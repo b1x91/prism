@@ -1,0 +1,485 @@
+# CLAUDE.md — Prism (프리즘) · 증바람 모임 사이트
+
+> claude.ai 프로젝트에서 설계·결정한 내용을 Claude Code로 넘기는 인수인계서. **v3 (2026-10-10)**
+> **[결정됨]** 은 재논의하지 않는다. **[미정]** 은 사용자에게 묻는다. **[검증필요]** 는 코드 전에 테스트한다. 추측으로 채우지 않는다.
+> v2.2 → v3 변경 요지: 운영진 해산. 사람이 돌리는 모든 절차를 제거하고 자동화로 대체. 수집기는 op.gg 공식 MCP를 1순위로 교체 가능하게 재설계. 사이트를 공개층/회원층 2층 구조로.
+
+---
+
+## 0. 작업 방식
+
+- 모든 대화와 코드 주석은 한국어.
+- 버그는 스크린샷 + 설명으로 온다. 정확히 진단하고 패치한다.
+- 사실이 아닌 것을 사실처럼 말하지 않는다. 모르면 모른다고 한다.
+- 실수하면 사과하고 고친다.
+- 파일 하나 고칠 때마다 `npm run build` 통과를 확인한 뒤 보고한다.
+- **운영자는 사용자 1명뿐이다.** "운영진이 처리한다"는 설계는 전부 무효. 사람 손이 가는 절차를 발견하면 자동화안을 먼저 제시한다.
+
+---
+
+## 1. 프로젝트 한 줄
+
+League of Legends **아수라장 칼바람 (ARAM: Mayhem, `queueId = 2400`)** 전용 모임 **Prism**의 사이트.
+
+세 가지 목표 (사용자 원문 기준):
+1. **Prism이라는 증바람 모임을 만든다.** 게임보다 사람이 목적. 30대 이상 중심, 지인 추천제. 50~70명에서 시작해 100명까지.
+2. **로열층을 모으기 위해 사이트를 만들고, 상세 정보는 Prism 가입 조건으로 건다.** 공개층은 미끼, 회원층이 본체. (2절, 9절)
+3. **회원이 사이트를 쓰고 매일 밤 증바람을 함께 하는 구조.** 운영진 없이 이 리듬이 돌아가야 하므로 리마인드·모집·케어는 전부 봇과 스케줄 함수가 한다. (10절)
+
+- **이름: Prism** (한글 "프리즘"). `src/config.ts`의 `SITE_NAME`. 아수라장 최상급 증강 등급이 프리즘이다.
+- **도메인: `prism.web.app`** (사용 가능 확인됨). Firebase 프로젝트 ID `prism`이 안 잡히면 아무 ID나 쓰고 **호스팅 사이트 ID만 `prism`**으로 만든다.
+- **디자인: 1.5절.**
+
+---
+
+## 1.5 [결정됨] 디자인 시스템
+
+**참고 사이트: https://rft.gg/** — 구조만 참고. 데이터 출처가 아니다 (e스포츠 사이트). 카드 밀도 높고, 경기 카드가 작고 촘촘하며, 선수 카드에 최근 경기 점수가 띠로 붙고, 이벤트 칩에 "now / in 20d" 같은 상태 배지가 붙는다. 우리 화면 대응:
+- 선수 카드의 최근 점수 띠 → 마이페이지 **최근 10판 승패 띠** (딜지수는 수집원이 딜량을 줄 때만)
+- 이벤트 칩 배지 → 파티 카드 **"지금 열림 / 2시간 뒤 / 출발"**
+- 경기 결과 카드 → 명예의 전당 카드, 최근 판 카드
+
+**테마: 다크 + 라이트 둘 다.** 시스템 설정 따라가고 토글 제공. 바탕은 중립색(다크: 짙은 남색 계열, 라이트: 오프화이트). CSS 변수로 토큰화.
+
+**색: 무지개 스펙트럼 — 단, 의미 있는 곳에만.**
+스펙트럼 7색을 `--spectrum-1` ~ `--spectrum-7`로 정의하고 다음에만 쓴다.
+- 4축 레이더의 축 색 (딜/탱/성장/관여)
+- 역할 6종 색 (원딜/마법사/암살자/브루저/탱커/서포터) — 역할 배지, 역할별 승률 바
+- 증강 등급: 실버(회색) / 골드(금색) / **프리즘(스펙트럼 그라디언트)**
+- 로고 — 빛이 프리즘을 지나 스펙트럼으로 갈라지는 모티프
+- 명예의 전당 1위 카드 테두리
+- 5/5 출발 상태 카드 강조
+**금지:** 무지개 텍스트, 무지개 배경, 본문·버튼·일반 UI에 스펙트럼 사용. 브랜드 순간에만.
+
+**서체: Pretendard Variable.** CDN 또는 셀프호스팅. 숫자는 `font-variant-numeric: tabular-nums`.
+
+**밀도:** 정보를 촘촘히 두되 모바일 우선. 모바일 1열, 데스크톱 2~3열.
+
+---
+
+## 2. [결정됨] 핵심 결정
+
+1. **로그인은 디스코드 OAuth.** Riot 로그인(RSO)은 쓰지 않는다 (2단계 승인 필요, 받아도 2400은 막혀 있어 실익 없음).
+2. **Riot 계정은 "연결".** 마이페이지에서 아이콘 인증 1회. 키는 PUUID(불변).
+3. **전적은 Riot 공식 API로 못 받는다.** 2026-09-14 사용자 직접 테스트: `queue=450` 정상, `queue=2400` → `[]`. 2026-10-10 재조사에서도 해제 징후 없음. 우회 시도 금지.
+4. **수집기는 교체 가능한 플러그인이다.** 어떤 수집원이든 `/ingest` 계약(7-1절)으로만 들어온다. 수집원 우선순위는 7절. 수집원이 바뀌어도 원본·집계·화면은 그대로다.
+5. **1순위 수집원은 op.gg 공식 MCP 서버** (`https://mcp-api.op.gg/mcp`). 사람·PC·하드웨어 없이 Cloud Function이 직접 호출한다. **[검증필요]** — 7-2절 테스트가 첫 작업.
+6. **스크린샷 OCR, 비전 모델 — 쓰지 않는다.** 폐기.
+7. **op.gg 화면 스크래핑은 금지.** 공식 MCP와 딥링크만 쓴다.
+8. **원본은 append-only, 집계는 파생.** `matches` / `participants`는 절대 수정하지 않는다. 공식이 바뀌면 원본에서 전체 재계산.
+9. **지표는 같은 판 같은 팀 5명 내 점유율로 정규화.** 절대 딜량 랭킹, 단일 "영향력 점수" 금지. 수집원이 팀 전체 딜량을 안 주면 4축은 꺼둔다 (끄는 거지 대체 공식을 만들지 않는다).
+10. **챔프폭 = 도감.** 랜덤 픽 모드이므로 "몇 종을 만났고 어땠나".
+11. **사이트는 2층.** 공개층(정적 게임 데이터, 로그인 없음) / 회원층(모든 회원 데이터). 회원 데이터는 어떤 형태로도 공개층에 내지 않는다 — **특히 회원 전적으로 만든 증강 승률 집계는 공개 금지.** Riot이 2400을 막은 이유가 그것이라 공개하면 수집 경로 자체가 표적이 된다.
+12. **비회원 참가자 개인정보는 저장하지 않는다.** 팀 합계 계산에만 쓰고 폐기.
+13. **회원 등급 3단계:** `guest` / `member` / `admin`. `admin`은 사용자 1명 (Discord ID 상수 `ADMIN_DISCORD_IDS`). **승급·강등은 전부 자동** (10-2절). 사람이 등급을 만지는 화면은 예외 처리용으로만 둔다.
+14. **파티는 동시에 여러 개.**
+15. **회원의 모임 밖 판도 수집한다.** 개인 통계는 전체 판, 모임 통계는 `crewCount ≥ 2`인 판만.
+16. **회원에게 프로그램 설치를 요구하지 않는다. 단, 선택은 가능.** 회원 앱(7절 3순위)은 "설치하면 내 PC도 수집 노드"인 옵션이지 조건이 아니다.
+17. **실시간 반영은 하지 않는다.** "방금 한 판"은 op.gg 딥링크가 맡는다. 사이트는 몇 시간 뒤 정리된 기록을 보여준다.
+18. **디스코드 봇은 1차다.** 운영진이 하던 일(공지·모집·케어)을 봇이 하므로 2차로 미룰 수 없다. 최소 범위는 10-1절.
+
+---
+
+## 3. [결정됨] 하드 제약
+
+- **match-v5는 2400을 싣지 않는다.** 키 등급 무관. 의도적 차단.
+- **Vanguard는 가상 머신을 막는다** (VAN 9100, 공식 지원 안내). 클라우드 VM에 롤 클라이언트를 띄우는 안은 **불가**. 물리 PC만 된다.
+- **LCU(클라이언트 로컬 API)는 Riot 비공식.** 예고 없이 바뀔 수 있다. 조회당 최대 20판, 과거 백필 불가. 다른 플레이어 전적도 PUUID로 조회 가능 (`/lol-match-history/v1/products/lol/{puuid}/matches`) — 회원의 비공개 설정과 무관하게 읽히므로 **수집 동의 문구 필수** (12절).
+- **op.gg MCP는 op.gg의 것이다.** 언제든 바뀌거나 닫힐 수 있다. 반환 필드·판 수·호출 제한·용도 허용 여부 모두 **[검증필요]**. 의존하되 종속되지 않도록 `/ingest` 뒤에 둔다.
+- `account-v1`, `summoner-v4`는 정상. 개발자 키로 충분. 계정 연결·검증에만 쓴다.
+- **기록은 오픈 첫날부터.** 어떤 수집원도 과거를 다 돌려주지 않는다 (op.gg도 "최근 N판"). 사이트보다 수집기를 먼저 돌린다.
+- Riot 정책상 플레이어 데이터 공개 전시는 본인 옵트인 필요 → 회원층 + 가입 동의로 충족.
+
+---
+
+## 4. [결정됨] 스택
+
+- **Frontend:** React + Vite + TypeScript. 모바일 우선.
+- **Backend:** Firebase — Hosting, Firestore, Cloud Functions (Node 20), Cloud Scheduler, App Check. **Blaze 요금제 필수** (외부 호출). 리전 `asia-northeast3`.
+- **Auth:** Firebase Auth **커스텀 토큰**. 디스코드 OAuth 콜백 → Function → `createCustomToken(discordId, claims)`.
+- **수집기 (1순위):** Cloud Function `collectOpgg` — Cloud Scheduler 2시간 주기. op.gg MCP를 JSON-RPC(StreamableHTTP)로 호출. MCP 클라이언트는 `@modelcontextprotocol/sdk` 사용, AI 모델은 끼지 않는다.
+- **수집기 (2순위, 필요 시):** Node + `league-connect` → 미니PC 상주 서비스. 7-3절.
+- **디스코드 봇:** Interactions Endpoint(HTTP webhook) 방식 → Cloud Function. 게이트웨이 상주 프로세스 없음. 정기 게시는 Cloud Scheduler → 웹훅 POST. 음성채널 감지만 게이트웨이가 필요하므로 10-1절 참고.
+- **비밀:** Firebase Secret Manager — `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_PUBLIC_KEY`, `RIOT_API_KEY`(Personal), `COLLECTOR_KEY`.
+- **정적 데이터:** Riot Data Dragon (챔피언·아이템). 증강은 DDragon에 없으면 CommunityDragon. 버전 상수는 `src/config.ts`.
+- **서체:** Pretendard Variable.
+- **Windows 개발 환경:** PowerShell 7.
+
+### 참고 (구조만 참고, **코드 복사 금지**)
+- `opgginc/opgg-mcp` — MIT. op.gg 공식 MCP. 롤 도구: `lol-summoner-search`, `lol-summoner-game-history`, `lol-summoner-renewal` 등.
+- `heoyh94/aram-squad-stats` — LICENSE 없음. LCU 실측 표, 역할 판정 함정.
+- `Yhprum/mayhem-tracker` — LICENSE 없음. Electron 트레이 앱, `league-connect` 사용 예.
+
+---
+
+## 5. [결정됨] 데이터 모델 (Firestore)
+
+```
+members/{memberId}                   # memberId = discordId
+  discordId, discordName, discordAvatar
+  riotPuuid        string | null
+  riotId           string | null     # "gameName#tagLine"
+  nick             string            # 사이트 표시명 (본인 편집)
+  intro            string            # 한 줄 소개 (본인 편집)
+  tier             'guest' | 'member' | 'admin'
+  tierChangedAt    Timestamp
+  joinedAt, lastPlayedAt, lastSeenAt
+  invitedBy        string | null     # 추천인 memberId (지인 추천제)
+  counts: { played, hosted, joined, events }
+  lastKnownGameId  number | null     # 수집기 기준점
+  pendingIcon      { iconId, expiresAt } | null
+  optIn            { collect: boolean, at: Timestamp }   # 수집 동의 기록
+
+parties/{partyId}
+  hostId, startAt, origin: 'site'|'discord'|'kakao'
+  slots            string[]          # memberId, 최대 5
+  status           'open'|'full'|'done'|'cancelled'
+  note, createdAt
+  discordMessageId string | null     # 봇이 올린 모집글
+
+schedules/{id}                       # 정기 시간. admin만. 1차는 비움
+  weekday, hour, label
+
+collectors/{collectorId}             # 수집원 하트비트 ('opgg' | 'minipc-1' | 회원앱 id)
+  kind             'opgg' | 'lcu'
+  lastRunAt, lastOkAt, lastSyncCount, lastError, version
+
+matches/{gameId}                     # 원본. append-only. Function만 쓴다.
+  gameId, queueId: 2400, playedAt, duration
+  source           'opgg' | 'lcu'
+  collectorId
+  crew             string[]
+  crewCount        number
+  teamTotals: { '100': {win,kills,damageToChampions?,damageTaken?,goldEarned?}, '200': {...} }
+
+participants/{gameId}_{memberId}     # 원본. append-only. 회원만.
+  gameId, memberId, riotPuuid
+  championId, role
+  teamId, win
+  kills, deaths, assists
+  damageToChampions?, damageTaken?, damageSelfMitigated?, goldEarned?   # 수집원에 따라 없을 수 있음
+  augments         number[] | null
+  items            number[] | null   # 최종 6칸, 장신구 제외
+  shares           { deal, tank, growth, kp } | null   # 팀 합계가 있을 때만
+
+memberStats/{memberId}               # 파생. 재생성 가능. 클라이언트 read-only.
+  played, won, hosted, dexCount
+  crewPlayed, crewWon
+  champions: { [id]: { n, w, sumDeal?, sumTank? } }
+  roles:     { [role]: { n, w } }
+  augments:  { [id]: { n, w } }
+  items:     { [id]: { n, w } }
+  indices:   { deal, tank, growth, kp } | null
+  streak:    { current, best }
+  recent10:  boolean[]               # 최근 10판 승패 띠
+  firstGameId
+
+pairs/{memberA_memberB}              # 파생. 페어 케미. crewCount ≥ 2 판만
+  n, w
+
+records/{recordId}                   # 명예의 전당. append-only.
+  category, value, memberId, gameId, achievedAt, previousRecordId
+
+reports/{reportId}                   # 신고 (2차)
+  targetId, reporterId, reason, createdAt
+```
+
+**명예의 전당 카테고리:** `max_kills` · `longest_game` · `best_streak_solo` · `best_streak_party` · `dex_complete_rank` · `most_hosted` · `most_played_month` — 7종은 수집원 무관. `max_deal_index` · `max_tank_index`는 딜량이 들어올 때만 활성 (레지스트리에 `requires: ['damage']` 플래그).
+
+---
+
+## 6. [결정됨] 인증·연결
+
+### 6-1. 디스코드 로그인
+```
+/login → discord authorize (scope: identify guilds.members.read)
+→ CF authDiscord → 서버 멤버 확인 → members upsert (merge: true)
+→ tier: ADMIN_DISCORD_IDS 포함이면 admin, 아니면 기존값 유지 (신규는 guest)
+→ createCustomToken(discordId, { tier }) → signInWithCustomToken
+```
+서버 미가입자는 거절. 디스코드 역할은 **읽지 않는다** — 등급은 Firestore가 진실이고, 봇이 역할을 거꾸로 동기화한다 (10-2절).
+
+### 6-2. Riot 계정 연결 (마이페이지, 아이콘 인증)
+```
+Riot ID 입력 → callable linkRiotStart
+  account-v1 by-riot-id → puuid, 랜덤 iconId → pendingIcon (5분)
+사용자: 롤에서 아이콘 변경 → [확인] → callable linkRiotVerify
+  summoner-v4 by-puuid → profileIconId 일치 → riotPuuid, optIn 저장
+  불일치 → 15초 간격 5회 자동 재시도 UI (Riot 반영 지연)
+```
+연결 화면에 수집 동의 문구 필수 (12절). 부계정 다중 연결은 2차.
+
+### 6-3. 닉네임
+`nick`은 사이트 표시명, 본인 편집. `riotId`는 수집기가 동기화 때마다 갱신.
+
+---
+
+## 7. [결정됨] 수집 — 플러그형, 우선순위 4단
+
+**원칙: 사람이 돌리지 않는다.** 설치 1회 이후 손이 가는 절차는 전부 실패로 간주.
+
+| 순위 | 수집원 | 사람 개입 | 상태 |
+|---|---|---|---|
+| 1 | **op.gg 공식 MCP** → Cloud Function | 없음 | **[검증필요]** 7-2 |
+| 2 | **미니PC** (집, 롤 클라이언트 상시 로그인 + LCU 에이전트) | 초기 설치 1회, 가끔 재부팅 | 1순위 실패 시 |
+| 3 | **회원 앱** (선택 설치, 자동 실행, 켜진 PC가 전 회원 동기화) | 회원당 설치 1회 | 보험. 1·2와 병행 가능 |
+| 4 | **데이터 없음** (op.gg 딥링크 + 승패 원탭 자가보고) | 없음 | 최후 |
+
+어느 순위로 가든 **사이트·봇·스키마는 동일**하다. 바뀌는 건 수집기 하나.
+
+### 7-1. `/ingest` 계약 (모든 수집원 공통)
+
+```
+POST /ingest   Header: X-Collector-Key, X-Collector-Id
+body: {
+  source: 'opgg' | 'lcu',
+  games: [{
+    gameId, queueId, playedAt, duration,
+    participants: [{
+      puuid, riotId?, championId, teamId, win,
+      kills, deaths, assists,
+      damageToChampions?, damageTaken?, damageSelfMitigated?, goldEarned?,
+      augments?, items?
+    }]   // 10명 전원. 회원 아닌 사람도 포함해서 보낸다 (팀 합계용)
+  }]
+}
+```
+서버 처리:
+1. `queueId !== 2400` 버림. `gameId` 중복이면 무시 (여러 수집원이 같은 판을 보내도 1회).
+2. `teamTotals` 계산 (10명 전원, 있는 필드만).
+3. `puuid ↔ members.riotPuuid` 대조 → `crew`, `crewCount`.
+4. `matches` 1건 + `participants`(회원 수만큼) 저장. **비회원 데이터는 여기서 폐기.**
+5. 같은 팀 5명 딜량이 전부 있을 때만 `shares` 계산, 아니면 `null`.
+6. 각 회원 `lastKnownGameId`, `lastPlayedAt` 갱신. `collectors/{id}` 하트비트.
+
+`onWrite participants` → `memberStats`, `pairs` 롤업 → `records` 갱신 판단.
+
+### 7-2. 1순위: op.gg MCP **[검증필요 — 첫 작업]**
+
+```
+Cloud Scheduler (매 2시간, 시작 분은 지터) → collectOpgg
+  1. members where riotPuuid != null
+  2. 회원마다: lol-summoner-renewal → lol-summoner-game-history
+  3. 응답에서 queueId/게임모드가 아수라장인 판만 → 7-1 포맷으로 변환 → /ingest
+  4. 실패·제한 응답은 collectors/opgg.lastError 에 기록, 다음 주기 재시도
+```
+
+**첫 세션에서 반드시 먼저 확인할 것 (스크립트 `scripts/probe-opgg-mcp.ts`):**
+1. `lol-summoner-game-history`가 **아수라장(2400) 판을 포함**하는가
+2. 판당 어떤 필드가 오는가 — 챔피언·승패·KDA / **증강 / 아이템 / 딜량·받은 딜 / 10명 전원** 각각 유무
+3. **몇 판**까지 오는가 (20판이면 2시간 주기 유지, 더 적으면 주기 단축)
+4. 응답 속도와 **호출 제한** (회원 100명 × 2콜 / 2시간 기준으로 안전한가)
+5. 서버 측 약관·용도 안내 문구가 있는지 (있으면 그대로 보고)
+
+결과를 사용자에게 표로 보고한 뒤 진행한다. **결과에 따라 자동으로 결정되는 것:**
+- 딜량 없음 → `shares`, 4축, `max_deal_index`·`max_tank_index` 비활성. 대체 공식 만들지 않는다.
+- 증강·아이템 없음 → 선호 증강·아이템은 2순위(미니PC) 보강 항목으로 넘기고 사용자에게 보고.
+- 아수라장 판 없음 → 7-3으로.
+
+### 7-3. 2순위: 미니PC (LCU 에이전트)
+
+- 물리 PC. Windows 11 + **TPM 2.0** (Vanguard). 롤 클라이언트 상시 로그인, 게임은 하지 않는다 (전적 조회에는 Vanguard 게임 실행 차단이 무관).
+- 수집 전용 **버리는 계정** 사용. 회원 계정 금지. 제재돼도 회원에 영향 없게.
+- 상주 서비스: `league-connect`로 접속 → 2시간마다 전 회원 PUUID로 `/lol-match-history/v1/products/lol/{puuid}/matches?begIndex=0&endIndex=19` → 신규만 `/lol-match-history/v1/games/{gameId}` → `/ingest`.
+- 20판 전부 신규면 `begIndex=20,40,…` 페이징 (상한 200).
+- **감시 루프:** lockfile 사라지면(패치·크래시) `RiotClientServices.exe --launch-product=league_of_legends --launch-patchline=live` 로 재기동. 10분 넘게 복구 안 되면 봇이 관리자 DM.
+- 관리자 화면에 `collectors` 상태: "마지막 성공 X분 전 · 오류 N회".
+
+### 7-4. 3순위: 회원 앱 (선택)
+
+- 7-3과 같은 에이전트의 트레이 앱 버전. 윈도우 시작 시 자동 실행, 클라이언트 켜져 있으면 전 회원 동기화.
+- 첫 실행에 **페어링 코드**(사이트에서 6자리 발급) 입력 → 그 회원의 Riot 계정 자동 연결 (아이콘 인증 대체).
+- 회원에게 **"설치하면 좋은 것"**으로만 안내. 조건으로 걸지 않는다.
+- 코드사인 인증서 없으면 SmartScreen 경고 — 설치 안내에 명시.
+
+### 7-5. 4순위: 데이터 없음
+
+수집기만 끈다. 마이페이지 전적 영역은 op.gg 딥링크 + "이겼다/졌다" 원탭(파티장 1명이 누르면 그 판 5명 반영). 연승·파티장 횟수·케미는 이걸로도 돌아간다.
+
+---
+
+## 8. [결정됨] 지표·판정
+
+```
+deal   = (내 damageToChampions / 팀 damageToChampions) / 0.2
+tank   = (내 damageTaken       / 팀 damageTaken)       / 0.2
+growth = (내 goldEarned        / 팀 goldEarned)        / 0.2
+kp     = (내 kills + assists)  / 팀 kills               # 팀 kills 0이면 null
+```
+1.0 = 팀 평균. 4축 레이더. **팀 5명 수치가 전부 있을 때만 계산.**
+
+**역할 판정 (DDragon 태그):** 기본은 첫 번째 태그. `Support` 태그가 있으면 Support 우선 (아니면 서포터가 전부 mage로 샌다). `Support`+`Tank`(탐 켄치·브라움)는 Tank.
+
+**선호 아이템:** 최종 6칸, 장신구 제외. 아이템별 n/w. 마이페이지 top 5, 챔피언별 top 5.
+
+**선호 증강:** 증강 ID별 n/w. 등급(실버/골드/프리즘)별로 묶어서 표시. 이름·아이콘은 CommunityDragon.
+
+---
+
+## 9. 사이트 — 2층 구조와 가입 동선
+
+### 9-0. 공개층 (로그인 없음) — 미끼
+- **증강 도감·검색·추천**: 증강 전체 목록, 설명, 등급, 챔피언별 추천, 시너지 링크. 전부 **정적 게임 데이터**라 Riot 정책·수집원과 무관. 사용자가 이전에 만든 단일 HTML 증강 도구(패치 26.16 한국어 데이터, 4탭: 검색·챔피언별 추천·실시간 픽 코치·판단 드릴)를 React로 이식한다. 데이터는 CommunityDragon으로 패치마다 갱신.
+- **Prism 소개**: 무엇을 하는 모임인지, 어떻게 들어오는지 (지인 추천 + 디스코드).
+- **잠긴 미리보기**: 마이페이지·도감·명예의 전당 카드를 블러 처리한 스크린샷과 "내 기록 보기 → Prism 가입". 실제 회원 데이터는 단 한 줄도 넣지 않는다.
+- OG 이미지 등 공유용 메타는 공개층 기준으로.
+
+### 9-1. 가입 동선 (3단계, 각 단계가 떨어져 나갈 수 있음을 전제)
+```
+공개층 "내 기록 보기" → 디스코드 초대 링크 (추천인 코드 포함) → 디스코드 가입
+→ 사이트 로그인 (guest) → Riot 연결 (아이콘 인증 또는 회원 앱 페어링)
+→ 다음 수집 주기에 마이페이지가 채워짐 → 봇이 "첫 기록 도착" DM
+```
+- 디스코드 초대 링크에 `?ref={memberId}`를 붙여 `invitedBy` 기록. 추천인 횟수는 마이페이지에 표시.
+- 연결 직후 빈 마이페이지를 보여주되 "첫 판이 끝나면 몇 시간 안에 나타납니다"를 명시. **빈 상태 디자인이 전환율의 전부.**
+
+### 9-2. 마이페이지 **[필수]**
+- 상단: 아바타, `nick`(편집), `intro`(편집), 등급 배지, 추천인 수
+- Riot 연결 카드 (6-2). 연결되면 **op.gg 아수라장 전적 보기** 딥링크
+- 최근 10판 승패 띠
+- **선호 증강 top 5 · 선호 아이템 top 5 · 선호 챔피언 top 5** (각 n·승률). 수집원이 안 주는 항목은 카드를 숨기지 말고 "이 수집 경로에서는 제공되지 않습니다"로 표시
+- **도감**: 전체 챔피언 그리드. 플레이한 챔프 컬러 + 판수/승률, 미개척 회색. `dexCount/전체`
+- 역할별 승률 바
+- 4축 레이더 (딜량 있을 때만)
+- 케미: 같이 한 회원별 승률 top 5
+- 내 기록: played / hosted / joined / 연승 / 첫 판
+
+### 9-3. 참여 신청 화면 **[필수 — 사이트의 존재 이유]**
+- 상단 고정: `schedules` 있으면 다음 정기 시간, 없으면 가장 가까운 열린 판
+- 열린 판 카드 (`parties`, status in [open, full], startAt 순)
+- 카드: 파티장 아바타 · 시간 · **슬롯 5개** — 채워진 슬롯은 아바타, 빈 슬롯은 물음표 챔피언 실루엣. 5/5면 "출발"
+- **원탭 참여/취소.** 확인 모달 없음
+- 판 열기: 시간 선택 + 선택적 한 줄 메모. 그 외 입력 없음
+- `onSnapshot` 실시간
+- 모바일에서 3초 안에 이름 올리고 나갈 수 있어야 한다
+- 참여 시 `counts.joined` 증가. 판 생성·5/5·취소는 봇이 디스코드에 미러링 (10-1)
+
+### 9-4. 명예의 전당 **[필수]**
+- 카테고리 카드: 현재 1위 + 값 + 달성일. 클릭 → 변천사
+- 모든 회원의 **첫 판** 섹션
+- 빈 상태: "첫 기록을 기다리는 중"
+
+### 9-5. 관리자 화면 (admin 1명)
+- `collectors` 상태, 수집 오류 로그
+- 등급 수동 조정 (예외용), `schedules` 편집
+- 신고 보류 큐 (2차)
+
+### 9-6. Cloud Functions (1차)
+- `authDiscord` (HTTP)
+- `linkRiotStart`, `linkRiotVerify`, `pairingCode` (callable)
+- `ingest` (HTTP, X-Collector-Key)
+- `collectOpgg` (scheduled, 2h)
+- `onParticipantWrite` (trigger) — 롤업
+- `tierSweep` (scheduled, daily) — 10-2
+- `discordInteractions` (HTTP) — 봇 슬래시/버튼
+- `discordDaily` (scheduled, 21:00 KST) — 10-1
+- `onPartyWrite` (trigger) — 디스코드 미러링
+
+### 9-7. Firestore rules
+- `members/{id}`: 본인은 `nick`, `intro`만 쓰기. 나머지는 Function만
+- `parties`: `member` 이상 생성. `slots`는 본인 추가/제거만 (rules에서 diff 검사). `admin`은 전체
+- `matches`, `participants`, `memberStats`, `pairs`, `records`, `collectors`: 클라이언트 쓰기 금지
+- `schedules`: `admin`만
+
+---
+
+## 10. 자동 운영 — 운영진이 하던 일
+
+### 10-1. 디스코드 봇 (1차 최소 범위)
+- **매일 21:00 KST 자동 게시**: 어젯밤 판 수 / 갱신된 기록 / 지금 열린 판 / "오늘 켜시는 분?" 버튼 → 누르면 사이트 파티 생성과 동일
+- **파티 미러링**: 사이트에서 판 생성 → 봇이 채널에 카드 게시 (버튼 참여), 5/5 → 참가자 멘션, 취소 → 메시지 갱신. 디스코드에서 버튼으로 참여해도 Firestore가 진실
+- **음성채널 자동 모집**: 지정 음성채널에 2명 이상 들어오면 열린 판이 없을 때 자동 생성. 이것만은 게이트웨이 이벤트가 필요하므로 **Cloud Run 최소 인스턴스 1개**로 상주 (유일한 상주 프로세스). 비용이 부담이면 2차로 미루고 1차는 사이트+버튼으로만.
+- `/판`, `/현황`, `/내기록` 슬래시 명령
+
+### 10-2. 등급 자동화 (`tierSweep`, 매일)
+- `guest → member`: 14일 내 `crewPlayed ≥ 3` **또는** 파티 개설 1회 + 참여 2회
+- `member → guest`: 45일 무활동 (`lastPlayedAt`, `lastSeenAt`, 파티 참여 모두 없음). 30일째 봇 DM 예고
+- 등급 변경 시 봇이 디스코드 역할 동기화 (Firestore → Discord 방향만)
+- `admin`은 스윕 제외
+
+### 10-3. 2차
+- 신입 케어 DM: 연결 완료 시, 첫 판 기록 시, 7일 무참여 시
+- 신고 3회 누적 → 자동 `guest` 강등 + 관리자 DM (사람 판단은 복구 여부만)
+- 주간 요약 (월요일), 월간 "이달의 기록" 자동 발행, 월간 경연 자동 집계
+- 카톡 미러 (정기 공지만), 카카오 로그인
+- 부계정 다중 연결
+- 회원 앱 (7-4)
+
+---
+
+## 11. 코딩 규칙
+
+- Firestore 권한은 rules에서 강제. 클라이언트 검사는 UX용
+- `members` upsert는 항상 `merge: true`
+- 숫자 값을 문자열과 비교하지 않는다 (타입 불일치 버그 반복 이력)
+- 레지스트리 기반: 명예의 전당 카테고리·수집원·봇 명령 추가 = 데이터 한 줄
+- 수집원은 `collectors/*.ts`에 `Collector` 인터페이스 구현체로만 추가. 화면 코드는 `source`를 모른다
+- 캐시되는 정적 자원은 파일명에 버전 (`og-v2.png`)
+- 이름·문구는 `src/config.ts`, `src/copy.ts`
+- 모바일 우선
+- 외부 호출(op.gg MCP, Riot, Discord)은 전부 재시도·백오프·타임아웃을 갖고, 실패는 `collectors`에 남긴다. 조용히 죽지 않는다
+
+---
+
+## 12. 문구 (`src/copy.ts` 초기값)
+
+```
+CONSENT_RIOT_LINK =
+  "Riot 계정을 연결하면 아수라장 전적이 Prism에 자동으로 수집됩니다. 회원에게만 보이며, 연결을 해제하면 수집이 중단됩니다."
+
+NOT_A_MEMBER =
+  "Prism은 디스코드 서버 회원만 이용할 수 있습니다. 아는 분께 초대를 부탁해주세요."
+
+EMPTY_MYPAGE =
+  "아직 기록된 판이 없습니다. 첫 판이 끝나면 몇 시간 안에 여기에 나타납니다."
+
+EMPTY_HALL =
+  "첫 기록을 기다리는 중입니다."
+
+NOT_PROVIDED_BY_SOURCE =
+  "현재 수집 경로에서는 제공되지 않는 항목입니다."
+
+PUBLIC_TEASER =
+  "내 증강 취향, 도감, 같이 하면 이기는 사람. 기록은 Prism 회원에게만 열립니다."
+
+DAILY_POST_TITLE =
+  "오늘 밤 증바람?"
+```
+
+---
+
+## 13. [미정] 사용자에게 물어볼 것
+
+- **디스코드 GUILD_ID, 관리자 Discord ID** (`ADMIN_DISCORD_IDS`), 봇 게시 채널 ID, 음성채널 ID
+- **op.gg MCP 테스트 결과** — 7-2 표. 결과가 수집원을 정한다
+- 미니PC 확보 여부 (1순위 실패 시에만)
+- 정기 시간 — 1차는 없음
+- 음성채널 자동 모집을 1차에 넣을지 (Cloud Run 상주 비용 vs 효용)
+
+---
+
+## 14. 첫 세션 순서
+
+1. **`scripts/probe-opgg-mcp.ts`** — 7-2 항목 5개 확인, 표로 보고. **이게 끝나기 전에 사이트 코드를 쓰지 않는다.**
+2. 스캐폴딩 + Firestore 스키마 + rules + `/ingest` + 롤업 트리거 (수집원 무관)
+3. 수집기 1종 연결 (테스트 결과에 따라 `collectors/opgg.ts` 또는 `collectors/lcu.ts`) → 수집기부터 돌린다. 기록이 쌓이기 시작하면 사이트는 그 뒤에 와도 된다
+4. 디스코드 로그인 → 마이페이지 → 참여 신청 → 명예의 전당
+5. 봇 최소 범위 (10-1) + 등급 자동화 (10-2)
+6. 공개층 (증강 도구 이식)
+
+---
+
+## 15. 하지 말 것
+
+- 절대 딜량 순위, 티어·MMR 표시
+- 회원 데이터를 공개층에 노출 — 집계·익명화 형태라도 금지
+- 비회원 참가자 PUUID·닉 저장
+- Riot 공식 API로 2400을 받으려는 우회
+- op.gg 화면·내부 API 스크래핑 (공식 MCP만)
+- 클라우드 VM에 롤 클라이언트 (Vanguard가 막는다)
+- 회원에게 설치를 **조건**으로 요구 — 선택으로만
+- 사람이 주기적으로 눌러야 돌아가는 절차
+- 수집원별 분기가 화면 코드에 새는 것 — 수집원은 `/ingest` 뒤에만 존재
+- 카톡·디스코드 양쪽에 상태 따로 관리 — 진실은 Firestore 하나
+- 참여 신청에 확인 모달·추가 입력
+- 참고 레포 코드 복사
