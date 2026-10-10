@@ -145,6 +145,18 @@ async function main() {
     return client.close();
   }
   const games: any[] = listJson?.data?.game_history ?? [];
+  if (games.length === 0) {
+    // 빈 목록이면 "계정을 못 찾음"과 "op.gg 에 해당 판이 없음"을 구분하기 위해 프로필을 조회한다
+    const prof = await call('lol_get_summoner_profile', {
+      game_name: gameName,
+      tag_line: tagLine,
+      region: opt.region,
+      lang: 'ko_KR',
+      desired_output_fields: ['data.summoner.game_name', 'data.summoner.tagline', 'data.summoner.level', 'data.summoner.updated_at'],
+    });
+    save('profile.raw.json', prof);
+    console.log(`\n[전적 0판] 프로필 조회: ${prof.error ?? extract(prof.value).text.split('\n').pop()}`);
+  }
   const typeCount: Record<string, number> = {};
   for (const g of games) typeCount[`${g.game_type}/${g.game_map}`] = (typeCount[`${g.game_type}/${g.game_map}`] ?? 0) + 1;
 
