@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit -p scripts",
+    "build": "tsc --noEmit -p .",
+    "app": "tsx app/server.ts",
     "probe:opgg": "tsx scripts/probe-opgg-mcp.ts"
   },
   "devDependencies": {

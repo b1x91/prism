@@ -8,5 +8,5 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["*.ts"]
+  "include": ["scripts/*.ts", "app/*.ts"]
 }
