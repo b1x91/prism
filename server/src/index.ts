@@ -5,7 +5,38 @@
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
 import { addTip, board, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setConsent, setProfile, toggleLike } from './crew.js';
 import { ingest } from './ingest.js';
-import { HttpError, json, type Env } from './util.js';
+import { HttpError, json, randomToken, sha256, type Env, type Member } from './util.js';
+
+export { ChatRoom } from './chat.js';
+
+const TICKET_TTL = 60_000;
+
+/** 채팅 접속용 1회용 티켓. 토큰을 WebSocket 주소에 싣지 않기 위해 쓴다 */
+async function chatTicket(env: Env, me: Member) {
+  const ticket = randomToken(24);
+  await env.DB.prepare('INSERT INTO chat_tickets (ticket_hash, member_id, expires_at) VALUES (?, ?, ?)').bind(await sha256(ticket), me.id, Date.now() + TICKET_TTL).run();
+  return json({ ticket });
+}
+
+async function chatConnect(req: Request, env: Env) {
+  if (req.headers.get('Upgrade') !== 'websocket') throw new HttpError(426, 'websocket 으로 접속해주세요.');
+  const ticket = new URL(req.url).searchParams.get('ticket') ?? '';
+  const row = await env.DB.prepare(
+    'DELETE FROM chat_tickets WHERE ticket_hash = ? RETURNING member_id, expires_at',
+  )
+    .bind(await sha256(ticket))
+    .first<{ member_id: string; expires_at: number }>();
+  if (!row || row.expires_at < Date.now()) throw new HttpError(401, '채팅 티켓이 만료되었습니다.');
+  const m = await env.DB.prepare('SELECT id, nick, tier FROM members WHERE id = ?').bind(row.member_id).first<{ id: string; nick: string; tier: string }>();
+  if (!m) throw new HttpError(401, '회원이 아닙니다.');
+  // 회원 정보는 Worker 가 넣는다. 클라이언트가 보낸 원래 헤더는 쓰지 않는다
+  const headers = new Headers({ Upgrade: 'websocket' });
+  headers.set('X-Prism-Member', m.id);
+  headers.set('X-Prism-Nick', encodeURIComponent(m.nick));
+  headers.set('X-Prism-Admin', m.tier === 'admin' ? '1' : '0');
+  const room = env.CHAT.get(env.CHAT.idFromName('prism'));
+  return room.fetch(new Request('https://chat/ws', { headers }));
+}
 
 async function route(req: Request, env: Env): Promise<Response> {
   const { pathname } = new URL(req.url);
@@ -17,6 +48,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && pathname === '/auth/dev') return devLogin(req, env);
   if (m === 'POST' && pathname === '/api/app/token') return exchangeCode(req, env);
   if (m === 'POST' && pathname === '/api/logout') return logout(req, env);
+  if (m === 'GET' && pathname === '/chat/ws') return chatConnect(req, env);
 
   if (!pathname.startsWith('/api/')) throw new HttpError(404, 'not found');
   const me = await authenticate(req, env);
@@ -30,6 +62,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/champselect') return champSelect(req, env, me);
   if (m === 'GET' && pathname === '/api/board') return board(env, me);
   if (m === 'POST' && pathname === '/api/tips') return addTip(req, env, me);
+  if (m === 'POST' && pathname === '/api/chat/ticket') return chatTicket(env, me);
 
   const champ = pathname.match(/^\/api\/champions\/(\d+)$/);
   if (m === 'GET' && champ) return getChampion(env, me, Number(champ[1]));
@@ -58,6 +91,7 @@ export default {
     await env.DB.batch([
       env.DB.prepare('DELETE FROM auth_codes WHERE expires_at < ?').bind(now),
       env.DB.prepare('DELETE FROM oauth_states WHERE expires_at < ?').bind(now),
+      env.DB.prepare('DELETE FROM chat_tickets WHERE expires_at < ?').bind(now),
     ]);
   },
 } satisfies ExportedHandler<Env>;

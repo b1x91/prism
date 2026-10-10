@@ -12,15 +12,17 @@
 import { exec } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
-import { dirname, join } from 'node:path';
+import { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { chat, deleteChat, sendChat, startChat, stopChat, subscribe } from './chat.js';
 import { SERVER_URL } from './config.js';
 import { loadHistory, personalStats, type Game, type Personal } from './history.js';
 import { discover, isGameRunning, lcuAsset, lcuGet, type LcuCreds } from './lcu.js';
 import { api, ApiError, finishLogin, loginUrl, logout, prism, refreshMe, setConsent, syncCrew, uploadOwn } from './prism.js';
 
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 const PORT = 5199;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -305,7 +307,7 @@ const server = createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(await readFile(join(HERE, 'public', 'index.html')));
     }
-    if (p === '/api/state') return send(res, 200, { ...state, prism, server: SERVER_URL, version: VERSION });
+    if (p === '/api/state') return send(res, 200, { ...state, prism, chat: { connected: chat.connected, online: chat.online.length }, server: SERVER_URL, version: VERSION });
     if (p === '/api/static') return send(res, 200, statics);
     if (p === '/api/export' && m === 'POST') return send(res, 200, { file: await exportDiagnostics() });
 
@@ -315,6 +317,43 @@ const server = createServer(async (req, res) => {
       const r = await lcuAsset(creds, url.searchParams.get('path') ?? '');
       res.writeHead(200, { 'Content-Type': r.type || 'image/png', 'Cache-Control': 'max-age=86400' });
       return res.end(r.body);
+    }
+
+    // 로고 등 정적 파일 (brand 폴더만)
+    if (p.startsWith('/brand/')) {
+      const name = basename(p);
+      const type = { '.png': 'image/png', '.webp': 'image/webp', '.gif': 'image/gif', '.svg': 'image/svg+xml' }[extname(name)];
+      if (!type) return send(res, 404, { error: 'not found' });
+      const file = await readFile(join(HERE, 'public', 'brand', name)).catch(() => null);
+      if (!file) return send(res, 404, { error: 'not found' });
+      res.writeHead(200, { 'Content-Type': type, 'Cache-Control': 'max-age=86400' });
+      return res.end(file);
+    }
+
+    // 채팅: 화면은 SSE 로 받고, 보내기·지우기는 POST
+    if (p === '/api/chat/stream') {
+      res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store', Connection: 'keep-alive' });
+      const off = subscribe((e) => res.write(`data: ${JSON.stringify(e)}\n\n`));
+      const keep = setInterval(() => res.write(': keep\n\n'), 25_000);
+      req.on('close', () => {
+        off();
+        clearInterval(keep);
+      });
+      return;
+    }
+    if (p === '/api/chat/send' && m === 'POST') {
+      const { text } = await readBody(req);
+      try {
+        sendChat(String(text ?? ''));
+        return send(res, 200, { ok: true });
+      } catch (e) {
+        return send(res, 503, { error: e instanceof Error ? e.message : String(e) });
+      }
+    }
+    if (p === '/api/chat/delete' && m === 'POST') {
+      const { id } = await readBody(req);
+      if (Number.isInteger(id)) deleteChat(id);
+      return send(res, 200, { ok: true });
     }
 
     // 로그인
@@ -329,13 +368,14 @@ const server = createServer(async (req, res) => {
       const ok = loginNonce !== null && url.searchParams.get('n') === loginNonce;
       loginNonce = null;
       if (!ok) prism.error = '로그인 요청이 맞지 않습니다. 앱에서 다시 로그인해주세요.';
-      else if (code) await finishLogin(code).catch((e) => (prism.error = e instanceof Error ? e.message : String(e)));
+      else if (code) await finishLogin(code).then(startChat).catch((e) => (prism.error = e instanceof Error ? e.message : String(e)));
       res.writeHead(302, { Location: '/#prism' });
       return res.end();
     }
 
     // Prism (서버)
     if (p === '/api/prism/logout' && m === 'POST') {
+      stopChat();
       await logout();
       return send(res, 200, { ok: true });
     }
@@ -372,6 +412,7 @@ server.listen(PORT, '127.0.0.1', async () => {
   console.log(SERVER_URL ? `Prism 서버: ${SERVER_URL}` : 'Prism 서버 미설정 — 혼자 쓰는 기능만 동작합니다.');
   console.log('종료하려면 Ctrl+C');
   await refreshMe();
+  if (prism.loggedIn) startChat();
   if (process.platform === 'win32' && !process.env.PRISM_NO_OPEN) exec(`start "" "${ORIGIN}"`);
   loop();
 });

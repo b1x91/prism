@@ -14,6 +14,8 @@
 6. **스택 변경: Firebase → GitHub + Cloudflare.** 서버는 Cloudflare Workers + D1 (`server/`), 배포는 GitHub Actions (`.github/workflows/deploy-server.yml`). 4절 Backend·Auth, 5절 Firestore 모델, 9-7 rules 는 D1 스키마(`server/migrations/`)와 Worker 권한 검사로 대체. 원칙(원본 append-only, 비회원 폐기, 회원 데이터 비공개)은 그대로.
 7. **로그인:** 디스코드 OAuth 는 Worker 가 처리하고 앱 로컬 주소로 1회용 code 를 돌려준다. 롤 계정 연결은 앱이 로그인된 클라이언트 계정으로 (아이콘 인증 대체).
 8. **Prism 기능을 1차에:** 케미, 모임 챔피언·증강 통계, 장인, 회원 한 줄 팁(공감), 모임 보드. "작은 공동체가 서로 공유할 무언가"가 참여 동기.
+9. **실시간 채팅 (1차):** 방 하나(#prism). Cloudflare Durable Object + WebSocket. 앱이 서버와 연결하고 화면에는 SSE 로 전달 (토큰은 화면에 안 나감). 접속은 60초짜리 1회용 티켓. 도배 방지 0.8초, 300자, 본인·관리자만 삭제.
+10. **디자인:** 토큰(간격 4·8·12·16·20·24·32·48 / 글자 12·13·14·16·20·28 / 모서리 8·12·16) 밖의 값을 쓰지 않는다. 데스크톱은 왼쪽 사이드바, 모바일은 상단 바 + 하단 탭. 로고는 사용자가 준 보석 이미지(`app/public/brand/`), 움직임은 CSS 빛 지나감(동작 줄이기 설정 존중). 스펙트럼은 로고·프리즘 증강·1위 표시(작은 보석)에만.
 
 ---
 

@@ -1,5 +1,6 @@
 export interface Env {
   DB: D1Database;
+  CHAT: DurableObjectNamespace;
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
   DISCORD_GUILD_ID: string;
