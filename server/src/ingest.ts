@@ -1,0 +1,197 @@
+/**
+ * POST /api/ingest — 모든 수집원 공통 입구 (CLAUDE.md 7-1).
+ *   1. queueId !== 2400 버림. 이미 있는 gameId 는 무시.
+ *   2. 10명 전원으로 팀 합계 계산 (있는 필드만).
+ *   3. puuid ↔ members.riot_puuid 대조 → crew.
+ *   4. matches 1건 + 회원 participants 저장. 비회원 데이터는 여기서 폐기.
+ *   5. 같은 팀 5명 수치가 모두 있을 때만 점유율 계산.
+ */
+import { finite, HttpError, int, json, type Env, type Member } from './util.js';
+
+const MAYHEM_QUEUE = 2400;
+const MAX_GAMES = 50;
+
+type InParticipant = {
+  puuid: string;
+  riotId?: string;
+  championId: number;
+  teamId: number;
+  win: boolean;
+  kills: number;
+  deaths: number;
+  assists: number;
+  damageToChampions?: number;
+  damageTaken?: number;
+  goldEarned?: number;
+  augments?: number[];
+  items?: number[];
+};
+type InGame = { gameId: number; queueId: number; playedAt: number; duration: number; participants: InParticipant[] };
+
+type TeamTotal = { win: boolean; kills: number; damageToChampions?: number; damageTaken?: number; goldEarned?: number };
+
+const sumIfAll = (ps: InParticipant[], f: (p: InParticipant) => number | null | undefined) => {
+  const vs = ps.map(f);
+  return vs.every((v) => typeof v === 'number') ? (vs as number[]).reduce((a, b) => a + b, 0) : undefined;
+};
+
+const ids = (v: unknown): number[] | null => (Array.isArray(v) ? v.filter((x): x is number => Number.isInteger(x) && x > 0) : null);
+
+function validGame(g: any): g is InGame {
+  return (
+    int(g?.gameId) !== null &&
+    int(g?.queueId) !== null &&
+    finite(g?.playedAt) !== null &&
+    finite(g?.duration) !== null &&
+    Array.isArray(g?.participants) &&
+    g.participants.length === 10 &&
+    g.participants.every(
+      (p: any) =>
+        typeof p?.puuid === 'string' &&
+        p.puuid.length > 0 &&
+        int(p.championId) !== null &&
+        (p.teamId === 100 || p.teamId === 200) &&
+        typeof p.win === 'boolean' &&
+        int(p.kills) !== null &&
+        int(p.deaths) !== null &&
+        int(p.assists) !== null,
+    )
+  );
+}
+
+export async function ingest(req: Request, env: Env, me: Member) {
+  if (!me.opt_in_at) throw new HttpError(403, '수집 동의가 필요합니다.');
+  const payload = (await req.json().catch(() => null)) as { source?: string; games?: unknown[] } | null;
+  if (!payload || !Array.isArray(payload.games)) throw new HttpError(400, 'games 가 없습니다.');
+  if (payload.games.length > MAX_GAMES) throw new HttpError(413, `한 번에 ${MAX_GAMES}판까지 보낼 수 있습니다.`);
+  const source = payload.source === 'lcu' ? 'lcu' : 'unknown';
+
+  const result = { received: payload.games.length, stored: 0, duplicate: 0, skipped: 0, crewGames: 0 };
+  const games = payload.games.filter((g): g is InGame => {
+    const ok = validGame(g) && g.queueId === MAYHEM_QUEUE;
+    if (!ok) result.skipped++;
+    return ok;
+  });
+  if (games.length === 0) return json(result);
+
+  // 이미 있는 판 제외 (여러 회원 앱이 같은 판을 보내도 1회)
+  const existing = new Set<number>();
+  const gameIds = games.map((g) => g.gameId);
+  const { results: ex } = await env.DB.prepare(`SELECT game_id FROM matches WHERE game_id IN (${gameIds.map(() => '?').join(',')})`)
+    .bind(...gameIds)
+    .all<{ game_id: number }>();
+  for (const r of ex) existing.add(r.game_id);
+
+  // 이번 요청에 등장한 puuid 중 동의한 회원만
+  const puuids = [...new Set(games.flatMap((g) => g.participants.map((p) => p.puuid)))];
+  const memberByPuuid = new Map<string, string>();
+  for (let i = 0; i < puuids.length; i += 90) {
+    const chunk = puuids.slice(i, i + 90);
+    const { results } = await env.DB.prepare(`SELECT id, riot_puuid FROM members WHERE opt_in_at IS NOT NULL AND riot_puuid IN (${chunk.map(() => '?').join(',')})`)
+      .bind(...chunk)
+      .all<{ id: string; riot_puuid: string }>();
+    for (const r of results) memberByPuuid.set(r.riot_puuid, r.id);
+  }
+
+  const now = Date.now();
+  const perGame: D1PreparedStatement[][] = [];
+  const seenInRequest = new Set<number>();
+  for (const g of games) {
+    if (existing.has(g.gameId) || seenInRequest.has(g.gameId)) {
+      result.duplicate++;
+      continue;
+    }
+    seenInRequest.add(g.gameId);
+
+    const teams: Record<'100' | '200', InParticipant[]> = { '100': [], '200': [] };
+    for (const p of g.participants) teams[String(p.teamId) as '100' | '200'].push(p);
+    const totals: Record<string, TeamTotal> = {};
+    for (const [t, ps] of Object.entries(teams)) {
+      totals[t] = {
+        win: ps.some((p) => p.win),
+        kills: ps.reduce((a, p) => a + p.kills, 0),
+        damageToChampions: sumIfAll(ps, (p) => finite(p.damageToChampions)),
+        damageTaken: sumIfAll(ps, (p) => finite(p.damageTaken)),
+        goldEarned: sumIfAll(ps, (p) => finite(p.goldEarned)),
+      };
+    }
+
+    const crew = g.participants.filter((p) => memberByPuuid.has(p.puuid));
+    if (crew.length >= 2) result.crewGames++;
+    const stmts: D1PreparedStatement[] = [];
+    perGame.push(stmts);
+    stmts.push(
+      env.DB.prepare(
+        'INSERT OR IGNORE INTO matches (game_id, queue_id, played_at, duration, source, collected_by, crew_count, team_totals, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      ).bind(g.gameId, g.queueId, g.playedAt, g.duration, source, me.id, crew.length, JSON.stringify(totals), now),
+    );
+
+    for (const p of crew) {
+      const memberId = memberByPuuid.get(p.puuid)!;
+      const team = teams[String(p.teamId) as '100' | '200'];
+      const tt = totals[String(p.teamId)];
+      const full = team.length === 5;
+      const share = (mine: number | null, total: number | undefined) => (full && mine !== null && total ? mine / total / 0.2 : null);
+      const augments = ids(p.augments);
+      const items = ids(p.items);
+      stmts.push(
+        env.DB.prepare(
+          `INSERT OR IGNORE INTO participants (game_id, member_id, champion_id, team_id, win, kills, deaths, assists, dmg_champ, dmg_taken, gold,
+             items, augments, share_deal, share_tank, share_growth, kp, played_at, crew_count)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        ).bind(
+          g.gameId,
+          memberId,
+          p.championId,
+          p.teamId,
+          p.win ? 1 : 0,
+          p.kills,
+          p.deaths,
+          p.assists,
+          finite(p.damageToChampions),
+          finite(p.damageTaken),
+          finite(p.goldEarned),
+          items ? JSON.stringify(items) : null,
+          augments ? JSON.stringify(augments) : null,
+          share(finite(p.damageToChampions), tt.damageToChampions),
+          share(finite(p.damageTaken), tt.damageTaken),
+          share(finite(p.goldEarned), tt.goldEarned),
+          tt.kills > 0 ? (p.kills + p.assists) / tt.kills : null,
+          g.playedAt,
+          crew.length,
+        ),
+      );
+      for (const a of new Set(augments ?? [])) {
+        stmts.push(
+          env.DB.prepare('INSERT OR IGNORE INTO participant_augments (game_id, member_id, augment_id, champion_id, win) VALUES (?, ?, ?, ?, ?)').bind(
+            g.gameId,
+            memberId,
+            a,
+            p.championId,
+            p.win ? 1 : 0,
+          ),
+        );
+      }
+      stmts.push(
+        env.DB.prepare('UPDATE members SET last_played_at = MAX(COALESCE(last_played_at, 0), ?), riot_id = COALESCE(?, riot_id) WHERE id = ?').bind(
+          g.playedAt,
+          typeof p.riotId === 'string' && p.riotId.includes('#') ? p.riotId : null,
+          memberId,
+        ),
+      );
+    }
+    result.stored++;
+  }
+
+  // D1 batch 는 트랜잭션으로 실행된다. 한 판이 두 트랜잭션으로 갈라지지 않도록 판 단위로 묶어 보낸다
+  let chunk: D1PreparedStatement[] = [];
+  for (const stmts of perGame) {
+    if (chunk.length + stmts.length > 400) {
+      await env.DB.batch(chunk);
+      chunk = [];
+    }
+    chunk.push(...stmts);
+  }
+  if (chunk.length) await env.DB.batch(chunk);
+  return json(result);
+}

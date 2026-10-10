@@ -1,0 +1,4 @@
+# 로컬 개발용 (npm run server:dev). .dev.vars 로 복사해서 쓴다
+DEV_LOGIN=1
+PUBLIC_URL=http://127.0.0.1:8787
+DISCORD_CLIENT_SECRET=

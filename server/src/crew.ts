@@ -1,0 +1,224 @@
+/**
+ * Prism 회원 전용 기능. 모든 응답은 회원 데이터이므로 로그인한 회원에게만 준다 (CLAUDE.md 2절 11).
+ * 집계는 저장하지 않고 원본에서 계산한다.
+ */
+import { HttpError, json, type Env, type Member } from './util.js';
+
+const TIP_MAX = 120;
+const MIN_PAIR_GAMES = 3;
+const MIN_WINRATE_GAMES = 10;
+
+type NW = { n: number; w: number };
+
+// ───────── 내 정보 ─────────
+
+export async function getMe(env: Env, me: Member) {
+  const row = await env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w FROM participants WHERE member_id = ?').bind(me.id).first<NW>();
+  return json({
+    id: me.id,
+    nick: me.nick,
+    tier: me.tier,
+    riotId: me.riot_id,
+    linked: Boolean(me.riot_puuid),
+    consent: Boolean(me.opt_in_at),
+    games: row ?? { n: 0, w: 0 },
+  });
+}
+
+/** 앱이 로그인된 롤 계정을 연결한다. 클라이언트에 로그인된 계정이라 아이콘 인증을 대신한다 */
+export async function linkRiot(req: Request, env: Env, me: Member) {
+  const { puuid, riotId } = (await req.json().catch(() => ({}))) as { puuid?: string; riotId?: string };
+  if (!puuid || typeof puuid !== 'string') throw new HttpError(400, 'puuid 가 없습니다.');
+  const owner = await env.DB.prepare('SELECT id FROM members WHERE riot_puuid = ?').bind(puuid).first<{ id: string }>();
+  if (owner && owner.id !== me.id) throw new HttpError(409, '이 롤 계정은 이미 다른 회원에게 연결되어 있습니다.');
+  await env.DB.prepare('UPDATE members SET riot_puuid = ?, riot_id = ? WHERE id = ?').bind(puuid, typeof riotId === 'string' ? riotId : null, me.id).run();
+  return json({ ok: true });
+}
+
+export async function setConsent(req: Request, env: Env, me: Member) {
+  const { agree } = (await req.json().catch(() => ({}))) as { agree?: boolean };
+  await env.DB.prepare('UPDATE members SET opt_in_at = ? WHERE id = ?').bind(agree === true ? Date.now() : null, me.id).run();
+  return json({ ok: true, consent: agree === true });
+}
+
+export async function setProfile(req: Request, env: Env, me: Member) {
+  const { nick, intro } = (await req.json().catch(() => ({}))) as { nick?: string; intro?: string };
+  const n = typeof nick === 'string' ? nick.trim().slice(0, 20) : me.nick;
+  const i = typeof intro === 'string' ? intro.trim().slice(0, 60) : me.intro;
+  if (!n) throw new HttpError(400, '닉네임을 입력해주세요.');
+  await env.DB.prepare('UPDATE members SET nick = ?, intro = ? WHERE id = ?').bind(n, i, me.id).run();
+  return json({ ok: true });
+}
+
+/** 앱이 대신 수집할 회원 목록 (동의 + 계정 연결된 회원만) */
+export async function crewTargets(env: Env) {
+  const { results } = await env.DB.prepare('SELECT riot_puuid AS puuid, last_played_at AS lastPlayedAt FROM members WHERE opt_in_at IS NOT NULL AND riot_puuid IS NOT NULL').all();
+  return json({ targets: results });
+}
+
+// ───────── 챔피언 단위 ─────────
+
+async function championInfo(env: Env, me: Member, championId: number, tipLimit: number) {
+  const [crew, mine, augs, masters, tips] = await env.DB.batch([
+    env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w FROM participants WHERE champion_id = ?').bind(championId),
+    env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w FROM participants WHERE champion_id = ? AND member_id = ?').bind(championId, me.id),
+    env.DB.prepare(
+      `SELECT augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments WHERE champion_id = ?
+       GROUP BY augment_id HAVING n >= 2 ORDER BY n DESC, w DESC LIMIT 6`,
+    ).bind(championId),
+    env.DB.prepare(
+      `SELECT m.id, m.nick, COUNT(*) AS n, SUM(p.win) AS w FROM participants p JOIN members m ON m.id = p.member_id
+       WHERE p.champion_id = ? GROUP BY m.id ORDER BY n DESC, w DESC LIMIT 3`,
+    ).bind(championId),
+    env.DB.prepare(
+      `SELECT t.id, t.augment_id AS augmentId, t.text, t.created_at AS createdAt, m.nick, t.member_id = ?2 AS mine,
+         (SELECT COUNT(*) FROM tip_likes l WHERE l.tip_id = t.id) AS likes,
+         EXISTS (SELECT 1 FROM tip_likes l WHERE l.tip_id = t.id AND l.member_id = ?2) AS liked
+       FROM tips t JOIN members m ON m.id = t.member_id
+       WHERE t.champion_id = ?1 AND t.deleted_at IS NULL ORDER BY likes DESC, t.created_at DESC LIMIT ?3`,
+    ).bind(championId, me.id, tipLimit),
+  ]);
+  return {
+    crew: crew.results[0] as NW,
+    me: mine.results[0] as NW,
+    topAugments: augs.results,
+    masters: masters.results,
+    tips: tips.results,
+  };
+}
+
+/** 챔프 선택 화면용: 여러 챔피언 + 같은 팀 회원 케미를 한 번에 */
+export async function champSelect(req: Request, env: Env, me: Member) {
+  const { championIds, teammatePuuids } = (await req.json().catch(() => ({}))) as { championIds?: unknown; teammatePuuids?: unknown };
+  const champs = (Array.isArray(championIds) ? championIds : []).filter((x): x is number => Number.isInteger(x) && x > 0).slice(0, 16);
+  const mates = (Array.isArray(teammatePuuids) ? teammatePuuids : []).filter((x): x is string => typeof x === 'string').slice(0, 4);
+
+  const champions: Record<number, unknown> = {};
+  for (const id of new Set(champs)) champions[id] = await championInfo(env, me, id, 3);
+
+  const teammates = [];
+  for (const puuid of mates) {
+    // 수집에 동의한 회원만 Prism 회원으로 표시한다
+    const m = await env.DB.prepare('SELECT id, nick FROM members WHERE riot_puuid = ? AND opt_in_at IS NOT NULL').bind(puuid).first<{ id: string; nick: string }>();
+    if (!m || m.id === me.id) continue;
+    const together = await env.DB.prepare(
+      `SELECT COUNT(*) AS n, COALESCE(SUM(a.win), 0) AS w FROM participants a JOIN participants b
+       ON a.game_id = b.game_id AND a.team_id = b.team_id WHERE a.member_id = ? AND b.member_id = ?`,
+    )
+      .bind(me.id, m.id)
+      .first<NW>();
+    teammates.push({ puuid, nick: m.nick, together });
+  }
+  return json({ champions, teammates });
+}
+
+export async function getChampion(env: Env, me: Member, championId: number) {
+  return json(await championInfo(env, me, championId, 50));
+}
+
+// ───────── 팁 ─────────
+
+export async function addTip(req: Request, env: Env, me: Member) {
+  const { championId, augmentId, text } = (await req.json().catch(() => ({}))) as { championId?: number; augmentId?: number; text?: string };
+  if (!Number.isInteger(championId) || championId! <= 0) throw new HttpError(400, '챔피언이 없습니다.');
+  const t = typeof text === 'string' ? text.trim() : '';
+  if (!t) throw new HttpError(400, '내용을 입력해주세요.');
+  if (t.length > TIP_MAX) throw new HttpError(400, `${TIP_MAX}자까지 쓸 수 있습니다.`);
+  const aug = Number.isInteger(augmentId) && augmentId! > 0 ? augmentId! : null;
+  const r = await env.DB.prepare('INSERT INTO tips (member_id, champion_id, augment_id, text, created_at) VALUES (?, ?, ?, ?, ?) RETURNING id')
+    .bind(me.id, championId, aug, t, Date.now())
+    .first<{ id: number }>();
+  return json({ id: r?.id });
+}
+
+export async function toggleLike(env: Env, me: Member, tipId: number) {
+  const del = await env.DB.prepare('DELETE FROM tip_likes WHERE tip_id = ? AND member_id = ?').bind(tipId, me.id).run();
+  if (del.meta.changes === 0) {
+    const exists = await env.DB.prepare('SELECT 1 FROM tips WHERE id = ? AND deleted_at IS NULL').bind(tipId).first();
+    if (!exists) throw new HttpError(404, '팁이 없습니다.');
+    await env.DB.prepare('INSERT INTO tip_likes (tip_id, member_id) VALUES (?, ?)').bind(tipId, me.id).run();
+    return json({ liked: true });
+  }
+  return json({ liked: false });
+}
+
+export async function deleteTip(env: Env, me: Member, tipId: number) {
+  const r = await env.DB.prepare('UPDATE tips SET deleted_at = ? WHERE id = ? AND deleted_at IS NULL AND (member_id = ? OR ? = 1)')
+    .bind(Date.now(), tipId, me.id, me.tier === 'admin' ? 1 : 0)
+    .run();
+  if (r.meta.changes === 0) throw new HttpError(404, '지울 수 있는 팁이 없습니다.');
+  return json({ ok: true });
+}
+
+// ───────── 모임 보드 ─────────
+
+export async function board(env: Env, me: Member) {
+  // KST 이번 달 1일 0시
+  const KST = 9 * 3_600_000;
+  const kstNow = new Date(Date.now() + KST);
+  const monthStart = Date.UTC(kstNow.getUTCFullYear(), kstNow.getUTCMonth(), 1) - KST;
+  const weekAgo = Date.now() - 7 * 86_400_000;
+
+  const [totals, maxKills, longest, monthly, dex, winrate, pairs, recent, crewDex, newTips] = await env.DB.batch([
+    env.DB.prepare(
+      `SELECT (SELECT COUNT(*) FROM members WHERE riot_puuid IS NOT NULL AND opt_in_at IS NOT NULL) AS linked,
+              (SELECT COUNT(*) FROM matches) AS games,
+              (SELECT COUNT(*) FROM matches WHERE crew_count >= 2) AS crewGames,
+              (SELECT COUNT(*) FROM matches WHERE crew_count >= 2 AND played_at >= ?) AS crewGamesWeek`,
+    ).bind(weekAgo),
+    env.DB.prepare(
+      `SELECT m.nick, p.kills AS value, p.champion_id AS championId, p.played_at AS at FROM participants p JOIN members m ON m.id = p.member_id
+       ORDER BY p.kills DESC, p.played_at ASC LIMIT 1`,
+    ),
+    env.DB.prepare(
+      `SELECT m.nick, x.duration AS value, p.champion_id AS championId, x.played_at AS at FROM participants p
+       JOIN matches x ON x.game_id = p.game_id JOIN members m ON m.id = p.member_id ORDER BY x.duration DESC, x.played_at ASC LIMIT 1`,
+    ),
+    env.DB.prepare(
+      `SELECT m.nick, COUNT(*) AS value FROM participants p JOIN members m ON m.id = p.member_id WHERE p.played_at >= ?
+       GROUP BY m.id ORDER BY value DESC LIMIT 1`,
+    ).bind(monthStart),
+    env.DB.prepare(
+      `SELECT m.nick, COUNT(DISTINCT p.champion_id) AS value FROM participants p JOIN members m ON m.id = p.member_id
+       GROUP BY m.id ORDER BY value DESC LIMIT 1`,
+    ),
+    env.DB.prepare(
+      `SELECT m.nick, COUNT(*) AS n, SUM(p.win) AS w FROM participants p JOIN members m ON m.id = p.member_id
+       GROUP BY m.id HAVING n >= ? ORDER BY CAST(w AS REAL) / n DESC, n DESC LIMIT 1`,
+    ).bind(MIN_WINRATE_GAMES),
+    env.DB.prepare(
+      `SELECT ma.nick AS a, mb.nick AS b, COUNT(*) AS n, SUM(pa.win) AS w FROM participants pa
+       JOIN participants pb ON pa.game_id = pb.game_id AND pa.team_id = pb.team_id AND pa.member_id < pb.member_id
+       JOIN members ma ON ma.id = pa.member_id JOIN members mb ON mb.id = pb.member_id
+       GROUP BY pa.member_id, pb.member_id HAVING n >= ? ORDER BY CAST(w AS REAL) / n DESC, n DESC LIMIT 5`,
+    ).bind(MIN_PAIR_GAMES),
+    env.DB.prepare(
+      `SELECT x.game_id AS gameId, x.played_at AS at, x.duration,
+         json_group_array(json_object('nick', m.nick, 'championId', p.champion_id, 'win', p.win, 'k', p.kills, 'd', p.deaths, 'a', p.assists)) AS crew
+       FROM matches x JOIN participants p ON p.game_id = x.game_id JOIN members m ON m.id = p.member_id
+       WHERE x.crew_count >= 2 GROUP BY x.game_id ORDER BY x.played_at DESC LIMIT 10`,
+    ),
+    env.DB.prepare('SELECT COUNT(DISTINCT champion_id) AS n FROM participants'),
+    env.DB.prepare(
+      `SELECT t.id, t.champion_id AS championId, t.augment_id AS augmentId, t.text, m.nick, t.created_at AS createdAt
+       FROM tips t JOIN members m ON m.id = t.member_id WHERE t.deleted_at IS NULL ORDER BY t.created_at DESC LIMIT 5`,
+    ),
+  ]);
+
+  const one = (r: D1Result) => r.results[0] ?? null;
+  return json({
+    totals: one(totals),
+    records: [
+      { key: 'max_kills', label: '한 판 최다 킬', ...(one(maxKills) ?? {}) },
+      { key: 'longest_game', label: '가장 긴 판', ...(one(longest) ?? {}) },
+      { key: 'most_played_month', label: '이달 최다 출전', ...(one(monthly) ?? {}) },
+      { key: 'dex_rank', label: '도감 1위', ...(one(dex) ?? {}) },
+      { key: 'best_winrate', label: `최고 승률 (${MIN_WINRATE_GAMES}판 이상)`, ...(one(winrate) ?? {}) },
+    ],
+    pairs: pairs.results,
+    recent: recent.results.map((r: any) => ({ ...r, crew: JSON.parse(r.crew) })),
+    crewDex: (one(crewDex) as { n: number } | null)?.n ?? 0,
+    newTips: newTips.results,
+    me: { nick: me.nick },
+  });
+}

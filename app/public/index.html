@@ -7,58 +7,77 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 <style>
   :root {
-    --bg: #f7f6f2; --surface: #ffffff; --line: #e4e2db; --text: #1b1d24; --muted: #6b6e78;
-    --win: #2f6fdf; --lose: #d2463c; --ok: #2b8a3e; --warn: #b7791f;
+    --bg: #f7f6f2; --surface: #ffffff; --surface2: #f0efea; --line: #e4e2db; --text: #1b1d24; --muted: #6b6e78;
+    --win: #2f6fdf; --lose: #d2463c; --ok: #2b8a3e; --warn: #b7791f; --accent: #3e63dd;
+    --silver: #9aa0a6; --gold: #c9a227;
     --spectrum-1: #e5484d; --spectrum-2: #f76b15; --spectrum-3: #ffc53d; --spectrum-4: #46a758;
     --spectrum-5: #0090ff; --spectrum-6: #3e63dd; --spectrum-7: #8e4ec6;
+    --spectrum: linear-gradient(90deg, var(--spectrum-1), var(--spectrum-2), var(--spectrum-3), var(--spectrum-4), var(--spectrum-5), var(--spectrum-6), var(--spectrum-7));
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0e1220; --surface: #161b2e; --line: #262c44; --text: #e8eaf2; --muted: #9096ab;
-      --win: #5b8def; --lose: #ef6b62; --ok: #4cc26a; --warn: #e0a84a;
+      --bg: #0e1220; --surface: #161b2e; --surface2: #1d2338; --line: #262c44; --text: #e8eaf2; --muted: #9096ab;
+      --win: #5b8def; --lose: #ef6b62; --ok: #4cc26a; --warn: #e0a84a; --accent: #7b93f0;
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0e1220; --surface: #161b2e; --line: #262c44; --text: #e8eaf2; --muted: #9096ab;
-    --win: #5b8def; --lose: #ef6b62; --ok: #4cc26a; --warn: #e0a84a;
+    --bg: #0e1220; --surface: #161b2e; --surface2: #1d2338; --line: #262c44; --text: #e8eaf2; --muted: #9096ab;
+    --win: #5b8def; --lose: #ef6b62; --ok: #4cc26a; --warn: #e0a84a; --accent: #7b93f0;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 "Pretendard Variable", Pretendard, system-ui, sans-serif; font-variant-numeric: tabular-nums; }
-  main { max-width: 960px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; }
+  main { max-width: 980px; margin: 0 auto; padding: 16px; display: grid; gap: 12px; }
   header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .logo { font-weight: 800; font-size: 18px; letter-spacing: .02em; display: flex; align-items: center; gap: 8px; }
-  .logo i { width: 18px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--spectrum-1), var(--spectrum-2), var(--spectrum-3), var(--spectrum-4), var(--spectrum-5), var(--spectrum-6), var(--spectrum-7)); }
+  .logo { font-weight: 800; font-size: 18px; display: flex; align-items: center; gap: 8px; }
+  .logo i { width: 18px; height: 4px; border-radius: 2px; background: var(--spectrum); }
+  nav { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); }
+  nav a { padding: 8px 12px; color: var(--muted); text-decoration: none; border-bottom: 2px solid transparent; white-space: nowrap; }
+  nav a.on { color: var(--text); border-color: var(--text); font-weight: 600; }
   .badge { font-size: 12px; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
-  .badge.ok { color: var(--ok); border-color: currentColor; }
-  .badge.warn { color: var(--warn); border-color: currentColor; }
+  .badge.ok { color: var(--ok); border-color: currentColor; } .badge.warn { color: var(--warn); border-color: currentColor; }
   .spacer { flex: 1; }
   button { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
-  button:hover { border-color: var(--muted); }
+  button:hover { border-color: var(--muted); } button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.link { border: 0; background: none; padding: 0 4px; color: var(--muted); }
+  input, select { font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
   .card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
   .card h2 { margin: 0 0 10px; font-size: 13px; font-weight: 700; color: var(--muted); }
-  .grid2 { display: grid; gap: 12px; grid-template-columns: 1fr; }
-  @media (min-width: 720px) { .grid2 { grid-template-columns: 1fr 1fr; } }
-  .muted { color: var(--muted); }
-  .strip { display: flex; gap: 4px; }
-  .strip span { flex: 1; height: 8px; border-radius: 2px; background: var(--line); }
+  .card h3 { margin: 12px 0 6px; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .cols { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .cols { grid-template-columns: 1fr 1fr; } .cols3 { grid-template-columns: 1fr 1fr 1fr; } }
+  .muted { color: var(--muted); } .small { font-size: 12px; } .win { color: var(--win); } .lose { color: var(--lose); }
+  .strip { display: flex; gap: 4px; } .strip span { flex: 1; height: 8px; border-radius: 2px; background: var(--line); }
   .strip .w { background: var(--win); } .strip .l { background: var(--lose); }
-  .champ { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
-  .champ img, .noimg { width: 36px; height: 36px; border-radius: 8px; background: var(--line); flex: none; }
-  .champ .rec { margin-left: auto; text-align: right; }
+  .row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row .right { margin-left: auto; text-align: right; }
+  img.ic, .noimg { width: 36px; height: 36px; border-radius: 8px; background: var(--line); flex: none; object-fit: cover; }
+  img.sm { width: 22px; height: 22px; border-radius: 4px; background: var(--line); }
+  .aug-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 2px 8px 2px 2px; border-radius: 999px; background: var(--surface2); margin: 2px 4px 2px 0; }
+  .aug-chip img { width: 18px; height: 18px; border-radius: 50%; }
+  .r-silver { box-shadow: inset 0 0 0 1px var(--silver); } .r-gold { box-shadow: inset 0 0 0 1px var(--gold); }
+  .r-prism { position: relative; } .r-prism::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: var(--spectrum); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
   .game { display: grid; grid-template-columns: 4px 40px 1fr; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line); }
-  .game:first-child { border-top: 0; }
-  .game .bar { border-radius: 2px; } .game.win .bar { background: var(--win); } .game.lose .bar { background: var(--lose); }
-  .game img.c { width: 40px; height: 40px; border-radius: 8px; }
+  .game:first-child { border-top: 0; } .game .bar { border-radius: 2px; } .game.w .bar { background: var(--win); } .game.l .bar { background: var(--lose); }
   .line { display: flex; gap: 8px; flex-wrap: wrap; align-items: baseline; }
   .items { display: flex; gap: 3px; margin-top: 4px; flex-wrap: wrap; }
-  .items img { width: 22px; height: 22px; border-radius: 4px; background: var(--line); }
-  .aug { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  table { width: 100%; border-collapse: collapse; }
-  td { padding: 4px 0; border-top: 1px solid var(--line); } tr:first-child td { border-top: 0; }
-  td:last-child { text-align: right; }
-  .yes { color: var(--ok); } .no { color: var(--lose); }
+  .dex { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 8px; }
+  .dex button { padding: 4px; display: grid; justify-items: center; gap: 2px; font-size: 11px; border-radius: 10px; }
+  .dex img, .dex .noimg { width: 44px; height: 44px; border-radius: 8px; }
+  .dex .no img { filter: grayscale(1); opacity: .35; } .dex .no { color: var(--muted); }
+  .bar-wrap { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+  .bar-wrap span { display: block; height: 100%; background: var(--win); }
+  table { width: 100%; border-collapse: collapse; } td { padding: 5px 0; border-top: 1px solid var(--line); } tr:first-child td { border-top: 0; } td.r { text-align: right; }
+  .record { border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+  .record.first { position: relative; border-color: transparent; }
+  .record.first::before { content: ""; position: absolute; inset: 0; border-radius: 10px; padding: 1px; background: var(--spectrum); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
+  .record b { font-size: 18px; display: block; }
+  .tip { padding: 8px 0; border-top: 1px solid var(--line); } .tip:first-child { border-top: 0; }
+  .mate { display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 999px; background: var(--surface2); margin: 2px 6px 2px 0; }
+  .empty { color: var(--muted); padding: 10px 0; margin: 0; }
+  .consent { border-color: var(--accent); }
   footer { font-size: 12px; color: var(--muted); text-align: center; padding: 8px 0 24px; }
-  .empty { color: var(--muted); padding: 12px 0; }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -68,131 +87,316 @@
     <span id="status" class="badge">확인 중</span>
     <span id="me" class="muted"></span>
     <span class="spacer"></span>
-    <button id="theme" type="button">테마</button>
+    <button id="theme" type="button" class="link">테마</button>
   </header>
+  <nav id="nav">
+    <a href="#home">홈</a><a href="#augments">증강</a><a href="#dex">도감</a><a href="#prism">모임</a><a href="#settings">설정</a>
+  </nav>
 
-  <section id="champselect" class="card" hidden>
-    <h2>챔프 선택 · 내 아수라장 기록 기준</h2>
-    <div id="cs-body"></div>
+  <!-- 홈 -->
+  <section data-view="home">
+    <div id="cs" class="card" hidden></div>
+    <div class="cols" style="margin-top:12px">
+      <div class="card"><h2>최근 10판</h2><div id="strip" class="strip"></div><p id="summary" class="muted small" style="margin:8px 0 0"></p></div>
+      <div class="card"><h2>자주 고른 증강</h2><div id="home-augs"></div></div>
+    </div>
+    <div class="card" style="margin-top:12px"><h2>최근 아수라장 판</h2><div id="games"></div></div>
   </section>
 
-  <div class="grid2">
-    <section class="card">
-      <h2>최근 10판</h2>
-      <div id="strip" class="strip"></div>
-      <p id="summary" class="muted" style="margin:8px 0 0"></p>
-    </section>
-    <section class="card">
+  <!-- 증강 -->
+  <section data-view="augments" class="card">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+      <h2 style="margin:0">내 증강 기록</h2><span class="spacer"></span>
+      <select id="aug-champ"><option value="">전체 챔피언</option></select>
+    </div>
+    <div id="aug-list"></div>
+  </section>
+
+  <!-- 도감 -->
+  <section data-view="dex">
+    <div id="champ-detail" class="card" hidden style="margin-bottom:12px"></div>
+    <div class="card">
+      <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;margin-bottom:10px">
+        <h2 style="margin:0">아수라장 도감</h2><b id="dex-count"></b><span class="muted small">최근 100판 기준 · 챔피언을 누르면 자세히</span>
+      </div>
+      <div id="dex" class="dex"></div>
+    </div>
+  </section>
+
+  <!-- 모임 -->
+  <section data-view="prism"><div id="prism"></div></section>
+
+  <!-- 설정 -->
+  <section data-view="settings" class="cols">
+    <div class="card"><h2>Prism 계정</h2><div id="account"></div></div>
+    <div class="card">
       <h2>데이터 확인 (개발 검증용)</h2>
       <table id="fields"></table>
       <div style="display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap">
-        <button id="export" type="button">진단 파일 저장</button>
-        <span id="export-msg" class="muted" style="font-size:12px"></span>
+        <button id="export" type="button">진단 파일 저장</button><span id="export-msg" class="muted small"></span>
       </div>
-    </section>
-  </div>
-
-  <section class="card">
-    <h2>최근 아수라장 판</h2>
-    <div id="games"></div>
+    </div>
   </section>
 
-  <footer>LCU 읽기 전용 · 게임 중에는 요청 없음 · 서버로 보내는 데이터 없음 · <span id="ver"></span></footer>
+  <footer>LCU 읽기 전용 · 게임 중에는 요청 없음 · <span id="footer-upload"></span> · <span id="ver"></span></footer>
 </main>
 <script>
-  const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const icon = (path, cls = '') => (path ? `<img class="${cls}" loading="lazy" alt="" src="/asset?path=${encodeURIComponent(path)}">` : `<span class="noimg"></span>`);
-  const pct = (w, n) => (n ? Math.round((w / n) * 100) + '%' : '-');
-  const ago = (t) => {
-    const m = Math.round((Date.now() - t) / 60000);
-    if (m < 60) return `${m}분 전`;
-    if (m < 1440) return `${Math.round(m / 60)}시간 전`;
-    return `${Math.round(m / 1440)}일 전`;
-  };
+const CONSENT = 'Riot 계정을 연결하면 아수라장 전적이 Prism에 자동으로 수집됩니다. 회원에게만 보이며, 연결을 해제하면 수집이 중단됩니다.';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const pct = (w, n) => (n ? Math.round((w / n) * 100) + '%' : '-');
+const ago = (t) => { const m = Math.round((Date.now() - t) / 60000); return m < 60 ? `${m}분 전` : m < 1440 ? `${Math.round(m / 60)}시간 전` : `${Math.round(m / 1440)}일 전`; };
+const date = (t) => (t ? new Date(t).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' }) : '');
+let S = null; // 앱 상태
+let ST = { champions: {}, items: {}, augments: {} }; // 이름·아이콘
 
-  // 테마: 시스템 설정 기본, 토글은 이 브라우저에만 기억
-  const applyTheme = (t) => (t ? document.documentElement.setAttribute('data-theme', t) : document.documentElement.removeAttribute('data-theme'));
-  try { applyTheme(localStorage.getItem('prism-theme')); } catch {}
-  $('theme').onclick = () => {
-    const dark = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() === '#0e1220';
-    const next = dark ? 'light' : 'dark';
-    applyTheme(next);
-    try { localStorage.setItem('prism-theme', next); } catch {}
-  };
+const img = (path, cls = 'ic') => (path ? `<img class="${cls}" loading="lazy" alt="" src="/asset?path=${encodeURIComponent(path)}">` : `<span class="noimg ${cls}"></span>`);
+const champName = (id) => ST.champions[id]?.name ?? `#${id}`;
+const champImg = (id, cls) => img(ST.champions[id]?.icon, cls);
+const rarityCls = (r) => (/prism/i.test(r ?? '') ? 'r-prism' : /gold/i.test(r ?? '') ? 'r-gold' : /silver/i.test(r ?? '') ? 'r-silver' : '');
+const augChip = (id, extra = '') => {
+  const a = ST.augments[id];
+  return `<span class="aug-chip ${rarityCls(a?.rarity)}">${a?.icon ? img(a.icon, '') : ''}${esc(a?.name ?? '#' + id)}${extra}</span>`;
+};
+const nw = (r) => (r && r.n ? `${r.w}승 ${r.n - r.w}패 · <b>${pct(r.w, r.n)}</b>` : '<span class="muted">기록 없음</span>');
 
-  $('export').onclick = async () => {
-    $('export-msg').textContent = '저장 중…';
-    try {
-      const r = await fetch('/api/export', { method: 'POST' }).then((r) => r.json());
-      $('export-msg').textContent = r.error ? r.error : `저장됨: ${r.file}`;
-    } catch (e) {
-      $('export-msg').textContent = '저장 실패: ' + e;
-    }
-  };
+async function j(url, init) {
+  const r = await fetch(url, init && { ...init, headers: { 'Content-Type': 'application/json' } });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error ?? r.status);
+  return d;
+}
 
-  function champRow(s, rec, label) {
-    const name = s.names.champions[rec.championId] ?? `#${rec.championId}`;
-    return `<div class="champ">${icon(s.icons.champions[rec.championId])}<div><b>${esc(name)}</b>${label ? ` <span class="muted">${label}</span>` : ''}</div>
-      <div class="rec">${rec.n ? `${rec.w}승 ${rec.n - rec.w}패 · <b>${pct(rec.w, rec.n)}</b>` : '<span class="muted">기록 없음</span>'}</div></div>`;
+// ───── 테마 ─────
+const applyTheme = (t) => (t ? document.documentElement.setAttribute('data-theme', t) : document.documentElement.removeAttribute('data-theme'));
+try { applyTheme(localStorage.getItem('prism-theme')); } catch {}
+$('theme').onclick = () => {
+  const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+  const cur = document.documentElement.getAttribute('data-theme') ?? (dark ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try { localStorage.setItem('prism-theme', next); } catch {}
+};
+
+// ───── 탭 ─────
+function route() {
+  const v = (location.hash.slice(1).split('/')[0]) || 'home';
+  document.querySelectorAll('[data-view]').forEach((el) => (el.hidden = el.dataset.view !== v));
+  document.querySelectorAll('#nav a').forEach((a) => a.classList.toggle('on', a.getAttribute('href') === '#' + v));
+  if (v === 'prism') loadBoard();
+  const champ = location.hash.match(/^#dex\/(\d+)/);
+  if (champ) openChampion(Number(champ[1])); else $('champ-detail').hidden = true;
+}
+addEventListener('hashchange', route);
+
+// ───── 홈 ─────
+function renderHome() {
+  const P = S.personal;
+  // 챔프 선택
+  const cs = S.champSelect;
+  $('cs').hidden = !cs;
+  if (cs) {
+    const crew = cs.crew;
+    const ids = [cs.mine, ...cs.bench].filter(Boolean);
+    const row = (id, label) => {
+      const mine = P?.champions[id];
+      const myAugs = (P?.augmentsByChampion[id] ?? []).slice(0, 3);
+      const c = crew?.champions?.[id];
+      const tip = c?.tips?.[0];
+      return `<div class="row" style="align-items:flex-start">${champImg(id)}<div style="flex:1;min-width:0">
+        <div class="line"><b>${esc(champName(id))}</b>${label ? `<span class="badge">${label}</span>` : ''}<span class="small">나 ${nw(mine)}</span>
+          ${c ? `<span class="small muted">모임 ${nw(c.crew)}</span>` : ''}</div>
+        ${myAugs.length ? `<div>${myAugs.map((a) => augChip(a.id, ` ${a.w}/${a.n}`)).join('')}</div>` : ''}
+        ${c?.topAugments?.length ? `<div class="small muted">모임이 많이 고른 증강: ${c.topAugments.slice(0, 3).map((a) => augChip(a.id, ` ${pct(a.w, a.n)}`)).join('')}</div>` : ''}
+        ${c?.masters?.length ? `<div class="small muted">장인: ${c.masters.map((m) => `${esc(m.nick)} ${m.n}판`).join(' · ')}</div>` : ''}
+        ${tip ? `<div class="small">💬 ${esc(tip.text)} <span class="muted">— ${esc(tip.nick)}</span></div>` : ''}
+      </div></div>`;
+    };
+    const mates = crew?.teammates ?? [];
+    $('cs').innerHTML = `<h2>챔프 선택</h2>
+      ${mates.length ? `<div style="margin-bottom:8px">${mates.map((m) => `<span class="mate"><b>${esc(m.nick)}</b><span class="small">같이 ${nw(m.together)}</span></span>`).join('')}</div>` : ''}
+      ${ids.length ? ids.map((id, i) => row(id, i === 0 && cs.mine ? '내 챔피언' : '벤치')).join('') : '<p class="empty">아직 챔피언이 정해지지 않았습니다.</p>'}
+      ${!S.prism.loggedIn ? '<p class="small muted" style="margin:8px 0 0">Prism에 로그인하면 모임 승률·장인·팁과 같은 팀 회원 케미가 함께 보입니다.</p>' : ''}`;
   }
+  // 띠
+  const recent = S.games.slice(0, 10);
+  $('strip').innerHTML = Array.from({ length: 10 }, (_, i) => `<span class="${recent[i] ? (recent[i].win ? 'w' : 'l') : ''}"></span>`).join('');
+  $('summary').textContent = P?.total.n ? `아수라장 ${P.total.n}판 · ${P.total.w}승 ${P.total.n - P.total.w}패 (${pct(P.total.w, P.total.n)})` : '';
+  // 자주 고른 증강
+  $('home-augs').innerHTML = P?.augments.length
+    ? P.augments.slice(0, 5).map((a) => `<div class="row">${augChip(a.id)}<span class="right small">${a.n}회 · ${pct(a.w, a.n)}</span></div>`).join('')
+    : `<p class="empty">${S.games.length ? '증강 정보가 오지 않습니다. 설정 탭의 진단 파일을 보내주세요.' : '아직 기록이 없습니다.'}</p>`;
+  // 판 목록
+  $('games').innerHTML = S.games.length
+    ? S.games.slice(0, 20).map((g) => `<div class="game ${g.win ? 'w' : 'l'}"><div class="bar"></div>${champImg(g.championId)}
+        <div><div class="line"><b>${esc(champName(g.championId))}</b><span>${g.kills}/${g.deaths}/${g.assists}</span>
+          <span class="muted small">${g.win ? '승' : '패'} · ${Math.round(g.duration / 60)}분${g.damageToChampions !== null ? ' · 딜 ' + g.damageToChampions.toLocaleString() : ''} · ${ago(g.playedAt)}</span></div>
+          <div class="items">${g.items.map((id) => img(ST.items[id]?.icon, 'sm')).join('')}</div>
+          <div>${g.augments.map((id) => augChip(id)).join('')}</div></div></div>`).join('')
+    : `<p class="empty">${S.status === 'ready' ? '최근 100판 중 아수라장 판이 없습니다.' : esc(S.message)}</p>`;
+}
 
-  function render(s) {
-    const st = $('status');
-    st.textContent = { 'no-client': '클라이언트 꺼짐', 'in-game': '게임 중', ready: '연결됨', error: '오류' }[s.status] ?? s.status;
-    st.className = 'badge ' + (s.status === 'ready' ? 'ok' : s.status === 'error' ? 'warn' : '');
-    st.title = s.message;
-    $('me').textContent = s.me ? `${s.me.gameName}#${s.me.tagLine}` : s.message;
-    $('ver').textContent = 'v' + s.version;
-
-    // 챔프 선택
-    const cs = s.champSelect;
-    $('champselect').hidden = !cs;
-    if (cs) {
-      const bench = [...cs.bench].sort((a, b) => b.w / (b.n || 1) - a.w / (a.n || 1) || b.n - a.n);
-      $('cs-body').innerHTML =
-        (cs.mine ? champRow(s, cs.mine, '내 챔피언') : '<p class="empty">아직 챔피언이 정해지지 않았습니다.</p>') +
-        (bench.length ? `<h2 style="margin-top:12px">교체 가능 (벤치)</h2>` + bench.map((r) => champRow(s, r)).join('') : '') +
-        (cs.team.length ? `<h2 style="margin-top:12px">우리 팀</h2>` + cs.team.map((r) => champRow(s, r)).join('') : '');
-    }
-
-    // 최근 10판 띠
-    const recent = s.games.slice(0, 10);
-    $('strip').innerHTML = Array.from({ length: 10 }, (_, i) => `<span class="${recent[i] ? (recent[i].win ? 'w' : 'l') : ''}"></span>`).join('');
-    const w = s.games.filter((g) => g.win).length;
-    $('summary').textContent = s.games.length ? `아수라장 ${s.games.length}판 · ${w}승 ${s.games.length - w}패 (${pct(w, s.games.length)})` : '';
-
-    // 데이터 확인
-    const n = s.games.length;
-    const rows = [
-      ['읽은 전체 판', s.scannedGames],
-      ['그중 아수라장(2400)', n],
-      ...Object.entries(s.fields).map(([k, v]) => [k, n ? `<span class="${v ? 'yes' : 'no'}">${v}/${n}</span>` : '-']),
-      ['큐 분포', esc(Object.entries(s.queueCounts).map(([q, c]) => `${q}:${c}`).join(' ') || '-')],
-    ];
-    $('fields').innerHTML = rows.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
-
-    // 판 목록
-    $('games').innerHTML = s.games.length
-      ? s.games.slice(0, 30).map((g) => {
-          const champ = s.names.champions[g.championId] ?? `#${g.championId}`;
-          const augs = g.augments.map((id) => s.names.augments[id] ?? `#${id}`).join(' · ');
-          const dmg = g.damageToChampions !== null ? ` · 딜 ${g.damageToChampions.toLocaleString()}` : '';
-          return `<div class="game ${g.win ? 'win' : 'lose'}"><div class="bar"></div>${icon(s.icons.champions[g.championId], 'c')}
-            <div><div class="line"><b>${esc(champ)}</b><span>${g.kills}/${g.deaths}/${g.assists}</span>
-              <span class="muted">${g.win ? '승' : '패'} · ${Math.round(g.duration / 60)}분${dmg} · ${ago(g.playedAt)}</span></div>
-              <div class="items">${g.items.map((id) => icon(s.icons.items[id])).join('')}</div>
-              <div class="aug">${augs ? '증강 ' + esc(augs) : '증강 정보 없음'}</div></div></div>`;
-        }).join('')
-      : `<p class="empty">${s.status === 'ready' ? '최근 100판 중 아수라장 판이 없습니다.' : esc(s.message)}</p>`;
+// ───── 증강 ─────
+function renderAugments() {
+  const P = S.personal;
+  const sel = $('aug-champ');
+  const champs = Object.entries(P?.champions ?? {}).sort((a, b) => b[1].n - a[1].n);
+  const want = champs.map(([id]) => id).join(',');
+  if (sel.dataset.ids !== want) {
+    const v = sel.value;
+    sel.innerHTML = '<option value="">전체 챔피언</option>' + champs.map(([id, r]) => `<option value="${id}">${esc(champName(id))} (${r.n})</option>`).join('');
+    sel.value = v; sel.dataset.ids = want;
   }
+  const list = sel.value ? P?.augmentsByChampion[sel.value] ?? [] : P?.augments ?? [];
+  $('aug-list').innerHTML = list.length
+    ? `<table>${list.map((a) => `<tr><td>${augChip(a.id)}</td><td class="r small">${a.n}회</td><td class="r" style="width:120px"><div class="bar-wrap"><span style="width:${pct(a.w, a.n)}"></span></div></td><td class="r small" style="width:48px">${pct(a.w, a.n)}</td></tr>`).join('')}</table>
+       <p class="small muted">증강 정보가 있는 판 ${P.augmentGames}판 기준</p>`
+    : '<p class="empty">증강 기록이 없습니다.</p>';
+}
+$('aug-champ').onchange = renderAugments;
 
-  async function poll() {
-    try { render(await fetch('/api/state').then((r) => r.json())); }
-    catch { $('status').textContent = '앱 꺼짐'; }
-    setTimeout(poll, 5000);
-  }
-  poll();
+// ───── 도감 ─────
+function renderDex() {
+  const P = S.personal;
+  const all = Object.entries(ST.champions).sort((a, b) => a[1].name.localeCompare(b[1].name, 'ko'));
+  const played = all.filter(([id]) => P?.champions[id]);
+  $('dex-count').textContent = all.length ? `${played.length} / ${all.length}` : '';
+  $('dex').innerHTML = all.length
+    ? all.map(([id, c]) => { const r = P?.champions[id];
+        return `<button type="button" class="${r ? '' : 'no'}" onclick="location.hash='#dex/${id}'">${img(c.icon)}<span>${esc(c.name)}</span><span class="muted">${r ? `${r.n}판 ${pct(r.w, r.n)}` : '-'}</span></button>`; }).join('')
+    : '<p class="empty">롤 클라이언트를 켜면 챔피언 목록이 나타납니다.</p>';
+}
+
+async function openChampion(id) {
+  const el = $('champ-detail');
+  el.hidden = false;
+  const P = S?.personal;
+  const myAugs = P?.augmentsByChampion[id] ?? [];
+  const head = `<div class="row" style="border:0">${champImg(id)}<div><b style="font-size:16px">${esc(champName(id))}</b><div class="small">나 ${nw(P?.champions[id])}</div></div>
+    <button class="link right" onclick="location.hash='#dex'">닫기</button></div>
+    ${myAugs.length ? `<h3>내가 고른 증강</h3>${myAugs.slice(0, 6).map((a) => augChip(a.id, ` ${a.w}/${a.n}`)).join('')}` : ''}`;
+  if (!S?.prism.loggedIn) { el.innerHTML = head + '<p class="small muted">Prism에 로그인하면 모임 기록과 팁이 보입니다.</p>'; return; }
+  el.innerHTML = head + '<p class="empty">모임 기록을 불러오는 중…</p>';
+  try {
+    const c = await j(`/api/prism/champions/${id}`);
+    el.innerHTML = head + `
+      <div class="cols" style="margin-top:8px">
+        <div><h3>모임 기록</h3><div>${nw(c.crew)}</div>
+          ${c.topAugments.length ? `<h3>모임이 많이 고른 증강</h3>${c.topAugments.map((a) => augChip(a.id, ` ${a.n}회 ${pct(a.w, a.n)}`)).join('')}` : ''}
+          ${c.masters.length ? `<h3>장인</h3>${c.masters.map((m, i) => `<div class="row"><b>${i + 1}</b> ${esc(m.nick)}<span class="right small">${m.n}판 · ${pct(m.w, m.n)}</span></div>`).join('')}` : ''}</div>
+        <div><h3>회원 팁</h3>
+          <form id="tip-form" style="display:flex;gap:6px;margin-bottom:6px">
+            <input id="tip-text" maxlength="120" placeholder="이 챔피언 한 줄 팁 (120자)" style="flex:1;min-width:0">
+            <button class="primary">남기기</button></form>
+          <div id="tip-msg" class="small muted"></div>
+          ${c.tips.length ? c.tips.map((t) => `<div class="tip">${t.augmentId ? augChip(t.augmentId) : ''}${esc(t.text)}
+            <div class="small muted">${esc(t.nick)} · ${date(t.createdAt)}
+              <button class="link" onclick="likeTip(${t.id}, ${id})">${t.liked ? '♥' : '♡'} ${t.likes}</button>
+              ${t.mine ? `<button class="link" onclick="deleteTip(${t.id}, ${id})">지우기</button>` : ''}</div></div>`).join('') : '<p class="empty">첫 팁을 남겨보세요.</p>'}
+        </div></div>`;
+    $('tip-form').onsubmit = async (e) => {
+      e.preventDefault();
+      try { await j('/api/prism/tips', { method: 'POST', body: JSON.stringify({ championId: id, text: $('tip-text').value }) }); openChampion(id); }
+      catch (err) { $('tip-msg').textContent = err.message; }
+    };
+  } catch (e) { el.innerHTML = head + `<p class="empty">${esc(e.message)}</p>`; }
+}
+async function likeTip(tipId, champ) { await j(`/api/prism/tips/${tipId}/like`, { method: 'POST' }).catch(() => {}); openChampion(champ); }
+async function deleteTip(tipId, champ) { await j(`/api/prism/tips/${tipId}`, { method: 'DELETE' }).catch(() => {}); openChampion(champ); }
+
+// ───── 모임 ─────
+function prismGate() {
+  const p = S.prism;
+  if (!p.configured) return '<div class="card"><h2>Prism 모임</h2><p class="empty">서버가 아직 설정되지 않았습니다. 혼자 쓰는 기능(홈·증강·도감)은 그대로 쓸 수 있습니다.</p></div>';
+  if (!p.loggedIn) return `<div class="card"><h2>Prism 모임</h2><p>디스코드로 로그인하면 모임 기록, 같이 하면 이기는 사람, 챔피언 장인과 회원 팁을 볼 수 있습니다.</p>
+    <a href="/auth/login"><button class="primary" type="button">디스코드로 로그인</button></a>${p.error ? `<p class="small warn">${esc(p.error)}</p>` : ''}</div>`;
+  if (!p.me?.consent) return `<div class="card consent"><h2>수집 동의</h2><p>${CONSENT}</p>
+    <p class="small muted">동의하면 지금 클라이언트에 로그인된 <b>${esc(S.me ? S.me.gameName + '#' + S.me.tagLine : '롤 계정')}</b>이 연결되고, 이 앱이 아수라장 판을 Prism에 올립니다. 다른 회원의 앱도 동의한 회원의 최근 판을 대신 올릴 수 있습니다.</p>
+    <button class="primary" type="button" onclick="consent(true)">동의하고 연결</button> <span id="consent-msg" class="small warn"></span></div>`;
+  return null;
+}
+async function consent(agree) {
+  try { await j('/api/prism/consent', { method: 'POST', body: JSON.stringify({ agree }) }); await poll(true); loadBoard(); }
+  catch (e) { const m = $('consent-msg'); if (m) m.textContent = e.message; else alert(e.message); }
+}
+let boardAt = 0;
+async function loadBoard(force) {
+  if (!S) return;
+  const gate = prismGate();
+  if (gate) { $('prism').innerHTML = gate; return; }
+  if (!force && Date.now() - boardAt < 30000 && $('prism').dataset.ready) return;
+  boardAt = Date.now();
+  try {
+    const b = await j('/api/prism/board');
+    const t = b.totals;
+    const recs = b.records.map((r) => `<div class="record ${r.nick ? 'first' : ''}"><div class="small muted">${esc(r.label)}</div>
+      ${r.nick ? `<b>${r.key === 'longest_game' ? Math.round(r.value / 60) + '분' : r.key === 'best_winrate' ? pct(r.w, r.n) : r.value + (r.key === 'dex_rank' ? '종' : r.key === 'most_played_month' ? '판' : '')}</b>
+        <div class="small">${esc(r.nick)}${r.championId ? ' · ' + esc(champName(r.championId)) : ''}${r.at ? ' · ' + date(r.at) : ''}</div>` : `<div class="muted small" style="padding:6px 0">첫 기록을 기다리는 중입니다.</div>`}</div>`).join('');
+    $('prism').innerHTML = `
+      <div class="card"><div class="line"><h2 style="margin:0">Prism</h2><span class="small muted">연결된 회원 ${t.linked}명 · 기록 ${t.games}판 · 모임 판 ${t.crewGames}판 (이번 주 ${t.crewGamesWeek}) · 모임 도감 ${b.crewDex}종</span></div></div>
+      <div class="card" style="margin-top:12px"><h2>기록</h2><div class="cols cols3" style="display:grid;gap:8px">${recs}</div></div>
+      <div class="cols" style="margin-top:12px">
+        <div class="card"><h2>같이 하면 이기는 사람</h2>${b.pairs.length ? b.pairs.map((p) => `<div class="row"><b>${esc(p.a)}</b>+<b>${esc(p.b)}</b><span class="right small">${p.w}승 ${p.n - p.w}패 · <b>${pct(p.w, p.n)}</b></span></div>`).join('') : '<p class="empty">같은 팀으로 3판 이상 한 회원이 아직 없습니다.</p>'}</div>
+        <div class="card"><h2>새 팁</h2>${b.newTips.length ? b.newTips.map((tp) => `<div class="tip"><a href="#dex/${tp.championId}" style="color:inherit"><b>${esc(champName(tp.championId))}</b></a> ${esc(tp.text)}<div class="small muted">${esc(tp.nick)} · ${date(tp.createdAt)}</div></div>`).join('') : '<p class="empty">아직 팁이 없습니다. 도감에서 챔피언을 눌러 첫 팁을 남겨보세요.</p>'}</div>
+      </div>
+      <div class="card" style="margin-top:12px"><h2>최근 모임 판</h2>${b.recent.length ? b.recent.map((g) => `<div class="row" style="flex-wrap:wrap">
+        <span class="small muted" style="width:72px">${ago(g.at)}</span>${g.crew.map((c) => `<span class="mate">${champImg(c.championId, 'sm')}<b class="${c.win ? 'win' : 'lose'}">${esc(c.nick)}</b><span class="small">${c.k}/${c.d}/${c.a}</span></span>`).join('')}</div>`).join('') : '<p class="empty">회원 두 명 이상이 함께한 판이 아직 없습니다.</p>'}</div>`;
+    $('prism').dataset.ready = '1';
+  } catch (e) { $('prism').innerHTML = `<div class="card"><p class="empty">${esc(e.message)}</p></div>`; }
+}
+
+// ───── 설정 ─────
+function renderSettings() {
+  const p = S.prism;
+  // 입력 중이면 다시 그리지 않는다 (5초 갱신이 입력을 지우지 않게)
+  if ($('account').contains(document.activeElement)) return;
+  const up = p.upload, cr = p.crewSync;
+  $('account').innerHTML = !p.configured ? '<p class="empty">서버 미설정</p>'
+    : !p.loggedIn ? '<a href="/auth/login"><button class="primary" type="button">디스코드로 로그인</button></a>'
+    : `<table>
+        <tr><td>닉네임</td><td class="r"><form id="nick-form" style="display:flex;gap:6px;justify-content:flex-end"><input id="nick" maxlength="20" value="${esc(p.me?.nick)}" style="width:140px"><button>저장</button></form></td></tr>
+        <tr><td>연결된 롤 계정</td><td class="r">${esc(p.me?.riotId ?? '없음')}</td></tr>
+        <tr><td>수집 동의</td><td class="r">${p.me?.consent ? '동의함 <button class="link" onclick="if(confirm(\'수집 동의를 철회할까요? 이후 판은 올라가지 않습니다.\'))consent(false)">철회</button>' : '<a href="#prism">동의하러 가기</a>'}</td></tr>
+        <tr><td>내 판 업로드</td><td class="r small">${up.lastAt ? ago(up.lastAt) + ` · 보냄 ${up.sent} · 새로 저장 ${up.stored}` : '-'}${up.lastError ? `<br><span class="lose">${esc(up.lastError)}</span>` : ''}</td></tr>
+        <tr><td>회원 대신 수집</td><td class="r small">${cr.running ? '진행 중…' : cr.lastAt ? ago(cr.lastAt) + ` · 회원 ${cr.members}명 · ${cr.games}판` : '-'}${cr.lastError ? `<br><span class="lose">${esc(cr.lastError)}</span>` : ''}</td></tr>
+       </table><p style="margin:10px 0 0"><button type="button" onclick="logoutPrism()">로그아웃</button></p>`;
+  const f = $('nick-form');
+  if (f) f.onsubmit = async (e) => { e.preventDefault(); await j('/api/prism/profile', { method: 'POST', body: JSON.stringify({ nick: $('nick').value }) }).catch((err) => alert(err.message)); poll(true); };
+  const n = S.games.length;
+  const rows = [['읽은 전체 판', S.scannedGames], ['그중 아수라장(2400)', n],
+    ...Object.entries(S.fields).map(([k, v]) => [k, n ? `<span class="${v ? 'win' : 'lose'}">${v}/${n}</span>` : '-']),
+    ['큐 분포', esc(Object.entries(S.queueCounts).map(([q, c]) => `${q}:${c}`).join(' ') || '-')]];
+  $('fields').innerHTML = rows.map(([k, v]) => `<tr><td>${k}</td><td class="r">${v}</td></tr>`).join('');
+}
+async function logoutPrism() { await j('/api/prism/logout', { method: 'POST' }).catch(() => {}); poll(true); }
+$('export').onclick = async () => {
+  $('export-msg').textContent = '저장 중…';
+  try { $('export-msg').textContent = '저장됨: ' + (await j('/api/export', { method: 'POST' })).file; }
+  catch (e) { $('export-msg').textContent = e.message; }
+};
+
+// ───── 갱신 ─────
+function render() {
+  const st = $('status');
+  st.textContent = { 'no-client': '클라이언트 꺼짐', 'in-game': '게임 중', ready: '연결됨', error: '오류' }[S.status] ?? S.status;
+  st.className = 'badge ' + (S.status === 'ready' ? 'ok' : S.status === 'error' ? 'warn' : '');
+  st.title = S.message;
+  $('me').textContent = S.me ? `${S.me.gameName}#${S.me.tagLine}` + (S.prism.me ? ` · ${S.prism.me.nick}` : '') : S.message;
+  $('ver').textContent = 'v' + S.version;
+  $('footer-upload').textContent = S.prism.me?.consent ? '수집 동의함: 아수라장 판을 Prism에 올림' : '서버로 보내는 데이터 없음';
+  renderHome(); renderAugments(); renderDex(); renderSettings();
+  if (location.hash.startsWith('#prism') && !$('prism').dataset.ready) loadBoard();
+}
+let staticCount = 0;
+async function poll(once) {
+  try {
+    S = await j('/api/state');
+    if (!staticCount && S.status === 'ready') { ST = await j('/api/static'); staticCount = Object.keys(ST.champions).length; }
+    render();
+  } catch { $('status').textContent = '앱 꺼짐'; }
+  if (once !== true) setTimeout(poll, 5000);
+}
+poll().then(route);
 </script>
 </body>
 </html>
