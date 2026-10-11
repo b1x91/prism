@@ -3,19 +3,22 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit -p . && tsc --noEmit -p server",
+    "build": "tsc --noEmit -p . && tsc --noEmit -p server && tsc --noEmit -p site",
     "app": "tsx app/server.ts",
     "probe:opgg": "tsx scripts/probe-opgg-mcp.ts",
     "server:dev": "wrangler dev --config server/wrangler.toml --local --ip 127.0.0.1 --port 8787",
     "server:migrate:local": "wrangler d1 migrations apply prism --local --config server/wrangler.toml",
     "server:migrate": "wrangler d1 migrations apply prism --remote --config server/wrangler.toml",
     "server:deploy": "wrangler deploy --config server/wrangler.toml",
-    "data:mayhem": "tsx scripts/mayhem/build.ts"
+    "data:mayhem": "tsx scripts/mayhem/build.ts",
+    "site:build": "node scripts/build-site.mjs",
+    "site:check": "tsc --noEmit -p site"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261010.1",
     "@modelcontextprotocol/sdk": "^1.32.1",
     "@types/node": "^22.20.5",
+    "esbuild": "^0.28.2",
     "tsx": "^4.23.15",
     "typescript": "5.9",
     "wrangler": "^4.149.0",
