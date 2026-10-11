@@ -16,7 +16,8 @@ const NOT_A_MEMBER = 'Prism은 디스코드 서버 회원만 이용할 수 있�
 
 function page(title: string, message: string, status = 200) {
   const html = `<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title>
-<body style="font-family:system-ui,sans-serif;max-width:480px;margin:48px auto;padding:0 16px;line-height:1.6"><h1 style="font-size:20px">${title}</h1><p>${message}</p></body>`;
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<body style="font-family:'Pretendard Variable',Pretendard,system-ui,sans-serif;max-width:480px;margin:48px auto;padding:0 16px;line-height:1.6"><h1 style="font-size:20px">${title}</h1><p>${message}</p></body>`;
   return new Response(html, { status, headers: { 'Content-Type': 'text/html; charset=utf-8' } });
 }
 

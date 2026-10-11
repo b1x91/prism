@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Prism</title>
 <link rel="icon" href="/brand/prism-32.png" />
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
 <style>
+/* ───────── 글꼴: Pretendard (앱에 포함, 인터넷 없이도 같은 글꼴) ───────── */
+@font-face { font-family: "Pretendard Variable"; font-weight: 45 920; font-style: normal; font-display: swap; src: url(/fonts/PretendardVariable.woff2) format("woff2-variations"), url(/fonts/PretendardVariable.woff2) format("woff2"); }
+
 /* ───────── 토큰 ───────── */
 :root {
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 20px; --s6: 24px; --s7: 32px; --s8: 48px;
@@ -50,7 +52,7 @@
 html, body { margin: 0; height: 100%; }
 body { background: var(--bg); color: var(--text); font: 400 var(--fs-md)/1.55 "Pretendard Variable", Pretendard, system-ui, sans-serif; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
 a { color: inherit; text-decoration: none; }
-button, input, select { font: inherit; color: inherit; }
+button, input, select, textarea { font: inherit; color: inherit; }
 img { display: block; }
 [hidden] { display: none !important; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -726,7 +728,7 @@ function render() {
 async function poll(once) {
   try {
     S = await j('/api/state');
-    if (!Object.keys(ST.champions).length && S.status === 'ready') ST = await j('/api/static');
+    if (!Object.keys(ST.champions).length) { ST = await j('/api/static'); if (Object.keys(ST.champions).length) lastKey = ''; }
     if (S.prism.loggedIn) startStream();
     render();
   } catch { for (const id of ['status', 'status-m']) { $(id).textContent = '앱 꺼짐'; $(id).className = 'pill warn'; } }

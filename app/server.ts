@@ -16,10 +16,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { getAsset, loadCachedStatics, loadStaticsFromCdragon, loadStaticsFromClient, statics } from './assets.js';
 import { chat, deleteChat, sendChat, startChat, stopChat, subscribe } from './chat.js';
 import { SERVER_URL } from './config.js';
 import { loadHistory, personalStats, type Game, type Personal } from './history.js';
-import { discover, isGameRunning, lcuAsset, lcuGet, type LcuCreds } from './lcu.js';
+import { discover, isGameRunning, lcuGet, type LcuCreds } from './lcu.js';
 import { api, ApiError, finishLogin, loginUrl, logout, prism, refreshMe, setConsent, syncCrew, uploadOwn } from './prism.js';
 
 const VERSION = '0.3.0';
@@ -63,11 +64,7 @@ const state = {
   updatedAt: Date.now(),
 };
 
-const statics = {
-  champions: {} as Record<number, { name: string; icon?: string }>,
-  items: {} as Record<number, { name: string; icon?: string }>,
-  augments: {} as Record<number, { name: string; icon?: string; rarity?: string }>,
-};
+
 
 let creds: LcuCreds | null = null;
 let myPuuid: string | null = null;
@@ -82,18 +79,6 @@ let loginNonce: string | null = null; // 다른 사이트가 /auth/done 으로 �
 
 // ───────── LCU ─────────
 
-async function loadStatic(c: LcuCreds) {
-  const tryGet = async (path: string) => (await lcuGet<any[]>(c, path).catch(() => [])) ?? [];
-  const [champs, items, augs] = await Promise.all([
-    tryGet('/lol-game-data/assets/v1/champion-summary.json'),
-    tryGet('/lol-game-data/assets/v1/items.json'),
-    tryGet('/lol-game-data/assets/v1/cherry-augments.json'),
-  ]);
-  for (const x of champs) if (x.id > 0) statics.champions[x.id] = { name: x.name, icon: x.squarePortraitPath };
-  for (const x of items) statics.items[x.id] = { name: x.name, icon: x.iconPath };
-  for (const x of augs) statics.augments[x.id] = { name: x.nameTRA ?? x.name ?? `#${x.id}`, icon: x.augmentSmallIconPath, rarity: x.rarity };
-  staticLoaded = true;
-}
 
 async function refreshHistory(c: LcuCreds) {
   if (!myPuuid) return;
@@ -170,6 +155,8 @@ async function tick(): Promise<number> {
   if (!creds) {
     state.status = 'no-client';
     state.message = '롤 클라이언트가 꺼져 있습니다. 클라이언트를 켜면 자동으로 연결됩니다.';
+    // 캐시가 비어 있으면 공개 서버에서 챔피언 목록을 받아 둔다 (클라이언트 없이도 썸네일·이름 표시)
+    void loadStaticsFromCdragon();
     return INTERVAL_MS.noClient;
   }
 
@@ -179,7 +166,8 @@ async function tick(): Promise<number> {
       myPuuid = me.puuid;
       state.me = { gameName: me.gameName ?? me.displayName ?? '?', tagLine: me.tagLine ?? '' };
     }
-    if (!staticLoaded) await loadStatic(creds);
+    // 패치가 바뀌었을 수 있으므로 접속할 때마다 클라이언트에서 최신 목록을 받아 캐시를 갱신한다
+    if (!staticLoaded) staticLoaded = await loadStaticsFromClient(creds);
     if (lastHistoryAt === 0) await refreshHistory(creds);
 
     if (wasInGame) {
@@ -312,11 +300,17 @@ const server = createServer(async (req, res) => {
     if (p === '/api/export' && m === 'POST') return send(res, 200, { file: await exportDiagnostics() });
 
     if (p === '/asset') {
-      // 게임 중에는 아이콘도 클라이언트에서 받지 않는다
-      if (!creds || state.status === 'in-game') return send(res, 503, { error: '클라이언트 미연결' });
-      const r = await lcuAsset(creds, url.searchParams.get('path') ?? '');
-      res.writeHead(200, { 'Content-Type': r.type || 'image/png', 'Cache-Control': 'max-age=86400' });
+      // 캐시 → 클라이언트(게임 중 아닐 때) → 공개 서버 순서. 게임 중에도 캐시된 썸네일은 보인다
+      const r = await getAsset(url.searchParams.get('path') ?? '', creds, state.status === 'in-game');
+      if (!r) return send(res, 404, { error: '아이콘 없음' });
+      res.writeHead(200, { 'Content-Type': r.type, 'Cache-Control': 'max-age=86400' });
       return res.end(r.body);
+    }
+
+    // 글꼴 (Pretendard, 앱에 포함)
+    if (p === '/fonts/PretendardVariable.woff2') {
+      res.writeHead(200, { 'Content-Type': 'font/woff2', 'Cache-Control': 'max-age=31536000' });
+      return res.end(await readFile(join(HERE, 'public', 'fonts', 'PretendardVariable.woff2')));
     }
 
     // 로고 등 정적 파일 (brand 폴더만)
@@ -408,6 +402,7 @@ const server = createServer(async (req, res) => {
 
 // 다른 PC 에서 접근하지 못하도록 127.0.0.1 에만 연다
 server.listen(PORT, '127.0.0.1', async () => {
+  await loadCachedStatics();
   console.log(`Prism 앱 v${VERSION} — ${ORIGIN}`);
   console.log(SERVER_URL ? `Prism 서버: ${SERVER_URL}` : 'Prism 서버 미설정 — 혼자 쓰는 기능만 동작합니다.');
   console.log('종료하려면 Ctrl+C');

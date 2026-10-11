@@ -8,8 +8,8 @@ const DEFAULT_SERVER = '';
 export const SERVER_URL = (process.env.PRISM_SERVER ?? DEFAULT_SERVER).replace(/\/$/, '');
 export const DEV_LOGIN = process.env.PRISM_DEV_LOGIN === '1';
 
-const DIR = process.env.PRISM_HOME ?? join(homedir(), '.prism');
-const FILE = join(DIR, 'config.json');
+export const PRISM_DIR = process.env.PRISM_HOME ?? join(homedir(), '.prism');
+const FILE = join(PRISM_DIR, 'config.json');
 const MAX_UPLOADED = 3000;
 
 export type Config = {
@@ -34,6 +34,6 @@ export async function saveConfig(patch: Partial<Config>) {
   const c = { ...(await loadConfig()), ...patch };
   c.uploaded = c.uploaded.slice(-MAX_UPLOADED);
   cache = c;
-  await mkdir(DIR, { recursive: true });
+  await mkdir(PRISM_DIR, { recursive: true });
   await writeFile(FILE, JSON.stringify(c, null, 2));
 }
