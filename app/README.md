@@ -32,20 +32,51 @@
 | 게임 직후 3분 | 30초 | 새 판이 뜰 때까지 전적 재조회 |
 
 ## 실행 (Windows, PowerShell 7, Node.js 22 이상)
+
+### 1. 받기 (처음 1번)
 ```powershell
 git clone https://github.com/b1x91/prism.git
 cd prism
 git checkout claude/new-session-18cxmx
 npm install
+```
+
+### 2-A. 혼자 쓰는 기능만 (가장 간단)
+```powershell
 npm run app
 ```
-브라우저가 `http://127.0.0.1:5199` 로 열린다. 서버가 아직 배포되지 않았으면 혼자 쓰는 기능만 동작한다.
-서버 배포는 `docs/deploy-cloudflare.md`.
+브라우저가 `http://127.0.0.1:5199` 로 열린다. 홈·증강·도감과 챔프 선택 카드(내 기록 기준)가 동작한다.
+
+### 2-B. 모임 기능까지 (서버를 내 PC 에서)
+디스코드·Cloudflare 설정 없이, 서버를 내 PC 에 띄우고 가짜 로그인으로 들어간다. 창 2개.
+```powershell
+# 창 1: 서버 (처음 1번만 앞의 두 줄)
+Copy-Item server/.dev.vars.example server/.dev.vars
+npm run server:migrate:local
+npm run server:dev
+```
+```powershell
+# 창 2: 앱
+$env:PRISM_SERVER = "http://127.0.0.1:8787"
+$env:PRISM_DEV_LOGIN = "1"
+$env:PRISM_DEV_NAME = "하제"
+npm run app
+```
+설정 탭 → 로그인 → 수집 동의를 누르면 내 판이 내 PC 의 서버에 올라가고, 모임·채팅·팁이 열린다. 회원이 나 혼자라 케미·장인은 비어 있는 게 정상이다.
+
+### 3. 확인 결과 보내기
+챔프 선택을 한 번 거치고, 게임을 1판 마친 뒤(게임 중이 아닐 때) **설정 → 진단 파일 저장**.
+`diagnostics/prism-diagnostic-*.json` 이 만들어진다. 다른 사람 닉네임·PUUID 는 지워서 저장한다.
+이 파일로 아래 "알려진 한계"의 실측 항목을 확인한다.
+
+서버를 실제로 배포하는 방법은 `docs/deploy-cloudflare.md`.
 
 ## 알려진 한계
 - 실제 롤 클라이언트로는 테스트하지 못했다 (가짜 LCU 서버로 검증). 특히 아래는 실측 필요
   - 아수라장 증강 필드 (`playerAugment1~N` 으로 추정)
   - 챔프 선택 세션의 팀원 `puuid` (케미 표시에 필요)
   - 다른 회원 PUUID 로 전적 조회가 되는지
+  - 챔피언 성향 필드 (`champions/{id}.json` 의 `tacticalInfo.damageType`, `playstyleInfo`) — AP/AD 칩과 팀 밸런스 추천에 필요
+  - 대기석 챔피언 썸네일·일러스트 경로
 - 아수라장 증강 이름은 클라이언트의 아레나 증강 목록에서 찾는다. 없으면 `#번호`
 - 설치 파일·트레이 아이콘·자동 실행은 아직 없다

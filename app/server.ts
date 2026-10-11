@@ -241,6 +241,8 @@ async function exportDiagnostics(): Promise<string> {
   if (await isGameRunning()) throw new Error('게임 중에는 진단 파일을 만들지 않습니다.');
   const latest = state.games[0];
   const detail = latest ? await lcuGet(creds, `/lol-match-history/v1/games/${latest.gameId}`).catch((e) => ({ error: String(e) })) : null;
+  // 챔피언 성향(AP/AD·단단함·CC) 필드가 실제 클라이언트에 있는지 확인용
+  const champRaw = latest ? await lcuGet<any>(creds, `/lol-game-data/assets/v1/champions/${latest.championId}.json`).catch(() => null) : null;
   const payload = {
     exportedAt: new Date().toISOString(),
     appVersion: VERSION,
@@ -254,6 +256,8 @@ async function exportDiagnostics(): Promise<string> {
     firstPageRaw: anonymize(lastRawPage),
     latestMayhemDetailRaw: anonymize(detail),
     champSelectRaw: anonymize(lastChampSelectRaw),
+    traitsCount: Object.keys(statics.traits).length,
+    champTraitsRaw: champRaw ? { id: latest?.championId, tacticalInfo: champRaw.tacticalInfo ?? null, playstyleInfo: champRaw.playstyleInfo ?? null } : null,
   };
   await mkdir(DIAG_DIR, { recursive: true });
   const stamp = new Date().toISOString().slice(0, 16).replace(/[-:T]/g, '');
