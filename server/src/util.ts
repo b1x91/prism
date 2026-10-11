@@ -1,11 +1,12 @@
 export interface Env {
   DB: D1Database;
-  CHAT: DurableObjectNamespace;
   DISCORD_CLIENT_ID: string;
   DISCORD_CLIENT_SECRET: string;
   DISCORD_GUILD_ID: string;
   ADMIN_DISCORD_IDS: string; // 쉼표 구분
   PUBLIC_URL: string; // 이 Worker 의 외부 주소 (OAuth redirect_uri 용)
+  DISCORD_INVITE_URL?: string; // 모임 디스코드 초대 주소 (공개)
+  KAKAO_OPENCHAT_URL?: string; // 모임 카카오톡 오픈채팅 주소 (공개)
   DEV_LOGIN?: string; // '1' 이면 로컬 개발용 가짜 로그인 허용. 배포 환경에서는 절대 켜지 않는다
 }
 

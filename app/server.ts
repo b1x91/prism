@@ -17,13 +17,13 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ensureTraits, getAsset, loadCachedStatics, loadStaticsFromCdragon, loadStaticsFromClient, statics } from './assets.js';
-import { chat, deleteChat, sendChat, startChat, stopChat, subscribe } from './chat.js';
 import { SERVER_URL } from './config.js';
 import { loadHistory, personalStats, type Game, type Personal } from './history.js';
 import { discover, isGameRunning, lcuGet, type LcuCreds } from './lcu.js';
 import { api, ApiError, finishLogin, loginUrl, logout, prism, refreshMe, setConsent, syncCrew, uploadOwn } from './prism.js';
+import { guideFor, loadMayhem, mayhem } from './synergy.js';
 
-const VERSION = '0.3.0';
+const VERSION = '0.4.0';
 const PORT = 5199;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -266,6 +266,20 @@ async function exportDiagnostics(): Promise<string> {
   return file;
 }
 
+// ───────── 모임 바로가기 (디스코드·카카오톡) ─────────
+
+/** 서버의 공개 주소. 로그인 전에도 보인다 (가입하러 갈 길) */
+const links: { discord: string | null; kakao: string | null } = { discord: null, kakao: null };
+async function loadLinks() {
+  if (!SERVER_URL) return;
+  try {
+    const r = await fetch(`${SERVER_URL}/links`, { signal: AbortSignal.timeout(10_000) });
+    if (r.ok) Object.assign(links, await r.json());
+  } catch {
+    setTimeout(loadLinks, 60_000); // 서버가 잠시 안 되면 1분 뒤 다시
+  }
+}
+
 // ───────── 로컬 화면 ─────────
 
 const send = (res: ServerResponse, status: number, data: unknown) => {
@@ -306,8 +320,22 @@ const server = createServer(async (req, res) => {
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       return res.end(await readFile(join(HERE, 'public', 'index.html')));
     }
-    if (p === '/api/state') return send(res, 200, { ...state, prism, chat: { connected: chat.connected, online: chat.online.length }, server: SERVER_URL, version: VERSION });
-    if (p === '/api/static') return send(res, 200, statics);
+    if (p === '/api/state') return send(res, 200, { ...state, prism, links, server: SERVER_URL, version: VERSION });
+    if (p === '/api/static') {
+      // 챔피언 일러스트 경로는 아수라장 데이터(기본 스킨)에서 붙인다
+      const champions = Object.fromEntries(Object.entries(statics.champions).map(([id, c]) => [id, { ...c, splash: mayhem.champions[Number(id)]?.splash, tile: mayhem.champions[Number(id)]?.tile }]));
+      return send(res, 200, { ...statics, champions });
+    }
+    // 아수라장 증강 도감 (게임 데이터, 로그인 불필요)
+    if (p === '/api/mayhem') return send(res, 200, { version: mayhem.version, augments: mayhem.augments });
+    const guide = p.match(/^\/api\/mayhem\/guide\/(\d+)$/);
+    if (guide) {
+      const g = guideFor(Number(guide[1]));
+      if (!g) return send(res, 404, { error: '챔피언 정보가 없습니다.' });
+      // Prism 회원이면 실전 통계를 붙인다 (서버 실패해도 궁합은 보여준다)
+      const stats = prism.loggedIn ? await api(`/api/augments?champion=${g.championId}`).catch(() => null) : null;
+      return send(res, 200, { ...g, version: mayhem.version, stats });
+    }
     if (p === '/api/export' && m === 'POST') return send(res, 200, { file: await exportDiagnostics() });
 
     if (p === '/asset') {
@@ -335,32 +363,6 @@ const server = createServer(async (req, res) => {
       return res.end(file);
     }
 
-    // 채팅: 화면은 SSE 로 받고, 보내기·지우기는 POST
-    if (p === '/api/chat/stream') {
-      res.writeHead(200, { 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store', Connection: 'keep-alive' });
-      const off = subscribe((e) => res.write(`data: ${JSON.stringify(e)}\n\n`));
-      const keep = setInterval(() => res.write(': keep\n\n'), 25_000);
-      req.on('close', () => {
-        off();
-        clearInterval(keep);
-      });
-      return;
-    }
-    if (p === '/api/chat/send' && m === 'POST') {
-      const { text } = await readBody(req);
-      try {
-        sendChat(String(text ?? ''));
-        return send(res, 200, { ok: true });
-      } catch (e) {
-        return send(res, 503, { error: e instanceof Error ? e.message : String(e) });
-      }
-    }
-    if (p === '/api/chat/delete' && m === 'POST') {
-      const { id } = await readBody(req);
-      if (Number.isInteger(id)) deleteChat(id);
-      return send(res, 200, { ok: true });
-    }
-
     // 로그인
     if (p === '/auth/login') {
       if (!SERVER_URL) return send(res, 400, { error: '서버 주소가 설정되지 않았습니다.' });
@@ -373,14 +375,13 @@ const server = createServer(async (req, res) => {
       const ok = loginNonce !== null && url.searchParams.get('n') === loginNonce;
       loginNonce = null;
       if (!ok) prism.error = '로그인 요청이 맞지 않습니다. 앱에서 다시 로그인해주세요.';
-      else if (code) await finishLogin(code).then(startChat).catch((e) => (prism.error = e instanceof Error ? e.message : String(e)));
+      else if (code) await finishLogin(code).catch((e) => (prism.error = e instanceof Error ? e.message : String(e)));
       res.writeHead(302, { Location: '/#prism' });
       return res.end();
     }
 
     // Prism (서버)
     if (p === '/api/prism/logout' && m === 'POST') {
-      stopChat();
       await logout();
       return send(res, 200, { ok: true });
     }
@@ -397,6 +398,10 @@ const server = createServer(async (req, res) => {
     }
     if (p === '/api/prism/profile' && m === 'POST') return proxy(res, '/api/me/profile', { method: 'POST', body: await readBody(req) }).then(refreshMe);
     if (p === '/api/prism/board') return proxy(res, '/api/board');
+    if (p === '/api/prism/notes' && m === 'GET') return proxy(res, '/api/notes');
+    if (p === '/api/prism/notes' && m === 'POST') return proxy(res, '/api/notes', { method: 'POST', body: await readBody(req) });
+    const noteDel = p.match(/^\/api\/prism\/notes\/(\d+)$/);
+    if (noteDel && m === 'DELETE') return proxy(res, `/api/notes/${noteDel[1]}`, { method: 'DELETE' });
     if (p === '/api/prism/tips' && m === 'POST') return proxy(res, '/api/tips', { method: 'POST', body: await readBody(req) });
     const champ = p.match(/^\/api\/prism\/champions\/(\d+)$/);
     if (champ) return proxy(res, `/api/champions/${champ[1]}`);
@@ -414,11 +419,12 @@ const server = createServer(async (req, res) => {
 // 다른 PC 에서 접근하지 못하도록 127.0.0.1 에만 연다
 server.listen(PORT, '127.0.0.1', async () => {
   await loadCachedStatics();
+  await loadMayhem();
   console.log(`Prism 앱 v${VERSION} — ${ORIGIN}`);
   console.log(SERVER_URL ? `Prism 서버: ${SERVER_URL}` : 'Prism 서버 미설정 — 혼자 쓰는 기능만 동작합니다.');
   console.log('종료하려면 Ctrl+C');
   await refreshMe();
-  if (prism.loggedIn) startChat();
+  loadLinks();
   if (process.platform === 'win32' && !process.env.PRISM_NO_OPEN) exec(`start "" "${ORIGIN}"`);
   loop();
 });

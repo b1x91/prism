@@ -138,7 +138,7 @@ img { display: block; }
 
 .chips { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); }
 .chip { position: relative; display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px 0 4px; border-radius: var(--r-pill); background: var(--surface-2); font-size: var(--fs-xs); font-weight: 500; white-space: nowrap; }
-.chip img { width: 18px; height: 18px; border-radius: 50%; }
+.chip img { width: 18px; height: 18px; border-radius: 50%; background: #1a2036; padding: 2px; box-sizing: border-box; }
 .chip.noicon { padding-left: 10px; }
 .chip em { font-style: normal; color: var(--text-3); }
 .chip.r-silver { box-shadow: inset 0 0 0 1px var(--silver); } .chip.r-gold { box-shadow: inset 0 0 0 1px var(--gold); }
@@ -172,6 +172,48 @@ img { display: block; }
 .empty.compact { padding: var(--s5) var(--s3); }
 
 .wl { font-weight: 650; } .w { color: var(--win); } .l { color: var(--lose); }
+/* 증강 가이드 */
+.guide-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); }
+.guide-top .who { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
+.guide-top .who .av { width: 48px; height: 48px; border-radius: var(--r-m); }
+.guide-top h2 { margin: 0; font-size: var(--fs-xl); }
+.guide-top .sp { flex: 1; }
+.guide-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); margin-top: var(--s5); }
+@media (max-width: 1100px) { .guide-cols { grid-template-columns: minmax(0, 1fr); } }
+.gcol h3 { display: flex; align-items: center; gap: var(--s2); margin: 0 0 var(--s2); font-size: var(--fs-sm); }
+.gcol h3 i { width: 10px; height: 10px; border-radius: 3px; background: var(--silver); }
+.gcol.gold h3 i { background: var(--gold); } .gcol.prismatic h3 i { background: var(--spectrum); }
+.gcol h3 .meta { font-weight: 500; }
+.ga { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 4px var(--s3); align-items: center; padding: var(--s2) 0; border-top: 1px solid var(--border); }
+.ga:first-of-type { border-top: 0; }
+.ga > img, .ga > .noimg { width: 32px; height: 32px; border-radius: var(--r-s); grid-row: span 2; align-self: start; }
+/* 증강 아이콘은 흰 그림이라 테마와 관계없이 어두운 칸에 둔다 */
+.ga > img, .ga > .noimg, .adex .ai img, .adex .ai .noimg { background: #1a2036; padding: 4px; box-sizing: border-box; }
+.ga .nm { font-size: var(--fs-sm); font-weight: 600; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ga .why { grid-column: 2 / 4; display: flex; flex-wrap: wrap; gap: 4px var(--s2); font-size: var(--fs-xs); color: var(--text-3); }
+.ga .why b { font-weight: 600; color: var(--text-2); }
+.ga.weak, .ga.none { opacity: .55; }
+.ga details { grid-column: 2 / 4; font-size: var(--fs-xs); color: var(--text-2); }
+.ga summary { cursor: pointer; color: var(--text-3); list-style: none; }
+.ga summary::-webkit-details-marker { display: none; }
+.ga details p { margin: 4px 0 0; white-space: pre-line; line-height: 1.5; }
+.lv { display: inline-flex; align-items: center; height: 20px; padding: 0 8px; border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 700; white-space: nowrap; }
+.lv.best { background: var(--accent-soft); color: var(--accent); }
+.lv.good { background: var(--surface-2); color: var(--text-2); }
+.lv.weak { color: var(--text-3); }
+.lv.none { color: var(--text-3); text-decoration: line-through; }
+.pstat { font-size: var(--fs-xs); color: var(--text-2); white-space: nowrap; }
+.pstat b { color: var(--text); font-weight: 700; }
+.premium { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: var(--r-pill); background: var(--surface-2); font-size: var(--fs-xs); font-weight: 600; color: var(--text-2); }
+.premium img { width: 14px; height: 14px; }
+.adex { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--s3); }
+.adex .ai { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: var(--s1) var(--s3); padding: var(--s3); border-radius: var(--r-m); background: var(--surface-2); }
+.adex .ai img, .adex .ai .noimg { width: 40px; height: 40px; border-radius: var(--r-s); grid-row: span 3; }
+.adex .ai .nm { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); font-weight: 600; }
+.adex .ai .note2 { font-size: var(--fs-xs); color: var(--text-2); }
+.adex .ai p { margin: 0; font-size: var(--fs-xs); color: var(--text-3); white-space: pre-line; line-height: 1.5; }
+.rdot { width: 8px; height: 8px; border-radius: 50%; flex: none; background: var(--silver); }
+.rdot.gold { background: var(--gold); } .rdot.prismatic { background: var(--spectrum); }
 .bar { height: 6px; border-radius: var(--r-pill); background: var(--surface-3); overflow: hidden; }
 .bar > span { display: block; height: 100%; border-radius: inherit; background: var(--win); }
 
@@ -374,27 +416,37 @@ img { display: block; }
 .composer { display: flex; gap: var(--s2); }
 .composer .input { flex: 1; }
 
-/* 채팅 */
-.chat { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: calc(100vh - 220px); min-height: 420px; padding: 0; overflow: hidden; }
-@media (max-width: 959px) { .chat { height: calc(100dvh - 240px); min-height: 360px; } }
-.chat-head { display: flex; align-items: center; gap: var(--s3); padding: var(--s4) var(--s5); border-bottom: 1px solid var(--border); }
-.chat-head .online { margin-left: auto; display: flex; align-items: center; padding-left: 6px; }
-.chat-head .online .initial { width: 26px; height: 26px; font-size: 11px; margin-left: -6px; box-shadow: 0 0 0 2px var(--surface); }
-.chat-log { overflow-y: auto; padding: var(--s2) var(--s5) var(--s4); display: flex; flex-direction: column; }
-.msg { display: grid; grid-template-columns: 32px minmax(0, 1fr); column-gap: var(--s3); padding: 2px var(--s2); margin: 0 calc(-1 * var(--s2)); border-radius: var(--r-s); }
-.msg:hover { background: var(--surface-2); }
-.msg.first { margin-top: var(--s3); padding-top: var(--s1); }
-.msg .initial { grid-row: span 2; }
-.msg .who-line { display: flex; align-items: baseline; gap: var(--s2); }
-.msg .who-line b { font-size: var(--fs-sm); }
-.msg.mine .who-line b { color: var(--accent); }
-.msg .text { grid-column: 2; white-space: pre-wrap; word-break: break-word; }
-.msg .del { opacity: 0; border: 0; background: none; color: var(--text-3); cursor: pointer; font-size: var(--fs-xs); padding: 0; }
-.msg:hover .del { opacity: 1; }
-.day { align-self: center; margin: var(--s4) 0 0; font-size: var(--fs-xs); color: var(--text-3); }
-.chat-input { display: flex; gap: var(--s2); padding: var(--s3) var(--s4); border-top: 1px solid var(--border); }
-.chat-input .input { flex: 1; height: 40px; }
-.chat-input .btn { height: 40px; }
+/* 한 줄 생각 */
+.notes { display: grid; gap: var(--s2); }
+.note-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: var(--s3); align-items: center; padding: var(--s2) 0; border-top: 1px solid var(--border); }
+.note-row:first-child { border-top: 0; }
+.note-row .initial { width: 28px; height: 28px; font-size: var(--fs-xs); }
+.note-row .txt { font-size: var(--fs-sm); line-height: 1.45; word-break: break-word; }
+.note-row .txt b { font-weight: 650; margin-right: var(--s2); }
+.note-row .end { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; }
+.note-row .end button { border: 0; background: none; padding: 0; color: inherit; cursor: pointer; font-size: var(--fs-xs); }
+.composer .count { align-self: center; font-size: var(--fs-xs); color: var(--text-3); min-width: 40px; text-align: right; }
+
+/* 모임 바로가기 (디스코드·카카오톡) */
+.channels { display: grid; gap: var(--s2); }
+.ch-btn { display: flex; align-items: center; gap: var(--s3); height: 40px; padding: 0 var(--s3); border-radius: var(--r-m); background: var(--surface-2); color: var(--text); font-size: var(--fs-sm); font-weight: 600; text-decoration: none; }
+.ch-btn:hover { background: var(--surface-3); }
+.ch-btn .dot { width: 24px; height: 24px; border-radius: var(--r-s); display: grid; place-items: center; flex: none; }
+.ch-btn .dot svg { width: 14px; height: 14px; }
+.ch-btn.discord .dot { background: #5865f2; color: #fff; }
+.ch-btn.kakao .dot { background: #fee500; color: #191919; }
+.ch-btn .go { margin-left: auto; color: var(--text-3); }
+.ch-btn .go svg { width: 14px; height: 14px; }
+.side .channels { margin-top: var(--s5); padding-top: var(--s4); border-top: 1px solid var(--border); }
+.side .channels .label { font-size: var(--fs-xs); color: var(--text-3); padding: 0 var(--s3) var(--s1); }
+.channels.big { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s3); }
+.channels.big .ch-btn { height: 56px; padding: 0 var(--s4); font-size: var(--fs-md); }
+.channels.big .ch-btn .dot { width: 32px; height: 32px; }
+.channels.big .ch-btn .dot svg { width: 18px; height: 18px; }
+@media (max-width: 600px) { .channels.big { grid-template-columns: minmax(0, 1fr); } }
+.topbar .ch-ic { width: 32px; height: 32px; border-radius: var(--r-s); display: grid; place-items: center; }
+.topbar .ch-ic svg { width: 16px; height: 16px; }
+.topbar .ch-ic.discord { background: #5865f2; color: #fff; } .topbar .ch-ic.kakao { background: #fee500; color: #191919; }
 
 /* 표 */
 .table { display: grid; }
@@ -418,6 +470,9 @@ img { display: block; }
     <symbol id="i-spark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
     <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></symbol>
     <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.5a6.5 6.5 0 0 1 3.5 5.5"/></symbol>
+    <symbol id="i-discord" viewBox="0 0 24 24" fill="currentColor"><path d="M19.6 5.6A16.5 16.5 0 0 0 15.5 4.3l-.5 1a15 15 0 0 0-6 0l-.5-1a16.5 16.5 0 0 0-4.1 1.3C1.8 9.4 1.1 13.1 1.4 16.8a16.6 16.6 0 0 0 5 2.5l1.1-1.7a10.6 10.6 0 0 1-1.7-.8l.4-.3a11.8 11.8 0 0 0 11.6 0l.4.3c-.5.3-1.1.6-1.7.8l1.1 1.7a16.5 16.5 0 0 0 5-2.5c.4-4.3-.6-8-3-11.2zM8.7 14.6c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2zm6.6 0c-1 0-1.8-.9-1.8-2s.8-2 1.8-2 1.8.9 1.8 2-.8 2-1.8 2z"/></symbol>
+    <symbol id="i-talk" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3.5C6.8 3.5 2.5 6.8 2.5 11c0 2.7 1.8 5 4.5 6.4l-.9 3.4c-.1.4.3.7.6.5l4-2.7c.4 0 .9.1 1.3.1 5.2 0 9.5-3.3 9.5-7.6S17.2 3.5 12 3.5z"/></symbol>
+    <symbol id="i-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
     <symbol id="i-chat" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20.5l1.4-4.6A8 8 0 1 1 21 12z"/></symbol>
     <symbol id="i-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
     <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
@@ -438,6 +493,7 @@ img { display: block; }
   <aside class="side">
     <a class="brand" href="#home"><span class="gem"><img src="/brand/prism-64.png" alt=""></span><b>Prism</b></a>
     <nav class="nav" id="nav"></nav>
+    <div class="channels" id="side-channels"></div>
     <div class="side-foot">
       <div class="who" id="who"></div>
       <div style="display:flex;gap:var(--s2);align-items:center">
@@ -450,7 +506,8 @@ img { display: block; }
   <div class="topbar">
     <span class="gem" style="--size:24px"><img src="/brand/prism-64.png" alt=""></span><b>Prism</b>
     <span class="pill" id="status-m">확인 중</span>
-    <a class="icon-btn" href="#settings" title="설정"><svg><use href="#i-gear"/></svg></a>
+    <span id="top-channels" style="display:flex;gap:var(--s2);margin-left:auto"></span>
+    <a class="icon-btn" href="#settings" title="설정" style="margin-left:0"><svg><use href="#i-gear"/></svg></a>
   </div>
 
   <main class="main"><div class="page" id="page"></div></main>
@@ -465,7 +522,6 @@ const VIEWS = [
   { id: 'augments', label: '증강', icon: 'i-spark' },
   { id: 'dex', label: '도감', icon: 'i-grid' },
   { id: 'prism', label: '모임', icon: 'i-users' },
-  { id: 'chat', label: '채팅', icon: 'i-chat' },
   { id: 'settings', label: '설정', icon: 'i-gear', desktopOnly: true },
 ];
 const $ = (id) => document.getElementById(id);
@@ -485,7 +541,7 @@ const asset = (path, cls = 'av') => (path ? `<img class="${cls}" loading="lazy" 
 const champName = (id) => ST.champions[id]?.name ?? `#${id}`;
 const champAv = (id, cls = 'av') => asset(ST.champions[id]?.icon, cls);
 const rarity = (r) => (/prism/i.test(r ?? '') ? 'r-prism' : /gold/i.test(r ?? '') ? 'r-gold' : /silver/i.test(r ?? '') ? 'r-silver' : '');
-const chip = (id, extra = '') => { const a = ST.augments[id]; return `<span class="chip ${rarity(a?.rarity)} ${a?.icon ? '' : 'noicon'}">${a?.icon ? asset(a.icon, '') : ''}${esc(a?.name ?? '증강 #' + id)}${extra ? ` <em>${extra}</em>` : ''}</span>`; };
+const chip = (id, extra = '') => { const a = MH?.byId[id] ?? ST.augments[id]; return `<span class="chip ${rarity(a?.rarity)} ${a?.icon ? '' : 'noicon'}">${a?.icon ? asset(a.icon, '') : ''}${esc(a?.name ?? '증강 #' + id)}${extra ? ` <em>${extra}</em>` : ''}</span>`; };
 const record = (r) => (r && r.n ? `<span class="wl">${pct(r.w, r.n)}</span> <span class="meta">${r.w}승 ${r.n - r.w}패</span>` : '<span class="meta">기록 없음</span>');
 const empty = (text, action = '', compact = false) => `<div class="empty ${compact ? 'compact' : ''}"><span class="gem float"><img src="/brand/prism-64.png" alt=""></span><div>${text}</div>${action}</div>`;
 const card = (title, body, side = '') => `<section class="card"><div class="card-head"><h2 class="card-title">${title}</h2>${side}</div>${body}</section>`;
@@ -510,17 +566,33 @@ $('theme').onclick = () => {
 };
 
 // ───── 내비게이션 ─────
-let unread = 0;
 function renderNav() {
-  const badge = (id) => (id === 'chat' && unread ? `<span class="count">${unread > 99 ? '99+' : unread}</span>` : '');
-  $('nav').innerHTML = VIEWS.map((v) => `<a href="#${v.id}" class="${view === v.id ? 'on' : ''}"><svg><use href="#${v.icon}"/></svg>${v.label}${badge(v.id)}</a>`).join('');
-  $('tabbar').innerHTML = VIEWS.filter((v) => !v.desktopOnly).map((v) => `<a href="#${v.id}" class="${view === v.id ? 'on' : ''}"><svg><use href="#${v.icon}"/></svg>${v.label}${badge(v.id)}</a>`).join('');
+  $('nav').innerHTML = VIEWS.map((v) => `<a href="#${v.id}" class="${view === v.id ? 'on' : ''}"><svg><use href="#${v.icon}"/></svg>${v.label}</a>`).join('');
+  $('tabbar').innerHTML = VIEWS.filter((v) => !v.desktopOnly).map((v) => `<a href="#${v.id}" class="${view === v.id ? 'on' : ''}"><svg><use href="#${v.icon}"/></svg>${v.label}</a>`).join('');
+}
+
+// ───── 모임 바로가기 (소통은 디스코드·카카오톡에서) ─────
+const CHANNELS = [['discord', '디스코드', 'i-discord'], ['kakao', '카카오톡', 'i-talk']];
+const channelBtn = ([k, label, icon], L) => `<a class="ch-btn ${k}" href="${esc(L[k])}" target="_blank" rel="noopener"><span class="dot"><svg><use href="#${icon}"/></svg></span>${label}<span class="go"><svg><use href="#i-out"/></svg></span></a>`;
+function channelsHtml(big) {
+  const L = S?.links ?? {};
+  const list = CHANNELS.filter(([k]) => L[k]);
+  return list.length ? `<div class="channels ${big ? 'big' : ''}">${list.map((c) => channelBtn(c, L)).join('')}</div>` : '';
+}
+let lastLinks = '';
+function renderChannels() {
+  const L = S?.links ?? {}, key = JSON.stringify(L);
+  if (key === lastLinks) return;
+  lastLinks = key;
+  const list = CHANNELS.filter(([k]) => L[k]);
+  $('side-channels').innerHTML = list.length ? `<div class="label">모임 채널</div>${list.map((c) => channelBtn(c, L)).join('')}` : '';
+  $('side-channels').style.display = list.length ? '' : 'none';
+  $('top-channels').innerHTML = list.map(([k, label, icon]) => `<a class="ch-ic ${k}" href="${esc(L[k])}" target="_blank" rel="noopener" title="${label}"><svg><use href="#${icon}"/></svg></a>`).join('');
 }
 
 function route() {
   const [v, arg] = location.hash.slice(1).split('/');
   view = VIEWS.some((x) => x.id === v) ? v : 'home';
-  if (view === 'chat') unread = 0;
   renderNav();
   lastKey = '';
   render();
@@ -548,7 +620,8 @@ function streak(games) {
 
 // 챔피언 일러스트: 스플래시 → 타일 → 정사각 썸네일 순서로 대신한다
 const champSplash = (id) => {
-  const chain = [`/lol-game-data/assets/v1/champion-splashes/${id}/${id}000.jpg`, `/lol-game-data/assets/v1/champion-tiles/${id}/${id}000.jpg`, ST.champions[id]?.icon].filter(Boolean)
+  const c = ST.champions[id];
+  const chain = [c?.splash, c?.tile, `/lol-game-data/assets/v1/champion-splashes/${id}/${id}000.jpg`, c?.icon].filter(Boolean)
     .map((p) => `/asset?path=${encodeURIComponent(p)}`);
   return `<img alt="" loading="lazy" src="${chain[0]}" data-next="${chain.slice(1).join('|')}" onerror="const n=this.dataset.next.split('|').filter(Boolean);if(n.length){this.src=n.shift();this.dataset.next=n.join('|')}else this.remove()">`;
 };
@@ -647,7 +720,7 @@ function champSelectCard() {
     if (!TR[id]) return '';
     if (f.warn) return `<span class="need-chip">팀이 ${f.warn}</span>`;
     if (f.fills.length) return f.fills.map((x) => `<span class="ok-chip">${x} 보완</span>`).join('');
-    return needs.length ? '<span class="meta">팀의 부족한 점과는 겹치지 않음</span>' : '<span class="meta">팀 구성 무난</span>';
+    return needs.length ? `<span class="meta">부족한 ${needs.join('·')} 보완 안 됨</span>` : '<span class="meta">팀 구성 무난</span>';
   };
 
   // ── 우리 팀 줄 ──
@@ -679,6 +752,7 @@ function champSelectCard() {
       <div class="cs-body">
         <div class="cs-stats">${stat('나', P?.champions[id])}${stat('모임', cc?.crew, !S.prism.loggedIn)}</div>
         ${TR[id] ? `<div class="cs-augs"><span class="head">팀에 넣으면</span><div class="cs-fit">${fitChips(id)}</div></div>` : ''}
+        ${fitAugs(id)}
         ${augs ? `<div class="cs-augs"><span class="head">${augs.head}</span>${augs.list.map((a) => `<div class="row">${chip(a.id)}<span class="meta">${pct(a.w, a.n)} · ${a.n}회</span></div>`).join('')}</div>` : ''}
         ${master ? `<div class="cs-master">${initial(master.nick)}<span>장인 <b style="color:var(--text)">${esc(master.nick)}</b> · ${master.n}판 ${pct(master.w, master.n)}</span></div>` : ''}
       </div></article>`;
@@ -709,11 +783,29 @@ function champSelectCard() {
   return card('챔프 선택', body, '<span class="pill accent live">진행 중</span>');
 }
 
+/** 챔프 선택 큰 카드: 이 챔피언에게 잘 맞는 증강 (프리즘 → 골드 순으로 3개) */
+function fitAugs(id) {
+  if (!MH) loadMayhem();
+  const g = GUIDE[id];
+  if (!g) { loadGuide(id); return ''; }
+  if (g.loading || g.error) return '';
+  const top = [...g.prismatic.slice(0, 2), ...g.gold.slice(0, 1)].filter((f) => f.level === 'best');
+  return top.length ? `<div class="cs-augs"><span class="head">어울리는 증강</span><div class="chips">${top.map((f) => chip(f.id)).join('')}</div></div>` : '';
+}
+
+/** 게임 중 홈 맨 위: 내 챔피언 증강 가이드 요약 */
+function inGameGuide() {
+  if (S.status !== 'in-game' || !guideChamp) return '';
+  if (!MH) loadMayhem();
+  if (!GUIDE[guideChamp]) loadGuide(guideChamp);
+  return card(`${esc(champName(guideChamp))} 증강 가이드`, guideBody(guideChamp, true), '<a class="btn ghost sm" href="#augments">전체 보기</a>');
+}
+
 function renderHome() {
   const P = S.personal, games = S.games;
   const head = `<div class="page-head"><div><h1>${S.prism.me ? `${esc(S.prism.me.nick)}님, 오늘 밤도 한 판` : '아수라장 기록'}</h1><p>${S.status === 'ready' ? '최근 100판 중 아수라장 판을 모았습니다.' : esc(S.message)}</p></div></div>`;
   if (!games.length) {
-    return head + (S.champSelect ? champSelectCard() : '') + `<section class="card">${empty(S.status === 'ready' ? '최근 100판 중 아수라장 판이 없습니다.<br>한 판 하고 나면 여기에 나타납니다.' : esc(S.message))}</section>`;
+    return head + inGameGuide() + (S.champSelect ? champSelectCard() : '') + `<section class="card">${empty(S.status === 'ready' ? '최근 100판 중 아수라장 판이 없습니다.<br>한 판 하고 나면 여기에 나타납니다.' : esc(S.message))}</section>`;
   }
   const st = streak(games);
   const dexTotal = Object.keys(ST.champions).length;
@@ -740,7 +832,7 @@ function renderHome() {
       <div class="items">${g.items.map((id) => asset(ST.items[id]?.icon, '')).join('')}</div></div></div>`).join('');
   const topAugs = P.augments.slice(0, 6);
   const topChamps = Object.entries(P.champions).sort((a, b) => b[1].n - a[1].n).slice(0, 5);
-  return head + (S.champSelect ? champSelectCard() : '') + stats
+  return head + inGameGuide() + (S.champSelect ? champSelectCard() : '') + stats
     + card('최근 10판', r10, '<span class="meta">왼쪽이 최근 · 누르면 도감</span>')
     + `<div class="grid g-main">`
     + card('최근 판', `<div>${gameRows}</div>`)
@@ -752,7 +844,103 @@ function renderHome() {
 
 // ───── 증강 ─────
 let augChamp = '';
+let augTab = (() => { try { return localStorage.getItem('prism-aug-tab') || 'guide'; } catch { return 'guide'; } })();
+let MH = null; // 아수라장 증강 도감 { version, byId }
+let guideChamp = (() => { try { return Number(localStorage.getItem('prism-guide-champ')) || null; } catch { return null; } })();
+let guideAll = false, adexQuery = '', adexRarity = 'all';
+const guideMore = { prismatic: false, gold: false, silver: false };
+const GUIDE = {}; // championId → 가이드 응답
+const RARITY_KO = { prismatic: '프리즘', gold: '골드', silver: '실버' };
+const LEVEL_KO = { best: '잘 맞음', good: '무난', weak: '안 맞음', none: '조건 없음' };
+
+async function loadMayhem() {
+  if (MH) return MH;
+  const d = await j('/api/mayhem').catch(() => null);
+  MH = d ? { version: d.version, list: d.augments, byId: Object.fromEntries(d.augments.map((a) => [a.id, a])) } : { version: '', list: [], byId: {} };
+  lastKey = ''; render();
+  return MH;
+}
+async function loadGuide(id, force) {
+  if (!id || (GUIDE[id] && !force)) return;
+  GUIDE[id] = { loading: true };
+  try { GUIDE[id] = await j('/api/mayhem/guide/' + id); } catch (e) { GUIDE[id] = { error: e.message }; }
+  lastKey = ''; render();
+}
+function setGuideChamp(id) {
+  guideChamp = id || null;
+  try { localStorage.setItem('prism-guide-champ', String(guideChamp ?? '')); } catch {}
+  if (guideChamp) loadGuide(guideChamp);
+}
+const augIcon = (a) => (a?.icon ? asset(a.icon, '') : '<span class="noimg"></span>');
+const nw = (r) => (r && r.n ? `<b>${pct(r.w, r.n)}</b> ${r.n}판` : '');
+
+/** 한 챔피언의 등급별 증강 궁합 (compact: 홈·게임 중 요약) */
+function guideBody(id, compact) {
+  const g = GUIDE[id];
+  if (!MH || !g || g.loading) return `<p class="meta">불러오는 중…</p>`;
+  if (g.error) return `<p class="meta">${esc(g.error)}</p>`;
+  const st = g.stats;
+  const champStat = Object.fromEntries((st?.champion ?? []).map((r) => [r.id, r]));
+  const allStat = Object.fromEntries((st?.overall ?? []).map((r) => [r.id, r]));
+  const row = (f) => {
+    const a = MH.byId[f.id]; if (!a) return '';
+    const cs = champStat[f.id], os = allStat[f.id];
+    const why = f.missing ? `<b>${esc(f.missing)}</b>` : f.reasons.map((r) => `<span>${esc(r)}</span>`).join('');
+    const stat = st ? `<span class="pstat">${cs?.n ? `이 챔피언 ${nw(cs)}` : os?.n ? `모임 ${nw(os)}` : ''}</span>` : '';
+    return `<div class="ga ${f.level}">${augIcon(a)}<span class="nm" title="${esc(a.name)}">${esc(a.name)}</span>${guideAll && !compact ? `<span class="lv ${f.level}">${LEVEL_KO[f.level]}</span>` : '<span></span>'}
+      <div class="why">${why}${stat}</div>
+      ${compact ? '' : `<details><summary>${esc(a.note || '효과 보기')}</summary><p>${esc(a.desc)}</p></details>`}</div>`;
+  };
+  const col = (r) => {
+    const all = guideAll && !compact ? g[r] : g[r].filter((f) => f.level === 'best');
+    const limit = compact ? 4 : guideMore[r] ? all.length : 8;
+    const more = all.length - limit;
+    const best = g[r].filter((f) => f.level === 'best').length;
+    return `<div class="gcol ${r}"><h3><i></i>${RARITY_KO[r]}<span class="meta">잘 맞음 ${best}개</span></h3>${all.slice(0, limit).map(row).join('') || '<p class="meta">없음</p>'}
+      ${!compact && more > 0 ? `<button type="button" class="btn ghost sm" data-guide-more="${r}" style="margin-top:var(--s2)">${more}개 더 보기</button>` : ''}</div>`;
+  };
+  return `<div class="guide-cols">${['prismatic', 'gold', 'silver'].map(col).join('')}</div>`;
+}
+
+function guidePicker() {
+  const opts = Object.entries(ST.champions).sort((a, b) => a[1].name.localeCompare(b[1].name, 'ko')).map(([, c]) => `<option value="${esc(c.name)}">`).join('');
+  return `<input class="input" id="guide-q" list="champ-list" placeholder="챔피언 이름" style="width:180px" value="${guideChamp ? esc(champName(guideChamp)) : ''}"><datalist id="champ-list">${opts}</datalist>`;
+}
+
 function renderAugments() {
+  const tabs = `<div class="seg">${[['guide', '챔피언별 가이드'], ['dex', '증강 도감'], ['mine', '내 기록']].map(([k, l]) => `<button type="button" data-aug-tab="${k}" class="${augTab === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
+  const head = (title, sub) => `<div class="page-head"><div><h1>${title}</h1><p>${sub}</p></div>${tabs}</div>`;
+  if (!MH) loadMayhem();
+
+  if (augTab === 'guide') {
+    if (guideChamp && !GUIDE[guideChamp]) loadGuide(guideChamp);
+    const g = guideChamp && GUIDE[guideChamp];
+    const prof = g && !g.loading && !g.error ? g.profile : null;
+    const premium = S.prism.loggedIn
+      ? `<span class="premium"><img src="/brand/prism-32.png" alt="">Prism 실전 ${g?.stats ? `${g.stats.games}판 기준` : ''}</span>`
+      : `<span class="premium" title="회원의 실제 판에서 나온 승률이 함께 보입니다"><img src="/brand/prism-32.png" alt="">실전 승률은 Prism 회원 전용</span>`;
+    const top = `<div class="guide-top">
+      <div class="who">${guideChamp ? champAv(guideChamp) : ''}<div><h2>${guideChamp ? esc(champName(guideChamp)) : '챔피언을 고르세요'}</h2>
+        ${prof ? `<span class="meta">${[ROLE_KO[prof.roles[0]], prof.damage, prof.range === 'ranged' ? '원거리' : '근접'].filter(Boolean).join(' · ')}</span>` : ''}</div></div>
+      <span class="sp"></span>${guidePicker()}
+      <div class="seg"><button type="button" data-guide-all="0" class="${guideAll ? '' : 'on'}">잘 맞는 것</button><button type="button" data-guide-all="1" class="${guideAll ? 'on' : ''}">전체 비교</button></div>
+      ${premium}</div>`;
+    const body = guideChamp ? guideBody(guideChamp, false) : empty('챔피언을 고르면 등급별로 어울리는 증강이 나옵니다.<br>챔프 선택에 들어가면 내 챔피언으로 자동으로 바뀝니다.', '', true);
+    const foot = `<p class="note" style="margin:var(--s5) 0 0">"잘 맞음"은 챔피언 역할·피해 유형·스킬과 증강 효과를 맞춰 본 <b>어울림</b>입니다. 증강 자체의 세기는 아니며, 실제로 얼마나 이겼는지는 Prism 실전 승률로 확인하세요.
+      게임 데이터 ${esc(MH?.version?.split('.').slice(0, 2).join('.') ?? '')} 기준${guideChamp ? ` · <a href="https://arammayhem.com/ko-kr/champions/${esc((ST.champions[guideChamp]?.alias ?? '').toLowerCase())}" target="_blank" rel="noopener">외부 통계 사이트에서 보기</a>` : ''}</p>`;
+    return head('증강 가이드', '증강을 고를 때 세 개 중 무엇이 내 챔피언에게 맞는지') + `<section class="card">${top}${body}${foot}</section>`;
+  }
+
+  if (augTab === 'dex') {
+    const list = (MH?.list ?? []).filter((a) => !a.disabled && (adexRarity === 'all' || a.rarity === adexRarity) && (!adexQuery || a.name.includes(adexQuery) || a.desc.includes(adexQuery) || a.note.includes(adexQuery)))
+      .sort((a, b) => ['prismatic', 'gold', 'silver'].indexOf(a.rarity) - ['prismatic', 'gold', 'silver'].indexOf(b.rarity) || a.name.localeCompare(b.name, 'ko'));
+    const bar = `<div class="toolbar" style="margin:0 0 var(--s4)"><input class="input" id="adex-q" placeholder="이름·효과 검색 (예: 치명타, 보호막)" value="${esc(adexQuery)}">
+      <div class="seg">${[['all', '전체'], ['prismatic', '프리즘'], ['gold', '골드'], ['silver', '실버']].map(([k, l]) => `<button type="button" data-adex-r="${k}" class="${adexRarity === k ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <span class="meta">${list.length}개</span></div>`;
+    const grid = MH ? (list.length ? `<div class="adex">${list.map((a) => `<div class="ai">${augIcon(a)}<span class="nm"><i class="rdot ${a.rarity}"></i>${esc(a.name)}</span><span class="note2">${esc(a.note)}</span><p>${esc(a.desc)}</p></div>`).join('')}</div>` : empty('찾는 증강이 없습니다.', '', true)) : '<p class="meta">불러오는 중…</p>';
+    return head('아수라장 증강 도감', `현재 아수라장 증강 ${MH?.list?.filter((a) => !a.disabled).length ?? ''}개 · 게임 파일 기준 한국어 설명`) + `<section class="card">${bar}${grid}</section>`;
+  }
+
   const P = S.personal;
   const champs = Object.entries(P?.champions ?? {}).filter(([id]) => P.augmentsByChampion[id]?.length).sort((a, b) => b[1].n - a[1].n);
   const list = augChamp ? P?.augmentsByChampion[augChamp] ?? [] : P?.augments ?? [];
@@ -761,7 +949,20 @@ function renderAugments() {
     ? `<div class="table">${list.map((a) => `<div class="trow"><div>${chip(a.id)}</div><span class="num meta">${a.n}회</span><div class="bar"><span style="width:${pct(a.w, a.n)}"></span></div><span class="num wl">${pct(a.w, a.n)}</span></div>`).join('')}</div>
        <p class="note" style="margin:var(--s4) 0 0">증강 정보가 있는 ${P.augmentGames}판 기준 · 승률은 그 증강을 고른 판의 승률입니다.</p>`
     : empty(S.games.length ? '증강 정보가 오지 않습니다.<br>설정의 진단 파일을 보내주시면 고치겠습니다.' : '아직 기록이 없습니다.');
-  return `<div class="page-head"><div><h1>내 증강 기록</h1><p>어떤 증강을 자주 고르고, 골랐을 때 얼마나 이겼는지</p></div></div>` + card(augChamp ? esc(champName(augChamp)) : '전체', body, select);
+  return head('내 증강 기록', '어떤 증강을 자주 고르고, 골랐을 때 얼마나 이겼는지') + card(augChamp ? esc(champName(augChamp)) : '전체', body, select);
+}
+
+function bindAugments() {
+  document.querySelectorAll('[data-aug-tab]').forEach((b) => (b.onclick = () => { augTab = b.dataset.augTab; try { localStorage.setItem('prism-aug-tab', augTab); } catch {} lastKey = ''; render(); }));
+  document.querySelectorAll('[data-guide-more]').forEach((b) => (b.onclick = () => { guideMore[b.dataset.guideMore] = true; lastKey = ''; render(); }));
+  document.querySelectorAll('[data-guide-all]').forEach((b) => (b.onclick = () => { guideAll = b.dataset.guideAll === '1'; lastKey = ''; render(); }));
+  document.querySelectorAll('[data-adex-r]').forEach((b) => (b.onclick = () => { adexRarity = b.dataset.adexR; lastKey = ''; render(); }));
+  const ac = $('aug-champ');
+  if (ac) ac.onchange = (e) => { augChamp = e.target.value; e.target.blur(); render(); };
+  const gq = $('guide-q');
+  if (gq) gq.onchange = () => { const hit = Object.entries(ST.champions).find(([, c]) => c.name === gq.value.trim()); if (hit) { setGuideChamp(Number(hit[0])); gq.blur(); lastKey = ''; render(); } };
+  const aq = $('adex-q');
+  if (aq) aq.oninput = () => { clearTimeout(aq._t); aq._t = setTimeout(() => { adexQuery = aq.value.trim(); const pos = aq.selectionStart; aq.blur(); lastKey = ''; render(); const n = $('adex-q'); n.focus(); n.setSelectionRange(pos, pos); }, 250); };
 }
 
 // ───── 도감 ─────
@@ -827,8 +1028,9 @@ addEventListener('keydown', (e) => e.key === 'Escape' && sheetChamp && closeShee
 function gate(title) {
   const p = S.prism;
   const head = `<div class="page-head"><div><h1>${title}</h1><p>같이 하는 사람들의 기록</p></div></div>`;
-  if (!p.configured) return head + `<section class="card">${empty('서버가 아직 설정되지 않았습니다.<br>혼자 쓰는 기능(홈·증강·도감)은 그대로 쓸 수 있습니다.')}</section>`;
-  if (!p.loggedIn) return head + `<section class="card">${empty('디스코드로 로그인하면 모임 기록, 같이 하면 이기는 사람,<br>챔피언 장인과 회원 팁, 채팅을 쓸 수 있습니다.', `<a class="btn primary" href="/auth/login">디스코드로 로그인</a>${p.error ? `<p class="note">${esc(p.error)}</p>` : ''}`)}</section>`;
+  if (!p.configured) return head + `<section class="card">${empty('Prism 모임 기능은 곧 열립니다.<br>홈·증강 가이드·도감은 지금 바로 쓸 수 있습니다.')}</section>`;
+  if (!p.loggedIn) return head + `<section class="card">${empty('모임 기록, 같이 하면 이기는 사람, 챔피언 장인과 회원 팁,<br>그리고 증강 실전 승률은 Prism 회원에게 열립니다.', `<a class="btn primary" href="/auth/login">디스코드로 로그인</a>${p.error ? `<p class="note">${esc(p.error)}</p>` : ''}`)}</section>`
+    + (channelsHtml(true) ? card('아직 회원이 아니라면', channelsHtml(true)) : '');
   if (!p.me?.consent) return head + `<section class="card"><div class="card-head"><h2 class="card-title">수집 동의</h2></div>
     <p style="margin:0 0 var(--s3)">${CONSENT}</p>
     <p class="note" style="margin:0 0 var(--s5)">동의하면 지금 클라이언트에 로그인된 <b>${esc(S.me ? S.me.gameName + '#' + S.me.tagLine : '롤 계정')}</b>이 연결되고, 이 앱이 아수라장 판을 Prism에 올립니다. 다른 회원의 앱도 동의한 회원의 최근 판을 대신 올릴 수 있습니다. 설정에서 언제든 철회할 수 있습니다.</p>
@@ -866,6 +1068,8 @@ function renderPrism() {
       <section class="card stat"><span class="label">기록된 판</span><span class="value">${t.games}</span></section>
       <section class="card stat"><span class="label">이번 주 모임 판</span><span class="value">${t.crewGamesWeek}<small>/ ${t.crewGames}</small></span></section>
       <section class="card stat"><span class="label">모임 도감</span><span class="value">${b.crewDex}<small>종</small></span></section></div>`
+    + (channelsHtml(true) ? card('오늘 밤 같이 할 사람', channelsHtml(true)) : '')
+    + notesCard()
     + card('기록', `<div class="grid g3" style="gap:var(--s3)">${recs}</div>`)
     + `<div class="grid g2">`
     + card('같이 하면 이기는 사람', b.pairs.length ? `<div class="list">${b.pairs.map((p) => `<div class="item"><span style="display:flex">${initial(p.a)}<span style="margin-left:-8px;border-radius:50%;box-shadow:0 0 0 2px var(--surface)">${initial(p.b)}</span></span><span class="title">${esc(p.a)} + ${esc(p.b)}</span><span class="end">${record(p)}</span></div>`).join('')}</div>` : empty('같은 팀으로 3판 이상 한 회원이 아직 없습니다.', '', true))
@@ -875,81 +1079,44 @@ function renderPrism() {
         <div class="chips">${g.crew.map((c) => `<span class="chip">${champAv(c.championId, '')}<b class="${c.win ? 'w' : 'l'}">${esc(c.nick)}</b><em>${c.k}/${c.d}/${c.a}</em></span>`).join('')}</div></div>`).join('')}</div>` : empty('회원 두 명 이상이 함께한 판이 아직 없습니다.', '', true));
 }
 
-// ───── 채팅 ─────
-const CH = { connected: false, me: null, online: [], messages: [], error: null };
-let chatFollow = true;
-function renderChat() {
-  const g = gate('채팅');
-  if (g) return g;
-  const online = CH.online.slice(0, 5).map((o) => initial(o.nick)).join('');
-  return `<div class="page-head"><div><h1>채팅</h1><p>Prism 회원끼리 · 오늘 밤 누구 켜요?</p></div></div>
-    <section class="card chat">
-      <div class="chat-head"><b># prism</b><span class="pill ${CH.connected ? 'ok' : 'warn'}">${CH.connected ? `접속 ${CH.online.length}명` : '연결 중…'}</span>
-        <span class="online" title="${esc(CH.online.map((o) => o.nick).join(', '))}">${online}</span></div>
-      <div class="chat-log" id="chat-log">${chatLog()}</div>
-      <form class="chat-input" id="chat-form"><input class="input" id="chat-text" maxlength="300" autocomplete="off" placeholder="${CH.connected ? '메시지 보내기' : '연결되면 보낼 수 있습니다'}">
-        <button class="btn primary" type="submit"><svg width="16" height="16"><use href="#i-send"/></svg>보내기</button></form>
-    </section>`;
+// ───── 한 줄 생각 ─────
+let notes = null, notesAt = 0, notesLoading = false;
+async function loadNotes() {
+  if (notesLoading) return;
+  notesLoading = true; notesAt = Date.now();
+  try { notes = await j('/api/prism/notes'); } catch (e) { notes = { error: e.message }; }
+  notesLoading = false; lastKey = ''; render();
 }
-function chatLog() {
-  if (!CH.messages.length) return empty(CH.connected ? '첫 메시지를 남겨보세요.' : esc(CH.error ?? '채팅 서버에 연결하는 중입니다.'), '', true);
-  let out = '', prev = null;
-  for (const m of CH.messages) {
-    const newDay = !prev || new Date(prev.at).toDateString() !== new Date(m.at).toDateString();
-    if (newDay) out += `<div class="day">${day(m.at)}</div>`;
-    const first = newDay || prev.memberId !== m.memberId || m.at - prev.at > 5 * 60000;
-    const mine = m.memberId === CH.me;
-    const del = mine ? ` <button class="del" type="button" onclick="delChat(${m.id})">지우기</button>` : '';
-    out += `<div class="msg ${first ? 'first' : ''} ${mine ? 'mine' : ''}">${first ? initial(m.nick) : '<span></span>'}
-      ${first ? `<div class="who-line"><b>${esc(m.nick)}</b><span class="meta">${time(m.at)}</span>${del}</div>` : ''}
-      <div class="text">${esc(m.text)}${first ? '' : del}</div></div>`;
-    prev = m;
-  }
-  return out;
+function notesCard() {
+  if (!notes || Date.now() - notesAt > 60000) loadNotes();
+  const max = notes?.max ?? 60;
+  const list = !notes ? '<p class="meta">불러오는 중…</p>' : notes.error ? `<p class="meta">${esc(notes.error)}</p>`
+    : notes.notes.length ? `<div class="notes">${notes.notes.map((n) => `<div class="note-row">${initial(n.nick)}<div class="txt"><b>${esc(n.nick)}</b>${esc(n.text)}</div>
+        <span class="end">${ago(n.createdAt)}${n.mine ? ` <button type="button" onclick="deleteNote(${n.id})">지우기</button>` : ''}</span></div>`).join('')}</div>`
+    : empty('오늘 판은 어땠나요? 첫 한 줄을 남겨보세요.', '', true);
+  return card('한 줄 생각', `<form class="composer" id="note-form" style="margin-bottom:var(--s4)"><input class="input" id="note-text" maxlength="${max}" autocomplete="off" placeholder="오늘 판 한 줄, 같이 할 사람 구하기, 아무 생각이나">
+    <span class="count" id="note-count">0/${max}</span><button class="btn primary" type="submit">남기기</button></form><p class="note" id="note-msg" style="margin:0"></p>${list}`);
 }
-function paintChat() {
-  const log = $('chat-log');
-  if (!log) { lastKey = ''; render(); return; }
-  chatFollow = log.scrollHeight - log.scrollTop - log.clientHeight < 80;
-  log.innerHTML = chatLog();
-  scrollChat();
-}
-function scrollChat(force) { const log = $('chat-log'); if (log && (force || chatFollow)) log.scrollTop = log.scrollHeight; }
-async function delChat(id) { await j('/api/chat/delete', { method: 'POST', body: JSON.stringify({ id }) }).catch(() => {}); }
-function bindChat() {
-  const f = $('chat-form');
+async function deleteNote(id) { await j(`/api/prism/notes/${id}`, { method: 'DELETE' }).catch(() => {}); notes = null; loadNotes(); }
+function bindNotes() {
+  const f = $('note-form');
   if (!f) return;
+  const input = $('note-text'), count = $('note-count');
+  input.oninput = () => (count.textContent = `${[...input.value].length}/${input.maxLength}`);
   f.onsubmit = async (e) => {
     e.preventDefault();
-    const input = $('chat-text'), text = input.value.trim();
+    const text = input.value.trim();
     if (!text) return;
-    try { await j('/api/chat/send', { method: 'POST', body: JSON.stringify({ text }) }); input.value = ''; chatFollow = true; }
-    catch (err) { input.placeholder = err.message; }
-  };
-}
-let es = null;
-function startStream() {
-  if (es) return;
-  es = new EventSource('/api/chat/stream');
-  es.onmessage = (ev) => {
-    const d = JSON.parse(ev.data);
-    if (d.type === 'snapshot') Object.assign(CH, { connected: d.connected, me: d.me, online: d.online, messages: d.messages, error: d.error });
-    else if (d.type === 'message') { CH.messages = [...CH.messages, d.message].slice(-200); if (view !== 'chat' && d.message.memberId !== CH.me) { unread++; renderNav(); } }
-    else if (d.type === 'deleted') CH.messages = CH.messages.filter((m) => m.id !== d.id);
-    else if (d.type === 'presence') CH.online = d.online;
-    else if (d.type === 'status') { CH.connected = d.connected; if (d.error) CH.error = d.error; }
-    else if (d.type === 'error') { const i = $('chat-text'); if (i) i.placeholder = d.message; }
-    if (view !== 'chat') return;
-    if (d.type === 'message' || d.type === 'deleted') paintChat();
-    else { lastKey = ''; render(); }
+    try { await j('/api/prism/notes', { method: 'POST', body: JSON.stringify({ text }) }); input.value = ''; input.blur(); notes = null; loadNotes(); }
+    catch (err) { $('note-msg').textContent = err.message; }
   };
 }
 
 // ───── 설정 ─────
 function renderSettings() {
   const p = S.prism, up = p.upload, cr = p.crewSync;
-  const account = !p.configured ? empty('서버가 설정되지 않았습니다.', '', true)
-    : !p.loggedIn ? empty('디스코드로 로그인하면 모임 기능과 채팅이 열립니다.', '<a class="btn primary" href="/auth/login">디스코드로 로그인</a>', true)
+  const account = !p.configured ? empty('Prism 모임 기능은 곧 열립니다.', '', true)
+    : !p.loggedIn ? empty('디스코드로 로그인하면 모임 기능이 열립니다.', '<a class="btn primary" href="/auth/login">디스코드로 로그인</a>', true)
     : `<div class="kv">
         <div><span class="k">닉네임</span><form id="nick-form" class="composer" style="max-width:260px"><input class="input" id="nick" maxlength="20" value="${esc(p.me?.nick)}"><button class="btn">저장</button></form></div>
         <div><span class="k">연결된 롤 계정</span><span class="v">${esc(p.me?.riotId ?? '없음')}</span></div>
@@ -957,17 +1124,11 @@ function renderSettings() {
         <div><span class="k">내 판 업로드</span><span class="v sub">${up.lastAt ? `${ago(up.lastAt)} · 보냄 ${up.sent} · 새로 저장 ${up.stored}` : '–'}${up.lastError ? `<br><span class="l">${esc(up.lastError)}</span>` : ''}</span></div>
         <div><span class="k">회원 대신 수집</span><span class="v sub">${cr.running ? '진행 중…' : cr.lastAt ? `${ago(cr.lastAt)} · 회원 ${cr.members}명 · ${cr.games}판` : '–'}${cr.lastError ? `<br><span class="l">${esc(cr.lastError)}</span>` : ''}</span></div>
         <div><span class="k">계정</span><button class="btn sm" type="button" onclick="logoutPrism()">로그아웃</button></div></div>`;
-  const n = S.games.length;
-  const fields = `<div class="kv">${[['읽은 전체 판', S.scannedGames], ['그중 아수라장 (2400)', n],
-    ...Object.entries(S.fields).map(([k, v]) => [k, n ? `<span class="wl ${v ? 'w' : 'l'}">${v} / ${n}</span>` : '–']),
-    ['큐 분포', `<span class="sub">${esc(Object.entries(S.queueCounts).map(([q, c]) => `${q}: ${c}`).join(' · ') || '–')}</span>`]].map(([k, v]) => `<div><span class="k">${k}</span><span class="v">${v}</span></div>`).join('')}</div>
-    <div style="display:flex;gap:var(--s3);align-items:center;margin-top:var(--s4);flex-wrap:wrap"><button class="btn" id="export" type="button">진단 파일 저장</button><span class="note" id="export-msg"></span></div>`;
-  const principles = `<div class="kv">
-    <div><span class="k">롤 클라이언트</span><span class="v sub">읽기만 · 게임 중 요청 없음</span></div>
-    <div><span class="k">서버 전송</span><span class="v sub">${p.me?.consent ? '동의함 · 아수라장 판만' : '보내는 데이터 없음'}</span></div>
-    <div><span class="k">버전</span><span class="v sub">v${esc(S.version)}</span></div></div>`;
+  const support = `<div class="kv">
+    <div><span class="k">버전</span><span class="v sub">v${esc(S.version)}</span></div>
+    <div><span class="k">문제가 있나요?</span><span class="v"><button class="btn sm" id="export" type="button">진단 파일 저장</button> <span class="note" id="export-msg"></span></span></div></div>`;
   return `<div class="page-head"><div><h1>설정</h1></div></div>`
-    + card('Prism 계정', account) + `<div class="grid g2">` + card('데이터 확인', fields, '<span class="meta">개발 검증용</span>') + card('이 앱이 지키는 것', principles) + `</div>`;
+    + card('Prism 계정', account) + (channelsHtml(true) ? card('모임 채널', channelsHtml(true)) : '') + card('앱 정보', support);
 }
 async function logoutPrism() { await j('/api/prism/logout', { method: 'POST' }).catch(() => {}); board = null; await poll(true); }
 function bindSettings() {
@@ -982,24 +1143,26 @@ let lastKey = '';
 function render() {
   if (!S) return;
   renderChrome();
+  renderChannels();
   // 입력 중이면 다시 그리지 않는다 (5초 갱신이 입력을 지우지 않게)
   const a = document.activeElement;
   if (a && a.closest('#page') && ['INPUT', 'SELECT', 'TEXTAREA'].includes(a.tagName)) return;
   // 내용이 바뀌지 않았으면 다시 그리지 않는다 (깜빡임 방지)
   const key = JSON.stringify([view, S.status, S.message, S.games.length, S.games[0]?.gameId, S.champSelect, S.prism.loggedIn, S.prism.me, S.prism.upload, S.prism.crewSync, Object.keys(ST.champions).length,
-    view === 'chat' ? [CH.connected, CH.online.length] : 0, augChamp, dexFilter, dexQuery, boardAt, Boolean(board), csPreview, benchSort, sortMenu]);
+    notesAt, Boolean(notes), augChamp, augTab, guideChamp, guideAll, guideMore, adexQuery, adexRarity, Boolean(MH), guideChamp && GUIDE[guideChamp] ? (GUIDE[guideChamp].loading ? 1 : 2) : 0, dexFilter, dexQuery, boardAt, Boolean(board), csPreview, benchSort, sortMenu]);
   if (!S.champSelect) csPreview = null;
+  if (S.champSelect?.mine && S.champSelect.mine !== guideChamp) setGuideChamp(S.champSelect.mine);
   if (key === lastKey) return;
   lastKey = key;
-  const html = { home: renderHome, augments: renderAugments, dex: renderDex, prism: renderPrism, chat: renderChat, settings: renderSettings }[view]();
-  $('page').innerHTML = html + `<p class="note foot">LCU 읽기 전용 · 게임 중에는 요청 없음 · ${S.prism.me?.consent ? '수집 동의함' : '서버로 보내는 데이터 없음'}</p>`;
-  if (view === 'augments') $('aug-champ').onchange = (e) => { augChamp = e.target.value; e.target.blur(); render(); };
+  const html = { home: renderHome, augments: renderAugments, dex: renderDex, prism: renderPrism, settings: renderSettings }[view]();
+  $('page').innerHTML = html;
+  if (view === 'augments' || view === 'home') bindAugments();
   if (view === 'dex') {
     document.querySelectorAll('.seg [data-f]').forEach((b) => (b.onclick = () => { dexFilter = b.dataset.f; render(); }));
     const q = $('dex-q');
     q.oninput = () => { clearTimeout(q._t); q._t = setTimeout(() => { dexQuery = q.value.trim(); const pos = q.selectionStart; q.blur(); render(); const n = $('dex-q'); n.focus(); n.setSelectionRange(pos, pos); }, 200); };
   }
-  if (view === 'chat') { bindChat(); scrollChat(true); }
+  if (view === 'prism') bindNotes();
   if (view === 'settings') bindSettings();
 }
 
@@ -1007,7 +1170,6 @@ async function poll(once) {
   try {
     S = await j('/api/state');
     if (!Object.keys(ST.champions).length) { ST = await j('/api/static'); if (Object.keys(ST.champions).length) lastKey = ''; }
-    if (S.prism.loggedIn) startStream();
     render();
   } catch { for (const id of ['status', 'status-m']) { $(id).textContent = '앱 꺼짐'; $(id).className = 'pill warn'; } }
   if (once !== true) setTimeout(poll, 5000);

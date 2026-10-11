@@ -1,0 +1,4141 @@
+{
+ "version": "16.20.8248524",
+ "generatedAt": "2026-10-11T15:12:21.316Z",
+ "champions": {
+  "1": {
+   "name": "애니",
+   "alias": "Annie",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "empower",
+    "ally",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Annie/Skins/Base/Images/annie_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Annie/Skins/Base/Images/annie_splash_tile_0.jpg"
+  },
+  "2": {
+   "name": "올라프",
+   "alias": "Olaf",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Olaf/Skins/Base/Images/olaf_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Olaf/Skins/Base/Images/olaf_splash_tile_0.jpg"
+  },
+  "3": {
+   "name": "갈리오",
+   "alias": "Galio",
+   "roles": [
+    "tank",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "burn",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Galio/Skins/Base/Images/galio_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Galio/Skins/Base/Images/galio_splash_tile_0.jpg"
+  },
+  "4": {
+   "name": "트위스티드 페이트",
+   "alias": "TwistedFate",
+   "roles": [
+    "mage",
+    "marksman"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/TwistedFate/skins/base/Images/twistedfate_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/TwistedFate/skins/base/Images/twistedfate_splash_tile_0.jpg"
+  },
+  "5": {
+   "name": "신 짜오",
+   "alias": "XinZhao",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/XinZhao/Skins/Base/Images/XinZhaoRework_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/XinZhao/Skins/Base/Images/XinZhaoRework_splash_tile_0.jpg"
+  },
+  "6": {
+   "name": "우르곳",
+   "alias": "Urgot",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Urgot/Skins/Base/Images/urgot_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Urgot/Skins/Base/Images/urgot_splash_tile_0.jpg"
+  },
+  "7": {
+   "name": "르블랑",
+   "alias": "Leblanc",
+   "roles": [
+    "assassin",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Leblanc/Skins/Base/Images/Leblanc_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Leblanc/Skins/Base/Images/Leblanc_splash_tile_0.jpg"
+  },
+  "8": {
+   "name": "블라디미르",
+   "alias": "Vladimir",
+   "roles": [
+    "mage",
+    "fighter"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Vladimir/Skins/Base/Images/vladimir_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Vladimir/Skins/Base/Images/vladimir_splash_tile_0.jpg"
+  },
+  "9": {
+   "name": "피들스틱",
+   "alias": "FiddleSticks",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Fiddlesticks/Skins/Base/Images/fiddlesticks_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Fiddlesticks/Skins/Base/Images/fiddlesticks_splash_tile_0.jpg"
+  },
+  "10": {
+   "name": "케일",
+   "alias": "Kayle",
+   "roles": [
+    "marksman",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 3
+   },
+   "flags": [
+    "heal",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Kayle/Skins/Base/Images/kayle_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Kayle/Skins/Base/Images/kayle_splash_tile_0.jpg"
+  },
+  "11": {
+   "name": "마스터 이",
+   "alias": "MasterYi",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/MasterYi/Skins/Base/Images/masteryi_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/MasterYi/Skins/Base/Images/masteryi_splash_tile_0.jpg"
+  },
+  "12": {
+   "name": "알리스타",
+   "alias": "Alistar",
+   "roles": [
+    "tank",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "knockback",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Alistar/Skins/Base/Images/alistar_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Alistar/Skins/Base/Images/alistar_splash_tile_0.jpg"
+  },
+  "13": {
+   "name": "라이즈",
+   "alias": "Ryze",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Ryze/Skins/Base/Images/ryze_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Ryze/Skins/Base/Images/ryze_splash_tile_0.jpg"
+  },
+  "14": {
+   "name": "사이온",
+   "alias": "Sion",
+   "roles": [
+    "tank",
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "knockback",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Sion/Skins/Base/Images/sion_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Sion/Skins/Base/Images/sion_splash_tile_0.jpg"
+  },
+  "15": {
+   "name": "시비르",
+   "alias": "Sivir",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "shield",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Sivir/Skins/Base/Images/sivir_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Sivir/Skins/Base/Images/sivir_splash_tile_0.jpg"
+  },
+  "16": {
+   "name": "소라카",
+   "alias": "Soraka",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 1,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Soraka/Skins/Base/Images/soraka_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Soraka/Skins/Base/Images/soraka_splash_tile_0.jpg"
+  },
+  "17": {
+   "name": "티모",
+   "alias": "Teemo",
+   "roles": [
+    "marksman",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "burn",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Teemo/Skins/Base/Images/teemo_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Teemo/Skins/Base/Images/teemo_splash_tile_0.jpg"
+  },
+  "18": {
+   "name": "트리스타나",
+   "alias": "Tristana",
+   "roles": [
+    "marksman",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Tristana/Skins/Base/Images/tristana_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Tristana/Skins/Base/Images/tristana_splash_tile_0.jpg"
+  },
+  "19": {
+   "name": "워윅",
+   "alias": "Warwick",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "MIX",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Warwick/Skins/Base/Images/warwick_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Warwick/Skins/Base/Images/warwick_splash_tile_0.jpg"
+  },
+  "20": {
+   "name": "누누와 윌럼프",
+   "alias": "Nunu",
+   "roles": [
+    "tank",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 3,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "channel"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Nunu/Skins/Base/Images/nunu_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Nunu/Skins/Base/Images/nunu_splash_tile_0.jpg"
+  },
+  "21": {
+   "name": "미스 포츈",
+   "alias": "MissFortune",
+   "roles": [
+    "marksman",
+    "mage"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "channel"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/MissFortune/Skins/Base/Images/missfortune_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/MissFortune/Skins/Base/Images/missfortune_splash_tile_0.jpg"
+  },
+  "22": {
+   "name": "애쉬",
+   "alias": "Ashe",
+   "roles": [
+    "marksman",
+    "support"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Ashe/Skins/Base/Images/ashe_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Ashe/Skins/Base/Images/ashe_splash_tile_0.jpg"
+  },
+  "23": {
+   "name": "트린다미어",
+   "alias": "Tryndamere",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Tryndamere/Skins/Base/Images/tryndamere_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Tryndamere/Skins/Base/Images/tryndamere_splash_tile_0.jpg"
+  },
+  "24": {
+   "name": "잭스",
+   "alias": "Jax",
+   "roles": [
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Jax/Skins/Base/Images/jax_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Jax/Skins/Base/Images/jax_splash_tile_0.jpg"
+  },
+  "25": {
+   "name": "모르가나",
+   "alias": "Morgana",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Morgana/Skins/Base/Images/morgana_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Morgana/Skins/Base/Images/morgana_splash_tile_0.jpg"
+  },
+  "26": {
+   "name": "질리언",
+   "alias": "Zilean",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Zilean/Skins/Base/Images/zilean_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Zilean/Skins/Base/Images/zilean_splash_tile_0.jpg"
+  },
+  "27": {
+   "name": "신지드",
+   "alias": "Singed",
+   "roles": [
+    "tank",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Singed/Skins/Base/Images/singed_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Singed/Skins/Base/Images/singed_splash_tile_0.jpg"
+  },
+  "28": {
+   "name": "이블린",
+   "alias": "Evelynn",
+   "roles": [
+    "assassin",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Evelynn/Skins/Base/Images/evelynn_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Evelynn/Skins/Base/Images/evelynn_splash_tile_0.jpg"
+  },
+  "29": {
+   "name": "트위치",
+   "alias": "Twitch",
+   "roles": [
+    "marksman",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "burn"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Twitch/Skins/Base/Images/twitch_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Twitch/Skins/Base/Images/twitch_splash_tile_0.jpg"
+  },
+  "30": {
+   "name": "카서스",
+   "alias": "Karthus",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "heal",
+    "channel"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Karthus/Skins/Base/Images/karthus_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Karthus/Skins/Base/Images/karthus_splash_tile_0.jpg"
+  },
+  "31": {
+   "name": "초가스",
+   "alias": "Chogath",
+   "roles": [
+    "tank",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Chogath/skins/base/Images/chogath_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Chogath/skins/base/Images/chogath_splash_tile_0.jpg"
+  },
+  "32": {
+   "name": "아무무",
+   "alias": "Amumu",
+   "roles": [
+    "tank",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Amumu/Skins/Base/Images/amumu_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Amumu/Skins/Base/Images/amumu_splash_tile_0.jpg"
+  },
+  "33": {
+   "name": "람머스",
+   "alias": "Rammus",
+   "roles": [
+    "tank"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Rammus/skins/base/Images/rammus_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Rammus/skins/base/Images/rammus_splash_tile_0.jpg"
+  },
+  "34": {
+   "name": "애니비아",
+   "alias": "Anivia",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "terrain"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Anivia/Skins/Base/Images/anivia_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Anivia/Skins/Base/Images/anivia_splash_tile_0.jpg"
+  },
+  "35": {
+   "name": "샤코",
+   "alias": "Shaco",
+   "roles": [
+    "assassin"
+   ],
+   "damage": "MIX",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "burn",
+    "empower",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Shaco/Skins/Base/Images/shaco_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Shaco/Skins/Base/Images/shaco_splash_tile_0.jpg"
+  },
+  "36": {
+   "name": "문도 박사",
+   "alias": "DrMundo",
+   "roles": [
+    "tank",
+    "fighter"
+   ],
+   "damage": "MIX",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "burn",
+    "knockback",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/DrMundo/Skins/Base/Images/drmundo_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/DrMundo/Skins/Base/Images/drmundo_splash_tile_0.jpg"
+  },
+  "37": {
+   "name": "소나",
+   "alias": "Sona",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Sona/Skins/Base/Images/sona_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Sona/Skins/Base/Images/sona_splash_tile_0.jpg"
+  },
+  "38": {
+   "name": "카사딘",
+   "alias": "Kassadin",
+   "roles": [
+    "assassin",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "shield",
+    "heal",
+    "channel",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Kassadin/Skins/Base/Images/kassadin_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Kassadin/Skins/Base/Images/kassadin_splash_tile_0.jpg"
+  },
+  "39": {
+   "name": "이렐리아",
+   "alias": "Irelia",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Irelia/Skins/Base/Images/irelia_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Irelia/Skins/Base/Images/irelia_splash_tile_0.jpg"
+  },
+  "40": {
+   "name": "잔나",
+   "alias": "Janna",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 1,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "knockback",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Janna/Skins/Base/Images/janna_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Janna/Skins/Base/Images/janna_splash_tile_0.jpg"
+  },
+  "41": {
+   "name": "갱플랭크",
+   "alias": "Gangplank",
+   "roles": [
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Gangplank/Skins/Base/Images/gangplank_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Gangplank/Skins/Base/Images/gangplank_splash_tile_0.jpg"
+  },
+  "42": {
+   "name": "코르키",
+   "alias": "Corki",
+   "roles": [
+    "marksman",
+    "mage"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Corki/Skins/Base/Images/corki_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Corki/Skins/Base/Images/corki_splash_tile_0.jpg"
+  },
+  "43": {
+   "name": "카르마",
+   "alias": "Karma",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Karma/Skins/Base/Images/karma_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Karma/Skins/Base/Images/karma_splash_tile_0.jpg"
+  },
+  "44": {
+   "name": "타릭",
+   "alias": "Taric",
+   "roles": [
+    "support",
+    "tank"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Taric/Skins/Base/Images/taric_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Taric/Skins/Base/Images/taric_splash_tile_0.jpg"
+  },
+  "45": {
+   "name": "베이가",
+   "alias": "Veigar",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Veigar/Skins/Base/Images/veigar_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Veigar/Skins/Base/Images/veigar_splash_tile_0.jpg"
+  },
+  "48": {
+   "name": "트런들",
+   "alias": "Trundle",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "knockback",
+    "empower",
+    "terrain"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Trundle/Skins/Base/Images/trundle_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Trundle/Skins/Base/Images/trundle_splash_tile_0.jpg"
+  },
+  "50": {
+   "name": "스웨인",
+   "alias": "Swain",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Swain/Skins/Base/Images/swain_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Swain/Skins/Base/Images/swain_splash_tile_0.jpg"
+  },
+  "51": {
+   "name": "케이틀린",
+   "alias": "Caitlyn",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Caitlyn/Skins/Base/Images/caitlyn_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Caitlyn/Skins/Base/Images/caitlyn_splash_tile_0.jpg"
+  },
+  "53": {
+   "name": "블리츠크랭크",
+   "alias": "Blitzcrank",
+   "roles": [
+    "tank",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 2,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Blitzcrank/Skins/Base/Images/blitzcrank_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Blitzcrank/Skins/Base/Images/blitzcrank_splash_tile_0.jpg"
+  },
+  "54": {
+   "name": "말파이트",
+   "alias": "Malphite",
+   "roles": [
+    "tank",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Malphite/Skins/Base/Images/malphite_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Malphite/Skins/Base/Images/malphite_splash_tile_0.jpg"
+  },
+  "55": {
+   "name": "카타리나",
+   "alias": "Katarina",
+   "roles": [
+    "assassin",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "spin"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Katarina/Skins/Base/Images/katarina_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Katarina/Skins/Base/Images/katarina_splash_tile_0.jpg"
+  },
+  "56": {
+   "name": "녹턴",
+   "alias": "Nocturne",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Nocturne/Skins/Base/Images/nocturne_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Nocturne/Skins/Base/Images/nocturne_splash_tile_0.jpg"
+  },
+  "57": {
+   "name": "마오카이",
+   "alias": "Maokai",
+   "roles": [
+    "tank",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Maokai/Skins/Base/Images/maokai_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Maokai/Skins/Base/Images/maokai_splash_tile_0.jpg"
+  },
+  "58": {
+   "name": "레넥톤",
+   "alias": "Renekton",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Renekton/Skins/Base/Images/renekton_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Renekton/Skins/Base/Images/renekton_splash_tile_0.jpg"
+  },
+  "59": {
+   "name": "자르반 4세",
+   "alias": "JarvanIV",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "terrain"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/JarvanIV/Skins/Base/Images/jarvaniv_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/JarvanIV/Skins/Base/Images/jarvaniv_splash_tile_0.jpg"
+  },
+  "60": {
+   "name": "엘리스",
+   "alias": "Elise",
+   "roles": [
+    "assassin",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Elise/Skins/Base/Images/elise_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Elise/Skins/Base/Images/elise_splash_tile_0.jpg"
+  },
+  "61": {
+   "name": "오리아나",
+   "alias": "Orianna",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Orianna/Skins/Base/Images/orianna_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Orianna/Skins/Base/Images/orianna_splash_tile_0.jpg"
+  },
+  "62": {
+   "name": "오공",
+   "alias": "MonkeyKing",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/MonkeyKing/Skins/Base/Images/monkeyking_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/MonkeyKing/Skins/Base/Images/monkeyking_splash_tile_0.jpg"
+  },
+  "63": {
+   "name": "브랜드",
+   "alias": "Brand",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Brand/Skins/Base/Images/brand_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Brand/Skins/Base/Images/brand_splash_tile_0.jpg"
+  },
+  "64": {
+   "name": "리 신",
+   "alias": "LeeSin",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "shield",
+    "heal",
+    "knockback",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/LeeSin/Skins/Base/Images/leesin_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/LeeSin/Skins/Base/Images/leesin_splash_tile_0.jpg"
+  },
+  "67": {
+   "name": "베인",
+   "alias": "Vayne",
+   "roles": [
+    "marksman",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Vayne/Skins/Base/Images/vayne_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Vayne/Skins/Base/Images/vayne_splash_tile_0.jpg"
+  },
+  "68": {
+   "name": "럼블",
+   "alias": "Rumble",
+   "roles": [
+    "fighter",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "shield"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Rumble/Skins/Base/Images/rumble_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Rumble/Skins/Base/Images/rumble_splash_tile_0.jpg"
+  },
+  "69": {
+   "name": "카시오페아",
+   "alias": "Cassiopeia",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "burn"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Cassiopeia/Skins/Base/Images/cassiopeia_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Cassiopeia/Skins/Base/Images/cassiopeia_splash_tile_0.jpg"
+  },
+  "72": {
+   "name": "스카너",
+   "alias": "Skarner",
+   "roles": [
+    "tank",
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Skarner/Skins/Base/Images/skarner_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Skarner/Skins/Base/Images/skarner_splash_tile_0.jpg"
+  },
+  "74": {
+   "name": "하이머딩거",
+   "alias": "Heimerdinger",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Heimerdinger/Skins/Base/Images/heimerdinger_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Heimerdinger/Skins/Base/Images/heimerdinger_splash_tile_0.jpg"
+  },
+  "75": {
+   "name": "나서스",
+   "alias": "Nasus",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "heal",
+    "empower",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Nasus/Skins/Base/Images/nasus_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Nasus/Skins/Base/Images/nasus_splash_tile_0.jpg"
+  },
+  "76": {
+   "name": "니달리",
+   "alias": "Nidalee",
+   "roles": [
+    "assassin",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 2
+   },
+   "flags": [
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Nidalee/Skins/Base/Images/nidalee_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Nidalee/Skins/Base/Images/nidalee_splash_tile_0.jpg"
+  },
+  "77": {
+   "name": "우디르",
+   "alias": "Udyr",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "MIX",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Udyr/Skins/Base/Images/udyr_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Udyr/Skins/Base/Images/udyr_splash_tile_0.jpg"
+  },
+  "78": {
+   "name": "뽀삐",
+   "alias": "Poppy",
+   "roles": [
+    "tank",
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Poppy/Skins/Base/Images/poppy_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Poppy/Skins/Base/Images/poppy_splash_tile_0.jpg"
+  },
+  "79": {
+   "name": "그라가스",
+   "alias": "Gragas",
+   "roles": [
+    "fighter",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "knockback",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Gragas/Skins/Base/Images/gragas_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Gragas/Skins/Base/Images/gragas_splash_tile_0.jpg"
+  },
+  "80": {
+   "name": "판테온",
+   "alias": "Pantheon",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Pantheon/Skins/Base/Images/pantheon_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Pantheon/Skins/Base/Images/pantheon_splash_tile_0.jpg"
+  },
+  "81": {
+   "name": "이즈리얼",
+   "alias": "Ezreal",
+   "roles": [
+    "marksman",
+    "mage"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 1,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "dash"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Ezreal/Skins/Base/Images/ezreal_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Ezreal/Skins/Base/Images/ezreal_splash_tile_0.jpg"
+  },
+  "82": {
+   "name": "모데카이저",
+   "alias": "Mordekaiser",
+   "roles": [
+    "fighter",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Mordekaiser/Skins/Base/Images/mordekaiser_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Mordekaiser/Skins/Base/Images/mordekaiser_splash_tile_0.jpg"
+  },
+  "83": {
+   "name": "요릭",
+   "alias": "Yorick",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "dash",
+    "heal",
+    "empower",
+    "summon",
+    "terrain"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Yorick/Skins/Base/Images/yorick_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Yorick/Skins/Base/Images/yorick_splash_tile_0.jpg"
+  },
+  "84": {
+   "name": "아칼리",
+   "alias": "Akali",
+   "roles": [
+    "assassin"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Akali/Skins/Base/Images/akali_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Akali/Skins/Base/Images/akali_splash_tile_0.jpg"
+  },
+  "85": {
+   "name": "케넨",
+   "alias": "Kennen",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Kennen/Skins/Base/Images/kennen_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Kennen/Skins/Base/Images/kennen_splash_tile_0.jpg"
+  },
+  "86": {
+   "name": "가렌",
+   "alias": "Garen",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "shield",
+    "empower",
+    "spin"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Garen/Skins/Base/Images/garen_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Garen/Skins/Base/Images/garen_splash_tile_0.jpg"
+  },
+  "89": {
+   "name": "레오나",
+   "alias": "Leona",
+   "roles": [
+    "tank",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Leona/Skins/Base/Images/leona_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Leona/Skins/Base/Images/leona_splash_tile_0.jpg"
+  },
+  "90": {
+   "name": "말자하",
+   "alias": "Malzahar",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Malzahar/Skins/Base/Images/malzahar_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Malzahar/Skins/Base/Images/malzahar_splash_tile_0.jpg"
+  },
+  "91": {
+   "name": "탈론",
+   "alias": "Talon",
+   "roles": [
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Talon/Skins/Base/Images/talon_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Talon/Skins/Base/Images/talon_splash_tile_0.jpg"
+  },
+  "92": {
+   "name": "리븐",
+   "alias": "Riven",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Riven/Skins/Base/Images/riven_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Riven/Skins/Base/Images/riven_splash_tile_0.jpg"
+  },
+  "96": {
+   "name": "코그모",
+   "alias": "KogMaw",
+   "roles": [
+    "marksman",
+    "mage"
+   ],
+   "damage": "MIX",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/KogMaw/Skins/Base/Images/kogmaw_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/KogMaw/Skins/Base/Images/kogmaw_splash_tile_0.jpg"
+  },
+  "98": {
+   "name": "쉔",
+   "alias": "Shen",
+   "roles": [
+    "tank"
+   ],
+   "damage": "MIX",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Shen/Skins/Base/Images/shen_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Shen/Skins/Base/Images/shen_splash_tile_0.jpg"
+  },
+  "99": {
+   "name": "럭스",
+   "alias": "Lux",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Lux/Skins/Base/Images/lux_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Lux/Skins/Base/Images/lux_splash_tile_0.jpg"
+  },
+  "101": {
+   "name": "제라스",
+   "alias": "Xerath",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Xerath/Skins/Base/Images/xerath_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Xerath/Skins/Base/Images/xerath_splash_tile_0.jpg"
+  },
+  "102": {
+   "name": "쉬바나",
+   "alias": "Shyvana",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "MIX",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "shield",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Shyvana/Skins/Base/Images/Shyvana_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Shyvana/Skins/Base/Images/Shyvana_splash_tile_0.jpg"
+  },
+  "103": {
+   "name": "아리",
+   "alias": "Ahri",
+   "roles": [
+    "mage",
+    "assassin"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Ahri/Skins/Base/Images/ahri_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Ahri/Skins/Base/Images/ahri_splash_tile_0.jpg"
+  },
+  "104": {
+   "name": "그레이브즈",
+   "alias": "Graves",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "dash"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Graves/Skins/Base/Images/graves_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Graves/Skins/Base/Images/graves_splash_tile_0.jpg"
+  },
+  "105": {
+   "name": "피즈",
+   "alias": "Fizz",
+   "roles": [
+    "assassin",
+    "fighter"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "knockback",
+    "empower",
+    "onhit"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Fizz/Skins/Base/Images/fizz_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Fizz/Skins/Base/Images/fizz_splash_tile_0.jpg"
+  },
+  "106": {
+   "name": "볼리베어",
+   "alias": "Volibear",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "MIX",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "empower",
+    "onhit"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Volibear/Skins/Base/Images/volibear_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Volibear/Skins/Base/Images/volibear_splash_tile_0.jpg"
+  },
+  "107": {
+   "name": "렝가",
+   "alias": "Rengar",
+   "roles": [
+    "assassin",
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Rengar/Skins/Base/Images/rengar_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Rengar/Skins/Base/Images/rengar_splash_tile_0.jpg"
+  },
+  "110": {
+   "name": "바루스",
+   "alias": "Varus",
+   "roles": [
+    "marksman",
+    "mage"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Varus/Skins/Base/Images/varus_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Varus/Skins/Base/Images/varus_splash_tile_0.jpg"
+  },
+  "111": {
+   "name": "노틸러스",
+   "alias": "Nautilus",
+   "roles": [
+    "tank",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "burn"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Nautilus/Skins/Base/Images/nautilus_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Nautilus/Skins/Base/Images/nautilus_splash_tile_0.jpg"
+  },
+  "112": {
+   "name": "빅토르",
+   "alias": "Viktor",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "channel",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Viktor/Skins/Base/Images/Viktor_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Viktor/Skins/Base/Images/Viktor_splash_tile_0.jpg"
+  },
+  "113": {
+   "name": "세주아니",
+   "alias": "Sejuani",
+   "roles": [
+    "tank"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Sejuani/Skins/Base/Images/sejuani_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Sejuani/Skins/Base/Images/sejuani_splash_tile_0.jpg"
+  },
+  "114": {
+   "name": "피오라",
+   "alias": "Fiora",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "onhit"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Fiora/Skins/Base/Images/fiora_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Fiora/Skins/Base/Images/fiora_splash_tile_0.jpg"
+  },
+  "115": {
+   "name": "직스",
+   "alias": "Ziggs",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "knockback",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Ziggs/Skins/Base/Images/ziggs_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Ziggs/Skins/Base/Images/ziggs_splash_tile_0.jpg"
+  },
+  "117": {
+   "name": "룰루",
+   "alias": "Lulu",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Lulu/Skins/Base/Images/lulu_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Lulu/Skins/Base/Images/lulu_splash_tile_0.jpg"
+  },
+  "119": {
+   "name": "드레이븐",
+   "alias": "Draven",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "knockback",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Draven/Skins/Base/Images/draven_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Draven/Skins/Base/Images/draven_splash_tile_0.jpg"
+  },
+  "120": {
+   "name": "헤카림",
+   "alias": "Hecarim",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "heal",
+    "knockback",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Hecarim/Skins/Base/Images/hecarim_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Hecarim/Skins/Base/Images/hecarim_splash_tile_0.jpg"
+  },
+  "121": {
+   "name": "카직스",
+   "alias": "Khazix",
+   "roles": [
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/KhaZix/Skins/Base/Images/khazix_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/KhaZix/Skins/Base/Images/khazix_splash_tile_0.jpg"
+  },
+  "122": {
+   "name": "다리우스",
+   "alias": "Darius",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "empower",
+    "spin"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Darius/Skins/Base/Images/darius_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Darius/Skins/Base/Images/darius_splash_tile_0.jpg"
+  },
+  "126": {
+   "name": "제이스",
+   "alias": "Jayce",
+   "roles": [
+    "fighter",
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "dash",
+    "knockback",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Jayce/Skins/Base/Images/jayce_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Jayce/Skins/Base/Images/jayce_splash_tile_0.jpg"
+  },
+  "127": {
+   "name": "리산드라",
+   "alias": "Lissandra",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Lissandra/Skins/Base/Images/lissandra_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Lissandra/Skins/Base/Images/lissandra_splash_tile_0.jpg"
+  },
+  "131": {
+   "name": "다이애나",
+   "alias": "Diana",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Diana/Skins/Base/Images/diana_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Diana/Skins/Base/Images/diana_splash_tile_0.jpg"
+  },
+  "133": {
+   "name": "퀸",
+   "alias": "Quinn",
+   "roles": [
+    "marksman",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "channel",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Quinn/Skins/Base/Images/quinn_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Quinn/Skins/Base/Images/quinn_splash_tile_0.jpg"
+  },
+  "134": {
+   "name": "신드라",
+   "alias": "Syndra",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Syndra/Skins/Base/Images/syndra_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Syndra/Skins/Base/Images/syndra_splash_tile_0.jpg"
+  },
+  "136": {
+   "name": "아우렐리온 솔",
+   "alias": "AurelionSol",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "channel",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/AurelionSol/Skins/Base/Images/aurelionsol_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/AurelionSol/Skins/Base/Images/aurelionsol_splash_tile_0.jpg"
+  },
+  "141": {
+   "name": "케인",
+   "alias": "Kayn",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Kayn/Skins/Base/Images/kayn_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Kayn/Skins/Base/Images/kayn_splash_tile_0.jpg"
+  },
+  "142": {
+   "name": "조이",
+   "alias": "Zoe",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Zoe/Skins/Base/Images/zoe_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Zoe/Skins/Base/Images/zoe_splash_tile_0.jpg"
+  },
+  "143": {
+   "name": "자이라",
+   "alias": "Zyra",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Zyra/Skins/Base/Images/zyra_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Zyra/Skins/Base/Images/zyra_splash_tile_0.jpg"
+  },
+  "145": {
+   "name": "카이사",
+   "alias": "Kaisa",
+   "roles": [
+    "marksman",
+    "mage"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 0,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Kaisa/Skins/Base/Images/kaisa_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Kaisa/Skins/Base/Images/kaisa_splash_tile_0.jpg"
+  },
+  "147": {
+   "name": "세라핀",
+   "alias": "Seraphine",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Seraphine/Skins/Base/Images/seraphine_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Seraphine/Skins/Base/Images/seraphine_splash_tile_0.jpg"
+  },
+  "150": {
+   "name": "나르",
+   "alias": "Gnar",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Gnar/Skins/Base/Images/gnar_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Gnar/Skins/Base/Images/gnar_splash_tile_0.jpg"
+  },
+  "154": {
+   "name": "자크",
+   "alias": "Zac",
+   "roles": [
+    "tank",
+    "fighter"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Zac/Skins/Base/Images/zac_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Zac/Skins/Base/Images/zac_splash_tile_0.jpg"
+  },
+  "157": {
+   "name": "야스오",
+   "alias": "Yasuo",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Yasuo/Skins/Base/Images/yasuo_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Yasuo/Skins/Base/Images/yasuo_splash_tile_0.jpg"
+  },
+  "161": {
+   "name": "벨코즈",
+   "alias": "Velkoz",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Velkoz/Skins/Base/Images/velkoz_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Velkoz/Skins/Base/Images/velkoz_splash_tile_0.jpg"
+  },
+  "163": {
+   "name": "탈리야",
+   "alias": "Taliyah",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "knockback",
+    "terrain"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Taliyah/Skins/Base/Images/taliyah_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Taliyah/Skins/Base/Images/taliyah_splash_tile_0.jpg"
+  },
+  "164": {
+   "name": "카밀",
+   "alias": "Camille",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "channel",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Camille/skins/base/Images/camille_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Camille/skins/base/Images/camille_splash_tile_0.jpg"
+  },
+  "166": {
+   "name": "아크샨",
+   "alias": "Akshan",
+   "roles": [
+    "marksman",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 2
+   },
+   "flags": [
+    "shield"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Akshan/Skins/Base/Images/akshan_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Akshan/Skins/Base/Images/akshan_splash_tile_0.jpg"
+  },
+  "200": {
+   "name": "벨베스",
+   "alias": "Belveth",
+   "roles": [
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Belveth/Skins/Base/Images/belveth_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Belveth/Skins/Base/Images/belveth_splash_tile_0.jpg"
+  },
+  "201": {
+   "name": "브라움",
+   "alias": "Braum",
+   "roles": [
+    "tank",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 2,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Braum/Skins/Base/Images/braum_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Braum/Skins/Base/Images/braum_splash_tile_0.jpg"
+  },
+  "202": {
+   "name": "진",
+   "alias": "Jhin",
+   "roles": [
+    "marksman",
+    "mage"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "channel"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Jhin/Skins/Base/Images/jhin_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Jhin/Skins/Base/Images/jhin_splash_tile_0.jpg"
+  },
+  "203": {
+   "name": "킨드레드",
+   "alias": "Kindred",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 2
+   },
+   "flags": [
+    "dash",
+    "heal",
+    "empower",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Kindred/skins/base/Images/kindred_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Kindred/skins/base/Images/kindred_splash_tile_0.jpg"
+  },
+  "221": {
+   "name": "제리",
+   "alias": "Zeri",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 0
+   },
+   "flags": [
+    "dash",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Zeri/Skins/Base/Images/Zeri_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Zeri/Skins/Base/Images/Zeri_splash_tile_0.jpg"
+  },
+  "222": {
+   "name": "징크스",
+   "alias": "Jinx",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Jinx/Skins/Base/Images/jinx_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Jinx/Skins/Base/Images/jinx_splash_tile_0.jpg"
+  },
+  "223": {
+   "name": "탐 켄치",
+   "alias": "TahmKench",
+   "roles": [
+    "tank",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/TahmKench/Skins/Base/Images/tahmkench_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/TahmKench/Skins/Base/Images/tahmkench_splash_tile_0.jpg"
+  },
+  "233": {
+   "name": "브라이어",
+   "alias": "Briar",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 3,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Briar/Skins/Base/Images/Briar_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Briar/Skins/Base/Images/Briar_splash_tile_0.jpg"
+  },
+  "234": {
+   "name": "비에고",
+   "alias": "Viego",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Viego/Skins/Base/Images/viego_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Viego/Skins/Base/Images/viego_splash_tile_0.jpg"
+  },
+  "235": {
+   "name": "세나",
+   "alias": "Senna",
+   "roles": [
+    "support",
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "ally",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Senna/Skins/Base/Images/senna_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Senna/Skins/Base/Images/senna_splash_tile_0.jpg"
+  },
+  "236": {
+   "name": "루시안",
+   "alias": "Lucian",
+   "roles": [
+    "marksman",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Lucian/Skins/Base/Images/lucian_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Lucian/Skins/Base/Images/lucian_splash_tile_0.jpg"
+  },
+  "238": {
+   "name": "제드",
+   "alias": "Zed",
+   "roles": [
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Zed/Skins/Base/Images/zed_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Zed/Skins/Base/Images/zed_splash_tile_0.jpg"
+  },
+  "240": {
+   "name": "클레드",
+   "alias": "Kled",
+   "roles": [
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "knockback",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Kled/Skins/Base/Images/kled_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Kled/Skins/Base/Images/kled_splash_tile_0.jpg"
+  },
+  "245": {
+   "name": "에코",
+   "alias": "Ekko",
+   "roles": [
+    "assassin",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Ekko/Skins/Base/Images/ekko_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Ekko/Skins/Base/Images/ekko_splash_tile_0.jpg"
+  },
+  "246": {
+   "name": "키아나",
+   "alias": "Qiyana",
+   "roles": [
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "knockback"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Qiyana/Skins/Base/Images/qiyana_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Qiyana/Skins/Base/Images/qiyana_splash_tile_0.jpg"
+  },
+  "254": {
+   "name": "바이",
+   "alias": "Vi",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "knockback",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Vi/Skins/Base/Images/vi_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Vi/Skins/Base/Images/vi_splash_tile_0.jpg"
+  },
+  "266": {
+   "name": "아트록스",
+   "alias": "Aatrox",
+   "roles": [
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 3,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Aatrox/Skins/Base/Images/aatrox_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Aatrox/Skins/Base/Images/aatrox_splash_tile_0.jpg"
+  },
+  "267": {
+   "name": "나미",
+   "alias": "Nami",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 1,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Nami/Skins/Base/Images/nami_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Nami/Skins/Base/Images/nami_splash_tile_0.jpg"
+  },
+  "268": {
+   "name": "아지르",
+   "alias": "Azir",
+   "roles": [
+    "mage",
+    "marksman"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "shield",
+    "summon",
+    "terrain"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Azir/Skins/Base/Images/azir_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Azir/Skins/Base/Images/azir_splash_tile_0.jpg"
+  },
+  "350": {
+   "name": "유미",
+   "alias": "Yuumi",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 1,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Yuumi/Skins/Base/Images/yuumi_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Yuumi/Skins/Base/Images/yuumi_splash_tile_0.jpg"
+  },
+  "360": {
+   "name": "사미라",
+   "alias": "Samira",
+   "roles": [
+    "marksman",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Samira/Skins/Base/Images/samira_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Samira/Skins/Base/Images/samira_splash_tile_0.jpg"
+  },
+  "412": {
+   "name": "쓰레쉬",
+   "alias": "Thresh",
+   "roles": [
+    "support",
+    "tank"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 1,
+    "durability": 2,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "knockback",
+    "empower",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Thresh/Skins/Base/Images/thresh_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Thresh/Skins/Base/Images/thresh_splash_tile_0.jpg"
+  },
+  "420": {
+   "name": "일라오이",
+   "alias": "Illaoi",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "empower",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Illaoi/Skins/Base/Images/illaoi_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Illaoi/Skins/Base/Images/illaoi_splash_tile_0.jpg"
+  },
+  "421": {
+   "name": "렉사이",
+   "alias": "RekSai",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "dash"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/RekSai/Skins/Base/Images/reksai_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/RekSai/Skins/Base/Images/reksai_splash_tile_0.jpg"
+  },
+  "427": {
+   "name": "아이번",
+   "alias": "Ivern",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 1,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "ally",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Ivern/Skins/Base/Images/ivern_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Ivern/Skins/Base/Images/ivern_splash_tile_0.jpg"
+  },
+  "429": {
+   "name": "칼리스타",
+   "alias": "Kalista",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 2
+   },
+   "flags": [
+    "dash",
+    "knockback",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Kalista/Skins/Base/Images/kalista_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Kalista/Skins/Base/Images/kalista_splash_tile_0.jpg"
+  },
+  "432": {
+   "name": "바드",
+   "alias": "Bard",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 1,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "heal",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Bard/Skins/Base/Images/bard_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Bard/Skins/Base/Images/bard_splash_tile_0.jpg"
+  },
+  "497": {
+   "name": "라칸",
+   "alias": "Rakan",
+   "roles": [
+    "support"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 2,
+    "cc": 3,
+    "mobility": 3,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Rakan/Skins/Base/Images/rakan_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Rakan/Skins/Base/Images/rakan_splash_tile_0.jpg"
+  },
+  "498": {
+   "name": "자야",
+   "alias": "Xayah",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Xayah/Skins/Base/Images/xayah_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Xayah/Skins/Base/Images/xayah_splash_tile_0.jpg"
+  },
+  "516": {
+   "name": "오른",
+   "alias": "Ornn",
+   "roles": [
+    "tank"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "knockback",
+    "terrain"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Ornn/Skins/Base/Images/ornn_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Ornn/Skins/Base/Images/ornn_splash_tile_0.jpg"
+  },
+  "517": {
+   "name": "사일러스",
+   "alias": "Sylas",
+   "roles": [
+    "mage",
+    "assassin"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Sylas/Skins/Base/Images/sylas_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Sylas/Skins/Base/Images/sylas_splash_tile_0.jpg"
+  },
+  "518": {
+   "name": "니코",
+   "alias": "Neeko",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Neeko/Skins/Base/Images/neeko_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Neeko/Skins/Base/Images/neeko_splash_tile_0.jpg"
+  },
+  "523": {
+   "name": "아펠리오스",
+   "alias": "Aphelios",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Aphelios/Skins/Base/Images/aphelios_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Aphelios/Skins/Base/Images/aphelios_splash_tile_0.jpg"
+  },
+  "526": {
+   "name": "렐",
+   "alias": "Rell",
+   "roles": [
+    "tank",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 1,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Rell/Skins/Base/Images/rell_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Rell/Skins/Base/Images/rell_splash_tile_0.jpg"
+  },
+  "555": {
+   "name": "파이크",
+   "alias": "Pyke",
+   "roles": [
+    "support",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "channel"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Pyke/Skins/Base/Images/pyke_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Pyke/Skins/Base/Images/pyke_splash_tile_0.jpg"
+  },
+  "711": {
+   "name": "벡스",
+   "alias": "Vex",
+   "roles": [
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Vex/Skins/Base/Images/vex_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Vex/Skins/Base/Images/vex_splash_tile_0.jpg"
+  },
+  "777": {
+   "name": "요네",
+   "alias": "Yone",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Yone/Skins/Base/Images/yone_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Yone/Skins/Base/Images/yone_splash_tile_0.jpg"
+  },
+  "799": {
+   "name": "암베사",
+   "alias": "Ambessa",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Ambessa/Skins/Base/Images/Ambessa_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Ambessa/Skins/Base/Images/Ambessa_splash_tile_0.jpg"
+  },
+  "800": {
+   "name": "멜",
+   "alias": "Mel",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "burn",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Mel/Skins/Base/Images/Mel_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Mel/Skins/Base/Images/Mel_splash_tile_0.jpg"
+  },
+  "804": {
+   "name": "유나라",
+   "alias": "Yunara",
+   "roles": [
+    "marksman"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 2,
+    "utility": 0
+   },
+   "flags": [
+    "dash"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Yunara/Skins/Base/Images/Yunara_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Yunara/Skins/Base/Images/Yunara_splash_tile_0.jpg"
+  },
+  "805": {
+   "name": "로크",
+   "alias": "Locke",
+   "roles": [
+    "assassin",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Locke/Skins/Base/Images/Locke_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Locke/Skins/Base/Images/Locke_splash_tile_0.jpg"
+  },
+  "875": {
+   "name": "세트",
+   "alias": "Sett",
+   "roles": [
+    "fighter",
+    "tank"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Sett/Skins/Base/Images/sett_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Sett/Skins/Base/Images/sett_splash_tile_0.jpg"
+  },
+  "876": {
+   "name": "릴리아",
+   "alias": "Lillia",
+   "roles": [
+    "fighter",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Lillia/Skins/Base/Images/lillia_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Lillia/Skins/Base/Images/lillia_splash_tile_0.jpg"
+  },
+  "887": {
+   "name": "그웬",
+   "alias": "Gwen",
+   "roles": [
+    "fighter"
+   ],
+   "damage": "AP",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 2,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Gwen/Skins/Base/Images/gwen_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Gwen/Skins/Base/Images/gwen_splash_tile_0.jpg"
+  },
+  "888": {
+   "name": "레나타 글라스크",
+   "alias": "Renata",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 2,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Renata/Skins/Base/Images/Renata_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Renata/Skins/Base/Images/Renata_splash_tile_0.jpg"
+  },
+  "893": {
+   "name": "오로라",
+   "alias": "Aurora",
+   "roles": [
+    "mage",
+    "assassin"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Aurora/Skins/Base/Images/Aurora_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Aurora/Skins/Base/Images/Aurora_splash_tile_0.jpg"
+  },
+  "895": {
+   "name": "닐라",
+   "alias": "Nilah",
+   "roles": [
+    "fighter",
+    "assassin"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Nilah/Skins/Base/Images/Nilah_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Nilah/Skins/Base/Images/Nilah_splash_tile_0.jpg"
+  },
+  "897": {
+   "name": "크산테",
+   "alias": "KSante",
+   "roles": [
+    "tank",
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 3,
+    "cc": 3,
+    "mobility": 2,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "shield",
+    "heal",
+    "knockback",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/KSante/Skins/Base/Images/KSante_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/KSante/Skins/Base/Images/KSante_splash_tile_0.jpg"
+  },
+  "901": {
+   "name": "스몰더",
+   "alias": "Smolder",
+   "roles": [
+    "marksman",
+    "mage"
+   ],
+   "damage": "AD",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 1,
+    "utility": 1
+   },
+   "flags": [
+    "heal",
+    "stack"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Smolder/Skins/Base/Images/Smolder_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Smolder/Skins/Base/Images/Smolder_splash_tile_0.jpg"
+  },
+  "902": {
+   "name": "밀리오",
+   "alias": "Milio",
+   "roles": [
+    "support",
+    "mage"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 1,
+    "durability": 1,
+    "cc": 2,
+    "mobility": 1,
+    "utility": 3
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "knockback",
+    "empower",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Milio/Skins/Base/Images/Milio_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Milio/Skins/Base/Images/Milio_splash_tile_0.jpg"
+  },
+  "904": {
+   "name": "자헨",
+   "alias": "Zaahen",
+   "roles": [
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 2,
+    "durability": 2,
+    "cc": 2,
+    "mobility": 2,
+    "utility": 1
+   },
+   "flags": [
+    "cc",
+    "dash",
+    "heal",
+    "empower"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Zaahen/Skins/Base/Images/Zaahen_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Zaahen/Skins/Base/Images/Zaahen_splash_tile_0.jpg"
+  },
+  "910": {
+   "name": "흐웨이",
+   "alias": "Hwei",
+   "roles": [
+    "mage",
+    "support"
+   ],
+   "damage": "AP",
+   "range": "ranged",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 3,
+    "mobility": 1,
+    "utility": 2
+   },
+   "flags": [
+    "cc",
+    "shield",
+    "heal",
+    "ally"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Hwei/Skins/Skin0/Images/hwei_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Hwei/Skins/Skin0/Images/hwei_splash_tile_0.jpg"
+  },
+  "950": {
+   "name": "나피리",
+   "alias": "Naafiri",
+   "roles": [
+    "assassin",
+    "fighter"
+   ],
+   "damage": "AD",
+   "range": "melee",
+   "style": {
+    "damage": 3,
+    "durability": 1,
+    "cc": 1,
+    "mobility": 3,
+    "utility": 1
+   },
+   "flags": [
+    "dash",
+    "shield",
+    "heal",
+    "summon"
+   ],
+   "splash": "/lol-game-data/assets/ASSETS/Characters/Naafiri/Skins/Base/Images/naafiri_splash_centered_0.jpg",
+   "tile": "/lol-game-data/assets/ASSETS/Characters/Naafiri/Skins/Base/Images/naafiri_splash_tile_0.jpg"
+  }
+ }
+}

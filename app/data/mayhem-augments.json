@@ -1,0 +1,3483 @@
+{
+ "version": "16.20.8248524",
+ "generatedAt": "2026-10-11T15:12:21.316Z",
+ "augments": [
+  {
+   "id": 1001,
+   "key": "ARAM_ImTheJuggernaut",
+   "name": "거인의 결의",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/IAmTheJuggernaut_small.png",
+   "desc": "챔피언에게 피해를 입히거나 받으면 6초 동안 전쟁기계 출동 1중첩을 얻습니다. 전쟁기계 출동 10중첩마다 적응형 능력치를 일정량, 방어력을 일정량, 마법 저항력을 일정량, 크기를 일정량, 강인함을 일정량 얻습니다.\n중첩 수가 많을수록 중첩이 빠르게 사라집니다.",
+   "tags": [
+    "bruiser",
+    "tank",
+    "melee"
+   ],
+   "note": "주고받을수록 능력치·저항. 근접 전사",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1002,
+   "key": "ARAM_ApexInventor",
+   "name": "최첨단 발명가",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ApexInventor_small.png",
+   "desc": "아이템 가속이 100 증가합니다. (50%의 아이템 재사용 대기시간 감소 효과와 동일)\n아이템 가속은 모든 아이템 스킬의 재사용 대기시간을 감소시킵니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "아이템 가속 100. 사용 효과 아이템을 쓰는 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1004,
+   "key": "ARAM_BacktoBasics",
+   "name": "기본으로 돌아가기",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BackToBasics_small.png",
+   "desc": "궁극기가 봉인됩니다. 스킬 피해량이 35% 증가합니다. 체력 회복량, 보호막 흡수량이 증가하고 70의 스킬 가속을 얻습니다.",
+   "tags": [
+    "ability",
+    "haste"
+   ],
+   "note": "궁극기 봉인 대신 스킬 피해·가속. 궁극기 의존도 낮은 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1005,
+   "key": "ARAM_WeeWooWeeWoo",
+   "name": "삐뽀삐뽀",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WeeWooWeeWoo_small.png",
+   "desc": "주변 아군을 향해 이동할 때 해당 아군의 잃은 체력에 비례해 이동 속도가 일정 수준까지 증가합니다. 또한 대상 잃은 체력에 비례해 체력 회복량 및 보호막 흡수량이 일정 수준까지 증가합니다.",
+   "tags": [
+    "req:ally",
+    "mobile"
+   ],
+   "note": "다친 아군에게 빠르게, 회복·보호막 강화. 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1006,
+   "key": "ARAM_BladeWaltz",
+   "name": "검무",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BladeWaltz_small.png",
+   "desc": "적에게 돌진해 반복해서 일정량의 피해를 8회 입히는 동안 대상으로 지정되지 않습니다. (적중 시 피해량의 50%)",
+   "tags": [
+    "melee",
+    "burst"
+   ],
+   "note": "대상 지정 불가 돌진 연타. 근접 딜러",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1007,
+   "key": "ARAM_BluntForce",
+   "name": "육중한 힘",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BluntForce_small.png",
+   "desc": "공격력이 20% 증가합니다.",
+   "tags": [
+    "ad"
+   ],
+   "note": "공격력 20% 증가. AD 챔피언 전반",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1011,
+   "key": "ARAM_CantTouchThis",
+   "name": "난공불락",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CantTouchThis_small.png",
+   "desc": "궁극기를 사용하면 2초 동안 무적 상태가 됩니다. (재사용 대기시간 8초)",
+   "tags": [
+    "ult",
+    "tank",
+    "melee"
+   ],
+   "note": "궁극기 후 2초 무적. 궁극기로 진입하는 근접",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1013,
+   "key": "ARAM_CelestialBody",
+   "name": "천상의 신체",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CelestialBody_small.png",
+   "desc": "1500의 체력을 얻지만, 피해량이 10% 감소합니다.",
+   "tags": [
+    "tank"
+   ],
+   "note": "체력 1500, 피해 10% 감소. 탱커 전용",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1015,
+   "key": "ARAM_CircleofDeath",
+   "name": "죽음의 순환",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CircleOfDeath_small.png",
+   "desc": "체력을 회복하거나 체력을 재생하면 가장 가까운 적 챔피언에게 해당 수치의 70%만큼 마법 피해를 입힙니다.",
+   "tags": [
+    "sustain",
+    "req:heal"
+   ],
+   "note": "회복량 70%를 피해로. 자기 회복이 많은 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1018,
+   "key": "ARAM_CourageoftheColossus",
+   "name": "거석상의 용기",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CourageOfTheColossus_small.png",
+   "desc": "적 챔피언을 이동 불가 상태로 만들거나 이동 스킬을 사용할 수 없게 하면 일정량의 보호막을 얻습니다.",
+   "tags": [
+    "req:cc",
+    "tank"
+   ],
+   "note": "CC를 걸면 보호막. CC 많은 앞라인",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1019,
+   "key": "ARAM_Dashing",
+   "name": "돌진",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Dashing_small.png",
+   "desc": "돌진, 도약, 점멸, 순간이동 스킬의 스킬 가속이 175만큼 증가합니다.",
+   "tags": [
+    "req:dash",
+    "mobile"
+   ],
+   "note": "돌진 스킬 가속 175. 돌진 스킬이 핵심인 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1020,
+   "key": "ARAM_DawnbringersResolve",
+   "name": "빛의 인도자 결의",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DawnbringersResolve_small.png",
+   "desc": "체력이 50% 아래로 떨어지면 3초 동안 최대 체력의 30%를 회복합니다.\n사망 시 또는 45초마다 초기화됩니다.",
+   "tags": [
+    "bruiser",
+    "sustain"
+   ],
+   "note": "체력 50%에서 30% 회복",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1022,
+   "key": "ARAM_Deft",
+   "name": "능수능란",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Deft_small.png",
+   "desc": "60%의 공격 속도를 얻습니다.",
+   "tags": [
+    "attack"
+   ],
+   "note": "공격 속도 60%. 평타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1025,
+   "key": "ARAM_DiveBomber",
+   "name": "폭격기",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DiveBomber_small.png",
+   "desc": "사망 시 폭발하여 주변 적에게 대상 최대 체력의 20%에 해당하는 고정 피해를 입힙니다.",
+   "tags": [
+    "tank",
+    "melee"
+   ],
+   "note": "사망 시 폭발. 먼저 들어가는 근접",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1026,
+   "key": "ARAM_DontBlink",
+   "name": "속전속결",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DontBlink_small.png",
+   "desc": "대상보다 이동 속도가 10 높을 때마다 추가 피해량이 1% 증가합니다.",
+   "tags": [
+    "mobile"
+   ],
+   "note": "이동 속도 차이만큼 추가 피해. 빠른 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1027,
+   "key": "ARAM_Earthwake",
+   "name": "대지의 각성",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Earthwake_small.png",
+   "desc": "돌진, 도약, 점멸, 순간이동 스킬이 1초 후에 폭발하는 흔적을 남기고 일정량의 물리 피해를 입힙니다.",
+   "tags": [
+    "req:dash"
+   ],
+   "note": "돌진 흔적 폭발. 돌진 많은 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1028,
+   "key": "ARAM_Erosion",
+   "name": "부식",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Erosion_small.png",
+   "desc": "적에게 피해를 입히면 4초 동안 방어력 및 마법 저항력을 1.5% 감소시킵니다. 최대 20회 중첩되어 일정량%까지 감소합니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "피해마다 적 저항 감소. 지속 딜러",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1029,
+   "key": "ARAM_EtherealWeapon",
+   "name": "환영 무기",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/EtherealWeapon_small.png",
+   "desc": "스킬이 적중 시 효과 효과를 적용합니다. 대상마다 1초의 재사용 대기시간이 적용됩니다.",
+   "tags": [
+    "ability",
+    "attack"
+   ],
+   "note": "스킬이 적중 시 효과 적용. 적중 시 아이템을 쓰는 스킬 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1030,
+   "key": "ARAM_Eureka",
+   "name": "유레카",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Eureka_small.png",
+   "desc": "스킬 가속이 증가합니다.",
+   "tags": [
+    "haste",
+    "ability",
+    "ap"
+   ],
+   "note": "주문력에 비례한 스킬 가속. AP 스킬 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1034,
+   "key": "VeilOfWarding",
+   "name": "감시의 장막",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
+   "desc": "30초마다 적의 다음 스킬을 막아 주는 주문 방어막을 생성합니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "30초마다 주문 방어막",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1036,
+   "key": "ARAM_Firebrand",
+   "name": "화염 낙인",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Firebrand_small.png",
+   "desc": "기본 공격 시 적에게 화상 효과를 적용해 5초 동안 초당 최대 체력의 0.4%에 해당하는 마법 피해를 입힙니다. 화상 효과는 무한히 중첩됩니다.",
+   "tags": [
+    "attack"
+   ],
+   "note": "평타가 무한 중첩 화상. 공격 속도 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1037,
+   "key": "ARAM_FirstAidKit",
+   "name": "응급처치 키트",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FirstAidKit_small.png",
+   "desc": "체력 회복 및 보호막 효과가 20% 증가합니다.",
+   "tags": [
+    "req:heal"
+   ],
+   "note": "회복·보호막 20%. 회복·보호막 스킬 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1038,
+   "key": "ARAM_FromBeginningToEnd",
+   "name": "시작부터 끝까지",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FromBeginningToEnd_small.png",
+   "desc": "선제공격과 어둠의 수확 핵심 룬을 얻습니다.\n선제공격: 적 챔피언과 전투 개시 시 3초 동안 10%의 추가 피해를 입히고 입힌 피해에 따라 골드를 획득합니다.\n어둠의 수확: 체력이 낮은 챔피언에게 피해를 입히면 적응형 피해를 입히고 해당 챔피언의 영혼을 수확합니다.",
+   "tags": [
+    "burst"
+   ],
+   "note": "선제공격·어둠의 수확. 순간 딜러",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1041,
+   "key": "ARAM_Goliath",
+   "name": "거인",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Goliath_small.png",
+   "desc": "크기가 커져 체력이 35% 증가하고 적응형 능력치가 15% 증가합니다.",
+   "tags": [
+    "tank",
+    "bruiser"
+   ],
+   "note": "체력 35%와 적응형 능력치. 근접 앞라인",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1044,
+   "key": "ARAM_IceCold",
+   "name": "차가운 냉기",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/IceCold_small.png",
+   "desc": "둔화 효과가 이동 속도를 추가로 75 감소시킵니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "둔화 강화. 둔화 스킬이 있는 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1045,
+   "key": "ARAM_InfernalConduit",
+   "name": "지옥의 전도체",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/InfernalConduit_small.png",
+   "desc": "스킬 사용 시 무한히 중첩되는 화상 효과를 적용해 3초 동안 매초 일정량의 마법 피해를 입힙니다.\n모든 화상 효과가 적 챔피언에게 피해를 입힐 때마다 기본 스킬의 재사용 대기시간을 0.08초 감소시킵니다.",
+   "tags": [
+    "ability",
+    "ap"
+   ],
+   "note": "스킬이 화상, 화상마다 기본 스킬 쿨 감소. AP 스킬 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1046,
+   "key": "ARAM_InfernalSoul",
+   "name": "지옥불 영혼",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/InfernalSoul_small.png",
+   "desc": "기본 스킬 또는 기본 공격으로 적을 공격할 때마다 추가 피해를 입히는 지옥불 영혼을 얻습니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "스킬·평타에 추가 피해",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1047,
+   "key": "ARAM_ItsCritical",
+   "name": "치명적인 공격",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ItsCritical_small.png",
+   "desc": "치명타 확률이 50% 증가합니다.",
+   "tags": [
+    "crit",
+    "attack"
+   ],
+   "note": "치명타 확률 50%. 치명타 원딜의 핵심",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1048,
+   "key": "ARAM_JeweledGauntlet",
+   "name": "보석 건틀릿",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/JeweledGauntlet_small.png",
+   "desc": "스킬에 총 145%의 피해를 입히는 치명타가 적용될 수 있습니다.\n치명타 확률이 증가합니다.",
+   "tags": [
+    "ability",
+    "burst"
+   ],
+   "note": "스킬에 치명타. 스킬 딜러",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1051,
+   "key": "ARAM_LightemUp",
+   "name": "불을 밝혀",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LightEmUp_small.png",
+   "desc": "4번째 기본 공격마다 투사체 4개를 발사해 일정량의 마법 피해를 입힙니다.",
+   "tags": [
+    "attack"
+   ],
+   "note": "4타마다 투사체. 평타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1053,
+   "key": "ARAM_MadScientist",
+   "name": "미친 과학자",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MadScientist_small.png",
+   "desc": "부활할 때마다 크기가 커져 30%의 적응형 능력치와 20%의 체력을 얻거나, 크기가 작아져 70의 스킬 가속과 40%의 이동 속도를 얻습니다.",
+   "tags": [
+    "any",
+    "gamble"
+   ],
+   "note": "부활마다 큰 몸(능력치) 또는 작은 몸(가속·속도) 무작위",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1054,
+   "key": "ARAM_MasterofDuality",
+   "name": "결투의 대가",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MasterOfDuality_small.png",
+   "desc": "기본 공격 시 일정량의 주문력을 얻고 스킬로 적에게 피해를 입히면 일정량의 공격력을 얻습니다.\n이 효과는 5초 동안 지속되지만 무한히 초기화 및 중첩됩니다.",
+   "tags": [
+    "attack",
+    "ability"
+   ],
+   "note": "평타는 주문력, 스킬은 공격력을 준다. 평타와 스킬을 섞어 쓰는 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1056,
+   "key": "ARAM_MindtoMatter",
+   "name": "정신 변환",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MindToMatter_small.png",
+   "desc": "체력이 증가합니다.",
+   "tags": [
+    "tank",
+    "bruiser"
+   ],
+   "note": "체력 증가. 앞라인",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1057,
+   "key": "ARAM_MountainSoul",
+   "name": "대지의 영혼",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MountainSoul_small.png",
+   "desc": "전투에서 벗어나면 잠시 동안 보호막을 획득하는 대지의 영혼을 얻습니다.",
+   "tags": [
+    "tank",
+    "any"
+   ],
+   "note": "전투 이탈 시 보호막",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1058,
+   "key": "ARAM_MysticPunch",
+   "name": "신비한 주먹",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MysticPunch_small.png",
+   "desc": "적중 시 효과 스킬의 재사용 대기시간이 1.25초 감소합니다.",
+   "tags": [
+    "attack",
+    "haste"
+   ],
+   "note": "적중 시 스킬 재사용 대기시간 감소. 평타로 스킬 굴리는 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1060,
+   "key": "ARAM_OceanSoul",
+   "name": "바다의 영혼",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/OceanSoul_small.png",
+   "desc": "적에게 피해를 입힌 후 높은 체력 및 마나 재생 효과를 얻는 바다의 영혼을 획득합니다.",
+   "tags": [
+    "sustain"
+   ],
+   "note": "피해를 주면 체력·마나 재생",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1061,
+   "key": "ARAM_OkBoomerang",
+   "name": "부메랑 투척",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/OKBoomerang_small.png",
+   "desc": "7초마다 근처 적에게 부메랑을 자동 사용하여 적중한 적에게 일정량의 적응형 피해를 입힙니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "부메랑 자동 사용",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1062,
+   "key": "ARAM_OmniSoul",
+   "name": "전능의 영혼",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/OmniSoul_small.png",
+   "desc": "무작위 드래곤 영혼 3개를 획득합니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "드래곤 영혼 3개 무작위",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1063,
+   "key": "ARAM_OutlawsGrit",
+   "name": "무법자의 투지",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/OutlawsGrit_small.png",
+   "desc": "돌진, 점멸, 순간이동 스킬을 사용한 후 12의 방어력 및 마법 저항력을 얻습니다. 최대 5회 중첩되어 일정 수준까지 증가합니다.\n15초마다 초기화됩니다.",
+   "tags": [
+    "req:dash",
+    "bruiser"
+   ],
+   "note": "돌진 후 저항. 돌진 많은 전사",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1064,
+   "key": "ARAM_Perseverance",
+   "name": "인내심",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Perseverance_small.png",
+   "desc": "기본 체력 재생이 1000% 증가합니다. 체력이 25% 아래로 떨어지면 기본 체력 재생이 2000%까지 증가합니다.",
+   "tags": [
+    "tank",
+    "sustain"
+   ],
+   "note": "체력 재생 대폭",
+   "ability": false,
+   "quest": false,
+   "disabled": true
+  },
+  {
+   "id": 1066,
+   "key": "ARAM_QuantumComputing",
+   "name": "양자 연산",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/QuantumComputing_small.png",
+   "desc": "30초마다 강력한 베기를 자동 사용하여 주변에 일정량의 물리 피해를 입힙니다. 바깥쪽 절반에서 맞은 적은 80% 둔화된 후 2초에 걸쳐 원래대로 돌아오며, 최대 체력의 일정량에 해당하는 물리 피해를 추가로 받습니다. 챔피언에게 입힌 피해량의 80%만큼 체력을 회복합니다.",
+   "tags": [
+    "bruiser",
+    "melee"
+   ],
+   "note": "30초마다 강력한 베기",
+   "ability": false,
+   "quest": false,
+   "disabled": true
+  },
+  {
+   "id": 1067,
+   "key": "ARAM_RabbleRousing",
+   "name": "원기 회복",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/RabbleRousing_small.png",
+   "desc": "선택한 스킬 사용 시 일정량의 체력을 회복합니다.\n일정량만큼 체력을 회복하며 스킬 재사용 대기시간이 길수록 50%까지 증가합니다.",
+   "tags": [
+    "sustain",
+    "ability"
+   ],
+   "note": "선택한 스킬 사용 시 회복",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1068,
+   "key": "ARAM_Recursion",
+   "name": "되풀이",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Recursion_small.png",
+   "desc": "스킬 가속이 60 증가합니다.",
+   "tags": [
+    "haste",
+    "ability"
+   ],
+   "note": "스킬 가속 60. 스킬 챔피언 전반",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1071,
+   "key": "ARAM_ScopierWeapons",
+   "name": "상급 조준경 부착",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopierWeapons_small.png",
+   "desc": "공격 사거리가 증가합니다.",
+   "tags": [
+    "ranged",
+    "attack"
+   ],
+   "note": "공격 사거리. 원거리 평타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1072,
+   "key": "ARAM_SearingDawn",
+   "name": "타오르는 새벽",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SearingDawn_small.png",
+   "desc": "스킬이 적에게 표식을 남깁니다. 적은 아군의 다음 기본 공격 또는 스킬로부터 추가로 일정량의 마법 피해를 입습니다.",
+   "tags": [
+    "ability"
+   ],
+   "note": "스킬이 표식, 아군 공격 시 추가 피해. 스킬 포킹",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1073,
+   "key": "ARAM_ShadowRunner",
+   "name": "그림자 질주",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ShadowRunner_small.png",
+   "desc": "돌진, 점멸, 순간이동 스킬을 사용하거나 은신 상태에서 벗어난 후 2초 동안 이동 속도가 300 증가합니다.",
+   "tags": [
+    "req:dash",
+    "mobile"
+   ],
+   "note": "돌진·은신 후 이동 속도 300",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1074,
+   "key": "ARAM_ShrinkRay",
+   "name": "감쇠 광선",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ShrinkRay_small.png",
+   "desc": "기본 공격 시 3초 동안 적의 피해량이 15% 감소합니다.",
+   "tags": [
+    "attack",
+    "tank"
+   ],
+   "note": "평타 맞은 적의 피해 감소. 평타 앞라인·원딜",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1076,
+   "key": "ARAM_SonicBoom",
+   "name": "음속 폭발",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SonicBoom_small.png",
+   "desc": "아군에게 이로운 효과, 체력 회복, 보호막을 부여하면 아군 주변 적들에게 일정량의 고정 피해를 입히고 2초 동안 30% 둔화시킵니다. (재사용 대기시간 2초)",
+   "tags": [
+    "req:ally"
+   ],
+   "note": "아군 강화·회복·보호막 시 주변 적 피해. 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1077,
+   "key": "ARAM_SoulSiphon",
+   "name": "영혼 흡수",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SoulSiphon_small.png",
+   "desc": "치명타 확률이 25% 증가하고 치명타 적중 시 12%의 생명력 흡수를 얻습니다.",
+   "tags": [
+    "crit",
+    "attack",
+    "sustain"
+   ],
+   "note": "치명타 확률과 치명타 흡혈. 치명타 원딜",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1079,
+   "key": "ARAM_SymphonyofWar",
+   "name": "전장의 교향곡",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SymphonyOfWar_small.png",
+   "desc": "치명적 속도와 정복자 핵심 룬을 얻습니다.\n치명적 속도 - 챔피언을 기본 공격하면 공격 속도가 증가합니다. 이 효과는 6회까지 중첩됩니다. 6회 중첩되면 기본 공격 시 투사체를 날려 추가 피해를 입힙니다.\n정복자: 적 챔피언 공격 시 적응형 능력치 중첩을 획득합니다. 12회 중첩 시 챔피언 대상 피해량의 일부만큼 체력을 회복합니다.",
+   "tags": [
+    "attack",
+    "bruiser"
+   ],
+   "note": "치명적 속도·정복자. 평타 전사·원딜",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1080,
+   "key": "ARAM_TankItOrLeaveIt",
+   "name": "확률적 방어",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/TankItOrLeaveIt_small.png",
+   "desc": "공격당할 때 치명타 확률(최대 50%)에 따라 치명 방어가 발동해 받는 피해가 20% 감소할 수 있습니다. 치명타 확률이 25% 증가합니다.",
+   "tags": [
+    "crit",
+    "tank"
+   ],
+   "note": "치명타 확률만큼 받는 피해 감소. 치명타 쓰는 앞라인",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1081,
+   "key": "ARAM_TapDancer",
+   "name": "탭 댄서",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/TapDancer_small.png",
+   "desc": "기본 공격 시 이동 속도가 10 증가합니다. 공격 속도가 증가합니다.\n이 효과는 5초 동안 지속되지만 무한히 초기화 및 중첩됩니다.",
+   "tags": [
+    "attack",
+    "mobile"
+   ],
+   "note": "평타마다 이동 속도·공격 속도. 평타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1084,
+   "key": "ARAM_ThreadtheNeedle",
+   "name": "바늘에 실 끼우기",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ThreadTheNeedle_small.png",
+   "desc": "방어구 관통력 및 마법 관통력 18%를 얻습니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "관통력 18%. 딜러 누구나",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1087,
+   "key": "ARAM_Typhoon",
+   "name": "태풍",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Typhoon_small.png",
+   "desc": "기본 공격 시 추가 대상에게 투사체를 발사해 30%의 피해를 입히고 적중 시 효과 효과를 적용합니다.",
+   "tags": [
+    "attack",
+    "ranged"
+   ],
+   "note": "평타가 추가 대상에게. 원거리 평타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1088,
+   "key": "ARAM_UltimateRevolution",
+   "name": "궁극기 대변혁",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/UltimateRevolution_small.png",
+   "desc": "궁극기를 사용한 다음 초기화합니다. (재사용 대기시간 75초 또는 사망 시 초기화)",
+   "tags": [
+    "ult"
+   ],
+   "note": "궁극기 두 번. 궁극기가 강한 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1092,
+   "key": "ARAM_Vulnerability",
+   "name": "취약",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Vulnerability_small.png",
+   "desc": "아이템 및 지속 피해 효과에 145%의 추가 피해를 입히는 치명타가 적용될 수 있습니다.\n치명타 확률을 25% 획득합니다.",
+   "tags": [
+    "crit",
+    "attack"
+   ],
+   "note": "아이템·지속 피해에도 치명타. 치명타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1095,
+   "key": "ARAM_WindspeakersBlessing",
+   "name": "바람전달자의 축복",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WindspeakersBlessing_small.png",
+   "desc": "회복 및 보호막 효과를 부여하면 3초 동안 대상의 방어력 및 마법 저항력이 증가합니다.",
+   "tags": [
+    "req:ally"
+   ],
+   "note": "회복·보호막 대상 저항 증가. 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1097,
+   "key": "ARAM_WitchfulThinking",
+   "name": "사악한 정신",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WitchfulThinking_small.png",
+   "desc": "주문력이 증가합니다.",
+   "tags": [
+    "ap"
+   ],
+   "note": "주문력 증가. AP 챔피언 전반",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1098,
+   "key": "ARAM_WithHaste",
+   "name": "속행",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WithHaste_small.png",
+   "desc": "이동 속도가 증가합니다.",
+   "tags": [
+    "any",
+    "mobile"
+   ],
+   "note": "이동 속도. 무난",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1103,
+   "key": "ARAM_BreadAndButter",
+   "name": "빵과 버터",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬 가속을 100 얻습니다.",
+   "tags": [
+    "haste",
+    "ability"
+   ],
+   "note": "Q 스킬 가속 100. Q가 핵심인 챔피언",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1104,
+   "key": "ARAM_Minionmancer",
+   "name": "소환술사",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Minionmancer_small.png",
+   "desc": "소환물의 크기, 체력, 피해량이 40% 증가합니다.",
+   "tags": [
+    "req:summon"
+   ],
+   "note": "소환물 강화. 소환물 챔피언 전용",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1105,
+   "key": "ARAM_Homeguard",
+   "name": "민병대",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Homeguard_small.png",
+   "desc": "이동 속도가 100% 증가합니다. 피해를 입은 후 6초 동안은 효과가 멈춥니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "맞지 않을 때 이동 속도 100%. 합류·이탈용",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1112,
+   "key": "ARAM_UltimateUnstoppable",
+   "name": "궁극의 저지 불가",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/UltimateUnstoppable_small.png",
+   "desc": "궁극기 사용 시 3초 동안 군중 제어 효과에 면역이 됩니다. (재사용 대기시간 8초)",
+   "tags": [
+    "ult",
+    "melee"
+   ],
+   "note": "궁극기 후 CC 면역. 궁극기로 진입하는 근접",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1113,
+   "key": "ARAM_SkilledSniper",
+   "name": "노련한 저격수",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SkilledSniper_small.png",
+   "desc": "기본 스킬로 적을 저격하면 해당 스킬 재사용 대기시간의 80%를 돌려받습니다. (지속 스킬의 경우 65%)\n저격 - 600 거리 이상 떨어진 적에게 피해 입히기",
+   "tags": [
+    "ability",
+    "ranged"
+   ],
+   "note": "600 넘는 거리로 맞히면 쿨 80% 반환. 장거리 포킹 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1115,
+   "key": "ARAM_ScopiestWeapons",
+   "name": "최상급 조준경 부착",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopiestWeapons_small.png",
+   "desc": "공격 사거리가 증가합니다.",
+   "tags": [
+    "ranged",
+    "attack"
+   ],
+   "note": "공격 사거리 대폭. 원딜 최상급",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1116,
+   "key": "ARAM_Flashy",
+   "name": "점멸 난사",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Flashy_small.png",
+   "desc": "점멸 사용 가능 횟수가 3번이 됩니다. 120초 후 횟수가 모두 충전됩니다.",
+   "tags": [
+    "any",
+    "mobile"
+   ],
+   "note": "점멸 3회",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1118,
+   "key": "ARAM_CriticalHealing",
+   "name": "치명적 치유",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/CriticalHealing_small.png",
+   "desc": "체력 회복 및 보호막 효과에 치명타가 적용되어 40% 증폭될 수 있습니다. 치명타 확률이 25% 증가합니다.",
+   "tags": [
+    "req:ally"
+   ],
+   "note": "회복·보호막에 치명타. 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1129,
+   "key": "ARAM_Marksmage",
+   "name": "마법 명사수",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Marksmage_small.png",
+   "desc": "기본 공격 시 일정량의 물리 피해를 추가로 입힙니다.",
+   "tags": [
+    "attack",
+    "ap"
+   ],
+   "note": "주문력 비례 평타 추가 피해. AP 평타 챔피언(케일·카사딘 등)",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1133,
+   "key": "ARAM_MagicMissile",
+   "name": "마법 미사일",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/Maps/Particles/Kiwi/MagicMissile_small.png",
+   "desc": "스킬 피해를 입히면 적중한 적마다 투사체 3개를 발사해 이동한 거리에 따라 최대 각각 최대 체력의 1%에 해당하는 고정 피해를 입힙니다.",
+   "tags": [
+    "ability"
+   ],
+   "note": "스킬 적중마다 최대 체력 비례 고정 피해 미사일",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1134,
+   "key": "ARAM_DrawYourSword",
+   "name": "검을 뽑아라",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DrawYourSword_small.png",
+   "desc": "이제 근접 챔피언으로 간주됩니다. 24%의 공격력, 24%의 체력, 20%의 공격 속도, 20%의 생명력 흡수 효과, 20%의 이동 속도를 얻습니다. 각 능력치는 잃은 공격 사거리에 따라 추가로 증가합니다.",
+   "tags": [
+    "ranged",
+    "attack",
+    "bruiser"
+   ],
+   "note": "원거리 챔피언이 근접이 되어 큰 능력치. 원거리 평타 챔피언 전용",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1136,
+   "key": "ARAM_SlapAround",
+   "name": "우당탕탕",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SlapAround_small.png",
+   "desc": "적을 이동 불가 상태로 만들거나 이동 스킬을 사용할 수 없게 할 때마다 10의 적응형 능력치를 부여하는 중첩을 얻습니다. 사망 시 중첩의 50%를 잃습니다.",
+   "tags": [
+    "req:cc"
+   ],
+   "note": "CC마다 적응형 능력치 중첩",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1138,
+   "key": "ARAM_Goredrink",
+   "name": "선혈포식",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/GoreDrink_small.png",
+   "desc": "모든 피해 흡혈 15%를 얻습니다.",
+   "tags": [
+    "sustain"
+   ],
+   "note": "모든 피해 흡혈 15%",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1141,
+   "key": "ARAM_AllForYou",
+   "name": "너만을 위해",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/AllForYou_small.png",
+   "desc": "아군에게 사용하는 체력 회복 및 보호막 효과가 30% 증가합니다.",
+   "tags": [
+    "req:ally"
+   ],
+   "note": "아군 회복·보호막 30%. 인챈터 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1149,
+   "key": "ARAM_Impassable",
+   "name": "넘을 수 없는 벽",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Impassable_small.png",
+   "desc": "여진과 빙결 강화 핵심 룬을 얻습니다.\n여진: 적 챔피언을 이동 불가 상태로 만들면 방어력/마법 저항력이 증가하고 잠시 후 주변에 큰 마법 피해를 입힙니다.빙결 강화: 적 챔피언을 이동 불가 상태로 만들면 3줄기의 빙결 광선이 뻗어 나와 근처 적들을 둔화하고 아군에게 입히는 피해를 감소시킵니다.",
+   "tags": [
+    "req:cc",
+    "tank"
+   ],
+   "note": "여진·빙결 강화. CC 탱커",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1150,
+   "key": "ARAM_BreadAndJam",
+   "name": "빵과 잼",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬 가속을 100 얻습니다.",
+   "tags": [
+    "haste",
+    "ability"
+   ],
+   "note": "W 스킬 가속 100. W가 핵심인 챔피언",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1151,
+   "key": "ARAM_BreadAndCheese",
+   "name": "빵과 치즈",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬 가속을 100 얻습니다.",
+   "tags": [
+    "haste",
+    "ability"
+   ],
+   "note": "E 스킬 가속 100. E가 핵심인 챔피언",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1152,
+   "key": "ARAM_Quest_SteelYourHeart",
+   "name": "강철 같은 심장",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Quest_SteelYourHeart_small.png",
+   "desc": "퀘스트: 300중첩 이상 적용된 강철심장을 보유해야 합니다.\n보상: 강철심장 중첩이 3배가 됩니다.",
+   "tags": [
+    "tank"
+   ],
+   "note": "강철심장 퀘스트. 탱커",
+   "ability": false,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 1154,
+   "key": "ARAM_Quest_UrfsChampion",
+   "name": "우르프의 챔피언",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Quest_UrfsChampion_small.png",
+   "desc": "퀘스트: 처치 관여를 여러 번 달성해야 합니다.\n보상: 황금 뒤집개",
+   "tags": [
+    "any"
+   ],
+   "note": "처치 관여 18회 퀘스트, 보상 황금 뒤집개",
+   "ability": false,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 1156,
+   "key": "ARAM_Quest_WoogletsWitchcap",
+   "name": "우글렛의 마녀 모자",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Quest_WoogletsWitchcap_small.png",
+   "desc": "즉시 쓸데없이 큰 지팡이를 획득합니다.\n퀘스트: 라바돈의 죽음모자와 존야의 모래시계를 보유해야 합니다.\n보상: 우글렛의 마녀 모자를 획득합니다.",
+   "tags": [
+    "ap"
+   ],
+   "note": "라바돈·존야 퀘스트. AP 챔피언",
+   "ability": false,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 1170,
+   "key": "ARAM_ScopedWeapons",
+   "name": "조준경 부착",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ScopedWeapons_small.png",
+   "desc": "공격 사거리가 증가합니다.",
+   "tags": [
+    "ranged",
+    "attack"
+   ],
+   "note": "공격 사거리. 원거리 평타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1180,
+   "key": "ARAM_BigBrain",
+   "name": "전술적 대비",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/BigBrain_small.png",
+   "desc": "일정량의 보호막을 얻습니다. 사망 시 또는 만료 70초 후 초기화됩니다.",
+   "tags": [
+    "ap"
+   ],
+   "note": "주문력 300% 보호막",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1181,
+   "key": "ARAM_HeavyHitter",
+   "name": "강타자",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/HeavyHitter_small.png",
+   "desc": "기본 공격 시 일정량의 물리 피해를 추가로 입힙니다.",
+   "tags": [
+    "attack",
+    "tank"
+   ],
+   "note": "체력 비례 평타 추가 피해. 체력 높은 평타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1187,
+   "key": "ARAM_Flashbang",
+   "name": "점멸탄",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Flashbang_small.png",
+   "desc": "점멸 시 폭발을 일으켜 일정량의 피해를 입히고 둔화시킵니다. (사망 시 초기화)",
+   "tags": [
+    "any"
+   ],
+   "note": "점멸 폭발",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1194,
+   "key": "ARAM_FeyMagic",
+   "name": "요정 마법",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FeyMagic_small.png",
+   "desc": "궁극기로 적에게 피해를 입히면 2초 동안 변이시킵니다. (재사용 대기시간 15초)",
+   "tags": [
+    "ult"
+   ],
+   "note": "궁극기로 적을 변이. 궁극기가 넓게 맞는 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1195,
+   "key": "ARAM_GiantSlayer",
+   "name": "거인 학살자",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/GiantSlayer_small.png",
+   "desc": "크기가 작아져 20%의 이동 속도를 얻으며, 상대가 자신보다 큰 정도에 비례해 챔피언에게 10%~30%의 추가 피해를 입힙니다.",
+   "tags": [
+    "melee",
+    "burst",
+    "mobile"
+   ],
+   "note": "작아지고 큰 적에게 추가 피해. 탱커 잡는 딜러",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1204,
+   "key": "ARAM_StackosaurusRex",
+   "name": "다단 중첩",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StackosaurusRex_small.png",
+   "desc": "스킬 중첩을 영구적으로 획득할 때마다 100% 더 획득합니다!",
+   "tags": [
+    "req:stack"
+   ],
+   "note": "영구 중첩 2배. 나서스·베이가·초가스·스몰더 같은 중첩 챔피언 전용",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1205,
+   "key": "ARAM_ADAPt",
+   "name": "적응형 능력치",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ADAPt_small.png",
+   "desc": "추가 공격력을 주문력으로 전환합니다. 또한 주문력이 증가합니다.\n전환 비율은 공격력 1당 주문력 1.67입니다.",
+   "tags": [
+    "ap",
+    "ability"
+   ],
+   "note": "추가 공격력을 주문력으로 바꾼다. 순수 AP 챔피언용",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1206,
+   "key": "ARAM_escAPADe",
+   "name": "마법사 (물리)",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Escapade_small.png",
+   "desc": "주문력을 추가 공격력으로 전환합니다. 또한 공격력이 증가합니다.\n전환 비율은 주문력 1당 공격력 0.6입니다.",
+   "tags": [
+    "ad",
+    "attack"
+   ],
+   "note": "주문력을 공격력으로 바꾼다. 순수 AD 챔피언용",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1211,
+   "key": "ARAM_ItsKillingTime",
+   "name": "처형 시간",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ItsKillingTime_small.png",
+   "desc": "궁극기 사용 후 모든 적에게 표식을 남깁니다. 표식은 대상에게 입히는 피해의 40%를 비축합니다. 5초 후에 비축한 피해를 폭발시킵니다. (재사용 대기시간 8초)",
+   "tags": [
+    "ult",
+    "burst"
+   ],
+   "note": "궁극기 후 피해를 비축했다 폭발. 궁극기로 진입하는 딜러",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1214,
+   "key": "ARAM_SpinToWin",
+   "name": "승리를 위한 회전",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SpinToWin_small.png",
+   "desc": "회전 스킬의 스킬 가속이 30, 피해량이 증가합니다. 궁극기는 피해량이 증가합니다.",
+   "tags": [
+    "req:spin"
+   ],
+   "note": "회전 스킬 강화. 가렌·카타리나 같은 회전 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1220,
+   "key": "ARAM_FanTheHammer",
+   "name": "탄환 세례",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/FanTheHammer_small.png",
+   "desc": "적 챔피언 공격 시 투사체를 5개 발사해 각각 일정량의 물리 피해를 입힙니다. 피해량은 투사체가 이동한 거리에 비례해 50%까지 증가합니다. 방향마다 8초의 재사용 대기시간이 적용됩니다.\n각 탄환은 치명타를 입힐 수 있고 적중 시 효과가 20%로 적용됩니다.",
+   "tags": [
+    "attack",
+    "ad"
+   ],
+   "note": "공격 시 투사체 5개. AD 평타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1225,
+   "key": "ARAM_DualWield",
+   "name": "양손잡이",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DualWield_small.png",
+   "desc": "기본 공격 시 40%의 피해를 입히고 적중 시 효과 효과를 40%만큼 적용하는 투사체를 발사합니다.\n총 공격 속도가 10% 증가합니다.",
+   "tags": [
+    "attack"
+   ],
+   "note": "평타가 투사체를 한 번 더. 적중 시 효과 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1237,
+   "key": "ARAM_TransmuteGold",
+   "name": "전환: 골드",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/TransmuteGold_small.png",
+   "desc": "무작위 골드 증강을 획득합니다.",
+   "tags": [
+    "gamble"
+   ],
+   "note": "무작위 골드 증강",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1238,
+   "key": "ARAM_TransmutePrismatic",
+   "name": "전환: 프리즘",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/TransmutePrismatic_small.png",
+   "desc": "무작위 프리즘 증강을 획득합니다.",
+   "tags": [
+    "gamble"
+   ],
+   "note": "무작위 프리즘 증강",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1243,
+   "key": "ARAM_TransmuteChaos",
+   "name": "전환: 혼돈",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/TransmuteChaos_small.png",
+   "desc": "무작위 증강 2개를 획득합니다.",
+   "tags": [
+    "gamble"
+   ],
+   "note": "무작위 증강 2개",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1301,
+   "key": "ARAM_DivineIntervention",
+   "name": "신성한 중재",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SlowActingPainkillers_small.png",
+   "desc": "35초마다 보호의 별을 자동 사용해 자신에게 서서히 내려오게 합니다. 별이 착지하면 자신과 주변 아군이 2.5초 동안 무적 상태가 됩니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "주기적으로 자신과 주변 아군 무적",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1305,
+   "key": "ARAM_LegDay",
+   "name": "하체 운동의 날",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LegDay_small.png",
+   "desc": "50의 이동 속도와 50%의 둔화 저항을 얻습니다.",
+   "tags": [
+    "any",
+    "melee"
+   ],
+   "note": "이동 속도·둔화 저항. 붙어야 하는 근접",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1308,
+   "key": "ARAM_Firefox",
+   "name": "불여우",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Firfox_small.png",
+   "desc": "자동 사용: 이동 속도가 25% 증가하고 7초마다 주위를 빙빙 도는 불꽃 3개를 생성합니다. 불꽃은 시야에 들어오는 가장 가까운 적을 대상으로 지정해 일정량의 적응형 피해를 입힙니다. 연달아 적중하면 30%의 피해를 입힙니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "이동 속도와 자동 불꽃",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1310,
+   "key": "ARAM_ClownCollege",
+   "name": "광대 대학",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/ClownCollege_small.png",
+   "desc": "암습: 뒤에서 공격 시 일정량의 추가 물리 피해를 입힙니다.\n속임수: 근처로 순간이동해 3초 동안 투명 상태가 됩니다. 투명 상태에서 다음 기본 공격 시 일정량의 물리 피해를 추가로 입힙니다. 뒤에서 기본 공격 시 치명타가 적용되어 일정량의 피해를 입힙니다.\n환각: 죽음: 사망 시 최대 체력의 25%에 해당하는 고정 피해를 입히고 주변을 1초 동안 공포에 빠뜨립니다.",
+   "tags": [
+    "burst",
+    "melee"
+   ],
+   "note": "뒤 공격 추가 피해와 투명 순간이동. 근접 암살자",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1311,
+   "key": "ARAM_Overflow",
+   "name": "범람",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Overflow_small.png",
+   "desc": "마나 소모량이 2배가 됩니다. 스킬의 체력 회복량, 보호막 흡수량 및 피해량이 증가합니다.",
+   "tags": [
+    "ability",
+    "ap"
+   ],
+   "note": "마나 2배 소모 대신 스킬 효과 증가. 마나 여유 있는 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1314,
+   "key": "MightyShield",
+   "name": "강력한 방패",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/MightyShield_small.png",
+   "desc": "보호막을 얻으면 3초 동안 일정량의 적응형 능력치를 얻습니다. (재사용 대기시간 5초)",
+   "tags": [
+    "req:shield"
+   ],
+   "note": "보호막을 얻으면 적응형 능력치. 보호막 스킬 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1315,
+   "key": "SwiftAndSafe",
+   "name": "빠르고 안전하게",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SwiftandSafe_small.png",
+   "desc": "돌진하거나 점멸한 후에 2초 동안 일정량의 보호막을 얻습니다. (재사용 대기시간 5초)",
+   "tags": [
+    "req:dash"
+   ],
+   "note": "돌진 후 보호막",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1318,
+   "key": "ARAM_Upgrade_ZH",
+   "name": "존야 업그레이드",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeZH_small.png",
+   "desc": "존야의 모래시계 재사용 대기시간이 45초로 감소합니다. 이제 존야의 모래시계, 추적자의 팔목 보호대 또는 우글렛의 마녀모자 경직 상태에서 이동할 수 있으며 지속시간 동안 이동 속도가 50% 증가합니다.",
+   "tags": [
+    "ap"
+   ],
+   "note": "존야 강화. 존야를 사는 AP 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1319,
+   "key": "ARAM_Upgrade_Immolate",
+   "name": "불사르기 업그레이드",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeImmolate_small.png",
+   "desc": "공허한 광휘 및 태양불꽃 방패가 불사르기 효과가 적용된 대상 수에 비례하여 12골드를 제공합니다. 250골드를 획득합니다.",
+   "tags": [
+    "tank"
+   ],
+   "note": "불사르기 아이템 강화와 골드. 탱커",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1320,
+   "key": "ARAM_Upgrade_Collector",
+   "name": "징수의 총 업그레이드",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeCollector_small.png",
+   "desc": "징수의 총 기본 지속 효과로 적을 처형하면 처형 기준치가 0.5% 높아지며 추가로 50골드를 얻습니다.\n250골드를 획득합니다.",
+   "tags": [
+    "crit",
+    "ad"
+   ],
+   "note": "징수의 총 강화. 치명타 AD",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1322,
+   "key": "ARAM_GetExcited",
+   "name": "신난다!",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GetExcited_small.png",
+   "desc": "처치 관여 시 4초 동안 100%의 이동 속도 및 15%의 공격 속도를 얻습니다.",
+   "tags": [
+    "burst",
+    "attack"
+   ],
+   "note": "처치 관여 시 이동·공격 속도",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1323,
+   "key": "ARAM_Cruelty",
+   "name": "잔혹 행위",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Cruelty_small.png",
+   "desc": "적 챔피언을 이동 불가 상태로 만들거나 이동 스킬을 사용할 수 없게 하면 대상 위로 혜성을 소환합니다. 혜성은 1초 후 떨어지며, 주변 적에게 일정량의 마법 피해를 입힙니다.\n스킬 사용 1회당 대상별 재사용 대기시간이 6초입니다.",
+   "tags": [
+    "req:cc"
+   ],
+   "note": "CC를 걸면 혜성. CC 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1324,
+   "key": "ARAM_ProteinShake",
+   "name": "프로틴 음료",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ProteinShake_small.png",
+   "desc": "추가 방어력 및 마법 저항력에 비례하여 일정량%의 체력 회복 및 보호막 효과를 얻습니다.",
+   "tags": [
+    "tank",
+    "req:ally"
+   ],
+   "note": "저항력 비례 회복·보호막 강화. 탱 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1325,
+   "key": "GlassCannon",
+   "name": "유리 대포",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
+   "desc": "최대 체력이 30% 감소합니다. 피해량의 일정량만큼 추가 고정 피해를 입힙니다.",
+   "tags": [
+    "burst"
+   ],
+   "note": "체력 70% 상한 대신 25% 추가 고정 피해. 뒤에서 딜하는 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1326,
+   "key": "Nightstalking",
+   "name": "밤의 추적",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Nightstalking_small.png",
+   "desc": "자신이 피해를 입힌 챔피언이 3초 안에 죽으면 1.5초 동안 이동 속도가 40% 증가하고 투명 상태가 됩니다.",
+   "tags": [
+    "burst",
+    "mobile"
+   ],
+   "note": "처치 후 투명. 암살자",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1327,
+   "key": "Adamant",
+   "name": "단호함",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
+   "desc": "적을 이동 불가 상태로 만들거나 이동 스킬을 사용할 수 없게 할 때마다 10초 동안 일정량의 방어력 및 마법 저항력을 얻습니다. (최대 10회 중첩)",
+   "tags": [
+    "req:cc",
+    "tank"
+   ],
+   "note": "CC마다 저항 중첩",
+   "ability": false,
+   "quest": false,
+   "disabled": true
+  },
+  {
+   "id": 1328,
+   "key": "CriticalRhythm",
+   "name": "치명적 리듬",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CriticalRhythm_small.png",
+   "desc": "기본 공격 시 치명타가 발동하면 6%의 공격 속도 중첩을 획득합니다. (최대 10회 중첩)\n치명타 확률을 25% 획득합니다.",
+   "tags": [
+    "crit",
+    "attack"
+   ],
+   "note": "치명타마다 공격 속도 중첩. 치명타 원딜",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1329,
+   "key": "BiggestSnowballEver",
+   "name": "데굴데굴 눈덩이!",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BiggestSnowballEver_small.png",
+   "desc": "눈덩이의 스킬 가속이 100만큼 증가합니다.\n눈덩이가 거대해지고 미니언을 관통합니다. 눈덩이는 챔피언을 2초 동안 20%만큼 둔화시키고, 0.75초 동안 공중에 띄우며, 일정량의 피해를 추가로 입힙니다.\n눈덩이를 보유하지 않은 경우 눈덩이를 얻습니다.",
+   "tags": [
+    "any",
+    "melee"
+   ],
+   "note": "거대 눈덩이 에어본. 진입형",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1331,
+   "key": "EmpyreanPromise",
+   "name": "창공의 서약",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpyreamPromise_small.png",
+   "desc": "체력 회복 및 보호막 효과가 15% 증가합니다. 창공의 서약 소환사 주문을 얻습니다.\n경계\n아군에게 순간이동하고, 착지 후 3초 동안 일정량의 피해를 흡수하는 보호막을 부여합니다.",
+   "tags": [
+    "req:ally"
+   ],
+   "note": "회복·보호막 15%와 아군에게 순간이동. 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1332,
+   "key": "OminousPact",
+   "name": "불길한 서약",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/WisdomOfAges_small.png",
+   "desc": "잃은 체력에 비례하여 주문력을 일정량, 이동 속도를 50%, 모든 피해 흡혈을 20%을 얻습니다. 스킬 사용 시 현재 체력의 5%를 소모합니다.\n체력이 30%일 때 최대 효과를 얻습니다.",
+   "tags": [
+    "ap",
+    "sustain",
+    "bruiser"
+   ],
+   "note": "잃은 체력 비례 주문력·흡혈. AP 전사(블라디미르·모데카이저 등)",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1333,
+   "key": "EscapePlan",
+   "name": "도주 계획",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EscapePlan_small.png",
+   "desc": "체력이 35%가 되면 일정량만큼의 막대한 보호막, 150%의 이동 속도, 축소 효과를 얻습니다. 이러한 효과는 시간이 지나면 점차 사라집니다. (재사용 대기시간 75초)",
+   "tags": [
+    "any"
+   ],
+   "note": "체력 35%에서 큰 보호막과 이동 속도",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1334,
+   "key": "SnowballUpgrade",
+   "name": "눈덩이 업그레이드",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SnowballUpgrade_small.png",
+   "desc": "눈덩이의 스킬 가속이 50만큼 증가합니다.\n대상에게 눈덩이가 적중하면 2초 동안 영역을 생성하여 내부의 적을 일정량만큼 둔화시키고 매초 일정량의 마법 피해를 입힙니다. (최대 일정량의 마법 피해)",
+   "tags": [
+    "any"
+   ],
+   "note": "눈덩이 둔화 영역",
+   "ability": false,
+   "quest": false,
+   "disabled": true
+  },
+  {
+   "id": 1335,
+   "key": "Goldrend",
+   "name": "골드 강탈",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Goldrend_small.png",
+   "desc": "기본 공격이나 스킬로 챔피언에게 피해를 입히면 추가로 일정량의 마법 피해를 입히고 골드를 획득하며 1.5초 동안 25%의 이동 속도를 얻습니다. (챔피언별 재사용 대기시간 30초)",
+   "tags": [
+    "any"
+   ],
+   "note": "챔피언 타격 시 골드",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1336,
+   "key": "ARAM_Upgrade_IE",
+   "name": "무한의 대검 업그레이드",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeIE_small.png",
+   "desc": "500골드를 얻습니다.\n무한의 대검을 보유하고 있으면 치명타가 무작위로 추가 치명타 피해를 입힙니다. 이 피해는 치명타 확률에 비례하여 50%까지 증가합니다.",
+   "tags": [
+    "crit",
+    "attack"
+   ],
+   "note": "무한의 대검 강화와 500골드. 치명타 원딜",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1337,
+   "key": "KingMe",
+   "name": "나는 왕이다",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KingMe_small.png",
+   "desc": "전설급 아이템을 소지하고 처음으로 적 이동 수단을 사용하면 왕이 되어 아이템이 업그레이드되며, 무작위 프리즘 증강을 얻습니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "적 이동 수단(대포) 사용 시 아이템 강화와 프리즘 증강",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1343,
+   "key": "Quest_Sneakerhead",
+   "name": "신발 수집가",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Sneakerhead_small.png",
+   "desc": "다음 퀘스트를 완료하고 초강력 보상을 얻으세요.\n퀘스트 1: 광전사의 군화를 착용하고 기본 공격 일정량/25회\n퀘스트 2: 신속의 장화를 착용하고 내딛은 걸음 일정량/300회\n퀘스트 3: 명석함의 아이오니아 장화를 착용하고 스킬 사용 일정량/20회\n퀘스트 4: 헤르메스의 발걸음을 착용하고 당한 군중 제어 효과 일정량/5회\n퀘스트 5: 판금 장화를 착용하고 감소시킨 기본 공격 피해 일정량/200\n퀘스트 6: 마법사의 신발을 착용하고 입힌 스킬 피해 일정량/1500",
+   "tags": [
+    "attack",
+    "mobile"
+   ],
+   "note": "신발 퀘스트. 평타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1344,
+   "key": "FinalForm",
+   "name": "최종 형태",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FinalForm_small.png",
+   "desc": "궁극기를 사용하면 10초 동안 최대 체력의 50%에 해당하는 보호막, 20%의 모든 피해 흡혈, 30%의 추가 이동 속도를 얻습니다. (재사용 대기시간 20초)",
+   "tags": [
+    "ult",
+    "bruiser",
+    "sustain"
+   ],
+   "note": "궁극기 후 보호막·흡혈·속도. 궁극기로 싸움 거는 전사",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1345,
+   "key": "ARAM_SpiritualPurification",
+   "name": "영혼의 정화",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SpiritualPurification_small.png",
+   "desc": "처치 관여 시 폭발을 일으켜 주변 적에게 적 현재 체력의 15%에 해당하는 피해를 입히고 둔화 지역을 생성합니다. 범위 내 적은 1.5초 동안 60% 둔화됩니다.",
+   "tags": [
+    "burst"
+   ],
+   "note": "처치 관여 시 폭발·둔화",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1346,
+   "key": "Vampirism",
+   "name": "흡혈병",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Vampired_small.png",
+   "desc": "아군이 자신의 체력을 회복시키거나 자신이 체력 재생을 얻을 수 없습니다. 25%의 모든 피해 흡혈 효과를 얻습니다.",
+   "tags": [
+    "sustain"
+   ],
+   "note": "아군 회복 불가 대신 흡혈 25%",
+   "ability": false,
+   "quest": false,
+   "disabled": true
+  },
+  {
+   "id": 1347,
+   "key": "Poltergeist",
+   "name": "폴터가이스트",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Poltergeist_small.png",
+   "desc": "폴터가이스트 소환사 주문을 얻습니다.\n폴터가이스트는 방어막과 유체화를 동시에 사용합니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "방어막+유체화 소환사 주문",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1348,
+   "key": "Flash2",
+   "name": "점멸 2",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Flash2_small.png",
+   "desc": "두 번째 점멸 소환사 주문을 얻고 소환사 주문 가속이 70 증가합니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "점멸 하나 더",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1349,
+   "key": "UltimateAwakening",
+   "name": "궁극의 각성",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ZeroHour_small.png",
+   "desc": "궁극기 가속이 30 증가합니다.\n궁극기 사용 시 기본 스킬이 초기화되고 15초 동안 기본 스킬 가속이 300 증가합니다. (재사용 대기시간 20초)",
+   "tags": [
+    "ult",
+    "ability"
+   ],
+   "note": "궁극기 사용 시 기본 스킬 초기화. 궁극기 후 스킬 몰아치는 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1353,
+   "key": "ARAM_TankEngine",
+   "name": "탱크 엔진",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Tank_Engine_Small.png",
+   "desc": "처치 관여 시 중첩을 얻어 크기가 5% 커지고 최대 체력이 5% 증가합니다. 사망 시 65%의 중첩을 잃습니다.",
+   "tags": [
+    "tank"
+   ],
+   "note": "처치 관여마다 체력 5%. 탱커",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1356,
+   "key": "CriticalMissile",
+   "name": "치명적 미사일",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CriticalMissile_small.png",
+   "desc": "치명타 적중 시 미사일 1+일정량개를 발사해 각각 일정량의 마법 피해를 입힙니다.\n치명타 확률이 25% 증가합니다.",
+   "tags": [
+    "crit",
+    "attack"
+   ],
+   "note": "치명타마다 미사일. 치명타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1358,
+   "key": "PinballSnowball",
+   "name": "핀볼",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PinballSnowball_small.png",
+   "desc": "눈덩이의 스킬 가속이 50 증가하고 추가로 일정량의 고정 피해를 입히며 벽에 튕깁니다. 튕길 때마다 눈덩이의 크기가 25%, 피해량이 20% 증가하고 재사용 대기시간이 30% 감소합니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "눈덩이가 벽에 튕기며 강해진다",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1361,
+   "key": "ARAM_Quest_VoidImmolation",
+   "name": "이케시아의 몰락",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Quest_VoidImmolation_small.png",
+   "desc": "즉시: 바미의 불씨를 획득합니다.\n조건: 태양불꽃 방패와 공허한 광휘를 보유해야 합니다.\n보상: 태양불꽃 방패와 공허한 광휘가 공허의 불길로 합쳐집니다.",
+   "tags": [
+    "tank"
+   ],
+   "note": "태양불꽃·공허한 광휘 퀘스트. 탱커",
+   "ability": false,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 1373,
+   "key": "ShrinkEngine",
+   "name": "축소 엔진",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ShrinkEngine_small.png",
+   "desc": "처치 관여 시 중첩을 얻습니다. 중첩당 크기가 4% 작아지고 스킬 가속을 8, 이동 속도를 1% 얻습니다.\n사망 시 중첩을 65% 잃습니다.\n현재 일정량중첩을 보유 중이며, 다음 능력치를 얻습니다.\n스킬 가속 +일정량\n이동 속도 +일정량%",
+   "tags": [
+    "haste",
+    "mobile"
+   ],
+   "note": "처치 관여마다 스킬 가속·이동 속도",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1375,
+   "key": "SoulEater",
+   "name": "영혼의 포식자",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SoulEater_small.png",
+   "desc": "적 챔피언을 이동 불가 상태로 만들면 최대 체력을 20 얻습니다.\n두 번째 증강일 경우 일정량의 체력으로 시작합니다.",
+   "tags": [
+    "req:cc",
+    "tank"
+   ],
+   "note": "CC마다 최대 체력 영구 증가",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1379,
+   "key": "Upgrade_SwordOfBlossom",
+   "name": "꽃피는 새벽의 검 업그레이드",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeMikaelsBlessing_small.png",
+   "desc": "공격 속도를 100% 획득합니다.\n적 챔피언 공격 시 꽃피는 새벽의 검 체력 회복량이 250%로 증가합니다.",
+   "tags": [
+    "attack",
+    "req:ally"
+   ],
+   "note": "꽃피는 새벽의 검 강화와 공격 속도. 평타 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1384,
+   "key": "Donation",
+   "name": "후원",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Donation_small.png",
+   "desc": "1750골드를 획득합니다. 채팅창 여러분 고마워요! :)",
+   "tags": [
+    "any"
+   ],
+   "note": "즉시 1750골드. 아이템 하나를 빨리 완성",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1386,
+   "key": "YouSpinMeRightRound",
+   "name": "빙글빙글",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/YouSpinMeRightRound_small.png",
+   "desc": "소환사 주문이 영웅의 비상으로 변경됩니다.\n영웅의 비상을 사용하면 갈고리총을 발사해 지형에 고정시키며, 이후 스킬을 재사용하면 갈고리에 매달려 이동합니다. 매달려 이동하는 동안 주변 적을 자동 공격합니다. 적 챔피언에게 부딪히거나 스킬을 재사용하면 영웅의 비상이 끝납니다.",
+   "tags": [
+    "any",
+    "mobile"
+   ],
+   "note": "소환사 주문이 갈고리 이동기로",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1388,
+   "key": "InfiniteRecursion",
+   "name": "무한 반복",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/InfiniteRecursion_small.png",
+   "desc": "스킬 가속을 60+처치 관여당 3 얻습니다.",
+   "tags": [
+    "haste",
+    "ability"
+   ],
+   "note": "스킬 가속이 처치 관여마다 늘어난다. 한타 오래 사는 스킬 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1389,
+   "key": "HandOfBaron",
+   "name": "남작의 도움",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/HandofBaron_small.png",
+   "desc": "적응형 능력치를 25% 얻습니다. 주변 아군 미니언이 대폭 강화됩니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "적응형 능력치 25%와 미니언 강화",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1390,
+   "key": "ARAM_PhenomenalEvil",
+   "name": "극악무도",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ARAM_PhenomenalEvil_small.png",
+   "desc": "스킬로 적 챔피언에게 피해를 입히면 영구적으로 1의 주문력을 얻습니다.\n두 번째 증강일 경우 40의 주문력으로 시작합니다.\n일정량의 주문력을 얻었습니다. 베이가도 뿌듯하겠네요!",
+   "tags": [
+    "ap",
+    "ability"
+   ],
+   "note": "스킬 적중마다 주문력 영구 증가. 스킬 자주 맞히는 AP",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1392,
+   "key": "GoldenSnowball",
+   "name": "신성한 눈덩이",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GoldenSnowball_small.png",
+   "desc": "눈덩이의 스킬 가속이 100만큼 증가합니다.\n눈덩이로 돌진하면 1.5초 동안 무적 상태가 됩니다.\n눈덩이를 보유하지 않은 경우 눈덩이를 얻습니다.",
+   "tags": [
+    "melee",
+    "tank"
+   ],
+   "note": "눈덩이 돌진 시 무적. 진입형",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1401,
+   "key": "GrowthSpurt",
+   "name": "급속 성장",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GrowthSpurt_small.png",
+   "desc": "급속 성장 소환사 주문을 얻습니다.\n급속 성장으로 급격히 크기가 커져 주변 적을 1초 동안 공중으로 띄워 올리고, 7초 동안 최대 체력을 일정량 얻습니다.",
+   "tags": [
+    "tank",
+    "melee"
+   ],
+   "note": "커지며 에어본·체력. 진입 탱커",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1402,
+   "key": "ARAM_StatsOnStatsOnStats",
+   "name": "능력치 더하기 능력치 더하기 능력치!",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StatsOnStatsOnStats_small.png",
+   "desc": "능력치 모루 4개를 획득합니다. 골드 및 프리즘 모루를 획득할 확률이 더 높습니다!\n다음 증강 선택 시 슬롯마다 새로고침 1회를 추가로 얻습니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "능력치 모루 4개와 증강 새로고침",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1403,
+   "key": "ARAM_StatsOnStats",
+   "name": "능력치 더하기 능력치!",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/StatsOnStats_small.png",
+   "desc": "능력치 모루 3개를 획득합니다. 골드 및 프리즘 모루를 획득할 확률이 더 높습니다!",
+   "tags": [
+    "any"
+   ],
+   "note": "능력치 모루 3개",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1404,
+   "key": "ARAM_Stats",
+   "name": "능력치!",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Stats_small.png",
+   "desc": "능력치 모루를 2개 획득합니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "능력치 모루 2개",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1413,
+   "key": "ARAM_StuckInHereWithMe",
+   "name": "도망갈 수 없어",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/StuckInHereWithMe_small.png",
+   "desc": "궁극기를 사용한 후 2초 동안 피해량 감소를 일정량 획득합니다. 이후 안에 있는 적을 2초 동안 도발합니다.\n궁극기 스킬 가속이 30 증가합니다.",
+   "tags": [
+    "ult",
+    "tank"
+   ],
+   "note": "궁극기 후 피해 감소와 도발. 진입 탱커",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1415,
+   "key": "Twinfire",
+   "name": "쌍둥이 불꽃",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/TwinFire_small.png",
+   "desc": "스킬 피해를 입히면 투사체 1+일정량개를 발사해 각각 일정량의 마법 피해를 입힙니다.\n치명타 확률이 25% 증가합니다.",
+   "tags": [
+    "ability",
+    "crit"
+   ],
+   "note": "스킬 적중 시 미사일, 치명타 확률. 스킬 딜러",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1416,
+   "key": "HextechSoul",
+   "name": "마법공학의 영혼",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/InfernalSoul_small.png",
+   "desc": "주기적으로 스킬 또는 기본 공격으로 피해를 입히면 번개를 발사해 적에게 연쇄적으로 피해를 입히고 둔화시킵니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "주기적 연쇄 번개",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1420,
+   "key": "Sonata",
+   "name": "소나타",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Sonata_small.png",
+   "desc": "10초마다 인내의 아리아와 기민함의 노래를 번갈아 자동 사용합니다.\n인내의 아리아는 주변 아군의 체력을 회복시키고 일시적으로 보호막 오라를 부여합니다.\n기민함의 노래는 추가 이동 속도를 부여하는 오라를 잠시 동안 생성합니다.",
+   "tags": [
+    "req:ally"
+   ],
+   "note": "아군 회복·보호막·이동 속도 오라 자동 사용. 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1421,
+   "key": "PromQueen",
+   "name": "퀸카",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PromQueen_small.png",
+   "desc": "35초마다 반짝이는 티아라를 자동 사용해 자신에게 내려오게 합니다. 티아라를 쓰면 라칸의 궁극기를 얻어 닿는 적을 매혹합니다.",
+   "tags": [
+    "melee",
+    "tank"
+   ],
+   "note": "자동 라칸 궁극기(매혹 질주). 진입형",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 1996,
+   "key": "ARAM_Upgrade_Sheen",
+   "name": "광휘의 검 업그레이드",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeSheen_small.png",
+   "desc": "주문 검 효과가 대상 체력의 4%만큼 추가 피해를 입히고 대상 체력의 3.5%만큼 체력을 회복합니다. 추가로 250골드를 획득합니다.",
+   "tags": [
+    "attack",
+    "ability"
+   ],
+   "note": "주문 검 계열 강화. 스킬 후 평타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2004,
+   "key": "ARAM_EmpoweredByTheFaithful",
+   "name": "신념을 통한 강화",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpoweredByTheFaithful_small.png",
+   "desc": "아군을 상대로 체력을 회복시키거나 보호막을 씌우면 대상을 8초 동안 축복합니다. 축복받은 아군이 적 챔피언에게 피해를 입히면 헌신 중첩을 얻습니다. 헌신이 50중첩이 되면 충격파를 내보내 일정량의 마법 피해를 입히고 체력이 일정량 아래인 적을 처형합니다.",
+   "tags": [
+    "req:ally"
+   ],
+   "note": "회복·보호막 받은 아군이 때리면 중첩. 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2005,
+   "key": "ARAM_InfernoTriggered",
+   "name": "지옥불 난사 발동",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/MadScientist_small.png",
+   "desc": "이전 공격과 다른 기본 공격 또는 스킬로 적 챔피언에게 피해를 입히면 스타일(F~S)을 얻습니다.\n스타일 등급마다 이동 속도를 일정량 얻습니다.\n스타일이 S등급에 도달하면 스타일을 소모하고 총을 난사해 2초 동안 10회에 걸쳐 주변의 모든 적에게 공격을 퍼붓습니다. 각 사격은 일정량의 물리 피해를 입힙니다. 체력이 일정량 아래인 적에게는 치명타가 적용되어 일정량의 물리 피해를 입힙니다. 이 효과는 5초의 재사용 대기시간이 적용됩니다.\n사격에는 생명력 흡수가 적용되며, 미니언을 대상으로 25%의 피해를 입힙니다.",
+   "tags": [
+    "ability",
+    "attack"
+   ],
+   "note": "스킬·평타를 번갈아 쓰면 스타일 등급. 콤보 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2006,
+   "key": "ARAM_Dropkick",
+   "name": "드롭킥",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Dropkick_small.png",
+   "desc": "기본 공격 및 스킬이 체력이 최대 체력의 일정량 아래인 적 챔피언을 처형하고, 체력을 일정량 회복하며 대상을 뒤로 밀어냅니다.\n대상이 적 또는 지형과 충돌하거나 한계에 도달하면 밀려난 적이 폭발해 주변 적에게 일정량의 마법 피해를 입힙니다.\n이 폭발은 연쇄적으로 일어날 수 있습니다.",
+   "tags": [
+    "burst"
+   ],
+   "note": "체력 낮은 적 처형과 밀쳐내기",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2007,
+   "key": "ARAM_LittleDevil",
+   "name": "어깨 위의 악마",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/LittleDevil_small.png",
+   "desc": "작은 악마와 직접 계약을 맺었습니다. 작은 악마는 매초 현재 체력의 일정량만큼 체력을 흡수하며, 주변에 적이 있을 경우 흡수량은 일정 수준까지 증가합니다.\n이에 대한 보상으로 작은 악마는 기본 공격 및 스킬을 강화해, 추가로 일정량의 고정 피해를 입히고 주변에 5초 동안 생명의 파편을 생성합니다.\n생명의 파편을 흡수하면 일정량의 체력을 회복하고 1초 동안 이동 속도가 증가합니다.\n지속 피해는 1.5초에 한 번씩만 효과를 발동시킵니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "체력을 흡수하는 작은 악마",
+   "ability": false,
+   "quest": false,
+   "disabled": true
+  },
+  {
+   "id": 2009,
+   "key": "ARAM_Zealot",
+   "name": "광신자",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Zealot_small.png",
+   "desc": "치명타 확률을 일정량, 공격 속도를 일정량 얻습니다.",
+   "tags": [
+    "attack",
+    "crit"
+   ],
+   "note": "치명타·공격 속도. 원딜과 치명타 전사",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2010,
+   "key": "ARAM_DoubleTap",
+   "name": "한 발에 두 놈",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/DualWield_small.png",
+   "desc": "치명타 발동 시 적중 시 효과를 한 번 더 적용합니다.\n치명타 확률을 일정량 획득합니다.",
+   "tags": [
+    "crit",
+    "attack"
+   ],
+   "note": "치명타 때 적중 시 효과 두 번. 치명타+적중 시 효과 원딜",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2016,
+   "key": "ARAM_Juiced",
+   "name": "도취",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Juiced_small.png",
+   "desc": "적중 시 일정량의 마법 피해를 입힙니다. 이 피해에는 치명타가 적용될 수 있습니다.",
+   "tags": [
+    "attack",
+    "crit"
+   ],
+   "note": "적중 시 마법 피해. 공격 속도 높은 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2018,
+   "key": "ARAM_Purist_Caster",
+   "name": "순수주의자 - 마법사",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PuristCaster_small.png",
+   "desc": "재사용 대기시간 감소를 일정량 얻고 모든 공격 속도를 스킬 가속으로 전환합니다. (현재: 스킬 가속 일정량)\n전환 비율: 공격 속도 1%당 스킬 가속 0.65",
+   "tags": [
+    "ability",
+    "haste",
+    "ap"
+   ],
+   "note": "공격 속도를 스킬 가속으로. 평타 안 치는 마법사",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2024,
+   "key": "CritNCast",
+   "name": "치명적 가속",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/CritnCast_small.png",
+   "desc": "스킬 가속을 일정량 얻습니다. (40%)",
+   "tags": [
+    "ability",
+    "haste"
+   ],
+   "note": "치명타 확률을 스킬 가속으로. 스킬 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2026,
+   "key": "KillSecured",
+   "name": "확보된 킬",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KillSecure_small.png",
+   "desc": "체력이 40% 아래인 적에게 접근 시 이동 속도가 60% 증가합니다.",
+   "tags": [
+    "mobile",
+    "burst"
+   ],
+   "note": "체력 낮은 적에게 접근 시 이동 속도",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2031,
+   "key": "ARAM_DropBear",
+   "name": "곰 투하",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Drop_Bear_Small.png",
+   "desc": "사망 시 티버를 소환하여 주변 모든 적에게 일정량의 마법 피해를 입히고 0.5초 동안 기절시킵니다. 이후 티버가 처치자를 추격합니다.\n티버는 플레이어의 모든 증강을 보유합니다.",
+   "tags": [
+    "tank",
+    "melee"
+   ],
+   "note": "사망 시 티버 소환. 먼저 들어가는 근접",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2032,
+   "key": "FishBait",
+   "name": "상어 미끼",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FishBait_small.png",
+   "desc": "사망 시 상어 미끼 상태가 됩니다. 이동 외에 다른 행동은 할 수 없으며 주변 적을 40% 둔화시킵니다. 몇 초 후 상어가 나타나 주변 모든 적을 공중에 띄우고 물어뜯어, 잃은 체력의 일정량에 해당하는 마법 피해를 입힙니다.",
+   "tags": [
+    "tank",
+    "melee"
+   ],
+   "note": "사망 시 상어. 먼저 들어가는 근접",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2034,
+   "key": "SharkTempest",
+   "name": "상어 폭풍",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SharkTempest_small.png",
+   "desc": "상어가 눈덩이 주위를 돌며 통과하는 적을 둔화시키고 일정량의 마법 피해를 입힙니다. 눈덩이가 챔피언에게 적중하면 상어가 대상에게 고정되어 상어 폭풍을 일으킵니다. 상어 폭풍은 매초 일정량의 마법 피해를 입히고 주변 적을 3초 동안 40% 둔화시킵니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "눈덩이에 상어 폭풍",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2042,
+   "key": "BrushPower",
+   "name": "Hide on bush",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BrushPower_small.png",
+   "desc": "수풀에 들어가면 2초 동안 수풀의 힘을 얻습니다. 수풀의 힘이 활성화된 동안 피해량이 20% 증가합니다.\n수풀에 있으면 수풀의 힘이 초기화됩니다.",
+   "tags": [
+    "burst"
+   ],
+   "note": "수풀에서 나오며 피해 20%. 매복형",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2043,
+   "key": "NatureIsHealing",
+   "name": "자연의 회복",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/NatureIsHealing_small.png",
+   "desc": "수풀에 들어가면 잃은 체력의 일정량만큼 체력을 회복합니다. 수풀마다 20초의 재사용 대기시간이 적용됩니다.",
+   "tags": [
+    "sustain"
+   ],
+   "note": "수풀에서 회복",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2046,
+   "key": "PoroCharge_Active",
+   "name": "포로 쇄도",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestPoroCharge_small.png",
+   "desc": "일정 시간마다 주변에 포로 간식이 나타납니다. 포로에게 먹이를 주면 포로의 사랑 중첩을 얻습니다. 5중첩 시 포로 돌격 소환사 주문을 잠금 해제합니다. 포로에게 간식을 많이 줄수록 더 많은 무리를 날려 보냅니다.\n포로 돌격: 포로 무리를 날려 보내 적 챔피언에게 일정량의 물리 피해를 입힙니다.\n현재 포로 무리 일정량개를 날립니다.\n포로는 적 1명만 타격할 수 있습니다. 또한 첫 번째 무리만 적을 공중으로 띄워 올립니다.\n\"아! 어찌나 사랑스러운지!\" - 포로치기",
+   "tags": [
+    "any"
+   ],
+   "note": "포로 퀘스트, 포로 돌격 소환사 주문",
+   "ability": false,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 2054,
+   "key": "SpellVolley",
+   "name": "3연발",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Prismatic.png",
+   "desc": "선택한 스킬이 전방에 있는 적 2명을 추가로 대상 지정합니다.\n같은 스킬에 여러 번 적중 시 유닛이 받는 피해가 감소합니다.",
+   "tags": [
+    "ability"
+   ],
+   "note": "선택한 스킬을 3연발",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2055,
+   "key": "ARAM_Multishot",
+   "name": "다중 공격",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Prismatic.png",
+   "desc": "퀘스트: 선택한 스킬로 적 챔피언을 여러 번 맞혀야 합니다.\n보상: 퀘스트 레벨당 추가 투사체를 발사합니다.",
+   "tags": [
+    "ability"
+   ],
+   "note": "선택한 스킬 퀘스트, 보상 투사체 추가. 투사체 스킬",
+   "ability": true,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 2062,
+   "key": "Ability_SelfAOE_DoubleCast",
+   "name": "메아리 시전",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Prismatic.png",
+   "desc": "선택한 스킬을 사용하면 마우스 커서 위치로 스킬의 분신을 보내고, 0.25초 후 스킬을 다시 사용합니다.",
+   "tags": [
+    "ability",
+    "burst"
+   ],
+   "note": "선택한 스킬 분신이 한 번 더 시전",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2063,
+   "key": "DimensionShift_Active",
+   "name": "차원 이동",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WhenTheDarknessComes_small.png",
+   "desc": "어둠이 드리우면 소환사 주문을 얻습니다.\n어둠이 드리우면: 대상 위치에 눈부신 빛을 보냅니다. 빛이 당도하면 범위 내 살아있는 모든 유닛이 8초 동안 다른 세계로 이동합니다.\n이 세계에 있는 동안 다음 능력치를 얻습니다.\n체력 일정량\n주문력 일정량\n공격력 일정량\n크기 일정량\n이동한 세계에 있는 모든 유닛은 자유롭게 이동 및 행동할 수 있으나 포탑 또는 억제기 등 구조물을 대상으로 지정할 수 없습니다.\n'빛을... 따라가라.' - 길 잃은 영혼",
+   "tags": [
+    "any"
+   ],
+   "note": "적을 다른 차원으로 끌고 가는 소환사 주문",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2064,
+   "key": "ARAM_Quickstep",
+   "name": "날쌘걸음",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬 사용 시 커서 방향으로 돌진합니다.",
+   "tags": [
+    "ability",
+    "mobile"
+   ],
+   "note": "선택한 스킬에 짧은 돌진 추가",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2065,
+   "key": "ARAM_Terror",
+   "name": "공포",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Desecrator_large.png",
+   "desc": "선택한 스킬을 사용할 때마다 1.75초 동안 주변 적을 공포에 빠뜨립니다.",
+   "tags": [
+    "ability",
+    "melee"
+   ],
+   "note": "선택한 스킬에 주변 공포. 근접 진입 스킬",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2072,
+   "key": "Missile_Split",
+   "name": "주문 분산",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Prismatic.png",
+   "desc": "선택한 스킬 투사체가 적중하거나 최대 사거리에 도달하거나 재사용 시 두 개로 나뉩니다.\n같은 스킬에 여러 번 적중 시 적이 받는 피해가 감소합니다.",
+   "tags": [
+    "ability"
+   ],
+   "note": "선택한 투사체 스킬이 갈라진다",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2073,
+   "key": "ARAM_SustainingStrike",
+   "name": "흡수",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
+   "desc": "선택한 스킬로 적 챔피언에게 입힌 피해량의 30%만큼 체력을 회복합니다.",
+   "tags": [
+    "sustain",
+    "ability"
+   ],
+   "note": "선택한 스킬 피해의 30% 회복",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2076,
+   "key": "TitansPulse",
+   "name": "확고한 의지로",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
+   "desc": "선택한 스킬로 적 챔피언에게 피해를 입히면 대상의 피해 유형에 따라 방어력 또는 마법 저항력을 일정량 얻습니다.\n이 증강이 첫 번째 증강이 아닐 경우 방어력 및 마법 저항력을 20 얻습니다.",
+   "tags": [
+    "tank",
+    "ability"
+   ],
+   "note": "선택한 스킬 적중 시 저항. 앞라인",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2077,
+   "key": "DarkWind",
+   "name": "굶주린 속박",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeHubris_small.png",
+   "desc": "선택한 스킬로 적 챔피언을 이동 불가 상태로 만들거나 이동 스킬을 사용할 수 없게 하면 추가로 일정량의 마법 피해를 입히고 일정량의 체력을 회복합니다.\n체력 회복량은 스킬 재사용 대기시간에 비례해 50%까지 증가합니다.",
+   "tags": [
+    "req:cc",
+    "sustain"
+   ],
+   "note": "선택한 CC 스킬에 피해·회복",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2078,
+   "key": "ChainReaction",
+   "name": "연쇄 반응",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬로 뒤로 밀어낸 챔피언이 다른 챔피언과 부딪히면 둘 다 0.5초 동안 공중에 뜨며 일정량의 마법 피해를 입습니다. 적 챔피언이 지형에 충돌하면 0.75초 동안 공중에 뜨며 일정량의 마법 피해를 입습니다.\n공중에 뜬 시간 및 높이는 스킬 재사용 대기시간에 비례합니다.\n궁극기 피해량이 증가합니다.",
+   "tags": [
+    "req:knockback"
+   ],
+   "note": "밀어낸 적이 부딪히면 에어본. 밀어내기 챔피언",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2080,
+   "key": "Snowbomb",
+   "name": "눈 폭발",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Snowbomb_small.png",
+   "desc": "눈덩이 스킬 가속이 100 증가합니다. 스킬을 다시 사용하면 증가한 피해를 입히고 대상을 공중에 띄우며, 주변 적들을 뒤로 밀어냅니다.",
+   "tags": [
+    "any",
+    "melee"
+   ],
+   "note": "눈덩이 재사용 시 에어본·밀쳐내기",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2082,
+   "key": "Equilibrium",
+   "name": "우리의 치유",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Equillibrium_small.png",
+   "desc": "주변의 누군가가 체력을 회복할 때마다 그 회복량의 15%만큼 자신의 체력을 회복합니다. 적의 체력 회복 효과는 두 배로 적용됩니다.",
+   "tags": [
+    "req:ally"
+   ],
+   "note": "아군 회복 강화. 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2083,
+   "key": "BurstingTeeth",
+   "name": "이빨 요정",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestBurstingTeeth_small.png",
+   "desc": "2.5초 안에 적 챔피언 체력의 일정량 이상 피해를 입히면 해당 적이 이빨을 떨어뜨립니다.\n일정량개의 이빨 수집품이 현재 물리 관통력을 일정량, 마법 관통력을 일정량 부여합니다.\n대상당 4초의 재사용 대기시간이 적용됩니다.",
+   "tags": [
+    "burst"
+   ],
+   "note": "순간 피해로 관통력 수집",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2087,
+   "key": "ARAM_Archmage",
+   "name": "대마법사",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Eureka_small.png",
+   "desc": "스킬을 사용하면 사용한 스킬 재사용 대기시간의 30%만큼 다른 무작위 스킬의 재사용 대기시간을 반환합니다.",
+   "tags": [
+    "ability",
+    "haste"
+   ],
+   "note": "스킬을 쓸 때마다 다른 스킬 쿨 반환. 스킬 연타 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2088,
+   "key": "ARAM_Snowday",
+   "name": "눈 오는 날",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Snowday_small.png",
+   "desc": "눈덩이 스킬 가속이 100 증가하고 피해량이 100% 증가합니다.",
+   "tags": [
+    "any",
+    "melee"
+   ],
+   "note": "눈덩이 가속·피해 100%. 진입하는 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2089,
+   "key": "ARAM_YowchMyCoins",
+   "name": "으악, 내 동전!",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/YouchMyCoins_small.png",
+   "desc": "처치 관여 시 적 챔피언이 주변에 자신과 아군이 주울 수 있는 동전 일정량개를 떨어뜨립니다. 각 동전은 15골드의 가치를 지닙니다.\n일정량명의 자발적 기부자가 떨어뜨린 총 일정량개의 동전으로부터, 아군이 골드를 획득했으며, 골드를 직접 획득했습니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "처치 관여 시 아군이 주울 동전",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2091,
+   "key": "EndlessDecimation",
+   "name": "끝없는 학살",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/EndlessDecimate_small.png",
+   "desc": "전투 중 8초마다 자동 사용으로 도끼를 원형으로 휘둘러 물리 피해를 입힙니다. 바깥쪽 칼날에 적 적중 시 증가한 피해를 입히고 잃은 체력의 18%만큼 체력을 회복합니다. 바깥쪽 칼날에 적중한 적 하나당 이 스킬의 재사용 대기시간이 10% 감소합니다. (최소 3초)",
+   "tags": [
+    "bruiser",
+    "sustain",
+    "melee"
+   ],
+   "note": "자동 도끼 회전과 회복. 근접 전사",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2095,
+   "key": "ARAM_HighRoller",
+   "name": "도박꾼",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/HighRoller_small.png",
+   "desc": "주변 적이 죽을 때 일정 확률로 능력치 모루를 떨어뜨립니다.",
+   "tags": [
+    "gamble"
+   ],
+   "note": "적 처치 시 확률로 능력치 모루",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2096,
+   "key": "LittleExtraHelp",
+   "name": "작은 도움",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬 지속시간 동안 공격 사거리가 일정량, 공격 속도가 증가합니다.",
+   "tags": [
+    "attack"
+   ],
+   "note": "선택한 버프 스킬 동안 사거리·공격 속도. 평타 버프 스킬 챔피언",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2097,
+   "key": "VoidDash",
+   "name": "공허 돌진",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬 사용 시 도착 지점에 공허 지대를 생성합니다. 공허 지대는 1초 동안 적 챔피언을 35% 둔화시키고 일정량의 마법 피해를 입힙니다.",
+   "tags": [
+    "req:dash"
+   ],
+   "note": "선택한 돌진 스킬에 공허 지대",
+   "ability": true,
+   "quest": false,
+   "disabled": true
+  },
+  {
+   "id": 2098,
+   "key": "ARAM_EndlessHunt",
+   "name": "앙파상",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Dashing_small.png",
+   "desc": "주기적으로 적 챔피언의 급소를 파악합니다. 급소를 기본 공격 또는 스킬로 타격하면 추가로 최대 체력의 6%+중첩당 1.5%에 해당하는 고정 피해를 입히고, 잃은 체력의 5%만큼 체력을 회복하며, 이동 속도가 중첩당 5%만큼 증가합니다. 이동 속도는 2초에 걸쳐 원래대로 돌아옵니다.",
+   "tags": [
+    "bruiser",
+    "sustain"
+   ],
+   "note": "급소 타격 고정 피해와 회복. 오래 싸우는 전사",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2099,
+   "key": "ARAM_DivineDomain",
+   "name": "초월 의식",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GlassCannon_small.png",
+   "desc": "적 챔피언에게 피해를 입힌 후 3초 안에 해당 챔피언 처치에 관여하면 8초 동안 정수를 남깁니다. 정수를 공격하면 소모됩니다.\n정수를 소모하면 해당 위치로 순간적으로 이동하며 대상 지정 불가 및 저지 불가 상태가 되고, 이동 속도가 증가했다가 2초에 걸쳐 원래대로 돌아오며, 잃은 체력에 비례해 일정량~일정량의 체력을 회복합니다. 또한 기본 스킬의 재사용 대기시간이 초기화됩니다.\n오늘, 경들은 초월의 힘을 목도하게 될 것이네! - 사막의 황제 아지르",
+   "tags": [
+    "burst",
+    "mobile"
+   ],
+   "note": "처치 후 정수로 순간이동·초기화. 연쇄 처치형",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2100,
+   "key": "ARAM_SpecializedRecursion",
+   "name": "가속 추구",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "퀘스트: 선택한 스킬로 적 챔피언을 여러 번 맞혀야 합니다.\n보상: 퀘스트 레벨당 선택한 스킬 가속이 증가합니다.",
+   "tags": [
+    "haste"
+   ],
+   "note": "선택한 스킬 퀘스트, 보상 스킬 가속",
+   "ability": true,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 2102,
+   "key": "PressureCooker",
+   "name": "압력솥",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestPressureCooker_small.png",
+   "desc": "매초 최대 체력에 비례해 주변 적 챔피언에게 중첩되는 화상 효과를 적용합니다.\n퀘스트: 적 챔피언에게 화상 피해를 입혀야 합니다.\n보상: 퀘스트 레벨당 크기와 피해량이 증가합니다.",
+   "tags": [
+    "tank",
+    "melee"
+   ],
+   "note": "주변 화상, 체력 비례. 근접 탱커",
+   "ability": false,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 2103,
+   "key": "ARAM_BangBang",
+   "name": "초장거리 저격",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestBangBang_small.png",
+   "desc": "퀘스트: 스킬로 적 챔피언 일정량명을 저격해야 합니다.\n보상: 저격한 적 챔피언에게 유성을 날려 주변 지역에 마법 피해를 입힙니다.",
+   "tags": [
+    "ability",
+    "ranged"
+   ],
+   "note": "장거리 저격 퀘스트. 장거리 스킬 챔피언",
+   "ability": false,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 2104,
+   "key": "ARAM_SpiritBomb",
+   "name": "영혼 폭탄",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SpiritBomb_small.png",
+   "desc": "체력을 회복시키거나 보호막을 씌우면 영혼 폭탄이 중첩됩니다. 최대 중첩 시 체력이 가장 낮은 아군에게 영혼 폭탄을 던집니다. 폭탄이 대상에게 도달하면 주변 아군 체력을 잃은 체력의 일정량만큼 회복시키고 2초 동안 현재 체력의 일정량에 해당하는 보호막을 부여합니다.",
+   "tags": [
+    "req:ally"
+   ],
+   "note": "회복·보호막 중첩으로 영혼 폭탄. 서포터",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2107,
+   "key": "ARAM_Hellbent",
+   "name": "열의",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Hellbent_small.png",
+   "desc": "기본 공격 또는 스킬로 적 챔피언을 타격하면 6초 동안 부활 극대화 중첩을 얻습니다. 최대 10회 중첩되며, 최대 중첩 시 열의 상태가 됩니다.\n열의: 사망 시 4초에 걸쳐 일정량의 최대 체력으로 부활합니다. 이후 15초 동안 적응형 능력치를 일정량 얻고 적 챔피언을 향해 이동 시 이동 속도가 증가하며 모든 피해 흡혈을 일정량 얻습니다.\n90초의 재사용 대기시간이 적용됩니다.",
+   "tags": [
+    "bruiser",
+    "melee"
+   ],
+   "note": "중첩 후 사망 시 부활. 맨 앞 근접",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2108,
+   "key": "SupportMain",
+   "name": "서포터 주력",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/QuestSupportMain_small.png",
+   "desc": "퀘스트: 아군 챔피언의 체력을 일정량 회복시켜야 합니다.\n보상: 이제 내 모든 체력 회복 효과가 3초 동안 최초 체력 회복량의 25%에 해당하는 지속 체력 회복 효과를 부여합니다.",
+   "tags": [
+    "req:ally"
+   ],
+   "note": "아군 회복 퀘스트. 회복 서포터",
+   "ability": false,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 2109,
+   "key": "SnapBack",
+   "name": "원상복구",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬 재사용 시 폭발하여 일정량의 마법 피해를 입히고 원래 위치로 돌아갑니다.",
+   "tags": [
+    "ability"
+   ],
+   "note": "선택한 스킬 재사용 시 폭발하며 복귀",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2111,
+   "key": "Bonk",
+   "name": "꽁!",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bonk_large.png",
+   "desc": "선택한 스킬 효과로 강화된 기본 공격과 스킬이 대상 및 주변 적에게 추가로 30%의 피해를 입힙니다.",
+   "tags": [
+    "req:empower",
+    "attack"
+   ],
+   "note": "강화 평타 스킬이 주변까지 피해. 강화 평타 챔피언",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2115,
+   "key": "SquishySlappyGrab",
+   "name": "말랑 찰싹 손",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SquishySlappyGrab_small.png",
+   "desc": "때때로 주변 모든 적 챔피언에게 말랑 찰싹 손을 내보내 4초 동안 연결합니다. 연결된 상태에서 다음 기본 공격 시 연결된 적을 끌어당기고 일정량의 마법 피해를 입히며 0.25초 동안 기절시킵니다. 끌어당긴 적 1명당 2.5초 동안 일정량의 보호막을 얻습니다.\n30초의 재사용 대기시간이 적용됩니다.",
+   "tags": [
+    "attack",
+    "melee"
+   ],
+   "note": "주기적으로 적을 연결해 끌어당김",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2116,
+   "key": "SpecializedEmpowerment",
+   "name": "위력 추구",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Marksmage_small.png",
+   "desc": "퀘스트: 선택한 스킬로 적 챔피언을 여러 번 맞혀야 합니다.\n보상: 선택한 스킬 피해량이 영구적으로 증가합니다.",
+   "tags": [
+    "ability"
+   ],
+   "note": "선택한 스킬 퀘스트, 보상 피해 증가",
+   "ability": true,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 2118,
+   "key": "SkipTheBasics",
+   "name": "궁극기 봇",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SkipTheBasic_small.png",
+   "desc": "스킬 가속이 궁극기에만 적용되지만, 효과가 50% 증가합니다. 스킬 가속이 100 증가합니다.",
+   "tags": [
+    "ult",
+    "haste"
+   ],
+   "note": "스킬 가속이 궁극기에만, 대신 1.5배. 궁극기가 핵심인 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2119,
+   "key": "Overextender",
+   "name": "무리한 진입",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Overextender_small.png",
+   "desc": "대포 발사기의 사거리, 이동 속도, 피해량이 대폭 증가했습니다. 귀환하여 대포 발사기에 탑승하세요.",
+   "tags": [
+    "any"
+   ],
+   "note": "대포 발사기 강화. 대포로 진입하는 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2123,
+   "key": "Overloaded",
+   "name": "과충전",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Prismatic.png",
+   "desc": "다른 스킬 사용 시 선택한 스킬 재사용 대기시간이 초기화됩니다.\n초기화 효율: 일정량%\n\"다들 내 두루마릴 노리는군... 계획에 충실해야지... EQEQEQ...\" - 파란 존재",
+   "tags": [
+    "ability",
+    "haste"
+   ],
+   "note": "선택한 스킬이 다른 스킬을 쓸 때마다 초기화. 짧은 콤보 챔피언",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2125,
+   "key": "ItsGoTime",
+   "name": "출발할 시간",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
+   "desc": "선택한 스킬 사용 시 지속시간 동안 이동 속도가 증가합니다.",
+   "tags": [
+    "mobile"
+   ],
+   "note": "선택한 스킬 지속시간 동안 이동 속도",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2126,
+   "key": "KeepGoing",
+   "name": "재장전",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LightningStrikes_small.png",
+   "desc": "선택한 스킬 지속시간 동안 기본 공격 적중 시 효과 재사용 대기시간이 일정 시간 감소합니다.",
+   "tags": [
+    "attack"
+   ],
+   "note": "선택한 스킬 동안 적중 시 효과 쿨 감소",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2127,
+   "key": "ForgedByTheMaster",
+   "name": "장인의 솜씨",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ForgedByTheMaster_small.png",
+   "desc": "아이템 및 증강으로 입히는 피해량이 증가합니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "아이템·증강 피해 증가. 피해 아이템·증강을 많이 쓸수록",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2128,
+   "key": "BloodMoneyBurn",
+   "name": "타오르는 이자",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BloodMoney2_small.png",
+   "desc": "챔피언에게 적용한 화상 및 지속 피해 효과가 입힌 피해량의 0.75%만큼 골드를 생성합니다.",
+   "tags": [
+    "req:burn"
+   ],
+   "note": "화상·지속 피해가 골드. 지속 피해 챔피언",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2129,
+   "key": "Terraind",
+   "name": "지형 생성됨",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/LightningStrikes_small.png",
+   "desc": "선택한 스킬로 생성된 지형이 주변 적에게 매초 일정량의 마법 피해를 입힙니다.\n궁극기 스킬의 피해량이 증가합니다.",
+   "tags": [
+    "req:terrain",
+    "ult"
+   ],
+   "note": "생성한 지형이 피해. 지형 챔피언 전용",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2131,
+   "key": "DontChangeTheChannel",
+   "name": "채널 고정",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/DontChangeTheChannel_small.png",
+   "desc": "정신 집중하는 동안 매초 일정량의 보호막을 얻습니다. 정신 집중 상태가 아닐 경우 효과가 점차 사라집니다.",
+   "tags": [
+    "req:channel"
+   ],
+   "note": "정신 집중 중 보호막. 정신 집중 챔피언 전용",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2132,
+   "key": "WarlockJuicebox",
+   "name": "마도사의 주스 상자",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/WarlockJuicebox_small.png",
+   "desc": "모든 피해 흡혈을 일정량 얻습니다.",
+   "tags": [
+    "sustain",
+    "ap"
+   ],
+   "note": "모든 피해 흡혈. AP 지속 딜러",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2133,
+   "key": "MercysStrike",
+   "name": "자비의 일격",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬로 아군의 체력을 회복시키거나 보호막을 부여하면 다음 기본 공격 시 공격 사거리가 300, 공격 속도가 75% 증가하고, 추가로 최대 체력의 일정량에 해당하는 마법 피해를 입힙니다.\n포탑은 최대 체력의 2.5%에 해당하는 마법 피해를 입습니다.",
+   "tags": [
+    "req:ally",
+    "attack"
+   ],
+   "note": "아군 회복·보호막 후 강화 평타. 평타 서포터",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2134,
+   "key": "SurgeField",
+   "name": "방출 역장",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SurgeField_small.png",
+   "desc": "궁극기 사용 시, 주변에 영역을 생성합니다. 안에 있는 동안 스킬 가속이 50, 이동 속도가 40% 증가하고 투사체를 발사해 적에게 입힌 피해량의 20%만큼 피해를 입힙니다.\n영역은 처음 밖으로 나가면 따라오지만, 두 번째로 나가면 잠시 후 사라집니다.",
+   "tags": [
+    "ult",
+    "ability"
+   ],
+   "note": "궁극기 사용 시 가속·속도 영역",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2135,
+   "key": "Overkill",
+   "name": "바늘꽂이",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/SymphonyOfWar_small.png",
+   "desc": "선택한 스킬 지속시간 동안 기본 공격 시 대상에게 대못을 박습니다.\n대못은 선택한 스킬 지속시간이 종료되면 폭발하여 일정량의 물리 피해를 입히고 3초 동안 중첩당 10의 이동 속도를 부여합니다. 적 챔피언을 처치할 수 있을 만큼 피해량이 축적되면 대못이 더 빨리 폭발하고 대상을 처형합니다.",
+   "tags": [
+    "attack"
+   ],
+   "note": "선택한 버프 스킬 동안 평타가 대못",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2136,
+   "key": "TrustyWeapon",
+   "name": "믿음직한 무기",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
+   "desc": "선택한 스킬로 적 챔피언을 타격하면 우정의 결속이 형성되어 6초 동안 피해량이 증가합니다. 이 효과는 중첩될 수 있습니다.\n\"따, 딱히 널 좋아하거나 그런 건 아니거든!!\" -",
+   "tags": [
+    "ability"
+   ],
+   "note": "선택한 스킬 적중 시 피해 증가 중첩",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2137,
+   "key": "PatOnTheBack",
+   "name": "격려하기",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PatOnTheBack_small.png",
+   "desc": "아군 근처를 지나갈 때 아군이 격려하며 3초 동안 일정량의 보호막과 일정량의 이동 속도를 부여합니다. 이 효과는 중첩될 수 있습니다.\n아군마다 다시 격려할 때까지 일정 시간의 재사용 대기시간이 적용됩니다.",
+   "tags": [
+    "req:ally",
+    "mobile"
+   ],
+   "note": "아군 근처를 지나면 보호막·이동 속도",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2138,
+   "key": "WardingWeapon",
+   "name": "적응형 와드",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
+   "desc": "선택한 스킬로 적 챔피언을 타격하면 대상의 피해 유형에 따라 6초 동안 방어력 또는 마법 저항력이 증가합니다. 이 효과는 중첩될 수 있습니다.",
+   "tags": [
+    "tank",
+    "ability"
+   ],
+   "note": "선택한 스킬 적중 시 저항 중첩. 앞라인",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2139,
+   "key": "PinCushion",
+   "name": "고슴도치",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/PinCushion_small.png",
+   "desc": "챔피언에게 피해를 입으면 바늘 폭발이 축적됩니다. 특정 기준값에 도달하면 바늘이 폭발해 주변 적에게 일정량의 물리 피해를 입히고 2초 동안 일정량만큼 둔화시킵니다.",
+   "tags": [
+    "tank",
+    "melee"
+   ],
+   "note": "맞을수록 바늘 폭발. 맞아주는 앞라인",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2140,
+   "key": "Upgrade_Ravenous",
+   "name": "굶주린 히드라 업그레이드",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeSheen_small.png",
+   "desc": "적에게 스킬 적중 시 쪼개기 효과가 발동됩니다. 굶주린 히드라의 생명력 흡수가 일정량 수치로 증가합니다.\n500골드를 획득합니다.",
+   "tags": [
+    "ad",
+    "bruiser",
+    "sustain"
+   ],
+   "note": "굶주린 히드라 강화. AD 전사",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2141,
+   "key": "Quest_UltraHydra",
+   "name": "궁극의 히드라",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UltraHydra_small.png",
+   "desc": "히드라 아이템을 완성하면 티아맷을 획득합니다.\n퀘스트: 굶주린 히드라, 불경한 히드라, 거대한 히드라를 획득해야 합니다.\n보상: 궁극의 히드라를 획득합니다.",
+   "tags": [
+    "ad",
+    "bruiser"
+   ],
+   "note": "히드라 3종을 모으는 퀘스트. AD 전사",
+   "ability": false,
+   "quest": true,
+   "disabled": false
+  },
+  {
+   "id": 2143,
+   "key": "Upgrade_SunderedSky",
+   "name": "갈라진 하늘 업그레이드",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeIE_small.png",
+   "desc": "갈라진 하늘의 대상별 재사용 대기시간이 더 짧게 감소하고 잃은 체력의 일정량만큼 체력을 회복합니다.\n골드를 획득합니다.",
+   "tags": [
+    "ad",
+    "bruiser",
+    "sustain"
+   ],
+   "note": "갈라진 하늘 강화. AD 전사",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2144,
+   "key": "DoubleDefense",
+   "name": "보강",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
+   "desc": "선택한 스킬로 부여되는 보호막 효과가 대상 잃은 체력에 비례해 최대 60% 더 강력해집니다.\n최대 체력의 30%일 때 가장 효과적입니다.",
+   "tags": [
+    "req:shield"
+   ],
+   "note": "선택한 보호막 스킬 강화",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2148,
+   "key": "DoubleStrike",
+   "name": "2연속 공격",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
+   "desc": "선택한 스킬 적중 시 효과 효과가 한 번 더 적용됩니다.",
+   "tags": [
+    "attack"
+   ],
+   "note": "선택한 스킬의 적중 시 효과 두 번",
+   "ability": true,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 2157,
+   "key": "Upgrade_DeathDance",
+   "name": "죽음의 무도 업그레이드",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeDeathDance_small.png",
+   "desc": "골드를 획득합니다.\n죽음의 무도 고통 무시가 자신이 받은 피해의 일정량만큼으로 증가하고, 처치 관여 시 즉시 일정량의 체력을 회복합니다.",
+   "tags": [
+    "ad",
+    "bruiser"
+   ],
+   "note": "죽음의 무도 강화. AD 전사",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  },
+  {
+   "id": 12317,
+   "key": "ARAM_PandorasBox",
+   "name": "판도라의 상자",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Cherry/Augments/Icons/Pandoras_Box_Small.png",
+   "desc": "모든 증강을 무작위 프리즘 증강으로 전환합니다.",
+   "tags": [
+    "gamble"
+   ],
+   "note": "모든 증강을 무작위 프리즘으로",
+   "ability": false,
+   "quest": false,
+   "disabled": false
+  }
+ ]
+}

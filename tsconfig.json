@@ -5,8 +5,14 @@
     "moduleResolution": "NodeNext",
     "strict": true,
     "skipLibCheck": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "noEmit": true
   },
-  "include": ["scripts/*.ts", "app/*.ts"]
+  "include": [
+    "scripts/*.ts",
+    "scripts/mayhem/*.ts",
+    "app/*.ts"
+  ]
 }

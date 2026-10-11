@@ -112,6 +112,19 @@ export async function champSelect(req: Request, env: Env, me: Member) {
   return json({ champions, teammates });
 }
 
+/**
+ * 아수라장 증강 실전 통계 (회원 전용). 회원이 실제로 고른 증강의 판수·승률.
+ * championId 가 있으면 그 챔피언으로 고른 것만 따로 준다. 원본에서 매번 계산한다 (저장하지 않음).
+ */
+export async function augmentStats(env: Env, championId: number | null) {
+  const [games, overall, champ] = await env.DB.batch([
+    env.DB.prepare('SELECT COUNT(DISTINCT game_id) AS n FROM participant_augments'),
+    env.DB.prepare('SELECT augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments GROUP BY augment_id'),
+    env.DB.prepare('SELECT augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments WHERE champion_id = ? GROUP BY augment_id').bind(championId ?? 0),
+  ]);
+  return json({ games: (games.results[0] as { n: number }).n, overall: overall.results, champion: championId ? champ.results : [] });
+}
+
 export async function getChampion(env: Env, me: Member, championId: number) {
   return json(await championInfo(env, me, championId, 50));
 }
