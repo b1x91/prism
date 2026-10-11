@@ -1,5 +1,5 @@
 /**
- * Prism 공개 사이트 (prism.web.app).
+ * Prism 공개 사이트 (przm.web.app).
  * 로그인 없이 보는 층: 증강 가이드·증강 도감·모임 소개. 회원 데이터는 단 한 줄도 넣지 않는다 (CLAUDE.md 2-11).
  * 데이터는 게임 파일에서 만든 app/data/*.json 을 그대로 묶는다.
  */

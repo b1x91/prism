@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "prism",
+    "site": "przm",
     "public": "site/dist",
     "ignore": ["**/.*"],
     "cleanUrls": true,

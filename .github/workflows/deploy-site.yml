@@ -1,4 +1,4 @@
-# 공개 사이트(prism.web.app) 를 Firebase Hosting 에 배포
+# 공개 사이트(przm.web.app) 를 Firebase Hosting 에 배포
 # main 에 사이트·증강 데이터 변경이 들어오면 자동, 또는 Actions 탭에서 수동 실행(브랜치 선택 가능)
 # 필요한 저장소 설정: Secret FIREBASE_SERVICE_ACCOUNT (서비스 계정 JSON 전체), Variable FIREBASE_PROJECT_ID
 name: deploy-site

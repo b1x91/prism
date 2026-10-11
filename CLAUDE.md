@@ -22,7 +22,7 @@
 1. **실시간 채팅 제거 (v3.1 9번 무효).** 메인 소통 창구는 디스코드·카카오톡이고 그대로 유지한다. 앱에는 바로 갈 수 있는 버튼(사이드바·모바일 상단·모임 화면)과 방명록 **"한 줄 생각"**(60자, 30초 간격, 본인·관리자 삭제)만 둔다. 주소는 서버 vars `DISCORD_INVITE_URL`, `KAKAO_OPENCHAT_URL`.
 2. **증강 가이드가 핵심 기능.** 아수라장 증강 전체(한국어 설명·등급·아이콘)는 CommunityDragon 게임 파일에서 생성(`npm run data:mayhem` → `app/data/`). 챔피언별 "어울림"은 사람이 붙인 증강 태그 × 챔피언 특성으로 계산하고, 증강의 실제 세기는 **Prism 실전 승률(회원 전용)**로만 말한다. 근거 없는 S/A 티어를 만들지 않는다.
 3. **외부 통계 사이트의 수치는 가져오지 않는다.** 링크만 둔다.
-5. **공개 사이트는 Firebase Hosting(prism.web.app), 정적 파일만.** `site/` → `npm run site:build` → `site/dist`. 회원 기능 서버는 Cloudflare 그대로. 공개 사이트에는 회원 데이터를 넣지 않는다 (잠긴 미리보기는 흐린 자리표시만). 배포: `docs/deploy-site.md`.
+5. **공개 사이트는 Firebase Hosting(**przm.web.app**, 프로젝트 `prism-90`, 사이트 ID `przm`), 정적 파일만. `prism.web.app` 은 다른 사람 프로젝트가 선점해 쓸 수 없다 (2026-10-11 확인).** `site/` → `npm run site:build` → `site/dist`. 회원 기능 서버는 Cloudflare 그대로. 공개 사이트에는 회원 데이터를 넣지 않는다 (잠긴 미리보기는 흐린 자리표시만). 배포: `docs/deploy-site.md`.
 4. **화면에 기술 안내 문구를 넣지 않는다** ("LCU 읽기 전용", "서버로 보내는 데이터 없음" 같은 것). 원칙은 코드와 README 에서 지키고, 화면은 사용자 언어로만.
 
 ---
@@ -48,7 +48,7 @@ League of Legends **아수라장 칼바람 (ARAM: Mayhem, `queueId = 2400`)** �
 3. **회원이 사이트를 쓰고 매일 밤 증바람을 함께 하는 구조.** 운영진 없이 이 리듬이 돌아가야 하므로 리마인드·모집·케어는 전부 봇과 스케줄 함수가 한다. (10절)
 
 - **이름: Prism** (한글 "프리즘"). `src/config.ts`의 `SITE_NAME`. 아수라장 최상급 증강 등급이 프리즘이다.
-- **도메인: `prism.web.app`** (사용 가능 확인됨). Firebase 프로젝트 ID `prism`이 안 잡히면 아무 ID나 쓰고 **호스팅 사이트 ID만 `prism`**으로 만든다.
+- ~~도메인: `prism.web.app`~~ → **`przm.web.app`** (v3.2 5번). `prism` 사이트 ID 는 다른 프로젝트가 선점.
 - **디자인: 1.5절.**
 
 ---
