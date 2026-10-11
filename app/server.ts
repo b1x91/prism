@@ -16,7 +16,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { basename, dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { getAsset, loadCachedStatics, loadStaticsFromCdragon, loadStaticsFromClient, statics } from './assets.js';
+import { ensureTraits, getAsset, loadCachedStatics, loadStaticsFromCdragon, loadStaticsFromClient, statics } from './assets.js';
 import { chat, deleteChat, sendChat, startChat, stopChat, subscribe } from './chat.js';
 import { SERVER_URL } from './config.js';
 import { loadHistory, personalStats, type Game, type Personal } from './history.js';
@@ -47,7 +47,9 @@ type ChampSelect = {
   bench: number[];
   team: number[];
   teammatePuuids: string[];
+  teamSlots: { championId: number; puuid: string }[]; // 팀원 칸 순서 그대로 (챔피언과 puuid 짝)
   crew: any | null; // 서버 /api/champselect 응답
+  traits: Record<number, unknown>; // 챔피언 성향 (팀 밸런스용)
 };
 
 const state = {
@@ -113,9 +115,14 @@ async function loadChampSelect(c: LcuCreds) {
     bench: [...new Set(bench)],
     team: others.map((m) => Number(m.championId)).filter((id) => id > 0),
     teammatePuuids: others.map((m) => String(m.puuid ?? '')).filter(Boolean),
+    teamSlots: others.map((m) => ({ championId: Number(m.championId) || 0, puuid: String(m.puuid ?? '') })),
     crew: state.champSelect?.crew ?? null,
+    traits: state.champSelect?.traits ?? {},
   };
   state.champSelect = cs;
+  // 역할·피해 유형·단단함 등 성향 (팀 밸런스 계산용). 처음 보는 챔피언만 읽고 저장한다
+  await ensureTraits([cs.mine ?? 0, ...cs.bench, ...cs.team], c);
+  cs.traits = Object.fromEntries([cs.mine ?? 0, ...cs.bench, ...cs.team].filter((id) => statics.traits[id]).map((id) => [id, statics.traits[id]]));
 
   // 챔피언·팀원 구성이 바뀌었을 때만 서버에 묻는다
   const ids = [cs.mine, ...cs.bench].filter((x): x is number => x !== null);

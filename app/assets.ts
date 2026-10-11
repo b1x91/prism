@@ -19,17 +19,26 @@ const TIMEOUT_MS = 10_000;
 const STATIC_FILE = join(PRISM_DIR, 'static.json');
 const ASSET_DIR = join(PRISM_DIR, 'assets');
 
+/** 챔피언 성향 (클라이언트 champions/{id}.json 의 tacticalInfo·playstyleInfo) */
+export type Traits = {
+  damage: 'AP' | 'AD' | 'MIX' | null; // 주 피해 유형
+  durability: number; // 단단함 1~3
+  cc: number; // 군중 제어 1~3
+  dmg: number; // 피해량 1~3
+};
+
 export type Statics = {
-  champions: Record<number, { name: string; icon?: string }>;
+  champions: Record<number, { name: string; icon?: string; roles?: string[] }>;
+  traits: Record<number, Traits>;
   items: Record<number, { name: string; icon?: string }>;
   augments: Record<number, { name: string; icon?: string; rarity?: string }>;
 };
 
-export const statics: Statics = { champions: {}, items: {}, augments: {} };
+export const statics: Statics = { champions: {}, traits: {}, items: {}, augments: {} };
 
 /** 원본 목록(LCU·CommunityDragon 공통 형식)을 statics 로 옮긴다 */
 function apply(champs: any[], items: any[], augs: any[]) {
-  for (const x of champs) if (x.id > 0) statics.champions[x.id] = { name: x.name, icon: x.squarePortraitPath };
+  for (const x of champs) if (x.id > 0) statics.champions[x.id] = { name: x.name, icon: x.squarePortraitPath, roles: Array.isArray(x.roles) ? x.roles : undefined };
   for (const x of items) statics.items[x.id] = { name: x.name, icon: x.iconPath };
   for (const x of augs) statics.augments[x.id] = { name: x.nameTRA ?? x.name ?? `#${x.id}`, icon: x.augmentSmallIconPath, rarity: x.rarity };
 }
@@ -46,6 +55,7 @@ export async function loadCachedStatics() {
   try {
     const c = JSON.parse(await readFile(STATIC_FILE, 'utf8')) as Statics;
     Object.assign(statics.champions, c.champions);
+    Object.assign(statics.traits, c.traits ?? {});
     Object.assign(statics.items, c.items);
     Object.assign(statics.augments, c.augments);
   } catch {
@@ -130,4 +140,34 @@ export async function getAsset(path: string, creds: LcuCreds | null, inGame: boo
   await mkdir(ASSET_DIR, { recursive: true });
   await writeFile(file, body).catch(() => {});
   return { type, body };
+}
+
+const DAMAGE: Record<string, Traits['damage']> = { kMagic: 'AP', kPhysical: 'AD', kMixed: 'MIX' };
+const lvl = (v: unknown) => (typeof v === 'number' && v >= 0 ? Math.min(3, Math.max(1, v)) : 1);
+
+function toTraits(d: any): Traits | null {
+  const t = d?.tacticalInfo, p = d?.playstyleInfo;
+  if (!t && !p) return null;
+  return { damage: DAMAGE[t?.damageType] ?? null, durability: lvl(p?.durability), cc: lvl(p?.crowdControl), dmg: lvl(p?.damage) };
+}
+
+/**
+ * 챔피언 성향. 캐시 → 클라이언트 → CommunityDragon 순서. 한 번 받으면 저장해 두고 다시 묻지 않는다.
+ * 실제 필드(tacticalInfo.damageType, playstyleInfo)는 실제 클라이언트에서 확인 필요.
+ */
+export async function ensureTraits(ids: number[], creds: LcuCreds | null) {
+  const missing = [...new Set(ids)].filter((id) => id > 0 && !statics.traits[id]).slice(0, 20);
+  if (!missing.length) return;
+  for (const id of missing) {
+    let d: any = null;
+    if (creds) d = await lcuGet(creds, `/lol-game-data/assets/v1/champions/${id}.json`).catch(() => null);
+    if (!d) {
+      d = await fetchWithRetry(`${CDRAGON}/ko_kr/v1/champions/${id}.json`)
+        .then((r) => (r.ok ? r.json() : null))
+        .catch(() => null);
+    }
+    const t = toTraits(d);
+    if (t) statics.traits[id] = t;
+  }
+  await save().catch(() => {});
 }
