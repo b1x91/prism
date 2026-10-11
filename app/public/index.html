@@ -265,14 +265,22 @@ img { display: block; }
 @media (prefers-reduced-motion: reduce) { .cs-bg img { transition: none; } .cs-tile:hover .cs-bg img { transform: none; } }
 
 /* 챔프 선택 배치: 왼쪽 큰 카드(내 챔피언 또는 미리보기), 오른쪽 벤치 패널 */
-.cs-layout { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: var(--s4); align-items: start; }
-@media (max-width: 860px) { .cs-layout { grid-template-columns: 1fr; } }
+.cs-layout { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: var(--s4); align-items: stretch; }
+/* 벤치 패널은 높이를 차지하지 않고(절대 배치) 큰 카드 높이만큼만 늘어난다. 넘치면 목록 안에서 스크롤 */
+.cs-bench-wrap { position: relative; min-width: 0; }
+.cs-bench-wrap > .cs-bench { position: absolute; inset: 0; }
+@media (max-width: 860px) {
+  .cs-layout { grid-template-columns: 1fr; }
+  .cs-bench-wrap > .cs-bench { position: static; }
+  .cs-bench-wrap .cs-bench-list { flex: none; max-height: 360px; } /* 한 열일 때는 기준 카드가 없으므로 자체 최대 높이 */
+}
 .cs-back { position: absolute; top: var(--s3); right: var(--s3); height: 26px; padding: 0 10px; border: 0; border-radius: var(--r-pill); background: rgba(6, 8, 18, .7); color: #fff; font-size: 11px; font-weight: 600; cursor: pointer; backdrop-filter: blur(6px); }
-.cs-bench { display: grid; gap: var(--s2); min-width: 0; }
+.cs-bench { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; min-height: 0; }
 .cs-bench-head { display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px 64px; gap: var(--s3); padding: 0 calc(var(--s3) + 1px) 0 7px; font-size: var(--fs-xs); color: var(--text-3); }
 .cs-bench-head span:first-child { grid-column: 1 / 3; }
 .cs-bench-head span:not(:first-child) { text-align: right; }
-.cs-bench-list { display: grid; gap: 6px; max-height: 460px; overflow-y: auto; padding-right: 2px; }
+.cs-bench-list { flex: 1 1 0; min-height: 0; display: grid; align-content: start; gap: 6px; overflow-y: auto; padding-right: 2px; padding-bottom: var(--s5);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent); }
 .cs-b { display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px 64px; gap: var(--s3); align-items: center; width: 100%; padding: 6px var(--s3) 6px 6px; border: 1px solid transparent; border-radius: var(--r-m); background: var(--surface-2); text-align: left; cursor: pointer; }
 .cs-b:hover { background: var(--surface-3); }
 .cs-b.on { border-color: var(--accent); background: var(--accent-soft); }
@@ -545,10 +553,10 @@ function champSelectCard() {
   const body = `<div class="cs">
     ${mates.length ? `<div class="cs-mates"><span class="label">같은 팀 Prism</span>${mates.map((m) => `<span class="mate">${initial(m.nick)}<b>${esc(m.nick)}</b><span class="sub">같이 <span class="wl">${pct(m.together.w, m.together.n)}</span> · ${m.together.n}판</span></span>`).join('')}</div>` : ''}
     ${shown ? `<div class="cs-layout">${featured(shown)}
-      <div class="cs-bench">
+      <div class="cs-bench-wrap"><div class="cs-bench">
         <div class="cs-guide">${bench.length ? `<b>벤치 ${bench.length}개</b> · 모임 승률 순 · 누르면 왼쪽에 미리보기` : '벤치가 비어 있습니다'}</div>
         ${bench.length ? `<div class="cs-bench-head"><span>챔피언</span><span>나</span><span>모임</span></div><div class="cs-bench-list">${bench.map(benchRow).join('')}</div>` : ''}
-      </div></div>` : empty('챔피언이 정해지면 여기에 나타납니다.', '', true)}
+      </div></div></div>` : empty('챔피언이 정해지면 여기에 나타납니다.', '', true)}
     ${tip ? `<div class="cs-tip">${initial(tip.nick)}<span style="flex:1;min-width:0">“${esc(tip.text)}”</span><b>${esc(tip.nick)}</b></div>` : ''}
     ${!S.prism.loggedIn ? '<p class="note" style="margin:0">Prism에 로그인하면 모임 승률·추천 증강·장인과 같은 팀 회원 케미가 함께 보입니다.</p>' : ''}
   </div>`;
