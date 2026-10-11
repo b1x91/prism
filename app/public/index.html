@@ -175,13 +175,33 @@ img { display: block; }
 .bar { height: 6px; border-radius: var(--r-pill); background: var(--surface-3); overflow: hidden; }
 .bar > span { display: block; height: 100%; border-radius: inherit; background: var(--win); }
 
-/* 최근 10판 띠 */
-.strip { display: grid; grid-template-columns: repeat(10, 1fr); gap: var(--s2); }
-.strip .slot { display: grid; gap: 6px; justify-items: center; }
-.strip .slot .av { width: 100%; height: auto; aspect-ratio: 1; max-width: 44px; }
-.strip .slot i { width: 100%; max-width: 44px; height: 3px; border-radius: 2px; background: var(--surface-3); }
-.strip .slot.is-w i { background: var(--win); } .strip .slot.is-l i { background: var(--lose); }
-.strip .slot.none .av { background: transparent; border: 1px dashed var(--border-strong); }
+/* 최근 10판: 왼쪽 요약 + 오른쪽 일러스트 카드 10장 (왼쪽이 최근) */
+.r10 { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: var(--s5); align-items: center; }
+.r10-sum { display: grid; gap: var(--s1); align-content: center; padding-right: var(--s5); border-right: 1px solid var(--border); height: 100%; }
+.r10-sum .label { font-size: var(--fs-xs); color: var(--text-3); }
+.r10-sum .big { font-size: var(--fs-2xl); font-weight: 800; line-height: 1.1; letter-spacing: -.02em; }
+.r10-sum .wl-line { font-size: var(--fs-sm); color: var(--text-2); }
+.r10-sum .meta { margin-top: var(--s2); }
+.r10-row { display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: var(--s2); }
+.r10-g { position: relative; isolation: isolate; display: flex; flex-direction: column; justify-content: space-between; aspect-ratio: 3 / 4; padding: 6px; border-radius: var(--r-m); overflow: hidden; background: #0b0e1a; color: #fff; text-decoration: none; }
+.r10-g img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; transition: transform .4s ease; }
+.r10-g::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to bottom, rgba(6, 8, 18, .1) 30%, rgba(6, 8, 18, .85)); }
+.r10-g.is-l img { filter: saturate(.35) brightness(.7); }
+.r10-g:hover img { transform: scale(1.06); }
+.r10-g .res { align-self: flex-start; height: 18px; padding: 0 6px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; }
+.r10-g.is-w .res { background: var(--win); } .r10-g.is-l .res { background: rgba(255, 255, 255, .18); color: rgba(255, 255, 255, .85); }
+.r10-g.is-w { box-shadow: inset 0 -3px 0 var(--win); }
+.r10-g .kda { font-size: 10px; font-weight: 600; letter-spacing: -.02em; text-align: center; text-shadow: 0 1px 6px rgba(0, 0, 0, .6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.r10-g.none { background: transparent; border: 1px dashed var(--border-strong); }
+.r10-g.none::after { display: none; }
+@media (max-width: 720px) {
+  .r10 { grid-template-columns: 1fr; gap: var(--s4); }
+  .r10-sum { grid-template-columns: auto auto 1fr; align-items: baseline; gap: var(--s3); padding: 0 0 var(--s4); border-right: 0; border-bottom: 1px solid var(--border); }
+  .r10-sum .label { display: none; }
+  .r10-sum .meta { margin: 0; justify-self: end; }
+  .r10-row { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (prefers-reduced-motion: reduce) { .r10-g img { transition: none; } .r10-g:hover img { transform: none; } }
 
 /* 판 */
 .game { display: grid; grid-template-columns: 3px 40px minmax(0, 1fr) auto; gap: var(--s3); align-items: center; padding: var(--s3) 0; border-top: 1px solid var(--border); }
@@ -243,6 +263,29 @@ img { display: block; }
 .cs-tip b { color: var(--text); font-weight: 600; white-space: nowrap; }
 @media (max-width: 600px) { .cs-tile { padding-top: 140px; } }
 @media (prefers-reduced-motion: reduce) { .cs-bg img { transition: none; } .cs-tile:hover .cs-bg img { transform: none; } }
+
+/* 챔프 선택 배치: 왼쪽 큰 카드(내 챔피언 또는 미리보기), 오른쪽 벤치 패널 */
+.cs-layout { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: var(--s4); align-items: start; }
+@media (max-width: 860px) { .cs-layout { grid-template-columns: 1fr; } }
+.cs-back { position: absolute; top: var(--s3); right: var(--s3); height: 26px; padding: 0 10px; border: 0; border-radius: var(--r-pill); background: rgba(6, 8, 18, .7); color: #fff; font-size: 11px; font-weight: 600; cursor: pointer; backdrop-filter: blur(6px); }
+.cs-bench { display: grid; gap: var(--s2); min-width: 0; }
+.cs-bench-head { display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px 64px; gap: var(--s3); padding: 0 calc(var(--s3) + 1px) 0 7px; font-size: var(--fs-xs); color: var(--text-3); }
+.cs-bench-head span:first-child { grid-column: 1 / 3; }
+.cs-bench-head span:not(:first-child) { text-align: right; }
+.cs-bench-list { display: grid; gap: 6px; max-height: 460px; overflow-y: auto; padding-right: 2px; }
+.cs-b { display: grid; grid-template-columns: 64px minmax(0, 1fr) 64px 64px; gap: var(--s3); align-items: center; width: 100%; padding: 6px var(--s3) 6px 6px; border: 1px solid transparent; border-radius: var(--r-m); background: var(--surface-2); text-align: left; cursor: pointer; }
+.cs-b:hover { background: var(--surface-3); }
+.cs-b.on { border-color: var(--accent); background: var(--accent-soft); }
+.cs-b .thumb { position: relative; width: 64px; height: 40px; border-radius: var(--r-s); overflow: hidden; background: #0b0e1a; }
+.cs-b .thumb img { width: 100%; height: 100%; object-fit: cover; object-position: center 20%; }
+.cs-b .who { display: grid; gap: 2px; min-width: 0; }
+.cs-b .who b { font-size: var(--fs-md); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+.cs-b .who b img { width: 14px; height: 14px; flex: none; }
+.cs-b .who .meta { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cs-b .num { text-align: right; display: grid; }
+.cs-b .num b { font-size: var(--fs-md); font-weight: 700; }
+.cs-b .num b.none { color: var(--text-3); font-weight: 500; }
+.cs-b .num small { font-size: 11px; color: var(--text-3); }
 
 /* 도감 */
 .toolbar { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
@@ -453,46 +496,59 @@ const stat = (label, r, locked) => `<div class="cs-stat"><span class="k">${label
   ${r && r.n ? `<span class="v">${pct(r.w, r.n)}</span><span class="n">${r.n}판 · ${r.w}승 ${r.n - r.w}패</span><div class="bar"><span style="width:${pct(r.w, r.n)}"></span></div>`
     : `<span class="v none">–</span><span class="n">${locked ? '로그인하면 보입니다' : '아직 없음'}</span><div class="bar"></div>`}</div>`;
 
-let csExpanded = false;
-const BENCH_SHOWN = 3;
+let csPreview = null; // 벤치에서 눌러 본 챔피언 (화면 안에서만 바뀐다. 롤 클라이언트에는 요청 없음)
 function champSelectCard() {
   const cs = S.champSelect, P = S.personal, crew = cs.crew;
   const rate = (r) => (r && r.n ? r.w / r.n : -1);
-  // 벤치는 모임 승률 → 내 승률 순으로
+  // 벤치는 모임 승률 → 내 승률 순
   const bench = cs.bench.slice().sort((a, b) => rate(crew?.champions?.[b]?.crew) - rate(crew?.champions?.[a]?.crew) || rate(P?.champions[b]) - rate(P?.champions[a]));
-  const shownBench = csExpanded ? bench : bench.slice(0, BENCH_SHOWN);
-  const hidden = bench.length - shownBench.length;
+  if (csPreview && !bench.includes(csPreview)) csPreview = null;
   const ids = [cs.mine, ...bench].filter(Boolean);
   const mates = crew?.teammates ?? [];
-  // 모임 기록 3판 이상 중 승률이 가장 높은 챔피언 하나 (비교할 후보가 2개 이상일 때만)
+  // 모임 기록 3판 이상 중 승률이 가장 높은 챔피언 하나
   let best = null;
   if (ids.length > 1) for (const id of ids) { const r = crew?.champions?.[id]?.crew; if (r && r.n >= 3 && (!best || r.w / r.n > best.rate)) best = { id, rate: r.w / r.n }; }
-
-  const tile = (id, isMine) => {
-    const c = crew?.champions?.[id];
-    // 추천 증강: 모임 기록 우선, 없으면 내가 고른 증강
-    const crewAugs = (c?.topAugments ?? []).slice().sort((a, b) => b.w / b.n - a.w / a.n || b.n - a.n).slice(0, 3);
+  const augsOf = (id) => {
+    const crewAugs = (crew?.champions?.[id]?.topAugments ?? []).slice().sort((a, b) => b.w / b.n - a.w / a.n || b.n - a.n).slice(0, 3);
     const myAugs = (P?.augmentsByChampion[id] ?? []).slice(0, 3);
-    const augs = crewAugs.length ? { head: '모임 추천 증강', list: crewAugs } : myAugs.length ? { head: '내가 고른 증강', list: myAugs } : null;
+    return crewAugs.length ? { head: '모임 추천 증강', list: crewAugs } : myAugs.length ? { head: '내가 고른 증강', list: myAugs } : null;
+  };
+
+  const featured = (id) => {
+    const c = crew?.champions?.[id];
+    const isMine = id === cs.mine;
+    const augs = augsOf(id);
     const master = c?.masters?.[0];
     return `<article class="cs-tile ${isMine ? 'mine' : ''}">
       <div class="cs-bg">${champSplash(id)}</div>
       ${best?.id === id ? '<span class="cs-best"><img src="/brand/prism-32.png" alt="">모임 최고 승률</span>' : ''}
-      <div class="cs-name"><b>${esc(champName(id))}</b><span>${isMine ? '내 챔피언' : '벤치'}</span></div>
+      ${!isMine && cs.mine ? '<button type="button" class="cs-back" onclick="csPreview=null;render()">내 챔피언 보기</button>' : ''}
+      <div class="cs-name"><b>${esc(champName(id))}</b><span>${isMine ? '내 챔피언' : '벤치 미리보기'}</span></div>
       <div class="cs-body">
         <div class="cs-stats">${stat('나', P?.champions[id])}${stat('모임', c?.crew, !S.prism.loggedIn)}</div>
         ${augs ? `<div class="cs-augs"><span class="head">${augs.head}</span>${augs.list.map((a) => `<div class="row">${chip(a.id)}<span class="meta">${pct(a.w, a.n)} · ${a.n}회</span></div>`).join('')}</div>` : ''}
         ${master ? `<div class="cs-master">${initial(master.nick)}<span>장인 <b style="color:var(--text)">${esc(master.nick)}</b> · ${master.n}판 ${pct(master.w, master.n)}</span></div>` : ''}
       </div></article>`;
   };
-  const tip = cs.mine ? crew?.champions?.[cs.mine]?.tips?.[0] : null;
-  const guide = cs.mine
-    ? `<b>내 챔피언</b>과 <b>벤치에서 바꿀 수 있는 챔피언 ${bench.length}개</b>${bench.length > 1 ? ' · 모임 승률 순' : ''}${hidden > 0 ? ` · <button type="button" class="cs-more" onclick="csExpanded=true;render()">${hidden}개 더 보기</button>` : csExpanded && bench.length > BENCH_SHOWN ? ' · <button type="button" class="cs-more" onclick="csExpanded=false;render()">접기</button>' : ''}`
-    : '챔피언이 정해지면 비교가 나타납니다';
+  const num = (r, locked) => (r && r.n ? `<span class="num"><b>${pct(r.w, r.n)}</b><small>${r.n}판</small></span>` : `<span class="num"><b class="none">–</b><small>${locked ? '' : '없음'}</small></span>`);
+  const benchRow = (id) => {
+    const top = augsOf(id)?.list[0];
+    return `<button type="button" class="cs-b ${csPreview === id ? 'on' : ''}" onclick="csPreview=${csPreview === id ? 'null' : id};render()">
+      <span class="thumb">${champSplash(id)}</span>
+      <span class="who"><b>${best?.id === id ? '<img src="/brand/prism-32.png" alt="모임 최고 승률" title="모임 최고 승률">' : ''}${esc(champName(id))}</b>
+        <span class="meta">${top ? `${esc(ST.augments[top.id]?.name ?? '증강 #' + top.id)} ${pct(top.w, top.n)}` : '추천 증강 없음'}</span></span>
+      ${num(P?.champions[id])}${num(crew?.champions?.[id]?.crew, !S.prism.loggedIn)}</button>`;
+  };
+
+  const shown = csPreview ?? cs.mine ?? bench[0];
+  const tip = shown ? crew?.champions?.[shown]?.tips?.[0] : null;
   const body = `<div class="cs">
-    <div class="cs-top"><span class="cs-guide">${guide}</span>
-      ${mates.length ? `<div class="cs-mates"><span class="label">같은 팀 Prism</span>${mates.map((m) => `<span class="mate">${initial(m.nick)}<b>${esc(m.nick)}</b><span class="sub">같이 <span class="wl">${pct(m.together.w, m.together.n)}</span> · ${m.together.n}판</span></span>`).join('')}</div>` : ''}</div>
-    ${ids.length ? `<div class="cs-grid">${cs.mine ? tile(cs.mine, true) : ''}${shownBench.map((id) => tile(id, false)).join('')}</div>` : empty('챔피언이 정해지면 여기에 나타납니다.', '', true)}
+    ${mates.length ? `<div class="cs-mates"><span class="label">같은 팀 Prism</span>${mates.map((m) => `<span class="mate">${initial(m.nick)}<b>${esc(m.nick)}</b><span class="sub">같이 <span class="wl">${pct(m.together.w, m.together.n)}</span> · ${m.together.n}판</span></span>`).join('')}</div>` : ''}
+    ${shown ? `<div class="cs-layout">${featured(shown)}
+      <div class="cs-bench">
+        <div class="cs-guide">${bench.length ? `<b>벤치 ${bench.length}개</b> · 모임 승률 순 · 누르면 왼쪽에 미리보기` : '벤치가 비어 있습니다'}</div>
+        ${bench.length ? `<div class="cs-bench-head"><span>챔피언</span><span>나</span><span>모임</span></div><div class="cs-bench-list">${bench.map(benchRow).join('')}</div>` : ''}
+      </div></div>` : empty('챔피언이 정해지면 여기에 나타납니다.', '', true)}
     ${tip ? `<div class="cs-tip">${initial(tip.nick)}<span style="flex:1;min-width:0">“${esc(tip.text)}”</span><b>${esc(tip.nick)}</b></div>` : ''}
     ${!S.prism.loggedIn ? '<p class="note" style="margin:0">Prism에 로그인하면 모임 승률·추천 증강·장인과 같은 팀 회원 케미가 함께 보입니다.</p>' : ''}
   </div>`;
@@ -514,8 +570,14 @@ function renderHome() {
     <section class="card stat"><span class="label">지금</span><span class="value ${st.win ? 'w' : 'l'}">${st.n}<small>${st.win ? '연승' : '연패'}</small></span></section>
     <section class="card stat"><span class="label">도감</span><span class="value">${dexN}<small>/ ${dexTotal || '–'}</small></span></section></div>`;
   const recent = games.slice(0, 10);
-  const strip = `<div class="strip">${Array.from({ length: 10 }, (_, i) => { const g = recent[i];
-    return g ? `<a class="slot ${g.win ? 'is-w' : 'is-l'}" href="#dex/${g.championId}" title="${esc(champName(g.championId))} · ${g.win ? '승' : '패'} · ${g.kills}/${g.deaths}/${g.assists}">${champAv(g.championId)}<i></i></a>` : `<div class="slot none"><span class="av"></span><i></i></div>`; }).join('')}</div>`;
+  const rw = recent.filter((g) => g.win).length;
+  const avg = (f) => (recent.reduce((t, g) => t + f(g), 0) / recent.length).toFixed(1);
+  const r10 = `<div class="r10">
+    <div class="r10-sum"><span class="label">승률</span><span class="big">${pct(rw, recent.length)}</span><span class="wl-line">${rw}승 ${recent.length - rw}패</span>
+      <span class="meta">평균 KDA ${avg((g) => g.kills)} / ${avg((g) => g.deaths)} / ${avg((g) => g.assists)}</span></div>
+    <div class="r10-row">${Array.from({ length: 10 }, (_, i) => { const g = recent[i];
+      return g ? `<a class="r10-g ${g.win ? 'is-w' : 'is-l'}" href="#dex/${g.championId}" title="${esc(champName(g.championId))} · ${g.win ? '승리' : '패배'} · ${g.kills}/${g.deaths}/${g.assists} · ${ago(g.playedAt)}">${champSplash(g.championId)}<span class="res">${g.win ? '승' : '패'}</span><span class="kda">${g.kills}/${g.deaths}/${g.assists}</span></a>`
+        : '<div class="r10-g none"></div>'; }).join('')}</div></div>`;
   const gameRows = games.slice(0, 15).map((g) => `<div class="game ${g.win ? 'is-w' : 'is-l'}"><span class="edge"></span>${champAv(g.championId)}
     <div style="min-width:0"><div class="line"><b>${esc(champName(g.championId))}</b><span>${g.kills} / ${g.deaths} / ${g.assists}</span>
       ${g.damageToChampions !== null ? `<span class="meta">딜 ${g.damageToChampions.toLocaleString()}</span>` : ''}</div>
@@ -525,7 +587,7 @@ function renderHome() {
   const topAugs = P.augments.slice(0, 6);
   const topChamps = Object.entries(P.champions).sort((a, b) => b[1].n - a[1].n).slice(0, 5);
   return head + (S.champSelect ? champSelectCard() : '') + stats
-    + card('최근 10판', strip, `<span class="meta">${recent.filter((g) => g.win).length}승 ${recent.filter((g) => !g.win).length}패</span>`)
+    + card('최근 10판', r10, '<span class="meta">왼쪽이 최근 · 누르면 도감</span>')
     + `<div class="grid g-main">`
     + card('최근 판', `<div>${gameRows}</div>`)
     + `<div class="grid" style="align-content:start">`
@@ -771,8 +833,8 @@ function render() {
   if (a && a.closest('#page') && ['INPUT', 'SELECT', 'TEXTAREA'].includes(a.tagName)) return;
   // 내용이 바뀌지 않았으면 다시 그리지 않는다 (깜빡임 방지)
   const key = JSON.stringify([view, S.status, S.message, S.games.length, S.games[0]?.gameId, S.champSelect, S.prism.loggedIn, S.prism.me, S.prism.upload, S.prism.crewSync, Object.keys(ST.champions).length,
-    view === 'chat' ? [CH.connected, CH.online.length] : 0, augChamp, dexFilter, dexQuery, boardAt, Boolean(board), csExpanded]);
-  if (!S.champSelect) csExpanded = false;
+    view === 'chat' ? [CH.connected, CH.online.length] : 0, augChamp, dexFilter, dexQuery, boardAt, Boolean(board), csPreview]);
+  if (!S.champSelect) csPreview = null;
   if (key === lastKey) return;
   lastKey = key;
   const html = { home: renderHome, augments: renderAugments, dex: renderDex, prism: renderPrism, chat: renderChat, settings: renderSettings }[view]();
