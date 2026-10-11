@@ -285,11 +285,17 @@ img { display: block; }
 .cs-sort-menu small { display: block; font-size: var(--fs-xs); color: var(--text-3); }
 
 /* 역할 색 (CLAUDE.md 1.5: 역할 6종에 스펙트럼 사용) */
-.role { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-xs); color: var(--text-2); white-space: nowrap; }
-.role i { width: 7px; height: 7px; border-radius: 50%; background: var(--role, var(--text-3)); flex: none; }
+.role { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 8px 0 6px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--role, var(--text-3)) 16%, transparent); color: var(--text); font-size: var(--fs-xs); font-weight: 600; white-space: nowrap; }
+.role svg { width: 14px; height: 14px; color: var(--role, var(--text-3)); flex: none; }
 .r-marksman { --role: var(--spectrum-1); } .r-fighter { --role: var(--spectrum-2); } .r-support { --role: var(--spectrum-5); }
 .r-tank { --role: var(--spectrum-4); } .r-mage { --role: var(--spectrum-6); } .r-assassin { --role: var(--spectrum-7); }
-.dmg { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 5px; border: 1px solid var(--border-strong); font-size: 10px; font-weight: 700; letter-spacing: .02em; color: var(--text-2); }
+.dmg { display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: var(--r-pill); border: 1px solid var(--border-strong); font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+/* 초상화 모서리 배지: 왼쪽 아래 역할 아이콘, 오른쪽 아래 AP/AD */
+.ico-role { position: absolute; left: -4px; bottom: -4px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); box-shadow: 0 0 0 2px var(--bg); color: var(--role, var(--text-3)); }
+.ico-role svg { width: 12px; height: 12px; }
+.ico-dmg { position: absolute; right: -4px; bottom: -4px; height: 18px; padding: 0 4px; border-radius: var(--r-s); display: inline-flex; align-items: center; background: var(--surface); box-shadow: 0 0 0 2px var(--bg); color: var(--text); font-size: var(--fs-xs); font-weight: 700; line-height: 1; }
+.cs-team .ico-role { box-shadow: 0 0 0 2px var(--surface-2); }
+.cs-tags .dmg { border-color: rgba(255, 255, 255, .3); color: #fff; }
 
 /* 우리 팀 줄 */
 .cs-team { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s4) var(--s6); align-items: center; padding: var(--s4); border-radius: var(--r-l); background: var(--surface-2); }
@@ -297,7 +303,6 @@ img { display: block; }
 .tm { display: grid; justify-items: center; gap: 4px; width: 56px; }
 .tm .pic { position: relative; width: 44px; height: 44px; }
 .tm .pic .av { width: 44px; height: 44px; border-radius: var(--r-m); }
-.tm .pic::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: -3px; height: 3px; border-radius: 2px; background: var(--role, var(--surface-3)); }
 .tm.me .pic .av { box-shadow: 0 0 0 2px var(--accent); }
 .tm .who { font-size: var(--fs-xs); color: var(--text-3); max-width: 56px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tm.prism .who { color: var(--accent); font-weight: 600; }
@@ -324,13 +329,12 @@ img { display: block; }
 .seat { display: grid; justify-items: center; gap: 6px; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; min-width: 0; }
 .seat .pic { position: relative; width: 60px; height: 60px; border-radius: var(--r-m); transition: transform .15s ease; }
 .seat .pic .av { width: 60px; height: 60px; border-radius: var(--r-m); box-shadow: 0 2px 6px rgba(0, 0, 0, .25); }
-.seat .pic::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -4px; height: 3px; border-radius: 2px; background: var(--role, var(--surface-3)); }
 .seat:hover .pic { transform: translateY(-2px); }
 .seat.on .pic .av { box-shadow: 0 0 0 2px var(--accent), 0 4px 10px rgba(0, 0, 0, .3); }
-.seat .mark { position: absolute; top: -6px; right: -6px; height: 18px; min-width: 18px; padding: 0 5px; border-radius: var(--r-pill); background: var(--accent); color: var(--on-accent); font-size: 10px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px var(--bg); }
+.seat .mark { position: absolute; top: -6px; right: -6px; height: 18px; min-width: 18px; padding: 0 5px; border-radius: var(--r-pill); background: var(--accent); color: var(--on-accent); font-size: var(--fs-xs); font-weight: 700; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 0 0 2px var(--bg); }
 .seat .gem-mark { position: absolute; top: -5px; left: -5px; width: 16px; height: 16px; }
 .seat .nm { font-size: var(--fs-xs); font-weight: 600; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.seat .sub { font-size: 11px; color: var(--text-3); white-space: nowrap; margin-top: -4px; }
+.seat .sub { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; margin-top: -4px; }
 .seat-reco { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); color: var(--text-2); }
 .seat-reco b { color: var(--text); }
 @media (prefers-reduced-motion: reduce) { .seat .pic { transition: none; } .seat:hover .pic { transform: none; } }
@@ -419,6 +423,12 @@ img { display: block; }
     <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
     <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
     <symbol id="i-sort" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4v16M3.5 16.5 7 20l3.5-3.5M17 20V4M13.5 7.5 17 4l3.5 3.5"/></symbol>
+    <symbol id="i-r-marksman" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="6.5"/><path d="M12 2.5v5M12 16.5v5M2.5 12h5M16.5 12h5"/></symbol>
+    <symbol id="i-r-mage" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20 14 10"/><path d="M17 3l1.2 2.8L21 7l-2.8 1.2L17 11l-1.2-2.8L13 7l2.8-1.2z"/></symbol>
+    <symbol id="i-r-assassin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 4 9.5 14.5M20 4l-2 6-5 4.5M20 4l-6 2-4.5 5"/><path d="M8 13l3 3M4 20l4-4"/></symbol>
+    <symbol id="i-r-fighter" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 4H20v5.5L10 19.5 4.5 14z"/><path d="M7 21l-4-4M6.5 16.5 3 20"/></symbol>
+    <symbol id="i-r-tank" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8-7.5 9.5-4.3-1.5-7.5-4.9-7.5-9.5V6z"/></symbol>
+    <symbol id="i-r-support" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10z"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></symbol>
     <symbol id="i-send" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12 20 4l-6 16-3-7z"/></symbol>
   </defs>
@@ -564,9 +574,15 @@ let csPreview = null; // 벤치에서 눌러 본 챔피언 (화면 안에서만 
 // ───── 역할·피해 유형·팀 밸런스 ─────
 const ROLE_KO = { marksman: '원딜', mage: '마법사', assassin: '암살자', fighter: '전사', tank: '탱커', support: '서포터' };
 const roleOf = (id) => ST.champions[id]?.roles?.[0] ?? null;
-const roleTag = (id) => { const r = roleOf(id); return r ? `<span class="role r-${r}"><i></i>${ROLE_KO[r] ?? r}</span>` : ''; };
+const roleIcon = (r) => (ROLE_KO[r] ? `<svg aria-hidden="true"><use href="#i-r-${r}"/></svg>` : '');
+const roleTag = (id) => { const r = roleOf(id); return r ? `<span class="role r-${r}">${roleIcon(r)}${ROLE_KO[r] ?? r}</span>` : ''; };
 const DMG_KO = { AP: 'AP', AD: 'AD', MIX: 'AP·AD' };
 const dmgTag = (t) => (t?.damage ? `<span class="dmg">${DMG_KO[t.damage]}</span>` : '');
+/** 초상화 모서리 배지 (역할 아이콘 + AP/AD). 마우스를 올리면 글로 설명 */
+const picBadges = (id, TR, withDmg = true) => {
+  const r = roleOf(id), d = TR[id]?.damage;
+  return (ROLE_KO[r] ? `<span class="ico-role r-${r}" title="${ROLE_KO[r]}">${roleIcon(r)}</span>` : '') + (withDmg && d ? `<span class="ico-dmg" title="주 피해 ${DMG_KO[d]}">${d === 'MIX' ? '혼합' : d}</span>` : '');
+};
 
 /** 팀 구성: AP·AD 수 (혼합은 반씩), 앞라인 (단단함 3=1, 2=0.5), CC 합 */
 function comp(list) {
@@ -636,7 +652,7 @@ function champSelectCard() {
 
   // ── 우리 팀 줄 ──
   const mateByPuuid = Object.fromEntries((crew?.teammates ?? []).map((m) => [m.puuid, m]));
-  const tm = (id, label, cls) => `<div class="tm ${cls}"><span class="pic r-${roleOf(id) ?? 'none'}">${champAv(id)}</span><span class="who">${label}</span></div>`;
+  const tm = (id, label, cls) => `<div class="tm ${cls}"><span class="pic">${champAv(id)}${picBadges(id, TR, false)}</span><span class="who">${label}</span></div>`;
   const teamRow = `<div class="cs-team">
     <div class="cs-team-mates">${cs.mine ? tm(csPreview ?? cs.mine, csPreview ? '미리보기' : '나', 'me') : ''}${slots.map((s) => {
       const m = mateByPuuid[s.puuid];
@@ -674,7 +690,7 @@ function champSelectCard() {
     const f = fit(id);
     const sub = benchSort === 'balance' ? (f.fills.length ? `${f.fills.join('·')} 보완` : '–') : r?.n ? `${benchSort === 'crew' ? '모임' : '나'} ${pct(r.w, r.n)}` : '기록 없음';
     return `<button type="button" class="seat ${csPreview === id ? 'on' : ''}" onclick="csPreview=${csPreview === id ? 'null' : id};render()" title="${esc(champName(id))} · 누르면 왼쪽에 미리보기">
-      <span class="pic r-${roleOf(id) ?? 'none'}">${champAv(id)}${reco?.id === id ? '<span class="mark">추천</span>' : ''}${best?.id === id ? '<img class="gem-mark" src="/brand/prism-32.png" alt="모임 최고 승률" title="모임 최고 승률">' : ''}</span>
+      <span class="pic">${champAv(id)}${picBadges(id, TR)}${reco?.id === id ? '<span class="mark">추천</span>' : ''}${best?.id === id ? '<img class="gem-mark" src="/brand/prism-32.png" alt="모임 최고 승률" title="모임 최고 승률">' : ''}</span>
       <span class="nm">${esc(champName(id))}</span><span class="sub">${sub}</span></button>`;
   };
   const sortUi = `<button type="button" class="cs-sort" aria-haspopup="true" aria-expanded="${sortMenu}" onclick="sortMenu=!sortMenu;render()" title="벤치 정렬"><svg><use href="#i-sort"/></svg>${SORTS[benchSort][0]}</button>
