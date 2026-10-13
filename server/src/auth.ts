@@ -33,6 +33,9 @@ async function discordFetch(url: string, init: RequestInit) {
   }
 }
 
+/** OAuth 콜백 주소. PUBLIC_URL 이 비어 있으면 이 요청이 들어온 주소 (workers.dev 주소를 미리 몰라도 된다) */
+const callbackUrl = (req: Request, env: Env) => `${(env.PUBLIC_URL || new URL(req.url).origin).replace(/\/$/, '')}/auth/discord/callback`;
+
 export async function startDiscord(req: Request, env: Env) {
   const redirect = new URL(req.url).searchParams.get('redirect') ?? '';
   if (!allowedRedirect(redirect, env)) throw new HttpError(400, '허용되지 않은 redirect 입니다.');
@@ -41,7 +44,7 @@ export async function startDiscord(req: Request, env: Env) {
   const u = new URL('https://discord.com/oauth2/authorize');
   u.searchParams.set('client_id', env.DISCORD_CLIENT_ID);
   u.searchParams.set('response_type', 'code');
-  u.searchParams.set('redirect_uri', `${env.PUBLIC_URL}/auth/discord/callback`);
+  u.searchParams.set('redirect_uri', `${callbackUrl(req, env)}`);
   u.searchParams.set('scope', 'identify guilds.members.read');
   u.searchParams.set('state', state);
   u.searchParams.set('prompt', 'none');
@@ -64,7 +67,7 @@ export async function discordCallback(req: Request, env: Env) {
       client_secret: env.DISCORD_CLIENT_SECRET,
       grant_type: 'authorization_code',
       code: q.get('code')!,
-      redirect_uri: `${env.PUBLIC_URL}/auth/discord/callback`,
+      redirect_uri: `${callbackUrl(req, env)}`,
     }),
   });
   if (!tokenRes.ok) return page('로그인 실패', `디스코드 응답 오류 (${tokenRes.status})`, 502);
@@ -74,7 +77,7 @@ export async function discordCallback(req: Request, env: Env) {
   const memRes = await discordFetch(`${DISCORD_API}/users/@me/guilds/${env.DISCORD_GUILD_ID}/member`, {
     headers: { Authorization: `Bearer ${access_token}` },
   });
-  if (memRes.status === 404) return page('Prism 회원이 아닙니다', NOT_A_MEMBER, 403);
+  if (memRes.status === 404) return page('Prism 회원이 아닙니다', env.DISCORD_INVITE_URL ? `${NOT_A_MEMBER}<br><br><a href="${env.DISCORD_INVITE_URL}">디스코드 들어가기</a> 후 다시 로그인해주세요.` : NOT_A_MEMBER, 403);
   if (!memRes.ok) return page('로그인 실패', `디스코드 응답 오류 (${memRes.status})`, 502);
   const gm = (await memRes.json()) as { nick?: string | null; user: { id: string; username: string; global_name?: string | null; avatar?: string | null } };
 

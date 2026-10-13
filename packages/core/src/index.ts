@@ -5,3 +5,4 @@ export * from './data';
 export * from './text';
 export * from './assets';
 export * from './api';
+export * from './config';

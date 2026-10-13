@@ -44,8 +44,9 @@ apps/desktop/
 | 게임 직후 3분 | 30초 | 새 판이 뜰 때까지 전적 재조회 |
 
 ## 설치 파일 만들기
-GitHub Actions `build-desktop` (Windows). 저장소 Variables `PRISM_SERVER_URL` 이 앱에 들어간다 (없으면 모임 기능 없이 가이드만).
-- 태그 `app-v0.5.0` 을 올리면 GitHub Release 에 `Prism_0.5.0_x64-setup.exe` 가 붙는다
+GitHub Actions `build-desktop` (Windows). 회원 서버 주소는 Variables `PRISM_SERVER_URL`, 없으면 Cloudflare 계정에서 찾아 앱에 넣는다 (서버가 없으면 모임 기능 없이 가이드만).
+- 태그 `app-v0.5.0` 을 올리면 GitHub Release 에 `Prism-Setup.exe` 가 붙는다. 이름이 항상 같아서 받는 주소가 고정된다:
+  `https://github.com/b1x91/prism/releases/latest/download/Prism-Setup.exe` (웹의 "앱 받기")
 - Actions 탭에서 수동 실행하면 Artifacts 로만 남는다
 - 버전은 `src-tauri/tauri.conf.json` 의 `version`
 - 코드 서명 인증서가 없어서 처음 실행할 때 SmartScreen 경고가 뜬다 ("추가 정보 → 실행"). 회원 안내에 적어둔다

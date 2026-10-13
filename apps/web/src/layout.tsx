@@ -17,7 +17,8 @@ export function Layout() {
         <span className="sp" />
         <span className="top-ch">
           {links.discord && <a className="ch-ic discord" href={links.discord} target="_blank" rel="noopener noreferrer" title="디스코드"><Icon name="discord" /></a>}
-          {links.kakao && <a className="ch-ic kakao" href={links.kakao} target="_blank" rel="noopener noreferrer" title="카카오톡"><Icon name="talk" /></a>}
+          {links.kakao ? <a className="ch-ic kakao" href={links.kakao} target="_blank" rel="noopener noreferrer" title="카카오톡"><Icon name="talk" /></a>
+            : <span className="ch-ic kakao soon" title="카카오톡 오픈채팅은 곧 열립니다"><Icon name="talk" /></span>}
         </span>
         <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button>
         {me ? <NavLink to="/me" className="me-btn" title="내 기록"><Initial nick={me.nick} size={30} /><span>{me.nick}</span></NavLink>

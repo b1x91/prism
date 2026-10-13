@@ -3,14 +3,14 @@
  * 디스코드 로그인 → 서버가 1회용 code 와 함께 /auth/done 으로 돌려보냄 → 토큰으로 교환 → 이 브라우저에 저장.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ApiError, type Api, type Links, type Me } from '@prism/core';
+import { ApiError, withDefaults, type Api, type Links, type Me } from '@prism/core';
 
 export const SERVER = (import.meta.env.VITE_PRISM_SERVER ?? '').replace(/\/$/, '');
-/** Windows 앱 설치 파일 주소 (없으면 화면에 안내하지 않는다) */
-export const APP_URL = import.meta.env.VITE_APP_URL || '';
+/** Windows 앱 설치 파일 주소. 기본은 GitHub Releases 최신판 (build-desktop 이 늘 같은 이름으로 올린다) */
+export const APP_URL = import.meta.env.VITE_APP_URL || 'https://github.com/b1x91/prism/releases/latest/download/Prism-Setup.exe';
 const DEV_LOGIN = import.meta.env.VITE_PRISM_DEV_LOGIN === '1';
 const TOKEN_KEY = 'prism-token';
-const FALLBACK_LINKS: Links = { discord: import.meta.env.VITE_DISCORD_URL || null, kakao: import.meta.env.VITE_KAKAO_URL || null };
+const FALLBACK_LINKS: Links = withDefaults({ discord: import.meta.env.VITE_DISCORD_URL || null, kakao: import.meta.env.VITE_KAKAO_URL || null });
 
 const getToken = () => { try { return localStorage.getItem(TOKEN_KEY); } catch { return null; } };
 const setToken = (t: string | null) => { try { if (t) localStorage.setItem(TOKEN_KEY, t); else localStorage.removeItem(TOKEN_KEY); } catch { /* 저장소 없음 */ } };

@@ -13,13 +13,13 @@ database_id = "00000000-0000-0000-0000-000000000000" # 배포 전: npx wrangler 
 migrations_dir = "migrations"
 
 [vars]
-PUBLIC_URL = "https://prism.example.workers.dev" # 배포 전: 실제 Worker 주소로 교체
+PUBLIC_URL = "" # 비워 두면 요청이 들어온 주소를 쓴다. 나중에 도메인(api.przm.gg 등)을 붙이면 그 주소
 DISCORD_CLIENT_ID = ""
 DISCORD_GUILD_ID = ""
 ADMIN_DISCORD_IDS = ""
 # 모임 소통 창구. 앱 사이드바·모임 화면의 바로가기 버튼으로 나간다 (비어 있으면 버튼을 숨긴다)
-DISCORD_INVITE_URL = ""
-KAKAO_OPENCHAT_URL = ""
+DISCORD_INVITE_URL = "https://discord.gg/rK3U7xB6WQ"
+KAKAO_OPENCHAT_URL = "" # 오픈채팅을 만들면 주소를 넣는다 (그전에는 버튼이 "준비 중")
 # 웹 사이트 주소 (로그인 후 돌아갈 곳, CORS 허용). 쉼표 구분
 WEB_ORIGINS = "https://przm.web.app,https://przm.gg"
 # 비밀값은 wrangler secret put DISCORD_CLIENT_SECRET 로 넣는다 (파일에 쓰지 않는다)

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { AUGMENT, CHAMPIONS, champIcon, augIcon, type Links } from '@prism/core';
+import { AUGMENT, CHAMPIONS, champIcon, augIcon, withDefaults, type Links } from '@prism/core';
 import { Icon } from './icons';
 
 export function Gem({ size = 28, float, src = '/brand/prism-64.png' }: { size?: number; float?: boolean; src?: string }) {
@@ -36,13 +36,14 @@ export function Seg<T extends string>({ value, options, onChange }: { value: T; 
   return <div className="seg">{options.map(([k, l]) => <button key={k} type="button" className={value === k ? 'on' : ''} onClick={() => onChange(k)}>{l}</button>)}</div>;
 }
 
-export function Channels({ links, size }: { links: Links; size?: 'lg' }) {
-  if (!links.discord && !links.kakao) return null;
+export function Channels({ links, size }: { links?: Links | null; size?: 'lg' }) {
+  const l = withDefaults(links);
   const st = size === 'lg' ? { height: 48 } : undefined;
   return (
     <div className="channels">
-      {links.discord && <a className="ch discord" style={st} href={links.discord} target="_blank" rel="noopener noreferrer"><Icon name="discord" />디스코드</a>}
-      {links.kakao && <a className="ch kakao" style={st} href={links.kakao} target="_blank" rel="noopener noreferrer"><Icon name="talk" />카카오톡</a>}
+      {l.discord && <a className="ch discord" style={st} href={l.discord} target="_blank" rel="noopener noreferrer"><Icon name="discord" />디스코드</a>}
+      {l.kakao ? <a className="ch kakao" style={st} href={l.kakao} target="_blank" rel="noopener noreferrer"><Icon name="talk" />카카오톡</a>
+        : <span className="ch kakao soon" style={st} title="카카오톡 오픈채팅은 곧 열립니다"><Icon name="talk" />카카오톡<small>준비 중</small></span>}
     </div>
   );
 }

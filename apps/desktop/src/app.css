@@ -22,6 +22,9 @@ body { overflow: hidden; background: var(--bg); }
 .side-ch svg { width: 16px; height: 16px; }
 .side-ch.discord svg { color: #5865f2; }
 .side-ch.kakao svg { color: #e6c200; }
+.side-ch.soon { opacity: .5; cursor: default; }
+.side-ch.soon:hover { background: none; color: var(--text-2); }
+.side-ch small { margin-left: auto; font-size: var(--fs-xs); font-weight: 600; color: var(--text-3); }
 .side-status { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; padding: var(--s2) var(--s3); border-radius: var(--r-s); background: var(--surface); border: 1px solid var(--line); font-size: var(--fs-xs); font-weight: 650; color: var(--text-2); }
 .side-status .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); }
 .side-status.ok .dot { background: var(--ok); }

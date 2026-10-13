@@ -221,6 +221,8 @@ img { display: block; }
 .ch .icon { width: 18px; height: 18px; }
 .ch.discord { background: #5865f2; color: #fff; } .ch.kakao { background: #fee500; color: #191919; }
 .ch:hover { filter: brightness(1.06); }
+.ch.soon { opacity: .55; cursor: default; filter: none; }
+.ch.soon small { font-size: var(--fs-xs); font-weight: 600; margin-left: var(--s1); opacity: .8; }
 .initial { width: 32px; height: 32px; border-radius: 50%; display: inline-grid; place-items: center; flex: none; color: #fff; font-size: var(--fs-sm); font-weight: 700; }
 .list { display: grid; }
 .list > .item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: var(--s3); align-items: center; padding: var(--s3) 0; border-top: 1px solid var(--line); }

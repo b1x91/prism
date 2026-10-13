@@ -4,7 +4,7 @@ import { HashRouter, NavLink, Route, Routes, useNavigate } from 'react-router-do
 import '@prism/ui/styles.css';
 import './app.css';
 import { Gem, Icon, Initial, toggleTheme, useLoad, type IconName } from '@prism/ui';
-import type { Links } from '@prism/core';
+import { withDefaults, type Links } from '@prism/core';
 import { getState, refreshSession, start, subscribe, type State } from './controller';
 import { api, bridge } from './bridge';
 import { GamePage } from './pages/Game';
@@ -26,21 +26,21 @@ const STATUS: Record<State['status'], [string, string]> = {
 function App() {
   const s = useSyncExternalStore(subscribe, getState);
   const nav = useNavigate();
-  const links = useLoad<Links>(api, s.session.configured ? '/links' : null).data;
+  const links = withDefaults(useLoad<Links>(api, s.session.configured ? '/links' : null).data);
   const login = async () => { try { await bridge.login(); } finally { await refreshSession(); } };
   // 챔프 선택·게임이 시작되면 게임 화면으로 (Alt+Tab 했을 때 바로 보이게)
   useEffect(() => { if (s.status === 'champ-select' || s.status === 'in-game') nav('/'); }, [s.status, nav]);
   const [label, tone] = STATUS[s.status];
-  const ch = (url: string | null | undefined, cls: string, icon: IconName, name: string) => url && (
-    <button type="button" className={`side-ch ${cls}`} onClick={() => bridge.openUrl(url)} title={name}><Icon name={icon} /><span>{name}</span></button>
-  );
+  const ch = (url: string | null, cls: string, icon: IconName, name: string) => url
+    ? <button type="button" className={`side-ch ${cls}`} onClick={() => bridge.openUrl(url)} title={name}><Icon name={icon} /><span>{name}</span></button>
+    : <span className={`side-ch ${cls} soon`} title={`${name}은 곧 열립니다`}><Icon name={icon} /><span>{name}</span><small>준비 중</small></span>;
   return (
     <div className="shell">
       <aside className="side">
         <div className="side-brand"><Gem size={28} float /><b>Prism</b></div>
         <nav className="side-nav">{NAV.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'}><Icon name={i} />{l}</NavLink>)}</nav>
         <span className="sp" />
-        {links && <div className="side-chs">{ch(links.discord, 'discord', 'discord', '디스코드')}{ch(links.kakao, 'kakao', 'talk', '카카오톡')}</div>}
+        {<div className="side-chs">{ch(links.discord, 'discord', 'discord', '디스코드')}{ch(links.kakao, 'kakao', 'talk', '카카오톡')}</div>}
         <div className={`side-status ${tone}`}><span className="dot" />{label}{s.summoner && <span className="meta">{s.summoner.riotId.split('#')[0]}</span>}</div>
         <div className="side-foot">
           {s.me ? <NavLink to="/settings" className="side-me"><Initial nick={s.me.nick} size={28} /><span>{s.me.nick}</span></NavLink>

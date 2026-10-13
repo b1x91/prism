@@ -25,8 +25,9 @@ npx firebase-tools deploy --only hosting --project prism-90
 1. Firebase 콘솔 → 프로젝트 설정 → 서비스 계정 → **새 비공개 키 생성** → JSON 파일 저장
 2. GitHub 저장소 → Settings → Secrets and variables → Actions
    - Secrets 에 `FIREBASE_SERVICE_ACCOUNT` = JSON 파일 내용 전체
-   - Variables 에 `FIREBASE_PROJECT_ID` = 프로젝트 ID
-3. Actions 탭 → deploy-site → Run workflow (브랜치 선택). 이후 main 에 사이트 변경이 들어오면 자동 배포
+   - (선택) Variables 에 `FIREBASE_PROJECT_ID` — 비우면 `prism-90`
+3. Actions 탭 → deploy-site → Run workflow. 이후 웹 변경이 올라오면 자동 배포 (비밀값이 없으면 실패하지 않고 건너뛴다)
+4. 회원 서버를 배포했다면(`docs/deploy-cloudflare.md`) 서버 주소는 워크플로가 Cloudflare 에서 찾아 넣는다
 
 ## 바꿀 수 있는 것
 - 디스코드·카카오톡 주소: 서버 `wrangler.toml` 의 `DISCORD_INVITE_URL`, `KAKAO_OPENCHAT_URL` (로그인 전 화면용 예비값은 저장소 Variables `DISCORD_INVITE_URL`, `KAKAO_OPENCHAT_URL`). 비어 있으면 버튼이 숨는다

@@ -10,6 +10,7 @@
 .ch-ic { width: 32px; height: 32px; border-radius: var(--r-s); display: grid; place-items: center; }
 .ch-ic .icon { width: 16px; height: 16px; }
 .ch-ic.discord { background: #5865f2; color: #fff; } .ch-ic.kakao { background: #fee500; color: #191919; }
+.ch-ic.soon { opacity: .45; cursor: default; }
 .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: var(--r-m); background: transparent; color: var(--text-2); cursor: pointer; }
 .icon-btn:hover { background: var(--surface-2); color: var(--text); }
 .me-btn { display: inline-flex; align-items: center; gap: var(--s2); height: 36px; padding: 0 var(--s3) 0 4px; border-radius: var(--r-pill); background: var(--surface-2); font-weight: 650; font-size: var(--fs-sm); }

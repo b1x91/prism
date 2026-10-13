@@ -50,7 +50,7 @@ export function Home() {
           <Gem size={56} float src="/brand/prism-256.png" />
           <h2>매일 밤, 같이 증바람</h2>
           <p>Prism은 아수라장을 같이 하는 모임입니다. 회원이 되면 우리끼리의 실전 증강 승률, 기록, 같이 하면 이기는 사람이 열립니다.</p>
-          {links.discord || links.kakao ? <Channels links={links} size="lg" /> : <Link className="btn primary lg" to="/crew">Prism 알아보기</Link>}
+          <Channels links={links} size="lg" />
         </div>
       </div></section>
     </>
