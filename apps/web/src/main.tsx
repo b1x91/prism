@@ -9,7 +9,7 @@ import { Home } from './pages/Home';
 import { Compare, Guide } from './pages/Guide';
 import { Augments } from './pages/Augments';
 import { Crew } from './pages/Crew';
-import { MePage } from './pages/Me';
+import { MemberPage, RankingPage } from './pages/Members';
 import { AuthDone } from './pages/AuthDone';
 
 createRoot(document.getElementById('root')!).render(
@@ -25,7 +25,11 @@ createRoot(document.getElementById('root')!).render(
             <Route path="compare/:id" element={<Compare />} />
             <Route path="augments" element={<Augments />} />
             <Route path="crew" element={<Crew />} />
-            <Route path="me" element={<MePage />} />
+            <Route path="me" element={<MemberPage />} />
+            <Route path="members/:id" element={<MemberPage />} />
+            <Route path="ranking" element={<RankingPage />} />
+            <Route path="champions" element={<Guide />} />
+            <Route path="champions/:id" element={<Guide />} />
             <Route path="auth/done" element={<AuthDone />} />
             <Route path="*" element={<Home />} />
           </Route>

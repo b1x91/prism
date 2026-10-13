@@ -17,6 +17,7 @@ const P: Record<string, ReactElement> = {
   lock: <><rect x="4.5" y="10.5" width="15" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /></>,
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
   game: <><rect x="2.5" y="7" width="19" height="11" rx="4" /><path d="M7 11v3M5.5 12.5h3M15.5 12h.01M18 13.5h.01" /></>,
+  trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0z" /><path d="M16 6h3a3 3 0 0 1-3 4M8 6H5a3 3 0 0 0 3 4" /><path d="M12 13v4M8.5 20h7M10 17h4" /></>,
   login: <><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" /><path d="M10 17l5-5-5-5M15 12H4" /></>,
 };
 const FILLED: Record<string, ReactElement> = {

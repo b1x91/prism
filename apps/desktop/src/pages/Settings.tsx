@@ -5,9 +5,7 @@ import { bridge } from '../bridge';
 import { diagnostics, refreshSession, setConsent, type State } from '../controller';
 import { checkUpdate, installUpdate, useUpdate } from '../update';
 
-import conf from '../../src-tauri/tauri.conf.json';
-
-export const VERSION = conf.version; // 설치 파일 버전과 같은 값
+import { VERSION } from '../version';
 
 const CONSENT = 'Riot 계정을 연결하면 아수라장 전적이 Prism에 자동으로 수집됩니다. 회원에게만 보이며, 연결을 해제하면 수집이 중단됩니다.';
 

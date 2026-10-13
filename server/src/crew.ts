@@ -3,6 +3,11 @@
  * 집계는 저장하지 않고 원본에서 계산한다.
  */
 import { HttpError, json, type Env, type Member } from './util.js';
+import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
+import skinData from '../../packages/core/data/skins.json';
+
+/** 스킨 등급 (없는 스킨이면 null) */
+const skinTier = (id: number): number | null => (skinData.skins as unknown as Record<string, [string, number, string, string]>)[id]?.[1] ?? null;
 
 const TIP_MAX = 120;
 const MIN_PAIR_GAMES = 3;
@@ -22,6 +27,7 @@ export async function getMe(env: Env, me: Member) {
     linked: Boolean(me.riot_puuid),
     consent: Boolean(me.opt_in_at),
     games: row ?? { n: 0, w: 0 },
+    skin: me.profile_skin,
   });
 }
 
@@ -55,11 +61,22 @@ export async function setConsent(req: Request, env: Env, me: Member) {
 }
 
 export async function setProfile(req: Request, env: Env, me: Member) {
-  const { nick, intro } = (await req.json().catch(() => ({}))) as { nick?: string; intro?: string };
+  const { nick, intro, skin } = (await req.json().catch(() => ({}))) as { nick?: string; intro?: string; skin?: number | null };
   const n = typeof nick === 'string' ? nick.trim().slice(0, 20) : me.nick;
   const i = typeof intro === 'string' ? intro.trim().slice(0, 60) : me.intro;
   if (!n) throw new HttpError(400, '닉네임을 입력해주세요.');
-  await env.DB.prepare('UPDATE members SET nick = ?, intro = ? WHERE id = ?').bind(n, i, me.id).run();
+  let s = me.profile_skin;
+  if (skin === null) s = null;
+  else if (skin !== undefined) {
+    if (!Number.isInteger(skin)) throw new HttpError(400, '스킨이 올바르지 않습니다.');
+    const tier = skinTier(skin);
+    if (tier === null) throw new HttpError(400, '없는 스킨입니다.');
+    const row = await env.DB.prepare('SELECT COUNT(*) AS n FROM participants WHERE member_id = ?').bind(me.id).first<{ n: number }>();
+    const need = skinNeed(tier);
+    if ((row?.n ?? 0) < need) throw new HttpError(403, `${SKIN_TIERS[tier].name} 스킨은 ${need}판부터 쓸 수 있어요.`);
+    s = skin;
+  }
+  await env.DB.prepare('UPDATE members SET nick = ?, intro = ?, profile_skin = ? WHERE id = ?').bind(n, i, s, me.id).run();
   return json({ ok: true });
 }
 

@@ -37,13 +37,13 @@ export function Guide() {
   const { api, me } = useSession();
   const [tab, setTab] = useState<Tab>('guide');
   const stats = useLoad<AugmentStats>(api, me && championId ? `/api/augments?champion=${championId}` : null).data;
-  if (!id) return <GuidePicker to={(x) => `/guide/${x}`} />;
+  if (!id) return <GuidePicker to={(x) => `/champions/${x}`} />;
   if (!CHAMPIONS[championId]) return <div className="wrap section">챔피언을 찾을 수 없습니다.</div>;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <ChampBanner id={championId} eyebrow="아수라장 증강 가이드" actions={<Link className="btn sm" to="/guide">다른 챔피언</Link>} />
+      <ChampBanner id={championId} eyebrow="아수라장 증강 가이드" actions={<Link className="btn sm" to="/champions">다른 챔피언</Link>} />
       <div className="row wrapr">
-        <Seg value={tab} options={[['guide', '증강 가이드'], ['compare', '3개 비교'], ['crew', '모임 기록']]} onChange={setTab} />
+        <Seg value={tab} options={[['guide', '어울리는 증강'], ['compare', '증강 3개 비교'], ['crew', '모임 기록']]} onChange={setTab} />
         <span className="sp" /><span className="meta">게임 데이터 {DATA_VERSION} 기준</span>
       </div>
       {tab === 'guide' && <><AugmentGuide championId={championId} stats={stats} />{!me && <MemberLock />}

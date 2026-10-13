@@ -6,6 +6,7 @@
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
 import { addTip, augmentStats, board, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setConsent, setProfile, toggleLike } from './crew.js';
 import { ingest } from './ingest.js';
+import { memberPage, ranking } from './members.js';
 import { addNote, deleteNote, links, listNotes } from './notes.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 
@@ -35,6 +36,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && pathname === '/api/board') return board(env, me);
   if (m === 'POST' && pathname === '/api/tips') return addTip(req, env, me);
   if (m === 'GET' && pathname === '/api/notes') return listNotes(env, me);
+  if (m === 'GET' && pathname === '/api/ranking') return ranking(env, new URL(req.url).searchParams.get('period'));
   if (m === 'POST' && pathname === '/api/notes') return addNote(req, env, me);
   if (m === 'GET' && pathname === '/api/augments') {
     const c = Number(new URL(req.url).searchParams.get('champion'));
@@ -43,6 +45,8 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   const champ = pathname.match(/^\/api\/champions\/(\d+)$/);
   if (m === 'GET' && champ) return getChampion(env, me, Number(champ[1]));
+  const member = pathname.match(/^\/api\/members\/([0-9A-Za-z_-]{1,40})$/);
+  if (m === 'GET' && member) return memberPage(env, me, member[1]);
   const like = pathname.match(/^\/api\/tips\/(\d+)\/like$/);
   if (m === 'POST' && like) return toggleLike(env, me, Number(like[1]));
   const note = pathname.match(/^\/api\/notes\/(\d+)$/);

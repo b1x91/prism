@@ -130,13 +130,16 @@ export function AugmentDex() {
         <Seg value={r} options={[['all', '전체'], ...ORDER.map((x) => [x, RARITY_KO[x]] as [Rarity, string])]} onChange={setR} />
         <span className="meta">{list.length}개</span>
       </div>
-      {list.length ? (
-        <div className="adex">
-          {list.map((a) => (
-            <div key={a.id} className="ai"><AugImg id={a.id} size={44} /><span className="nm"><i className={`rdot ${a.rarity}`} />{a.name}</span><span className="note2">{a.note}</span><p>{a.desc}</p></div>
-          ))}
-        </div>
-      ) : <Empty>찾는 증강이 없습니다.</Empty>}
+      {list.length ? ORDER.filter((x) => list.some((a) => a.rarity === x)).map((x) => (
+        <section key={x} className="stack" style={{ gap: 12 }}>
+          <div className="dex-head"><i className={`rdot ${x}`} /><h3>{RARITY_KO[x]}</h3><span className="meta">{list.filter((a) => a.rarity === x).length}개</span></div>
+          <div className="adex">
+            {list.filter((a) => a.rarity === x).map((a) => (
+              <div key={a.id} className="ai"><AugImg id={a.id} size={44} /><span className="nm"><i className={`rdot ${a.rarity}`} />{a.name}</span><span className="note2">{a.note}</span><p>{a.desc}</p></div>
+            ))}
+          </div>
+        </section>
+      )) : <Empty>찾는 증강이 없습니다.</Empty>}
     </div>
   );
 }

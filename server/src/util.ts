@@ -13,6 +13,7 @@ export interface Env {
 
 export type Member = {
   id: string;
+  profile_skin: number | null;
   discord_name: string;
   discord_avatar: string | null;
   nick: string;

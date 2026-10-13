@@ -14,7 +14,7 @@ export class ApiError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
-export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW };
+export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null };
 export type Note = { id: number; text: string; createdAt: number; nick: string; mine: 0 | 1 };
 export type Tip = { id: number; augmentId: number | null; text: string; createdAt: number; nick: string; mine: 0 | 1; likes: number; liked: 0 | 1 };
 export type ChampionInfo = { crew: NW; me: NW; topAugments: { id: number; n: number; w: number }[]; masters: { id: string; nick: string; n: number; w: number }[]; tips: Tip[] };

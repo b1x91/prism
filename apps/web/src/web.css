@@ -41,7 +41,7 @@ main { min-height: calc(100vh - 64px - 120px); }
 
 /* 첫 화면 */
 .hero { position: relative; overflow: hidden; background: var(--glow); padding: var(--s8) 0 var(--s7); }
-.hero .wrap { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: var(--s7); align-items: center; }
+.hero .wrap { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: var(--s7); align-items: center; }
 .hero h1 { margin: 0; font-size: var(--fs-d2); font-weight: 880; letter-spacing: -.04em; line-height: 1.08; }
 .hero .sub { margin: var(--s5) 0 var(--s7); max-width: 520px; color: var(--text-2); font-size: var(--fs-xl); line-height: 1.5; }
 .hero .eyebrow { display: inline-flex; align-items: center; gap: var(--s2); margin-bottom: var(--s5); font-size: var(--fs-sm); font-weight: 700; color: var(--accent); }
@@ -80,3 +80,10 @@ main { min-height: calc(100vh - 64px - 120px); }
 .app-band p { margin: 0; max-width: 640px; }
 .app-band .eyebrow { font-size: var(--fs-sm); font-weight: 700; color: var(--accent); }
 @media (max-width: 720px) { .app-band { flex-direction: column; align-items: stretch; } }
+
+/* 첫 화면: 보석 자리와 검색창(빛이 나오는 곳) */
+.hero .art { display: grid; place-items: center; min-height: 360px; }
+.gem-stage { line-height: 0; }
+.gem-stage .gem img { filter: drop-shadow(0 0 28px rgba(140, 180, 255, .55)) drop-shadow(0 8px 40px rgba(90, 140, 255, .35)); }
+.lit .csearch .input { border-color: color-mix(in srgb, var(--beam) 35%, var(--line-2)); box-shadow: var(--shadow), 6px 0 24px -8px color-mix(in srgb, var(--beam) 60%, transparent); }
+@media (max-width: 900px) { .hero .art { min-height: 240px; } .gem-stage .gem { --size: 128px !important; } }
