@@ -4,6 +4,7 @@
  */
 import { AUGMENT, isMayhemGame, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
 import { api, bridge } from './bridge';
+import { VERSION } from './version';
 
 const INTERVAL = { noClient: 20_000, inGame: 30_000, idle: 15_000, champSelect: 5_000, error: 10_000 };
 const HISTORY_PAGES = 5; // 20판 × 5 = 최근 100판
@@ -78,19 +79,26 @@ async function loadHistory(puuid: string, pages: number) {
 const canUpload = () => Boolean(state.me?.consent);
 
 async function sendGames(ids: number[]) {
+  // 보냈음 = 서버가 받아들인 판만. 거절된 판(봇 섞인 커스텀 등)은 앱 버전마다 한 번만 다시 본다
   const done = new Set<number>(stored('prism-uploaded', []));
-  const todo = ids.filter((id) => !done.has(id));
+  const skipKey = `prism-skipped-${VERSION}`;
+  const skipped = new Set<number>(stored(skipKey, []));
+  const todo = ids.filter((id) => !done.has(id) && !skipped.has(id));
   for (let i = 0; i < todo.length; i += BATCH) {
+    const part = todo.slice(i, i + BATCH);
     const games = [];
-    for (const id of todo.slice(i, i + BATCH)) {
+    for (const id of part) {
       const d = await bridge.lcuGet(`/lol-match-history/v1/games/${id}`);
       if (isMayhemGame(d)) games.push(toIngestGame(d));
     }
+    const accepted = new Set<number>();
     if (games.length) {
-      const r = await api.post<{ stored: number }>('/api/ingest', { source: 'lcu', games });
+      const r = await api.post<{ stored: number; accepted?: number[] }>('/api/ingest', { source: 'lcu', games });
       set({ upload: { ...state.upload, stored: state.upload.stored + r.stored } });
+      (r.accepted ?? []).forEach((x) => accepted.add(x));
     }
-    store('prism-uploaded', [...stored<number[]>('prism-uploaded', []), ...todo.slice(i, i + BATCH)].slice(-2000));
+    store('prism-uploaded', [...stored<number[]>('prism-uploaded', []), ...part.filter((x) => accepted.has(x))].slice(-2000));
+    store(skipKey, [...stored<number[]>(skipKey, []), ...part.filter((x) => !accepted.has(x))].slice(-2000));
   }
 }
 

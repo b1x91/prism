@@ -1,6 +1,7 @@
 /**
  * POST /api/ingest — 모든 수집원 공통 입구 (CLAUDE.md 7-1).
- *   1. 아수라장 큐(2400)와 커스텀 아수라장만 받는다 (커스텀은 10명 모두 사람·5분 이상, 판수 부풀리기 방지). 이미 있는 gameId 는 무시.
+ *   1. 아수라장 큐(2400)와 커스텀 아수라장만 받는다 (커스텀은 10명 모두 사람·5분 이상, 판수 부풀리기 방지).
+ *      이미 있는 판은 다시 저장하지 않되, 빠진 회원 기록(나중에 동의한 회원)은 채운다.
  *   2. 10명 전원으로 팀 합계 계산 (있는 필드만).
  *   3. puuid ↔ members.riot_puuid 대조 → crew.
  *   4. matches 1건 + 회원 participants 저장. 비회원 데이터는 여기서 폐기.
@@ -76,7 +77,8 @@ export async function ingest(req: Request, env: Env, me: Member) {
   if (payload.games.length > MAX_GAMES) throw new HttpError(413, `한 번에 ${MAX_GAMES}판까지 보낼 수 있습니다.`);
   const source = payload.source === 'lcu' ? 'lcu' : 'unknown';
 
-  const result = { received: payload.games.length, stored: 0, duplicate: 0, skipped: 0, crewGames: 0 };
+  // accepted: 받아들인 판 ID (새로 저장 + 이미 있음). 앱은 이 판들만 '보냈음'으로 표시한다
+  const result = { received: payload.games.length, stored: 0, duplicate: 0, skipped: 0, crewGames: 0, accepted: [] as number[] };
   const games = payload.games.filter((g): g is InGame => {
     const ok = validGame(g) && (g.queueId === MAYHEM_QUEUE || isCustomMayhem(g));
     if (!ok) result.skipped++;
@@ -107,11 +109,12 @@ export async function ingest(req: Request, env: Env, me: Member) {
   const perGame: D1PreparedStatement[][] = [];
   const seenInRequest = new Set<number>();
   for (const g of games) {
-    if (existing.has(g.gameId) || seenInRequest.has(g.gameId)) {
-      result.duplicate++;
-      continue;
-    }
+    if (seenInRequest.has(g.gameId)) continue;
     seenInRequest.add(g.gameId);
+    result.accepted.push(g.gameId);
+    // 이미 있는 판이어도 회원 기록은 넣는다: 다른 회원이 먼저 올렸을 때 아직 동의 전이던 회원이 나중에 동의하면 빠지지 않도록 (모두 INSERT OR IGNORE)
+    const dup = existing.has(g.gameId);
+    if (dup) result.duplicate++;
 
     const teams: Record<'100' | '200', InParticipant[]> = { '100': [], '200': [] };
     for (const p of g.participants) teams[String(p.teamId) as '100' | '200'].push(p);
@@ -127,7 +130,7 @@ export async function ingest(req: Request, env: Env, me: Member) {
     }
 
     const crew = g.participants.filter((p) => memberByPuuid.has(p.puuid));
-    if (crew.length >= 2) result.crewGames++;
+    if (crew.length >= 2 && !dup) result.crewGames++;
     const stmts: D1PreparedStatement[] = [];
     perGame.push(stmts);
     stmts.push(
@@ -135,6 +138,7 @@ export async function ingest(req: Request, env: Env, me: Member) {
         'INSERT OR IGNORE INTO matches (game_id, queue_id, played_at, duration, source, collected_by, crew_count, team_totals, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
       ).bind(g.gameId, g.queueId, g.playedAt, g.duration, source, me.id, crew.length, JSON.stringify(totals), now),
     );
+    if (dup) stmts.push(env.DB.prepare('UPDATE matches SET crew_count = MAX(crew_count, ?) WHERE game_id = ?').bind(crew.length, g.gameId));
 
     for (const p of crew) {
       const memberId = memberByPuuid.get(p.puuid)!;
@@ -190,7 +194,7 @@ export async function ingest(req: Request, env: Env, me: Member) {
         ),
       );
     }
-    result.stored++;
+    if (!dup) result.stored++;
   }
 
   // D1 batch 는 트랜잭션으로 실행된다. 한 판이 두 트랜잭션으로 갈라지지 않도록 판 단위로 묶어 보낸다

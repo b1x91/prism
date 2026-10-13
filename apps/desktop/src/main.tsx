@@ -1,11 +1,11 @@
-import { StrictMode, useEffect, useSyncExternalStore } from 'react';
+import { StrictMode, useEffect, useState, useSyncExternalStore } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
 import { Gem, Icon, Initial, toggleTheme, useLoad, type IconName } from '@prism/ui';
 import { withDefaults, type Links } from '@prism/core';
-import { getState, refreshSession, start, subscribe, type State } from './controller';
+import { getState, refreshSession, setConsent, start, subscribe, type State } from './controller';
 import { api, bridge } from './bridge';
 import { installUpdate, startUpdates, useUpdate } from './update';
 import { VERSION } from './version';
@@ -59,6 +59,7 @@ function App() {
         </div>
       </aside>
       <main className="main">
+        {s.me && !s.me.consent && <ConsentBanner s={s} />}
         <Routes>
           <Route index element={<GamePage s={s} />} />
           <Route path="champions" element={<ChampionsPage member={!!s.me} />} />
@@ -74,6 +75,24 @@ function App() {
         </Routes>
       </main>
     </div>
+  );
+}
+
+/** 로그인했지만 아직 기록 저장에 동의하지 않은 경우: 맨 위에 한 번에 연결하는 안내 */
+function ConsentBanner({ s }: { s: State }) {
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+  return (
+    <section className="card pad consent-band">
+      <div className="stack" style={{ gap: 4 }}>
+        <b>내 아수라장 기록을 Prism에 저장할까요?</b>
+        <span className="muted">Riot 계정을 연결하면 아수라장 전적이 Prism에 자동으로 수집됩니다. 회원에게만 보이며, 연결을 해제하면 수집이 중단됩니다.</span>
+        {err && <span className="l">{err}</span>}
+      </div>
+      <button type="button" className="btn primary" disabled={busy || !s.summoner} onClick={async () => { setBusy(true); setErr(''); try { await setConsent(true); } catch (e) { setErr(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); } }}>
+        {s.summoner ? `동의하고 ${s.summoner.riotId.split('#')[0]} 연결` : '롤 클라이언트를 켜면 연결할 수 있어요'}
+      </button>
+    </section>
   );
 }
 

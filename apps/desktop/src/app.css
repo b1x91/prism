@@ -113,3 +113,8 @@ body { overflow: hidden; background: var(--bg); }
 }
 @media (prefers-reduced-motion: reduce) { .seat .pic { transition: none; } .side-status.live .dot, .pulse { animation: none; } }
 .ocr { margin: var(--s2) 0 0; padding: var(--s3); max-height: 200px; overflow: auto; border-radius: var(--r-s); background: var(--surface-2); font-size: var(--fs-xs); white-space: pre-wrap; }
+
+/* 기록 저장 동의 안내 */
+.consent-band { display: flex; align-items: center; gap: var(--s5); margin-bottom: var(--s5); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); background: linear-gradient(90deg, var(--accent-soft), var(--surface) 70%); }
+.consent-band .btn { flex: none; }
+@media (max-width: 900px) { .consent-band { flex-direction: column; align-items: stretch; } }

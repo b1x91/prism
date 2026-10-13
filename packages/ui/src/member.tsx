@@ -108,6 +108,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
         </div>
       </div>
       {edit && m.self && <ProfileEditor api={api} page={data} skins={skins} onSaved={() => { setEdit(false); reload(); }} />}
+      {m.self && !m.riotId && <section className="card pad"><b>아직 롤 계정이 연결되지 않았어요</b><div className="muted">PC의 Prism 앱에서 로그인한 뒤 맨 위의 <b>"동의하고 연결"</b>을 누르면, 그때부터 판이 여기에 쌓입니다. 앱에 이미 보이는 최근 판도 함께 올라와요.</div></section>}
       {!m.self && <SynergyCard data={data} />}
       <div className="grid4">
         <section className="card stat"><span className="k">기록된 판</span><span className="v">{total.n}<small>판</small></span></section>
