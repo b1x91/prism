@@ -29,6 +29,7 @@ export const bridge = {
   updateCheck: () => call<UpdateInfo>('update_check').catch((e) => { throw err(e); }),
   updateInstall: () => call<void>('update_install').catch((e) => { throw err(e); }),
   visionGet: () => call<VisionState>('vision_get'),
+  visionAllow: (allowed: boolean) => call<void>('vision_allow', { allowed }).catch(() => {}),
   visionSet: (enabled: boolean, position: 'right' | 'top') => call<void>('vision_set', { enabled, position }),
   visionTest: () => call<{ ids: number[]; text: string }>('vision_test').catch((e) => { throw err(e); }),
 };

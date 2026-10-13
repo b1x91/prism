@@ -33,6 +33,9 @@ export type State = {
   crew: CrewSelect;
   lastChampion: number | null; // 마지막 챔프 선택의 내 챔피언 (게임 중 가이드용)
   session: { configured: boolean; loggedIn: boolean };
+  /** 첫 세션 확인이 끝났는지, 서버에 닿지 못했는지 (첫 화면 판단용) */
+  sessionChecked: boolean;
+  sessionError: string | null;
   me: Me | null;
   upload: { lastAt: number; stored: number; error: string | null };
   crewSync: { lastAt: number; running: boolean; games: number; error: string | null };
@@ -43,7 +46,7 @@ const store = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.st
 
 let state: State = {
   status: 'starting', message: '', phase: '', summoner: null, games: [], personal: personalStats([]), champSelect: null, crew: null,
-  lastChampion: stored<number | null>('prism-last-champion', null), session: { configured: false, loggedIn: false }, me: null,
+  lastChampion: stored<number | null>('prism-last-champion', null), session: { configured: false, loggedIn: false }, sessionChecked: false, sessionError: null, me: null,
   upload: { lastAt: 0, stored: 0, error: null }, crewSync: { lastAt: stored('prism-crew-sync-at', 0), running: false, games: 0, error: null },
 };
 const subs = new Set<() => void>();
@@ -58,8 +61,17 @@ let crewKey = '';
 
 export async function refreshSession() {
   const session = await bridge.session().catch(() => ({ configured: false, loggedIn: false }));
-  const me = session.loggedIn ? await api.get<Me>('/api/me').catch(() => null) : null;
-  set({ session: { ...session, loggedIn: Boolean(me) }, me });
+  let me: Me | null = null;
+  let sessionError: string | null = null;
+  if (session.loggedIn) {
+    try { me = await api.get<Me>('/api/me'); }
+    catch {
+      // 로그인이 만료됐으면 Rust 가 토큰을 지운다 → 다시 물어보면 loggedIn=false. 그대로면 서버에 닿지 못한 것
+      const again = await bridge.session().catch(() => session);
+      if (again.loggedIn) sessionError = 'Prism 서버에 연결하지 못했습니다. 인터넷 연결을 확인해주세요.';
+    }
+  }
+  set({ session: { ...session, loggedIn: Boolean(me) }, me, sessionChecked: true, sessionError });
 }
 
 // 확인용 정보(diagnostics)에 넣을 마지막 원본. 화면에는 쓰지 않는다

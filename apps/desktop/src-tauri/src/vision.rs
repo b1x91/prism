@@ -53,6 +53,8 @@ pub struct Vision {
     pub report: Mutex<Report>,
     pub matcher: Matcher,
     shown: AtomicBool,
+    /// 로그인 + 수집 동의를 마쳤는지 (첫 화면을 끝내기 전에는 인식하지 않는다)
+    pub allowed: AtomicBool,
 }
 
 fn now() -> u64 {
@@ -63,7 +65,7 @@ impl Vision {
     pub fn new(dir: PathBuf) -> Arc<Self> {
         let path = dir.join("vision.json");
         let settings = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
-        Arc::new(Self { path, settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), shown: AtomicBool::new(false) })
+        Arc::new(Self { path, settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), shown: AtomicBool::new(false), allowed: AtomicBool::new(false) })
     }
 
     pub fn set(&self, s: Settings) {
@@ -213,7 +215,7 @@ mod imp {
         let mut last: Vec<u32> = Vec::new();
         loop {
             let s = v.settings.lock().unwrap().clone();
-            let game = if s.enabled { game_window() } else { None };
+            let game = if s.enabled && v.allowed.load(Ordering::SeqCst) { game_window() } else { None };
             let front = game.filter(|h| unsafe { GetForegroundWindow() } == *h);
             let (Some(h), Some(eng)) = (front, eng.as_ref()) else {
                 v.hide(&app);

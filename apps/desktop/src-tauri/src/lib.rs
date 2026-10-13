@@ -104,6 +104,15 @@ fn vision_set(handle: tauri::AppHandle, app: State<'_, Arc<App>>, enabled: bool,
     }
 }
 
+/// 첫 화면(로그인·동의)을 마쳤는지 화면이 알려준다
+#[tauri::command]
+fn vision_allow(handle: tauri::AppHandle, app: State<'_, Arc<App>>, allowed: bool) {
+    app.vision.allowed.store(allowed, std::sync::atomic::Ordering::SeqCst);
+    if !allowed {
+        app.vision.hide(&handle);
+    }
+}
+
 /// 클립보드 그림으로 인식 시험 (증강 화면을 Win+Shift+S 로 찍은 뒤)
 #[tauri::command]
 async fn vision_test(app: State<'_, Arc<App>>) -> Result<serde_json::Value, String> {
@@ -169,7 +178,7 @@ pub fn run() {
                 let _ = window.hide();
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, vision_get, vision_set, vision_test])
+        .invoke_handler(tauri::generate_handler![lcu_status, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, vision_get, vision_set, vision_allow, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }

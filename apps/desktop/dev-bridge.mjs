@@ -77,6 +77,7 @@ const CMD = {
   // MOCK_UPDATE=1 이면 새 버전이 있는 것처럼
   update_check: () => ({ current: '0.5.2', latest: process.env.MOCK_UPDATE ? '0.5.3' : '0.5.2', available: Boolean(process.env.MOCK_UPDATE), notes: '' }),
   update_install: () => { throw '개발 모드에서는 설치하지 않습니다.'; },
+  vision_allow: () => null,
   vision_get: () => ({ settings: vision, report: { engine: 'unsupported', last_text: '', last_ids: [], last_at: 0 } }),
   vision_set: ({ enabled, position }) => { vision = { enabled, position }; return null; },
   vision_test: () => { throw '윈도우에서만 쓸 수 있습니다.'; },
