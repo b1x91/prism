@@ -32,4 +32,4 @@ jobs:
             UNION ALL SELECT 'matches_crew0', COUNT(*) FROM matches WHERE crew_count = 0
             UNION ALL SELECT 'participants', COUNT(*) FROM participants
             UNION ALL SELECT 'last_match_age_min', CAST((strftime('%s','now')*1000 - MAX(created_at)) / 60000 AS INTEGER) FROM matches
-          " | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{for(const r of JSON.parse(s)[0].results)console.log(r.k.padEnd(22),r.v)})"
+          "
