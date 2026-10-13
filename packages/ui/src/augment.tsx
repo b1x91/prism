@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, fitOf, guideOf, initials, pct, relatedAugments, type AugmentStats, type Fit, type Rarity } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, rankFits, relatedAugments, topTie, type AugmentStats, type Fit, type Rarity } from '@prism/core';
 import { ChampImg } from './basics';
 import { AugImg, Empty, Seg } from './basics';
 import { Icon } from './icons';
@@ -82,30 +82,37 @@ export function AugmentCompare({ championId, stats, preset }: { championId: numb
   const c = CHAMPIONS[championId];
   const champ = toMap(stats?.champion), overall = toMap(stats?.overall);
   const pool = ACTIVE_AUGMENTS.filter((a) => a.rarity === rarity && matchAug(a.name, q)).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-  const fits = c ? picked.map((id) => fitOf(c, AUGMENT[id])) : [];
-  const rank = (f: Fit) => ({ best: 3, good: 2, weak: 1, none: 0 })[f.level] * 1000 + f.weight * 100 + f.score;
-  const ordered = [...fits].sort((a, b) => rank(b) - rank(a));
-  const top = ordered.length >= 2 ? ordered[0] : null;
+  // 순서·티어·동순위는 게임 위 작은 창과 같은 계산
+  const ranked = rankFits(c, picked.map((id) => AUGMENT[id]));
+  const byId = new Map(ranked.map((f) => [f.id, f]));
+  const tie = picked.length >= 2 ? topTie(ranked) : null;
+  const top = picked.length >= 2 && !tie ? ranked[0] : null;
   const add = (id: number) => { if (picked.length < 3 && !picked.includes(id)) { setPicked([...picked, id]); setQ(''); } };
   return (
     <div className="stack">
       <div className="cmp-slots">
         {[0, 1, 2].map((i) => {
           const id = picked[i];
-          const f = fits[i];
+          const f = id ? byId.get(id) : undefined;
           if (!id || !f) return <div key={i} className="slot"><span className="ph">증강 {i + 1} 고르기</span></div>;
-          const order = ordered.indexOf(f) + 1;
           return (
-            <div key={i} className={`slot filled ${top && top === f ? 'top' : ''}`}>
+            <div key={i} className={`slot filled ${picked.length >= 2 && f.rank === 1 ? 'top' : ''}`}>
               <AugImg id={id} size={48} />
               <span className="nm">{AUGMENT[id].name}</span>
               <span className="why meta">{f.missing ?? f.reasons.join(' · ')}</span>
-              <span className="rank"><span className={`lv ${f.level}`}>{picked.length >= 2 ? `${order}위 · ` : ''}{LEVEL_KO[f.level]}</span></span>
+              <span className="rank"><span className={`tier t-${f.tier}`} title="지금 챔피언과의 어울림 티어">{f.tier}</span>{picked.length >= 2 && <span className="meta">{f.rank}위{f.tied ? ' (비슷함)' : ''}</span>}</span>
               <button type="button" className="btn ghost sm x" onClick={() => setPicked(picked.filter((x) => x !== id))} aria-label="빼기"><Icon name="x" /></button>
             </div>
           );
         })}
       </div>
+      {tie && (
+        <div className="verdict">
+          <span className="meta">{c?.name}에게는</span>
+          <b>{tie.map((f) => AUGMENT[f.id].name).join(' · ')}</b>
+          <span className="muted">모두 {tie[0].tier}티어이고 차이가 작아요. 원하는 쪽으로 고르세요.</span>
+        </div>
+      )}
       {top && (
         <div className="verdict">
           <span className="meta">{c?.name}에게는</span>

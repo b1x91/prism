@@ -139,12 +139,40 @@ export function guideOf(data: { augments: MayhemAugment[]; champions: Record<num
   };
 }
 
-/** 뜬 증강 몇 개를 챔피언에게 맞는 순서로 (3개 비교·게임 위 작은 창 공용) */
-export function rankFits(c: ChampionProfile | undefined, augments: MayhemAugment[]): Fit[] {
+/**
+ * 어울림 티어 (v3.7): 지금 챔피언과 얼마나 잘 맞는지를 S~D 로. 증강 자체의 세기(승률)가 아니다.
+ * 점수 = 어울림 점수 + 근거(조건 충족·성향 일치) 하나당 5점 (최대 3개). 조건이 없으면 0.
+ * 경계는 전체 챔피언 × 증강 분포로 맞췄다: S 약 16% · 누구나 무난한 범용 증강은 B.
+ */
+export type FitTier = 'S' | 'A' | 'B' | 'C' | 'D';
+export const fitPoints = (f: Fit) => (f.level === 'none' ? 0 : f.score + Math.min(f.weight, 3) * 5);
+export const tierOf = (points: number): FitTier => (points >= 100 ? 'S' : points >= 85 ? 'A' : points >= 58 ? 'B' : points >= 35 ? 'C' : 'D');
+/** 같은 티어에서 이 점수 차 이내면 우열을 매기지 않는다 (같은 순위, 고르는 건 사용자) */
+export const TIE_GAP = 8;
+
+export type RankedFit = Fit & { points: number; tier: FitTier; rank: number; tied: boolean };
+
+/** 뜬 증강 몇 개를 챔피언에게 맞는 순서로 (3개 비교·게임 위 작은 창 공용). 비슷하면 같은 순위 */
+export function rankFits(c: ChampionProfile | undefined, augments: MayhemAugment[]): RankedFit[] {
   if (!c) return [];
-  const rank = (f: Fit) => ({ best: 3, good: 2, weak: 1, none: 0 })[f.level] * 1000 + f.weight * 100 + f.score;
-  return augments.map((a) => fitOf(c, a)).sort((a, b) => rank(b) - rank(a));
+  const list = augments
+    .map((a) => fitOf(c, a))
+    .map((f) => { const points = fitPoints(f); return { ...f, points, tier: tierOf(points), rank: 1, tied: false }; })
+    .sort((a, b) => b.points - a.points || b.weight - a.weight);
+  list.forEach((f, i) => {
+    const prev = list[i - 1];
+    if (!prev) return;
+    // 같은 티어이고 바로 위와 차이가 작으면 같은 순위 (D 끼리는 묶을 의미가 없어 그대로)
+    if (prev.tier === f.tier && f.tier !== 'D' && prev.points - f.points <= TIE_GAP) {
+      f.rank = prev.rank;
+      prev.tied = f.tied = true;
+    } else f.rank = i + 1;
+  });
+  return list;
 }
+
+/** 1위가 여럿이면 그 증강들 (사용자가 고를 몫) */
+export const topTie = (list: RankedFit[]) => { const top = list.filter((f) => f.rank === 1); return top.length >= 2 ? top : null; };
 
 // ───────── 증강 상세 (도감에서 누르면) ─────────
 
