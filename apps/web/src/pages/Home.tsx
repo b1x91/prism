@@ -40,6 +40,7 @@ export function Home() {
             <span className="eyebrow">Windows 앱</span>
             <h2>게임 옆에 두는 Prism</h2>
             <p className="muted">챔프 선택에서는 우리 팀에 부족한 것과 대기석 추천을, 게임 중에는 Alt+Tab 한 번으로 내 챔피언 증강 비교를. 내 판은 알아서 기록됩니다.</p>
+            <p className="meta">처음 실행할 때 "Windows의 PC 보호" 창이 뜨면 <b>추가 정보 → 실행</b>을 눌러주세요. 작은 모임 앱이라 아직 Microsoft 인증을 받지 않았습니다.</p>
           </div>
           <a className="btn primary lg" href={APP_URL} target="_blank" rel="noopener noreferrer"><Icon name="out" />앱 받기</a>
         </div>
