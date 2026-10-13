@@ -14,9 +14,9 @@ migrations_dir = "migrations"
 
 [vars]
 PUBLIC_URL = "" # 비워 두면 요청이 들어온 주소를 쓴다. 나중에 도메인(api.przm.gg 등)을 붙이면 그 주소
-DISCORD_CLIENT_ID = ""
-DISCORD_GUILD_ID = ""
-ADMIN_DISCORD_IDS = ""
+DISCORD_CLIENT_ID = "1549034168384491671"
+DISCORD_GUILD_ID = "793740647207010304"
+ADMIN_DISCORD_IDS = "426955675592163329"
 # 모임 소통 창구. 앱 사이드바·모임 화면의 바로가기 버튼으로 나간다 (비어 있으면 버튼을 숨긴다)
 DISCORD_INVITE_URL = "https://discord.gg/rK3U7xB6WQ"
 KAKAO_OPENCHAT_URL = "" # 오픈채팅을 만들면 주소를 넣는다 (그전에는 버튼이 "준비 중")
