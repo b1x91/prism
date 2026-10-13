@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { ago } from '@prism/core';
-import { Icon, Initial } from '@prism/ui';
-import { bridge } from '../bridge';
+import { AUGMENT, ago } from '@prism/core';
+import { AugImg, Icon, Initial, Seg } from '@prism/ui';
+import { bridge, type VisionState } from '../bridge';
 import { diagnostics, refreshSession, setConsent, type State } from '../controller';
 import { checkUpdate, installUpdate, useUpdate } from '../update';
 
@@ -18,6 +18,7 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
   return (
     <div className="stack" style={{ gap: 16, maxWidth: 760 }}>
       <h1 className="h1">설정</h1>
+      <VisionSettings />
       <section className="card pad">
         <div className="card-head"><h2>Prism 계정</h2></div>
         {!s.session.configured ? <p className="muted">Prism 모임 기능은 곧 열립니다.</p> : !s.me ? (
@@ -52,5 +53,37 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
         </div>
       </section>
     </div>
+  );
+}
+
+/** 게임 중 증강 자동 인식 (v3.5) */
+function VisionSettings() {
+  const [v, setV] = useState<VisionState | null>(null);
+  const [test, setTest] = useState<{ ids: number[]; text: string } | null>(null);
+  const [err, setErr] = useState('');
+  const load = () => bridge.visionGet().then(setV).catch(() => setV(null));
+  useEffect(() => { void load(); const t = setInterval(load, 3000); return () => clearInterval(t); }, []);
+  if (!v) return null;
+  const save = async (enabled: boolean, position: 'right' | 'top') => { await bridge.visionSet(enabled, position); await load(); };
+  const r = v.report;
+  return (
+    <section className="card pad">
+      <div className="card-head"><h2>게임 중 증강 자동 인식</h2><span className="sp" />
+        <button type="button" className={`btn sm ${v.settings.enabled ? '' : 'primary'}`} onClick={() => save(!v.settings.enabled, v.settings.position)}>{v.settings.enabled ? '끄기' : '켜기'}</button></div>
+      <p className="muted" style={{ marginTop: 0 }}>증강을 고르는 화면이 뜨면 앱이 알아보고, 게임 위 작은 창에 내 챔피언에게 맞는 순서를 보여줍니다. 롤을 <b>테두리 없는 창 모드</b>로 두어야 보여요.</p>
+      <div className="kv">
+        <div><span className="k">작은 창 위치</span><span><Seg value={v.settings.position} options={[['right', '오른쪽'], ['top', '위']]} onChange={(p) => save(v.settings.enabled, p)} /></span></div>
+        <div><span className="k">상태</span><span className="muted">{r.engine === 'no-korean' ? <span className="l">이 PC 에 한국어 문자 인식이 없습니다. Windows 설정 → 시간 및 언어 → 언어에서 한국어를 추가해주세요.</span> : r.engine === 'unsupported' ? '이 환경에서는 쓸 수 없습니다' : r.last_at ? <>마지막 인식 {ago(r.last_at)} · {r.last_ids.map((id) => AUGMENT[id]?.name ?? `#${id}`).join(', ')}</> : '아직 인식한 증강이 없습니다'}</span></div>
+        <div><span className="k">인식 시험</span><span className="stack" style={{ gap: 8 }}>
+          <span className="muted">증강 고르는 화면을 <b>Win+Shift+S</b> 로 찍은 뒤 누르면, 같은 방식으로 읽어 봅니다.</span>
+          <span><button type="button" className="btn sm" onClick={async () => { setErr(''); setTest(null); try { setTest(await bridge.visionTest()); } catch (e) { setErr(e instanceof Error ? e.message : String(e)); } }}>찍은 화면으로 시험</button></span>
+          {err && <span className="l">{err}</span>}
+          {test && <span className="stack" style={{ gap: 8 }}>
+            <span className="row wrapr" style={{ gap: 8 }}>{test.ids.length ? test.ids.map((id) => <span key={id} className="pill"><AugImg id={id} size={20} />{AUGMENT[id]?.name}</span>) : <span className="l">증강을 찾지 못했습니다</span>}</span>
+            <details><summary className="meta">읽은 글자 보기</summary><pre className="ocr">{test.text || '(없음)'}</pre></details>
+          </span>}
+        </span></div>
+      </div>
+    </section>
   );
 }

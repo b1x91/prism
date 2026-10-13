@@ -28,8 +28,15 @@ export const bridge = {
   autostart: (enable?: boolean) => call<boolean>('autostart', enable === undefined ? {} : { enable }),
   updateCheck: () => call<UpdateInfo>('update_check').catch((e) => { throw err(e); }),
   updateInstall: () => call<void>('update_install').catch((e) => { throw err(e); }),
+  visionGet: () => call<VisionState>('vision_get'),
+  visionSet: (enabled: boolean, position: 'right' | 'top') => call<void>('vision_set', { enabled, position }),
+  visionTest: () => call<{ ids: number[]; text: string }>('vision_test').catch((e) => { throw err(e); }),
 };
 
+export type VisionState = {
+  settings: { enabled: boolean; position: 'right' | 'top' };
+  report: { engine: 'ok' | 'no-korean' | 'unsupported' | ''; last_text: string; last_ids: number[]; last_at: number };
+};
 export type UpdateInfo = { current: string; latest: string; available: boolean; notes: string };
 
 export const api: Api = {

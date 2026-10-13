@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, fitOf, guideOf, initials, pct, type AugmentStats, type Fit, type Rarity } from '@prism/core';
 import { AugImg, Empty, Seg } from './basics';
 import { Icon } from './icons';
@@ -65,10 +65,19 @@ const matchAug = (name: string, q: string) => { const t = q.trim().replace(/\s/g
  * 증강 3개 비교: 게임 중 화면에 뜬 증강 3개를 직접 골라 넣으면 내 챔피언과의 어울림 순으로 보여준다.
  * 게임 화면을 읽지 않는다 (사용자가 고른다). 같은 등급끼리 뜨므로 등급 필터를 먼저 둔다.
  */
-export function AugmentCompare({ championId, stats }: { championId: number; stats?: AugmentStats | null }) {
+export function AugmentCompare({ championId, stats, preset }: { championId: number; stats?: AugmentStats | null; preset?: number[] }) {
   const [rarity, setRarity] = useState<Rarity>('gold');
   const [q, setQ] = useState('');
   const [picked, setPicked] = useState<number[]>([]);
+  // 게임에서 자동으로 알아낸 증강이 오면 그대로 채운다
+  const presetKey = (preset ?? []).join(',');
+  useEffect(() => {
+    if (!preset?.length) return;
+    setPicked(preset.filter((id) => AUGMENT[id]).slice(0, 3));
+    const r = AUGMENT[preset[0]]?.rarity;
+    if (r) setRarity(r);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [presetKey]);
   const c = CHAMPIONS[championId];
   const champ = toMap(stats?.champion), overall = toMap(stats?.overall);
   const pool = ACTIVE_AUGMENTS.filter((a) => a.rarity === rarity && matchAug(a.name, q)).sort((a, b) => a.name.localeCompare(b.name, 'ko'));

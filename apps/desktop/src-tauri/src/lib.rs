@@ -2,8 +2,10 @@
 //! 화면과 흐름(확인 간격, 업로드, 회원 대신 수집)은 공용 TS 가 맡는다.
 
 mod lcu;
+mod matcher;
 mod server;
 mod update;
+mod vision;
 
 use std::sync::Arc;
 use tauri::menu::{Menu, MenuItem};
@@ -15,6 +17,7 @@ use tauri_plugin_opener::OpenerExt;
 struct App {
     lcu: lcu::Lcu,
     server: server::Server,
+    vision: Arc<vision::Vision>,
 }
 
 #[tauri::command]
@@ -87,6 +90,28 @@ async fn update_install(handle: tauri::AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+#[tauri::command]
+fn vision_get(app: State<'_, Arc<App>>) -> serde_json::Value {
+    serde_json::json!({ "settings": *app.vision.settings.lock().unwrap(), "report": *app.vision.report.lock().unwrap() })
+}
+
+#[tauri::command]
+fn vision_set(handle: tauri::AppHandle, app: State<'_, Arc<App>>, enabled: bool, position: String) {
+    let position = if position == "top" { "top" } else { "right" }.to_string();
+    app.vision.set(vision::Settings { enabled, position });
+    if !enabled {
+        app.vision.hide(&handle);
+    }
+}
+
+/// 클립보드 그림으로 인식 시험 (증강 화면을 Win+Shift+S 로 찍은 뒤)
+#[tauri::command]
+async fn vision_test(app: State<'_, Arc<App>>) -> Result<serde_json::Value, String> {
+    let v = app.vision.clone();
+    let (ids, text) = tauri::async_runtime::spawn_blocking(move || vision::test_clipboard(&v)).await.map_err(|e| e.to_string())??;
+    Ok(serde_json::json!({ "ids": ids, "text": text }))
+}
+
 fn show(app: &tauri::AppHandle) {
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.show();
@@ -103,7 +128,11 @@ pub fn run() {
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--background"])))
         .setup(|app| {
             let dir = app.path().app_config_dir()?;
-            app.manage(Arc::new(App { lcu: lcu::Lcu::new(), server: server::Server::new(dir) }));
+            let vision = vision::Vision::new(dir.clone());
+            app.manage(Arc::new(App { lcu: lcu::Lcu::new(), server: server::Server::new(dir), vision: vision.clone() }));
+            // 게임 중 증강 인식 + 게임 위 작은 창 (v3.5)
+            vision::create_overlay(app)?;
+            vision.start(app.handle().clone());
 
             // 트레이: 창 열기 / 끝내기. 창을 닫으면 트레이로 숨는다 (기록·대신 수집을 계속하기 위해)
             let open = MenuItem::with_id(app, "open", "Prism 열기", true, None::<&str>)?;
@@ -140,7 +169,7 @@ pub fn run() {
                 let _ = window.hide();
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install])
+        .invoke_handler(tauri::generate_handler![lcu_status, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, vision_get, vision_set, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }

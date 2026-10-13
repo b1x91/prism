@@ -7,5 +7,6 @@ export default defineConfig({
   publicDir: '../../packages/assets/public',
   clearScreen: false,
   server: { port: 5174, host: '127.0.0.1', strictPort: true },
-  build: { outDir: 'dist', target: 'es2022', chunkSizeWarningLimit: 1500 },
+  // 화면 둘: 앱 본 창(index.html), 게임 위 작은 창(overlay.html)
+  build: { outDir: 'dist', target: 'es2022', chunkSizeWarningLimit: 1500, rollupOptions: { input: { main: 'index.html', overlay: 'overlay.html' } } },
 });

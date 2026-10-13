@@ -4,18 +4,20 @@ import { AugmentCompare, AugmentGuide, ChampBanner, ChampSearch, Empty, GameList
 import { useNavigate } from 'react-router-dom';
 import type { State } from '../controller';
 import { ChampSelectPanel } from './ChampSelect';
+import { useSeenAugments } from '../vision';
 
 /** 게임 중: Alt+Tab 하면 바로 보이는 내 챔피언 증강 가이드 + 3개 비교 */
 function InGame({ championId }: { championId: number | null }) {
   const [tab, setTab] = useState<'compare' | 'guide'>('compare');
   const [pick, setPick] = useState<number | null>(null);
+  const seen = useSeenAugments();
   const id = pick ?? championId;
   if (!id) return <section className="card pad"><Empty>이번 판 챔피언을 고르면 증강 가이드가 나옵니다.</Empty><ChampSearch onPick={setPick} /></section>;
   return (
     <div className="stack" style={{ gap: 16 }}>
       <ChampBanner id={id} eyebrow="게임 중 · 증강 고를 때 Alt+Tab" actions={<button type="button" className="btn sm" onClick={() => setPick(null)}>{pick ? '내 챔피언으로' : '다른 챔피언'}</button>} />
       <div className="row"><Seg value={tab} options={[['compare', '뜬 증강 3개 비교'], ['guide', '등급별 가이드']]} onChange={setTab} /></div>
-      {tab === 'compare' ? <AugmentCompare championId={id} /> : <AugmentGuide championId={id} compact={false} />}
+      {tab === 'compare' ? <AugmentCompare championId={id} preset={seen.ids} /> : <AugmentGuide championId={id} compact={false} />}
     </div>
   );
 }

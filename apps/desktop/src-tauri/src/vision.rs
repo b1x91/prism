@@ -1,0 +1,339 @@
+//! 게임 중 증강 자동 인식과 게임 위 작은 창 (CLAUDE.md v3.5 사용자 결정, Windows 전용).
+//!
+//! 지키는 것
+//! - 게임 창이 맨 앞에 있을 때만 화면 가운데 일부를 복사해 Windows 내장 문자 인식으로 읽는다
+//! - 캡처한 그림은 메모리에서만 쓰고 저장·전송하지 않는다
+//! - 게임 프로세스·메모리·입력은 건드리지 않는다. 롤에 요청도 하지 않는다
+//! - 작은 창은 클릭이 통과하고, 포커스를 가져가지 않으며, 화면 녹화·캡처에도 찍히지 않는다
+
+use crate::matcher::{Matcher, Word};
+use serde::{Deserialize, Serialize};
+use std::path::PathBuf;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tauri::{AppHandle, Emitter, Manager};
+
+const AUGMENTS_JSON: &str = include_str!("../../../../packages/core/data/mayhem-augments.json");
+const EVERY: Duration = Duration::from_millis(1500);
+const IDLE: Duration = Duration::from_secs(4);
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Settings {
+    pub enabled: bool,
+    /// 작은 창 위치: "right" (오른쪽 가운데) | "top" (위 가운데)
+    pub position: String,
+}
+impl Default for Settings {
+    fn default() -> Self {
+        Self { enabled: true, position: "right".into() }
+    }
+}
+
+#[derive(Serialize, Clone, Default)]
+pub struct Seen {
+    pub ids: Vec<u32>,
+    pub at: u64,
+}
+
+#[derive(Serialize, Clone, Default)]
+pub struct Report {
+    /// 인식기 상태: "ok" | "no-korean" (한국어 인식 없음) | "unsupported" (윈도우가 아님)
+    pub engine: String,
+    pub last_text: String,
+    pub last_ids: Vec<u32>,
+    pub last_at: u64,
+}
+
+pub struct Vision {
+    path: PathBuf,
+    pub settings: Mutex<Settings>,
+    pub report: Mutex<Report>,
+    pub matcher: Matcher,
+    shown: AtomicBool,
+}
+
+fn now() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
+}
+
+impl Vision {
+    pub fn new(dir: PathBuf) -> Arc<Self> {
+        let path = dir.join("vision.json");
+        let settings = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
+        Arc::new(Self { path, settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), shown: AtomicBool::new(false) })
+    }
+
+    pub fn set(&self, s: Settings) {
+        if let Ok(j) = serde_json::to_string(&s) {
+            let _ = std::fs::write(&self.path, j);
+        }
+        *self.settings.lock().unwrap() = s;
+    }
+
+    fn publish(&self, app: &AppHandle, ids: Vec<u32>, text: String) {
+        let mut r = self.report.lock().unwrap();
+        r.last_text = text.chars().take(400).collect();
+        if !ids.is_empty() {
+            r.last_ids = ids.clone();
+            r.last_at = now();
+        }
+        drop(r);
+        let _ = app.emit("augments", Seen { ids, at: now() });
+    }
+
+    /// 백그라운드 확인 루프 (앱이 켜져 있는 동안)
+    pub fn start(self: Arc<Self>, app: AppHandle) {
+        std::thread::spawn(move || imp::run(self, app));
+    }
+
+    pub fn hide(&self, app: &AppHandle) {
+        if self.shown.swap(false, Ordering::SeqCst) {
+            imp::hide_overlay(app);
+        }
+    }
+}
+
+/// 작은 창 만들기 (처음엔 숨김). 클릭 통과·포커스 안 가져감·캡처 제외는 윈도우 쪽에서 설정
+pub fn create_overlay(app: &tauri::App) -> tauri::Result<()> {
+    let w = tauri::WebviewWindowBuilder::new(app, "overlay", tauri::WebviewUrl::App("overlay.html".into()))
+        .title("Prism")
+        .decorations(false)
+        .transparent(true)
+        .shadow(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .resizable(false)
+        .focused(false)
+        .visible(false)
+        .inner_size(340.0, 280.0)
+        .build()?;
+    let _ = w.set_ignore_cursor_events(true);
+    imp::prepare_overlay(&w);
+    Ok(())
+}
+
+#[cfg(windows)]
+mod imp {
+    use super::*;
+    use windows::core::{HSTRING, PCWSTR};
+    use windows::Globalization::Language;
+    use windows::Graphics::Imaging::{BitmapAlphaMode, BitmapPixelFormat, SoftwareBitmap};
+    use windows::Media::Ocr::OcrEngine;
+    use windows::Storage::Streams::DataWriter;
+    use windows::Win32::Foundation::{HWND, POINT, RECT};
+    use windows::Win32::Graphics::Gdi::*;
+    use windows::Win32::System::WinRT::{RoInitialize, RO_INIT_MULTITHREADED};
+    use windows::Win32::UI::WindowsAndMessaging::*;
+
+    pub fn engine() -> Option<OcrEngine> {
+        let ko = Language::CreateLanguage(&HSTRING::from("ko")).ok()?;
+        OcrEngine::TryCreateFromLanguage(&ko).ok()
+    }
+
+    fn game_window() -> Option<HWND> {
+        let h = unsafe { FindWindowW(windows::core::w!("RiotWindowClass"), PCWSTR::null()) }.ok()?;
+        if h.is_invalid() { None } else { Some(h) }
+    }
+
+    /// 게임 창 화면 좌표 (클라이언트 영역)
+    fn client_rect(h: HWND) -> Option<RECT> {
+        let mut rc = RECT::default();
+        unsafe { GetClientRect(h, &mut rc) }.ok()?;
+        let mut p = POINT { x: 0, y: 0 };
+        let _ = unsafe { ClientToScreen(h, &mut p) };
+        Some(RECT { left: p.x, top: p.y, right: p.x + rc.right, bottom: p.y + rc.bottom })
+    }
+
+    /// 화면 일부를 BGRA 로 복사 (화면에 보이는 그대로. 게임 프로세스에는 손대지 않는다)
+    fn grab(x: i32, y: i32, w: i32, h: i32) -> Option<Vec<u8>> {
+        unsafe {
+            let screen = GetDC(None);
+            let mem = CreateCompatibleDC(Some(screen));
+            let bmp = CreateCompatibleBitmap(screen, w, h);
+            let old = SelectObject(mem, bmp.into());
+            let ok = BitBlt(mem, 0, 0, w, h, Some(screen), x, y, SRCCOPY).is_ok();
+            let mut bi = BITMAPINFO {
+                bmiHeader: BITMAPINFOHEADER { biSize: std::mem::size_of::<BITMAPINFOHEADER>() as u32, biWidth: w, biHeight: -h, biPlanes: 1, biBitCount: 32, biCompression: BI_RGB.0, ..Default::default() },
+                ..Default::default()
+            };
+            let mut buf = vec![0u8; (w * h * 4) as usize];
+            let lines = GetDIBits(mem, bmp, 0, h as u32, Some(buf.as_mut_ptr() as *mut _), &mut bi, DIB_RGB_COLORS);
+            SelectObject(mem, old);
+            let _ = DeleteObject(bmp.into());
+            let _ = DeleteDC(mem);
+            ReleaseDC(None, screen);
+            if !ok || lines == 0 {
+                return None;
+            }
+            for px in buf.chunks_exact_mut(4) {
+                px[3] = 255;
+            }
+            Some(buf)
+        }
+    }
+
+    /// 문자 인식 → 줄마다 단어(글자·위치)
+    pub fn recognize(engine: &OcrEngine, bgra: &[u8], w: i32, h: i32) -> windows::core::Result<(Vec<Vec<Word>>, String)> {
+        let dw = DataWriter::new()?;
+        dw.WriteBytes(bgra)?;
+        let buf = dw.DetachBuffer()?;
+        let bmp = SoftwareBitmap::CreateCopyWithAlphaFromBuffer(&buf, BitmapPixelFormat::Bgra8, w, h, BitmapAlphaMode::Ignore)?;
+        let res = engine.RecognizeAsync(&bmp)?.get()?;
+        let mut lines = Vec::new();
+        let mut text = String::new();
+        for line in res.Lines()? {
+            let mut words = Vec::new();
+            for word in line.Words()? {
+                let r = word.BoundingRect()?;
+                words.push(Word { text: word.Text()?.to_string(), x: r.X, y: r.Y });
+            }
+            text.push_str(&line.Text()?.to_string());
+            text.push('\n');
+            lines.push(words);
+        }
+        Ok((lines, text))
+    }
+
+    /// 찾는 곳: 게임 화면 가운데 (카드가 뜨는 자리). 실제 화면으로 맞춰 가며 조정한다
+    fn region(rc: &RECT) -> (i32, i32, i32, i32) {
+        let (w, h) = (rc.right - rc.left, rc.bottom - rc.top);
+        (rc.left + w * 8 / 100, rc.top + h * 10 / 100, w * 84 / 100, h * 62 / 100)
+    }
+
+    pub fn run(v: Arc<Vision>, app: AppHandle) {
+        let _ = unsafe { RoInitialize(RO_INIT_MULTITHREADED) };
+        let eng = engine();
+        v.report.lock().unwrap().engine = if eng.is_some() { "ok".into() } else { "no-korean".into() };
+        let mut misses = 0;
+        loop {
+            let s = v.settings.lock().unwrap().clone();
+            let game = if s.enabled { game_window() } else { None };
+            let front = game.filter(|h| unsafe { GetForegroundWindow() } == *h);
+            let (Some(h), Some(eng)) = (front, eng.as_ref()) else {
+                v.hide(&app);
+                std::thread::sleep(if game.is_some() { EVERY } else { IDLE });
+                continue;
+            };
+            let Some(rc) = client_rect(h) else { std::thread::sleep(EVERY); continue };
+            let (x, y, w, hh) = region(&rc);
+            if w < 200 || hh < 100 { std::thread::sleep(EVERY); continue; }
+            let found = grab(x, y, w, hh).and_then(|buf| recognize(eng, &buf, w, hh).ok());
+            match found {
+                Some((lines, text)) => {
+                    let ids = v.matcher.find(&lines, w as f32);
+                    if ids.len() >= 2 {
+                        misses = 0;
+                        v.publish(&app, ids, text);
+                        show_overlay(&app, &rc, &s.position);
+                        v.shown.store(true, Ordering::SeqCst);
+                    } else {
+                        misses += 1;
+                        v.report.lock().unwrap().last_text = text.chars().take(400).collect();
+                        // 고른 뒤 카드가 사라지면 두 번 연속 못 찾을 때 닫는다
+                        if misses >= 2 && v.shown.load(Ordering::SeqCst) {
+                            v.publish(&app, vec![], String::new());
+                            v.hide(&app);
+                        }
+                    }
+                }
+                None => misses += 1,
+            }
+            std::thread::sleep(EVERY);
+        }
+    }
+
+    fn hwnd_of(app: &AppHandle) -> Option<HWND> {
+        let w = app.get_webview_window("overlay")?;
+        w.hwnd().ok().map(|h| HWND(h.0 as _))
+    }
+
+    pub fn prepare_overlay(w: &tauri::WebviewWindow) {
+        let Ok(h) = w.hwnd() else { return };
+        let h = HWND(h.0 as _);
+        unsafe {
+            let ex = GetWindowLongPtrW(h, GWL_EXSTYLE);
+            SetWindowLongPtrW(h, GWL_EXSTYLE, ex | (WS_EX_NOACTIVATE.0 | WS_EX_TOOLWINDOW.0 | WS_EX_TRANSPARENT.0 | WS_EX_LAYERED.0) as isize);
+            // 녹화·캡처에 찍히지 않게 (우리 인식에도 섞이지 않는다)
+            let _ = SetWindowDisplayAffinity(h, WDA_EXCLUDEFROMCAPTURE);
+        }
+    }
+
+    pub fn show_overlay(app: &AppHandle, rc: &RECT, position: &str) {
+        let Some(h) = hwnd_of(app) else { return };
+        let scale = app.get_webview_window("overlay").and_then(|w| w.scale_factor().ok()).unwrap_or(1.0);
+        let (ow, oh) = ((340.0 * scale) as i32, (280.0 * scale) as i32);
+        let m = (24.0 * scale) as i32;
+        let (gw, gh) = (rc.right - rc.left, rc.bottom - rc.top);
+        let (x, y) = if position == "top" { (rc.left + (gw - ow) / 2, rc.top + m) } else { (rc.right - ow - m, rc.top + gh * 30 / 100) };
+        unsafe {
+            let _ = SetWindowPos(h, Some(HWND_TOPMOST), x, y, ow, oh, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        }
+    }
+
+    pub fn hide_overlay(app: &AppHandle) {
+        if let Some(h) = hwnd_of(app) {
+            unsafe {
+                let _ = ShowWindow(h, SW_HIDE);
+            }
+        }
+    }
+
+    /// 인식 시험: 클립보드의 그림(Win+Shift+S 로 찍은 화면)을 같은 방식으로 읽어 본다
+    pub fn test_clipboard(v: &Vision) -> Result<(Vec<u32>, String), String> {
+        use windows::Win32::System::DataExchange::{CloseClipboard, GetClipboardData, OpenClipboard};
+        use windows::Win32::System::Memory::{GlobalLock, GlobalUnlock};
+        use windows::Win32::Foundation::HGLOBAL;
+        const CF_DIB: u32 = 8;
+        let _ = unsafe { RoInitialize(RO_INIT_MULTITHREADED) };
+        let eng = engine().ok_or("이 PC 에서는 한국어 문자 인식을 쓸 수 없습니다. Windows 설정 → 언어에서 한국어를 추가해주세요.")?;
+        let (bgra, w, h) = unsafe {
+            OpenClipboard(None).map_err(|_| "클립보드를 열 수 없습니다.")?;
+            let res = (|| {
+                let hd = GetClipboardData(CF_DIB).map_err(|_| "클립보드에 그림이 없습니다. 증강 화면을 Win+Shift+S 로 찍은 뒤 눌러주세요.")?;
+                let g = HGLOBAL(hd.0);
+                let p = GlobalLock(g) as *const u8;
+                if p.is_null() { return Err("클립보드를 읽지 못했습니다."); }
+                let hdr = &*(p as *const BITMAPINFOHEADER);
+                let (w, hgt, bpp) = (hdr.biWidth, hdr.biHeight, hdr.biBitCount);
+                let top_down = hgt < 0;
+                let h = hgt.abs();
+                let mut off = hdr.biSize as usize;
+                if hdr.biCompression == BI_BITFIELDS.0 && hdr.biSize == 40 { off += 12; }
+                let stride = (((w * bpp as i32) + 31) / 32 * 4) as usize;
+                let src = p.add(off);
+                let mut out = vec![0u8; (w * h * 4) as usize];
+                for row in 0..h as usize {
+                    let sr = if top_down { row } else { h as usize - 1 - row };
+                    for col in 0..w as usize {
+                        let s = src.add(sr * stride + col * (bpp as usize / 8));
+                        let d = (row * w as usize + col) * 4;
+                        out[d] = *s; out[d + 1] = *s.add(1); out[d + 2] = *s.add(2); out[d + 3] = 255;
+                    }
+                }
+                let _ = GlobalUnlock(g);
+                if bpp != 24 && bpp != 32 { return Err("지원하지 않는 그림 형식입니다."); }
+                Ok((out, w, h))
+            })();
+            let _ = CloseClipboard();
+            res?
+        };
+        let (lines, text) = recognize(&eng, &bgra, w, h).map_err(|e| format!("문자 인식 실패: {e}"))?;
+        Ok((v.matcher.find(&lines, w as f32), text))
+    }
+}
+
+#[cfg(not(windows))]
+mod imp {
+    use super::*;
+    pub fn run(v: Arc<Vision>, _app: AppHandle) {
+        v.report.lock().unwrap().engine = "unsupported".into();
+    }
+    pub fn prepare_overlay(_w: &tauri::WebviewWindow) {}
+    pub fn hide_overlay(_app: &AppHandle) {}
+    pub fn test_clipboard(_v: &Vision) -> Result<(Vec<u32>, String), String> {
+        Err("윈도우에서만 쓸 수 있습니다.".into())
+    }
+}
+
+pub use imp::test_clipboard;

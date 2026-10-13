@@ -112,3 +112,4 @@ body { overflow: hidden; background: var(--bg); }
   .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .seat .pic { transition: none; } .side-status.live .dot, .pulse { animation: none; } }
+.ocr { margin: var(--s2) 0 0; padding: var(--s3); max-height: 200px; overflow: auto; border-radius: var(--r-s); background: var(--surface-2); font-size: var(--fs-xs); white-space: pre-wrap; }

@@ -138,3 +138,10 @@ export function guideOf(data: { augments: MayhemAugment[]; champions: Record<num
     prismatic: by('prismatic'),
   };
 }
+
+/** 뜬 증강 몇 개를 챔피언에게 맞는 순서로 (3개 비교·게임 위 작은 창 공용) */
+export function rankFits(c: ChampionProfile | undefined, augments: MayhemAugment[]): Fit[] {
+  if (!c) return [];
+  const rank = (f: Fit) => ({ best: 3, good: 2, weak: 1, none: 0 })[f.level] * 1000 + f.weight * 100 + f.score;
+  return augments.map((a) => fitOf(c, a)).sort((a, b) => rank(b) - rank(a));
+}
