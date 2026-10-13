@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { Gem, Icon, MemberFace, useLoad, useSkins, type IconName } from '@prism/ui';
+import { Icon, MemberFace, useLoad, useSkins, type IconName } from '@prism/ui';
 import { withDefaults, type Links } from '@prism/core';
 import { getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
@@ -40,10 +40,10 @@ function NavArrows() {
   const idx = hidx();
   max.current = type === 'PUSH' ? idx : Math.max(max.current, idx);
   return (
-    <div className="topnav">
-      <button type="button" className="icon-btn" disabled={idx <= 0} onClick={() => nav(-1)} title="뒤로" aria-label="뒤로"><Icon name="chevL" /></button>
-      <button type="button" className="icon-btn" disabled={idx >= max.current} onClick={() => nav(1)} title="앞으로" aria-label="앞으로"><Icon name="chevR" /></button>
-    </div>
+    <span className="side-arrows">
+      <button type="button" disabled={idx <= 0} onClick={() => nav(-1)} title="뒤로" aria-label="뒤로"><Icon name="chevL" /></button>
+      <button type="button" disabled={idx >= max.current} onClick={() => nav(1)} title="앞으로" aria-label="앞으로"><Icon name="chevR" /></button>
+    </span>
   );
 }
 
@@ -79,11 +79,13 @@ function App() {
   return (
     <div className="shell">
       <aside className="side">
-        <div className="side-brand"><Gem size={28} float /><b>Prism</b></div>
-        <div className="side-ver">
-          <span>v{VERSION}</span>
-          {up.info?.available && <button type="button" className="btn sm primary" disabled={up.installing} onClick={installUpdate} title={up.error ?? `새 버전 ${up.info.latest}`}>{up.installing ? '받는 중…' : `${up.info.latest} 업데이트`}</button>}
+        <div className="side-brand">
+          <span className="brand-mark"><img src="/brand/prism-64.png" alt="" /></span>
+          <span className="brand-word" data-text="Prism">Prism</span>
+          <NavArrows />
         </div>
+        <span className="brand-line" aria-hidden="true" />
+        {up.info?.available && <button type="button" className="side-update" disabled={up.installing} onClick={installUpdate} title={up.error ?? `지금 v${VERSION}`}><span className="dot" />{up.installing ? '새 버전 받는 중…' : `새 버전 ${up.info.latest} · 업데이트`}</button>}
         {up.error && up.info?.available && <span className="side-err l">{up.error}</span>}
         <nav className="side-nav">{NAV.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'}><Icon name={i} />{l}</NavLink>)}</nav>
         <span className="sp" />
@@ -97,7 +99,6 @@ function App() {
         </div>}
       </aside>
       <main className="main" ref={main}>
-        <NavArrows />
         <Page main={main}><Routes>
           <Route index element={<GamePage s={s} />} />
           <Route path="champions" element={<ChampionsPage member={!!s.me} />} />

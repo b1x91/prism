@@ -2,7 +2,7 @@
  * 한 줄 생각 — 회원이 남기는 짧은 방명록.
  * 실시간 대화는 디스코드·카카오톡이 맡는다. 여기는 지나가며 한 줄 남기는 곳.
  */
-import { HttpError, json, type Env, type Member } from './util.js';
+import { FACE, HttpError, json, type Env, type Member } from './util.js';
 
 const NOTE_MAX = 60;
 const NOTE_GAP = 30_000; // 같은 사람이 30초 안에 연달아 남기지 못하게
@@ -14,7 +14,7 @@ export function links(env: Env) {
 
 export async function listNotes(env: Env, me: Member) {
   const r = await env.DB.prepare(
-    `SELECT n.id, n.text, n.created_at AS createdAt, m.nick, n.member_id = ?1 AS mine
+    `SELECT n.id, n.text, n.created_at AS createdAt, m.id AS memberId, m.nick, ${FACE('m')}, n.member_id = ?1 AS mine
      FROM notes n JOIN members m ON m.id = n.member_id
      WHERE n.deleted_at IS NULL ORDER BY n.created_at DESC LIMIT 40`,
   )

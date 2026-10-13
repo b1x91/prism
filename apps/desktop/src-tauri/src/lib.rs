@@ -142,6 +142,10 @@ pub fn run() {
             // 게임 중 증강 인식 + 게임 위 작은 창 (v3.5)
             vision::create_overlay(app)?;
             vision.start(app.handle().clone());
+            // 창 제목에 버전: "Prism (v0.6.9)"
+            if let Some(w) = app.get_webview_window("main") {
+                let _ = w.set_title(&format!("Prism (v{})", app.package_info().version));
+            }
 
             // 트레이: 창 열기 / 끝내기. 창을 닫으면 트레이로 숨는다 (기록·대신 수집을 계속하기 위해)
             let open = MenuItem::with_id(app, "open", "Prism 열기", true, None::<&str>)?;

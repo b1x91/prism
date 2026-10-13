@@ -536,3 +536,51 @@ svg.light { position: absolute; inset: 0; z-index: 0; pointer-events: none; over
 @media (max-width: 640px) { .fc-row { grid-template-columns: minmax(0, 1fr) 48px 40px; } .fc-row .tr { grid-column: 1 / -1; grid-row: 2; } .tagrow { grid-template-columns: minmax(0, 1fr) 48px 72px; } .tagrow .cnt { display: none; } }
 .list.cols2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: var(--s5); }
 @media (max-width: 640px) { .list.cols2 { grid-template-columns: minmax(0, 1fr); } }
+
+/* ───────── 같이 할 판 (모집) ───────── */
+.parties { display: grid; gap: var(--s4); }
+.parties .card-head { margin-bottom: 0; }
+.pcompose { display: grid; gap: var(--s3); padding: var(--s4); border-radius: var(--r-m); background: var(--surface-2); }
+.ptimes { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.chip { display: inline-flex; align-items: center; gap: var(--s2); height: 32px; padding: 0 var(--s3); border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--text-2); font: inherit; font-size: var(--fs-sm); font-weight: 650; cursor: pointer; }
+.chip:hover { border-color: var(--line-2); color: var(--text); }
+.chip.on { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.chip.time input { border: 0; background: none; color: inherit; font: inherit; padding: 0; width: 96px; }
+.prow { display: flex; gap: var(--s2); }
+.prow .input { flex: 1; min-width: 0; }
+.prow .btn { flex: none; }
+.plist { display: grid; gap: var(--s3); }
+.pcard { position: relative; display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; gap: var(--s4); align-items: center; padding: var(--s4); border-radius: var(--r-l); border: 1px solid var(--line); background: var(--surface); }
+.pcard.mine { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); background: linear-gradient(90deg, var(--accent-soft), var(--surface) 40%); }
+/* 5/5 출발: 스펙트럼 테두리 (CLAUDE.md 1.5 허용 범위) */
+.pcard.go { border: 2px solid transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--spectrum) border-box; }
+.ptime { display: grid; justify-items: center; gap: 2px; padding: var(--s3) 0; border-radius: var(--r-m); background: var(--surface-2); }
+.ptime b { font-size: var(--fs-xl); font-weight: 850; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.ptime span { font-size: var(--fs-xs); color: var(--text-3); font-weight: 650; }
+.pmain { display: grid; gap: var(--s2); min-width: 0; }
+.phead { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2); }
+.pbadge { height: 22px; padding: 0 var(--s2); border-radius: var(--r-pill); display: inline-flex; align-items: center; font-size: var(--fs-xs); font-weight: 800; background: var(--surface-3); color: var(--text-2); }
+.pbadge.now, .pbadge.soon { background: var(--accent); color: var(--on-accent); }
+.pbadge.now { animation: blink 1.6s ease-in-out infinite; }
+.pbadge.go { background: var(--win); color: #fff; }
+.pcount { font-size: var(--fs-sm); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.pcount b { color: var(--text); font-size: var(--fs-lg); }
+.phost { margin-left: auto; }
+.pnote { margin: 0; font-size: var(--fs-sm); color: var(--text-2); word-break: keep-all; }
+.pslots { display: flex; flex-wrap: wrap; gap: var(--s3); }
+.pslot { position: relative; display: grid; justify-items: center; gap: 4px; width: 56px; padding: 0; border: 0; background: none; color: var(--text-2); font: inherit; font-size: var(--fs-xs); font-weight: 650; }
+.pslot > span:last-of-type { max-width: 56px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pslot.on { cursor: pointer; color: var(--text); }
+.pslot .face, .pslot .initial { border-radius: 50%; box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--line-2); }
+.pslot.on:hover .face, .pslot.on:hover .initial { box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--accent); }
+.pslot .ph { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; border: 2px dashed var(--line-2); color: var(--text-3); font-size: var(--fs-lg); font-weight: 800; }
+.pslot .crown { position: absolute; top: -6px; left: 50%; transform: translateX(-50%); height: 16px; padding: 0 6px; border-radius: var(--r-pill); background: var(--gold); color: #fff; font-style: normal; font-size: var(--fs-xs); font-weight: 800; line-height: 16px; white-space: nowrap; }
+.pact { display: grid; justify-items: end; gap: var(--s2); }
+.pact .btn { min-width: 96px; }
+@media (max-width: 720px) {
+  .pcard { grid-template-columns: 72px minmax(0, 1fr); }
+  .pact { grid-column: 1 / -1; grid-auto-flow: column; justify-content: space-between; align-items: center; }
+  .prow { flex-direction: column; }
+  .phost { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .pbadge.now { animation: none; } }

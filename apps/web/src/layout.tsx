@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Gem, Icon, Initial, toggleTheme, type IconName } from '@prism/ui';
+import { Gem, Icon, MemberFace, toggleTheme, type IconName } from '@prism/ui';
 import { useSession } from './session';
 
 const NAV: [string, string, IconName][] = [['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
@@ -21,7 +21,7 @@ export function Layout() {
             : <span className="ch-ic kakao soon" title="카카오톡 오픈채팅은 곧 열립니다"><Icon name="talk" /></span>}
         </span>
         <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button>
-        {me ? <NavLink to="/me" className="me-btn" title="내 페이지"><Initial nick={me.nick} size={30} /><span>{me.nick}</span></NavLink>
+        {me ? <NavLink to="/me" className="me-btn" title="내 페이지"><MemberFace nick={me.nick} skin={me.skin} size={30} /><span>{me.nick}</span></NavLink>
           : <button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />로그인</button>}
       </div></header>
       <main><Outlet /></main>

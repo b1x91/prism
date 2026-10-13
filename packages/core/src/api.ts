@@ -15,16 +15,23 @@ export class ApiError extends Error {
 }
 
 export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null };
-export type Note = { id: number; text: string; createdAt: number; nick: string; mine: 0 | 1 };
-export type Tip = { id: number; augmentId: number | null; text: string; createdAt: number; nick: string; mine: 0 | 1; likes: number; liked: 0 | 1 };
-export type ChampionInfo = { crew: NW; me: NW; topAugments: { id: number; n: number; w: number }[]; masters: { id: string; nick: string; n: number; w: number }[]; tips: Tip[] };
+/** 회원 얼굴 재료 (서버 FACE): 대표 스킨, 주 챔피언 */
+export type FaceInfo = { skin?: number | null; main?: number | null };
+export type Note = { id: number; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1 } & FaceInfo;
+export type Tip = { id: number; augmentId: number | null; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1; likes: number; liked: 0 | 1 } & FaceInfo;
+export type ChampionInfo = { crew: NW; me: NW; topAugments: { id: number; n: number; w: number }[]; masters: ({ id: string; nick: string; n: number; w: number } & FaceInfo)[]; tips: Tip[] };
 export type AugmentStats = { games: number; overall: { id: number; n: number; w: number }[]; champion: { id: number; n: number; w: number }[] };
 export type Board = {
   totals: { linked: number; games: number; crewGames: number; crewGamesWeek: number };
   crewDex: number;
   records: { key: string; label: string; value: number; nick: string | null; championId?: number; at?: number; n?: number; w?: number }[];
-  pairs: { a: string; b: string; n: number; w: number }[];
+  pairs: { a: string; b: string; sa?: number | null; sb?: number | null; n: number; w: number }[];
   newTips: { id: number; championId: number; augmentId: number | null; text: string; nick: string; createdAt: number }[];
   recent: { at: number; crew: { nick: string; championId: number; win: boolean; k: number; d: number; a: number }[] }[];
 };
 export type Links = { discord: string | null; kakao: string | null };
+
+/** 같이 할 판 모집 */
+export type PartyMember = { id: string; nick: string } & FaceInfo;
+export type Party = { id: number; startAt: number; note: string; hostId: string; createdAt: number; members: PartyMember[]; mine: boolean; host: boolean };
+export type Parties = { size: number; now: number; parties: Party[] };

@@ -85,3 +85,7 @@ export function isLoopback(url: string): boolean {
 
 export const int = (v: unknown): number | null => (typeof v === 'number' && Number.isInteger(v) ? v : null);
 export const finite = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
+/** 회원 얼굴 재료: 대표 스킨 + 주 챔피언 (스킨이 없을 때). 모든 회원 목록 쿼리에 같이 넣는다. a = members 테이블 별칭 */
+export const FACE = (a: string) =>
+  `${a}.profile_skin AS skin, (SELECT fp.champion_id FROM participants fp WHERE fp.member_id = ${a}.id GROUP BY fp.champion_id ORDER BY COUNT(*) DESC LIMIT 1) AS main`;

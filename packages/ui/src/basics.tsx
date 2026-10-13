@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { AUGMENT, CHAMPIONS, champIcon, augIcon, withDefaults, type Links } from '@prism/core';
+import { useEffect, useState, type ReactNode } from 'react';
+import { AUGMENT, CHAMPIONS, cdragon, champIcon, augIcon, loadSkins, withDefaults, type Links, type Skin } from '@prism/core';
 import { Icon } from './icons';
 
 export function Gem({ size = 28, float, src = '/brand/prism-64.png' }: { size?: number; float?: boolean; src?: string }) {
@@ -74,4 +74,22 @@ export function toggleTheme() {
 }
 export function restoreTheme() {
   try { const t = localStorage.getItem('prism-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch { /* 저장소 없음 */ }
+}
+
+/** 스킨 목록 (처음 필요할 때 한 번만 불러온다. 여러 곳에서 불러도 실제로는 한 번) */
+export function useSkins() {
+  const [s, setS] = useState<Record<number, Skin> | null>(null);
+  useEffect(() => { let on = true; loadSkins().then((x) => on && setS(x)).catch(() => {}); return () => { on = false; }; }, []);
+  return s;
+}
+
+/**
+ * 회원 얼굴 (모든 회원 표시는 이것 하나로): 대표 스킨 타일 → 주 챔피언 → 이니셜.
+ * skins 를 넘기지 않으면 알아서 불러온다.
+ */
+export function MemberFace({ nick, skin, champion, size = 40, skins }: { nick: string; skin?: number | null; champion?: number | null; size?: number; skins?: Record<number, Skin> | null }) {
+  const loaded = useSkins();
+  const sk = skins ?? loaded;
+  const src = skin && sk?.[skin]?.tile ? sk[skin].tile : champion ? cdragon(CHAMPIONS[champion]?.tile) : '';
+  return src ? <img className="face" src={src} width={size} height={size} alt="" loading="lazy" style={{ width: size, height: size }} /> : <Initial nick={nick} size={size} />;
 }

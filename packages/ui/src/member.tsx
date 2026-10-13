@@ -7,26 +7,13 @@ import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, synergyOf,
   type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
 } from '@prism/core';
-import { AugImg, ChampImg, Empty, Gem, Initial, Seg } from './basics';
+import { AugImg, ChampImg, Empty, Gem, MemberFace, Seg, useSkins } from './basics';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { RecentGames } from './game';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
-
-/** 스킨 목록 (처음 필요할 때 한 번만 불러온다) */
-export function useSkins() {
-  const [s, setS] = useState<Record<number, Skin> | null>(null);
-  useEffect(() => { let on = true; loadSkins().then((x) => on && setS(x)); return () => { on = false; }; }, []);
-  return s;
-}
-
-/** 회원 얼굴: 대표 스킨 타일, 없으면 주 챔피언, 그것도 없으면 이니셜 */
-export function MemberFace({ nick, skin, champion, size = 40, skins }: { nick: string; skin: number | null; champion?: number | null; size?: number; skins: Record<number, Skin> | null }) {
-  const src = skin && skins?.[skin]?.tile ? skins[skin].tile : champion ? cdragon(CHAMPIONS[champion]?.tile) : '';
-  return src ? <img className="face" src={src} width={size} height={size} alt="" loading="lazy" /> : <Initial nick={nick} size={size} />;
-}
 
 // ───────── 랭킹 ─────────
 

@@ -1,4 +1,5 @@
-import { BoardView, Channels, Gem, Icon, Notes } from '@prism/ui';
+import { useNavigate } from 'react-router-dom';
+import { BoardView, Channels, Gem, Icon, Notes, PartyBoard } from '@prism/ui';
 import { useSession } from '../session';
 
 function Intro() {
@@ -38,11 +39,13 @@ function Intro() {
 
 export function Crew() {
   const { me, ready, api, links } = useSession();
+  const nav = useNavigate();
   if (!ready) return null;
   if (!me) return <Intro />;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
       <div className="page-head"><div><h1>Prism</h1><p>{me.nick}님, 오늘 밤도 한 판.</p></div><span className="sp" /><Channels links={links} /></div>
+      <PartyBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
       <Notes api={api} />
       <BoardView api={api} />
     </div></section>

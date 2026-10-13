@@ -8,6 +8,7 @@ import { addTip, augmentStats, board, myGames, champSelect, crewTargets, deleteT
 import { ingest } from './ingest.js';
 import { memberPage, ranking } from './members.js';
 import { addNote, deleteNote, links, listNotes } from './notes.js';
+import { cancelParty, joinParty, leaveParty, listParties, openParty } from './parties.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 
 async function route(req: Request, env: Env): Promise<Response> {
@@ -38,6 +39,8 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && pathname === '/api/notes') return listNotes(env, me);
   if (m === 'GET' && pathname === '/api/ranking') return ranking(env, new URL(req.url).searchParams.get('period'));
   if (m === 'POST' && pathname === '/api/notes') return addNote(req, env, me);
+  if (m === 'GET' && pathname === '/api/parties') return listParties(env, me);
+  if (m === 'POST' && pathname === '/api/parties') return openParty(req, env, me);
   if (m === 'GET' && pathname === '/api/augments') {
     const c = Number(new URL(req.url).searchParams.get('champion'));
     return augmentStats(env, Number.isInteger(c) && c > 0 ? c : null);
@@ -49,6 +52,11 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && member) return memberPage(env, me, member[1]);
   const like = pathname.match(/^\/api\/tips\/(\d+)\/like$/);
   if (m === 'POST' && like) return toggleLike(env, me, Number(like[1]));
+  const party = pathname.match(/^\/api\/parties\/(\d+)\/(join|leave|cancel)$/);
+  if (m === 'POST' && party) {
+    const id = Number(party[1]);
+    return party[2] === 'join' ? joinParty(env, me, id) : party[2] === 'leave' ? leaveParty(env, me, id) : cancelParty(env, me, id);
+  }
   const note = pathname.match(/^\/api\/notes\/(\d+)$/);
   if (m === 'DELETE' && note) return deleteNote(env, me, Number(note[1]));
   const tip = pathname.match(/^\/api\/tips\/(\d+)$/);

@@ -2,7 +2,7 @@
  * Prism 회원 전용 기능. 모든 응답은 회원 데이터이므로 로그인한 회원에게만 준다 (CLAUDE.md 2절 11).
  * 집계는 저장하지 않고 원본에서 계산한다.
  */
-import { HttpError, json, type Env, type Member } from './util.js';
+import { FACE, HttpError, json, type Env, type Member } from './util.js';
 import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
 import skinData from '../../packages/core/data/skins.json';
 
@@ -97,11 +97,11 @@ async function championInfo(env: Env, me: Member, championId: number, tipLimit: 
        GROUP BY augment_id HAVING n >= 2 ORDER BY n DESC, w DESC LIMIT 6`,
     ).bind(championId),
     env.DB.prepare(
-      `SELECT m.id, m.nick, COUNT(*) AS n, SUM(p.win) AS w FROM participants p JOIN members m ON m.id = p.member_id
+      `SELECT m.id, m.nick, m.profile_skin AS skin, COUNT(*) AS n, SUM(p.win) AS w FROM participants p JOIN members m ON m.id = p.member_id
        WHERE p.champion_id = ? GROUP BY m.id ORDER BY n DESC, w DESC LIMIT 3`,
     ).bind(championId),
     env.DB.prepare(
-      `SELECT t.id, t.augment_id AS augmentId, t.text, t.created_at AS createdAt, m.nick, t.member_id = ?2 AS mine,
+      `SELECT t.id, t.augment_id AS augmentId, t.text, t.created_at AS createdAt, m.id AS memberId, m.nick, ${FACE('m')}, t.member_id = ?2 AS mine,
          (SELECT COUNT(*) FROM tip_likes l WHERE l.tip_id = t.id) AS likes,
          EXISTS (SELECT 1 FROM tip_likes l WHERE l.tip_id = t.id AND l.member_id = ?2) AS liked
        FROM tips t JOIN members m ON m.id = t.member_id
@@ -230,7 +230,7 @@ export async function board(env: Env, me: Member) {
        GROUP BY m.id HAVING n >= ? ORDER BY CAST(w AS REAL) / n DESC, n DESC LIMIT 1`,
     ).bind(MIN_WINRATE_GAMES),
     env.DB.prepare(
-      `SELECT ma.nick AS a, mb.nick AS b, COUNT(*) AS n, SUM(pa.win) AS w FROM participants pa
+      `SELECT ma.nick AS a, mb.nick AS b, ma.profile_skin AS sa, mb.profile_skin AS sb, COUNT(*) AS n, SUM(pa.win) AS w FROM participants pa
        JOIN participants pb ON pa.game_id = pb.game_id AND pa.team_id = pb.team_id AND pa.member_id < pb.member_id
        JOIN members ma ON ma.id = pa.member_id JOIN members mb ON mb.id = pb.member_id
        GROUP BY pa.member_id, pb.member_id HAVING n >= ? ORDER BY CAST(w AS REAL) / n DESC, n DESC LIMIT 5`,
