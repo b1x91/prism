@@ -50,6 +50,8 @@ export async function memberPage(env: Env, me: Member, id: string) {
       `SELECT COUNT(*) + 1 AS rank FROM (SELECT member_id, COUNT(*) AS n FROM participants GROUP BY member_id)
        WHERE n > (SELECT COUNT(*) FROM participants WHERE member_id = ?)`,
     ).bind(id),
+    // 증강 × 그때 챔피언 (그 챔피언과 잘 맞는 증강을 골랐는지 보는 재료)
+    env.DB.prepare('SELECT augment_id AS a, champion_id AS c, COUNT(*) AS n, SUM(win) AS w FROM participant_augments WHERE member_id = ? GROUP BY augment_id, champion_id').bind(id),
   ];
   if (!self) {
     queries.push(
@@ -66,13 +68,14 @@ export async function memberPage(env: Env, me: Member, id: string) {
       champs(me.id),
     );
   }
-  const [total, champions, augments, recent, rank, together, against, viewerChampions] = await env.DB.batch(queries);
+  const [total, champions, augments, recent, rank, picks, together, against, viewerChampions] = await env.DB.batch(queries);
   return json({
     member: { ...m, riotId: self ? m.riotId : null, self },
     total: total.results[0],
     rank: (rank.results[0] as { rank: number }).rank,
     champions: champions.results,
     augments: augments.results,
+    picks: picks.results,
     recent: recent.results.map((g: any) => ({ ...g, win: g.win === 1, augments: g.augments ? JSON.parse(g.augments) : [], items: g.items ? JSON.parse(g.items) : [], custom: g.queueId !== 2400 })),
     ...(self ? {} : { together: together.results[0], against: against.results[0], viewer: { champions: viewerChampions.results } }),
   });

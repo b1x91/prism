@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AUGMENT, ago } from '@prism/core';
-import { AugImg, Icon, Initial, Seg } from '@prism/ui';
+import { AugImg, Icon, MemberFace, Seg, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
 import { bridge, type VisionState } from '../bridge';
 import { diagnostics, refreshSession, setConsent, type State } from '../controller';
 import { checkUpdate, installUpdate, useUpdate } from '../update';
@@ -13,6 +13,8 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
   const [auto, setAuto] = useState<boolean | null>(null);
   const up = useUpdate();
   const [msg, setMsg] = useState('');
+  const [theme, setTheme] = useState<ThemeMode>(getThemeMode);
+  const skins = useSkins();
   useEffect(() => { bridge.autostart().then(setAuto).catch(() => setAuto(null)); }, []);
   const run = async (f: () => Promise<unknown>) => { setMsg(''); try { await f(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } };
   return (
@@ -25,7 +27,7 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
           <button type="button" className="btn primary" onClick={onLogin}><Icon name="discord" />디스코드로 로그인</button>
         ) : (
           <div className="kv">
-            <div><span className="k">계정</span><span className="row" style={{ gap: 8 }}><Initial nick={s.me.nick} size={24} />{s.me.nick}<button type="button" className="btn ghost sm" onClick={() => run(async () => { await bridge.logout(); await refreshSession(); })}>로그아웃</button></span></div>
+            <div><span className="k">계정</span><span className="row" style={{ gap: 8 }}><MemberFace nick={s.me.nick} skin={s.me.skin} size={24} skins={skins} />{s.me.nick}<button type="button" className="btn ghost sm" onClick={() => run(async () => { await bridge.logout(); await refreshSession(); })}>로그아웃</button></span></div>
             <div><span className="k">롤 계정</span><span>{s.me.riotId ?? '연결 안 됨'}{s.summoner && s.summoner.riotId !== s.me.riotId && <span className="meta"> (지금 클라이언트: {s.summoner.riotId})</span>}</span></div>
             <div><span className="k">기록 수집</span><span>{s.me.consent
               ? <span className="row" style={{ gap: 8 }}><span className="pill ok">동의함</span><button type="button" className="btn ghost sm" onClick={() => confirm('수집 동의를 철회할까요? 철회하면 판이 더 이상 올라가지 않고, 다시 동의하기 전까지 앱을 쓸 수 없습니다.') && run(() => setConsent(false))}>철회</button></span>
@@ -46,6 +48,7 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
               : <><span className="meta">{up.checking ? '확인 중…' : up.info ? '최신 버전입니다' : ''}</span><button type="button" className="btn ghost sm" disabled={up.checking} onClick={checkUpdate}>업데이트 확인</button></>}
             {up.error && <span className="l">{up.error}</span>}
           </span></div>
+          <div><span className="k">화면 테마</span><span><Seg value={theme} options={[['system', '시스템 설정'], ['light', '라이트'], ['dark', '다크']]} onChange={(m) => { setThemeMode(m); setTheme(m); }} /></span></div>
           <div><span className="k">윈도우 시작 시 실행</span><span>{auto === null ? '–' : <button type="button" className={`btn sm ${auto ? '' : 'primary'}`} onClick={() => run(async () => setAuto(await bridge.autostart(!auto)))}>{auto ? '끄기' : '켜기'}</button>}</span></div>
           <div><span className="k">창 닫기</span><span className="muted">창을 닫아도 트레이에서 계속 기록합니다. 끝내려면 트레이 아이콘 → 끝내기.</span></div>
           <div><span className="k">문제 알리기</span><span className="row wrapr" style={{ gap: 8 }}><button type="button" className="btn sm" onClick={() => run(async () => { await navigator.clipboard.writeText(await diagnostics(VERSION)); setMsg('복사했습니다. 디스코드에 붙여넣어 보내주세요. 다른 플레이어 이름은 지워져 있습니다.'); })}>확인용 정보 복사</button></span></div>

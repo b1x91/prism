@@ -4,6 +4,7 @@
  */
 import { AUGMENT, CHAMPIONS } from './data';
 import type { NW } from './history';
+import { fitOf, fitPoints, tierOf } from './synergy';
 
 export type ChampAgg = { id: number; n: number; w: number; k?: number; d?: number; a?: number };
 export type RankingRow = { id: string; nick: string; skin: number | null; n: number; w: number; mainChampion: number | null };
@@ -15,6 +16,8 @@ export type MemberPage = {
   rank: number;
   champions: ChampAgg[];
   augments: { id: number; n: number; w: number }[];
+  /** 증강 × 그때 챔피언 (서버 0.6.8 이후. 옛 서버면 없음) */
+  picks?: { a: number; c: number; n: number; w: number }[];
   recent: MemberGame[];
   together?: NW;
   against?: NW;
@@ -87,4 +90,41 @@ export function synergyOf(a: ChampAgg[], b: ChampAgg[]): Synergy | null {
   if (top(A) && top(A) === top(B)) reasons.push('주 역할이 같음');
   score = Math.max(0, Math.min(100, score));
   return { score, level: score >= 70 ? 'good' : score >= 45 ? 'ok' : 'weak', reasons };
+}
+
+/**
+ * 증강 고르는 습관과 승률 (회원 전용 화면).
+ * - 어울림: 그 판 챔피언과 잘 맞는(S·A) 증강을 골랐을 때 vs 아닐 때 승률
+ * - 성향별: 성향 태그별 고른 횟수·승률과 내 평소 승률의 차이
+ * 같은 판의 증강 여러 개가 각각 세어지므로 '고른 증강 기준' 승률이다 (판 기준 아님).
+ */
+export function augmentHabits(page: Pick<MemberPage, 'augments' | 'picks' | 'total'>) {
+  const base = page.total.n ? page.total.w / page.total.n : 0;
+  const fit = { good: { n: 0, w: 0 }, rest: { n: 0, w: 0 } };
+  for (const p of page.picks ?? []) {
+    const c = CHAMPIONS[p.c], a = AUGMENT[p.a];
+    if (!c || !a) continue;
+    const t = tierOf(fitPoints(fitOf(c, a)));
+    const b = t === 'S' || t === 'A' ? fit.good : fit.rest;
+    b.n += p.n; b.w += p.w;
+  }
+  const tags = new Map<string, NW>();
+  for (const x of page.augments) {
+    const a = AUGMENT[x.id];
+    if (!a) continue;
+    for (const t of new Set(a.tags)) {
+      if (!TAG_KO[t]) continue;
+      const v = tags.get(t) ?? { n: 0, w: 0 };
+      v.n += x.n; v.w += x.w;
+      tags.set(t, v);
+    }
+  }
+  const picks = page.augments.reduce((s, x) => s + x.n, 0);
+  const list = [...tags].map(([key, v]) => ({ key, label: TAG_KO[key], n: v.n, w: v.w, share: picks ? v.n / picks : 0, rate: v.n ? v.w / v.n : 0, delta: v.n ? v.w / v.n - base : 0 }))
+    .sort((x, y) => y.n - x.n).slice(0, 8);
+  // 표본이 너무 적은 성향은 '가장 잘/못 이기는' 후보에서 뺀다
+  const solid = list.filter((x) => x.n >= 5);
+  const best = solid.length >= 2 ? solid.reduce((m, x) => (x.delta > m.delta ? x : m)) : null;
+  const worst = solid.length >= 2 ? solid.reduce((m, x) => (x.delta < m.delta ? x : m)) : null;
+  return { base, picks, fit: page.picks ? fit : null, tags: list, best: best && best.delta > 0 ? best : null, worst: worst && worst.delta < 0 ? worst : null };
 }

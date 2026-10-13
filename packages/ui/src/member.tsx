@@ -4,13 +4,13 @@
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, RARITY_KO, SKIN_TIERS, TAG_KO, augmentStyleOf, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, synergyOf,
+  AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, synergyOf,
   type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, Initial, Seg } from './basics';
 import { Icon } from './icons';
-import { Recent10, useLoad } from './crew';
-import { GameList } from './game';
+import { useLoad } from './crew';
+import { RecentGames } from './game';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
@@ -93,7 +93,8 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
   const art = skin?.splash ?? (main ? cdragon(CHAMPIONS[main]?.splash) : '');
   const games: Game[] = data.recent.map((g) => ({ ...g, damageTaken: null }));
   const st = streakOf(games);
-  const S = styleOf(data.champions), A = augmentStyleOf(data.augments);
+  const S = styleOf(data.champions);
+  const picksN = data.augments.reduce((n, a) => n + a.n, 0);
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
   return (
     <div className="stack" style={{ gap: 16 }}>
@@ -116,8 +117,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
         <section className="card stat"><span className="k">KDA</span><span className="v">{kda}</span></section>
         <section className="card stat"><span className="k">지금</span><span className={`v ${st.win ? 'w' : 'l'}`}>{st.n}<small>{st.win ? '연승' : '연패'}</small></span></section>
       </div>
-      <section className="card pad"><div className="card-head"><h2>최근 10판</h2></div><Recent10 games={games} /></section>
-      {games.length > 0 && <section className="card pad"><div className="card-head"><h2>최근 판</h2></div><GameList games={games} limit={8} onChampion={onChampion} /></section>}
+      <RecentGames games={games} limit={8} onChampion={onChampion} />
       {total.n > 0 && <div className="grid2">
         <section className="card pad">
           <div className="card-head"><h2>주 챔피언</h2><span className="sp" /><span className="meta">만난 챔피언 {data.champions.length} / {Object.keys(CHAMPIONS).length}</span></div>
@@ -136,22 +136,43 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
           <p className="meta" style={{ margin: 0 }}>앞라인 챔피언 {Math.round(S.front * 100)}% · {S.cc >= 2.3 ? 'CC 많은 챔피언 선호' : S.cc < 1.8 ? 'CC 적은 챔피언 위주' : 'CC 보통'}</p>
         </section>
       </div>}
-      {A.n > 0 && <div className="grid2">
+      {picksN > 0 && <>
+        <AugmentHabits data={data} />
         <section className="card pad">
-          <div className="card-head"><h2>자주 고른 증강</h2><span className="sp" /><span className="meta">{A.n}회 선택</span></div>
-          <div className="list">{data.augments.slice(0, 6).map((a) => (
+          <div className="card-head"><h2>자주 고른 증강</h2><span className="sp" /><span className="meta">{picksN}회 선택</span></div>
+          <div className="list cols2">{data.augments.slice(0, 8).map((a) => (
             <div key={a.id} className="item"><AugImg id={a.id} size={28} /><span className="title">{AUGMENT[a.id]?.name ?? `#${a.id}`}</span><span><b>{pct(a.w, a.n)}</b> <span className="meta">{a.n}회</span></span></div>))}</div>
         </section>
-        <section className="card pad">
-          <div className="card-head"><h2>증강 취향</h2></div>
-          <div className="k-title">등급별</div>
-          <div className="rar3">{(['prismatic', 'gold', 'silver'] as const).map((r) => (
-            <div key={r} className={`rar ${r}`}><span className="k">{RARITY_KO[r]}</span><b>{A.n ? Math.round((A.rarity[r].n / A.n) * 100) : 0}%</b><span className="meta">승률 {pct(A.rarity[r].w, A.rarity[r].n)}</span></div>))}</div>
-          <div className="k-title">고르는 성향</div>
-          <div className="row wrapr" style={{ gap: 8 }}>{A.tags.map((t) => <span key={t.key} className="pill">{TAG_KO[t.key]} <b>{Math.round(t.share * 100)}%</b></span>)}</div>
-        </section>
-      </div>}
+      </>}
     </div>
+  );
+}
+
+/** 증강 고르는 습관과 승률: 챔피언에 맞게 골랐을 때 / 성향별 (고른 증강 기준) */
+function AugmentHabits({ data }: { data: MemberPage }) {
+  const H = augmentHabits(data);
+  const p = (x: number) => `${Math.round(x * 100)}%`;
+  const d = (x: number) => `${x >= 0 ? '+' : '−'}${Math.abs(Math.round(x * 100))}%p`;
+  const f = H.fit;
+  const fitGap = f && f.good.n >= 5 && f.rest.n >= 5 ? f.good.w / f.good.n - f.rest.w / f.rest.n : null;
+  return (
+    <section className="card pad habits">
+      <div className="card-head"><h2>증강 고르는 습관</h2><span className="sp" /><span className="meta">고른 증강 {H.picks}개 · 평소 승률 {p(H.base)}</span></div>
+      {f && (f.good.n + f.rest.n) > 0 && <div className="fitcmp">
+        <div className="fc-row"><span className="k">챔피언에 잘 맞는 증강 (S·A)</span><span className="tr"><span style={{ width: p(f.good.n ? f.good.w / f.good.n : 0) }} /></span><b>{f.good.n ? pct(f.good.w, f.good.n) : '–'}</b><span className="meta">{f.good.n}개</span></div>
+        <div className="fc-row rest"><span className="k">그 밖의 증강</span><span className="tr"><span style={{ width: p(f.rest.n ? f.rest.w / f.rest.n : 0) }} /></span><b>{f.rest.n ? pct(f.rest.w, f.rest.n) : '–'}</b><span className="meta">{f.rest.n}개</span></div>
+        <p className="insight">{fitGap === null ? '양쪽 모두 5개 이상 쌓이면 차이를 알려드려요.' : fitGap >= 0.03 ? <>챔피언에 맞는 증강을 골랐을 때 <b className="w">{d(fitGap)}</b> 더 이겼어요. 가이드를 믿어도 좋아요.</> : fitGap <= -0.03 ? <>맞는 증강보다 <b>다른 증강을 골랐을 때</b> 더 이겼어요 ({d(-fitGap)}). 나만의 조합이 있는 편이에요.</> : <>어떤 증강을 골라도 승률 차이가 크지 않아요.</>}</p>
+      </div>}
+      <div className="k-title">성향별 승률 <span className="meta">· 오른쪽은 평소 승률과의 차이</span></div>
+      <div className="tagrows">{H.tags.map((t) => (
+        <div key={t.key} className={`tagrow ${t.n < 5 ? 'thin' : ''} ${H.best?.key === t.key ? 'best' : ''} ${H.worst?.key === t.key ? 'worst' : ''}`}>
+          <span className="lb">{t.label}{H.best?.key === t.key && <em>가장 잘 이김</em>}{H.worst?.key === t.key && <em>아쉬움</em>}</span>
+          <span className="cnt"><span className="tr"><span style={{ width: p(t.share) }} /></span><span className="meta">{t.n}개</span></span>
+          <b>{p(t.rate)}</b>
+          <span className={`dl ${t.n < 5 ? '' : t.delta >= 0.03 ? 'up' : t.delta <= -0.03 ? 'down' : ''}`}>{t.n < 5 ? '표본 적음' : d(t.delta)}</span>
+        </div>))}</div>
+      {H.best && <p className="insight"><b>{H.best.label}</b> 증강을 고른 판에서 평소보다 <b className="w">{d(H.best.delta)}</b> 더 이겼어요{H.worst ? <>. <b>{H.worst.label}</b> 쪽은 <b className="l">{d(H.worst.delta)}</b></> : ''}.</p>}
+    </section>
   );
 }
 

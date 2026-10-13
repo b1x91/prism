@@ -55,6 +55,16 @@ export function Initial({ nick, size = 32 }: { nick: string; size?: number }) {
   return <span className="initial" style={{ background: TONES[h % TONES.length], width: size, height: size }}>{[...nick][0] ?? '?'}</span>;
 }
 
+/** 테마: 시스템 설정 따라감(기본) / 밝게 / 어둡게. 고르면 기억한다 */
+export type ThemeMode = 'system' | 'light' | 'dark';
+export function getThemeMode(): ThemeMode {
+  try { const t = localStorage.getItem('prism-theme'); return t === 'light' || t === 'dark' ? t : 'system'; } catch { return 'system'; }
+}
+export function setThemeMode(m: ThemeMode) {
+  if (m === 'system') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', m);
+  try { if (m === 'system') localStorage.removeItem('prism-theme'); else localStorage.setItem('prism-theme', m); } catch { /* 저장소 없음 */ }
+}
 /** 테마 전환 (시스템 따라감 → 직접 고르면 기억) */
 export function toggleTheme() {
   const cur = document.documentElement.getAttribute('data-theme') ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');

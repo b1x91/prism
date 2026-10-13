@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CHAMPIONS, ago, pct, streakOf } from '@prism/core';
-import { AugmentCompare, AugmentGuide, ChampBanner, ChampSearch, Empty, GameList, Recent10, Seg } from '@prism/ui';
+import { AugmentCompare, AugmentGuide, ChampBanner, ChampSearch, Empty, RecentGames, Seg } from '@prism/ui';
 import { useNavigate } from 'react-router-dom';
 import type { State } from '../controller';
 import { ChampSelectPanel } from './ChampSelect';
@@ -39,8 +39,7 @@ export function GamePage({ s }: { s: State }) {
         <section className="card stat"><span className="k">지금</span><span className={`v ${st.win ? 'w' : 'l'}`}>{st.n}<small>{st.win ? '연승' : '연패'}</small></span></section>
         <section className="card stat"><span className="k">만난 챔피언</span><span className="v">{Object.keys(P.champions).length}<small>/ {Object.keys(CHAMPIONS).length}</small></span></section>
       </div>}
-      <section className="card pad"><div className="card-head"><h2>최근 10판</h2></div><Recent10 games={games} /></section>
-      {games.length > 0 && <section className="card pad"><div className="card-head"><h2>최근 판</h2><span className="sp" /><span className="meta">챔피언을 누르면 증강 가이드</span></div><GameList games={games} onChampion={(c) => nav(`/champions/${c}`)} /></section>}
+      <RecentGames games={games} onChampion={(c) => nav(`/champions/${c}`)} />
     </div>
   );
 }
