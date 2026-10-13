@@ -348,3 +348,38 @@ svg.light { position: absolute; inset: 0; z-index: 0; pointer-events: none; over
 .pod .st b { color: #fff; font-size: var(--fs-lg); }
 @media (max-width: 720px) { .podium { grid-template-columns: minmax(0, 1fr); } .pod, .pod.p1 { min-height: 160px; } .podium .p2 { order: 2; } .podium .p1 { order: 1; } .podium .p3 { order: 3; } }
 @media (prefers-reduced-motion: reduce) { .pod, .pod .bg { transition: none; } }
+
+/* ── 한 판 카드 ── */
+.glist { display: grid; gap: var(--s2); }
+.gcard { --tone: var(--win); position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: minmax(140px, .9fr) 104px minmax(0, 1.5fr) 108px 132px; gap: var(--s4); align-items: center; padding: var(--s3) var(--s4) var(--s3) var(--s5); border-radius: var(--r-m); border: 1px solid color-mix(in srgb, var(--tone) 24%, var(--line)); background: linear-gradient(90deg, color-mix(in srgb, var(--tone) 16%, var(--surface)) 0%, var(--surface) 55%); }
+.gcard.lose { --tone: var(--lose); }
+.gcard::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--tone); }
+.gcard .gbg { position: absolute; left: 0; top: 0; z-index: -1; width: 220px; height: 100%; object-fit: cover; object-position: center 25%; opacity: .16; -webkit-mask-image: linear-gradient(90deg, #000 20%, transparent); mask-image: linear-gradient(90deg, #000 20%, transparent); }
+.gchamp { display: flex; align-items: center; gap: var(--s3); min-width: 0; padding: 0; border: 0; background: none; color: inherit; text-align: left; cursor: pointer; }
+.gchamp:disabled { cursor: default; }
+.gchamp .champ { box-shadow: 0 0 0 2px color-mix(in srgb, var(--tone) 60%, transparent); }
+.gname { display: grid; gap: 2px; min-width: 0; }
+.gname b { font-size: var(--fs-lg); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gres { font-size: var(--fs-sm); font-weight: 800; }
+.gkda { display: grid; gap: 2px; font-variant-numeric: tabular-nums; }
+.gkda b { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -.01em; white-space: nowrap; }
+.gkda i { font-style: normal; color: var(--text-3); margin: 0 3px; font-weight: 500; }
+.gratio { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); }
+.gratio.hot { color: var(--gold); }
+.gaugs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s1) var(--s2); }
+.gaug { position: relative; display: flex; align-items: center; gap: var(--s2); min-width: 0; height: 32px; padding: 0 var(--s2) 0 4px; border-radius: var(--r-s); background: color-mix(in srgb, var(--surface) 75%, transparent); border: 1px solid var(--line); font-size: var(--fs-xs); font-weight: 650; }
+.gaug::before { content: ""; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 3px; border-radius: var(--r-pill); background: var(--silver); }
+.gaug.gold::before { background: var(--gold); }
+.gaug.prismatic::before { background: linear-gradient(180deg, var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-7)); }
+.gaug .aug { flex: none; border-radius: 6px; background: var(--tile); }
+.gaug > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gitems { display: grid; grid-template-columns: repeat(3, 32px); grid-auto-rows: 32px; gap: 4px; }
+.gitems img, .gitems .empty { width: 32px; height: 32px; border-radius: 6px; background: var(--surface-3); }
+.gitems .empty { opacity: .5; display: block; }
+.gmeta { display: grid; gap: 2px; justify-items: end; text-align: right; font-size: var(--fs-sm); color: var(--text-2); font-variant-numeric: tabular-nums; }
+@media (max-width: 860px) {
+  .gcard { grid-template-columns: minmax(0, 1fr) auto; gap: var(--s3); }
+  .gkda { justify-items: end; text-align: right; }
+  .gaugs { grid-column: 1; } .gitems { grid-column: 2; grid-row: 2 / span 2; align-self: center; }
+  .gmeta { grid-column: 1; justify-items: start; text-align: left; }
+}

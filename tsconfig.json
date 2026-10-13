@@ -13,6 +13,7 @@
   "include": [
     "scripts/*.ts",
     "scripts/mayhem/*.ts",
-    "scripts/skins.ts"
+    "scripts/skins.ts",
+    "scripts/items.ts"
   ]
 }

@@ -10,6 +10,7 @@ import {
 import { AugImg, ChampImg, Empty, Gem, Initial, Seg } from './basics';
 import { Icon } from './icons';
 import { Recent10, useLoad } from './crew';
+import { GameList } from './game';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
@@ -90,7 +91,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
   const main = data.champions[0]?.id ?? null;
   const skin = m.skin && skins?.[m.skin] ? skins[m.skin] : null;
   const art = skin?.splash ?? (main ? cdragon(CHAMPIONS[main]?.splash) : '');
-  const games: Game[] = data.recent.map((g) => ({ ...g, items: [], damageToChampions: null, damageTaken: null, goldEarned: null }));
+  const games: Game[] = data.recent.map((g) => ({ ...g, damageTaken: null }));
   const st = streakOf(games);
   const S = styleOf(data.champions), A = augmentStyleOf(data.augments);
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
@@ -115,6 +116,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
         <section className="card stat"><span className="k">지금</span><span className={`v ${st.win ? 'w' : 'l'}`}>{st.n}<small>{st.win ? '연승' : '연패'}</small></span></section>
       </div>
       <section className="card pad"><div className="card-head"><h2>최근 10판</h2></div><Recent10 games={games} /></section>
+      {games.length > 0 && <section className="card pad"><div className="card-head"><h2>최근 판</h2></div><GameList games={games} limit={8} onChampion={onChampion} /></section>}
       {total.n > 0 && <div className="grid2">
         <section className="card pad">
           <div className="card-head"><h2>주 챔피언</h2><span className="sp" /><span className="meta">만난 챔피언 {data.champions.length} / {Object.keys(CHAMPIONS).length}</span></div>

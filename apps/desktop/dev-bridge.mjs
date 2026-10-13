@@ -24,6 +24,8 @@ const games = Array.from({ length: 34 }, (_, i) => {
   const win = rnd() < 0.56;
   const stats = { win, kills: Math.floor(rnd() * 18), deaths: Math.floor(rnd() * 10), assists: Math.floor(rnd() * 30), goldEarned: 12000 + Math.floor(rnd() * 6000), totalDamageDealtToChampions: 20000 + Math.floor(rnd() * 40000), totalDamageTaken: 15000 + Math.floor(rnd() * 30000) };
   [1, 2, 3, 4].forEach((k) => { stats[`playerAugment${k}`] = pick(augs); });
+  const IT = [3031, 3089, 3157, 3020, 6653, 3135, 3071, 3153, 3006, 3047, 3068, 3075, 6672, 3094, 4645, 3116];
+  [0, 1, 2, 3, 4, 5].forEach((k) => { if (rnd() < 0.85) stats[`item${k}`] = pick(IT); });
   return { gameId: 7100000000 + i, queueId: i % 5 === 4 ? 450 : 2400, gameCreation: Date.now() - i * 5.5 * 3600_000, gameDuration: 900 + Math.floor(rnd() * 700), participants: [{ championId: rnd() < 0.4 ? pick(FAV) : pick(champs), stats }] };
 });
 const CS = {
