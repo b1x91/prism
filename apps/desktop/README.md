@@ -1,0 +1,76 @@
+# Prism 앱 (Windows, v0.5)
+
+롤 클라이언트 옆에 켜두는 도우미. 혼자 써도 쓸모 있고, Prism 회원이면 모임 기능이 열린다.
+웹(przm.web.app)과 같은 화면 코드(`packages/ui`, `packages/core`)를 앱 안에 묶어 넣는다. 원격 웹을 띄우지 않는다.
+
+## 화면
+| 탭 | 혼자서도 | Prism 로그인 후 |
+|---|---|---|
+| 게임 | **챔프 선택**: 우리 팀 구성(AP/AD·앞라인·CC), 부족한 점, 대기석 추천(팀 밸런스·내가 잘하는 순), 챔피언 카드(내 승률·팀에 넣으면·어울리는 증강). **게임 중**: 내 챔피언 **증강 3개 비교**·등급별 가이드 (Alt+Tab). **평소**: 최근 10판, 최근 판, 승률·연승 | 모임 승률 정렬, 같은 팀 회원과의 케미, 장인 |
+| 증강 | 챔피언별 가이드, 3개 비교, 증강 도감 | Prism 실전 승률 |
+| 모임 | 디스코드·카카오톡 바로가기 (사이드바) | 한 줄 생각, 모임 보드 |
+| 설정 | 윈도우 시작 시 실행, 확인용 정보 복사 | 로그인, 수집 동의·철회, 저장 상태 |
+
+챔프 선택이나 게임이 시작되면 앱이 게임 탭으로 바뀐다. 롤을 "테두리 없는 창 모드"로 두면 Alt+Tab 이 빠르다.
+
+## 구조
+```
+apps/desktop/
+  src/            화면 (React). controller.ts = 확인 주기·전적·챔프 선택·업로드 흐름
+  src/bridge.ts   Rust 명령 호출 (앱 안: Tauri invoke / 개발 중 브라우저: dev-bridge)
+  src-tauri/      Rust (얇게)
+    lcu.rs        롤 클라이언트 읽기. 허용 경로만 GET, 게임 실행 중이면 거부
+    server.rs     Prism 서버 중계. 로그인 토큰은 여기에만 있고 화면에는 안 나간다
+    lib.rs        트레이, 한 번만 실행, 자동 실행(--background), 창 닫기 = 숨기기
+  dev-bridge.mjs  개발용 모의 클라이언트 (배포 앱에 안 들어감)
+```
+
+## 지키는 것 (CLAUDE.md v3.1-4·5, v3.3)
+- 롤 클라이언트는 **읽기(GET)만**, 허용 경로 5개만 (`lcu.rs` 의 `ALLOWED`). 초대·수락·픽 같은 조작 요청은 코드에 없다
+- **게임 중에는 롤에 아무 요청도 하지 않는다.** OS 프로세스 목록으로 게임 실행 여부만 본다 (Rust 에서 한 번 더 막는다)
+- 게임 프로세스·메모리·인게임 API·오버레이 없음
+- **로그인 + 수집 동의 전에는 서버로 아무것도 보내지 않는다**
+- 동의하면: 내 아수라장 판(10명 상세)을 올리고, 한가할 때(대기·로비) 30분에 1번 동의한 다른 회원의 최근 20판을 대신 올린다. 챔프 선택이나 게임이 시작되면 즉시 멈춘다
+- 서버는 비회원 참가자 정보를 저장하지 않는다 (팀 합계 계산에만 쓰고 버린다)
+- 로그인 토큰은 앱 설정 폴더(`%APPDATA%\gg.przm.desktop\config.json`)에만 저장한다
+
+## 확인 간격
+| 상황 | 간격 | 하는 일 |
+|---|---|---|
+| 클라이언트 꺼짐 | 20초 | OS 프로세스 확인만 |
+| 대기·로비·매칭 | 15초 | 게임 단계 1회 조회 |
+| 챔프 선택 | 5초 | 게임 단계 + 챔프 선택 정보. 구성이 바뀔 때만 서버에 질의 |
+| 게임 중 | 30초 | OS 프로세스 확인만 (롤 요청 없음) |
+| 게임 직후 3분 | 30초 | 새 판이 뜰 때까지 전적 재조회 |
+
+## 설치 파일 만들기
+GitHub Actions `build-desktop` (Windows). 저장소 Variables `PRISM_SERVER_URL` 이 앱에 들어간다 (없으면 모임 기능 없이 가이드만).
+- 태그 `app-v0.5.0` 을 올리면 GitHub Release 에 `Prism_0.5.0_x64-setup.exe` 가 붙는다
+- Actions 탭에서 수동 실행하면 Artifacts 로만 남는다
+- 버전은 `src-tauri/tauri.conf.json` 의 `version`
+- 코드 서명 인증서가 없어서 처음 실행할 때 SmartScreen 경고가 뜬다 ("추가 정보 → 실행"). 회원 안내에 적어둔다
+
+## 개발 (화면만, 브라우저에서)
+롤 클라이언트·Rust 없이 모의 데이터로 화면을 본다. 창 3개.
+```powershell
+npm run server:dev            # 서버 (server/.dev.vars 에 DEV_LOGIN=1)
+npm run desktop:bridge        # 모의 클라이언트 :5199
+npm run desktop:dev           # 화면 http://127.0.0.1:5174
+```
+장면 바꾸기: `Invoke-RestMethod -Method Post http://127.0.0.1:5199/scene -Body '{"scene":"in-game"}'` (`champ-select` / `in-game` / `idle` / `no-client`)
+
+## 개발 (실제 앱, Windows)
+Rust(rustup)와 WebView2 가 필요하다.
+```powershell
+$env:PRISM_SERVER = "http://127.0.0.1:8787"; $env:PRISM_DEV_LOGIN = "1"
+npm run tauri -w @prism/desktop -- dev
+```
+`PRISM_DEV_LOGIN` 은 빌드 시점에 들어가는 개발용 스위치다. **배포 빌드에는 절대 넣지 않는다.**
+
+## 알려진 한계 — 실제 롤 클라이언트로 아직 확인하지 못함
+설정 → **확인용 정보 복사**로 받은 내용(다른 플레이어 이름은 지워짐)으로 확인한다.
+- 아수라장 증강 필드 (`playerAugment1~N` 으로 추정)와 그 ID 가 게임 파일의 `AugmentPlatformId` 와 같은지 (가이드·실전 승률 연결)
+- 챔프 선택 세션의 팀원 `puuid` (케미 표시)
+- 다른 회원 PUUID 로 전적 조회가 되는지 (회원 대신 기록)
+- 대기석 필드 이름 (`benchChampions` / `benchChampionIds`)
+- 롤 클라이언트 프로세스의 실행 파일 위치·명령줄을 일반 권한으로 읽을 수 있는지 (설치 폴더 lockfile → 명령줄 순서로 접속 정보를 찾는다)

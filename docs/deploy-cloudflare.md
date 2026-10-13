@@ -32,9 +32,11 @@ npm run server:deploy                                # 배포. 출력되는 work
 ```
 브라우저에서 `https://prism.<서브도메인>.workers.dev/` 를 열어 `{"name":"Prism","ok":true}` 가 보이면 성공.
 
-## 4. 앱이 서버를 바라보게
-`app/config.ts` 의 `DEFAULT_SERVER` 에 Worker 주소를 넣고 커밋한다.
-(임시로는 `$env:PRISM_SERVER="https://..."; npm run app`)
+## 4. 웹·앱이 서버를 바라보게
+GitHub 저장소 → Settings → Secrets and variables → Actions → **Variables** 에 `PRISM_SERVER_URL` = Worker 주소.
+- 웹(`deploy-site.yml`)과 Windows 앱(`build-desktop.yml`)이 빌드할 때 이 값을 넣는다
+- 서버 `wrangler.toml` 의 `WEB_ORIGINS` 에 웹 주소(`https://przm.web.app`, 도메인을 사면 `https://przm.gg`)가 있어야 웹 로그인이 된다
+- 디스코드 앱 OAuth2 Redirects 에는 서버 콜백 주소 하나만 있으면 된다 (웹·앱 모두 서버를 거친다)
 
 ## 5. 자동 배포 (GitHub Actions)
 GitHub 저장소 → Settings → Secrets and variables → Actions 에 추가:
@@ -48,8 +50,9 @@ GitHub 저장소 → Settings → Secrets and variables → Actions 에 추가:
 copy server\.dev.vars.example server\.dev.vars
 npm run server:migrate:local
 npm run server:dev                                   # http://127.0.0.1:8787
-# 다른 창에서
-$env:PRISM_SERVER="http://127.0.0.1:8787"; $env:PRISM_DEV_LOGIN="1"; npm run app
+# 다른 창에서 (웹)
+$env:VITE_PRISM_SERVER="http://127.0.0.1:8787"; $env:VITE_PRISM_DEV_LOGIN="1"; npm run web:dev
+# 앱은 apps/desktop/README.md 참고
 ```
 `DEV_LOGIN=1` 은 디스코드 없이 로그인되는 개발용 스위치다. **배포 환경 vars 에는 절대 넣지 않는다.**
 

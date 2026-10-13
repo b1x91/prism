@@ -12,7 +12,6 @@
   },
   "include": [
     "scripts/*.ts",
-    "scripts/mayhem/*.ts",
-    "app/*.ts"
+    "scripts/mayhem/*.ts"
   ]
 }

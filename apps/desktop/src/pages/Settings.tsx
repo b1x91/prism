@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { ago } from '@prism/core';
 import { Icon, Initial } from '@prism/ui';
 import { bridge } from '../bridge';
-import { refreshSession, setConsent, type State } from '../controller';
+import { diagnostics, refreshSession, setConsent, type State } from '../controller';
+
+import conf from '../../src-tauri/tauri.conf.json';
+
+export const VERSION = conf.version; // 설치 파일 버전과 같은 값
 
 const CONSENT = 'Riot 계정을 연결하면 아수라장 전적이 Prism에 자동으로 수집됩니다. 회원에게만 보이며, 연결을 해제하면 수집이 중단됩니다.';
 
@@ -29,13 +33,14 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
             <div><span className="k">회원 대신 기록</span><span className="muted">{s.crewSync.running ? '진행 중…' : s.crewSync.lastAt ? `${ago(s.crewSync.lastAt)} · ${s.crewSync.games}판` : '–'}{s.crewSync.error && <span className="l"> · {s.crewSync.error}</span>}</span></div>
           </div>
         )}
-        {msg && <p className="l" style={{ marginBottom: 0 }}>{msg}</p>}
       </section>
+      {msg && <section className="card pad"><span className={msg.startsWith('복사했습니다') ? 'muted' : 'l'}>{msg}</span></section>}
       <section className="card pad">
         <div className="card-head"><h2>앱</h2></div>
         <div className="kv">
           <div><span className="k">윈도우 시작 시 실행</span><span>{auto === null ? '–' : <button type="button" className={`btn sm ${auto ? '' : 'primary'}`} onClick={() => run(async () => setAuto(await bridge.autostart(!auto)))}>{auto ? '끄기' : '켜기'}</button>}</span></div>
           <div><span className="k">창 닫기</span><span className="muted">창을 닫아도 트레이에서 계속 기록합니다. 끝내려면 트레이 아이콘 → 끝내기.</span></div>
+          <div><span className="k">문제 알리기</span><span className="row wrapr" style={{ gap: 8 }}><button type="button" className="btn sm" onClick={() => run(async () => { await navigator.clipboard.writeText(await diagnostics(VERSION)); setMsg('복사했습니다. 디스코드에 붙여넣어 보내주세요. 다른 플레이어 이름은 지워져 있습니다.'); })}>확인용 정보 복사</button><span className="meta">버전 {VERSION}</span></span></div>
           <div><span className="k">게임 중 증강 보기</span><span className="muted">롤을 "테두리 없는 창 모드"로 두면 Alt+Tab 전환이 빠릅니다.</span></div>
         </div>
       </section>

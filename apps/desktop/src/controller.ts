@@ -2,7 +2,7 @@
  * 앱의 흐름: 롤 클라이언트 확인 주기, 전적 정리, 챔프 선택, 업로드, 회원 대신 수집.
  * 원칙 (CLAUDE.md v3.1-4·5): 게임 중에는 롤에 요청 0, 확인 간격은 상황별.
  */
-import { MAYHEM_QUEUE, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
+import { AUGMENT, MAYHEM_QUEUE, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
 import { api, bridge } from './bridge';
 
 const INTERVAL = { noClient: 20_000, inGame: 30_000, idle: 15_000, champSelect: 5_000, error: 10_000 };
@@ -61,10 +61,14 @@ export async function refreshSession() {
   set({ session: { ...session, loggedIn: Boolean(me) }, me });
 }
 
+// 확인용 정보(diagnostics)에 넣을 마지막 원본. 화면에는 쓰지 않는다
+const raw: { page: unknown; champSelect: unknown } = { page: null, champSelect: null };
+
 async function loadHistory(puuid: string, pages: number) {
   const out: any[] = [];
   for (let p = 0; p < pages; p++) {
     const res = await bridge.lcuGet(`/lol-match-history/v1/products/lol/${puuid}/matches?begIndex=${p * 20}&endIndex=${p * 20 + 19}`);
+    if (p === 0 && puuid === state.summoner?.puuid) raw.page = res;
     out.push(res);
     if ((res?.games?.games ?? []).length < 20) break;
   }
@@ -127,6 +131,7 @@ async function syncCrew() {
 
 async function loadChampSelect() {
   const s = await bridge.lcuGet<any>('/lol-champ-select/v1/session');
+  raw.champSelect = s;
   const myTeam: any[] = s?.myTeam ?? [];
   const me = myTeam.find((m) => m.cellId === s.localPlayerCellId);
   const bench = [...(s?.benchChampions ?? []).map((b: any) => Number(b.championId ?? b)), ...(s?.benchChampionIds ?? []).map(Number)].filter((id) => id > 0);
@@ -199,4 +204,47 @@ export async function setConsent(agree: boolean) {
   await api.post('/api/me/consent', { agree });
   await refreshSession();
   if (agree) void uploadOwn();
+}
+
+const PERSONAL_KEYS = new Set(['gameName', 'tagLine', 'summonerName', 'displayName', 'internalName', 'riotIdGameName', 'riotIdTagline', 'summonerId', 'accountId', 'currentAccountId', 'profileIcon', 'matchHistoryUri', 'nameVisibilityType', 'obfuscatedPuuid', 'obfuscatedSummonerId']);
+
+/** 다른 플레이어 식별 정보를 지운다. 내 PUUID 는 ME, 다른 PUUID 는 P1, P2 … */
+function anonymize(data: unknown): unknown {
+  const alias = new Map<string, string>();
+  const walk = (v: any, key = ''): any => {
+    if (Array.isArray(v)) return v.map((x) => walk(x, key));
+    if (v && typeof v === 'object') return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, walk(x, k)]));
+    if (key === 'puuid' && typeof v === 'string' && v) {
+      if (v === state.summoner?.puuid) return 'ME';
+      if (!alias.has(v)) alias.set(v, `P${alias.size + 1}`);
+      return alias.get(v);
+    }
+    return PERSONAL_KEYS.has(key) ? '(익명)' : v;
+  };
+  return walk(data);
+}
+
+/**
+ * 실제 클라이언트 응답 모양 확인용 (증강 필드·팀원 puuid 등 미검증 항목). 다른 플레이어 정보는 지운다.
+ * 게임 중에는 만들지 않는다.
+ */
+export async function diagnostics(version: string): Promise<string> {
+  const st = await bridge.lcuStatus();
+  if (st.inGame) throw new Error('게임이 끝난 뒤에 다시 눌러주세요.');
+  if (!st.client || !state.summoner) throw new Error('롤 클라이언트를 켠 뒤에 다시 눌러주세요.');
+  const latest = state.games[0];
+  const detail = latest ? await bridge.lcuGet(`/lol-match-history/v1/games/${latest.gameId}`).catch((e) => ({ error: String(e) })) : null;
+  const augs = [...new Set(state.games.flatMap((g) => g.augments))];
+  return JSON.stringify({
+    exportedAt: new Date().toISOString(),
+    appVersion: version,
+    phase: state.phase,
+    mayhemGames: state.games.length,
+    gamesWithAugments: state.personal.augmentGames,
+    unknownAugmentIds: augs.filter((id) => !AUGMENT[id]),
+    knownAugmentIds: augs.filter((id) => AUGMENT[id]).length,
+    firstPageRaw: anonymize(raw.page),
+    latestMayhemDetailRaw: anonymize(detail),
+    champSelectRaw: anonymize(raw.champSelect),
+  }, null, 2);
 }

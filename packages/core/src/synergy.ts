@@ -3,7 +3,7 @@
  *
  * 게임 데이터(챔피언 역할·피해 유형·스킬 설명, 증강 태그)만으로 "어울리는 정도"를 계산한다.
  * 증강 자체가 얼마나 센지(승률)는 여기서 다루지 않는다 — 그건 Prism 실전 통계가 맡는다.
- * 데이터: app/data/mayhem-*.json (npm run data:mayhem 으로 갱신)
+ * 데이터: packages/core/data/mayhem-*.json (npm run data:mayhem 으로 갱신)
  */
 export type Rarity = 'silver' | 'gold' | 'prismatic';
 export type MayhemAugment = {

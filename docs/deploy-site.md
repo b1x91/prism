@@ -1,6 +1,6 @@
 # 공개 사이트 배포 (Firebase Hosting → przm.web.app)
 
-공개 사이트는 정적 파일만 올린다 (증강 가이드·증강 도감·모임 소개). 회원 기능 서버는 Cloudflare(`docs/deploy-cloudflare.md`).
+웹(`apps/web`)은 정적 파일만 올린다 (증강 가이드·3개 비교·증강 도감·모임). 회원 화면도 정적 파일이고, 회원 데이터는 로그인한 브라우저가 서버에서 직접 받는다. 회원 기능 서버는 Cloudflare(`docs/deploy-cloudflare.md`).
 Firebase 는 **Hosting 만** 쓰므로 무료 요금제(Spark)로 된다.
 
 ## 처음 한 번 (Firebase 콘솔)
@@ -15,7 +15,7 @@ Firebase 는 **Hosting 만** 쓰므로 무료 요금제(Spark)로 된다.
 cd prism
 git pull
 npm install
-npm run site:build
+npm run web:build
 npx firebase-tools login
 npx firebase-tools deploy --only hosting --project prism-90
 ```
@@ -29,5 +29,6 @@ npx firebase-tools deploy --only hosting --project prism-90
 3. Actions 탭 → deploy-site → Run workflow (브랜치 선택). 이후 main 에 사이트 변경이 들어오면 자동 배포
 
 ## 바꿀 수 있는 것
-- 디스코드·카카오톡 주소: `site/src/config.ts` (비어 있으면 버튼이 숨는다)
-- 패치가 나오면 `npm run data:mayhem` → `npm run site:build` → 배포
+- 디스코드·카카오톡 주소: 서버 `wrangler.toml` 의 `DISCORD_INVITE_URL`, `KAKAO_OPENCHAT_URL` (로그인 전 화면용 예비값은 저장소 Variables `DISCORD_INVITE_URL`, `KAKAO_OPENCHAT_URL`). 비어 있으면 버튼이 숨는다
+- Windows 앱 받기 안내: 저장소 Variables `APP_DOWNLOAD_URL` (비어 있으면 안내가 숨는다)
+- 패치가 나오면 `npm run data:mayhem` → 커밋 → main 에 합치면 자동 배포 (방법 A 라면 `npm run web:build` → 배포)
