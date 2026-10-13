@@ -1,6 +1,6 @@
 /**
  * POST /api/ingest — 모든 수집원 공통 입구 (CLAUDE.md 7-1).
- *   1. queueId !== 2400 버림. 이미 있는 gameId 는 무시.
+ *   1. 아수라장 큐(2400)와 커스텀 아수라장만 받는다 (커스텀은 10명 모두 사람·5분 이상, 판수 부풀리기 방지). 이미 있는 gameId 는 무시.
  *   2. 10명 전원으로 팀 합계 계산 (있는 필드만).
  *   3. puuid ↔ members.riot_puuid 대조 → crew.
  *   4. matches 1건 + 회원 participants 저장. 비회원 데이터는 여기서 폐기.
@@ -26,7 +26,17 @@ type InParticipant = {
   augments?: number[];
   items?: number[];
 };
-type InGame = { gameId: number; queueId: number; playedAt: number; duration: number; participants: InParticipant[] };
+type InGame = { gameId: number; queueId: number; gameType?: string; gameMode?: string; mapId?: number; playedAt: number; duration: number; participants: InParticipant[] };
+
+const CUSTOM_MIN_SECONDS = 300;
+
+/** 커스텀 아수라장: 커스텀 게임 + 증강 기록 있음 + 아레나 아님 + 5분 이상 (10명 모두 사람인지는 validGame 이 puuid 로 본다) */
+const isCustomMayhem = (g: InGame) =>
+  (g.gameType === 'CUSTOM_GAME' || g.queueId === 0) &&
+  g.gameMode !== 'CHERRY' &&
+  g.mapId !== 30 &&
+  g.duration >= CUSTOM_MIN_SECONDS &&
+  g.participants.some((p) => (ids(p.augments) ?? []).length > 0);
 
 type TeamTotal = { win: boolean; kills: number; damageToChampions?: number; damageTaken?: number; goldEarned?: number };
 
@@ -68,7 +78,7 @@ export async function ingest(req: Request, env: Env, me: Member) {
 
   const result = { received: payload.games.length, stored: 0, duplicate: 0, skipped: 0, crewGames: 0 };
   const games = payload.games.filter((g): g is InGame => {
-    const ok = validGame(g) && g.queueId === MAYHEM_QUEUE;
+    const ok = validGame(g) && (g.queueId === MAYHEM_QUEUE || isCustomMayhem(g));
     if (!ok) result.skipped++;
     return ok;
   });

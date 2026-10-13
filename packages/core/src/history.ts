@@ -4,6 +4,19 @@
  */
 export const MAYHEM_QUEUE = 2400;
 
+/**
+ * 사용자 설정(커스텀) 아수라장: 커스텀 게임이면서 증강 기록이 있는 판. 아레나(증강이 있는 다른 모드)는 뺀다.
+ * 목록 응답(본인 1명)과 상세 응답(10명) 모두에 쓴다.
+ */
+export const isCustomMayhem = (g: any) =>
+  (g?.gameType === 'CUSTOM_GAME' || Number(g?.queueId) === 0) &&
+  g?.gameMode !== 'CHERRY' &&
+  Number(g?.mapId) !== 30 &&
+  (g?.participants ?? []).some((p: any) => augmentsOf(p?.stats).length > 0);
+
+/** 기록 대상: 아수라장 큐(2400) 또는 커스텀 아수라장 */
+export const isMayhemGame = (g: any) => Number(g?.queueId) === MAYHEM_QUEUE || isCustomMayhem(g);
+
 export type NW = { n: number; w: number };
 export type Game = {
   gameId: number;
@@ -19,6 +32,8 @@ export type Game = {
   damageToChampions: number | null;
   damageTaken: number | null;
   goldEarned: number | null;
+  /** 사용자 설정(커스텀) 게임 */
+  custom?: boolean;
 };
 
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null);
@@ -50,6 +65,7 @@ export function toGame(g: any): Game | null {
     damageToChampions: num(s.totalDamageDealtToChampions),
     damageTaken: num(s.totalDamageTaken),
     goldEarned: num(s.goldEarned),
+    custom: Number(g.queueId) !== MAYHEM_QUEUE,
   };
 }
 
@@ -60,7 +76,7 @@ export function mayhemGames(pages: any[]): { games: Game[]; scanned: number } {
   for (const res of pages) {
     for (const g of res?.games?.games ?? []) {
       scanned++;
-      if (Number(g.queueId) !== MAYHEM_QUEUE) continue;
+      if (!isMayhemGame(g)) continue;
       const parsed = toGame(g);
       if (parsed) games.push(parsed);
     }
@@ -91,7 +107,7 @@ export function toIngestGame(d: any) {
       items: itemsOf(s),
     };
   });
-  return { gameId: Number(d?.gameId), queueId: Number(d?.queueId), playedAt: Number(d?.gameCreation), duration: Number(d?.gameDuration), participants };
+  return { gameId: Number(d?.gameId), queueId: Number(d?.queueId), gameType: String(d?.gameType ?? ''), gameMode: String(d?.gameMode ?? ''), mapId: Number(d?.mapId) || 0, playedAt: Number(d?.gameCreation), duration: Number(d?.gameDuration), participants };
 }
 
 export type Personal = {

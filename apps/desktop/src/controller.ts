@@ -2,7 +2,7 @@
  * 앱의 흐름: 롤 클라이언트 확인 주기, 전적 정리, 챔프 선택, 업로드, 회원 대신 수집.
  * 원칙 (CLAUDE.md v3.1-4·5): 게임 중에는 롤에 요청 0, 확인 간격은 상황별.
  */
-import { AUGMENT, MAYHEM_QUEUE, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
+import { AUGMENT, isMayhemGame, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
 import { api, bridge } from './bridge';
 
 const INTERVAL = { noClient: 20_000, inGame: 30_000, idle: 15_000, champSelect: 5_000, error: 10_000 };
@@ -84,7 +84,7 @@ async function sendGames(ids: number[]) {
     const games = [];
     for (const id of todo.slice(i, i + BATCH)) {
       const d = await bridge.lcuGet(`/lol-match-history/v1/games/${id}`);
-      if (Number(d?.queueId) === MAYHEM_QUEUE) games.push(toIngestGame(d));
+      if (isMayhemGame(d)) games.push(toIngestGame(d));
     }
     if (games.length) {
       const r = await api.post<{ stored: number }>('/api/ingest', { source: 'lcu', games });

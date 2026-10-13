@@ -8,7 +8,7 @@ import { AugImg, ChampImg } from './basics';
 export type CardGame = {
   gameId: number; playedAt: number; duration: number; championId: number; win: boolean;
   kills: number; deaths: number; assists: number; augments: number[]; items?: number[];
-  damageToChampions?: number | null; goldEarned?: number | null;
+  damageToChampions?: number | null; goldEarned?: number | null; custom?: boolean;
 };
 
 const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
@@ -23,7 +23,7 @@ export function GameCard({ g, onChampion }: { g: CardGame; onChampion?: (id: num
       {c?.tile && <img className="gbg" src={cdragon(c.tile)} alt="" loading="lazy" />}
       <button type="button" className="gchamp" onClick={() => onChampion?.(g.championId)} disabled={!onChampion}>
         <ChampImg id={g.championId} size={56} />
-        <span className="gname"><b>{c?.name ?? `#${g.championId}`}</b><span className={`gres ${g.win ? 'w' : 'l'}`}>{g.win ? '승리' : '패배'}</span></span>
+        <span className="gname"><b>{c?.name ?? `#${g.championId}`}</b><span className="gsub"><span className={`gres ${g.win ? 'w' : 'l'}`}>{g.win ? '승리' : '패배'}</span>{g.custom && <span className="gtag">사용자 설정</span>}</span></span>
       </button>
       <div className="gkda">
         <b>{g.kills}<i>/</i><span className="l">{g.deaths}</span><i>/</i>{g.assists}</b>

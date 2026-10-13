@@ -42,7 +42,7 @@ export async function memberPage(env: Env, me: Member, id: string) {
     champs(id),
     env.DB.prepare('SELECT augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments WHERE member_id = ? GROUP BY augment_id ORDER BY n DESC').bind(id),
     env.DB.prepare(
-      `SELECT p.game_id AS gameId, p.played_at AS playedAt, x.duration, p.champion_id AS championId, p.win, p.kills, p.deaths, p.assists, p.augments, p.items, p.dmg_champ AS damageToChampions, p.gold AS goldEarned, p.crew_count AS crewCount
+      `SELECT p.game_id AS gameId, p.played_at AS playedAt, x.duration, p.champion_id AS championId, p.win, p.kills, p.deaths, p.assists, p.augments, p.items, p.dmg_champ AS damageToChampions, p.gold AS goldEarned, p.crew_count AS crewCount, x.queue_id AS queueId
        FROM participants p JOIN matches x ON x.game_id = p.game_id WHERE p.member_id = ? ORDER BY p.played_at DESC LIMIT 30`,
     ).bind(id),
     // 판수 순위 (나보다 많이 한 회원 수 + 1)
@@ -73,7 +73,7 @@ export async function memberPage(env: Env, me: Member, id: string) {
     rank: (rank.results[0] as { rank: number }).rank,
     champions: champions.results,
     augments: augments.results,
-    recent: recent.results.map((g: any) => ({ ...g, win: g.win === 1, augments: g.augments ? JSON.parse(g.augments) : [], items: g.items ? JSON.parse(g.items) : [] })),
+    recent: recent.results.map((g: any) => ({ ...g, win: g.win === 1, augments: g.augments ? JSON.parse(g.augments) : [], items: g.items ? JSON.parse(g.items) : [], custom: g.queueId !== 2400 })),
     ...(self ? {} : { together: together.results[0], against: against.results[0], viewer: { champions: viewerChampions.results } }),
   });
 }
