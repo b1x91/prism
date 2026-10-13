@@ -145,3 +145,42 @@ export function rankFits(c: ChampionProfile | undefined, augments: MayhemAugment
   const rank = (f: Fit) => ({ best: 3, good: 2, weak: 1, none: 0 })[f.level] * 1000 + f.weight * 100 + f.score;
   return augments.map((a) => fitOf(c, a)).sort((a, b) => rank(b) - rank(a));
 }
+
+// ───────── 증강 상세 (도감에서 누르면) ─────────
+
+/** 증강 태그를 사람 말로: 성향(선호)과 필요한 것(조건) */
+export function augmentTraits(a: MayhemAugment): { prefs: string[]; reqs: string[] } {
+  const prefs = a.tags.filter((t) => REASON[t]).map((t) => REASON[t]({} as ChampionProfile));
+  const reqs = a.tags.filter((t) => REQUIRE[t]).map((t) => REQUIRE[t].label);
+  return { prefs: [...new Set(prefs)], reqs };
+}
+
+/** 이 증강이 잘 맞는 챔피언 (잘 맞음 → 무난 순, 같은 단계는 조건 충족·성향 일치가 많은 순) */
+export function championsFor(a: MayhemAugment, champions: Record<number, ChampionProfile>, limit = 15) {
+  const order = { best: 3, good: 2, weak: 1, none: 0 } as const;
+  const all = Object.entries(champions).map(([id, c]) => ({ ...fitOf(c, a), id: Number(id) }));
+  const best = all.filter((f) => f.level === 'best').length;
+  const list = all
+    .filter((f) => f.level === 'best' || f.level === 'good')
+    .sort((x, y) => order[y.level] - order[x.level] || y.weight - x.weight || y.score - x.score)
+    .slice(0, limit);
+  return { list, best, total: all.length };
+}
+
+/** 같은 성향의 증강 (선호·조건 태그가 많이 겹치는 순). 함께 노리면 빌드 방향이 맞는다 */
+export function relatedAugments(a: MayhemAugment, augments: MayhemAugment[], limit = 8) {
+  const key = (x: MayhemAugment) => new Set(x.tags.filter((t) => t !== 'any' && t !== 'gamble' && t !== 'ranged' && t !== 'melee'));
+  const mine = key(a);
+  if (!mine.size) return [];
+  return augments
+    .filter((x) => x.id !== a.id && !x.disabled)
+    .map((x) => {
+      const t = key(x);
+      const inter = [...t].filter((k) => mine.has(k)).length;
+      return { a: x, score: inter / (mine.size + t.size - inter || 1), inter };
+    })
+    .filter((r) => r.inter > 0 && r.score >= 0.34)
+    .sort((x, y) => y.score - x.score || x.a.name.localeCompare(y.a.name, 'ko'))
+    .slice(0, limit)
+    .map((r) => r.a);
+}

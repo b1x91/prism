@@ -64,6 +64,7 @@ function App() {
           <Route path="champions" element={<ChampionsPage member={!!s.me} />} />
           <Route path="champions/:id" element={<ChampionsPage member={!!s.me} />} />
           <Route path="augments" element={<AugmentsPage />} />
+          <Route path="augments/:id" element={<AugmentsPage />} />
           <Route path="ranking" element={<RankingPage s={s} onLogin={login} />} />
           <Route path="me" element={<MemberPage s={s} onLogin={login} />} />
           <Route path="members/:id" element={<MemberPage s={s} onLogin={login} />} />

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, fitOf, guideOf, initials, pct, type AugmentStats, type Fit, type Rarity } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, fitOf, guideOf, initials, pct, relatedAugments, type AugmentStats, type Fit, type Rarity } from '@prism/core';
+import { ChampImg } from './basics';
 import { AugImg, Empty, Seg } from './basics';
 import { Icon } from './icons';
 
@@ -127,7 +128,7 @@ export function AugmentCompare({ championId, stats, preset }: { championId: numb
   );
 }
 
-export function AugmentDex() {
+export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
   const [q, setQ] = useState('');
   const [r, setR] = useState<'all' | Rarity>('all');
   const list = ACTIVE_AUGMENTS.filter((a) => (r === 'all' || a.rarity === r) && (!q || matchAug(a.name, q) || a.desc.includes(q) || a.note.includes(q)))
@@ -144,11 +145,58 @@ export function AugmentDex() {
           <div className="dex-head"><i className={`rdot ${x}`} /><h3>{RARITY_KO[x]}</h3><span className="meta">{list.filter((a) => a.rarity === x).length}개</span></div>
           <div className="adex">
             {list.filter((a) => a.rarity === x).map((a) => (
-              <div key={a.id} className="ai"><AugImg id={a.id} size={44} /><span className="nm"><i className={`rdot ${a.rarity}`} />{a.name}</span><span className="note2">{a.note}</span><p>{a.desc}</p></div>
+              <button type="button" key={a.id} className="ai" onClick={() => onOpen?.(a.id)}><AugImg id={a.id} size={44} /><span className="nm"><i className={`rdot ${a.rarity}`} />{a.name}</span><span className="note2">{a.note}</span><p>{a.desc}</p></button>
             ))}
           </div>
         </section>
       )) : <Empty>찾는 증강이 없습니다.</Empty>}
+    </div>
+  );
+}
+
+/** 증강 상세: 설명, 성향·필요한 것, 잘 맞는 챔피언, 같은 성향 증강 (모두 게임 데이터 기준, 승률 없음) */
+export function AugmentDetail({ id, onChampion, onAugment, onBack }: { id: number; onChampion?: (id: number) => void; onAugment?: (id: number) => void; onBack?: () => void }) {
+  const a = AUGMENT[id];
+  if (!a) return <Empty>없는 증강입니다.</Empty>;
+  const t = augmentTraits(a);
+  const champs = championsFor(a, CHAMPIONS, 18);
+  const related = relatedAugments(a, AUGMENTS, 8);
+  return (
+    <div className="stack" style={{ gap: 16 }}>
+      <section className={`card pad adet ${a.rarity}`}>
+        <div className="adet-head">
+          <AugImg id={a.id} size={72} />
+          <div className="stack" style={{ gap: 8 }}>
+            <div className="row wrapr" style={{ gap: 8 }}><span className={`rpill ${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.disabled && <span className="pill">현재 꺼짐</span>}</div>
+            <h1>{a.name}</h1>
+            {a.note && <p className="note">{a.note}</p>}
+          </div>
+          {onBack && <button type="button" className="btn sm" onClick={onBack}>도감으로</button>}
+        </div>
+        <p className="desc">{a.desc}</p>
+        {(t.prefs.length > 0 || t.reqs.length > 0) && <div className="row wrapr" style={{ gap: 8 }}>
+          {t.prefs.map((x) => <span key={x} className="pill">{x}</span>)}
+          {t.reqs.map((x) => <span key={x} className="pill warn">필요: {x}</span>)}
+        </div>}
+      </section>
+      <section className="card pad">
+        <div className="card-head"><h2>잘 맞는 챔피언</h2><span className="sp" /><span className="meta">잘 맞음 {champs.best}명 / {champs.total}명</span></div>
+        {champs.list.length ? <div className="fit-champs">{champs.list.map((f) => (
+          <button type="button" key={f.id} className="fc" onClick={() => onChampion?.(f.id)}>
+            <ChampImg id={f.id} size={48} />
+            <span className="nm">{CHAMPIONS[f.id]?.name}</span>
+            <span className={`lv ${f.level}`}>{LEVEL_KO[f.level]}</span>
+            <span className="why">{f.reasons.slice(0, 2).join(' · ')}</span>
+          </button>))}</div> : <Empty>특별히 잘 맞는 챔피언이 없는 증강입니다.</Empty>}
+        <p className="meta" style={{ margin: '16px 0 0' }}>챔피언 역할·피해 유형·스킬과 증강 효과를 맞춰 본 어울림입니다. 증강 자체의 세기와는 다를 수 있어요.</p>
+      </section>
+      {related.length > 0 && <section className="card pad">
+        <div className="card-head"><h2>같은 성향의 증강</h2><span className="sp" /><span className="meta">함께 노리면 빌드 방향이 맞아요</span></div>
+        <div className="rel-augs">{related.map((x) => (
+          <button type="button" key={x.id} className="ra" onClick={() => onAugment?.(x.id)}>
+            <AugImg id={x.id} size={36} /><span className="nm"><i className={`rdot ${x.rarity}`} />{x.name}</span><span className="meta">{x.note}</span>
+          </button>))}</div>
+      </section>}
     </div>
   );
 }

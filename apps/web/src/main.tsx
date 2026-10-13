@@ -24,6 +24,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="compare" element={<Compare />} />
             <Route path="compare/:id" element={<Compare />} />
             <Route path="augments" element={<Augments />} />
+            <Route path="augments/:id" element={<Augments />} />
             <Route path="crew" element={<Crew />} />
             <Route path="me" element={<MemberPage />} />
             <Route path="members/:id" element={<MemberPage />} />
