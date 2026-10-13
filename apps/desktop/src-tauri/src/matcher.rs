@@ -91,6 +91,11 @@ impl Matcher {
 
     /// 화면 전체(여러 줄)에서 카드별 증강 ID 를 왼쪽부터 최대 3개. width 는 캡처한 그림 폭
     pub fn find(&self, lines: &[Vec<Word>], width: f32) -> Vec<u32> {
+        self.find_at(lines, width).into_iter().map(|f| f.0).collect()
+    }
+
+    /// find 와 같고, 각 제목의 위치(x, y)도 함께 (다음 확인 때 제목 줄만 읽기 위해)
+    pub fn find_at(&self, lines: &[Vec<Word>], width: f32) -> Vec<(u32, f32, f32)> {
         let mut all: Vec<Hit> = lines.iter().flat_map(|l| self.line_hits(l)).collect();
         all.sort_by(|a, b| a.x.partial_cmp(&b.x).unwrap_or(std::cmp::Ordering::Equal));
         // x 로 묶기 (같은 카드 안의 설명 글자는 제목과 x 가 가깝다)
@@ -102,12 +107,12 @@ impl Matcher {
                 _ => groups.push(vec![h]),
             }
         }
-        let mut out: Vec<u32> = Vec::new();
+        let mut out: Vec<(u32, f32, f32)> = Vec::new();
         for g in groups {
             // 묶음에서 가장 위(제목), 같은 높이면 긴 이름
             if let Some(top) = g.iter().min_by(|a, b| a.y.partial_cmp(&b.y).unwrap_or(std::cmp::Ordering::Equal).then(b.len.cmp(&a.len))) {
-                if !out.contains(&top.id) {
-                    out.push(top.id);
+                if !out.iter().any(|o| o.0 == top.id) {
+                    out.push((top.id, top.x, top.y));
                 }
             }
             if out.len() == 3 {

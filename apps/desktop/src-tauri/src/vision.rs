@@ -15,7 +15,9 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Emitter, Manager};
 
 const AUGMENTS_JSON: &str = include_str!("../../../../packages/core/data/mayhem-augments.json");
-const EVERY: Duration = Duration::from_millis(1500);
+const EVERY: Duration = Duration::from_millis(1200);
+/// 카드가 보이는 동안: 새로고침을 바로 따라가도록 자주, 제목 줄만 좁게 읽는다
+const FAST: Duration = Duration::from_millis(350);
 const IDLE: Duration = Duration::from_secs(4);
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -206,32 +208,56 @@ mod imp {
         let eng = engine();
         v.report.lock().unwrap().engine = if eng.is_some() { "ok".into() } else { "no-korean".into() };
         let mut misses = 0;
+        // 제목 줄 (찾는 영역 안에서의 y, 높이). 카드가 보이는 동안만 쓴다
+        let mut band: Option<(i32, i32)> = None;
+        let mut last: Vec<u32> = Vec::new();
         loop {
             let s = v.settings.lock().unwrap().clone();
             let game = if s.enabled { game_window() } else { None };
             let front = game.filter(|h| unsafe { GetForegroundWindow() } == *h);
             let (Some(h), Some(eng)) = (front, eng.as_ref()) else {
                 v.hide(&app);
+                band = None;
+                last.clear();
                 std::thread::sleep(if game.is_some() { EVERY } else { IDLE });
                 continue;
             };
             let Some(rc) = client_rect(h) else { std::thread::sleep(EVERY); continue };
             let (x, y, w, hh) = region(&rc);
             if w < 200 || hh < 100 { std::thread::sleep(EVERY); continue; }
-            let found = grab(x, y, w, hh).and_then(|buf| recognize(eng, &buf, w, hh).ok());
+            // 카드가 떠 있으면 제목 줄만, 아니면 넓게
+            let (by, bh) = band.unwrap_or((0, hh));
+            let found = grab(x, y + by, w, bh).and_then(|buf| recognize(eng, &buf, w, bh).ok());
+            let shown = v.shown.load(Ordering::SeqCst);
             match found {
                 Some((lines, text)) => {
-                    let ids = v.matcher.find(&lines, w as f32);
-                    if ids.len() >= 2 {
+                    let hits = v.matcher.find_at(&lines, w as f32);
+                    if hits.len() >= 2 {
                         misses = 0;
-                        v.publish(&app, ids, text);
-                        show_overlay(&app, &rc, &s.position);
-                        v.shown.store(true, Ordering::SeqCst);
+                        if band.is_none() {
+                            // 제목 줄 위아래로 여유를 두고 기억
+                            let top = hits.iter().map(|h| h.2).fold(f32::MAX, f32::min) as i32;
+                            let bottom = hits.iter().map(|h| h.2).fold(0.0, f32::max) as i32;
+                            let m = (hh * 6 / 100).max(24);
+                            let y0 = (top - m).max(0);
+                            band = Some((y0, (bottom - y0 + m * 2).min(hh - y0)));
+                        }
+                        let ids: Vec<u32> = hits.iter().map(|h| h.0).collect();
+                        if ids != last || !shown {
+                            last = ids.clone();
+                            v.publish(&app, ids, text);
+                            show_overlay(&app, &rc, &s.position);
+                            v.shown.store(true, Ordering::SeqCst);
+                        }
                     } else {
                         misses += 1;
                         v.report.lock().unwrap().last_text = text.chars().take(400).collect();
-                        // 고른 뒤 카드가 사라지면 두 번 연속 못 찾을 때 닫는다
-                        if misses >= 2 && v.shown.load(Ordering::SeqCst) {
+                        if band.is_some() && misses >= 2 {
+                            // 제목 줄에서 못 찾으면 넓게 다시 (창 크기가 바뀌었을 수도)
+                            band = None;
+                        } else if band.is_none() && misses >= 3 && shown {
+                            // 고른 뒤 카드가 사라짐
+                            last.clear();
                             v.publish(&app, vec![], String::new());
                             v.hide(&app);
                         }
@@ -239,7 +265,7 @@ mod imp {
                 }
                 None => misses += 1,
             }
-            std::thread::sleep(EVERY);
+            std::thread::sleep(if v.shown.load(Ordering::SeqCst) { FAST } else { EVERY });
         }
     }
 
