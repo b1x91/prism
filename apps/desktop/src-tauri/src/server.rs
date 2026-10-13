@@ -6,8 +6,13 @@ use std::time::Duration;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 
-/// 서버 주소: 빌드할 때 PRISM_SERVER 로 넣는다 (없으면 모임 기능 꺼짐)
-pub const SERVER: Option<&str> = option_env!("PRISM_SERVER");
+/// 서버 주소: 빌드할 때 PRISM_SERVER 로 넣는다. 없거나 비어 있으면 모임 기능 꺼짐
+/// (CI 에서 서버가 아직 없으면 빈 문자열로 들어오므로 http(s) 주소일 때만 쓴다)
+pub fn server_url() -> Option<&'static str> {
+    option_env!("PRISM_SERVER")
+        .map(|s| s.trim().trim_end_matches('/'))
+        .filter(|s| s.starts_with("https://") || s.starts_with("http://"))
+}
 
 #[derive(Default, Serialize, Deserialize)]
 struct Config {
@@ -37,12 +42,12 @@ impl Server {
     }
 
     pub fn logged_in(&self) -> bool {
-        SERVER.is_some() && self.load().token.is_some()
+        server_url().is_some() && self.load().token.is_some()
     }
 
     /// 서버 호출. 401 이면 저장된 토큰을 지운다
     pub async fn call(&self, method: &str, path: &str, body: Option<serde_json::Value>) -> Result<serde_json::Value, String> {
-        let base = SERVER.ok_or("Prism 모임 기능은 곧 열립니다.")?;
+        let base = server_url().ok_or("Prism 모임 기능은 곧 열립니다.")?;
         if !path.starts_with('/') {
             return Err("잘못된 경로".into());
         }
@@ -86,7 +91,7 @@ impl Server {
 
     /// 디스코드 로그인: 내 PC 의 임시 주소(127.0.0.1)로 1회용 code 를 받아 토큰으로 바꾼다
     pub async fn login(&self, open: impl Fn(String)) -> Result<(), String> {
-        let base = SERVER.ok_or("Prism 모임 기능은 곧 열립니다.")?;
+        let base = server_url().ok_or("Prism 모임 기능은 곧 열립니다.")?;
         let listener = TcpListener::bind("127.0.0.1:0").await.map_err(|e| e.to_string())?;
         let port = listener.local_addr().map_err(|e| e.to_string())?.port();
         let back = format!("http://127.0.0.1:{port}/done");

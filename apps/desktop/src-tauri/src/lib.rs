@@ -33,7 +33,7 @@ async fn api(app: State<'_, Arc<App>>, method: String, path: String, body: Optio
 
 #[tauri::command]
 fn session(app: State<'_, Arc<App>>) -> serde_json::Value {
-    serde_json::json!({ "configured": server::SERVER.is_some(), "loggedIn": app.server.logged_in() })
+    serde_json::json!({ "configured": server::server_url().is_some(), "loggedIn": app.server.logged_in() })
 }
 
 #[tauri::command]
