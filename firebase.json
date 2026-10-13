@@ -1,13 +1,45 @@
 {
   "hosting": {
     "site": "przm",
-    "public": "site/dist",
-    "ignore": ["**/.*"],
+    "public": "apps/web/dist",
+    "ignore": [
+      "**/.*"
+    ],
     "cleanUrls": true,
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
     "headers": [
-      { "source": "/img/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=604800" }] },
-      { "source": "/fonts/**", "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }] },
-      { "source": "/app.js", "headers": [{ "key": "Cache-Control", "value": "public, max-age=300" }] }
+      {
+        "source": "/assets/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "/img/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=604800"
+          }
+        ]
+      },
+      {
+        "source": "/fonts/**",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=31536000, immutable"
+          }
+        ]
+      }
     ]
   }
 }

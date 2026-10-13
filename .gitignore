@@ -8,3 +8,7 @@ server/.dev.vars
 site/dist/
 site/.cache/
 .firebase/
+packages/assets/public/img/
+apps/*/dist/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/

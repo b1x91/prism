@@ -1,0 +1,142 @@
+import { useMemo, useState } from 'react';
+import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, fitOf, guideOf, initials, pct, type AugmentStats, type Fit, type Rarity } from '@prism/core';
+import { AugImg, Empty, Seg } from './basics';
+import { Icon } from './icons';
+
+const ORDER: Rarity[] = ['prismatic', 'gold', 'silver'];
+type StatMap = Record<number, { n: number; w: number }>;
+const toMap = (rows?: { id: number; n: number; w: number }[]): StatMap => Object.fromEntries((rows ?? []).map((r) => [r.id, r]));
+
+function StatLine({ id, champ, all }: { id: number; champ: StatMap; all: StatMap }) {
+  const c = champ[id], o = all[id];
+  if (c?.n) return <span className="stat2">이 챔피언 <b>{pct(c.w, c.n)}</b> {c.n}판</span>;
+  if (o?.n) return <span className="stat2">모임 <b>{pct(o.w, o.n)}</b> {o.n}판</span>;
+  return null;
+}
+
+function GuideRow({ f, showLevel, compact, champ, all, stats }: { f: Fit; showLevel: boolean; compact?: boolean; champ: StatMap; all: StatMap; stats: boolean }) {
+  const a = AUGMENT[f.id];
+  if (!a) return null;
+  return (
+    <div className={`ga ${f.level}`}>
+      <AugImg id={a.id} />
+      <span className="nm" title={a.name}>{a.name}</span>
+      {showLevel ? <span className={`lv ${f.level}`}>{LEVEL_KO[f.level]}</span> : <span />}
+      <div className="why">
+        {f.missing ? <b>{f.missing}</b> : f.reasons.map((r) => <span key={r}>{r}</span>)}
+        {stats && <StatLine id={a.id} champ={champ} all={all} />}
+      </div>
+      {!compact && <details><summary>{a.note || '효과 보기'}</summary><p>{a.desc}</p></details>}
+    </div>
+  );
+}
+
+/** 챔피언 하나의 등급별 증강 궁합. stats 가 있으면 Prism 실전 승률을 붙인다 (회원 전용) */
+export function AugmentGuide({ championId, stats, compact }: { championId: number; stats?: AugmentStats | null; compact?: boolean }) {
+  const g = useMemo(() => guideOf(GAME_DATA, championId), [championId]);
+  const [all, setAll] = useState(false);
+  const [more, setMore] = useState<Record<Rarity, boolean>>({ prismatic: false, gold: false, silver: false });
+  if (!g) return <Empty>챔피언 정보가 없습니다.</Empty>;
+  const champ = toMap(stats?.champion), overall = toMap(stats?.overall);
+  return (
+    <div className="stack">
+      {!compact && <div className="row"><Seg value={all ? 'all' : 'fit'} options={[['fit', '잘 맞는 것'], ['all', '전체 비교']]} onChange={(v) => setAll(v === 'all')} /></div>}
+      <div className="gcols">
+        {ORDER.map((r) => {
+          const list = all && !compact ? g[r] : g[r].filter((f) => f.level === 'best');
+          const limit = compact ? 4 : more[r] ? list.length : 8;
+          return (
+            <div key={r} className="card gcol">
+              <h3><i className={`rbar ${r}`} />{RARITY_KO[r]}<span className="meta">잘 맞음 {g[r].filter((f) => f.level === 'best').length}개</span></h3>
+              {list.slice(0, limit).map((f) => <GuideRow key={f.id} f={f} showLevel={all && !compact} compact={compact} champ={champ} all={overall} stats={Boolean(stats)} />)}
+              {!list.length && <p className="meta">없음</p>}
+              {!compact && list.length > limit && <button type="button" className="btn ghost sm" onClick={() => setMore({ ...more, [r]: true })}>{list.length - limit}개 더 보기</button>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const matchAug = (name: string, q: string) => { const t = q.trim().replace(/\s/g, ''); const n = name.replace(/\s/g, ''); return !t || n.includes(t) || initials(n).includes(t); };
+
+/**
+ * 증강 3개 비교: 게임 중 화면에 뜬 증강 3개를 직접 골라 넣으면 내 챔피언과의 어울림 순으로 보여준다.
+ * 게임 화면을 읽지 않는다 (사용자가 고른다). 같은 등급끼리 뜨므로 등급 필터를 먼저 둔다.
+ */
+export function AugmentCompare({ championId, stats }: { championId: number; stats?: AugmentStats | null }) {
+  const [rarity, setRarity] = useState<Rarity>('gold');
+  const [q, setQ] = useState('');
+  const [picked, setPicked] = useState<number[]>([]);
+  const c = CHAMPIONS[championId];
+  const champ = toMap(stats?.champion), overall = toMap(stats?.overall);
+  const pool = ACTIVE_AUGMENTS.filter((a) => a.rarity === rarity && matchAug(a.name, q)).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+  const fits = c ? picked.map((id) => fitOf(c, AUGMENT[id])) : [];
+  const rank = (f: Fit) => ({ best: 3, good: 2, weak: 1, none: 0 })[f.level] * 1000 + f.weight * 100 + f.score;
+  const ordered = [...fits].sort((a, b) => rank(b) - rank(a));
+  const top = ordered.length >= 2 ? ordered[0] : null;
+  const add = (id: number) => { if (picked.length < 3 && !picked.includes(id)) { setPicked([...picked, id]); setQ(''); } };
+  return (
+    <div className="stack">
+      <div className="cmp-slots">
+        {[0, 1, 2].map((i) => {
+          const id = picked[i];
+          const f = fits[i];
+          if (!id || !f) return <div key={i} className="slot"><span className="ph">증강 {i + 1} 고르기</span></div>;
+          const order = ordered.indexOf(f) + 1;
+          return (
+            <div key={i} className={`slot filled ${top && top === f ? 'top' : ''}`}>
+              <AugImg id={id} size={48} />
+              <span className="nm">{AUGMENT[id].name}</span>
+              <span className="why meta">{f.missing ?? f.reasons.join(' · ')}</span>
+              <span className="rank"><span className={`lv ${f.level}`}>{picked.length >= 2 ? `${order}위 · ` : ''}{LEVEL_KO[f.level]}</span></span>
+              <button type="button" className="btn ghost sm x" onClick={() => setPicked(picked.filter((x) => x !== id))} aria-label="빼기"><Icon name="x" /></button>
+            </div>
+          );
+        })}
+      </div>
+      {top && (
+        <div className="verdict">
+          <span className="meta">{c?.name}에게는</span>
+          <b>{AUGMENT[top.id].name}</b>
+          <span className="muted">{AUGMENT[top.id].note}</span>
+          {stats && <StatLine id={top.id} champ={champ} all={overall} />}
+        </div>
+      )}
+      <div className="card pad">
+        <div className="row wrapr" style={{ marginBottom: 12 }}>
+          <Seg value={rarity} options={ORDER.map((r) => [r, RARITY_KO[r]] as [Rarity, string])} onChange={(r) => { setRarity(r); setPicked([]); }} />
+          <input className="input" style={{ flex: 1, minWidth: 180 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="증강 이름 (초성 가능)" onKeyDown={(e) => { if (e.key === 'Enter' && pool[0]) add(pool[0].id); }} />
+          {picked.length > 0 && <button type="button" className="btn sm" onClick={() => setPicked([])}>비우기</button>}
+        </div>
+        <div className="aug-pick">
+          {pool.map((a) => <button key={a.id} type="button" disabled={picked.length >= 3 || picked.includes(a.id)} onClick={() => add(a.id)}><AugImg id={a.id} size={28} />{a.name}</button>)}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AugmentDex() {
+  const [q, setQ] = useState('');
+  const [r, setR] = useState<'all' | Rarity>('all');
+  const list = ACTIVE_AUGMENTS.filter((a) => (r === 'all' || a.rarity === r) && (!q || matchAug(a.name, q) || a.desc.includes(q) || a.note.includes(q)))
+    .sort((a, b) => ORDER.indexOf(a.rarity) - ORDER.indexOf(b.rarity) || a.name.localeCompare(b.name, 'ko'));
+  return (
+    <div className="stack">
+      <div className="row wrapr">
+        <input className="input" style={{ flex: 1, minWidth: 200 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름·효과 검색 (예: 치명타, 보호막, ㅂㅅ)" />
+        <Seg value={r} options={[['all', '전체'], ...ORDER.map((x) => [x, RARITY_KO[x]] as [Rarity, string])]} onChange={setR} />
+        <span className="meta">{list.length}개</span>
+      </div>
+      {list.length ? (
+        <div className="adex">
+          {list.map((a) => (
+            <div key={a.id} className="ai"><AugImg id={a.id} size={44} /><span className="nm"><i className={`rdot ${a.rarity}`} />{a.name}</span><span className="note2">{a.note}</span><p>{a.desc}</p></div>
+          ))}
+        </div>
+      ) : <Empty>찾는 증강이 없습니다.</Empty>}
+    </div>
+  );
+}

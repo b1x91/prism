@@ -25,6 +25,19 @@ export async function getMe(env: Env, me: Member) {
   });
 }
 
+/** 내 판 목록 (최근 100판). 웹·앱의 "내 기록" 화면용. 본인 것만 */
+export async function myGames(env: Env, me: Member) {
+  const r = await env.DB.prepare(
+    `SELECT p.game_id AS gameId, p.played_at AS playedAt, m.duration AS duration, p.champion_id AS championId, p.win, p.kills, p.deaths, p.assists,
+            p.dmg_champ AS damageToChampions, p.dmg_taken AS damageTaken, p.gold AS goldEarned, p.items, p.augments
+     FROM participants p JOIN matches m ON m.game_id = p.game_id WHERE p.member_id = ? ORDER BY p.played_at DESC LIMIT 100`,
+  )
+    .bind(me.id)
+    .all();
+  const games = r.results.map((g: any) => ({ ...g, win: g.win === 1, items: g.items ? JSON.parse(g.items) : [], augments: g.augments ? JSON.parse(g.augments) : [] }));
+  return json({ games });
+}
+
 /** 앱이 로그인된 롤 계정을 연결한다. 클라이언트에 로그인된 계정이라 아이콘 인증을 대신한다 */
 export async function linkRiot(req: Request, env: Env, me: Member) {
   const { puuid, riotId } = (await req.json().catch(() => ({}))) as { puuid?: string; riotId?: string };

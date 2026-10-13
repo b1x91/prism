@@ -1,12 +1,13 @@
-# 공개 사이트(przm.web.app) 를 Firebase Hosting 에 배포
+# 웹(przm.web.app) 를 Firebase Hosting 에 배포
 # main 에 사이트·증강 데이터 변경이 들어오면 자동, 또는 Actions 탭에서 수동 실행(브랜치 선택 가능)
-# 필요한 저장소 설정: Secret FIREBASE_SERVICE_ACCOUNT (서비스 계정 JSON 전체), Variable FIREBASE_PROJECT_ID
+# 필요한 저장소 설정: Secret FIREBASE_SERVICE_ACCOUNT (서비스 계정 JSON 전체), Variables FIREBASE_PROJECT_ID
+# 선택: Variables PRISM_SERVER_URL (회원 서버 주소), DISCORD_INVITE_URL, KAKAO_OPENCHAT_URL
 name: deploy-site
 
 on:
   push:
     branches: [main]
-    paths: ['site/**', 'app/data/**', 'app/synergy-core.ts', 'app/public/brand/**', 'firebase.json', 'scripts/build-site.mjs', '.github/workflows/deploy-site.yml']
+    paths: ['apps/web/**', 'packages/**', 'firebase.json', 'scripts/fetch-icons.mjs', '.github/workflows/deploy-site.yml']
   workflow_dispatch:
 
 concurrency: deploy-site
@@ -22,8 +23,11 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run site:check
-      - run: npm run site:build
+      - run: npm run web:build
+        env:
+          VITE_PRISM_SERVER: ${{ vars.PRISM_SERVER_URL }}
+          VITE_DISCORD_URL: ${{ vars.DISCORD_INVITE_URL }}
+          VITE_KAKAO_URL: ${{ vars.KAKAO_OPENCHAT_URL }}
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

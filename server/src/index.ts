@@ -4,10 +4,10 @@
  * /links 는 공개(디스코드·카카오톡 주소). 가입 전인 사람도 들어올 길이 있어야 하므로.
  */
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
-import { addTip, augmentStats, board, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setConsent, setProfile, toggleLike } from './crew.js';
+import { addTip, augmentStats, board, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setConsent, setProfile, toggleLike } from './crew.js';
 import { ingest } from './ingest.js';
 import { addNote, deleteNote, links, listNotes } from './notes.js';
-import { HttpError, json, type Env } from './util.js';
+import { HttpError, json, webOrigins, type Env } from './util.js';
 
 async function route(req: Request, env: Env): Promise<Response> {
   const { pathname } = new URL(req.url);
@@ -25,6 +25,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   const me = await authenticate(req, env);
 
   if (m === 'GET' && pathname === '/api/me') return getMe(env, me);
+  if (m === 'GET' && pathname === '/api/me/games') return myGames(env, me);
   if (m === 'POST' && pathname === '/api/me/riot') return linkRiot(req, env, me);
   if (m === 'POST' && pathname === '/api/me/consent') return setConsent(req, env, me);
   if (m === 'POST' && pathname === '/api/me/profile') return setProfile(req, env, me);
@@ -52,14 +53,38 @@ async function route(req: Request, env: Env): Promise<Response> {
   throw new HttpError(404, 'not found');
 }
 
+/** 등록된 웹 사이트에서 오는 요청만 CORS 허용 (토큰은 Authorization 헤더, 쿠키 안 씀) */
+function withCors(req: Request, env: Env, res: Response): Response {
+  const origin = req.headers.get('Origin');
+  if (!origin || !webOrigins(env).includes(origin)) return res;
+  const r = new Response(res.body, res);
+  r.headers.set('Access-Control-Allow-Origin', origin);
+  r.headers.set('Vary', 'Origin');
+  return r;
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
+    if (req.method === 'OPTIONS') {
+      const origin = req.headers.get('Origin');
+      if (!origin || !webOrigins(env).includes(origin)) return new Response(null, { status: 403 });
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': origin,
+          'Access-Control-Allow-Methods': 'GET, POST, DELETE',
+          'Access-Control-Allow-Headers': 'Authorization, Content-Type',
+          'Access-Control-Max-Age': '86400',
+          Vary: 'Origin',
+        },
+      });
+    }
     try {
-      return await route(req, env);
+      return withCors(req, env, await route(req, env));
     } catch (e) {
-      if (e instanceof HttpError) return json({ error: e.message }, e.status);
+      if (e instanceof HttpError) return withCors(req, env, json({ error: e.message }, e.status));
       console.error(e);
-      return json({ error: '서버 오류가 발생했습니다.' }, 500);
+      return withCors(req, env, json({ error: '서버 오류가 발생했습니다.' }, 500));
     }
   },
 

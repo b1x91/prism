@@ -20,4 +20,6 @@ ADMIN_DISCORD_IDS = ""
 # 모임 소통 창구. 앱 사이드바·모임 화면의 바로가기 버튼으로 나간다 (비어 있으면 버튼을 숨긴다)
 DISCORD_INVITE_URL = ""
 KAKAO_OPENCHAT_URL = ""
+# 웹 사이트 주소 (로그인 후 돌아갈 곳, CORS 허용). 쉼표 구분
+WEB_ORIGINS = "https://przm.web.app,https://przm.gg"
 # 비밀값은 wrangler secret put DISCORD_CLIENT_SECRET 로 넣는다 (파일에 쓰지 않는다)

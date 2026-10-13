@@ -10,7 +10,7 @@
  *   - 챔피언:      plugins/.../ko_kr/v1/champions/{id}.json  (역할, 피해 유형, 스킬 설명)
  * 궁합 태그는 사람이 붙인 표(augment-tags.ts)를 합친다.
  *
- * 결과: app/data/mayhem-augments.json, app/data/mayhem-champions.json
+ * 결과: packages/core/data/mayhem-augments.json, packages/core/data/mayhem-champions.json
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
@@ -19,7 +19,7 @@ import { AUGMENT_TAGS } from './augment-tags.js';
 
 const RAW = 'https://raw.communitydragon.org/latest';
 const PLUGIN = `${RAW}/plugins/rcp-be-lol-game-data/global/ko_kr/v1`;
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'app', 'data');
+const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'packages', 'core', 'data');
 
 async function get<T>(url: string): Promise<T> {
   for (let i = 0; ; i++) {

@@ -1,0 +1,43 @@
+/**
+ * 챔피언·증강 아이콘을 CommunityDragon 에서 받아 packages/assets/public/img 에 둔다 (웹·앱이 함께 묶어 넣는다).
+ * 이미 있는 파일은 다시 받지 않는다. 저장소에는 올리지 않는다 (빌드 때 받는다).
+ *   npm run icons
+ */
+import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const OUT = join(ROOT, 'packages', 'assets', 'public', 'img');
+const DATA = join(ROOT, 'packages', 'core', 'data');
+const CDRAGON = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/';
+
+const augs = JSON.parse(await readFile(join(DATA, 'mayhem-augments.json'), 'utf8')).augments;
+const champs = JSON.parse(await readFile(join(DATA, 'mayhem-champions.json'), 'utf8')).champions;
+const jobs = [
+  ...Object.keys(champs).map((id) => ({ url: `${CDRAGON}v1/champion-icons/${id}.png`, out: `champ/${id}.png` })),
+  ...augs.filter((a) => a.icon).map((a) => ({ url: CDRAGON + a.icon.replace('/lol-game-data/assets/', '').toLowerCase(), out: `aug/${a.id}.png` })),
+];
+const exists = (p) => access(p).then(() => true, () => false);
+let fetched = 0;
+const failed = [];
+async function one(j) {
+  const file = join(OUT, j.out);
+  if (await exists(file)) return;
+  for (let i = 0; ; i++) {
+    try {
+      const r = await fetch(j.url, { signal: AbortSignal.timeout(30_000) });
+      if (!r.ok) throw new Error(String(r.status));
+      await mkdir(dirname(file), { recursive: true });
+      await writeFile(file, Buffer.from(await r.arrayBuffer()));
+      fetched++;
+      return;
+    } catch (e) {
+      if (i >= 2) { failed.push(`${j.out} (${e.message})`); return; }
+      await new Promise((ok) => setTimeout(ok, 1500 * (i + 1)));
+    }
+  }
+}
+for (let i = 0; i < jobs.length; i += 12) await Promise.all(jobs.slice(i, i + 12).map(one));
+console.log(`아이콘 ${jobs.length}개 준비 (새로 받음 ${fetched})`);
+if (failed.length) { console.error(`실패 ${failed.length}개: ${failed.slice(0, 10).join(', ')}`); process.exitCode = 1; }

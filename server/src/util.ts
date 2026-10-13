@@ -7,6 +7,7 @@ export interface Env {
   PUBLIC_URL: string; // 이 Worker 의 외부 주소 (OAuth redirect_uri 용)
   DISCORD_INVITE_URL?: string; // 모임 디스코드 초대 주소 (공개)
   KAKAO_OPENCHAT_URL?: string; // 모임 카카오톡 오픈채팅 주소 (공개)
+  WEB_ORIGINS?: string; // 웹 사이트 주소 (쉼표 구분). 예: https://przm.web.app,https://przm.gg
   DEV_LOGIN?: string; // '1' 이면 로컬 개발용 가짜 로그인 허용. 배포 환경에서는 절대 켜지 않는다
 }
 
@@ -56,6 +57,22 @@ export async function sha256(text: string): Promise<string> {
 }
 
 /** 앱이 로컬에서 받는 콜백만 허용한다 (127.0.0.1 / localhost) */
+/** 웹 사이트 주소 목록 (쉼표 구분 vars WEB_ORIGINS). 로그인 후 돌아갈 곳과 CORS 허용에 쓴다 */
+export function webOrigins(env: Env): string[] {
+  return (env.WEB_ORIGINS ?? '').split(',').map((s) => s.trim().replace(/\/$/, '')).filter(Boolean);
+}
+
+/** 로그인 후 돌아갈 주소: 앱 루프백 또는 등록된 웹 사이트 */
+export function allowedRedirect(url: string, env: Env): boolean {
+  if (isLoopback(url)) return true;
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' ? webOrigins(env).includes(u.origin) : webOrigins(env).includes(u.origin) && u.hostname === 'localhost';
+  } catch {
+    return false;
+  }
+}
+
 export function isLoopback(url: string): boolean {
   try {
     const u = new URL(url);

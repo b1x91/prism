@@ -1,0 +1,7 @@
+{
+  "name": "@prism/web",
+  "private": true,
+  "type": "module",
+  "scripts": { "dev": "vite", "build": "tsc --noEmit -p . && vite build", "preview": "vite preview" },
+  "dependencies": { "@prism/core": "*", "@prism/ui": "*", "react": "^19.3.0", "react-dom": "^19.3.0", "react-router-dom": "^7.18.4" }
+}

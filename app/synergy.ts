@@ -4,11 +4,11 @@
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { guideOf, type ChampionProfile, type MayhemAugment } from './synergy-core.js';
+import { guideOf, type ChampionProfile, type MayhemAugment } from '../packages/core/src/synergy.js';
 
-export type { ChampionProfile, MayhemAugment } from './synergy-core.js';
+export type { ChampionProfile, MayhemAugment } from '../packages/core/src/synergy.js';
 
-const DATA = join(dirname(fileURLToPath(import.meta.url)), 'data');
+const DATA = join(dirname(fileURLToPath(import.meta.url)), '..', 'packages', 'core', 'data');
 
 export const mayhem: { version: string; augments: MayhemAugment[]; champions: Record<number, ChampionProfile> } = { version: '', augments: [], champions: {} };
 

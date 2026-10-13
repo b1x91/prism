@@ -1,11 +1,11 @@
 /**
- * 로그인 흐름 (앱 기준):
+ * 로그인 흐름 (앱은 루프백 주소, 웹은 WEB_ORIGINS 에 등록된 주소로 돌아간다):
  *   앱 → 브라우저로 /auth/discord/start?redirect=http://127.0.0.1:5199/auth/done
  *   → 디스코드 승인 → /auth/discord/callback → 서버 멤버 확인 → members upsert
  *   → 1회용 code 와 함께 앱 로컬 주소로 리다이렉트 → 앱이 POST /api/app/token 으로 토큰 교환
  * 등급은 DB 가 진실. 디스코드 역할은 읽지 않는다 (CLAUDE.md 6-1).
  */
-import { HttpError, isLoopback, json, randomToken, sha256, type Env, type Member } from './util.js';
+import { allowedRedirect, HttpError, json, randomToken, sha256, type Env, type Member } from './util.js';
 
 const STATE_TTL = 10 * 60_000;
 const CODE_TTL = 60_000;
@@ -35,7 +35,7 @@ async function discordFetch(url: string, init: RequestInit) {
 
 export async function startDiscord(req: Request, env: Env) {
   const redirect = new URL(req.url).searchParams.get('redirect') ?? '';
-  if (!isLoopback(redirect)) throw new HttpError(400, '허용되지 않은 redirect 입니다.');
+  if (!allowedRedirect(redirect, env)) throw new HttpError(400, '허용되지 않은 redirect 입니다.');
   const state = randomToken(16);
   await env.DB.prepare('INSERT INTO oauth_states (state, redirect, expires_at) VALUES (?, ?, ?)').bind(state, redirect, Date.now() + STATE_TTL).run();
   const u = new URL('https://discord.com/oauth2/authorize');
@@ -53,7 +53,7 @@ export async function discordCallback(req: Request, env: Env) {
   const st = await env.DB.prepare('DELETE FROM oauth_states WHERE state = ? RETURNING redirect, expires_at')
     .bind(q.get('state') ?? '')
     .first<{ redirect: string; expires_at: number }>();
-  if (!st || st.expires_at < Date.now()) return page('로그인 실패', '로그인 요청이 만료되었습니다. 앱에서 다시 시도해주세요.', 400);
+  if (!st || st.expires_at < Date.now()) return page('로그인 실패', '로그인 요청이 만료되었습니다. 다시 시도해주세요.', 400);
   if (!q.get('code')) return page('로그인 취소', '디스코드 로그인이 취소되었습니다.', 400);
 
   const tokenRes = await discordFetch(`${DISCORD_API}/oauth2/token`, {
@@ -88,7 +88,7 @@ export async function devLogin(req: Request, env: Env) {
   if (env.DEV_LOGIN !== '1') throw new HttpError(404, 'not found');
   const q = new URL(req.url).searchParams;
   const redirect = q.get('redirect') ?? '';
-  if (!isLoopback(redirect)) throw new HttpError(400, '허용되지 않은 redirect 입니다.');
+  if (!allowedRedirect(redirect, env)) throw new HttpError(400, '허용되지 않은 redirect 입니다.');
   const id = q.get('id') ?? 'dev-1';
   return finishLogin(env, redirect, id, q.get('name') ?? id, null);
 }
