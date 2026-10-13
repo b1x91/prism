@@ -1,5 +1,6 @@
 # Windows 앱(Prism.exe 설치 파일) 빌드
-# 태그 app-v* 를 올리면 GitHub Release 에 설치 파일을 붙인다. Actions 탭에서 수동 실행하면 빌드 결과물(Artifacts)로만 남긴다.
+# 태그 app-v* 를 올리거나, Actions 탭에서 수동 실행 + "릴리스로 공개" 를 켜면 GitHub Release(app-v<버전>)에 설치 파일을 붙인다.
+# 수동 실행에서 끄면 빌드 결과물(Artifacts)로만 남긴다.
 # 회원 서버 주소: Variables PRISM_SERVER_URL, 없으면 Cloudflare 계정에서 찾는다 (서버가 없으면 모임 기능 없이 가이드만 동작)
 # 설치 파일은 항상 같은 이름(Prism-Setup.exe)으로 올려서 웹의 "앱 받기" 주소가 바뀌지 않게 한다
 # 앱 버전은 apps/desktop/src-tauri/tauri.conf.json 의 version
@@ -9,6 +10,11 @@ on:
   push:
     tags: ['app-v*']
   workflow_dispatch:
+    inputs:
+      release:
+        description: 릴리스로 공개 (웹의 "앱 받기"가 이 파일을 받는다)
+        type: boolean
+        default: true
 
 permissions:
   contents: write
@@ -46,8 +52,15 @@ jobs:
         with:
           name: prism-windows
           path: Prism-Setup.exe
-      - if: startsWith(github.ref, 'refs/tags/app-v')
+      - name: 버전
+        id: ver
+        shell: bash
+        run: echo "tag=app-v$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
+      - if: startsWith(github.ref, 'refs/tags/app-v') || inputs.release
         uses: softprops/action-gh-release@v2
         with:
           files: Prism-Setup.exe
-          name: Prism 앱 ${{ github.ref_name }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/app-v') && github.ref_name || steps.ver.outputs.tag }}
+          target_commitish: ${{ github.sha }}
+          name: Prism 앱 ${{ startsWith(github.ref, 'refs/tags/app-v') && github.ref_name || steps.ver.outputs.tag }}
+          make_latest: true

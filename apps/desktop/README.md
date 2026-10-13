@@ -47,7 +47,8 @@ apps/desktop/
 GitHub Actions `build-desktop` (Windows). 회원 서버 주소는 Variables `PRISM_SERVER_URL`, 없으면 Cloudflare 계정에서 찾아 앱에 넣는다 (서버가 없으면 모임 기능 없이 가이드만).
 - 태그 `app-v0.5.0` 을 올리면 GitHub Release 에 `Prism-Setup.exe` 가 붙는다. 이름이 항상 같아서 받는 주소가 고정된다:
   `https://github.com/b1x91/prism/releases/latest/download/Prism-Setup.exe` (웹의 "앱 받기")
-- Actions 탭에서 수동 실행하면 Artifacts 로만 남는다
+- 또는 Actions 탭 → build-desktop → Run workflow ("릴리스로 공개" 켜짐) → 버전(`tauri.conf.json`)으로 태그와 Release 를 만든다. 끄면 Artifacts 로만 남는다
+- 새 버전을 낼 때는 `tauri.conf.json` 의 `version` 을 올린 뒤 실행한다 (같은 버전이면 기존 Release 의 파일이 바뀐다)
 - 버전은 `src-tauri/tauri.conf.json` 의 `version`
 - 코드 서명 인증서가 없어서 처음 실행할 때 SmartScreen 경고가 뜬다 ("추가 정보 → 실행"). 회원 안내에 적어둔다
 
