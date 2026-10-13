@@ -72,3 +72,10 @@ main { min-height: calc(100vh - 64px - 120px); }
 .cta-band p { margin: 0 auto var(--s6); max-width: 520px; color: var(--text-2); font-size: var(--fs-lg); }
 .cta-band .channels { justify-content: center; }
 @media (max-width: 640px) { .cta-band { padding: var(--s7) var(--s5); } .cta-band h2 { font-size: var(--fs-2xl); } }
+
+/* 앱 안내 */
+.app-band { display: flex; align-items: center; justify-content: space-between; gap: var(--s6); }
+.app-band h2 { margin: 0; font-size: var(--fs-xl); font-weight: 800; letter-spacing: -.01em; }
+.app-band p { margin: 0; max-width: 640px; }
+.app-band .eyebrow { font-size: var(--fs-sm); font-weight: 700; color: var(--accent); }
+@media (max-width: 720px) { .app-band { flex-direction: column; align-items: stretch; } }

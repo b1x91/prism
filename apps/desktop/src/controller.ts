@@ -1,0 +1,202 @@
+/**
+ * 앱의 흐름: 롤 클라이언트 확인 주기, 전적 정리, 챔프 선택, 업로드, 회원 대신 수집.
+ * 원칙 (CLAUDE.md v3.1-4·5): 게임 중에는 롤에 요청 0, 확인 간격은 상황별.
+ */
+import { MAYHEM_QUEUE, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
+import { api, bridge } from './bridge';
+
+const INTERVAL = { noClient: 20_000, inGame: 30_000, idle: 15_000, champSelect: 5_000, error: 10_000 };
+const HISTORY_PAGES = 5; // 20판 × 5 = 최근 100판
+const HISTORY_EVERY = 10 * 60_000;
+const AFTER_GAME = 3 * 60_000; // 게임 직후 새 판이 뜰 때까지 30초마다 다시 읽는다
+const CREW_EVERY = 30 * 60_000;
+const CREW_STEP = 1_500; // 다른 회원 조회 사이 간격 (클라이언트 부하 방지)
+const BATCH = 10;
+const IDLE_PHASES = ['None', 'Lobby', 'EndOfGame', 'WaitingForStats', 'PreEndOfGame'];
+
+export type Slot = { championId: number; puuid: string };
+export type ChampSelect = { mine: number | null; bench: number[]; team: Slot[] };
+export type CrewSelect = {
+  champions: Record<number, { crew: { n: number; w: number }; topAugments: { id: number; n: number; w: number }[]; masters: { nick: string; n: number; w: number }[] }>;
+  teammates: { puuid: string; nick: string; together: { n: number; w: number } }[];
+} | null;
+
+export type State = {
+  status: 'starting' | 'no-client' | 'idle' | 'champ-select' | 'in-game' | 'error';
+  message: string;
+  phase: string;
+  summoner: { puuid: string; riotId: string } | null;
+  games: Game[];
+  personal: Personal;
+  champSelect: ChampSelect | null;
+  crew: CrewSelect;
+  lastChampion: number | null; // 마지막 챔프 선택의 내 챔피언 (게임 중 가이드용)
+  session: { configured: boolean; loggedIn: boolean };
+  me: Me | null;
+  upload: { lastAt: number; stored: number; error: string | null };
+  crewSync: { lastAt: number; running: boolean; games: number; error: string | null };
+};
+
+const stored = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
+const store = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* 저장소 없음 */ } };
+
+let state: State = {
+  status: 'starting', message: '', phase: '', summoner: null, games: [], personal: personalStats([]), champSelect: null, crew: null,
+  lastChampion: stored<number | null>('prism-last-champion', null), session: { configured: false, loggedIn: false }, me: null,
+  upload: { lastAt: 0, stored: 0, error: null }, crewSync: { lastAt: stored('prism-crew-sync-at', 0), running: false, games: 0, error: null },
+};
+const subs = new Set<() => void>();
+const set = (p: Partial<State>) => { state = { ...state, ...p }; subs.forEach((f) => f()); };
+export const getState = () => state;
+export const subscribe = (f: () => void) => { subs.add(f); return () => subs.delete(f); };
+
+let historyAt = 0;
+let refreshUntil = 0;
+let wasInGame = false;
+let crewKey = '';
+
+export async function refreshSession() {
+  const session = await bridge.session().catch(() => ({ configured: false, loggedIn: false }));
+  const me = session.loggedIn ? await api.get<Me>('/api/me').catch(() => null) : null;
+  set({ session: { ...session, loggedIn: Boolean(me) }, me });
+}
+
+async function loadHistory(puuid: string, pages: number) {
+  const out: any[] = [];
+  for (let p = 0; p < pages; p++) {
+    const res = await bridge.lcuGet(`/lol-match-history/v1/products/lol/${puuid}/matches?begIndex=${p * 20}&endIndex=${p * 20 + 19}`);
+    out.push(res);
+    if ((res?.games?.games ?? []).length < 20) break;
+  }
+  return mayhemGames(out).games;
+}
+
+const canUpload = () => Boolean(state.me?.consent);
+
+async function sendGames(ids: number[]) {
+  const done = new Set<number>(stored('prism-uploaded', []));
+  const todo = ids.filter((id) => !done.has(id));
+  for (let i = 0; i < todo.length; i += BATCH) {
+    const games = [];
+    for (const id of todo.slice(i, i + BATCH)) {
+      const d = await bridge.lcuGet(`/lol-match-history/v1/games/${id}`);
+      if (Number(d?.queueId) === MAYHEM_QUEUE) games.push(toIngestGame(d));
+    }
+    if (games.length) {
+      const r = await api.post<{ stored: number }>('/api/ingest', { source: 'lcu', games });
+      set({ upload: { ...state.upload, stored: state.upload.stored + r.stored } });
+    }
+    store('prism-uploaded', [...stored<number[]>('prism-uploaded', []), ...todo.slice(i, i + BATCH)].slice(-2000));
+  }
+}
+
+async function uploadOwn() {
+  if (!canUpload()) return;
+  try { await sendGames(state.games.map((g) => g.gameId)); set({ upload: { ...state.upload, lastAt: Date.now(), error: null } }); }
+  catch (e) { set({ upload: { ...state.upload, error: e instanceof Error ? e.message : String(e) } }); }
+}
+
+/** 한가할 때(대기·로비) 동의한 다른 회원의 최근 20판을 대신 올린다. 바빠지면 즉시 멈춘다 */
+async function syncCrew() {
+  if (!canUpload() || state.crewSync.running || Date.now() - state.crewSync.lastAt < CREW_EVERY || !state.summoner) return;
+  set({ crewSync: { ...state.crewSync, running: true, games: 0 } });
+  let games = 0;
+  try {
+    const { targets } = await api.get<{ targets: { puuid: string; lastPlayedAt: number | null }[] }>('/api/crew/targets');
+    for (const t of targets) {
+      if (t.puuid === state.summoner.puuid) continue;
+      const st = await bridge.lcuStatus();
+      if (st.inGame) return;
+      const phase = await bridge.lcuGet<string>('/lol-gameflow/v1/gameflow-phase').catch(() => 'Unknown');
+      if (!IDLE_PHASES.includes(phase)) return;
+      await new Promise((r) => setTimeout(r, CREW_STEP));
+      const list = await loadHistory(t.puuid, 1).catch(() => null);
+      if (!list) continue;
+      const since = (t.lastPlayedAt ?? 0) - 86_400_000;
+      const fresh = list.filter((g) => g.playedAt > since).map((g) => g.gameId);
+      if (fresh.length) { await sendGames(fresh); games += fresh.length; }
+    }
+    store('prism-crew-sync-at', Date.now());
+    set({ crewSync: { lastAt: Date.now(), running: false, games, error: null } });
+  } catch (e) {
+    set({ crewSync: { ...state.crewSync, running: false, error: e instanceof Error ? e.message : String(e) } });
+  } finally {
+    if (state.crewSync.running) set({ crewSync: { ...state.crewSync, running: false } });
+  }
+}
+
+async function loadChampSelect() {
+  const s = await bridge.lcuGet<any>('/lol-champ-select/v1/session');
+  const myTeam: any[] = s?.myTeam ?? [];
+  const me = myTeam.find((m) => m.cellId === s.localPlayerCellId);
+  const bench = [...(s?.benchChampions ?? []).map((b: any) => Number(b.championId ?? b)), ...(s?.benchChampionIds ?? []).map(Number)].filter((id) => id > 0);
+  const team = myTeam.filter((m) => m.cellId !== s.localPlayerCellId).map((m) => ({ championId: Number(m.championId) || 0, puuid: String(m.puuid ?? '') }));
+  const cs: ChampSelect = { mine: Number(me?.championId) > 0 ? Number(me.championId) : null, bench: [...new Set<number>(bench)], team };
+  if (cs.mine && cs.mine !== state.lastChampion) store('prism-last-champion', cs.mine);
+  set({ champSelect: cs, lastChampion: cs.mine ?? state.lastChampion });
+  // 챔피언·팀원 구성이 바뀌었을 때만 서버에 묻는다 (모임 기록·같은 팀 회원 케미)
+  const ids = [cs.mine, ...cs.bench].filter((x): x is number => Boolean(x));
+  const puuids = team.map((t) => t.puuid).filter(Boolean);
+  const key = JSON.stringify([ids.slice().sort(), puuids.slice().sort()]);
+  if (state.me && key !== crewKey) {
+    crewKey = key;
+    api.post<CrewSelect>('/api/champselect', { championIds: ids, teammatePuuids: puuids }).then((crew) => set({ crew })).catch(() => {});
+  }
+}
+
+async function tick(): Promise<number> {
+  const st = await bridge.lcuStatus().catch(() => ({ client: false, inGame: false }));
+  if (st.inGame) {
+    wasInGame = true;
+    set({ status: 'in-game', message: '게임 중', champSelect: null });
+    return INTERVAL.inGame;
+  }
+  if (!st.client) {
+    set({ status: 'no-client', message: '롤 클라이언트를 켜면 자동으로 연결됩니다.', champSelect: null, summoner: null });
+    return INTERVAL.noClient;
+  }
+  try {
+    if (!state.summoner) {
+      const s = await bridge.lcuGet<any>('/lol-summoner/v1/current-summoner');
+      set({ summoner: { puuid: s.puuid, riotId: `${s.gameName ?? s.displayName ?? '?'}#${s.tagLine ?? ''}` } });
+      historyAt = 0;
+    }
+    if (wasInGame) { wasInGame = false; refreshUntil = Date.now() + AFTER_GAME; }
+    const stale = Date.now() - historyAt > (Date.now() < refreshUntil ? 30_000 : HISTORY_EVERY);
+    if (stale) {
+      const games = await loadHistory(state.summoner!.puuid, HISTORY_PAGES);
+      historyAt = Date.now();
+      set({ games, personal: personalStats(games) });
+      void uploadOwn();
+    }
+    const phase = await bridge.lcuGet<string>('/lol-gameflow/v1/gameflow-phase');
+    if (phase === 'ChampSelect') await loadChampSelect();
+    else { if (state.champSelect) set({ champSelect: null }); crewKey = ''; }
+    set({ phase, status: phase === 'ChampSelect' ? 'champ-select' : 'idle', message: '' });
+    if (phase === 'None' || phase === 'Lobby') void syncCrew();
+    return phase === 'ChampSelect' ? INTERVAL.champSelect : INTERVAL.idle;
+  } catch (e) {
+    set({ status: 'error', message: e instanceof Error ? e.message : String(e), summoner: null });
+    return INTERVAL.error;
+  }
+}
+
+let started = false;
+export function start() {
+  if (started) return;
+  started = true;
+  void refreshSession();
+  const loop = async () => setTimeout(loop, await tick().catch(() => INTERVAL.error));
+  void loop();
+}
+
+/** 수집 동의 (지금 클라이언트에 로그인된 롤 계정을 연결) / 철회 */
+export async function setConsent(agree: boolean) {
+  if (agree) {
+    if (!state.summoner) throw new Error('롤 클라이언트를 켠 상태에서 동의해주세요.');
+    await api.post('/api/me/riot', { puuid: state.summoner.puuid, riotId: state.summoner.riotId });
+  }
+  await api.post('/api/me/consent', { agree });
+  await refreshSession();
+  if (agree) void uploadOwn();
+}

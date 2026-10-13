@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit -p . && tsc --noEmit -p server && tsc --noEmit -p apps/web",
+    "build": "tsc --noEmit -p . && tsc --noEmit -p server && tsc --noEmit -p apps/web && tsc --noEmit -p apps/desktop",
     "app": "tsx app/server.ts",
     "probe:opgg": "tsx scripts/probe-opgg-mcp.ts",
     "server:dev": "wrangler dev --config server/wrangler.toml --local --ip 127.0.0.1 --port 8787",
@@ -14,7 +14,10 @@
     "site:build": "npm run web:build",
     "icons": "node scripts/fetch-icons.mjs",
     "web:dev": "npm run dev -w @prism/web",
-    "web:build": "npm run icons && npm run build -w @prism/web"
+    "web:build": "npm run icons && npm run build -w @prism/web",
+    "desktop:dev": "npm run dev -w @prism/desktop",
+    "desktop:bridge": "node apps/desktop/dev-bridge.mjs",
+    "desktop:build": "npm run icons && npm run tauri -w @prism/desktop -- build"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261010.1",

@@ -1,7 +1,7 @@
 # 웹(przm.web.app) 를 Firebase Hosting 에 배포
 # main 에 사이트·증강 데이터 변경이 들어오면 자동, 또는 Actions 탭에서 수동 실행(브랜치 선택 가능)
 # 필요한 저장소 설정: Secret FIREBASE_SERVICE_ACCOUNT (서비스 계정 JSON 전체), Variables FIREBASE_PROJECT_ID
-# 선택: Variables PRISM_SERVER_URL (회원 서버 주소), DISCORD_INVITE_URL, KAKAO_OPENCHAT_URL
+# 선택: Variables PRISM_SERVER_URL (회원 서버 주소), DISCORD_INVITE_URL, KAKAO_OPENCHAT_URL, APP_DOWNLOAD_URL (Windows 앱 설치 파일 주소)
 name: deploy-site
 
 on:
@@ -28,6 +28,7 @@ jobs:
           VITE_PRISM_SERVER: ${{ vars.PRISM_SERVER_URL }}
           VITE_DISCORD_URL: ${{ vars.DISCORD_INVITE_URL }}
           VITE_KAKAO_URL: ${{ vars.KAKAO_OPENCHAT_URL }}
+          VITE_APP_URL: ${{ vars.APP_DOWNLOAD_URL }}
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

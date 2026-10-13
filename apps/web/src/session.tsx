@@ -6,6 +6,8 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { ApiError, type Api, type Links, type Me } from '@prism/core';
 
 export const SERVER = (import.meta.env.VITE_PRISM_SERVER ?? '').replace(/\/$/, '');
+/** Windows 앱 설치 파일 주소 (없으면 화면에 안내하지 않는다) */
+export const APP_URL = import.meta.env.VITE_APP_URL || '';
 const DEV_LOGIN = import.meta.env.VITE_PRISM_DEV_LOGIN === '1';
 const TOKEN_KEY = 'prism-token';
 const FALLBACK_LINKS: Links = { discord: import.meta.env.VITE_DISCORD_URL || null, kakao: import.meta.env.VITE_KAKAO_URL || null };
