@@ -22,14 +22,12 @@ jobs:
         run: node scripts/ci/ensure-d1.mjs
       - name: 숫자 집계
         run: |
-          npx wrangler d1 execute prism --remote --config server/wrangler.toml --json --command "
-            SELECT 'members' AS k, COUNT(*) AS v FROM members
-            UNION ALL SELECT 'members_linked', COUNT(*) FROM members WHERE riot_puuid IS NOT NULL
-            UNION ALL SELECT 'members_consent', COUNT(*) FROM members WHERE opt_in_at IS NOT NULL
-            UNION ALL SELECT 'app_tokens', COUNT(*) FROM app_tokens
-            UNION ALL SELECT 'matches', COUNT(*) FROM matches
-            UNION ALL SELECT 'matches_custom', COUNT(*) FROM matches WHERE queue_id <> 2400
-            UNION ALL SELECT 'matches_crew0', COUNT(*) FROM matches WHERE crew_count = 0
-            UNION ALL SELECT 'participants', COUNT(*) FROM participants
-            UNION ALL SELECT 'last_match_age_min', CAST((strftime('%s','now')*1000 - MAX(created_at)) / 60000 AS INTEGER) FROM matches
-          "
+          npx wrangler d1 execute prism --remote --config server/wrangler.toml --command "SELECT
+            (SELECT COUNT(*) FROM members) AS members,
+            (SELECT COUNT(*) FROM members WHERE riot_puuid IS NOT NULL) AS linked,
+            (SELECT COUNT(*) FROM members WHERE opt_in_at IS NOT NULL) AS consent,
+            (SELECT COUNT(*) FROM app_tokens) AS tokens,
+            (SELECT COUNT(*) FROM matches) AS matches,
+            (SELECT COUNT(*) FROM matches WHERE queue_id <> 2400) AS custom,
+            (SELECT COUNT(*) FROM matches WHERE crew_count = 0) AS crew0,
+            (SELECT COUNT(*) FROM participants) AS participants"
