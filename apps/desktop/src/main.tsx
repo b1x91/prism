@@ -7,6 +7,7 @@ import { Gem, Icon, Initial, toggleTheme, useLoad, type IconName } from '@prism/
 import { withDefaults, type Links } from '@prism/core';
 import { getState, refreshSession, start, subscribe, type State } from './controller';
 import { api, bridge } from './bridge';
+import { installUpdate, startUpdates, useUpdate } from './update';
 import { GamePage } from './pages/Game';
 import { AugmentsPage } from './pages/Augments';
 import { CrewPage } from './pages/Crew';
@@ -25,6 +26,7 @@ const STATUS: Record<State['status'], [string, string]> = {
 
 function App() {
   const s = useSyncExternalStore(subscribe, getState);
+  const up = useUpdate();
   const nav = useNavigate();
   const links = withDefaults(useLoad<Links>(api, s.session.configured ? '/links' : null).data);
   const login = async () => { try { await bridge.login(); } finally { await refreshSession(); } };
@@ -41,6 +43,13 @@ function App() {
         <nav className="side-nav">{NAV.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'}><Icon name={i} />{l}</NavLink>)}</nav>
         <span className="sp" />
         {<div className="side-chs">{ch(links.discord, 'discord', 'discord', '디스코드')}{ch(links.kakao, 'kakao', 'talk', '카카오톡')}</div>}
+        {up.info?.available && (
+          <div className="side-update">
+            <b>새 버전 {up.info.latest}</b>
+            <button type="button" className="btn sm primary" disabled={up.installing} onClick={installUpdate}>{up.installing ? '받는 중…' : '업데이트'}</button>
+            {up.error && <span className="l">{up.error}</span>}
+          </div>
+        )}
         <div className={`side-status ${tone}`}><span className="dot" />{label}{s.summoner && <span className="meta">{s.summoner.riotId.split('#')[0]}</span>}</div>
         <div className="side-foot">
           {s.me ? <NavLink to="/settings" className="side-me"><Initial nick={s.me.nick} size={28} /><span>{s.me.nick}</span></NavLink>
@@ -62,4 +71,5 @@ function App() {
 }
 
 start();
+startUpdates();
 createRoot(document.getElementById('root')!).render(<StrictMode><HashRouter><App /></HashRouter></StrictMode>);

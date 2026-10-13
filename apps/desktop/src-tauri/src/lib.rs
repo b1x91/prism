@@ -3,6 +3,7 @@
 
 mod lcu;
 mod server;
+mod update;
 
 use std::sync::Arc;
 use tauri::menu::{Menu, MenuItem};
@@ -67,6 +68,25 @@ fn autostart(handle: tauri::AppHandle, enable: Option<bool>) -> Result<bool, Str
     a.is_enabled().map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+fn app_version() -> &'static str {
+    update::CURRENT
+}
+
+#[tauri::command]
+async fn update_check() -> Result<update::Info, String> {
+    update::check().await
+}
+
+/// 받아서 설치 프로그램을 띄운 뒤 앱을 끝낸다 (설치가 끝나면 설치 프로그램이 다시 켠다)
+#[tauri::command]
+async fn update_install(handle: tauri::AppHandle) -> Result<(), String> {
+    update::install().await?;
+    tokio::time::sleep(std::time::Duration::from_millis(400)).await;
+    handle.exit(0);
+    Ok(())
+}
+
 fn show(app: &tauri::AppHandle) {
     if let Some(w) = app.get_webview_window("main") {
         let _ = w.show();
@@ -120,7 +140,7 @@ pub fn run() {
                 let _ = window.hide();
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, lcu_get, api, session, login, logout, open_url, autostart])
+        .invoke_handler(tauri::generate_handler![lcu_status, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }

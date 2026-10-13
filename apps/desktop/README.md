@@ -1,4 +1,4 @@
-# Prism 앱 (Windows, v0.5.2)
+# Prism 앱 (Windows, v0.5.3)
 
 롤 클라이언트 옆에 켜두는 도우미. 혼자 써도 쓸모 있고, Prism 회원이면 모임 기능이 열린다.
 웹(przm.web.app)과 같은 화면 코드(`packages/ui`, `packages/core`)를 앱 안에 묶어 넣는다. 원격 웹을 띄우지 않는다.
@@ -42,6 +42,14 @@ apps/desktop/
 | 챔프 선택 | 5초 | 게임 단계 + 챔프 선택 정보. 구성이 바뀔 때만 서버에 질의 |
 | 게임 중 | 30초 | OS 프로세스 확인만 (롤 요청 없음) |
 | 게임 직후 3분 | 30초 | 새 판이 뜰 때까지 전적 재조회 |
+
+## 앱 안에서 업데이트 (0.5.3부터)
+- 켜질 때(5초 뒤)와 6시간마다 이 저장소의 GitHub Release 최신판을 확인한다
+- 새 버전이 있으면 사이드바에 "새 버전 · 업데이트" 알림, 설정 → 버전에도 버튼
+- 누르면 `Prism-Setup.exe` 를 받아 크기·실행 파일 여부를 확인하고, 설치 프로그램을 `/P /R` 로 실행한 뒤 앱을 끈다
+  (`/P` 진행 창만 보이는 자동 설치, 실행 중인 Prism 은 설치 프로그램이 닫음 / `/R` 설치 후 다시 실행)
+- 받는 주소는 `github.com/b1x91/prism/releases/download/` 로만 허용 (`src-tauri/src/update.rs`)
+- 0.5.2 이하에는 이 기능이 없어서 0.5.3 은 한 번 직접 받아 설치해야 한다
 
 ## 설치 파일 만들기
 GitHub Actions `build-desktop` (Windows). 회원 서버 주소는 Variables `PRISM_SERVER_URL`, 없으면 Cloudflare 계정에서 찾아 앱에 넣는다 (서버가 없으면 모임 기능 없이 가이드만).

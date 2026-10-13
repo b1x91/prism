@@ -71,6 +71,9 @@ const CMD = {
   logout: () => { token = null; return null; },
   open_url: () => null,
   autostart: ({ enable }) => { if (enable !== undefined) auto = enable; return auto; },
+  // MOCK_UPDATE=1 이면 새 버전이 있는 것처럼
+  update_check: () => ({ current: '0.5.2', latest: process.env.MOCK_UPDATE ? '0.5.3' : '0.5.2', available: Boolean(process.env.MOCK_UPDATE), notes: '' }),
+  update_install: () => { throw '개발 모드에서는 설치하지 않습니다.'; },
   api,
 };
 

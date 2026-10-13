@@ -3,6 +3,7 @@ import { ago } from '@prism/core';
 import { Icon, Initial } from '@prism/ui';
 import { bridge } from '../bridge';
 import { diagnostics, refreshSession, setConsent, type State } from '../controller';
+import { checkUpdate, installUpdate, useUpdate } from '../update';
 
 import conf from '../../src-tauri/tauri.conf.json';
 
@@ -12,6 +13,7 @@ const CONSENT = 'Riot 계정을 연결하면 아수라장 전적이 Prism에 자
 
 export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   const [auto, setAuto] = useState<boolean | null>(null);
+  const up = useUpdate();
   const [msg, setMsg] = useState('');
   useEffect(() => { bridge.autostart().then(setAuto).catch(() => setAuto(null)); }, []);
   const run = async (f: () => Promise<unknown>) => { setMsg(''); try { await f(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } };
@@ -38,9 +40,16 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
       <section className="card pad">
         <div className="card-head"><h2>앱</h2></div>
         <div className="kv">
+          <div><span className="k">버전</span><span className="row wrapr" style={{ gap: 8 }}>
+            <span>{VERSION}</span>
+            {up.info?.available
+              ? <button type="button" className="btn sm primary" disabled={up.installing} onClick={installUpdate}>{up.installing ? '받는 중… 잠시 뒤 다시 켜집니다' : `${up.info.latest}으로 업데이트`}</button>
+              : <><span className="meta">{up.checking ? '확인 중…' : up.info ? '최신 버전입니다' : ''}</span><button type="button" className="btn ghost sm" disabled={up.checking} onClick={checkUpdate}>업데이트 확인</button></>}
+            {up.error && <span className="l">{up.error}</span>}
+          </span></div>
           <div><span className="k">윈도우 시작 시 실행</span><span>{auto === null ? '–' : <button type="button" className={`btn sm ${auto ? '' : 'primary'}`} onClick={() => run(async () => setAuto(await bridge.autostart(!auto)))}>{auto ? '끄기' : '켜기'}</button>}</span></div>
           <div><span className="k">창 닫기</span><span className="muted">창을 닫아도 트레이에서 계속 기록합니다. 끝내려면 트레이 아이콘 → 끝내기.</span></div>
-          <div><span className="k">문제 알리기</span><span className="row wrapr" style={{ gap: 8 }}><button type="button" className="btn sm" onClick={() => run(async () => { await navigator.clipboard.writeText(await diagnostics(VERSION)); setMsg('복사했습니다. 디스코드에 붙여넣어 보내주세요. 다른 플레이어 이름은 지워져 있습니다.'); })}>확인용 정보 복사</button><span className="meta">버전 {VERSION}</span></span></div>
+          <div><span className="k">문제 알리기</span><span className="row wrapr" style={{ gap: 8 }}><button type="button" className="btn sm" onClick={() => run(async () => { await navigator.clipboard.writeText(await diagnostics(VERSION)); setMsg('복사했습니다. 디스코드에 붙여넣어 보내주세요. 다른 플레이어 이름은 지워져 있습니다.'); })}>확인용 정보 복사</button></span></div>
           <div><span className="k">게임 중 증강 보기</span><span className="muted">롤을 "테두리 없는 창 모드"로 두면 Alt+Tab 전환이 빠릅니다.</span></div>
         </div>
       </section>

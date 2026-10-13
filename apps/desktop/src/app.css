@@ -39,6 +39,11 @@ body { overflow: hidden; background: var(--bg); }
 .icon-btn:hover { background: var(--surface-2); color: var(--text); }
 .icon-btn svg { width: 16px; height: 16px; }
 
+/* 업데이트 알림 */
+.side-update { display: grid; gap: var(--s2); padding: var(--s3); border-radius: var(--r-m); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); font-size: var(--fs-sm); }
+.side-update .l { font-size: var(--fs-xs); }
+@media (max-width: 900px) { .side-update b, .side-update .l { display: none; } .side-update { padding: var(--s1); } .side-update .btn { padding: 0; font-size: var(--fs-xs); } }
+
 /* 클라이언트 대기 */
 .pulse { width: 12px; height: 12px; border-radius: 50%; background: var(--accent); flex: none; animation: blink 1.6s ease-in-out infinite; }
 

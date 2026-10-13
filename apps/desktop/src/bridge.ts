@@ -26,7 +26,11 @@ export const bridge = {
   logout: () => call<void>('logout'),
   openUrl: (url: string) => call<void>('open_url', { url }).catch(() => window.open(url, '_blank')),
   autostart: (enable?: boolean) => call<boolean>('autostart', enable === undefined ? {} : { enable }),
+  updateCheck: () => call<UpdateInfo>('update_check').catch((e) => { throw err(e); }),
+  updateInstall: () => call<void>('update_install').catch((e) => { throw err(e); }),
 };
+
+export type UpdateInfo = { current: string; latest: string; available: boolean; notes: string };
 
 export const api: Api = {
   get: (path) => call('api', { method: 'GET', path }).catch((e) => { throw err(e); }) as any,
