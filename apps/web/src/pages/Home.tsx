@@ -37,14 +37,24 @@ export function Home() {
       </div></section>
 
       {APP_URL && <section className="section tight"><div className="wrap">
-        <div className="card pad app-band">
-          <div className="stack" style={{ gap: 8 }}>
-            <span className="eyebrow">Windows 앱</span>
+        <div className="app-band">
+          <div className="app-copy">
+            <span className="eyebrow"><Icon name="windows" />Windows 앱</span>
             <h2>게임 옆에 두는 Prism</h2>
-            <p className="muted">챔프 선택에서는 우리 팀에 부족한 것과 대기석 추천을, 게임 중에는 Alt+Tab 한 번으로 내 챔피언 증강 비교를. 내 판은 알아서 기록됩니다.</p>
-            <p className="meta">처음 실행할 때 "Windows의 PC 보호" 창이 뜨면 <b>추가 정보 → 실행</b>을 눌러주세요. 작은 모임 앱이라 아직 Microsoft 인증을 받지 않았습니다.</p>
+            <ul className="app-points">
+              <li><b>챔프 선택</b>우리 팀에 부족한 것과 대기석 추천</li>
+              <li><b>게임 중</b>뜬 증강을 알아보고 내 챔피언 기준으로 순위·티어</li>
+              <li><b>게임 뒤</b>내 판은 알아서 기록</li>
+            </ul>
           </div>
-          <a className="btn primary lg" href={APP_URL} target="_blank" rel="noopener noreferrer"><Icon name="out" />앱 받기</a>
+          <div className="app-get">
+            <a className="dl-btn" href={APP_URL} target="_blank" rel="noopener noreferrer">
+              <Icon name="windows" />
+              <span><b>Windows용 받기</b><small>무료 · Windows 10/11</small></span>
+              <Icon name="download" className="icon dl-arrow" />
+            </a>
+            <p className="dl-note">처음 실행할 때 "Windows의 PC 보호" 창이 뜨면 <b>추가 정보 → 실행</b>을 눌러주세요. 작은 모임 앱이라 아직 Microsoft 인증을 받지 않았어요.</p>
+          </div>
         </div>
       </div></section>}
 

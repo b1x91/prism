@@ -4,7 +4,7 @@ import { ChampImg } from './basics';
 import { Icon } from './icons';
 
 /** 이름·초성으로 챔피언 찾기 (위아래 키, Enter) */
-export function ChampSearch({ onPick, placeholder = '챔피언 이름 (초성도 돼요: ㅇㄹ)', autoFocus }: { onPick: (id: number) => void; placeholder?: string; autoFocus?: boolean }) {
+export function ChampSearch({ onPick, placeholder = "챔피언 이름 (예: '아리' 혹은 'ㅇㄹ')", autoFocus }: { onPick: (id: number) => void; placeholder?: string; autoFocus?: boolean }) {
   const [q, setQ] = useState('');
   const [idx, setIdx] = useState(0);
   const hits = useMemo(() => (q.trim() ? CHAMPION_LIST.filter((c) => matchName(c.name, q)).slice(0, 6) : []), [q]);

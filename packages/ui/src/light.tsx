@@ -43,7 +43,8 @@ export function LightRefraction({ box, anchor, gem }: { box: RefObject<HTMLEleme
   const ox = gx + r * 0.38, oy = gy + r * 0.04;
   const far = w + 60;
   const reach = far - ox;
-  const top = oy - Math.min(h * 0.62, reach * 0.62), bottom = oy + Math.min(h * 0.62, reach * 0.62);
+  // 아래쪽은 첫 화면 밖(다음 구역)까지 길게 퍼진다 (첫 화면이 세로로 자르지 않음)
+  const top = oy - Math.min(h * 0.62, reach * 0.62), bottom = oy + Math.min(h * 1.15, reach * 0.95);
   const step = (bottom - top) / 7;
   const bands = COLORS.map((c, i) => ({ c, y1: top + step * i, y2: top + step * (i + 1), mid: top + step * (i + 0.5), spread: 2.2 }));
   const sparks = Array.from({ length: 14 }, (_, i) => {

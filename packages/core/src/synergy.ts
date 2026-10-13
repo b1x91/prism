@@ -212,3 +212,99 @@ export function relatedAugments(a: MayhemAugment, augments: MayhemAugment[], lim
     .slice(0, limit)
     .map((r) => r.a);
 }
+
+// ───────── 설명 (게임 위 작은 창·3개 비교) ─────────
+
+/** 받침이 있으면 '이', 없으면 '가' (한글이 아닌 끝 글자는 '가', 예: CC) */
+const iGa = (w: string) => { const ch = w.charCodeAt(w.length - 1); return ch >= 0xac00 && ch <= 0xd7a3 && (ch - 0xac00) % 28 ? '이' : '가'; };
+
+/** 이 챔피언에게 왜 맞는지 (성향 태그별) */
+const WHY: Record<string, string> = {
+  haste: '스킬을 자주 써서 교전을 계속 열 수 있어요',
+  ability: '스킬로 싸우는 챔피언이라 효과를 다 받아요',
+  ult: '궁극기를 더 자주, 더 세게 써요',
+  attack: '평타로 싸우는 챔피언이라 효과를 다 받아요',
+  crit: '치명타 아이템을 가는 챔피언이라 바로 이득이에요',
+  ap: 'AP 챔피언이라 그대로 강해져요',
+  ad: 'AD 챔피언이라 그대로 강해져요',
+  tank: '앞에서 버티는 역할이 더 단단해져요',
+  bruiser: '싸움 한가운데서 오래 버티는 전사형에 맞아요',
+  sustain: '회복으로 긴 싸움을 버텨요',
+  mobile: '많이 움직이는 챔피언이라 효과를 자주 터뜨려요',
+  ranged: '원거리라 안전하게 효과를 써요',
+  melee: '붙어서 싸우는 챔피언에 맞아요',
+  burst: '한 번에 몰아치는 순간 딜에 맞아요',
+  any: '어느 챔피언이 써도 손해 없는 범용 증강이에요',
+  gamble: '운에 따라 결과가 갈리는 증강이에요',
+};
+/** 조건을 갖췄을 때 */
+const WHY_REQ: Record<string, string> = {
+  'req:cc': '묶는 스킬(CC)이 있어 효과가 자주 터져요',
+  'req:dash': '돌진기가 있어 효과를 자주 써요',
+  'req:ally': '아군을 돕는 스킬이 있어 효과가 커져요',
+  'req:shield': '보호막 스킬이 있어 효과가 커져요',
+  'req:heal': '회복·보호막 스킬이 있어 효과가 커져요',
+  'req:channel': '정신 집중 스킬과 잘 맞아요',
+  'req:summon': '소환물이 있어 함께 강해져요',
+  'req:burn': '지속 피해 스킬과 잘 맞아요',
+  'req:stack': '영구 중첩 스킬과 잘 맞아요',
+  'req:knockback': '밀어내기 스킬과 잘 맞아요',
+  'req:terrain': '지형 생성 스킬과 잘 맞아요',
+  'req:spin': '회전 스킬과 잘 맞아요',
+  'req:empower': '강화 평타 스킬과 잘 맞아요',
+};
+/**
+ * 언제 더 좋은지: 증강 설명(게임 파일 원문)에 있는 말로만 판단한다. 위에서부터 처음 맞는 하나.
+ * same: 이유(WHY)와 같은 말이면 겹치지 않게 건너뛴다
+ */
+const WHEN: { re: RegExp; text: string; same?: string[] }[] = [
+  { re: /최대 체력[^.]*(피해|고정)/, text: '체력 많은 탱커를 상대할 때 특히 좋아요' },
+  { re: /고정 피해/, text: '방어력·마법 저항력과 상관없이 들어가요' },
+  { re: /(방어력|마법 저항력)[^.]*감소/, text: '단단한 적을 녹일 때 좋아요' },
+  { re: /(체력이 낮은|잃은 체력)/, text: '마무리와 역전에 강해요' },
+  { re: /영구/, text: '오래 쌓을수록 강해져요. 일찍 고를수록 좋아요' },
+  { re: /무한히 (중첩|초기화)/, text: '오래 싸울수록 강해져요' },
+  { re: /선택한 스킬/, text: '핵심 스킬 하나를 골라 집중해서 키워요' },
+  { re: /아군/, text: '아군과 붙어 다닐 때 빛나요' },
+  { re: /(주변 적|주변의 적|모든 적|광역)/, text: '적이 뭉친 한타에서 좋아요' },
+  { re: /(둔화|기절|속박|공중에 띄|이동 불가)/, text: '적을 묶어 아군이 들어가기 쉬워져요' },
+  { re: /보호막/, text: '한타에서 한 번 더 버텨요', same: ['tank'] },
+  { re: /(회복|흡혈)/, text: '긴 교전에서 강해요', same: ['sustain'] },
+  { re: /(스킬 가속|재사용 대기시간)/, text: '스킬을 자주 쓸수록 좋아요', same: ['haste', 'ability'] },
+  { re: /이동 속도/, text: '치고 빠지기와 추격에 좋아요', same: ['mobile'] },
+  { re: /공격 속도/, text: '평타를 많이 칠수록 좋아요', same: ['attack'] },
+  { re: /사거리/, text: '먼저 때리고 안전하게 싸워요', same: ['ranged'] },
+  { re: /사망 시/, text: '앞에서 먼저 싸우다 쓰러져도 손해가 적어요' },
+  { re: /체력[^.]*(증가|얻)/, text: '쉽게 쓰러지지 않아요', same: ['tank', 'bruiser'] },
+];
+
+/** 왜 맞는지(챔피언 기준) + 언제 더 좋은지(증강 설명 기준). 둘 다 사람 말 한 줄 */
+export function explainFit(c: ChampionProfile, a: MayhemAugment): { why: string; when: string | null; key: string | null } {
+  const reqs = a.tags.filter((t) => REQUIRE[t]);
+  const missing = reqs.find((t) => !REQUIRE[t].ok(c));
+  const prefs = a.tags.filter((t) => AFFINITY[t]);
+  const level = fitOf(c, a).level;
+  // 성향이 안 맞을 때 쓰는 말 (가장 안 맞는 성향 기준)
+  const weakWhy = () => {
+    const worst = prefs.filter((t) => REASON[t]).sort((x, y) => AFFINITY[x](c) - AFFINITY[y](c))[0];
+    return worst ? `${REASON[worst]({} as ChampionProfile)} 증강이라 이 챔피언에겐 효과가 작아요` : '이 챔피언에겐 효과가 작아요';
+  };
+  let why: string, key: string | null = null;
+  if (missing) why = `${REQUIRE[missing].label}${iGa(REQUIRE[missing].label)} 없어 효과를 거의 못 봐요`;
+  else if (level === 'weak') why = weakWhy();
+  else if (reqs.length) { key = reqs[0]; why = WHY_REQ[reqs[0]] ?? `${REQUIRE[reqs[0]].label} 보유`; }
+  else {
+    // 가장 잘 맞는 성향 (범용·운은 다른 성향이 없을 때만)
+    const ranked = prefs.filter((t) => WHY[t]).sort((x, y) => AFFINITY[y](c) - AFFINITY[x](c) || Number(x === 'any' || x === 'gamble') - Number(y === 'any' || y === 'gamble'));
+    const best = ranked.find((t) => t !== 'any' && t !== 'gamble') ?? ranked[0];
+    if (!best) why = '어느 챔피언이 써도 무난해요';
+    else if (best === 'any' || best === 'gamble' || AFFINITY[best](c) >= 0.6) { key = best; why = WHY[best]; }
+    else why = weakWhy();
+  }
+  // 잘 안 맞는 증강에는 '언제 좋은지'를 붙이지 않는다 (고를 이유처럼 보이지 않게)
+  const when = missing || level === 'weak' ? null : WHEN.find((w) => w.re.test(a.desc) && !(key && w.same?.includes(key)))?.text ?? null;
+  return { why, when, key };
+}
+
+/** 등급을 넘어서는 어울림: S 티어 실버는 골드급, S 티어 골드는 프리즘급 */
+export const gradeUp = (rarity: Rarity, tier: FitTier): Rarity | null => (tier !== 'S' ? null : rarity === 'silver' ? 'gold' : rarity === 'gold' ? 'prismatic' : null);

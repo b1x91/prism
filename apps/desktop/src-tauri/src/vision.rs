@@ -110,7 +110,7 @@ pub fn create_overlay(app: &tauri::App) -> tauri::Result<()> {
         .resizable(false)
         .focused(false)
         .visible(false)
-        .inner_size(340.0, 320.0)
+        .inner_size(420.0, 540.0)
         .build()?;
     let _ = w.set_ignore_cursor_events(true);
     imp::prepare_overlay(&w);
@@ -290,7 +290,7 @@ mod imp {
     pub fn show_overlay(app: &AppHandle, rc: &RECT, position: &str) {
         let Some(h) = hwnd_of(app) else { return };
         let scale = app.get_webview_window("overlay").and_then(|w| w.scale_factor().ok()).unwrap_or(1.0);
-        let (ow, oh) = ((340.0 * scale) as i32, (320.0 * scale) as i32);
+        let (ow, oh) = ((420.0 * scale) as i32, (540.0 * scale) as i32);
         let m = (24.0 * scale) as i32;
         let (gw, gh) = (rc.right - rc.left, rc.bottom - rc.top);
         let (x, y) = if position == "top" { (rc.left + (gw - ow) / 2, rc.top + m) } else { (rc.right - ow - m, rc.top + gh * 30 / 100) };

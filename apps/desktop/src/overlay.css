@@ -4,25 +4,18 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
 .ov-head { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); color: rgba(255, 255, 255, .7); }
 .ov-head b { color: #fff; font-size: var(--fs-sm); margin-right: var(--s2); }
 .ov-head .champ { border-radius: 6px; }
-.ov-row { display: grid; grid-template-columns: 20px 40px minmax(0, 1fr) auto; gap: var(--s2); align-items: center; padding: var(--s2); border-radius: var(--r-m); background: rgba(255, 255, 255, .05); }
-.ov-row.top { background: rgba(124, 156, 255, .16); box-shadow: inset 0 0 0 1px rgba(124, 156, 255, .5); }
-.ov-rk { font-size: var(--fs-lg); font-weight: 850; text-align: center; color: rgba(255, 255, 255, .6); }
+.ov-row { display: grid; grid-template-columns: 36px 44px minmax(0, 1fr) 40px; gap: var(--s3); align-items: center; padding: var(--s3); border-radius: var(--r-m); background: rgba(255, 255, 255, .05); }
+.ov-row.top { background: rgba(124, 156, 255, .14); box-shadow: inset 0 0 0 1px rgba(124, 156, 255, .45); }
+.ov-row.t-C, .ov-row.t-D { opacity: .72; }
+.ov-rk { display: grid; justify-items: center; line-height: 1; color: rgba(255, 255, 255, .5); }
+.ov-rk b { font-size: var(--fs-2xl); font-weight: 900; letter-spacing: -.03em; }
+.ov-rk small { font-size: var(--fs-xs); font-weight: 800; }
 .ov-row.top .ov-rk { color: #fff; }
-.ov-ic { display: inline-grid; place-items: center; padding: 2px; border-radius: var(--r-s); background: var(--silver); }
-.ov-ic.gold { background: var(--gold); } .ov-ic.prismatic { background: var(--spectrum); }
-.ov-ic .aug { display: block; border-radius: 6px; background: #161b2e; }
-.ov-tx { display: flex; flex-wrap: wrap; align-items: center; gap: 2px var(--s2); min-width: 0; }
-.ov-tx b { font-size: var(--fs-md); font-weight: 800; }
-.ov-tx small { flex-basis: 100%; font-size: var(--fs-xs); color: rgba(255, 255, 255, .62); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ov-row.top .ov-rk b { background: linear-gradient(180deg, #ffffff, #a9b8ff); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 0 10px rgba(124, 156, 255, .8)); }
+.ov-tx { display: grid; gap: 2px; min-width: 0; }
+.ov-nm { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); }
+.ov-nm b { font-size: var(--fs-md); font-weight: 800; color: #fff; }
+.ov .ex-why { color: rgba(255, 255, 255, .72); }
+.ov .ex-when { color: #a9bbff; }
 .ov-note { font-size: var(--fs-xs); color: rgba(255, 255, 255, .6); }
-.ov .lv.best { background: rgba(124, 156, 255, .22); color: #9bb3ff; }
-.ov .lv.good { background: rgba(255, 255, 255, .1); color: rgba(255, 255, 255, .8); }
-.ov .lv.weak, .ov .lv.none { background: none; color: rgba(255, 255, 255, .5); }
-
-/* 어울림 티어 (승률 아님). 스펙트럼은 쓰지 않는다 */
-.ov .tier { min-width: 32px; height: 32px; display: grid; place-items: center; border-radius: var(--r-s); font-size: var(--fs-lg); font-weight: 900; }
-.ov .tier.t-S { background: #7c9cff; color: #0b1020; }
-.ov .tier.t-A { background: rgba(124, 156, 255, .28); color: #c9d6ff; }
-.ov .tier.t-B { background: rgba(255, 255, 255, .12); color: rgba(255, 255, 255, .85); }
-.ov .tier.t-C, .ov .tier.t-D { background: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16); color: rgba(255, 255, 255, .5); }
 .ov-tie { font-size: var(--fs-xs); font-weight: 700; color: #c9d6ff; padding: var(--s1) var(--s2); }

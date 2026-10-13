@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, rankFits, relatedAugments, topTie, type AugmentStats, type Fit, type Rarity } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, gradeUp, rankFits, relatedAugments, topTie, type AugmentStats, type FitTier, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
 import { ChampImg } from './basics';
 import { AugImg, Empty, Seg } from './basics';
 import { Icon } from './icons';
@@ -97,10 +97,11 @@ export function AugmentCompare({ championId, stats, preset }: { championId: numb
           if (!id || !f) return <div key={i} className="slot"><span className="ph">증강 {i + 1} 고르기</span></div>;
           return (
             <div key={i} className={`slot filled ${picked.length >= 2 && f.rank === 1 ? 'top' : ''}`}>
-              <AugImg id={id} size={48} />
+              <AugRing id={id} size={48} />
               <span className="nm">{AUGMENT[id].name}</span>
-              <span className="why meta">{f.missing ?? f.reasons.join(' · ')}</span>
-              <span className="rank"><span className={`tier t-${f.tier}`} title="지금 챔피언과의 어울림 티어">{f.tier}</span>{picked.length >= 2 && <span className="meta">{f.rank}위{f.tied ? ' (비슷함)' : ''}</span>}</span>
+              <span className="why">{c && <Explain c={c} id={id} tier={f.tier} />}<GradeUp rarity={AUGMENT[id].rarity} tier={f.tier} /></span>
+              {picked.length >= 2 && <span className={`place p${f.rank}`}>{f.tied && <small>공동</small>}<b>{f.rank}</b><small>위</small></span>}
+              <span className="rank"><TierBadge tier={f.tier} /></span>
               <button type="button" className="btn ghost sm x" onClick={() => setPicked(picked.filter((x) => x !== id))} aria-label="빼기"><Icon name="x" /></button>
             </div>
           );
@@ -206,4 +207,27 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack }: { id: numbe
       </section>}
     </div>
   );
+}
+
+/** 어울림 티어 배지 (지금 챔피언과의 궁합, 승률 아님) */
+export function TierBadge({ tier }: { tier: FitTier }) {
+  return <span className={`tier t-${tier}`} title="지금 챔피언과의 어울림 티어"><b>{tier}</b></span>;
+}
+
+/** S 티어가 제 등급을 넘을 때: 실버 → 골드급, 골드 → 프리즘급 */
+export function GradeUp({ rarity, tier }: { rarity: Rarity; tier: FitTier }) {
+  const up = gradeUp(rarity, tier);
+  if (!up) return null;
+  return <span className={`gradeup ${up}`}>이 챔피언에겐 {up === 'prismatic' ? '프리즘급' : '골드급'}</span>;
+}
+
+/** 원형 증강 아이콘 (등급 테두리) */
+export function AugRing({ id, size = 40 }: { id: number; size?: number }) {
+  return <span className={`aug-ring ${AUGMENT[id]?.rarity ?? ''}`} style={{ width: size, height: size }}><AugImg id={id} size={size - 6} /></span>;
+}
+
+/** 왜 맞는지 + 언제 더 좋은지 (C·D 티어에는 '언제'를 붙이지 않는다) */
+export function Explain({ c, id, tier }: { c: ChampionProfile; id: number; tier: FitTier }) {
+  const e = explainFit(c, AUGMENT[id]);
+  return <><span className="ex-why">{e.why}</span>{e.when && (tier === 'S' || tier === 'A' || tier === 'B') && <span className="ex-when">{e.when}</span>}</>;
 }

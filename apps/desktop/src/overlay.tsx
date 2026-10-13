@@ -8,7 +8,7 @@ import { createRoot } from 'react-dom/client';
 import '@prism/ui/styles.css';
 import './overlay.css';
 import { AUGMENT, CHAMPIONS, rankFits, topTie } from '@prism/core';
-import { AugImg, ChampImg, Gem } from '@prism/ui';
+import { AugRing, ChampImg, Explain, Gem, GradeUp, TierBadge } from '@prism/ui';
 import { lastChampion, useSeenAugments } from './vision';
 
 function Overlay() {
@@ -22,20 +22,20 @@ function Overlay() {
     <div className="ov">
       <div className="ov-head"><Gem size={16} src="/brand/prism-32.png" /><b>Prism</b>{champ && <><ChampImg id={champ} size={18} /><span>{c?.name}</span></>}</div>
       {fits.length ? fits.map((f) => (
-        <div key={f.id} className={`ov-row ${f.rank === 1 ? 'top' : ''}`}>
-          <span className="ov-rk">{f.rank}</span>
-          <span className={`ov-ic ${AUGMENT[f.id]?.rarity ?? ''}`}><AugImg id={f.id} size={32} /></span>
+        <div key={f.id} className={`ov-row ${f.rank === 1 ? 'top' : ''} t-${f.tier}`}>
+          <span className="ov-rk">{f.tied && f.rank === 1 && <small>공동</small>}<b>{f.rank}</b><small>위</small></span>
+          <AugRing id={f.id} size={44} />
           <span className="ov-tx">
-            <b>{AUGMENT[f.id]?.name}</b>
-            {(f.missing || f.reasons.length > 0) && <small>{f.missing ?? f.reasons.slice(0, 2).join(' · ')}</small>}
+            <span className="ov-nm"><b>{AUGMENT[f.id]?.name}</b><GradeUp rarity={AUGMENT[f.id].rarity} tier={f.tier} /></span>
+            <Explain c={c!} id={f.id} tier={f.tier} />
           </span>
-          <span className={`tier t-${f.tier}`}>{f.tier}</span>
+          <TierBadge tier={f.tier} />
         </div>
       )) : ids.map((id) => (
         <div key={id} className="ov-row">
           <span className="ov-rk">·</span>
-          <span className={`ov-ic ${AUGMENT[id]?.rarity ?? ''}`}><AugImg id={id} size={32} /></span>
-          <span className="ov-tx"><b>{AUGMENT[id]?.name}</b></span>
+          <AugRing id={id} size={44} />
+          <span className="ov-tx"><span className="ov-nm"><b>{AUGMENT[id]?.name}</b></span></span>
         </div>
       ))}
       {tie && <div className="ov-tie">{tie.length === 2 ? '두' : '세'} 증강 모두 {tie[0].tier}티어, 차이가 작아요 · 취향대로 고르세요</div>}
