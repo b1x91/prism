@@ -45,6 +45,15 @@ pub struct Report {
     pub last_text: String,
     pub last_ids: Vec<u32>,
     pub last_at: u64,
+    /// 지금 어디까지 왔는지 (설정·게임 화면에 그대로 보여 준다)
+    /// "off" 꺼짐 | "wait" 동의 전 | "no-game" 게임 창 없음 | "back" 게임 창이 뒤에 있음 | "capture" 화면 복사 실패
+    /// | "reading" 읽었지만 증강 2개 이상을 못 찾음 | "found" 찾음
+    pub stage: String,
+    pub stage_at: u64,
+    /// 마지막으로 읽은 화면에서 찾은 증강 수
+    pub hits: u32,
+    /// 게임 창을 찾은 방법: "class" | "process" | ""
+    pub window: String,
 }
 
 pub struct Vision {
@@ -73,6 +82,14 @@ impl Vision {
             let _ = std::fs::write(&self.path, j);
         }
         *self.settings.lock().unwrap() = s;
+    }
+
+    fn stage(&self, stage: &str, hits: u32, window: &str) {
+        let mut r = self.report.lock().unwrap();
+        if r.stage != stage { r.stage_at = now(); }
+        r.stage = stage.into();
+        r.hits = hits;
+        r.window = window.into();
     }
 
     fn publish(&self, app: &AppHandle, ids: Vec<u32>, text: String) {
@@ -135,9 +152,21 @@ mod imp {
         OcrEngine::TryCreateFromLanguage(&ko).ok()
     }
 
-    fn game_window() -> Option<HWND> {
-        let h = unsafe { FindWindowW(windows::core::w!("RiotWindowClass"), PCWSTR::null()) }.ok()?;
-        if h.is_invalid() { None } else { Some(h) }
+    /// 게임 창: 창 종류 이름으로 찾고, 못 찾으면 맨 앞 창이 게임 프로세스(League of Legends.exe)의 창인지 본다
+    /// (창 종류 이름이 패치로 바뀌어도 동작하도록. 롤에 요청하지 않고 OS 정보만 본다)
+    fn game_window(pids: &mut (Vec<u32>, Option<std::time::Instant>)) -> Option<(HWND, &'static str)> {
+        if let Ok(h) = unsafe { FindWindowW(windows::core::w!("RiotWindowClass"), PCWSTR::null()) } {
+            if !h.is_invalid() { return Some((h, "class")); }
+        }
+        if pids.1.map_or(true, |t| t.elapsed() > Duration::from_secs(5)) {
+            *pids = (crate::lcu::game_pids(), Some(std::time::Instant::now()));
+        }
+        if pids.0.is_empty() { return None; }
+        let fg = unsafe { GetForegroundWindow() };
+        if fg.is_invalid() { return None; }
+        let mut pid = 0u32;
+        let _ = unsafe { GetWindowThreadProcessId(fg, Some(&mut pid as *mut u32)) };
+        if pids.0.contains(&pid) { Some((fg, "process")) } else { None }
     }
 
     /// 게임 창 화면 좌표 (클라이언트 영역)
@@ -213,11 +242,15 @@ mod imp {
         // 제목 줄 (찾는 영역 안에서의 y, 높이). 카드가 보이는 동안만 쓴다
         let mut band: Option<(i32, i32)> = None;
         let mut last: Vec<u32> = Vec::new();
+        let mut pids: (Vec<u32>, Option<std::time::Instant>) = (Vec::new(), None);
         loop {
             let s = v.settings.lock().unwrap().clone();
-            let game = if s.enabled && v.allowed.load(Ordering::SeqCst) { game_window() } else { None };
-            let front = game.filter(|h| unsafe { GetForegroundWindow() } == *h);
-            let (Some(h), Some(eng)) = (front, eng.as_ref()) else {
+            let allowed = v.allowed.load(Ordering::SeqCst);
+            let game = if s.enabled && allowed { game_window(&mut pids) } else { None };
+            let front = game.filter(|(h, _)| unsafe { GetForegroundWindow() } == *h);
+            let how = game.map(|g| g.1).unwrap_or("");
+            let (Some((h, _)), Some(eng)) = (front, eng.as_ref()) else {
+                v.stage(if !s.enabled { "off" } else if !allowed { "wait" } else if game.is_none() { "no-game" } else { "back" }, 0, how);
                 v.hide(&app);
                 band = None;
                 last.clear();
@@ -234,6 +267,7 @@ mod imp {
             match found {
                 Some((lines, text)) => {
                     let hits = v.matcher.find_at(&lines, w as f32);
+                    v.stage(if hits.len() >= 2 { "found" } else { "reading" }, hits.len() as u32, how);
                     if hits.len() >= 2 {
                         misses = 0;
                         if band.is_none() {
@@ -265,7 +299,10 @@ mod imp {
                         }
                     }
                 }
-                None => misses += 1,
+                None => {
+                    v.stage("capture", 0, how);
+                    misses += 1
+                }
             }
             std::thread::sleep(if v.shown.load(Ordering::SeqCst) { FAST } else { EVERY });
         }

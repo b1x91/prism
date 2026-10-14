@@ -60,6 +60,13 @@ pub fn game_running() -> bool {
     sys.processes().values().any(|p| is_named(p, GAME_PROCESS))
 }
 
+/// 게임(인게임) 프로세스 번호들 (작은 창이 게임 창을 찾을 때 쓴다)
+pub fn game_pids() -> Vec<u32> {
+    let mut sys = System::new();
+    sys.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::nothing());
+    sys.processes().values().filter(|p| is_named(p, GAME_PROCESS)).map(|p| p.pid().as_u32()).collect()
+}
+
 /// 클라이언트의 포트·비밀번호 찾기: 실행 파일 옆 lockfile → 실행 인자 순서
 fn discover() -> Option<Creds> {
     let mut sys = processes();

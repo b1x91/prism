@@ -7,19 +7,20 @@ import { api } from '../bridge';
 import { useNavigate } from 'react-router-dom';
 import { editMatchup, type State } from '../controller';
 import { ChampSelectPanel } from './ChampSelect';
-import { useSeenAugments } from '../vision';
+import { useSeenAugments, useVisionState, visionStatus } from '../vision';
 
 /** 게임 중: Alt+Tab 하면 바로 보이는 내 챔피언 증강 가이드 + 3개 비교 */
 function InGame({ championId, matchup }: { championId: number | null; matchup: State['matchup'] }) {
   const [tab, setTab] = useState<'compare' | 'guide'>('compare');
   const [pick, setPick] = useState<number | null>(null);
   const seen = useSeenAugments();
+  const vs = visionStatus(useVisionState());
   const id = pick ?? championId;
   if (!id) return <section className="card pad"><Empty>이번 판 챔피언을 고르면 증강 가이드가 나옵니다.</Empty><ChampSearch onPick={setPick} /></section>;
   return (
     <div className="stack" style={{ gap: 16 }}>
       <ChampBanner id={id} eyebrow="게임 중 · 증강 고를 때 Alt+Tab" actions={<button type="button" className="btn sm" onClick={() => setPick(null)}>{pick ? '내 챔피언으로' : '다른 챔피언'}</button>} />
-      <div className="row"><Seg value={tab} options={[['compare', '뜬 증강 3개 비교'], ['guide', '등급별 가이드']]} onChange={setTab} /></div>
+      <div className="row"><Seg value={tab} options={[['compare', '뜬 증강 3개 비교'], ['guide', '등급별 가이드']]} onChange={setTab} />{vs.text && <span className={`vs ${vs.tone}`} title="게임 중 증강 자동 인식"><i />{vs.text}</span>}</div>
       {tab === 'compare' ? <AugmentCompare championId={id} preset={seen.ids} matchup={matchup ? { allies: matchup.allies, enemies: matchup.enemies } : { allies: [], enemies: [] }} onMatchup={editMatchup} autoMatchup={matchup?.source === 'game' || matchup?.source === 'champ-select'} /> : <AugmentGuide championId={id} compact={false} />}
     </div>
   );

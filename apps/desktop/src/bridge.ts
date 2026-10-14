@@ -34,9 +34,10 @@ export const bridge = {
   visionTest: () => call<{ ids: number[]; text: string }>('vision_test').catch((e) => { throw err(e); }),
 };
 
+export type VisionStage = '' | 'off' | 'wait' | 'no-game' | 'back' | 'capture' | 'reading' | 'found';
 export type VisionState = {
   settings: { enabled: boolean; position: 'right' | 'top' };
-  report: { engine: 'ok' | 'no-korean' | 'unsupported' | ''; last_text: string; last_ids: number[]; last_at: number };
+  report: { engine: 'ok' | 'no-korean' | 'unsupported' | ''; last_text: string; last_ids: number[]; last_at: number; stage?: VisionStage; stage_at?: number; hits?: number; window?: string };
 };
 export type UpdateInfo = { current: string; latest: string; available: boolean; notes: string };
 

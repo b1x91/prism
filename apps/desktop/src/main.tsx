@@ -71,7 +71,12 @@ function App() {
   useEffect(() => { if (s.status === 'champ-select' || s.status === 'in-game') nav('/'); }, [s.status, nav]);
   const ready = Boolean(s.me?.consent);
   // 게임 위 작은 창(자동 인식)도 동의한 뒤에만 켠다
-  useEffect(() => { void bridge.visionAllow(ready); }, [ready]);
+  // (한 번 놓쳐도 되도록 15초마다 다시 알린다)
+  useEffect(() => {
+    void bridge.visionAllow(ready);
+    const t = setInterval(() => void bridge.visionAllow(ready), 15_000);
+    return () => clearInterval(t);
+  }, [ready]);
   const [label, tone] = STATUS[s.status];
   // 이 창을 보고 있으니 앱은 떠 있다. 롤이 켜져 있으면 앱+게임
   const presence: Presence = LOL_ON.has(s.status) ? 'both' : 'app';

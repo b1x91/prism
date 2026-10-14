@@ -256,3 +256,9 @@ body { overflow: hidden; background: var(--bg); }
 .ta-row .tier b { font-size: var(--fs-lg); }
 .relogin { display: flex; align-items: center; gap: var(--s3); max-width: var(--wide); margin: 0 auto var(--s4); padding: var(--s3) var(--s4); border-radius: var(--r-m); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); font-size: var(--fs-sm); }
 .relogin span { flex: 1; }
+
+/* 증강 자동 인식 상태 한 줄 */
+.vs { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); font-weight: 650; color: var(--text-2); }
+.vs i { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex: none; }
+.vs.ok i { background: var(--ok); } .vs.warn i { background: var(--warn); } .vs.bad i { background: var(--lose); } .vs.bad { color: var(--lose); }
+.row > .vs { margin-left: auto; }
