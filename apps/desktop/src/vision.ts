@@ -15,8 +15,15 @@ export function useSeenAugments(): Seen {
       return;
     }
     let off: (() => void) | undefined;
+    let live = true;
+    // 이 화면이 늦게 열려도(예: 설정을 보다가 게임 화면으로) 방금 인식한 증강을 바로 보여 준다.
+    // 예전에는 화면이 열린 뒤의 새 소식만 받아서, 인식은 됐는데 3개 비교가 비어 있었다
+    bridge.visionGet().then((v) => {
+      const r = v.report;
+      if (live && r.last_ids.length >= 2 && Date.now() - r.last_at < 5 * 60_000) setSeen((s) => (s.at >= r.last_at ? s : { ids: r.last_ids, at: r.last_at }));
+    }).catch(() => {});
     import('@tauri-apps/api/event').then(({ listen }) => listen<Seen>('augments', (e) => setSeen(e.payload)).then((f) => { off = f; }));
-    return () => off?.();
+    return () => { live = false; off?.(); };
   }, []);
   return seen;
 }

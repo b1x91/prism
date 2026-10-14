@@ -98,7 +98,6 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
     <div className="dex">
       <header className="dex-device">
         <span className="dex-lens" aria-hidden="true"><Gem size={44} /></span>
-        <span className="dex-lights" aria-hidden="true"><i /><i /><i /></span>
         <div className="dex-title">
           <h1>도감</h1>
           <Seg value={kind} options={[['champions', '챔피언'], ['augments', '증강']]} onChange={(k) => { setKind(k); setGroup('all'); setQ(''); setShow('all'); }} />

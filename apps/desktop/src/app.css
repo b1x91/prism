@@ -278,3 +278,12 @@ body { overflow: hidden; background: var(--bg); }
 .verdict.poor { background: color-mix(in srgb, var(--lose) 14%, transparent); color: var(--lose); }
 .verdict.gold { color: var(--text); background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(90deg, var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-7)) border-box; border: 1.5px solid transparent; }
 .verdict.gold i { width: 10px; height: 10px; transform: rotate(45deg); border-radius: 2px; background: linear-gradient(135deg, var(--spectrum-2), var(--spectrum-6)); }
+
+/* 게임·챔프 선택 중: '게임' 메뉴가 숨 쉬듯 빛나고 오른쪽에 점 */
+.side-nav a.live { position: relative; color: var(--text); animation: nav-live 1.8s ease-in-out infinite; }
+.side-nav a.live svg { color: var(--accent); }
+.side-nav a .live-dot { width: 8px; height: 8px; margin-left: auto; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); animation: live-ping 1.8s ease-out infinite; }
+@keyframes nav-live { 0%, 100% { background: color-mix(in srgb, var(--accent) 8%, transparent); } 50% { background: color-mix(in srgb, var(--accent) 22%, transparent); } }
+@keyframes live-ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
+@media (max-width: 900px) { .side-nav a .live-dot { position: absolute; top: 6px; right: 6px; margin: 0; } }
+@media (prefers-reduced-motion: reduce) { .side-nav a.live, .side-nav a .live-dot { animation: none; } .side-nav a.live { background: color-mix(in srgb, var(--accent) 14%, transparent); } }

@@ -88,6 +88,8 @@ function App() {
   // 이 창을 보고 있으니 앱은 떠 있다. 롤이 켜져 있으면 앱+게임
   const presence: Presence = LOL_ON.has(s.status) ? 'both' : 'app';
   // 운영진은 글자 대신 카드가 프리즘처럼 빛난다
+  // 게임·챔프 선택 중에는 '게임' 메뉴가 반짝인다 (다른 화면에 있다가도 바로 돌아오게)
+  const playing = s.status === 'in-game' || s.status === 'champ-select';
   const staff = s.me?.tier === 'admin' || (s.me?.role?.level ?? 0) >= 5;
   const skins = useSkins();
   const main = useRef<HTMLElement>(null);
@@ -114,7 +116,7 @@ function App() {
         <span className="brand-line" aria-hidden="true" />
         {up.info?.available && <button type="button" className="side-update" disabled={up.installing} onClick={installUpdate} title={up.error ?? `지금 v${VERSION}`}><span className="dot" />{up.installing ? '새 버전 받는 중…' : `새 버전 ${up.info.latest} · 업데이트`}</button>}
         {up.error && up.info?.available && <span className="side-err l">{up.error}</span>}
-        <nav className="side-nav">{NAV.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'}><Icon name={i} />{l}</NavLink>)}</nav>
+        <nav className="side-nav">{NAV.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}</NavLink>)}</nav>
         <span className="sp" />
         {/* 모임 채널: 메뉴와 같은 모양으로 아래쪽에 */}
         <nav className="side-nav side-chan" aria-label="모임 채널">
