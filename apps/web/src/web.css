@@ -1,4 +1,4 @@
-/* 웹 전용 틀 (상단 바·모바일 하단 탭·첫 화면) */
+/* 웹 전용 틀 (상단 바·모바일 메뉴·첫 화면) */
 .top { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line); }
 .top .wrap { display: flex; align-items: center; gap: var(--s4); height: 64px; }
 .brand { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg); font-weight: 850; letter-spacing: -.02em; }
@@ -14,7 +14,9 @@
 .icon-btn { width: 36px; height: 36px; display: grid; place-items: center; border: 0; border-radius: var(--r-m); background: transparent; color: var(--text-2); cursor: pointer; }
 .icon-btn:hover { background: var(--surface-2); color: var(--text); }
 .me-btn { display: inline-flex; align-items: center; gap: var(--s2); height: 36px; padding: 0 var(--s3) 0 4px; border-radius: var(--r-pill); background: var(--surface-2); font-weight: 650; font-size: var(--fs-sm); }
-.tabbar { display: none; }
+.top-wide { display: contents; }
+.menu-btn { display: none !important; }
+.mmenu { display: none; }
 main { min-height: calc(100vh - 64px - 120px); }
 .foot { padding: var(--s7) 0 var(--s8); border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-xs); margin-top: var(--s8); }
 .foot .wrap { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s6); justify-content: space-between; }
@@ -23,12 +25,30 @@ main { min-height: calc(100vh - 64px - 120px); }
   .tabs { display: none; }
   .me-btn span { display: none; }
   .me-btn { padding: 0; background: none; }
-  .tabbar { display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; justify-content: space-around; padding: 6px var(--s2) calc(6px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(16px); border-top: 1px solid var(--line); }
-  .tabbar a { flex: 1; display: grid; justify-items: center; gap: 2px; padding: var(--s1) 0; font-size: var(--fs-xs); font-weight: 650; color: var(--text-3); }
-  .tabbar a.active { color: var(--text); }
-  .tabbar .icon { width: 20px; height: 20px; }
-  main { padding-bottom: 72px; }
+  .top-wide { display: none; }
+  .menu-btn { display: grid !important; }
+  .mmenu { display: block; position: fixed; inset: 0; z-index: 60; pointer-events: none; }
+  .mmenu.open { pointer-events: auto; }
+  .mmenu-scrim { position: absolute; inset: 0; border: 0; background: rgba(0, 0, 0, .45); opacity: 0; transition: opacity .2s ease; }
+  .mmenu.open .mmenu-scrim { opacity: 1; }
+  .mmenu-panel { position: absolute; top: 0; right: 0; bottom: 0; width: min(320px, 86vw); display: flex; flex-direction: column; gap: var(--s4); padding: var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom)); background: var(--bg); border-left: 1px solid var(--line); box-shadow: -16px 0 40px rgba(0, 0, 0, .25); transform: translateX(105%); transition: transform .24s cubic-bezier(.2, .8, .2, 1); overflow-y: auto; }
+  .mmenu.open .mmenu-panel { transform: none; }
+  .mmenu-head { display: flex; align-items: center; justify-content: space-between; height: 40px; }
+  .mmenu-me { display: flex; align-items: center; gap: var(--s3); padding: var(--s3); border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--line); }
+  .mmenu-me .face, .mmenu-me .initial { border-radius: 50%; }
+  .mmenu-me b { display: block; font-size: var(--fs-md); }
+  .mmenu-me small { color: var(--text-3); font-size: var(--fs-xs); }
+  .mmenu-login { justify-content: center; }
+  .mmenu-nav { display: grid; gap: 2px; }
+  .mmenu-nav a { display: flex; align-items: center; gap: var(--s3); height: 48px; padding: 0 var(--s3); border-radius: var(--r-m); color: var(--text-2); font-size: var(--fs-lg); font-weight: 650; }
+  .mmenu-nav a .icon { width: 20px; height: 20px; }
+  .mmenu-nav a.active { color: var(--text); background: var(--surface); box-shadow: inset 3px 0 0 var(--accent); }
+  .mmenu-foot { display: grid; gap: var(--s3); padding-top: var(--s4); border-top: 1px solid var(--line); }
+  .mmenu-row { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+  .mmenu-row .k { font-size: var(--fs-sm); color: var(--text-3); font-weight: 650; }
+  .mmenu-panel .sp { flex: 1; }
 }
+@media (max-width: 860px) and (prefers-reduced-motion: reduce) { .mmenu-panel, .mmenu-scrim { transition: none; } }
 
 .section { padding: var(--s8) 0; }
 .section.tight { padding-top: var(--s6); }
