@@ -4,7 +4,7 @@
  * 못 만난 것은 번호와 흐린 그림(???). 누르면 도감 설명과 다음 목표.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity } from '@prism/core';
 import { ChampImg, Gem, Seg } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
@@ -201,6 +201,42 @@ function Journey({ m, specialList }: { m: Mastery; specialList: ReactNode }) {
   );
 }
 
+/**
+ * 마스터 무대: 정복한 챔피언·증강의 설명 머리. 어두운 무대 + 그 챔피언 그림 + 도는 스펙트럼 빛무리·빛살·반짝임.
+ * 처음 열 때(이 기기에서 한 번) 섬광 → 빛 터짐 → '정복' 도장이 찍힌다. 그림을 누르면 다시 볼 수 있다. 동작 줄이기면 멈춘 그림만.
+ */
+const SEEN_KEY = 'prism-dex-conquered';
+function MasterStage({ kind, id, no, name, sub, e, m, art, pic }: { kind: Kind; id: number; no: number; name: string; sub: ReactNode; e?: DexEntry; m: Mastery; art?: string; pic: ReactNode }) {
+  const key = `${kind}:${id}`;
+  const [play, setPlay] = useState(0);
+  useEffect(() => {
+    let seen: string[] = [];
+    try { seen = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '[]'); } catch { /* 저장소 없음 */ }
+    if (!seen.includes(key)) {
+      setPlay((x) => x + 1);
+      try { localStorage.setItem(SEEN_KEY, JSON.stringify([...seen, key].slice(-500))); } catch { /* 저장소 없음 */ }
+    }
+  }, [key]);
+  const sparks = useMemo(() => Array.from({ length: 14 }, (_, i) => ({ x: (i * 37 + 11) % 100, y: (i * 53 + 7) % 100, d: (i % 7) * 0.45, s: 4 + (i % 3) * 2 })), []);
+  return (
+    <div className={`mstage ${play ? 'intro' : ''}`} key={`${key}-${play}`}>
+      {art && <img className="ms-art" src={art} alt="" />}
+      <span className="ms-rays" aria-hidden="true" />
+      <span className="ms-halo" aria-hidden="true" />
+      {sparks.map((p, i) => <i key={i} className="ms-spark" aria-hidden="true" style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.s, height: p.s, animationDelay: `${p.d}s` }} />)}
+      {play > 0 && <><span className="ms-flash" aria-hidden="true" /><span className="ms-burst" aria-hidden="true" /></>}
+      <button type="button" className="ms-pic" onClick={() => setPlay((x) => x + 1)} title="정복 순간 다시 보기">{pic}</button>
+      <div className="ms-title">
+        <span className="ms-kicker"><PrismMark size={16} />MASTER · {NO(no)}</span>
+        <h2>{name}</h2>
+        <div className="ms-sub">{sub}</div>
+        <span className="ms-stamp" aria-hidden="true">정복</span>
+        <p className="ms-line">목표 {m.total}개 모두 달성{e ? ` · ${e.n}판 ${e.w}승` : ''} · 장인으로 이름이 올랐어요</p>
+      </div>
+    </div>
+  );
+}
+
 function Stats({ e }: { e: DexEntry }) {
   return (
     <div className="dxe-stats">
@@ -227,11 +263,12 @@ function ChampEntry({ id, no, e, m, dex, onChampion }: { id: number; no: number;
   const sList = [...m.special.ids].sort((a, b) => Number(tried.has(b)) - Number(tried.has(a)) || RARITY_ORDER.indexOf(AUGMENT[b].rarity) - RARITY_ORDER.indexOf(AUGMENT[a].rarity)).slice(0, 12);
   return (
     <div className={`dxe ${stageKey(m)}`}>
-      <div className="dxe-hero">
-        <span className="dxe-pic"><ChampImg id={id} size={112} />{!m.seen && <i className="q" aria-hidden="true">?</i>}<Ring m={m} /></span>
-        <div><span className="no">{NO(no)}</span><h2>{c.name}</h2><div className="dxe-types"><StageTag m={m} />{types.map((t) => <span key={t} className="pill">{t}</span>)}</div></div>
-      </div>
-      {m.master && <div className="dxe-crown"><PrismMark size={24} /><div><b>이 챔피언의 장인</b><span>챔피언 페이지와 랭킹에 이름이 올랐어요</span></div></div>}
+      {m.master
+        ? <MasterStage kind="champions" id={id} no={no} name={c.name} e={e} m={m} art={c.splash ? cdragon(c.splash) : undefined} pic={<ChampImg id={id} size={112} />} sub={types.join(' · ')} />
+        : <div className="dxe-hero">
+          <span className="dxe-pic"><ChampImg id={id} size={112} />{!m.seen && <i className="q" aria-hidden="true">?</i>}<Ring m={m} /></span>
+          <div><span className="no">{NO(no)}</span><h2>{c.name}</h2><div className="dxe-types"><StageTag m={m} />{types.map((t) => <span key={t} className="pill">{t}</span>)}</div></div>
+        </div>}
       <p className="dxe-text">{e ? `${flavor} ${day(e.first)}에 처음 만나 지금까지 ${e.n}판, ${e.w}번 이겼다.` : `아직 만나지 못한 챔피언이에요. ${flavor} 주사위나 대기석에서 보이면 잡아 보세요.`}</p>
       <Journey m={m} specialList={
         <div className="dxe-sub"><span className="k">이 챔피언에게 S티어인 증강 <small>{m.special.tried.length}/{m.special.ids.length}</small></span>
@@ -253,11 +290,12 @@ function AugEntry({ id, no, e, m, dex, onAugment, onChampion }: { id: number; no
   const best = [...m.special.ids].sort((x, y) => Number(tried.has(y)) - Number(tried.has(x)) || x - y).slice(0, 14);
   return (
     <div className={`dxe ${stageKey(m)}`}>
-      <div className="dxe-hero">
-        <span className="dxe-pic aug"><AugRing id={id} size={104} />{!m.seen && <i className="q" aria-hidden="true">?</i>}<Ring m={m} /></span>
-        <div><span className="no">{NO(no)}</span><h2>{a.name}</h2><div className="dxe-types"><StageTag m={m} /><span className={`pill rar-${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.note && <span className="pill">{a.note}</span>}</div></div>
-      </div>
-      {m.master && <div className="dxe-crown"><PrismMark size={24} /><div><b>이 증강의 장인</b><span>증강 페이지와 랭킹에 이름이 올랐어요</span></div></div>}
+      {m.master
+        ? <MasterStage kind="augments" id={id} no={no} name={a.name} e={e} m={m} pic={<AugRing id={id} size={104} />} sub={`${RARITY_KO[a.rarity]} 증강`} />
+        : <div className="dxe-hero">
+          <span className="dxe-pic aug"><AugRing id={id} size={104} />{!m.seen && <i className="q" aria-hidden="true">?</i>}<Ring m={m} /></span>
+          <div><span className="no">{NO(no)}</span><h2>{a.name}</h2><div className="dxe-types"><StageTag m={m} /><span className={`pill rar-${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.note && <span className="pill">{a.note}</span>}</div></div>
+        </div>}
       <p className="dxe-text">{a.desc}</p>
       <Journey m={m} specialList={
         <div className="dxe-sub"><span className="k">이 증강이 {m.special.tier}티어로 맞는 챔피언 <small>{m.special.tried.length}/{m.special.ids.length}</small></span>

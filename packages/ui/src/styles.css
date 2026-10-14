@@ -1105,3 +1105,41 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .jsteps li.gate .jc { background: none; }
 .jsteps li.gate.done .jc { background: var(--ok); }
 .jsteps li.off { opacity: .5; }
+
+/* 도감 마스터 무대: 정복한 챔피언·증강 */
+.mstage { --c: 100px; position: relative; isolation: isolate; overflow: hidden; display: grid; justify-items: center; gap: var(--s3); padding: var(--s7) var(--s4) var(--s5); border-radius: var(--r-l); text-align: center; color: #fff; background: radial-gradient(70% 60% at 50% 22%, rgba(80, 110, 255, .35), transparent 70%), linear-gradient(180deg, #0b0f22, #05060d); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08), 0 12px 40px rgba(20, 30, 90, .35); }
+.ms-art { position: absolute; inset: 0; z-index: -3; width: 100%; height: 100%; object-fit: cover; object-position: center 18%; opacity: .32; filter: saturate(1.15); -webkit-mask-image: linear-gradient(#000 35%, transparent 95%); mask-image: linear-gradient(#000 35%, transparent 95%); }
+.ms-rays { position: absolute; z-index: -2; left: 50%; top: var(--c); width: 960px; height: 960px; translate: -50% -50%; background: repeating-conic-gradient(from 0deg, rgba(255, 255, 255, .11) 0 3deg, transparent 3deg 15deg); -webkit-mask-image: radial-gradient(circle, #000 0 12%, transparent 55%); mask-image: radial-gradient(circle, #000 0 12%, transparent 55%); animation: ms-rot 48s linear infinite; }
+.ms-halo { position: absolute; z-index: -1; left: 50%; top: var(--c); width: 230px; height: 230px; translate: -50% -50%; border-radius: 50%; background: conic-gradient(var(--spectrum-1), var(--spectrum-2), var(--spectrum-3), var(--spectrum-4), var(--spectrum-5), var(--spectrum-6), var(--spectrum-7), var(--spectrum-1)); filter: blur(30px); opacity: .7; animation: ms-rot 9s linear infinite; }
+.ms-spark { position: absolute; z-index: -1; border-radius: 50%; background: #fff; box-shadow: 0 0 8px #fff, 0 0 16px var(--spectrum-5); opacity: 0; animation: lt-twinkle 2.8s ease-in-out infinite; }
+.ms-pic { display: grid; place-items: center; width: 136px; height: 136px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; background: conic-gradient(from var(--dx-ang), var(--spectrum-1), var(--spectrum-2), var(--spectrum-3), var(--spectrum-4), var(--spectrum-5), var(--spectrum-6), var(--spectrum-7), var(--spectrum-1)); box-shadow: 0 0 24px rgba(255, 255, 255, .28), 0 0 64px rgba(120, 150, 255, .45); animation: dx-spin 4s linear infinite; }
+.ms-pic > * { width: 126px !important; height: 126px !important; border-radius: 50%; box-shadow: 0 0 0 3px #070912; }
+.ms-pic .aug-ring { background: #070912; }
+.ms-title { display: grid; justify-items: center; gap: 4px; }
+.ms-kicker { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .24em; color: rgba(255, 255, 255, .85); }
+.mstage h2 { margin: 0; font-size: var(--fs-d1); line-height: 1.15; font-weight: 900; color: transparent; background: linear-gradient(110deg, #fff 38%, #ffe7a3 50%, #fff 62%); background-size: 260% 100%; -webkit-background-clip: text; background-clip: text; filter: drop-shadow(0 2px 14px rgba(140, 170, 255, .6)); animation: shine 4.5s ease-in-out infinite; word-break: keep-all; }
+.ms-sub { font-size: var(--fs-sm); color: rgba(255, 255, 255, .78); word-break: keep-all; }
+.ms-line { margin: 0; font-size: var(--fs-xs); color: rgba(255, 255, 255, .6); word-break: keep-all; }
+.ms-stamp { position: absolute; top: var(--s4); left: var(--s4); padding: 4px var(--s3); border: 2px solid #ffd56a; border-radius: var(--r-s); color: #ffd56a; font-size: var(--fs-lg); font-weight: 900; letter-spacing: .2em; transform: rotate(-12deg); opacity: .92; word-break: keep-all; text-shadow: 0 0 12px rgba(255, 213, 106, .6); box-shadow: 0 0 16px rgba(255, 213, 106, .3), inset 0 0 8px rgba(255, 213, 106, .25); }
+/* 처음 열 때: 섬광 → 빛 터짐 → 그림 → 이름 → 도장 */
+.ms-flash { position: absolute; inset: 0; z-index: 3; pointer-events: none; background: radial-gradient(circle at 50% var(--c), #fff, rgba(255, 255, 255, .6) 25%, transparent 65%); opacity: 0; animation: ms-flash 1s ease-out; }
+.ms-burst { position: absolute; z-index: 2; pointer-events: none; left: 50%; top: var(--c); width: 40px; height: 40px; translate: -50% -50%; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 24px #fff, 0 0 48px var(--spectrum-6), inset 0 0 24px var(--spectrum-3); opacity: 0; animation: ms-burst 1.2s cubic-bezier(.2, .8, .2, 1); }
+.mstage.intro .ms-pic { animation: dx-spin 4s linear infinite, ms-pop 1s cubic-bezier(.2, 1.4, .4, 1) both; }
+.mstage.intro .ms-title > :not(.ms-stamp) { animation: ms-rise .6s ease-out both; }
+.mstage.intro .ms-kicker { animation-delay: .45s !important; }
+.mstage.intro h2 { animation: ms-rise .6s ease-out .55s both, shine 4.5s ease-in-out 1.2s infinite; }
+.mstage.intro .ms-sub { animation-delay: .7s !important; }
+.mstage.intro .ms-line { animation-delay: .8s !important; }
+.mstage.intro .ms-stamp { animation: ms-stamp .45s cubic-bezier(.2, 1.6, .4, 1) 1.15s both; }
+.mstage.intro .ms-halo { animation: ms-rot 9s linear infinite, ms-swell 1.2s ease-out; }
+@keyframes ms-rot { to { rotate: 360deg; } }
+@keyframes ms-flash { 0% { opacity: 0; } 12% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes ms-burst { 0% { opacity: 1; width: 40px; height: 40px; } 100% { opacity: 0; width: 620px; height: 620px; border-width: 1px; } }
+@keyframes ms-pop { 0% { transform: scale(.3); opacity: 0; filter: brightness(3); } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); filter: none; } }
+@keyframes ms-rise { from { opacity: 0; transform: translateY(14px); } }
+@keyframes ms-stamp { 0% { opacity: 0; transform: rotate(-12deg) scale(2.8); } 100% { opacity: .92; transform: rotate(-12deg) scale(1); } }
+@keyframes ms-swell { 0% { opacity: 1; width: 60px; height: 60px; } 100% { opacity: .7; width: 230px; height: 230px; } }
+@media (prefers-reduced-motion: reduce) {
+  .ms-rays, .ms-halo, .ms-spark, .ms-pic, .mstage h2, .mstage.intro .ms-pic, .mstage.intro .ms-title > *, .mstage.intro h2, .mstage.intro .ms-stamp, .mstage.intro .ms-halo { animation: none !important; }
+  .ms-spark { opacity: .6; } .ms-flash, .ms-burst { display: none; }
+}
