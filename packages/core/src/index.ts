@@ -9,3 +9,4 @@ export * from './config';
 export * from './skin-tiers';
 export * from './skins';
 export * from './profile';
+export * from './mastery';
