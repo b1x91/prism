@@ -57,6 +57,8 @@ pub struct Report {
     pub stage_at: u64,
     /// 마지막으로 읽은 화면에서 찾은 증강 수
     pub hits: u32,
+    /// 한 번 읽는 데 걸린 시간 (복사 + 문자 인식)
+    pub read_ms: u32,
     /// 게임 창을 찾은 방법: "class" | "process" | ""
     pub window: String,
 }
@@ -155,7 +157,7 @@ pub fn create_overlay(app: &tauri::App) -> tauri::Result<()> {
 }
 
 /// 구석 표시 크기 (논리 픽셀)
-const BADGE: f64 = 32.0;
+const BADGE: f64 = 28.0;
 
 #[cfg(windows)]
 mod imp {
@@ -252,7 +254,13 @@ mod imp {
     }
 
     /// 찾는 곳: 게임 화면 가운데 (카드가 뜨는 자리). 실제 화면으로 맞춰 가며 조정한다
+    /// 카드 제목이 뜨는 가로 띠 (16:9 기준 화면 높이 40% 안팎). 좁게 읽어야 빠르고, 다른 글자에 덜 흔들린다
     fn region(rc: &RECT) -> (i32, i32, i32, i32) {
+        let (w, h) = (rc.right - rc.left, rc.bottom - rc.top);
+        (rc.left + w * 12 / 100, rc.top + h * 26 / 100, w * 76 / 100, h * 34 / 100)
+    }
+    /// 넓게: 좁은 띠에서 못 찾을 때 가끔 (화면 비율·UI 크기가 다른 경우)
+    fn region_wide(rc: &RECT) -> (i32, i32, i32, i32) {
         let (w, h) = (rc.right - rc.left, rc.bottom - rc.top);
         (rc.left + w * 8 / 100, rc.top + h * 10 / 100, w * 84 / 100, h * 62 / 100)
     }
@@ -264,6 +272,7 @@ mod imp {
         let mut misses = 0;
         // 제목 줄 (찾는 영역 안에서의 y, 높이). 카드가 보이는 동안만 쓴다
         let mut band: Option<(i32, i32)> = None;
+        let mut band_wide = false;
         let mut last: Vec<u32> = Vec::new();
         let mut slots = Slots::default();
         // 마지막으로 카드를 본 때, 게임 창이 뒤로 간 때
@@ -302,11 +311,16 @@ mod imp {
                 show_badge(&app, &rc);
                 badge_at = Some(rc);
             }
-            let (x, y, w, hh) = region(&rc);
+            // 제목 줄을 아직 모르면: 보통은 좁은 띠, 네 번에 한 번은 넓게
+            // 제목 줄을 찾았으면 그 줄을 찾은 범위 그대로 (좁은 띠 / 넓게 기준이 다르다)
+            let wide = if band.is_some() { band_wide } else { misses % 4 == 3 };
+            let (x, y, w, hh) = if wide { region_wide(&rc) } else { region(&rc) };
             if w < 200 || hh < 100 { std::thread::sleep(EVERY); continue; }
             // 카드가 떠 있으면 제목 줄만, 아니면 넓게
             let (by, bh) = band.unwrap_or((0, hh));
+            let t0 = std::time::Instant::now();
             let found = grab(x, y + by, w, bh).and_then(|buf| recognize(eng, &buf, w, bh).ok());
+            v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
             let shown = v.shown.load(Ordering::SeqCst);
             match found {
                 Some((lines, text)) => {
@@ -324,6 +338,7 @@ mod imp {
                             let m = (hh * 6 / 100).max(24);
                             let y0 = (top - m).max(0);
                             band = Some((y0, (bottom - y0 + m * 2).min(hh - y0)));
+                            band_wide = wide;
                         }
                         let ids = slots.update(&hits, w as f32);
                         if ids != last || !shown {
@@ -394,9 +409,9 @@ mod imp {
         let Some(h) = hwnd_by(app, "badge") else { return };
         let scale = app.get_webview_window("badge").and_then(|w| w.scale_factor().ok()).unwrap_or(1.0);
         let size = (super::BADGE * scale) as i32;
-        let m = (6.0 * scale) as i32;
+        // 게임 화면 오른쪽 위 모서리에 딱 붙인다
         unsafe {
-            let _ = SetWindowPos(h, Some(HWND_TOPMOST), rc.right - size - m, rc.top + m, size, size, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            let _ = SetWindowPos(h, Some(HWND_TOPMOST), rc.right - size, rc.top, size, size, SWP_NOACTIVATE | SWP_SHOWWINDOW);
         }
     }
 

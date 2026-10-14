@@ -81,7 +81,7 @@ function VisionSettings() {
       <div className="kv">
         <div><span className="k">작은 창 위치</span><span><Seg value={v.settings.position} options={[['right', '오른쪽'], ['top', '위']]} onChange={(p) => save(v.settings.enabled, p)} /></span></div>
         <div><span className="k">상태</span><span className="stack" style={{ gap: 4 }}>
-          <span className={`vs ${st.tone}`}><i />{st.text}</span>
+          <span className={`vs ${st.tone}`}><i />{st.text}{r.read_ms ? <small className="muted"> · 한 번 읽는 데 {(r.read_ms / 1000).toFixed(2)}초</small> : null}</span>
           {r.last_at && r.last_ids.length ? <span className="stack" style={{ gap: 4 }}>
             <b>마지막으로 읽은 증강 · {ago(r.last_at)}</b>
             <span className="row wrapr" style={{ gap: 8 }}>{r.last_ids.map((id) => <span key={id} className="pill"><AugImg id={id} size={20} />{AUGMENT[id]?.name ?? `#${id}`}</span>)}</span>

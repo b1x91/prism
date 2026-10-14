@@ -23,25 +23,49 @@ export const levelTotal = (l: DexLevel) => ([1, 2, 3, 4, 5] as DexLevel[]).filte
 
 export type ShopSlot = 'frame' | 'fx' | 'name' | 'title';
 export const SLOT_KO: Record<ShopSlot, string> = { frame: '머리 테두리', fx: '머리 효과', name: '이름 효과', title: '칭호' };
-export type ShopItem = { id: string; slot: ShopSlot; name: string; price: number; desc: string };
+export type ShopRarity = 'common' | 'rare' | 'epic' | 'legendary';
+export const RARITY_SHOP_KO: Record<ShopRarity, string> = { common: '일반', rare: '희귀', epic: '영웅', legendary: '전설' };
+export type ShopItem = { id: string; slot: ShopSlot; name: string; price: number; desc: string; rarity: ShopRarity };
 
+const it = (id: string, slot: ShopSlot, rarity: ShopRarity, price: number, name: string, desc: string): ShopItem => ({ id, slot, rarity, price, name, desc });
 export const SHOP: ShopItem[] = [
-  { id: 'frame-gold', slot: 'frame', name: '금빛 테두리', price: 300, desc: '머리와 얼굴을 금빛으로 두른다' },
-  { id: 'frame-ember', slot: 'frame', name: '불꽃 테두리', price: 600, desc: '붉게 타오르는 테두리' },
-  { id: 'frame-frost', slot: 'frame', name: '서리 테두리', price: 600, desc: '차갑게 빛나는 푸른 테두리' },
-  { id: 'frame-prism', slot: 'frame', name: '프리즘 테두리', price: 1200, desc: '스펙트럼이 천천히 돈다' },
-  { id: 'fx-sparkle', slot: 'fx', name: '반짝임', price: 400, desc: '머리 위로 작은 빛이 반짝인다' },
-  { id: 'fx-petals', slot: 'fx', name: '꽃잎', price: 500, desc: '꽃잎이 천천히 흩날린다' },
-  { id: 'fx-rays', slot: 'fx', name: '빛살', price: 700, desc: '뒤에서 빛줄기가 퍼진다' },
-  { id: 'fx-aurora', slot: 'fx', name: '오로라', price: 900, desc: '머리 위로 오로라가 흐른다' },
-  { id: 'name-glow', slot: 'name', name: '빛나는 이름', price: 250, desc: '이름이 은은하게 빛난다' },
-  { id: 'name-gold', slot: 'name', name: '금빛 이름', price: 400, desc: '이름을 금빛으로' },
-  { id: 'name-galaxy', slot: 'name', name: '은하 이름', price: 800, desc: '이름에 푸른 은하가 흐른다' },
-  { id: 'title-night', slot: 'title', name: '밤의 단골', price: 200, desc: '이름 위 한 줄 칭호' },
-  { id: 'title-start', slot: 'title', name: '전설의 시작', price: 200, desc: '이름 위 한 줄 칭호' },
-  { id: 'title-teamfight', slot: 'title', name: '한타의 중심', price: 350, desc: '이름 위 한 줄 칭호' },
-  { id: 'title-alchemist', slot: 'title', name: '증강 연금술사', price: 450, desc: '이름 위 한 줄 칭호' },
-  { id: 'title-ruler', slot: 'title', name: '칼바람의 지배자', price: 600, desc: '이름 위 한 줄 칭호' },
+  // 머리 테두리: 얼굴 테두리 + 머리 아래 빛 띠
+  it('frame-silver', 'frame', 'common', 200, '은빛 테두리', '단정한 은빛으로 얼굴을 두른다'),
+  it('frame-gold', 'frame', 'rare', 400, '금빛 테두리', '묵직한 금빛 테두리와 금빛 띠'),
+  it('frame-jade', 'frame', 'rare', 450, '비취 테두리', '맑은 초록빛 비취 테두리'),
+  it('frame-ember', 'frame', 'epic', 700, '불꽃 테두리', '숨 쉬듯 타오르는 붉은 테두리'),
+  it('frame-frost', 'frame', 'epic', 700, '서리 테두리', '얼음 결정처럼 차갑게 빛난다'),
+  it('frame-void', 'frame', 'epic', 800, '공허 테두리', '보랏빛 어둠이 천천히 일렁인다'),
+  it('frame-starlight', 'frame', 'legendary', 1200, '별빛 테두리', '밤하늘 테두리에 별이 반짝인다'),
+  it('frame-prism', 'frame', 'legendary', 1500, '프리즘 테두리', '스펙트럼이 얼굴을 따라 돈다'),
+  // 머리 효과: 머리 전체에 흐르는 움직임
+  it('fx-sparkle', 'fx', 'common', 300, '반짝임', '머리 곳곳에 작은 빛이 반짝인다'),
+  it('fx-snow', 'fx', 'rare', 450, '눈송이', '하얀 눈이 조용히 내린다'),
+  it('fx-petals', 'fx', 'rare', 500, '꽃잎', '분홍 꽃잎이 바람에 흩날린다'),
+  it('fx-fireflies', 'fx', 'epic', 650, '반딧불', '노란 빛이 둥실 떠다닌다'),
+  it('fx-embers', 'fx', 'epic', 700, '불씨', '불씨가 아래에서 위로 솟는다'),
+  it('fx-rays', 'fx', 'epic', 800, '빛살', '뒤에서 빛줄기가 천천히 돈다'),
+  it('fx-aurora', 'fx', 'legendary', 1100, '오로라', '초록·보랏빛 오로라가 흐른다'),
+  it('fx-meteor', 'fx', 'legendary', 1300, '별똥별', '별똥별이 비스듬히 떨어진다'),
+  // 이름 효과 (무지개 글자는 쓰지 않는다 — 1.5절)
+  it('name-glow', 'name', 'common', 200, '빛나는 이름', '이름이 은은하게 빛난다'),
+  it('name-silver', 'name', 'rare', 350, '은빛 이름', '금속처럼 매끈한 은빛'),
+  it('name-gold', 'name', 'rare', 450, '금빛 이름', '무게감 있는 금빛'),
+  it('name-ember', 'name', 'epic', 650, '불꽃 이름', '붉게 달아오른 이름'),
+  it('name-frost', 'name', 'epic', 650, '서리 이름', '얼음처럼 푸른 이름'),
+  it('name-galaxy', 'name', 'legendary', 1000, '은하 이름', '푸른 은하가 이름 위로 흐른다'),
+  // 칭호: 이름 위 한 줄
+  it('title-night', 'title', 'common', 150, '밤의 단골', '오늘 밤도 한 판'),
+  it('title-poro', 'title', 'common', 150, '포로 친구', '다리 위의 작은 친구들과 함께'),
+  it('title-start', 'title', 'common', 200, '전설의 시작', '모든 장인은 첫 판부터'),
+  it('title-bridge', 'title', 'rare', 300, '다리 위의 산책자', '울부짖는 심연이 내 집'),
+  it('title-teamfight', 'title', 'rare', 350, '한타의 중심', '싸움은 늘 내 곁에서'),
+  it('title-dice', 'title', 'rare', 350, '주사위의 신', '무작위도 내 편'),
+  it('title-last', 'title', 'rare', 400, '끝까지 버티는 자', '마지막까지 서 있는 사람'),
+  it('title-alchemist', 'title', 'epic', 500, '증강 연금술사', '어떤 증강도 금으로'),
+  it('title-penta', 'title', 'epic', 600, '펜타킬 사냥꾼', '다섯은 기본'),
+  it('title-ruler', 'title', 'legendary', 800, '칼바람의 지배자', '이 다리의 주인'),
+  it('title-prism', 'title', 'legendary', 1000, '프리즘 수집가', '빛을 모으는 사람'),
 ];
 export const SHOP_ITEM: Record<string, ShopItem> = Object.fromEntries(SHOP.map((x) => [x.id, x]));
 

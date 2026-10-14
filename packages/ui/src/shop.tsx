@@ -4,9 +4,9 @@
  *  - ShopView: 피스 잔액·버는 법·상품 (사면 바로 장착, 가진 것은 장착/해제)
  *  - PublicProfileView: 로그인 없이 보는 그 사람의 강점 (모임 정보 없음)
  */
-import { useState, type ReactNode } from 'react';
+import { useId, useState, type ReactNode } from 'react';
 import {
-  CHAMPIONS, DEX_LEVEL_KO, EARN, LEVEL_REWARD, PIECE, ROLE_KO, SHOP, SLOT_KO, cdragon, pct, shareUrl, styleOf,
+  CHAMPIONS, DEX_LEVEL_KO, EARN, LEVEL_REWARD, PIECE, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
   type Api, type Deco, type DexLevel, type PublicProfile, type Shop, type ShopItem, type ShopSlot,
 } from '@prism/core';
 import { ChampImg, Empty, Gem, MemberFace, useSkins } from './basics';
@@ -16,31 +16,52 @@ import { Icon } from './icons';
 const SLOTS: ShopSlot[] = ['frame', 'fx', 'name', 'title'];
 const titleOf = (d?: Deco) => (d?.title ? SHOP.find((x) => x.id === d.title)?.name : undefined);
 
+/** 피스 아이콘: 프리즘에서 떨어져 나온 빛 조각 (면 넷 + 빛 모서리) */
+export function PieceIcon({ size = 16 }: { size?: number }) {
+  const u = useId().replace(/:/g, '');
+  return (
+    <svg className="piece-ic" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <linearGradient id={`${u}a`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#9fb2ff" /><stop offset="1" stopColor="#6a5cff" /></linearGradient>
+        <linearGradient id={`${u}b`} x1="1" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#7ef0d6" /><stop offset="1" stopColor="#4a8cff" /></linearGradient>
+        <linearGradient id={`${u}c`} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#c58cff" /><stop offset="1" stopColor="#ff7ab8" /></linearGradient>
+        <linearGradient id={`${u}d`} x1="0" y1="0" x2="1" y2="0"><stop offset="0" stopColor="#ffb36e" /><stop offset="1" stopColor="#ffe28a" /></linearGradient>
+      </defs>
+      <path d="M12 1.5 20.5 8 10.5 12z" fill={`url(#${u}b)`} />
+      <path d="M12 1.5 3.5 9 10.5 12z" fill={`url(#${u}a)`} />
+      <path d="M3.5 9 10.5 12 7.5 22.5z" fill={`url(#${u}c)`} />
+      <path d="M10.5 12 20.5 8 17 21 7.5 22.5z" fill={`url(#${u}d)`} opacity=".92" />
+      <path d="M12 1.5 20.5 8 17 21 7.5 22.5 3.5 9z" fill="none" stroke="rgba(255,255,255,.85)" strokeWidth="1" strokeLinejoin="round" />
+      <path d="M12 1.5 10.5 12 7.5 22.5M3.5 9 10.5 12 20.5 8" fill="none" stroke="rgba(255,255,255,.5)" strokeWidth=".7" />
+    </svg>
+  );
+}
+
 /** 피스 아이콘 + 숫자 */
 export function Piece({ n, size = 16 }: { n: number; size?: number }) {
-  return <span className="piece"><Gem size={size} src="/brand/prism-32.png" /><b>{n.toLocaleString()}</b><small>{PIECE}</small></span>;
+  return <span className="piece"><PieceIcon size={size} /><b>{n.toLocaleString()}</b><small>{PIECE}</small></span>;
 }
 
 /** 머리 (좌우 끝까지). 꾸밈: 테두리(frame) · 효과(fx) · 이름(name) · 칭호(title) */
-export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, actions, chips, children }: {
+export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, actions, chips, children, mini }: {
   nick: string; intro?: string; art?: string; skin?: number | null; champion?: number | null; deco?: Deco;
-  corner?: ReactNode; actions?: ReactNode; chips?: ReactNode; children?: ReactNode;
+  corner?: ReactNode; actions?: ReactNode; chips?: ReactNode; children?: ReactNode; mini?: boolean;
 }) {
   const skins = useSkins();
   const title = titleOf(deco);
   // 배경: 넘겨준 그림 → 대표 스킨 → 주 챔피언
   const bg = art || (skin && skins?.[skin]?.splash) || (champion ? cdragon(CHAMPIONS[champion]?.splash) : '');
   return (
-    <header className={`phero ${deco?.frame ?? ''} ${deco?.fx ?? ''}`}>
+    <header className={`phero ${mini ? 'mini' : ''} ${deco?.frame ?? ''} ${deco?.fx ?? ''}`}>
       {bg && <img className="phero-bg" alt="" src={bg} />}
       {deco?.fx && <span className="phero-fx" aria-hidden="true">{Array.from({ length: 14 }, (_, i) => <i key={i} />)}</span>}
       <div className="phero-in">
         {corner && <div className="phero-corner">{corner}</div>}
         {actions && <div className="phero-actions">{actions}</div>}
         <div className="phero-main">
-          <span className="phero-face"><MemberFace nick={nick} skin={skin} champion={champion} skins={skins} size={112} /></span>
+          <span className="phero-face"><MemberFace nick={nick} skin={skin} champion={champion} skins={skins} size={mini ? 48 : 112} /></span>
           <div className="phero-txt">
-            {title && <span className="phero-title">{title}</span>}
+            {title && <span className={`phero-title r-${SHOP_ITEM[deco!.title!]?.rarity ?? 'common'}`}>{title}</span>}
             <h1 className={`phero-name ${deco?.name ?? ''}`}>{nick}</h1>
             {intro && <p className="phero-intro">{intro}</p>}
             {chips && <div className="phero-chips">{chips}</div>}
@@ -74,62 +95,81 @@ export function ShareButton({ api, id, shared, onChange }: { api: Api; id: strin
 
 // ───────── 상점 ─────────
 
-export function ShopView({ api, preview }: { api: Api; preview?: (deco: Deco) => ReactNode }) {
+type Me = { nick: string; skin?: number | null; champion?: number | null };
+const RARITY_ORDER = ['legendary', 'epic', 'rare', 'common'] as const;
+
+export function ShopView({ api, me }: { api: Api; me: Me }) {
   const { data, error, reload } = useLoad<Shop>(api, '/api/shop');
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
-  const [hover, setHover] = useState<ShopItem | null>(null);
   const [slot, setSlot] = useState<ShopSlot>('frame');
+  const [only, setOnly] = useState<'all' | 'owned'>('all');
+  const [how, setHow] = useState(false);
   const run = async (k: string, f: () => Promise<unknown>) => { setBusy(k); setMsg(''); try { await f(); reload(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); } };
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <p className="meta">불러오는 중…</p>;
+  if (!data) return <div className="shop-skel" role="status" aria-label="불러오는 중">{Array.from({ length: 6 }, (_, i) => <i key={i} className="sk" />)}</div>;
   const e = data.earned;
   const rows: [string, string, number][] = [
     ['기록된 판', `${e.games}판 × ${EARN.game}`, e.games * EARN.game],
     ['이긴 판', `${e.wins}승 × ${EARN.win}`, e.wins * EARN.win],
-    ['모임 판 (회원 2명 이상)', `${e.crew}판 × ${EARN.crew}`, e.crew * EARN.crew],
+    ['모임 판', `회원 2명 이상 · ${e.crew}판 × ${EARN.crew}`, e.crew * EARN.crew],
     ['도감 레벨', `실버 ${LEVEL_REWARD[1]} · 골드 +${LEVEL_REWARD[2]} · 플래티넘 +${LEVEL_REWARD[3]} · 다이아몬드 +${LEVEL_REWARD[4]} · 마스터 +${LEVEL_REWARD[5]}`, e.levels],
-    ['함께 해요 참여', `${e.together}번 × ${EARN.together}`, e.together * EARN.together],
+    ['함께 해요 참여', `연 판에 참여하고 그 시간에 한 판 · ${e.together}번 × ${EARN.together}`, e.together * EARN.together],
     ['매일 첫 접속', `${e.daily}일 × ${EARN.daily}`, e.daily * EARN.daily],
   ];
-  // 미리 보기: 마우스를 올린 상품을 지금 꾸밈 위에 얹어 본다
-  const look: Deco = hover ? { ...data.deco, [hover.slot]: hover.id } : data.deco;
+  const list = SHOP.filter((x) => x.slot === slot && (only === 'all' || data.owned.includes(x.id)))
+    .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || b.price - a.price);
+  const count = (sl: ShopSlot) => [SHOP.filter((x) => x.slot === sl && data.owned.includes(x.id)).length, SHOP.filter((x) => x.slot === sl).length];
   return (
-    <div className="stack" style={{ gap: 16 }}>
-      {preview?.(look)}
-      <div className="shop-top">
-        <section className="card pad shop-bal">
-          <span className="k">내 {PIECE}</span>
-          <Piece n={data.balance} size={28} />
-          <span className="meta">지금까지 {(data.balance + data.spent).toLocaleString()} 모았고 {data.spent.toLocaleString()} 썼어요</span>
-        </section>
-        <section className="card pad shop-earn">
-          <div className="card-head"><h2>{PIECE} 모으는 법</h2><span className="sp" /><span className="meta">기록에서 자동으로 쌓여요</span></div>
-          <div className="earn-list">{rows.map(([k, how, v]) => <div key={k} className="earn-row"><b>{k}</b><span className="meta">{how}</span><span className="num">+{v.toLocaleString()}</span></div>)}</div>
-        </section>
-      </div>
-      {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
-      <section className="card pad">
-        <div className="card-head"><h2>상점</h2><span className="sp" />
-          <div className="seg">{SLOTS.map((s) => <button key={s} type="button" className={slot === s ? 'on' : ''} onClick={() => setSlot(s)}>{SLOT_KO[s]}</button>)}</div>
+    <div className="shop">
+      <header className="shop-head">
+        <div className="shop-title"><h1>상점</h1><span className="meta">내 페이지를 꾸밀 것들. 산 것은 공유 링크에도 보여요.</span></div>
+        <div className="shop-wallet">
+          <span className="sw-ic"><PieceIcon size={40} /></span>
+          <span className="sw-n"><small>내 {PIECE}</small><b>{data.balance.toLocaleString()}</b></span>
+          <button type="button" className={`btn sm ${how ? 'on' : ''}`} onClick={() => setHow(!how)} aria-expanded={how}>모으는 법</button>
         </div>
-        <div className="shop-grid">{SHOP.filter((x) => x.slot === slot).map((x) => {
-          const own = data.owned.includes(x.id), on = data.deco[x.slot] === x.id, lack = x.price - data.balance;
-          return (
-            <article key={x.id} className={`shop-item ${on ? 'on' : ''}`} onMouseEnter={() => setHover(x)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(x)} onBlur={() => setHover(null)}>
-              <span className={`shop-sw ${x.slot} ${x.id}`} aria-hidden="true">{x.slot === 'title' ? x.name : x.slot === 'name' ? '이름' : <i />}</span>
-              <span className="shop-nm"><b>{x.name}</b><span className="meta">{x.desc}</span></span>
-              <span className="shop-act">
-                {own
-                  ? <button type="button" className={`btn sm ${on ? '' : 'primary'}`} disabled={busy === x.id} onClick={() => run(x.id, () => api.post('/api/me/equip', { slot: x.slot, id: on ? null : x.id }))}>{on ? '해제' : '장착'}</button>
-                  : <button type="button" className="btn sm primary" disabled={busy === x.id || lack > 0} title={lack > 0 ? `${lack.toLocaleString()} ${PIECE} 모자라요` : undefined} onClick={() => run(x.id, () => api.post('/api/shop/buy', { id: x.id }))}><Gem size={14} src="/brand/prism-32.png" />{x.price.toLocaleString()}</button>}
-              </span>
-            </article>
-          );
-        })}</div>
-        <p className="meta" style={{ margin: 0 }}>사면 바로 장착돼요. 마우스를 올리면 위에서 미리 볼 수 있어요.</p>
-      </section>
+      </header>
+      {how && <section className="card pad shop-how">
+        <div className="earn-list">{rows.map(([k, h, v]) => <div key={k} className="earn-row"><b>{k}</b><span className="meta">{h}</span><span className="num"><PieceIcon size={14} />{v.toLocaleString()}</span></div>)}</div>
+        <p className="meta" style={{ margin: 0 }}>지금까지 {(data.balance + data.spent).toLocaleString()} 모았고 {data.spent.toLocaleString()} 썼어요. 기록에서 자동으로 계산돼요.</p>
+      </section>}
+      {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
+      <div className="shop-bar">
+        <nav className="shop-tabs" aria-label="종류">{(['frame', 'fx', 'name', 'title'] as ShopSlot[]).map((sl) => {
+          const [o, t] = count(sl);
+          return <button key={sl} type="button" className={slot === sl ? 'on' : ''} onClick={() => setSlot(sl)}>{SLOT_KO[sl]}<small>{o}/{t}</small></button>;
+        })}</nav>
+        <span className="sp" />
+        <div className="seg"><button type="button" className={only === 'all' ? 'on' : ''} onClick={() => setOnly('all')}>전체</button><button type="button" className={only === 'owned' ? 'on' : ''} onClick={() => setOnly('owned')}>가진 것</button></div>
+      </div>
+      {list.length ? <div className="shop-grid">{list.map((x) => <ShopCard key={x.id} x={x} me={me} data={data} busy={busy === x.id}
+        onBuy={() => run(x.id, () => api.post('/api/shop/buy', { id: x.id }))}
+        onEquip={(on) => run(x.id, () => api.post('/api/me/equip', { slot: x.slot, id: on ? x.id : null }))} />)}</div>
+        : <Empty>아직 가진 {SLOT_KO[slot]}가 없어요.</Empty>}
     </div>
+  );
+}
+
+function ShopCard({ x, me, data, busy, onBuy, onEquip }: { x: ShopItem; me: Me; data: Shop; busy: boolean; onBuy: () => void; onEquip: (on: boolean) => void }) {
+  const own = data.owned.includes(x.id), on = data.deco[x.slot] === x.id, lack = x.price - data.balance;
+  // 미리 보기: 지금 내 꾸밈에 이 상품을 얹어서
+  const look: Deco = { ...data.deco, [x.slot]: x.id };
+  return (
+    <article className={`shop-card r-${x.rarity} ${on ? 'on' : ''}`}>
+      <div className="sc-prev"><ProfileHero mini nick={me.nick} skin={me.skin} champion={me.champion} deco={look} /></div>
+      <div className="sc-body">
+        <span className={`sc-rar r-${x.rarity}`}>{RARITY_SHOP_KO[x.rarity]}</span>
+        <b className="sc-nm">{x.name}</b>
+        <span className="sc-desc">{x.desc}</span>
+        <div className="sc-act">
+          {own
+            ? <><span className="sc-own">{on ? '장착 중' : '가지고 있어요'}</span><button type="button" className={`btn sm ${on ? '' : 'primary'}`} disabled={busy} onClick={() => onEquip(!on)}>{on ? '해제' : '장착'}</button></>
+            : <><span className={`sc-price ${lack > 0 ? 'lack' : ''}`}><PieceIcon size={18} /><b>{x.price.toLocaleString()}</b></span>
+              <button type="button" className="btn sm primary" disabled={busy || lack > 0} onClick={onBuy}>{lack > 0 ? `${lack.toLocaleString()} 모자라요` : '사기'}</button></>}
+        </div>
+      </div>
+    </article>
   );
 }
 

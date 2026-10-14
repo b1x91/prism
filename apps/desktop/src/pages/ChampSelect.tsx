@@ -3,8 +3,8 @@
  * 롤 클라이언트에는 읽기만 한다. 고르기·교체는 사용자가 롤에서 직접 한다.
  */
 import { useState } from 'react';
-import { CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, guideOf, GAME_DATA, needsOf, pct, teamFit, verdictOf, type ChampionProfile } from '@prism/core';
-import { AugImg, ChampImg, Gem, Seg } from '@prism/ui';
+import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, teamFit, tierOf, verdictOf, type ChampionProfile } from '@prism/core';
+import { AugRing, AugmentLink, ChampImg, Seg, TierBadge } from '@prism/ui';
 import type { ChampSelect, CrewSelect } from '../controller';
 import type { Personal } from '@prism/core';
 
@@ -90,27 +90,68 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
   );
 }
 
+const STYLE: [keyof ChampionProfile['style'], string][] = [['damage', '피해'], ['durability', '단단함'], ['cc', '군중 제어'], ['mobility', '기동'], ['utility', '보조']];
+const RANGE_KO = { ranged: '원거리', melee: '근접' } as const;
+
+/** 큰 카드: 내 챔피언(또는 대기석 미리보기)의 성향·내 기록·모임 기록·팀에 넣으면·어울리는 증강·내가 고른 증강 */
 function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }: { id: number; isMine: boolean; crew: CrewSelect; personal: Personal; fitText: ReturnType<typeof teamFit>; needs: string[]; isReco: boolean; onBack?: () => void }) {
   const ch = CHAMPIONS[id];
   const g = guideOf(GAME_DATA, id);
-  const best = g ? [...g.prismatic.slice(0, 2), ...g.gold.slice(0, 2)].filter((f) => f.level === 'best').slice(0, 3) : [];
+  // 등급마다 가장 잘 맞는 증강 하나씩 (프리즘 · 골드 · 실버)
+  const picks = g ? ([['prismatic', g.prismatic], ['gold', g.gold], ['silver', g.silver]] as const).map(([r, list]) => ({ r, f: list[0] })).filter((x) => x.f && x.f.level !== 'none') : [];
   const me = personal.champions[id], cc = crew?.champions?.[id];
+  const myAugs = (personal.augmentsByChampion[id] ?? []).slice(0, 3);
+  const top = cc?.masters?.[0];
+  if (!ch) return <div />;
   return (
     <article className={`cs-tile ${isMine ? 'mine' : ''}`}>
-      <img className="bg" alt="" src={cdragon(ch?.splash)} />
-      {isReco && <span className="badge">팀 추천</span>}
-      {onBack && <button type="button" className="btn sm back" onClick={onBack}>내 챔피언 보기</button>}
+      <img className="bg" alt="" src={cdragon(ch.splash)} />
+      <div className="cs-top">
+        <span className={`cs-tag ${isMine ? 'mine' : ''}`}>{isMine ? '내 챔피언' : '대기석 미리보기'}</span>
+        {isReco && <span className="cs-tag reco">팀 추천</span>}
+        <span className="sp" />
+        {onBack && <button type="button" className="btn sm back" onClick={onBack}>내 챔피언 보기</button>}
+      </div>
       <div className="body">
-        <div className="row" style={{ gap: 8 }}><h3>{ch?.name}</h3><span className="pill dark">{isMine ? '내 챔피언' : '대기석'}</span></div>
-        <div className="row" style={{ gap: 6 }}>{[ROLE_KO[ch?.roles[0] ?? ''], ch?.damage === 'MIX' ? 'AP·AD' : ch?.damage].filter(Boolean).map((t) => <span key={t} className="pill dark">{t}</span>)}</div>
-        <div className="stats2">
-          <div><span className="k">나</span><b>{me?.n ? pct(me.w, me.n) : '–'}</b><span className="k">{me?.n ? `${me.n}판` : '기록 없음'}</span></div>
-          <div><span className="k">모임</span><b>{cc?.crew?.n ? pct(cc.crew.w, cc.crew.n) : '–'}</b><span className="k">{cc?.crew?.n ? `${cc.crew.n}판` : crew ? '기록 없음' : '회원 전용'}</span></div>
+        <div className="cs-name">
+          <h3>{ch.name}</h3>
+          <div className="cs-chips">{[ROLE_KO[ch.roles[0]], ch.roles[1] && ROLE_KO[ch.roles[1]], ch.damage === 'MIX' ? 'AP·AD' : ch.damage, RANGE_KO[ch.range]].filter(Boolean).map((t) => <span key={t as string}>{t}</span>)}</div>
         </div>
-        <div className="k">팀에 넣으면</div>
-        <div className="row wrapr" style={{ gap: 6 }}>{fitText.warn ? <span className="pill warn">팀이 {fitText.warn}</span> : fitText.fills.length ? fitText.fills.map((x) => <span key={x} className="pill ok">{x} 보완</span>) : <span className="k">{needs.length ? `부족한 ${needs.join('·')} 보완 안 됨` : '팀 구성 무난'}</span>}</div>
-        {best.length > 0 && <><div className="k">어울리는 증강</div><div className="row wrapr" style={{ gap: 6 }}>{best.map((f) => <span key={f.id} className="pill dark"><AugImg id={f.id} size={18} />{GAME_DATA.augments.find((a) => a.id === f.id)?.name}</span>)}</div></>}
-        {cc?.masters?.[0] && <div className="k row" style={{ gap: 6 }}>최다 <b style={{ color: '#fff' }}>{cc.masters[0].nick}</b> · {cc.masters[0].n}판 {pct(cc.masters[0].w, cc.masters[0].n)}</div>}
+
+        <div className="cs-style" aria-label="챔피언 성향">{STYLE.map(([k, l]) => (
+          <span key={k} className="cs-st"><small>{l}</small><span className="pips">{[1, 2, 3].map((n) => <i key={n} className={ch.style[k] >= n ? 'on' : ''} />)}</span></span>
+        ))}</div>
+
+        <div className="cs-rec">
+          <div><small>내 기록</small><b>{me?.n ? pct(me.w, me.n) : '–'}</b><span>{me?.n ? `${me.n}판 ${me.w}승` : '처음이에요'}</span>{me?.n ? <i className="wbar"><i style={{ width: `${(me.w / me.n) * 100}%` }} /></i> : null}</div>
+          <div><small>모임</small><b>{cc?.crew?.n ? pct(cc.crew.w, cc.crew.n) : '–'}</b><span>{cc?.crew?.n ? `${cc.crew.n}판` : crew ? '기록 없음' : '회원 전용'}</span>{cc?.crew?.n ? <i className="wbar"><i style={{ width: `${(cc.crew.w / cc.crew.n) * 100}%` }} /></i> : null}</div>
+          <div><small>모임 최다</small>{top ? <><b className="who">{top.nick}</b><span>{top.n}판 · {pct(top.w, top.n)}</span></> : <><b>–</b><span>아직 없어요</span></>}</div>
+        </div>
+
+        <div className="cs-sec">
+          <span className="cs-h">팀에 넣으면</span>
+          <div className="cs-fill">{fitText.warn ? <span className="pill warn">팀이 {fitText.warn}</span> : fitText.fills.length ? fitText.fills.map((x) => <span key={x} className="pill ok">{x} 보완</span>) : <span className="cs-muted">{needs.length ? `부족한 ${needs.join('·')}는 채우지 못해요` : '팀 구성 무난'}</span>}</div>
+        </div>
+
+        {picks.length > 0 && <div className="cs-sec">
+          <span className="cs-h">어울리는 증강 <small>등급별 1순위</small></span>
+          <div className="cs-augs">{picks.map(({ r, f }) => {
+            const tier = tierOf(fitPoints(f));
+            const e = explainFit(ch, AUGMENT[f.id]);
+            return (
+              <AugmentLink key={f.id} id={f.id} champion={id} className={`cs-aug ${r}`}>
+                <AugRing id={f.id} size={36} />
+                <span className="t"><b>{AUGMENT[f.id]?.name}</b><small>{e.why}</small></span>
+                <TierBadge tier={tier} />
+              </AugmentLink>
+            );
+          })}</div>
+        </div>}
+
+        {myAugs.length > 0 && <div className="cs-sec">
+          <span className="cs-h">내가 이 챔피언으로 고른 증강</span>
+          <div className="cs-mine">{myAugs.map((a) => <AugmentLink key={a.id} id={a.id} champion={id} inline className="cs-chip"><AugRing id={a.id} size={22} /><span>{AUGMENT[a.id]?.name}</span><small>{a.n}번 · {pct(a.w, a.n)}</small></AugmentLink>)}</div>
+        </div>}
       </div>
     </article>
   );

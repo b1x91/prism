@@ -37,7 +37,7 @@ export const bridge = {
 export type VisionStage = '' | 'off' | 'wait' | 'no-game' | 'back' | 'capture' | 'reading' | 'found';
 export type VisionState = {
   settings: { enabled: boolean; position: 'right' | 'top' };
-  report: { engine: 'ok' | 'no-korean' | 'unsupported' | ''; last_text: string; last_ids: number[]; last_at: number; stage?: VisionStage; stage_at?: number; hits?: number; window?: string };
+  report: { engine: 'ok' | 'no-korean' | 'unsupported' | ''; last_text: string; last_ids: number[]; last_at: number; stage?: VisionStage; stage_at?: number; hits?: number; window?: string; read_ms?: number };
 };
 export type UpdateInfo = { current: string; latest: string; available: boolean; notes: string };
 

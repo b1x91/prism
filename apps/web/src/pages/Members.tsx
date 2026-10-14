@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Empty, Gem, Icon, MemberView, ProfileHero, PublicProfileView, RankingView, ShopView } from '@prism/ui';
+import { Empty, Gem, Icon, MemberView, PublicProfileView, RankingView, ShopView } from '@prism/ui';
 import type { PublicProfile } from '@prism/core';
 import { SERVER, useSession } from '../session';
 
@@ -43,7 +43,7 @@ export function ShopPage() {
   if (!me) return <NeedLogin what="상점" />;
   return (
     <section className="section tight"><div className="wrap">
-      <ShopView api={api} preview={(deco) => <ProfileHero nick={me.nick} skin={me.skin} deco={deco} corner={<span className="pill dark">미리 보기</span>} />} />
+      <ShopView api={api} me={{ nick: me.nick, skin: me.skin }} />
     </div></section>
   );
 }
