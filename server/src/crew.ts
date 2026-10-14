@@ -306,11 +306,11 @@ export async function gameDetail(env: Env, gameId: number) {
             p.dmg_champ AS damageToChampions, p.dmg_taken AS damageTaken, p.gold AS goldEarned, p.items, p.augments
      FROM participants p JOIN members m ON m.id = p.member_id WHERE p.game_id = ?`,
   ).bind(gameId).all<any>();
-  let totals: Record<string, { win?: boolean; kills?: number }> = {};
+  let totals: Record<string, { win?: boolean; kills?: number; champions?: number[] }> = {};
   try { totals = JSON.parse(m.teamTotals || '{}'); } catch { /* 옛 기록 */ }
   return json({
     gameId: m.gameId, playedAt: m.playedAt, duration: m.duration, custom: m.queueId !== 2400, full: false,
-    teams: Object.fromEntries(Object.entries(totals).map(([t, v]) => [t, { win: Boolean(v.win), kills: v.kills ?? null }])),
+    teams: Object.fromEntries(Object.entries(totals).map(([t, v]) => [t, { win: Boolean(v.win), kills: v.kills ?? null, champions: Array.isArray(v.champions) ? v.champions : null }])),
     players: results.map((r) => ({ ...r, win: r.win === 1, name: r.nick, items: r.items ? JSON.parse(r.items) : [], augments: r.augments ? JSON.parse(r.augments) : [] })),
   });
 }

@@ -24,3 +24,12 @@ export function useSeenAugments(): Seen {
 export const lastChampion = (): number | null => {
   try { return Number(JSON.parse(localStorage.getItem('prism-last-champion') ?? 'null')) || null; } catch { return null; }
 };
+
+/** 이번 판 조합 (메인 창이 localStorage 에 써 두면 작은 창이 읽는다) */
+export function readMatchup(): { allies: number[]; enemies: number[] } | null {
+  try {
+    const m = JSON.parse(localStorage.getItem('prism-matchup') ?? 'null');
+    // 한 판보다 오래된 조합은 쓰지 않는다
+    return m && Date.now() - Number(m.at) < 90 * 60_000 ? { allies: m.allies ?? [], enemies: m.enemies ?? [] } : null;
+  } catch { return null; }
+}

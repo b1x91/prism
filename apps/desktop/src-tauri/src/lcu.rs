@@ -23,6 +23,8 @@ const ALLOWED: &[&str] = &[
     "/lol-match-history/v1/games/",
     "/lol-champ-select/v1/session",
     "/lol-gameflow/v1/gameflow-phase",
+    // 게임 시작 직전 양 팀 챔피언 (증강 우선순위의 조합 판단용). 게임이 뜨면 아래 차단 규칙으로 읽지 않는다
+    "/lol-gameflow/v1/session",
 ];
 
 #[derive(Clone)]

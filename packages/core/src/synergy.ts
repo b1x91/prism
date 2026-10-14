@@ -172,7 +172,7 @@ export function rankFits(c: ChampionProfile | undefined, augments: MayhemAugment
 }
 
 /** 1위가 여럿이면 그 증강들 (사용자가 고를 몫) */
-export const topTie = (list: RankedFit[]) => { const top = list.filter((f) => f.rank === 1); return top.length >= 2 ? top : null; };
+export const topTie = <T extends { rank: number }>(list: T[]) => { const top = list.filter((f) => f.rank === 1); return top.length >= 2 ? top : null; };
 
 // ───────── 증강 상세 (도감에서 누르면) ─────────
 

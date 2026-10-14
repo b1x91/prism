@@ -5,12 +5,12 @@ import { GAME_DATA, fitPoints, tierOf } from '@prism/core';
 import { AugmentCompare, AugmentGuide, ChampBanner, ChampSearch, Empty, MemberFace, RecentGames, Seg, partyTime, useParties } from '@prism/ui';
 import { api } from '../bridge';
 import { useNavigate } from 'react-router-dom';
-import type { State } from '../controller';
+import { editMatchup, type State } from '../controller';
 import { ChampSelectPanel } from './ChampSelect';
 import { useSeenAugments } from '../vision';
 
 /** 게임 중: Alt+Tab 하면 바로 보이는 내 챔피언 증강 가이드 + 3개 비교 */
-function InGame({ championId }: { championId: number | null }) {
+function InGame({ championId, matchup }: { championId: number | null; matchup: State['matchup'] }) {
   const [tab, setTab] = useState<'compare' | 'guide'>('compare');
   const [pick, setPick] = useState<number | null>(null);
   const seen = useSeenAugments();
@@ -20,7 +20,7 @@ function InGame({ championId }: { championId: number | null }) {
     <div className="stack" style={{ gap: 16 }}>
       <ChampBanner id={id} eyebrow="게임 중 · 증강 고를 때 Alt+Tab" actions={<button type="button" className="btn sm" onClick={() => setPick(null)}>{pick ? '내 챔피언으로' : '다른 챔피언'}</button>} />
       <div className="row"><Seg value={tab} options={[['compare', '뜬 증강 3개 비교'], ['guide', '등급별 가이드']]} onChange={setTab} /></div>
-      {tab === 'compare' ? <AugmentCompare championId={id} preset={seen.ids} /> : <AugmentGuide championId={id} compact={false} />}
+      {tab === 'compare' ? <AugmentCompare championId={id} preset={seen.ids} matchup={matchup ? { allies: matchup.allies, enemies: matchup.enemies } : { allies: [], enemies: [] }} onMatchup={editMatchup} autoMatchup={matchup?.source === 'game' || matchup?.source === 'champ-select'} /> : <AugmentGuide championId={id} compact={false} />}
     </div>
   );
 }
@@ -89,7 +89,7 @@ function NoGame({ s }: { s: State }) {
 
 export function GamePage({ s }: { s: State }) {
   const nav = useNavigate();
-  if (s.status === 'in-game') return <InGame championId={s.lastChampion} />;
+  if (s.status === 'in-game') return <InGame championId={s.lastChampion} matchup={s.matchup} />;
   const games = s.games, P = s.personal;
   const st = streakOf(games);
   return (

@@ -19,3 +19,7 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
 .ov .ex-when { color: #a9bbff; }
 .ov-note { font-size: var(--fs-xs); color: rgba(255, 255, 255, .6); }
 .ov-tie { font-size: var(--fs-xs); font-weight: 700; color: #c9d6ff; padding: var(--s1) var(--s2); }
+.ov-sits { display: flex; flex-wrap: wrap; gap: 4px; }
+.ov-sits span { padding: 0 var(--s2); height: 20px; display: inline-flex; align-items: center; border-radius: var(--r-pill); background: rgba(255, 196, 92, .16); color: #ffd58a; font-size: var(--fs-xs); font-weight: 700; }
+.ov-situ { font-size: var(--fs-xs); font-weight: 700; color: #ffd58a; line-height: 1.4; word-break: keep-all; }
+.ov-situ.neg { color: #ff9a9a; }

@@ -40,7 +40,7 @@ const isCustomMayhem = (g: InGame) =>
   g.duration >= CUSTOM_MIN_SECONDS &&
   g.participants.some((p) => (ids(p.augments) ?? []).length > 0);
 
-type TeamTotal = { win: boolean; kills: number; damageToChampions?: number; damageTaken?: number; goldEarned?: number };
+type TeamTotal = { win: boolean; kills: number; damageToChampions?: number; damageTaken?: number; goldEarned?: number; champions?: number[] };
 
 const sumIfAll = (ps: InParticipant[], f: (p: InParticipant) => number | null | undefined) => {
   const vs = ps.map(f);
@@ -127,6 +127,8 @@ export async function ingest(req: Request, env: Env, me: Member) {
         damageToChampions: sumIfAll(ps, (p) => finite(p.damageToChampions)),
         damageTaken: sumIfAll(ps, (p) => finite(p.damageTaken)),
         goldEarned: sumIfAll(ps, (p) => finite(p.goldEarned)),
+        // 팀 조합 (챔피언 번호만, 누가 했는지는 남기지 않는다): 판 복기의 조합 피드백용
+        champions: ps.map((p) => Number(p.championId)).filter((id) => Number.isInteger(id) && id > 0),
       };
     }
 

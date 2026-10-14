@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, fitOf, gradeUp, fitPoints, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, fitOf, gradeUp, fitPoints, rankByPriority, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type Matchup, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
 import { ChampImg } from './basics';
 import { AugImg, Empty, Hover, Seg } from './basics';
 import { Icon } from './icons';
+import { MatchupBar } from './situation';
 
 
 const ORDER: Rarity[] = ['prismatic', 'gold', 'silver'];
@@ -72,7 +73,11 @@ const matchAug = (name: string, q: string) => { const t = q.trim().replace(/\s/g
  * 증강 3개 비교: 게임 중 화면에 뜬 증강 3개를 직접 골라 넣으면 내 챔피언과의 어울림 순으로 보여준다.
  * 게임 화면을 읽지 않는다 (사용자가 고른다). 같은 등급끼리 뜨므로 등급 필터를 먼저 둔다.
  */
-export function AugmentCompare({ championId, stats, preset }: { championId: number; stats?: AugmentStats | null; preset?: number[] }) {
+export function AugmentCompare({ championId, stats, preset, matchup: given, onMatchup, autoMatchup }: { championId: number; stats?: AugmentStats | null; preset?: number[]; matchup?: Matchup | null; onMatchup?: (m: Matchup) => void; autoMatchup?: boolean }) {
+  // 조합: 앱은 자동으로 받은 것(고치면 onMatchup), 웹은 이 화면에서 직접 넣는다
+  const [own, setOwn] = useState<Matchup>({ allies: [], enemies: [] });
+  const matchup = given ?? own;
+  const setMatchup = onMatchup ?? setOwn;
   const [rarity, setRarity] = useState<Rarity>('gold');
   const [q, setQ] = useState('');
   const [picked, setPicked] = useState<number[]>([]);
@@ -88,14 +93,15 @@ export function AugmentCompare({ championId, stats, preset }: { championId: numb
   const c = CHAMPIONS[championId];
   const champ = toMap(stats?.champion), overall = toMap(stats?.overall);
   const pool = ACTIVE_AUGMENTS.filter((a) => a.rarity === rarity && matchAug(a.name, q)).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-  // 순서·티어·동순위는 게임 위 작은 창과 같은 계산
-  const ranked = rankFits(c, picked.map((id) => AUGMENT[id]));
+  // 순서·티어·동순위는 게임 위 작은 창과 같은 계산 (티어 = 어울림, 순위 = 어울림 + 이번 판 조합)
+  const ranked = rankByPriority(c, picked.map((id) => AUGMENT[id]), matchup);
   const byId = new Map(ranked.map((f) => [f.id, f]));
   const tie = picked.length >= 2 ? topTie(ranked) : null;
   const top = picked.length >= 2 && !tie ? ranked[0] : null;
   const add = (id: number) => { if (picked.length < 3 && !picked.includes(id)) { setPicked([...picked, id]); setQ(''); } };
   return (
     <div className="stack">
+      <MatchupBar me={championId} matchup={matchup} onChange={setMatchup} auto={autoMatchup} />
       <div className="cmp-slots">
         {[0, 1, 2].map((i) => {
           const id = picked[i];
@@ -105,7 +111,8 @@ export function AugmentCompare({ championId, stats, preset }: { championId: numb
             <div key={i} className={`slot filled ${picked.length >= 2 && f.rank === 1 ? 'top' : ''}`}>
               <AugRing id={id} size={48} />
               <span className="nm">{AUGMENT[id].name}</span>
-              <span className="why">{c && <Explain c={c} id={id} tier={f.tier} />}<GradeUp rarity={AUGMENT[id].rarity} tier={f.tier} /></span>
+              <span className="why">{c && <Explain c={c} id={id} tier={f.tier} />}<GradeUp rarity={AUGMENT[id].rarity} tier={f.tier} />
+                {f.reasons.length > 0 && <span className={`situ ${f.bonus < 0 ? 'neg' : ''}`}>{f.lifted && f.rank === 1 && <b>이번 판 1순위</b>}{f.reasons[0]}</span>}</span>
               {picked.length >= 2 && <span className={`place p${f.rank}`}>{f.tied && <small>공동</small>}<b>{f.rank}</b><small>위</small></span>}
               <span className="rank"><TierBadge tier={f.tier} /></span>
               <button type="button" className="btn ghost sm x" onClick={() => setPicked(picked.filter((x) => x !== id))} aria-label="빼기"><Icon name="x" /></button>
@@ -124,7 +131,7 @@ export function AugmentCompare({ championId, stats, preset }: { championId: numb
         <div className="verdict">
           <span className="meta">{c?.name}에게는</span>
           <b>{AUGMENT[top.id].name}</b>
-          <span className="muted">{AUGMENT[top.id].note}</span>
+          <span className="muted">{top.lifted && top.reasons[0] ? `티어는 ${top.tier}지만 이번 판에선 더 중요해요 · ${top.reasons[0]}` : AUGMENT[top.id].note}</span>
           {stats && <StatLine id={top.id} champ={champ} all={overall} />}
         </div>
       )}

@@ -8,3 +8,4 @@ export * from './light';
 export * from './game';
 export * from './dex';
 export * from './artisan';
+export * from './situation';

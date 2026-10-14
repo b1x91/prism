@@ -7,27 +7,31 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@prism/ui/styles.css';
 import './overlay.css';
-import { AUGMENT, CHAMPIONS, rankFits, topTie } from '@prism/core';
+import { AUGMENT, CHAMPIONS, matchupSummary, rankByPriority, topTie } from '@prism/core';
 import { AugRing, ChampImg, Explain, Gem, GradeUp, TierBadge } from '@prism/ui';
-import { lastChampion, useSeenAugments } from './vision';
+import { lastChampion, readMatchup, useSeenAugments } from './vision';
 
 function Overlay() {
   const { ids } = useSeenAugments();
   if (!ids.length) return null;
   const champ = lastChampion();
   const c = champ ? CHAMPIONS[champ] : undefined;
-  const fits = rankFits(c, ids.map((id) => AUGMENT[id]).filter(Boolean));
+  // 티어 = 챔피언과의 어울림, 순위 = 어울림 + 이번 판 조합 (승률 없음)
+  const matchup = readMatchup();
+  const fits = rankByPriority(c, ids.map((id) => AUGMENT[id]).filter(Boolean), matchup);
+  const sits = matchupSummary(c, matchup).slice(0, 2);
   const tie = topTie(fits);
   return (
     <div className="ov">
       <div className="ov-head"><Gem size={16} src="/brand/prism-32.png" /><b>Prism</b>{champ && <><ChampImg id={champ} size={18} /><span>{c?.name}</span></>}</div>
+      {sits.length > 0 && <div className="ov-sits">{sits.map((x) => <span key={x.key}>{x.label}</span>)}</div>}
       {fits.length ? fits.map((f) => (
         <div key={f.id} className={`ov-row ${f.rank === 1 ? 'top' : ''} t-${f.tier}`}>
           <span className="ov-rk">{f.tied && f.rank === 1 && <small>공동</small>}<b>{f.rank}</b><small>위</small></span>
           <AugRing id={f.id} size={44} />
           <span className="ov-tx">
             <span className="ov-nm"><b>{AUGMENT[f.id]?.name}</b><GradeUp rarity={AUGMENT[f.id].rarity} tier={f.tier} /></span>
-            <Explain c={c!} id={f.id} tier={f.tier} />
+            {f.reasons[0] ? <span className={`ov-situ ${f.bonus < 0 ? 'neg' : ''}`}>{f.lifted && f.rank === 1 ? '이번 판 1순위 · ' : ''}{f.reasons[0]}</span> : <Explain c={c!} id={f.id} tier={f.tier} />}
           </span>
           <TierBadge tier={f.tier} />
         </div>

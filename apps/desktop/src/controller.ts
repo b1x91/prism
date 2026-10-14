@@ -22,6 +22,10 @@ export type CrewSelect = {
   teammates: { puuid: string; nick: string; together: { n: number; w: number } }[];
 } | null;
 
+/** 이번 판 조합 (우리 팀은 나를 뺀 4명). 게임 위 작은 창과 localStorage 로 나눈다 */
+export type MatchupState = { allies: number[]; enemies: number[]; source: 'champ-select' | 'game' | 'manual'; at: number };
+export const MATCHUP_KEY = 'prism-matchup';
+
 export type State = {
   status: 'starting' | 'no-client' | 'idle' | 'champ-select' | 'in-game' | 'error';
   message: string;
@@ -32,6 +36,7 @@ export type State = {
   champSelect: ChampSelect | null;
   crew: CrewSelect;
   lastChampion: number | null; // 마지막 챔프 선택의 내 챔피언 (게임 중 가이드용)
+  matchup: MatchupState | null;
   session: { configured: boolean; loggedIn: boolean };
   /** 첫 세션 확인이 끝났는지, 서버에 닿지 못했는지 (첫 화면 판단용) */
   sessionChecked: boolean;
@@ -46,7 +51,7 @@ const store = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.st
 
 let state: State = {
   status: 'starting', message: '', phase: '', summoner: null, games: [], personal: personalStats([]), champSelect: null, crew: null,
-  lastChampion: stored<number | null>('prism-last-champion', null), session: { configured: false, loggedIn: false }, sessionChecked: false, sessionError: null, me: null,
+  lastChampion: stored<number | null>('prism-last-champion', null), matchup: stored<MatchupState | null>(MATCHUP_KEY, null), session: { configured: false, loggedIn: false }, sessionChecked: false, sessionError: null, me: null,
   upload: { lastAt: 0, stored: 0, error: null }, crewSync: { lastAt: stored('prism-crew-sync-at', 0), running: false, games: 0, error: null },
 };
 const subs = new Set<() => void>();
@@ -167,7 +172,11 @@ async function loadChampSelect() {
   const team = myTeam.filter((m) => m.cellId !== s.localPlayerCellId).map((m) => ({ championId: Number(m.championId) || 0, puuid: String(m.puuid ?? '') }));
   const cs: ChampSelect = { mine: Number(me?.championId) > 0 ? Number(me.championId) : null, bench: [...new Set<number>(bench)], team };
   if (cs.mine && cs.mine !== state.lastChampion) store('prism-last-champion', cs.mine);
+  // 우리 팀 조합 (상대는 게임이 시작될 때). 새 챔프 선택이 시작되면 지난 판 상대는 지운다
+  const fresh = !state.champSelect || !state.matchup;
   set({ champSelect: cs, lastChampion: cs.mine ?? state.lastChampion });
+  const allies = team.map((t) => t.championId).filter((id) => id > 0);
+  setMatchup({ allies, enemies: fresh ? [] : state.matchup!.enemies, source: fresh ? 'champ-select' : state.matchup!.source, at: Date.now() });
   // 챔피언·팀원 구성이 바뀌었을 때만 서버에 묻는다 (모임 기록·같은 팀 회원 케미)
   const ids = [cs.mine, ...cs.bench].filter((x): x is number => Boolean(x));
   const puuids = team.map((t) => t.puuid).filter(Boolean);
@@ -176,6 +185,33 @@ async function loadChampSelect() {
     crewKey = key;
     api.post<CrewSelect>('/api/champselect', { championIds: ids, teammatePuuids: puuids }).then((crew) => set({ crew })).catch(() => {});
   }
+}
+
+function setMatchup(m: MatchupState) {
+  store(MATCHUP_KEY, m);
+  set({ matchup: m });
+}
+
+/** 게임 정보에서 양 팀 챔피언. 내 팀은 내 PUUID(없으면 내 챔피언)로 찾는다 */
+async function loadMatchup() {
+  const d = await bridge.lcuGet<any>('/lol-gameflow/v1/session');
+  const one: any[] = d?.gameData?.teamOne ?? [], two: any[] = d?.gameData?.teamTwo ?? [];
+  const champ = (p: any) => Number(p?.championId) || 0;
+  const sel = new Map<string, number>((d?.gameData?.playerChampionSelections ?? []).map((x: any) => [String(x.puuid ?? x.summonerInternalName ?? ''), Number(x.championId) || 0]));
+  const withChamp = (t: any[]) => t.map((p) => champ(p) || sel.get(String(p.puuid ?? '')) || 0);
+  const a = withChamp(one), b = withChamp(two);
+  if (!a.some(Boolean) || !b.some(Boolean)) return;
+  const me = state.summoner?.puuid;
+  const mineIsTwo = me ? two.some((p) => p.puuid === me) : b.includes(state.lastChampion ?? -1);
+  const [mineT, theirs] = mineIsTwo ? [b, a] : [a, b];
+  let removed = false;
+  const allies = mineT.filter((id) => { if (!removed && id === state.lastChampion) { removed = true; return false; } return id > 0; });
+  setMatchup({ allies: allies.slice(0, 4), enemies: theirs.filter((id) => id > 0).slice(0, 5), source: 'game', at: Date.now() });
+}
+
+/** 3개 비교 화면에서 직접 고친 조합 */
+export function editMatchup(m: { allies: number[]; enemies: number[] }) {
+  setMatchup({ ...m, source: 'manual', at: Date.now() });
 }
 
 async function tick(): Promise<number> {
@@ -204,10 +240,14 @@ async function tick(): Promise<number> {
       void uploadOwn();
     }
     const phase = await bridge.lcuGet<string>('/lol-gameflow/v1/gameflow-phase');
+    // 게임이 시작되는 순간(게임 창이 뜨기 전) 양 팀 챔피언을 한 번 읽는다. 창이 뜨면 Rust 가 요청을 막는다
+    const starting = phase === 'GameStart' || phase === 'InProgress' || phase === 'Reconnect';
+    if (starting && state.matchup?.source !== 'game') await loadMatchup().catch(() => {});
     if (phase === 'ChampSelect') await loadChampSelect();
     else { if (state.champSelect) set({ champSelect: null }); crewKey = ''; }
     set({ phase, status: phase === 'ChampSelect' ? 'champ-select' : 'idle', message: '' });
     if (phase === 'None' || phase === 'Lobby') void syncCrew();
+    if (starting && state.matchup?.source !== 'game') return 1500; // 놓치지 않게 잠깐 자주
     return phase === 'ChampSelect' ? INTERVAL.champSelect : INTERVAL.idle;
   } catch (e) {
     set({ status: 'error', message: e instanceof Error ? e.message : String(e), summoner: null });

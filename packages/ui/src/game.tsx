@@ -3,7 +3,7 @@
  * 앱의 최근 판과 회원 페이지가 함께 쓴다.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { AUGMENT, CHAMPIONS, ITEM, ago, cdragon, loadItemDetail, type ItemDetail, type MatchDetail, type MatchPlayer } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ITEM, ago, cdragon, loadItemDetail, reviewMatch, type ItemDetail, type MatchDetail, type MatchPlayer } from '@prism/core';
 import { AugImg, ChampImg, Empty, Hover, MemberFace } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
@@ -188,6 +188,7 @@ export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: 
           <button type="button" className="icon-btn md-x" aria-label="닫기" onClick={onClose}><Icon name="x" /></button>
         </div>
         <div className="md-body">
+          {m && !loading && <Lessons m={m} g={g} />}
           {loading ? <p className="meta md-load">불러오는 중…</p> : m && teamIds.map((t) => {
             const list = m.players.filter((p) => p.teamId === t).sort((a, b) => Number(isMe(b)) - Number(isMe(a)) || (b.damageToChampions ?? 0) - (a.damageToChampions ?? 0));
             const win = list[0]?.win;
@@ -214,5 +215,32 @@ export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: 
         </div>
       </div>
     </div>
+  );
+}
+
+/** 이 판에서 배울 점: 조합에 비춘 아이템·증강 복기 */
+function Lessons({ m, g }: { m: MatchDetail; g: CardGame }) {
+  const items = useItemDetail(true);
+  const [all, setAll] = useState(false);
+  const r = reviewMatch(m, { championId: g.championId, win: g.win }, items);
+  if (!r.known) return <section className="md-lessons empty"><b>이 판에서 배울 점</b><span className="meta">상대 조합을 알 수 있는 판에서 보여 드려요.</span></section>;
+  return (
+    <section className="md-lessons">
+      <div className="mdl-h"><b>이 판에서 배울 점</b><span className="meta">이번 판 조합에 비춘 아이템·증강</span></div>
+      {r.lessons.length ? (all ? r.lessons : r.lessons.slice(0, 3)).map((l, i) => (
+        <div key={i} className={`mdl ${l.kind}`}>
+          <span className="mdl-i" aria-hidden="true">{l.kind === 'good' ? <Icon name="check" /> : '▸'}</span>
+          <div className="mdl-t">
+            <b>{l.title}</b>
+            {l.detail && <span>{l.detail}</span>}
+            {(l.augments?.length || l.items?.length) ? <span className="mdl-x">
+              {l.items?.map((id) => <ItemIcon key={id} id={id} size={24} />)}
+              {l.augments?.map((id) => <AugmentLink key={id} id={id} champion={g.championId} inline className="mdl-aug"><AugRing id={id} size={24} /><span>{AUGMENT[id]?.name}</span></AugmentLink>)}
+            </span> : null}
+          </div>
+        </div>
+      )) : <div className="mdl good"><span className="mdl-i" aria-hidden="true"><Icon name="check" /></span><div className="mdl-t"><b>조합에 맞게 잘 챙겼어요</b><span>눈에 띄게 아쉬운 아이템·증강이 없어요.</span></div></div>}
+      {r.lessons.length > 3 && <button type="button" className="mdl-more" onClick={() => setAll(!all)}>{all ? '접기' : `${r.lessons.length - 3}개 더 보기`}</button>}
+    </section>
   );
 }

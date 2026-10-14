@@ -245,7 +245,7 @@ export type MatchDetail = {
   gameId: number; playedAt: number; duration: number; custom: boolean;
   /** 10명 전체가 있는가 (서버만이면 함께한 Prism 회원만) */
   full: boolean;
-  teams: Record<string, { win: boolean; kills: number | null }>;
+  teams: Record<string, { win: boolean; kills: number | null; champions?: number[] | null }>;
   players: MatchPlayer[];
 };
 
@@ -260,8 +260,9 @@ export function matchFromLcu(d: any): MatchDetail | null {
   }));
   const teams: MatchDetail['teams'] = {};
   for (const p of players) {
-    const t = (teams[p.teamId] ??= { win: p.win, kills: 0 });
+    const t = (teams[p.teamId] ??= { win: p.win, kills: 0, champions: [] });
     t.kills = (t.kills ?? 0) + p.kills;
+    t.champions!.push(p.championId);
   }
   return { gameId: g.gameId, playedAt: g.playedAt, duration: g.duration, custom: g.queueId !== MAYHEM_QUEUE, full: players.length >= 10, teams, players };
 }
