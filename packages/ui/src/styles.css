@@ -414,11 +414,9 @@ svg.light { position: absolute; inset: 0; z-index: 0; pointer-events: none; over
 .gratio { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); }
 .gratio.hot { color: var(--gold); }
 .gaugs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s1) var(--s2); }
-.gaug { position: relative; display: flex; align-items: center; gap: var(--s2); min-width: 0; height: 32px; padding: 0 var(--s2) 0 4px; border-radius: var(--r-s); background: color-mix(in srgb, var(--surface) 75%, transparent); border: 1px solid var(--line); font-size: var(--fs-xs); font-weight: 650; }
-.gaug::before { content: ""; position: absolute; left: -1px; top: 6px; bottom: 6px; width: 3px; border-radius: var(--r-pill); background: var(--silver); }
-.gaug.gold::before { background: var(--gold); }
-.gaug.prismatic::before { background: linear-gradient(180deg, var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-7)); }
-.gaug .aug { flex: none; border-radius: 6px; background: var(--tile); }
+.gaug { display: flex; align-items: center; gap: var(--s2); min-width: 0; height: 32px; padding: 0 var(--s2) 0 3px; border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 650; color: var(--text); transition: background .15s; }
+/* 등급은 아이콘 테두리(실버·골드·프리즘)로만 — 앱 전체의 증강 표시와 같게 */
+a.gaug:hover { background: var(--surface-2); }
 .gaug > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .gitems { display: grid; grid-template-columns: repeat(3, 32px); grid-auto-rows: 32px; gap: 4px; }
 .gitems .hov, .gitems .item-empty { display: block; width: 32px; height: 32px; }

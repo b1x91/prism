@@ -4,7 +4,7 @@
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { AUGMENT, CHAMPIONS, ITEM, ago, cdragon, loadItemDetail, reviewMatch, type ItemDetail, type MatchDetail, type MatchPlayer } from '@prism/core';
-import { AugImg, ChampImg, Empty, Hover, MemberFace } from './basics';
+import { ChampImg, Empty, Hover, MemberFace } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
 
@@ -64,7 +64,7 @@ export function GameCard({ g, onOpen }: { g: CardGame; onOpen?: (g: CardGame) =>
       <div className="gaugs">
         {g.augments.length ? g.augments.slice(0, 6).map((a, i) => {
           const x = AUGMENT[a];
-          return <AugmentLink key={`${a}-${i}`} id={a} champion={g.championId} className={`gaug ${x?.rarity ?? 'silver'}`}><AugImg id={a} size={24} /><span>{x?.name ?? `#${a}`}</span></AugmentLink>;
+          return <AugmentLink key={`${a}-${i}`} id={a} champion={g.championId} className="gaug"><AugRing id={a} size={26} /><span>{x?.name ?? `#${a}`}</span></AugmentLink>;
         }) : <span className="meta">증강 기록 없음</span>}
       </div>
       <div className="gitems">
@@ -95,7 +95,7 @@ function GameTip({ g }: { g: CardGame }) {
     <div className="gtip">
       <div className="gtip-head"><b>{c?.name}</b><span className={`gres ${g.win ? 'w' : 'l'}`}>{g.win ? '승리' : '패배'}</span>{g.custom && <span className="gtag">사용자 설정</span>}</div>
       <div className="gtip-line"><b>{g.kills} / <span className="l">{g.deaths}</span> / {g.assists}</b><span className="meta">{Math.round(g.duration / 60)}분 · {ago(g.playedAt)}</span></div>
-      {g.augments.length > 0 && <div className="gtip-augs">{g.augments.slice(0, 6).map((a, i) => <span key={`${a}-${i}`} className={`gaug ${AUGMENT[a]?.rarity ?? 'silver'}`}><AugImg id={a} size={20} /><span>{AUGMENT[a]?.name ?? `#${a}`}</span></span>)}</div>}
+      {g.augments.length > 0 && <div className="gtip-augs">{g.augments.slice(0, 6).map((a, i) => <span key={`${a}-${i}`} className="gaug"><AugRing id={a} size={22} /><span>{AUGMENT[a]?.name ?? `#${a}`}</span></span>)}</div>}
       {items.length > 0 && <div className="gtip-items">{items.slice(0, 6).map((x, i) => <img key={i} src={cdragon(ITEM[x].icon)} alt={ITEM[x].name} />)}</div>}
     </div>
   );
