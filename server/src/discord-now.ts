@@ -9,7 +9,7 @@ type Widget = {
   instant_invite: string | null;
   presence_count: number;
   channels: { id: string; name: string; position: number }[];
-  members: { username: string; avatar_url: string; status: string; game?: { name: string }; channel_id?: string; self_mute?: boolean; self_deaf?: boolean; mute?: boolean; deaf?: boolean }[];
+  members: { username: string; avatar_url: string; status: string; channel_id?: string; self_mute?: boolean; self_deaf?: boolean; mute?: boolean; deaf?: boolean }[];
 };
 
 const TTL = 20;
@@ -50,13 +50,13 @@ export async function discordNow(env: Env) {
       return { name: m.username, avatar: m.avatar_url, muted: Boolean(m.self_mute || m.mute), deaf: Boolean(m.self_deaf || m.deaf), memberId: f?.id ?? null, skin: f?.skin ?? null, main: f?.main ?? null };
     }),
   }));
-  // 온라인 회원 (롤 하는 사람 먼저, 그다음 온라인 > 자리 비움 > 방해 금지)
-  const rank = (m: Widget['members'][number]) => (/league of legends/i.test(m.game?.name ?? '') ? 0 : m.game ? 1 : m.status === 'online' ? 2 : m.status === 'idle' ? 3 : 4);
+  // 접속 중인 사람 (온라인 > 자리 비움 > 방해 금지 순). 무슨 게임을 하는지는 쓰지 않는다
+  const rank = (m: Widget['members'][number]) => (m.status === 'online' ? 0 : m.status === 'idle' ? 1 : 2);
   const online = [...w.members].sort((a, b) => rank(a) - rank(b)).slice(0, 30).map((m) => {
     const f = faces.get(m.username);
-    return { name: m.username, avatar: m.avatar_url, status: m.status, game: m.game?.name ?? null, lol: /league of legends/i.test(m.game?.name ?? ''), memberId: f?.id ?? null, skin: f?.skin ?? null, main: f?.main ?? null };
+    return { name: m.username, avatar: m.avatar_url, status: m.status, memberId: f?.id ?? null, skin: f?.skin ?? null, main: f?.main ?? null };
   });
-  return json({ enabled: true, online: w.presence_count, playing: online.filter((m) => m.lol).length, inVoice: inVoice.length, invite: w.instant_invite ?? env.DISCORD_INVITE_URL ?? null, channels, members: online });
+  return json({ enabled: true, online: w.presence_count, inVoice: inVoice.length, invite: w.instant_invite ?? env.DISCORD_INVITE_URL ?? null, channels, members: online });
 }
 
 const DEV_SAMPLE: Widget = {
@@ -64,8 +64,8 @@ const DEV_SAMPLE: Widget = {
   presence_count: 23,
   channels: [{ id: 'v1', name: '증바람 1번방', position: 0 }, { id: 'v2', name: '증바람 2번방', position: 1 }, { id: 'v3', name: '내전방', position: 2 }],
   members: [
-    { username: '하제', avatar_url: '', status: 'online', channel_id: 'v1', game: { name: 'League of Legends' } },
-    { username: '노을', avatar_url: '', status: 'online', game: { name: 'League of Legends' } },
+    { username: '하제', avatar_url: '', status: 'online', channel_id: 'v1' },
+    { username: '노을', avatar_url: '', status: 'online' },
     { username: '바람', avatar_url: '', status: 'idle' },
     { username: '빛', avatar_url: '', status: 'online', channel_id: 'v1', self_mute: true },
     { username: '굴절', avatar_url: '', status: 'online', channel_id: 'v1' },

@@ -388,7 +388,7 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
   if (!data.enabled) return admin ? <section className="card pad dnow off"><b>지금 디스코드</b><span className="meta">디스코드 서버 설정에서 '서버 위젯'을 켜면 음성방에 누가 있는지 여기에 떠요.</span></section> : null;
   return (
     <section className="card pad dnow">
-      <div className="card-head"><h2>지금 디스코드</h2><span className="sp" /><span className="meta">온라인 {data.online}명{data.playing > 0 && <> · <b className="lolc">롤 하는 중 {data.playing}명</b></>} · 음성 {data.inVoice}명</span>
+      <div className="card-head"><h2>지금 디스코드</h2><span className="sp" /><span className="meta">접속 중 {data.online}명 · 음성 {data.inVoice}명</span>
         {data.invite && <button type="button" className="btn sm" onClick={() => open(data.invite)}>디스코드 열기</button>}</div>
       <div className="vchans">{data.channels.map((c) => (
         <div key={c.id} className={`vchan ${c.members.length ? 'live' : ''}`}>
@@ -402,10 +402,9 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
         </div>
       ))}</div>
       {data.members.length > 0 && <div className="onl">{data.members.map((m) => (
-        <span key={m.name} className={`om ${m.status} ${m.lol ? 'lol' : ''}`} title={`${m.name}${m.game ? ` · ${m.game}` : ''}`}>
+        <span key={m.name} className={`om ${m.status}`} title={m.name}>
           <span className="op">{m.memberId || !m.avatar ? <MemberFace nick={m.name} skin={m.skin} champion={m.main} size={32} /> : <img className="face" src={m.avatar} width={32} height={32} alt="" loading="lazy" />}<i /></span>
           <span className="on">{m.name}</span>
-          {m.lol ? <span className="og">롤 하는 중</span> : m.game ? <span className="og other">{m.game}</span> : null}
         </span>
       ))}</div>}
     </section>
