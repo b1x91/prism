@@ -8,6 +8,7 @@ import {
   type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, MemberFace, RoleBadge, Seg, useSkins } from './basics';
+import { AugmentLink } from './augment';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { RecentGames } from './game';
@@ -129,7 +130,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
         <section className="card pad">
           <div className="card-head"><h2>자주 고른 증강</h2><span className="sp" /><span className="meta">{picksN}회 선택</span></div>
           <div className="list cols2">{data.augments.slice(0, 8).map((a) => (
-            <div key={a.id} className="item"><AugImg id={a.id} size={28} /><span className="title">{AUGMENT[a.id]?.name ?? `#${a.id}`}</span><span><b>{pct(a.w, a.n)}</b> <span className="meta">{a.n}회</span></span></div>))}</div>
+            <AugmentLink key={a.id} id={a.id} className="item"><AugImg id={a.id} size={28} /><span className="title">{AUGMENT[a.id]?.name ?? `#${a.id}`}</span><span><b>{pct(a.w, a.n)}</b> <span className="meta">{a.n}회</span></span></AugmentLink>))}</div>
         </section>
       </>}
     </div>

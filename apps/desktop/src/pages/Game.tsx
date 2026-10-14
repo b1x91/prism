@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AUGMENT, CHAMPIONS, ago, guideOf, pct, streakOf, todayPicks, type Personal } from '@prism/core';
-import { AugRing, TierBadge } from '@prism/ui';
+import { AugRing, AugmentLink, TierBadge } from '@prism/ui';
 import { GAME_DATA, fitPoints, tierOf } from '@prism/core';
 import { AugmentCompare, AugmentGuide, ChampBanner, ChampSearch, Empty, MemberFace, RecentGames, Seg, partyTime, useParties } from '@prism/ui';
 import { api } from '../bridge';
@@ -47,13 +47,13 @@ function TodayPick({ personal }: { personal: Personal }) {
           <div key={r} className="ta-col">
             <span className={`k ${r}`}>{r === 'prismatic' ? '프리즘' : r === 'gold' ? '골드' : '실버'}</span>
             {list.map((f) => (
-              <div key={f.id} className="ta-row"><AugRing id={f.id} size={36} /><span className="nm">{AUGMENT[f.id]?.name}</span><TierBadge tier={tierOf(fitPoints(f))} /></div>
+              <AugmentLink key={f.id} id={f.id} champion={pick.id} className="ta-row"><AugRing id={f.id} size={36} /><span className="nm">{AUGMENT[f.id]?.name}</span><TierBadge tier={tierOf(fitPoints(f))} /></AugmentLink>
             ))}
           </div>
         ))}
         {mine.length > 0 && <div className="ta-col mine">
           <span className="k">내가 이 챔피언으로 고른 증강</span>
-          {mine.slice(0, 3).map((a) => <div key={a.id} className="ta-row"><AugRing id={a.id} size={36} /><span className="nm">{AUGMENT[a.id]?.name ?? `#${a.id}`}</span><span className="meta">{a.n}번 · {pct(a.w, a.n)}</span></div>)}
+          {mine.slice(0, 3).map((a) => <AugmentLink key={a.id} id={a.id} champion={pick.id} className="ta-row"><AugRing id={a.id} size={36} /><span className="nm">{AUGMENT[a.id]?.name ?? `#${a.id}`}</span><span className="meta">{a.n}번 · {pct(a.w, a.n)}</span></AugmentLink>)}
         </div>}
       </div>
     </section>

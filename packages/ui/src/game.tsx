@@ -3,33 +3,10 @@
  * 앱의 최근 판과 회원 페이지가 함께 쓴다.
  */
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { createPortal } from 'react-dom';
 import { AUGMENT, CHAMPIONS, ITEM, RARITY_KO, ago, cdragon, loadItemDetail, type ItemDetail } from '@prism/core';
-import { AugImg, ChampImg, Empty } from './basics';
+import { AugImg, ChampImg, Empty, Hover } from './basics';
+import { AugmentLink } from './augment';
 import { Icon } from './icons';
-
-// ───────── 마우스를 올리면 뜨는 설명 (카드 밖으로 잘리지 않게 화면 맨 위 층에 띄운다) ─────────
-
-export function Hover({ tip, children, className = '' }: { tip: ReactNode | (() => ReactNode); children: ReactNode; className?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const [at, setAt] = useState<{ x: number; y: number; below: boolean } | null>(null);
-  const show = () => {
-    const r = ref.current?.getBoundingClientRect();
-    if (r) setAt({ x: Math.min(Math.max(r.left + r.width / 2, 160), innerWidth - 160), y: r.top < 220 ? r.bottom + 8 : r.top - 8, below: r.top < 220 });
-  };
-  useEffect(() => {
-    if (!at) return;
-    const hide = () => setAt(null);
-    addEventListener('scroll', hide, true);
-    return () => removeEventListener('scroll', hide, true);
-  }, [at]);
-  return (
-    <span ref={ref} className={`hov ${className}`} onMouseEnter={show} onMouseLeave={() => setAt(null)} onFocus={show} onBlur={() => setAt(null)}>
-      {children}
-      {at && createPortal(<div className={`tipbox ${at.below ? 'below' : ''}`} style={{ left: at.x, top: at.y }} role="tooltip">{typeof tip === 'function' ? tip() : tip}</div>, document.body)}
-    </span>
-  );
-}
 
 /** 아이템 능력치·효과는 처음 마우스를 올릴 때 한 번 불러온다 */
 let details: Record<number, ItemDetail> | null = null;
@@ -85,7 +62,7 @@ export function GameCard({ g, onChampion }: { g: CardGame; onChampion?: (id: num
       <div className="gaugs">
         {g.augments.length ? g.augments.slice(0, 6).map((a, i) => {
           const x = AUGMENT[a];
-          return <span key={`${a}-${i}`} className={`gaug ${x?.rarity ?? 'silver'}`} title={x ? `${x.name} · ${RARITY_KO[x.rarity]}\n${x.note}` : `#${a}`}><AugImg id={a} size={24} /><span>{x?.name ?? `#${a}`}</span></span>;
+          return <AugmentLink key={`${a}-${i}`} id={a} champion={g.championId} className={`gaug ${x?.rarity ?? 'silver'}`}><AugImg id={a} size={24} /><span>{x?.name ?? `#${a}`}</span></AugmentLink>;
         }) : <span className="meta">증강 기록 없음</span>}
       </div>
       <div className="gitems">

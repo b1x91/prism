@@ -42,9 +42,11 @@ export async function discordNow(env: Env) {
     ).bind(...names, ...names).all<{ id: string; name: string; nick: string; skin: number | null; main: number | null }>();
     for (const r of results) { faces.set(r.name, r); faces.set(r.nick, r); }
   }
+  // 음성 채널 바로가기: 서버 회원이 누르면 디스코드가 그 채널을 열고 '참가'를 띄운다 (초대 링크는 봇이 있어야 만들 수 있다)
   const channels = [...w.channels].sort((a, b) => a.position - b.position).map((c) => ({
     id: c.id,
     name: c.name,
+    link: `https://discord.com/channels/${env.DISCORD_GUILD_ID}/${c.id}`,
     members: inVoice.filter((m) => m.channel_id === c.id).map((m) => {
       const f = faces.get(m.username);
       return { name: m.username, avatar: m.avatar_url, muted: Boolean(m.self_mute || m.mute), deaf: Boolean(m.self_deaf || m.deaf), memberId: f?.id ?? null, skin: f?.skin ?? null, main: f?.main ?? null };

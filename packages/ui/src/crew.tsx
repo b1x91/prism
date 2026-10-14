@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type DiscordNow, type Parties, type Party, type Prospects, type Scrim, type ScrimMember, type Scrims } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, MemberFace } from './basics';
+import { AugmentLink } from './augment';
 
 /** 서버 데이터 한 덩이 불러오기 (다시 불러오기 함수 포함) */
 export function useLoad<T>(api: Api, path: string | null) {
@@ -112,7 +113,7 @@ export function ChampionCrew({ api, championId }: { api: Api; championId: number
           <div className="record"><span className="k">내 승률</span><span className="v">{pct(data.me.w, data.me.n)}</span><span className="s">{data.me.n}판</span></div>
         </div>
         {data.masters.length > 0 && <><h3 style={{ fontSize: 14, margin: '20px 0 8px' }}>장인</h3><div className="list">{data.masters.map((m) => <div key={m.id} className="item"><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={32} /><span className="title">{m.nick}</span><span className="meta">{m.n}판 {pct(m.w, m.n)}</span></div>)}</div></>}
-        {data.topAugments.length > 0 && <><h3 style={{ fontSize: 14, margin: '20px 0 8px' }}>모임이 많이 고른 증강</h3><div className="list">{data.topAugments.map((a) => <div key={a.id} className="item"><AugImg id={a.id} size={28} /><span className="title">{/* 이름은 데이터에서 */}<AugName id={a.id} /></span><span className="meta">{a.n}회 {pct(a.w, a.n)}</span></div>)}</div></>}
+        {data.topAugments.length > 0 && <><h3 style={{ fontSize: 14, margin: '20px 0 8px' }}>모임이 많이 고른 증강</h3><div className="list">{data.topAugments.map((a) => <AugmentLink key={a.id} id={a.id} champion={championId} className="item"><AugImg id={a.id} size={28} /><span className="title"><AugName id={a.id} /></span><span className="meta">{a.n}회 {pct(a.w, a.n)}</span></AugmentLink>)}</div></>}
       </section>
       <section className="card pad">
         <div className="card-head"><h2>회원 한 줄 팁</h2></div>
@@ -382,8 +383,12 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
 
 export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url: string) => void; admin?: boolean }) {
   const { data, reload } = useLoad<DiscordNow>(api, '/api/discord/now');
+  const [copied, setCopied] = useState<string | null>(null);
   useEffect(() => { const t = setInterval(reload, 30_000); return () => clearInterval(t); }, [reload]);
   if (!data) return null;
+  const copy = async (id: string, link: string) => {
+    try { await navigator.clipboard.writeText(link); setCopied(id); setTimeout(() => setCopied((x) => (x === id ? null : x)), 2000); } catch { /* 클립보드 막힘 */ }
+  };
   const open = (u: string | null) => { if (!u) return; if (onOpen) onOpen(u); else window.open(u, '_blank', 'noopener'); };
   if (!data.enabled) return admin ? <section className="card pad dnow off"><b>지금 디스코드</b><span className="meta">디스코드 서버 설정에서 '서버 위젯'을 켜면 음성방에 누가 있는지 여기에 떠요.</span></section> : null;
   return (
@@ -395,15 +400,19 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
           <div className="vh"><span className="vi" aria-hidden="true">🔊</span><b>{c.name}</b><span className="meta">{c.members.length ? `${c.members.length}명` : '비어 있음'}</span></div>
           {c.members.length > 0 && <div className="vmembers">{c.members.map((m) => (
             <span key={m.name} className="vm" title={m.name}>
-              {m.memberId || !m.avatar ? <MemberFace nick={m.name} skin={m.skin} champion={m.main} size={28} /> : <img className="face" src={m.avatar} width={28} height={28} alt="" loading="lazy" />}
+              <MemberFace nick={m.name} skin={m.skin} champion={m.main} size={28} />
               <span>{m.name}</span>{(m.muted || m.deaf) && <i className="vmute">{m.deaf ? '소리 끔' : '마이크 끔'}</i>}
             </span>
           ))}</div>}
+          <span className="vact">
+            <button type="button" className={`vbtn ${copied === c.id ? 'done' : ''}`} onClick={() => copy(c.id, c.link)} title="채널 링크 복사">{copied === c.id ? '복사됨' : '링크 복사'}</button>
+            <button type="button" className="vbtn go" onClick={() => open(c.link)} title="디스코드에서 이 채널 열기">들어가기</button>
+          </span>
         </div>
       ))}</div>
       {data.members.length > 0 && <div className="onl">{data.members.map((m) => (
         <span key={m.name} className={`om ${m.status}`} title={m.name}>
-          <span className="op">{m.memberId || !m.avatar ? <MemberFace nick={m.name} skin={m.skin} champion={m.main} size={32} /> : <img className="face" src={m.avatar} width={32} height={32} alt="" loading="lazy" />}<i /></span>
+          <span className="op"><MemberFace nick={m.name} skin={m.skin} champion={m.main} size={32} /><i /></span>
           <span className="on">{m.name}</span>
         </span>
       ))}</div>}

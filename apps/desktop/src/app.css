@@ -248,8 +248,9 @@ body { overflow: hidden; background: var(--bg); }
 .ta-col { display: grid; gap: var(--s2); align-content: start; padding: var(--s4); border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--line); }
 .ta-col .k { font-size: var(--fs-xs); font-weight: 800; color: var(--text-2); }
 .ta-col .k.prismatic { color: var(--spectrum-6); } .ta-col .k.gold { color: var(--gold); }
-.ta-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: var(--s2); align-items: center; }
-.ta-row .nm { font-size: var(--fs-sm); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ta-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: var(--s2); align-items: center; padding: 4px; }
+.ta-row .meta { white-space: nowrap; font-size: var(--fs-xs); }
+.ta-row .nm { font-size: var(--fs-sm); font-weight: 700; line-height: 1.35; word-break: keep-all; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .ta-row .tier { width: 32px; height: 32px; }
 .ta-row .tier b { font-size: var(--fs-lg); }
 .side-me-card .role-dot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; vertical-align: middle; box-shadow: 0 0 6px currentColor; }

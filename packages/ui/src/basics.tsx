@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { AUGMENT, CHAMPIONS, cdragon, champIcon, augIcon, loadSkins, withDefaults, type DiscordRole, type Links, type Skin } from '@prism/core';
 import { Icon } from './icons';
 
@@ -116,3 +117,27 @@ export function RoleBadge({ role, small }: { role?: DiscordRole | null; small?: 
   if (!role) return null;
   return <span className={`role-badge ${small ? 'sm' : ''}`} style={{ ['--rc' as string]: role.color }}><i />{role.name}</span>;
 }
+
+// ───────── 마우스를 올리면 뜨는 설명 (카드 밖으로 잘리지 않게 화면 맨 위 층에 띄운다) ─────────
+
+export function Hover({ tip, children, className = '' }: { tip: ReactNode | (() => ReactNode); children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [at, setAt] = useState<{ x: number; y: number; below: boolean } | null>(null);
+  const show = () => {
+    const r = ref.current?.getBoundingClientRect();
+    if (r) setAt({ x: Math.min(Math.max(r.left + r.width / 2, 160), innerWidth - 160), y: r.top < 220 ? r.bottom + 8 : r.top - 8, below: r.top < 220 });
+  };
+  useEffect(() => {
+    if (!at) return;
+    const hide = () => setAt(null);
+    addEventListener('scroll', hide, true);
+    return () => removeEventListener('scroll', hide, true);
+  }, [at]);
+  return (
+    <span ref={ref} className={`hov ${className}`} onMouseEnter={show} onMouseLeave={() => setAt(null)} onFocus={show} onBlur={() => setAt(null)}>
+      {children}
+      {at && createPortal(<div className={`tipbox ${at.below ? 'below' : ''}`} style={{ left: at.x, top: at.y }} role="tooltip">{typeof tip === 'function' ? tip() : tip}</div>, document.body)}
+    </span>
+  );
+}
+

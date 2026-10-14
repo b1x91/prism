@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, gradeUp, fitPoints, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, fitOf, gradeUp, fitPoints, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
 import { ChampImg } from './basics';
-import { AugImg, Empty, Seg } from './basics';
+import { AugImg, Empty, Hover, Seg } from './basics';
 import { Icon } from './icons';
+
 
 const ORDER: Rarity[] = ['prismatic', 'gold', 'silver'];
 type StatMap = Record<number, { n: number; w: number }>;
@@ -235,4 +236,39 @@ export function AugRing({ id, size = 40 }: { id: number; size?: number }) {
 export function Explain({ c, id, tier }: { c: ChampionProfile; id: number; tier: FitTier }) {
   const e = explainFit(c, AUGMENT[id]);
   return <><span className="ex-why">{e.why}</span>{e.when && (tier === 'S' || tier === 'A' || tier === 'B') && <span className="ex-when">{e.when}</span>}</>;
+}
+
+/** 증강 상세로 가는 길 (앱·웹이 각자 라우터로 넣어준다). 없으면 누를 수 없고 설명만 뜬다 */
+export const AugmentOpen = createContext<((id: number) => void) | null>(null);
+
+/** 받침 있으면 '과', 없으면 '와' */
+const gwa = (w: string) => { const ch = w.charCodeAt(w.length - 1); return ch >= 0xac00 && ch <= 0xd7a3 && (ch - 0xac00) % 28 ? '과' : '와'; };
+
+/** 증강에 마우스를 올렸을 때: 등급·짧은 설명·효과, 챔피언이 있으면 어울림 티어와 이유 */
+export function AugmentTip({ id, champion, link }: { id: number; champion?: number | null; link?: boolean }) {
+  const a = AUGMENT[id];
+  if (!a) return <span>#{id}</span>;
+  const c = champion ? CHAMPIONS[champion] : null;
+  const tier = c ? tierOf(fitPoints(fitOf(c, a))) : null;
+  return (
+    <div className="atip">
+      <div className="atip-head"><AugRing id={id} size={40} /><div><b>{a.name}</b><small className={a.rarity}>{RARITY_KO[a.rarity]}{a.note ? ` · ${a.note}` : ''}</small></div></div>
+      {c && tier && <div className="atip-fit">
+        <div className="atip-tier"><TierBadge tier={tier} /><span>{c.name}{gwa(c.name)} 어울림</span><GradeUp rarity={a.rarity} tier={tier} /></div>
+        <Explain c={c} id={id} tier={tier} />
+      </div>}
+      {a.desc && <p className="atip-desc">{a.desc}</p>}
+      {link && <span className="atip-more">눌러서 자세히 보기 →</span>}
+    </div>
+  );
+}
+
+/** 증강 한 줄을 감싼다: 올리면 설명, 누르면 증강 상세 */
+export function AugmentLink({ id, champion, className = '', inline, children }: { id: number; champion?: number | null; className?: string; inline?: boolean; children: ReactNode }) {
+  const open = useContext(AugmentOpen);
+  return (
+    <Hover className={`hov-aug ${inline ? 'inline' : ''}`} tip={() => <AugmentTip id={id} champion={champion} link={Boolean(open)} />}>
+      {open ? <button type="button" className={`aug-link ${className}`} onClick={() => open(id)}>{children}</button> : <span className={`aug-link ${className}`}>{children}</span>}
+    </Hover>
+  );
 }
