@@ -6,7 +6,7 @@ import { AUGMENT, isMayhemGame, mayhemGames, personalStats, toIngestGame, type G
 import { api, bridge } from './bridge';
 import { VERSION } from './version';
 
-const INTERVAL = { noClient: 20_000, inGame: 30_000, idle: 15_000, champSelect: 5_000, error: 10_000 };
+const INTERVAL = { noClient: 20_000, inGame: 30_000, idle: 15_000, champSelect: 600, error: 10_000 };
 const HISTORY_PAGES = 5; // 20판 × 5 = 최근 100판
 const HISTORY_EVERY = 10 * 60_000;
 const AFTER_GAME = 3 * 60_000; // 게임 직후 새 판이 뜰 때까지 30초마다 다시 읽는다
@@ -176,8 +176,10 @@ async function loadChampSelect() {
   if (cs.mine && cs.mine !== state.lastChampion) store('prism-last-champion', cs.mine);
   // 우리 팀 조합 (상대는 게임이 시작될 때). 새 챔프 선택이 시작되면 지난 판 상대는 지운다
   const fresh = !state.champSelect || !state.matchup;
-  set({ champSelect: cs, lastChampion: cs.mine ?? state.lastChampion });
   const allies = team.map((t) => t.championId).filter((id) => id > 0);
+  // 0.6초마다 읽으므로, 바뀐 게 없으면 화면을 다시 그리지 않는다
+  if (!fresh && JSON.stringify(cs) === JSON.stringify(state.champSelect) && JSON.stringify(allies) === JSON.stringify(state.matchup!.allies)) return;
+  set({ champSelect: cs, lastChampion: cs.mine ?? state.lastChampion });
   setMatchup({ allies, enemies: fresh ? [] : state.matchup!.enemies, source: fresh ? 'champ-select' : state.matchup!.source, at: Date.now() });
   // 챔피언·팀원 구성이 바뀌었을 때만 서버에 묻는다 (모임 기록·같은 팀 회원 케미)
   const ids = [cs.mine, ...cs.bench].filter((x): x is number => Boolean(x));
@@ -247,7 +249,8 @@ async function tick(): Promise<number> {
     if (starting && state.matchup?.source !== 'game') await loadMatchup().catch(() => {});
     if (phase === 'ChampSelect') await loadChampSelect();
     else { if (state.champSelect) set({ champSelect: null }); crewKey = ''; }
-    set({ phase, status: phase === 'ChampSelect' ? 'champ-select' : 'idle', message: '' });
+    const status = phase === 'ChampSelect' ? 'champ-select' : 'idle';
+    if (state.phase !== phase || state.status !== status || state.message) set({ phase, status, message: '' });
     if (phase === 'None' || phase === 'Lobby') void syncCrew();
     if (starting && state.matchup?.source !== 'game') return 1500; // 놓치지 않게 잠깐 자주
     return phase === 'ChampSelect' ? INTERVAL.champSelect : INTERVAL.idle;

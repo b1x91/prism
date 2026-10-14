@@ -53,8 +53,21 @@ fn is_named(p: &sysinfo::Process, name: &str) -> bool {
     p.name().to_string_lossy().eq_ignore_ascii_case(name)
 }
 
-/// 게임(인게임) 프로세스가 떠 있는가
+/// 게임(인게임) 프로세스가 떠 있는가. 챔프 선택 중에는 0.6초마다 여러 번 묻기 때문에
+/// 0.25초 안의 결과는 다시 쓴다 (프로세스 목록 전체를 매번 훑지 않게)
 pub fn game_running() -> bool {
+    static LAST: Mutex<Option<(std::time::Instant, bool)>> = Mutex::new(None);
+    if let Some((t, v)) = *LAST.lock().unwrap() {
+        if t.elapsed() < Duration::from_millis(250) {
+            return v;
+        }
+    }
+    let v = scan_game();
+    *LAST.lock().unwrap() = Some((std::time::Instant::now(), v));
+    v
+}
+
+fn scan_game() -> bool {
     let mut sys = System::new();
     sys.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::nothing());
     sys.processes().values().any(|p| is_named(p, GAME_PROCESS))
