@@ -11,7 +11,7 @@ export type RankingRow = { id: string; nick: string; skin: number | null; n: num
 export type Ranking = { period: 'all' | 'month'; minWinrate: number; rows: RankingRow[] };
 export type MemberGame = { gameId: number; playedAt: number; duration: number; championId: number; win: boolean; kills: number; deaths: number; assists: number; augments: number[]; items: number[]; damageToChampions: number | null; goldEarned: number | null; crewCount: number; custom?: boolean };
 export type MemberPage = {
-  member: { id: string; nick: string; intro: string; tier: 'guest' | 'member' | 'admin'; joinedAt: number; skin: number | null; riotId: string | null; self: boolean; role?: import('./api').DiscordRole | null };
+  member: { id: string; nick: string; intro: string; tier: 'guest' | 'member' | 'admin'; joinedAt: number; skin: number | null; riotId: string | null; self: boolean; role?: import('./api').DiscordRole | null; presence?: import('./presence').Presence };
   total: NW & { k: number; d: number; a: number; first: number | null };
   rank: number;
   champions: ChampAgg[];

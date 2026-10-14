@@ -255,11 +255,37 @@ async function tick(): Promise<number> {
   }
 }
 
+/** 접속 상태 점: 앱이 떠 있는지(트레이면 아님)·롤이 켜져 있는지를 서버에 알린다. 바뀌면 바로, 아니면 60초마다 */
+const LOL_ON = new Set<State['status']>(['idle', 'champ-select', 'in-game']);
+let presenceKey = '';
+let presenceAt = 0;
+async function windowOpen() {
+  try {
+    const { getCurrentWindow } = await import('@tauri-apps/api/window');
+    return await getCurrentWindow().isVisible();
+  } catch {
+    return document.visibilityState === 'visible';
+  }
+}
+async function pingPresence() {
+  if (!state.me) return;
+  const lol = LOL_ON.has(state.status);
+  const open = await windowOpen();
+  const key = `${lol}-${open}`;
+  const now = Date.now();
+  if (key === presenceKey && now - presenceAt < 60_000) return;
+  presenceKey = key;
+  presenceAt = now;
+  await api.post('/api/me/presence', { via: 'app', lol, open }).catch(() => { presenceKey = ''; });
+}
+
 let started = false;
 export function start() {
   if (started) return;
   started = true;
-  void refreshSession();
+  void refreshSession().then(pingPresence);
+  setInterval(() => void pingPresence(), 10_000);
+  document.addEventListener('visibilitychange', () => void pingPresence());
   const loop = async () => setTimeout(loop, await tick().catch(() => INTERVAL.error));
   void loop();
 }

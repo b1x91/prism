@@ -12,3 +12,4 @@ export * from './profile';
 export * from './mastery';
 export * from './situation';
 export * from './review';
+export * from './presence';

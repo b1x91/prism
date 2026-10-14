@@ -464,8 +464,7 @@ svg.light { position: absolute; inset: 0; z-index: 0; pointer-events: none; over
 
 /* ───────── 마우스를 올리면 뜨는 설명 ───────── */
 .hov { position: relative; display: inline-block; }
-.tipbox { position: fixed; z-index: 1000; transform: translate(-50%, -100%); max-width: 300px; padding: var(--s3); border-radius: var(--r-m); background: #0f1322; color: #eef1f8; border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 12px 32px rgba(0, 0, 0, .45); font-size: var(--fs-sm); line-height: 1.5; pointer-events: none; animation: tip-in .12s ease-out; }
-.tipbox.below { transform: translate(-50%, 0); }
+.tipbox { position: fixed; z-index: 1000; max-width: min(300px, calc(100vw - 16px)); max-height: calc(100vh - 16px); overflow: hidden; padding: var(--s3); border-radius: var(--r-m); background: #0f1322; color: #eef1f8; border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 12px 32px rgba(0, 0, 0, .45); font-size: var(--fs-sm); line-height: 1.5; pointer-events: none; animation: tip-in .12s ease-out; }
 @keyframes tip-in { from { opacity: 0; margin-top: 4px; } }
 .tipbox .meta { color: rgba(255, 255, 255, .55); }
 .hov-aug { display: block; min-width: 0; }
@@ -609,14 +608,14 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 @media (prefers-reduced-motion: reduce) { .pbadge.now { animation: none; } }
 
 /* ───────── 디스코드·카카오톡 앱 아이콘 ───────── */
-.chis { display: flex; gap: var(--s2); }
-.chi { display: grid; place-items: center; flex: none; padding: 0; border: 0; border-radius: 28%; cursor: pointer; text-decoration: none; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 2px 6px rgba(0, 0, 0, .12); }
-.chi svg { width: 58%; height: 58%; display: block; }
-.chi.discord { background: #5865f2; color: #fff; }
-.chi.kakao { background: #fee500; color: #3a1d1d; }
-.chi.kakao svg { width: 66%; height: 66%; }
-.chi:not(.soon):hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 6px 14px rgba(0, 0, 0, .2); }
-.chi.soon { filter: grayscale(1); opacity: .4; cursor: default; }
+.chis { display: flex; gap: 4px; }
+/* 디스코드·카카오톡: 바탕 없이 한 가지 색 아이콘만. 마우스를 올리면 그 앱의 색 */
+.chi { display: grid; place-items: center; flex: none; padding: 0; border: 0; border-radius: var(--r-s); background: none; color: var(--text-3); cursor: pointer; text-decoration: none; transition: color .15s ease, background .15s ease; }
+.chi svg { width: 20px; height: 20px; display: block; }
+.chi:not(.soon):hover, .chi:not(.soon):focus-visible { background: var(--surface-2); }
+.chi.discord:not(.soon):hover { color: #5865f2; }
+.chi.kakao:not(.soon):hover { color: #e0b800; }
+.chi.soon { opacity: .35; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .chi { transition: none; } }
 
 /* ───────── 내전 ───────── */
@@ -1081,3 +1080,13 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .mdl-aug { display: inline-flex !important; align-items: center; gap: 4px; padding: 0 !important; background: none !important; color: var(--text); font-size: var(--fs-xs); font-weight: 650; }
 .mdl-aug:hover span { text-decoration: underline; }
 .mdl-more { justify-self: start; margin-left: 28px; padding: 0 0 var(--s2); border: 0; background: none; color: var(--accent); font: inherit; font-size: var(--fs-xs); font-weight: 750; cursor: pointer; }
+
+/* 접속 상태 점: 웹 · 앱 · 게임 · 앱+게임 */
+.pdot { display: inline-block; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); }
+.pdot.app { background: var(--accent); }
+.pdot.game { background: var(--warn); }
+.pdot.both { background: var(--ok); }
+.fp { position: relative; display: inline-flex; flex: none; }
+.fp .pdot { position: absolute; right: -3px; bottom: -3px; width: 12px; height: 12px; box-shadow: 0 0 0 2px var(--surface); }
+.ptag { display: inline-flex; align-items: center; gap: 6px; font: inherit; color: inherit; vertical-align: baseline; }
+.banner .ptag { background: none; padding: 0; border: 0; box-shadow: none; }

@@ -5,7 +5,7 @@
  */
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
 import { artisanRanking, augmentArtisans, championArtisans } from './artisans.js';
-import { addTip, augmentStats, board, gameDetail, myDex, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setConsent, setProfile, toggleLike } from './crew.js';
+import { addTip, augmentStats, board, gameDetail, myDex, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setPresence, setConsent, setProfile, toggleLike } from './crew.js';
 import { ingest } from './ingest.js';
 import { memberPage, ranking } from './members.js';
 import { addNote, deleteNote, links, listNotes } from './notes.js';
@@ -36,6 +36,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/me/riot') return linkRiot(req, env, me);
   if (m === 'POST' && pathname === '/api/me/consent') return setConsent(req, env, me);
   if (m === 'POST' && pathname === '/api/me/profile') return setProfile(req, env, me);
+  if (m === 'POST' && pathname === '/api/me/presence') return setPresence(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'GET' && pathname === '/api/crew/targets') return crewTargets(env);
   if (m === 'POST' && pathname === '/api/ingest') return ingest(req, env, me);
   if (m === 'POST' && pathname === '/api/champselect') return champSelect(req, env, me);

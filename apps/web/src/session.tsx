@@ -3,7 +3,7 @@
  * 디스코드 로그인 → 서버가 1회용 code 와 함께 /auth/done 으로 돌려보냄 → 토큰으로 교환 → 이 브라우저에 저장.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ApiError, withDefaults, type Api, type Links, type Me } from '@prism/core';
+import { ApiError, withDefaults, type Api, type Links, type Me, type Presence } from '@prism/core';
 
 export const SERVER = (import.meta.env.VITE_PRISM_SERVER ?? '').replace(/\/$/, '');
 /** Windows 앱 설치 파일 주소. 기본은 GitHub Releases 최신판 (build-desktop 이 늘 같은 이름으로 올린다) */
@@ -54,6 +54,19 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     refresh();
     if (SERVER) fetch(`${SERVER}/links`).then((r) => r.json()).then((l: Links) => setLinks({ discord: l.discord ?? FALLBACK_LINKS.discord, kakao: l.kakao ?? FALLBACK_LINKS.kakao })).catch(() => {});
   }, [refresh]);
+  // 접속 상태 점: 화면을 보고 있는 동안 60초마다 '웹 접속'을 알리고, 앱·게임 상태가 섞인 결과를 받는다
+  const loggedIn = Boolean(me);
+  useEffect(() => {
+    if (!loggedIn) return;
+    const ping = () => {
+      if (document.visibilityState !== 'visible') return;
+      api.post<{ presence: Presence }>('/api/me/presence', { via: 'web' }).then((r) => setMe((m) => (m && m.presence !== r.presence ? { ...m, presence: r.presence } : m)), () => {});
+    };
+    ping();
+    const t = setInterval(ping, 60_000);
+    document.addEventListener('visibilitychange', ping);
+    return () => { clearInterval(t); document.removeEventListener('visibilitychange', ping); };
+  }, [loggedIn, api]);
   const value: Session = {
     api, me, ready, links, refresh,
     login: () => {

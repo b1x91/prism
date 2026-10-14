@@ -10,6 +10,7 @@ import './overlay.css';
 import { AUGMENT, CHAMPIONS, matchupSummary, rankByPriority, topTie } from '@prism/core';
 import { AugRing, ChampImg, Explain, Gem, GradeUp, TierBadge } from '@prism/ui';
 import { lastChampion, readMatchup, useSeenAugments } from './vision';
+import { lockdown } from './lockdown';
 
 function Overlay() {
   const { ids } = useSeenAugments();
@@ -48,4 +49,5 @@ function Overlay() {
   );
 }
 
+lockdown();
 createRoot(document.getElementById('root')!).render(<StrictMode><Overlay /></StrictMode>);

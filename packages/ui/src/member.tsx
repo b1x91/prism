@@ -7,7 +7,7 @@ import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, synergyOf,
   type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
 } from '@prism/core';
-import { AugImg, ChampImg, Empty, Gem, MemberFace, RoleBadge, Seg, useSkins } from './basics';
+import { AugImg, ChampImg, Empty, Gem, MemberFace, PresenceTag, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
 import { ArtisanRankingView } from './artisan';
 import { Icon } from './icons';
@@ -94,7 +94,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
         {art && <img className="bg" alt="" src={art} />}
         <div className="actions">{m.self && <button type="button" className="btn sm" onClick={() => setEdit(!edit)}>{edit ? '닫기' : '프로필 꾸미기'}</button>}{actions}</div>
         <div>
-          <div className="eyebrow">{m.role ? <RoleBadge role={m.role} /> : TIER_KO[m.tier]} · 판수 {data.rank}위 · {shortDate(m.joinedAt)} 가입</div>
+          <div className="eyebrow">{m.role ? <RoleBadge role={m.role} /> : TIER_KO[m.tier]} · 판수 {data.rank}위 · {shortDate(m.joinedAt)} 가입{m.presence && m.presence !== 'off' && <> · <PresenceTag p={m.presence} /></>}</div>
           <h1>{m.nick}</h1>
           {m.intro && <p className="intro">{m.intro}</p>}
           {skin && <span className="pill dark">{skin.name}</span>}

@@ -208,9 +208,10 @@ body { overflow: hidden; background: var(--bg); }
 .side-me-card .who { display: grid; min-width: 0; }
 .side-me-card .who b { font-size: var(--fs-sm); font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side-me-card .st { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.side-me-card .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex: none; }
-.side-me-card .ok .dot { background: var(--ok); } .side-me-card .bad .dot { background: var(--lose); }
-.side-me-card .live .dot { background: var(--accent); animation: blink 1.6s ease-in-out infinite; }
+.side-me-card .st .rl { font-style: normal; font-weight: 750; }
+.side-me-card .st .rl::after { content: '·'; margin-left: 6px; color: var(--text-3); }
+.side-me-card .bad { color: var(--lose); }
+.side-me-card .fp .pdot { box-shadow: 0 0 0 2px var(--surface); }
 .side-me-card .gear.active { color: var(--accent); background: var(--accent-soft); }
 .side-me-card .gear svg { width: 18px; height: 18px; }
 @media (max-width: 900px) { .side-me-card { flex-direction: column; padding: var(--s1); } .side-me-card .who { display: none; } }
@@ -253,6 +254,5 @@ body { overflow: hidden; background: var(--bg); }
 .ta-row .nm { font-size: var(--fs-sm); font-weight: 700; line-height: 1.35; word-break: keep-all; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .ta-row .tier { width: 32px; height: 32px; }
 .ta-row .tier b { font-size: var(--fs-lg); }
-.side-me-card .role-dot { display: inline-block; width: 8px; height: 8px; margin-left: 6px; border-radius: 50%; vertical-align: middle; box-shadow: 0 0 6px currentColor; }
 .relogin { display: flex; align-items: center; gap: var(--s3); max-width: var(--wide); margin: 0 auto var(--s4); padding: var(--s3) var(--s4); border-radius: var(--r-m); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); font-size: var(--fs-sm); }
 .relogin span { flex: 1; }

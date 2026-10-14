@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { AugmentOpen, ChannelIcons, Icon, MatchNote, MatchSource, MemberFace, useLoad, useSkins, type IconName } from '@prism/ui';
-import { matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
+import { AugmentOpen, ChannelIcons, FacePresence, Icon, MatchNote, MatchSource, MemberFace, useLoad, useSkins, type IconName } from '@prism/ui';
+import { matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail, type Presence } from '@prism/core';
 import { getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
@@ -18,6 +18,7 @@ import { ChampionsPage } from './pages/Champions';
 import { MemberPage, RankingPage } from './pages/Members';
 import { CrewPage } from './pages/Crew';
 import { SettingsPage } from './pages/Settings';
+import { lockdown } from './lockdown';
 
 const NAV: [string, string, IconName][] = [['/', '게임', 'game'], ['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
 
@@ -30,6 +31,8 @@ const STATUS: Record<State['status'], [string, string]> = {
   'in-game': ['게임 중', 'live'],
   error: ['롤 연결 오류', 'bad'],
 };
+
+const LOL_ON = new Set<State['status']>(['idle', 'champ-select', 'in-game']);
 
 /** 뒤로·앞으로 (마우스 뒤로가기 버튼과 같은 기록을 쓴다) */
 const hidx = () => (window.history.state as { idx?: number } | null)?.idx ?? 0;
@@ -70,6 +73,8 @@ function App() {
   // 게임 위 작은 창(자동 인식)도 동의한 뒤에만 켠다
   useEffect(() => { void bridge.visionAllow(ready); }, [ready]);
   const [label, tone] = STATUS[s.status];
+  // 이 창을 보고 있으니 앱은 떠 있다. 롤이 켜져 있으면 앱+게임
+  const presence: Presence = LOL_ON.has(s.status) ? 'both' : 'app';
   const skins = useSkins();
   const main = useRef<HTMLElement>(null);
   const riotName = s.summoner?.riotId.split('#')[0];
@@ -97,11 +102,11 @@ function App() {
         {up.error && up.info?.available && <span className="side-err l">{up.error}</span>}
         <nav className="side-nav">{NAV.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'}><Icon name={i} />{l}</NavLink>)}</nav>
         <span className="sp" />
-        <ChannelIcons links={links} size={36} onOpen={(u) => bridge.openUrl(u)} />
+        <ChannelIcons links={links} size={32} onOpen={(u) => bridge.openUrl(u)} />
         {s.me && <div className="side-me-card">
           <NavLink to="/me" className="side-me" title="내 페이지">
-            <MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} />
-            <span className="who"><b>{s.me.nick}{s.me.role && <i className="role-dot" style={{ background: s.me.role.color }} title={s.me.role.name} />}</b><span className={`st ${tone}`}><i className="dot" />{label}{riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}</span></span>
+            <FacePresence p={presence}><MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} /></FacePresence>
+            <span className="who"><b>{s.me.nick}</b><span className={`st ${tone}`}>{s.me.role && <em className="rl" style={{ color: s.me.role.color }}>{s.me.role.name}</em>}{label}{riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}</span></span>
           </NavLink>
           <NavLink to="/settings" className="icon-btn gear" title="설정" aria-label="설정"><Icon name="gear" /></NavLink>
         </div>}
@@ -147,4 +152,5 @@ function Root() {
 
 start();
 startUpdates();
+lockdown();
 createRoot(document.getElementById('root')!).render(<StrictMode><HashRouter><Root /></HashRouter></StrictMode>);

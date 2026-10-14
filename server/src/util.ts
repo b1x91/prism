@@ -31,6 +31,10 @@ export type Member = {
   discord_roles: string | null; // 로그인 때 받은 디스코드 역할 ID 배열 (JSON)
   discord_refresh: string | null; // 역할을 다시 확인할 때 쓰는 디스코드 refresh token (서버에만)
   roles_at: number | null; // 역할을 마지막으로 확인한 시각
+  web_seen_at: number;
+  app_seen_at: number;
+  app_lol: number;
+  app_open: number;
 };
 
 export class HttpError extends Error {

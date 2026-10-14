@@ -4,6 +4,7 @@
  */
 import { HttpError, json, type Env, type Member } from './util.js';
 import { topRole } from './roles.js';
+import { presenceOf } from '../../packages/core/src/presence.js';
 
 export const RANK_MIN_WINRATE = 10; // 승률 순위는 10판 이상만
 
@@ -30,9 +31,9 @@ export async function ranking(env: Env, period: string | null) {
 
 /** 회원 페이지: 프로필 + 전체 기록 분석 재료 + (다른 사람이면) 나와 같이 한 판 */
 export async function memberPage(env: Env, me: Member, id: string) {
-  const m = await env.DB.prepare('SELECT id, nick, intro, tier, joined_at AS joinedAt, profile_skin AS skin, riot_id AS riotId, discord_roles FROM members WHERE id = ?')
+  const m = await env.DB.prepare('SELECT id, nick, intro, tier, joined_at AS joinedAt, profile_skin AS skin, riot_id AS riotId, discord_roles, web_seen_at, app_seen_at, app_lol, app_open FROM members WHERE id = ?')
     .bind(id)
-    .first<{ id: string; nick: string; intro: string; tier: string; joinedAt: number; skin: number | null; riotId: string | null; discord_roles: string | null }>();
+    .first<{ id: string; nick: string; intro: string; tier: string; joinedAt: number; skin: number | null; riotId: string | null; discord_roles: string | null; web_seen_at: number; app_seen_at: number; app_lol: number; app_open: number }>();
   if (!m) throw new HttpError(404, '없는 회원입니다.');
   const self = id === me.id;
 
@@ -71,7 +72,7 @@ export async function memberPage(env: Env, me: Member, id: string) {
   }
   const [total, champions, augments, recent, rank, picks, together, against, viewerChampions] = await env.DB.batch(queries);
   return json({
-    member: { id: m.id, nick: m.nick, intro: m.intro, tier: m.tier, joinedAt: m.joinedAt, skin: m.skin, riotId: self ? m.riotId : null, self, role: topRole(m) },
+    member: { id: m.id, nick: m.nick, intro: m.intro, tier: m.tier, joinedAt: m.joinedAt, skin: m.skin, riotId: self ? m.riotId : null, self, role: topRole(m), presence: presenceOf({ webAt: m.web_seen_at, appAt: m.app_seen_at, lol: Boolean(m.app_lol), open: Boolean(m.app_open) }) },
     total: total.results[0],
     rank: (rank.results[0] as { rank: number }).rank,
     champions: champions.results,

@@ -7,6 +7,7 @@ import { FACE, HttpError, canHostScrim, json, type Env, type Member } from './ut
 import { adoptProspect } from './prospects.js';
 import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
 import skinData from '../../packages/core/data/skins.json';
+import { presenceOf } from '../../packages/core/src/presence.js';
 
 /** 스킨 등급 (없는 스킨이면 null) */
 const skinTier = (id: number): number | null => (skinData.skins as unknown as Record<string, [string, number, string, string]>)[id]?.[1] ?? null;
@@ -34,7 +35,24 @@ export async function getMe(env: Env, me: Member) {
     role: topRole(me),
     perms: permsOf(me),
     rolesKnown: me.roles_at !== null || me.discord_roles !== null,
+    presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }),
   });
+}
+
+/** 접속 알림 (앱·웹이 60초마다). 앱은 롤 켜짐·창 떠 있음도 함께 */
+export async function setPresence(env: Env, me: Member, body: { via?: unknown; lol?: unknown; open?: unknown }) {
+  const now = Date.now();
+  if (body.via === 'app') {
+    await env.DB.prepare('UPDATE members SET app_seen_at = ?, app_lol = ?, app_open = ? WHERE id = ?').bind(now, body.lol ? 1 : 0, body.open ? 1 : 0, me.id).run();
+    Object.assign(me, { app_seen_at: now, app_lol: body.lol ? 1 : 0, app_open: body.open ? 1 : 0 });
+  } else if (body.via === 'app-quit') {
+    await env.DB.prepare('UPDATE members SET app_seen_at = 0, app_lol = 0, app_open = 0 WHERE id = ?').bind(me.id).run();
+    Object.assign(me, { app_seen_at: 0, app_lol: 0, app_open: 0 });
+  } else {
+    await env.DB.prepare('UPDATE members SET web_seen_at = ? WHERE id = ?').bind(now, me.id).run();
+    me.web_seen_at = now;
+  }
+  return json({ presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }, now) });
 }
 
 /** 내 판 목록 (최근 100판). 웹·앱의 "내 기록" 화면용. 본인 것만 */
