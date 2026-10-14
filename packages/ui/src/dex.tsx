@@ -109,8 +109,8 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
           <span className="dex-bar" role="progressbar" aria-valuenow={rate} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${(goalsDone / Math.max(goalsAll, 1)) * 100}%` }} /></span>
           <div className="dex-tally">
             <span><i className="dst seen" />만남 <b>{seen}</b></span>
-            <span><i className="dst caught" />포획 <b>{caught}</b></span>
-            <span><i className="dst master" />마스터 <b>{masters}</b></span>
+            <span><Crystal />포획 <b>{caught}</b></span>
+            <span><PrismMark />마스터 <b>{masters}</b></span>
             <span className="of">/ {ids.length}</span>
           </div>
           <span className="meta">{loading ? '기록 불러오는 중…' : next ? `다음 배지 '${next[1]}'까지 ${next[0] - rate}%` : '도감을 완성했어요!'}</span>
@@ -120,9 +120,9 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
 
       <div className="dex-rules">
         <span><i className="dst seen" /><b>만남</b> 1판</span><span className="arr" aria-hidden="true">→</span>
-        <span><i className="dst caught" /><b>포획</b> 3승</span><span className="arr" aria-hidden="true">→</span>
+        <span><Crystal /><b>포획</b> 3승</span><span className="arr" aria-hidden="true">→</span>
         <span><i className="pip s on" /><b>{kind === 'champions' ? 'S티어 증강' : '잘 맞는 챔피언'}</b> 골라 보기 · 5·10·30·50승</span><span className="arr" aria-hidden="true">→</span>
-        <span><i className="dst master" /><b>마스터</b></span>
+        <span><PrismMark /><b>마스터</b></span>
       </div>
 
       <div className="dex-body">
@@ -142,7 +142,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
               <button key={id} type="button" className={`dx ${stageKey(x)} ${current === id ? 'sel' : ''} ${kind === 'augments' ? AUGMENT[id]?.rarity ?? '' : ''}`} onClick={() => pick(id)} aria-label={x.seen ? `${nameOf(kind, id)} ${stageOf(x)} ${x.done}/${x.total}` : `${NO(no.get(id)!)} 미발견`}>
                 <span className="no">{NO(no.get(id)!)}</span>
                 {fresh && !x.caught && <span className="new">NEW</span>}
-                {x.master ? <span className="mark master" aria-hidden="true"><Gem size={16} src="/brand/prism-32.png" /></span> : x.caught && <span className="mark ball" aria-hidden="true" />}
+                {x.master ? <span className="mark" role="img" aria-label="마스터" title="마스터 · 목표 6개 모두 달성"><PrismMark size={18} /></span> : x.caught && <span className="mark" role="img" aria-label="포획" title="포획 · 3승 달성"><Crystal size={16} /></span>}
                 <span className="pic">{kind === 'champions' ? <ChampImg id={id} size={56} /> : <AugRing id={id} size={56} />}{!x.seen && <i className="q" aria-hidden="true">?</i>}</span>
                 <span className="nm">{x.seen ? nameOf(kind, id) : '???'}</span>
                 <Pips m={x} />
@@ -206,7 +206,7 @@ function Stats({ e }: { e: DexEntry }) {
 }
 
 function StageTag({ m }: { m: Mastery }) {
-  return <span className={`stage-tag ${stageKey(m)}`}>{stageOf(m)}</span>;
+  return <span className={`stage-tag ${stageKey(m)}`}>{m.master ? <PrismMark size={14} /> : m.caught ? <Crystal size={12} /> : null}{stageOf(m)}</span>;
 }
 
 function ChampEntry({ id, no, e, m, dex, onChampion }: { id: number; no: number; e?: DexEntry; m: Mastery; dex: Dex; onChampion?: (id: number) => void }) {
@@ -272,4 +272,19 @@ function Ring({ m }: { m: Mastery }) {
       {m.done > 0 && <circle cx="68" cy="68" r={r} className="fg" strokeDasharray={`${(m.done / m.total) * len} ${len}`} />}
     </svg>
   );
+}
+
+/** 포획 표시: 깎인 원석 (3승) */
+export function Crystal({ size = 12 }: { size?: number }) {
+  return (
+    <svg className="crystal" width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
+      <path className="c-l" d="M8 1 2 6l6 9z" /><path className="c-r" d="M8 1l6 5-6 9z" /><path className="c-t" d="M5 6 8 1l3 5z" />
+      <path className="c-e" d="M8 1 2 6l6 9 6-9zM2 6h12M5 6l3 9 3-9" />
+    </svg>
+  );
+}
+
+/** 마스터 표시: 빛나는 프리즘 보석 (로고) */
+export function PrismMark({ size = 12 }: { size?: number }) {
+  return <img className="prism-mark" src="/brand/prism-32.png" width={size} height={size} alt="" />;
 }

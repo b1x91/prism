@@ -746,8 +746,6 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .dex-tally .of { color: rgba(255, 255, 255, .45); }
 .dst { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
 .dst.seen { background: #8b93a7; }
-.dst.caught { background: linear-gradient(180deg, #ff6b6b 0 45%, #20253a 45% 55%, #fff 55%); box-shadow: 0 0 0 1px rgba(0, 0, 0, .3); }
-.dst.master { background: conic-gradient(var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-7), var(--spectrum-1)); }
 .dex-rules { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); padding: var(--s3) var(--s4); border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--line); font-size: var(--fs-sm); color: var(--text-2); }
 .dex-rules > span { display: inline-flex; align-items: center; gap: 6px; }
 .dex-rules b { color: var(--text); }
@@ -779,8 +777,12 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .dx .no { justify-self: start; line-height: 16px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); font-variant-numeric: tabular-nums; }
 .dx .new { position: absolute; top: 82px; left: 50%; transform: translateX(-50%); z-index: 1; box-shadow: 0 0 0 2px var(--surface); padding: 0 4px; border-radius: 4px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; line-height: 16px; letter-spacing: .02em; }
 .dx .mark { position: absolute; top: 14px; right: 10px; line-height: 0; }
-.dx .mark.ball { width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(180deg, #ff6b6b 0 45%, #20253a 45% 55%, #fff 55%); box-shadow: 0 0 0 1px rgba(0, 0, 0, .35); }
-.dx .mark.master { top: 12px; right: 8px; }
+.dx .mark { top: 12px; right: 8px; }
+/* 포획 표시: 푸른 원석 / 마스터: 프리즘 보석 */
+.crystal { display: inline-block; flex: none; filter: drop-shadow(0 0 3px rgba(110, 160, 255, .55)); }
+.crystal .c-l { fill: #6f9dff; } .crystal .c-r { fill: #4a76e8; } .crystal .c-t { fill: #b9d2ff; }
+.crystal .c-e { fill: none; stroke: rgba(255, 255, 255, .75); stroke-width: .8; stroke-linejoin: round; }
+.prism-mark { display: inline-block; flex: none; object-fit: contain; filter: drop-shadow(0 0 4px rgba(170, 140, 255, .6)); }
 .dx.seen .pic > * { filter: grayscale(.85); opacity: .75; }
 .dx.master { border-color: transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(135deg, var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-7)) border-box; }
 .pips { display: flex; align-items: center; justify-content: center; gap: 3px; height: 12px; }
@@ -847,10 +849,11 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .jring .fg { stroke: var(--accent); stroke-linecap: round; transition: stroke-dasharray .4s ease; }
 .jring.master .fg { stroke: var(--spectrum-6); }
 .dxe.seen .dxe-pic > :not(.jring) { filter: grayscale(.85); opacity: .8; }
-.stage-tag { display: inline-flex; align-items: center; height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 800; background: var(--surface-2); color: var(--text-3); }
+.stage-tag { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 800; background: var(--surface-2); color: var(--text-3); }
 .stage-tag.seen { color: var(--text-2); }
-.stage-tag.caught { background: color-mix(in srgb, #ff6b6b 14%, transparent); color: #e05555; }
+.stage-tag.caught { background: color-mix(in srgb, #4a76e8 14%, transparent); color: #4a76e8; }
 .stage-tag.master { color: #fff; background: linear-gradient(135deg, var(--spectrum-2), var(--spectrum-6)); }
+.stage-tag.master .prism-mark { filter: none; }
 .journey { display: grid; gap: var(--s2); padding: var(--s3); border-radius: var(--r-m); border: 1px solid var(--line); }
 .jh { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2); }
 .jh .k { font-size: var(--fs-xs); font-weight: 750; color: var(--text-3); }
