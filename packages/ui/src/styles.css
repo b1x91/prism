@@ -769,8 +769,8 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .dx .mark { position: absolute; top: 14px; right: 10px; line-height: 0; }
 .dx .mark { top: 12px; right: 8px; }
 /* 포획 표시: 푸른 원석 / 마스터: 프리즘 보석 */
-.crystal { display: inline-block; flex: none; filter: drop-shadow(0 0 3px rgba(110, 160, 255, .55)); }
-.crystal .c-l { fill: #6f9dff; } .crystal .c-r { fill: #4a76e8; } .crystal .c-t { fill: #b9d2ff; }
+.crystal { display: inline-block; flex: none; filter: drop-shadow(0 0 3px rgba(240, 190, 80, .6)); }
+.crystal .c-l { fill: #f2c14e; } .crystal .c-r { fill: #d39a22; } .crystal .c-t { fill: #ffe6a3; }
 .crystal .c-e { fill: none; stroke: rgba(255, 255, 255, .75); stroke-width: .8; stroke-linejoin: round; }
 .prism-mark { display: inline-block; flex: none; object-fit: contain; filter: drop-shadow(0 0 4px rgba(170, 140, 255, .6)); }
 .dx.seen .pic > * { filter: grayscale(.85); opacity: .75; }
@@ -889,7 +889,10 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .dxe.seen .dxe-pic > :not(.jring) { filter: grayscale(.85); opacity: .8; }
 .stage-tag { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 800; background: var(--surface-2); color: var(--text-3); }
 .stage-tag.seen { color: var(--text-2); }
-.stage-tag.caught { background: color-mix(in srgb, #4a76e8 14%, transparent); color: #4a76e8; }
+.stage-tag.lv1 { background: color-mix(in srgb, #9aa4b5 18%, transparent); color: #7d8799; }
+.stage-tag.lv2 { background: color-mix(in srgb, #e0a82e 16%, transparent); color: #c18a16; }
+.stage-tag.lv3 { background: color-mix(in srgb, #2bb3a3 16%, transparent); color: #1f9b8c; }
+.stage-tag.lv4 { background: color-mix(in srgb, #5b7cff 16%, transparent); color: #4c6cf0; }
 .stage-tag.master { color: #fff; background: linear-gradient(135deg, var(--spectrum-2), var(--spectrum-6)); }
 .stage-tag.master .prism-mark { filter: none; }
 .journey { display: grid; gap: var(--s2); padding: var(--s3); border-radius: var(--r-m); border: 1px solid var(--line); }
@@ -1202,9 +1205,10 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .dex-levels .dl-group button.on { background: var(--surface); box-shadow: var(--shadow); }
 .dex-levels .dl-mine { font-weight: 800; }
 .dex-levels .lv { font-style: normal; min-width: 24px; height: 18px; padding: 0 4px; display: inline-grid; place-items: center; border-radius: var(--r-pill); background: var(--surface-3); color: var(--text-3); font-size: var(--fs-xs); font-weight: 800; }
-.dex-levels .l2 .lv { background: color-mix(in srgb, #4aa3ff 18%, transparent); color: #3b8ee8; }
-.dex-levels .l3 .lv { background: color-mix(in srgb, var(--accent) 16%, transparent); color: var(--accent); }
-.dex-levels .l4 .lv { background: color-mix(in srgb, var(--gold) 20%, transparent); color: var(--gold); }
+.dex-levels .l1 .lv { background: color-mix(in srgb, #9aa4b5 22%, transparent); color: #7d8799; }
+.dex-levels .l2 .lv { background: color-mix(in srgb, #e0a82e 20%, transparent); color: #c18a16; }
+.dex-levels .l3 .lv { background: color-mix(in srgb, #2bb3a3 18%, transparent); color: #1f9b8c; }
+.dex-levels .l4 .lv { background: color-mix(in srgb, #5b7cff 18%, transparent); color: #4c6cf0; }
 .dex-levels .l5 .lv { background: var(--spectrum); color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, .35); }
 .stage-tag small { font-size: var(--fs-xs); font-weight: 800; opacity: .7; margin-right: 2px; }
 @media (max-width: 640px) { .dex-levels .dl-group { flex-basis: 100%; order: 3; } }

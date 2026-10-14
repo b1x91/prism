@@ -1,6 +1,6 @@
 /**
  * 도감 (포켓몬 도감 방식) + 마스터 여정.
- * 해 봤다고 채워지지 않는다: 만남(1판) → 포획(3승) → S티어 증강 경험·5/10/30/50승 → 마스터.
+ * 해 봤다고 채워지지 않는다: 실버(1판) → 골드(3승) → 플래티넘 → 다이아몬드 → 마스터 (S티어 증강 경험·5/10/30/50승·역할 챌린지).
  * 못 만난 것은 번호와 흐린 그림(???). 누르면 도감 설명과 다음 목표.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
@@ -24,7 +24,7 @@ export function useDex(api: Api | null, games: Game[] = []) {
 }
 
 type Kind = 'champions' | 'augments';
-/** 전체 · 내 도감(모두 / 레벨 1~5) · 미발견 */
+/** 전체 · 내 도감(모두 / 레벨 1~5) · 아직 안 해봄 */
 type Show = 'all' | 'mine' | 'l1' | 'l2' | 'l3' | 'l4' | 'l5' | 'missing';
 type Sort = 'no' | 'progress' | 'most' | 'recent';
 
@@ -108,8 +108,8 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
           <b>{rate}<small>%</small></b>
           <span className="dex-bar" role="progressbar" aria-valuenow={rate} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${(goalsDone / Math.max(goalsAll, 1)) * 100}%` }} /></span>
           <div className="dex-tally">
-            <span><i className="dst seen" />발견 <b>{seen}</b></span>
-            <span><Crystal />포획 이상 <b>{caught}</b></span>
+            <span><i className="dst seen" />해 본 것 <b>{seen}</b></span>
+            <span><Crystal />골드 이상 <b>{caught}</b></span>
             <span><PrismMark />마스터 <b>{masters}</b></span>
             <span className="of">/ {ids.length}</span>
           </div>
@@ -118,7 +118,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
         <div className="dex-badges">{BADGES.map(([p, l]) => <span key={p} className={`dex-badge ${rate >= p ? 'on' : ''}`} title={`마스터 여정 ${p}%`}><i />{l}<small>{p}%</small></span>)}</div>
       </header>
 
-      {/* 전체 · 내 도감(레벨 1~5) · 미발견 */}
+      {/* 전체 · 내 도감(레벨 1~5) · 아직 안 해봄 */}
       <nav className="dex-levels" aria-label="도감 보기">
         <button type="button" className={show === 'all' ? 'on' : ''} onClick={() => setShow('all')}>전체<small>{ids.length}</small></button>
         <span className="dl-group">
@@ -129,7 +129,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
             </button>
           ))}
         </span>
-        <button type="button" className={show === 'missing' ? 'on' : ''} onClick={() => setShow('missing')} title="아직 만나지 못한 것">미발견<small>{ids.length - seen}</small></button>
+        <button type="button" className={show === 'missing' ? 'on' : ''} onClick={() => setShow('missing')} title="아직 한 번도 안 해 본 것">아직 안 해봄<small>{ids.length - seen}</small></button>
       </nav>
 
       <div className="dex-body">
@@ -138,15 +138,15 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
             <label className="dex-search"><Icon name="search" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="만난 것 이름 또는 번호" /></label>
             <Select label="정렬" value={sort} onChange={setSort} options={[['no', '번호순'], ['progress', '진척도순'], ['most', '많이 한 순'], ['recent', '최근 만난 순']]} />
           </div>
-          <div className="dex-groups">{groups.map(([g, l]) => { const [f, t] = groupCount(g); return <button key={g} type="button" className={`chip ${group === g ? 'on' : ''}`} onClick={() => setGroup(g)} title="포획 / 전체">{l}<small>{f}/{t}</small></button>; })}</div>
+          <div className="dex-groups">{groups.map(([g, l]) => { const [f, t] = groupCount(g); return <button key={g} type="button" className={`chip ${group === g ? 'on' : ''}`} onClick={() => setGroup(g)} title="골드 이상 / 전체">{l}<small>{f}/{t}</small></button>; })}</div>
           {list.length ? <div className={`dex-grid ${kind}`}>{list.map((id) => {
             const x = m(id), e = got[id];
             const fresh = e && now - e.first < NEW_MS;
             return (
-              <button key={id} type="button" className={`dx ${stageKey(x)} ${current === id ? 'sel' : ''} ${kind === 'augments' ? AUGMENT[id]?.rarity ?? '' : ''}`} onClick={() => pick(id)} aria-label={x.seen ? `${nameOf(kind, id)} ${stageOf(x)} ${x.done}/${x.total}` : `${NO(no.get(id)!)} 미발견`}>
+              <button key={id} type="button" className={`dx ${stageKey(x)} ${current === id ? 'sel' : ''} ${kind === 'augments' ? AUGMENT[id]?.rarity ?? '' : ''}`} onClick={() => pick(id)} aria-label={x.seen ? `${nameOf(kind, id)} ${stageOf(x)} ${x.done}/${x.total}` : `${NO(no.get(id)!)} 아직 안 해봄`}>
                 <span className="no">{NO(no.get(id)!)}</span>
                 {fresh && !x.caught && <span className="new">NEW</span>}
-                {x.master ? <span className="mark" role="img" aria-label="마스터" title={`마스터 · 목표 ${x.total}개 모두 달성`}><PrismMark size={18} /></span> : x.caught && <span className="mark" role="img" aria-label="포획" title="포획 · 3승 달성"><Crystal size={16} /></span>}
+                {x.master ? <span className="mark" role="img" aria-label="마스터" title={`마스터 · 목표 ${x.total}개 모두 달성`}><PrismMark size={18} /></span> : x.caught && <span className="mark" role="img" aria-label="골드" title="골드 · 3승 달성"><Crystal size={16} /></span>}
                 <span className="pic">{kind === 'champions' ? <ChampImg id={id} size={56} /> : <AugRing id={id} size={56} />}{!x.seen && <i className="q" aria-hidden="true">?</i>}</span>
                 <span className="nm">{x.seen ? nameOf(kind, id) : '???'}</span>
                 <Pips m={x} />
@@ -262,7 +262,7 @@ function Stats({ e }: { e: DexEntry }) {
 }
 
 function StageTag({ m }: { m: Mastery }) {
-  return <span className={`stage-tag ${stageKey(m)}`}>{m.master ? <PrismMark size={14} /> : m.caught ? <Crystal size={12} /> : null}{m.seen && <small>Lv.{dexLevel(m)}</small>}{stageOf(m)}</span>;
+  return <span className={`stage-tag ${stageKey(m)} lv${dexLevel(m)}`}>{m.master ? <PrismMark size={14} /> : m.caught ? <Crystal size={12} /> : null}{m.seen && <small>Lv.{dexLevel(m)}</small>}{stageOf(m)}</span>;
 }
 
 function ChampEntry({ id, no, e, m, dex, onChampion }: { id: number; no: number; e?: DexEntry; m: Mastery; dex: Dex; onChampion?: (id: number) => void }) {
@@ -334,7 +334,7 @@ function Ring({ m }: { m: Mastery }) {
   );
 }
 
-/** 포획 표시: 깎인 원석 (3승) */
+/** 골드 표시: 깎인 금빛 원석 (3승) */
 export function Crystal({ size = 12 }: { size?: number }) {
   return (
     <svg className="crystal" width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
