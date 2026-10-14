@@ -64,3 +64,15 @@ jobs:
           target_commitish: ${{ github.sha }}
           name: Prism 앱 ${{ startsWith(github.ref, 'refs/tags/app-v') && github.ref_name || steps.ver.outputs.tag }}
           make_latest: true
+      # 서버에 새 버전을 바로 알린다 (GitHub 가 서버의 확인 요청을 막아도 업데이트가 늦지 않게)
+      - if: startsWith(github.ref, 'refs/tags/app-v') || inputs.release
+        name: 서버에 새 버전 알리기
+        shell: bash
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TAG: ${{ startsWith(github.ref, 'refs/tags/app-v') && github.ref_name || steps.ver.outputs.tag }}
+        run: |
+          [ -n "$CLOUDFLARE_API_TOKEN" ] || { echo "::notice::CLOUDFLARE_API_TOKEN 이 없어 건너뜁니다"; exit 0; }
+          [[ "$TAG" =~ ^app-v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "이상한 태그: $TAG"; exit 1; }
+          npx wrangler d1 execute prism --remote --config server/wrangler.toml --command "INSERT INTO ext_cache (k, v, at) VALUES ('release-tag', '$TAG', $(date +%s)000) ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at"

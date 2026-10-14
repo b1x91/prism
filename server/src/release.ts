@@ -44,15 +44,23 @@ async function tagFromWeb(env: Env): Promise<string | null> {
  * 둘 다 실패하면 마지막으로 알아낸 태그(D1 ext_cache)를 쓴다. 업데이트 확인이 그 때문에 끊기지 않게.
  */
 async function latestTag(env: Env): Promise<string> {
-  const tag = (await tagFromWeb(env)) ?? (await release(env).then((r) => r.tag_name).catch(() => null));
-  if (tag) {
+  // 빌드가 끝나면 CI 가 ext_cache 에 새 태그를 바로 적는다(build-desktop.yml). GitHub 에서 읽은 것과 둘 중 더 새 것
+  const row = await env.DB.prepare('SELECT v FROM ext_cache WHERE k = ?').bind('release-tag').first<{ v: string }>().catch(() => null);
+  const web = (await tagFromWeb(env)) ?? (await release(env).then((r) => r.tag_name).catch(() => null));
+  const tag = [row?.v, web].filter((x): x is string => Boolean(x)).sort((a, b) => cmpTag(b, a))[0];
+  if (!tag) throw new HttpError(502, '배포 정보를 가져오지 못했습니다. 잠시 뒤 다시 시도해주세요.');
+  if (tag !== row?.v) {
     await env.DB.prepare('INSERT INTO ext_cache (k, v, at) VALUES (?, ?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at')
       .bind('release-tag', tag, Date.now()).run().catch(() => {});
-    return tag;
   }
-  const row = await env.DB.prepare('SELECT v FROM ext_cache WHERE k = ?').bind('release-tag').first<{ v: string }>().catch(() => null);
-  if (row?.v) return row.v;
-  throw new HttpError(502, '배포 정보를 가져오지 못했습니다. 잠시 뒤 다시 시도해주세요.');
+  return tag;
+}
+/** 태그 비교 (app-v0.9.10 > app-v0.9.9: 자리별 숫자) */
+function cmpTag(a: string, b: string) {
+  const n = (t: string) => t.replace(/^app-v|^v/, '').split('.').map((x) => Number(x) || 0);
+  const x = n(a), y = n(b);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] ?? 0) !== (y[i] ?? 0)) return (x[i] ?? 0) - (y[i] ?? 0);
+  return 0;
 }
 
 async function release(env: Env, tag?: string): Promise<Rel> {
@@ -78,7 +86,7 @@ export async function latest(req: Request, env: Env) {
     size: a?.size ?? 0,
     url: a ? `${origin(req, env)}/app/download/${encodeURIComponent(rel.tag_name)}/${ASSET}` : '',
   });
-  res.headers.set('Cache-Control', 'public, max-age=300');
+  res.headers.set('Cache-Control', 'public, max-age=120');
   await cache.put(key, res.clone());
   return res;
 }
