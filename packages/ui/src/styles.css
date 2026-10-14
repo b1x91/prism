@@ -658,3 +658,26 @@ svg.light { position: absolute; inset: 0; z-index: 0; pointer-events: none; over
 .role-badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--rc); box-shadow: 0 0 6px var(--rc); }
 .role-badge.sm { height: 18px; padding: 0 6px; margin-left: var(--s2); }
 .banner .role-badge { background: color-mix(in srgb, var(--rc) 30%, rgba(0, 0, 0, .3)); color: #fff; }
+
+/* 내전 대기 */
+.swait { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.wchip { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 var(--s2) 0 4px; border-radius: var(--r-pill); background: var(--surface-2); font-size: var(--fs-xs); font-weight: 650; }
+.wchip b { width: 20px; height: 20px; display: grid; place-items: center; border-radius: 50%; background: var(--surface-3); font-size: var(--fs-xs); }
+.wchip .face, .wchip .initial { border-radius: 50%; }
+
+/* 지금 디스코드 */
+.dnow { display: grid; gap: var(--s3); }
+.dnow.off { gap: var(--s1); }
+.dnow .card-head { margin-bottom: 0; gap: var(--s3); }
+.vchans { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s3); }
+.vchan { display: grid; gap: var(--s2); align-content: start; padding: var(--s3) var(--s4); border-radius: var(--r-m); background: var(--surface-2); border: 1px solid transparent; }
+.vchan.live { border-color: color-mix(in srgb, #5865f2 45%, var(--line)); background: color-mix(in srgb, #5865f2 8%, var(--surface-2)); }
+.vh { display: flex; align-items: center; gap: var(--s2); }
+.vh .meta { margin-left: auto; }
+.vi { font-size: var(--fs-sm); }
+.vchan:not(.live) { opacity: .7; }
+.vmembers { display: grid; gap: var(--s1); }
+.vm { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); font-weight: 650; min-width: 0; }
+.vm .face, .vm .initial { border-radius: 50%; flex: none; }
+.vm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vmute { flex: none; font-style: normal; font-size: var(--fs-xs); font-weight: 650; height: 18px; padding: 0 6px; border-radius: var(--r-pill); background: var(--surface-3); color: var(--text-3); line-height: 18px; }

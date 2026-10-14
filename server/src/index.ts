@@ -9,6 +9,7 @@ import { ingest } from './ingest.js';
 import { memberPage, ranking } from './members.js';
 import { addNote, deleteNote, links, listNotes } from './notes.js';
 import { deleteProspect, listProspects } from './prospects.js';
+import { discordNow } from './discord-now.js';
 import { listScrims, openScrim, scrimAction } from './scrims.js';
 import { cancelParty, joinParty, leaveParty, listParties, openParty } from './parties.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
@@ -44,6 +45,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && pathname === '/api/parties') return listParties(env, me);
   if (m === 'POST' && pathname === '/api/parties') return openParty(req, env, me);
   if (m === 'GET' && pathname === '/api/scrims') return listScrims(env, me);
+  if (m === 'GET' && pathname === '/api/discord/now') return discordNow(env);
   if (m === 'GET' && pathname === '/api/prospects') return listProspects(env, me);
   if (m === 'POST' && pathname === '/api/scrims') return openScrim(req, env, me);
   if (m === 'GET' && pathname === '/api/augments') {
@@ -62,7 +64,7 @@ async function route(req: Request, env: Env): Promise<Response> {
     const id = Number(party[1]);
     return party[2] === 'join' ? joinParty(env, me, id) : party[2] === 'leave' ? leaveParty(env, me, id) : cancelParty(env, me, id);
   }
-  const sc = pathname.match(/^\/api\/scrims\/(\d+)\/(join|leave|cancel|balance|swap|lock|unlock)$/);
+  const sc = pathname.match(/^\/api\/scrims\/(\d+)\/(join|leave|cancel|balance|swap|lock|unlock|confirm|unconfirm)$/);
   if (m === 'POST' && sc) return scrimAction(req, env, me, Number(sc[1]), sc[2]);
   const pr = pathname.match(/^\/api\/prospects\/([0-9A-Za-z_-]{10,100})$/);
   if (m === 'DELETE' && pr) return deleteProspect(env, me, pr[1]);

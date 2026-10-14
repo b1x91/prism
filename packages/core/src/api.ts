@@ -38,8 +38,8 @@ export type Parties = { size: number; now: number; parties: Party[] };
 
 /** 내전 */
 export type ScrimMember = PartyMember & { team: 1 | 2 | null; n: number; w: number; rating: number };
-export type Scrim = { id: number; startAt: number; note: string; hostId: string; lockedAt: number | null; members: ScrimMember[]; mine: boolean; host: boolean; results: { gameId: number; at: number; duration: number; winner: 1 | 2 }[] };
-export type Scrims = { size: number; now: number; canHost: boolean; scrims: Scrim[] };
+export type Scrim = { id: number; startAt: number; note: string; hostId: string; lockedAt: number | null; confirmedAt: number | null; members: ScrimMember[]; waiting: PartyMember[]; mine: boolean; host: boolean; results: { gameId: number; at: number; duration: number; winner: 1 | 2 }[] };
+export type Scrims = { size: number; wait: number; now: number; canHost: boolean; scrims: Scrim[] };
 
 /** 포텐 멤버 (회원 전용) */
 export type Prospect = { puuid: string; riotId: string | null; n: number; w: number; queued: number; customs: number; lastAt: number; main: number | null; mates: { nick: string; n: number }[] };
@@ -48,3 +48,7 @@ export type Prospects = { prospects: Prospect[]; queueMin: number };
 /** 디스코드 역할 (가장 높은 것 하나) 과 앱 기능 권한 */
 export type DiscordRole = { key: string; name: string; color: string; level: number };
 export type Perms = { party: boolean; scrim: boolean; prospects: boolean; moderate: boolean };
+
+/** 지금 디스코드 (서버 위젯) */
+export type VoiceMember = { name: string; avatar: string; muted: boolean; deaf: boolean; memberId: string | null; skin: number | null; main: number | null };
+export type DiscordNow = { enabled: false; invite: string | null } | { enabled: true; online: number; inVoice: number; invite: string | null; channels: { id: string; name: string; members: VoiceMember[] }[] };

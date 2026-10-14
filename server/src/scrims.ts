@@ -1,14 +1,17 @@
 /**
  * 내전: 우리끼리 5:5 (사용자 설정 게임).
  * - 여는 사람: 역할 표(roles.ts)의 scrim 단계 이상 (우수회원 이상·운영진·관리자)
- * - 참여/빠지기 원탭, 10자리. 팀이 확정되면 참여·빠지기를 막는다 (연 사람이 '팀 다시'로 풀 수 있음)
+ * - 참여/빠지기 원탭, 10자리 + 대기 10명 (먼저 신청한 10명이 참가, 빠지면 대기 1번이 자동으로 올라감)
+ * - 개최 확정: 방장이 10명이 차면 '개최 확정'. 팀이 확정되면 참여·빠지기를 막는다 (방장이 '팀 다시 풀기')
  * - 팀 나누기: Prism 기록 승률(판수가 적으면 50%에 가깝게 보정)의 합이 가장 비슷한 조합 중 하나를 고른다
- * - 결과: 시작 30분 전 ~ 6시간 뒤에 기록된 사용자 설정 판 중, 이 내전 참가자가 6명 이상인 판을 자동으로 찾아 점수로 보여준다
+ * - 결과: 늘 자동. 시작 30분 전 ~ 6시간 뒤에 기록된 사용자 설정 판 중 이 내전 사람이 6명 이상인 판.
+ *   팀을 나눴으면 그 팀으로, 안 나눴으면 게임 안 진영(블루 100 / 레드 200)으로 승패를 매긴다
  */
 import { can } from './roles.js';
 import { FACE, HttpError, canHostScrim, json, type Env, type Member } from './util.js';
 
 const SIZE = 10;
+const WAIT = 10; // 대기자 최대
 const NOTE_MAX = 40;
 const SHOW_AFTER_START = 6 * 3600_000;
 const MAX_AHEAD = 14 * 24 * 3600_000;
@@ -35,8 +38,9 @@ async function slotsOf(env: Env, ids: number[]) {
 /** 기록된 사용자 설정 판에서 이 내전의 결과 찾기 */
 async function resultsOf(env: Env, startAt: number, slots: Slot[]) {
   const teamOf = new Map(slots.filter((s) => s.team).map((s) => [s.id, s.team!]));
-  if (teamOf.size < 6) return [];
-  const ids = [...teamOf.keys()];
+  const byTeam = teamOf.size >= 6; // 팀을 나눴으면 팀 기준, 아니면 게임 진영 기준
+  const ids = slots.map((s) => s.id);
+  if (ids.length < 6) return [];
   const { results } = await env.DB.prepare(
     `SELECT p.game_id AS gameId, x.played_at AS at, x.duration, p.member_id AS memberId, p.team_id AS side, p.win
      FROM participants p JOIN matches x ON x.game_id = p.game_id
@@ -48,8 +52,8 @@ async function resultsOf(env: Env, startAt: number, slots: Slot[]) {
   const out: { gameId: number; at: number; duration: number; winner: 1 | 2 }[] = [];
   for (const [gameId, rows] of games) {
     if (rows.length < 6) continue;
-    // 블루팀(1) 회원이 많이 있는 진영의 승패로 판정
-    const blue = rows.filter((r) => teamOf.get(r.memberId) === 1);
+    // 블루팀(1) 사람이 많이 있는 진영의 승패로 판정. 팀을 안 나눴으면 게임의 블루 진영(100)
+    const blue = byTeam ? rows.filter((r) => teamOf.get(r.memberId) === 1) : rows.filter((r) => r.side === 100);
     if (!blue.length) continue;
     const blueWon = blue.filter((r) => r.win === 1).length * 2 > blue.length;
     out.push({ gameId, at: rows[0].at, duration: rows[0].duration, winner: blueWon ? 1 : 2 });
@@ -60,22 +64,23 @@ async function resultsOf(env: Env, startAt: number, slots: Slot[]) {
 export async function listScrims(env: Env, me: Member) {
   const now = Date.now();
   const { results: ss } = await env.DB.prepare(
-    `SELECT id, start_at AS startAt, note, host_id AS hostId, locked_at AS lockedAt FROM scrims
+    `SELECT id, start_at AS startAt, note, host_id AS hostId, locked_at AS lockedAt, confirmed_at AS confirmedAt FROM scrims
      WHERE cancelled_at IS NULL AND start_at >= ? ORDER BY start_at LIMIT 10`,
-  ).bind(now - SHOW_AFTER_START).all<{ id: number; startAt: number; note: string; hostId: string; lockedAt: number | null }>();
+  ).bind(now - SHOW_AFTER_START).all<{ id: number; startAt: number; note: string; hostId: string; lockedAt: number | null; confirmedAt: number | null }>();
   const by = await slotsOf(env, ss.map((s) => s.id));
   const scrims = [];
   for (const s of ss) {
     const slots = by.get(s.id) ?? [];
     scrims.push({
       ...s,
-      members: slots.map((x) => ({ ...x, rating: Math.round(rating(x) * 1000) / 1000 })),
+      members: slots.slice(0, SIZE).map((x) => ({ ...x, rating: Math.round(rating(x) * 1000) / 1000 })),
+      waiting: slots.slice(SIZE).map(({ id, nick, skin, main }) => ({ id, nick, skin, main })),
       mine: slots.some((x) => x.id === me.id),
       host: s.hostId === me.id || can(me, 'moderate'),
-      results: s.lockedAt ? await resultsOf(env, s.startAt, slots) : [],
+      results: await resultsOf(env, s.startAt, slots.slice(0, SIZE)),
     });
   }
-  return json({ size: SIZE, now, canHost: canHostScrim(env, me), scrims });
+  return json({ size: SIZE, wait: WAIT, now, canHost: canHostScrim(env, me), scrims });
 }
 
 export async function openScrim(req: Request, env: Env, me: Member) {
@@ -92,8 +97,8 @@ export async function openScrim(req: Request, env: Env, me: Member) {
 }
 
 async function scrim(env: Env, id: number) {
-  const s = await env.DB.prepare('SELECT id, host_id AS hostId, start_at AS startAt, locked_at AS lockedAt FROM scrims WHERE id = ? AND cancelled_at IS NULL')
-    .bind(id).first<{ id: number; hostId: string; startAt: number; lockedAt: number | null }>();
+  const s = await env.DB.prepare('SELECT id, host_id AS hostId, start_at AS startAt, locked_at AS lockedAt, confirmed_at AS confirmedAt FROM scrims WHERE id = ? AND cancelled_at IS NULL')
+    .bind(id).first<{ id: number; hostId: string; startAt: number; lockedAt: number | null; confirmedAt: number | null }>();
   if (!s || s.startAt < Date.now() - SHOW_AFTER_START) throw new HttpError(404, '이미 끝났거나 취소된 내전입니다.');
   return s;
 }
@@ -108,17 +113,18 @@ export async function scrimAction(req: Request, env: Env, me: Member, id: number
       const r = await env.DB.prepare(
         `INSERT OR IGNORE INTO scrim_slots (scrim_id, member_id, joined_at)
          SELECT ?1, ?2, ?3 WHERE (SELECT COUNT(*) FROM scrim_slots WHERE scrim_id = ?1) < ?4`,
-      ).bind(id, me.id, now, SIZE).run();
+      ).bind(id, me.id, now, SIZE + WAIT).run();
       if (r.meta.changes === 0 && !(await env.DB.prepare('SELECT 1 FROM scrim_slots WHERE scrim_id = ? AND member_id = ?').bind(id, me.id).first()))
-        throw new HttpError(409, '자리가 다 찼습니다.');
+        throw new HttpError(409, '대기 자리까지 다 찼습니다.');
       break;
     }
     case 'leave':
       if (s.hostId === me.id) throw new HttpError(400, '연 사람은 빠질 수 없습니다. 내전을 취소해주세요.');
       if (s.lockedAt) throw new HttpError(409, '팀이 확정된 뒤에는 연 사람에게 말해 팀을 다시 풀어야 합니다.');
+      const mine = await env.DB.prepare('SELECT team FROM scrim_slots WHERE scrim_id = ? AND member_id = ?').bind(id, me.id).first<{ team: number | null }>();
       await env.DB.prepare('DELETE FROM scrim_slots WHERE scrim_id = ? AND member_id = ?').bind(id, me.id).run();
-      // 누가 빠지면 나눠둔 팀은 다시 나눠야 한다
-      await env.DB.prepare('UPDATE scrim_slots SET team = NULL WHERE scrim_id = ?').bind(id).run();
+      // 팀에 들어 있던 사람이 빠지면 대기 1번이 올라오므로 팀은 다시 나눠야 한다
+      if (mine?.team) await env.DB.prepare('UPDATE scrim_slots SET team = NULL WHERE scrim_id = ?').bind(id).run();
       break;
     case 'cancel':
       if (!isHost(s, me)) throw new HttpError(403, '연 사람만 취소할 수 있습니다.');
@@ -127,10 +133,13 @@ export async function scrimAction(req: Request, env: Env, me: Member, id: number
     case 'balance': {
       if (!isHost(s, me)) throw new HttpError(403, '연 사람만 팀을 나눌 수 있습니다.');
       if (s.lockedAt) throw new HttpError(409, '팀을 다시 풀고 나눠주세요.');
-      const slots = (await slotsOf(env, [id])).get(id) ?? [];
+      const slots = ((await slotsOf(env, [id])).get(id) ?? []).slice(0, SIZE);
       if (slots.length < 2 || slots.length % 2) throw new HttpError(400, '짝수 인원(2~10명)일 때 나눌 수 있습니다.');
       const teams = balance(slots);
-      await env.DB.batch(slots.map((x, i) => env.DB.prepare('UPDATE scrim_slots SET team = ? WHERE scrim_id = ? AND member_id = ?').bind(teams[i], id, x.id)));
+      await env.DB.batch([
+        env.DB.prepare('UPDATE scrim_slots SET team = NULL WHERE scrim_id = ?').bind(id),
+        ...slots.map((x, i) => env.DB.prepare('UPDATE scrim_slots SET team = ? WHERE scrim_id = ? AND member_id = ?').bind(teams[i], id, x.id)),
+      ]);
       break;
     }
     case 'swap': {
@@ -153,6 +162,17 @@ export async function scrimAction(req: Request, env: Env, me: Member, id: number
       await env.DB.prepare('UPDATE scrims SET locked_at = ? WHERE id = ?').bind(now, id).run();
       break;
     }
+    case 'confirm': {
+      if (!isHost(s, me)) throw new HttpError(403, '연 사람만 개최를 확정할 수 있습니다.');
+      const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM scrim_slots WHERE scrim_id = ?').bind(id).first<{ n: number }>();
+      if ((n?.n ?? 0) < SIZE) throw new HttpError(400, `${SIZE}명이 모여야 개최를 확정할 수 있습니다.`);
+      await env.DB.prepare('UPDATE scrims SET confirmed_at = ? WHERE id = ?').bind(now, id).run();
+      break;
+    }
+    case 'unconfirm':
+      if (!isHost(s, me)) throw new HttpError(403, '연 사람만 바꿀 수 있습니다.');
+      await env.DB.prepare('UPDATE scrims SET confirmed_at = NULL WHERE id = ?').bind(id).run();
+      break;
     case 'unlock':
       if (!isHost(s, me)) throw new HttpError(403, '연 사람만 풀 수 있습니다.');
       await env.DB.prepare('UPDATE scrims SET locked_at = NULL WHERE id = ?').bind(id).run();

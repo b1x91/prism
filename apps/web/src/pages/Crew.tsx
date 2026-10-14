@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { BoardView, Channels, Gem, Icon, Notes, PartyBoard, ProspectBoard, ScrimBoard } from '@prism/ui';
+import { BoardView, Channels, Gem, Icon, DiscordNowCard, Notes, PartyBoard, ProspectBoard, ScrimBoard } from '@prism/ui';
 import { useSession } from '../session';
 
 function Intro() {
@@ -45,6 +45,7 @@ export function Crew() {
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
       <div className="page-head"><div><h1>Prism</h1><p>{me.nick}님, 오늘 밤도 한 판.</p></div><span className="sp" /><Channels links={links} /></div>
+      <DiscordNowCard api={api} admin={me.tier === 'admin'} />
       <PartyBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
       <ScrimBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
       {me.perms?.prospects !== false && <ProspectBoard api={api} invite={links.discord} admin={Boolean(me.perms?.moderate)} />}

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type Parties, type Party, type Prospects, type Scrim, type ScrimMember, type Scrims } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type DiscordNow, type Parties, type Party, type Prospects, type Scrim, type ScrimMember, type Scrims } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, MemberFace } from './basics';
 
 /** 서버 데이터 한 덩이 불러오기 (다시 불러오기 함수 포함) */
@@ -302,19 +302,20 @@ function ScrimCard({ s, size, now, busy, run, api, onMember }: { s: Scrim; size:
       <span className="rt">{m.n ? `${pct(m.w, m.n)} · ${m.n}판` : '기록 없음'}</span>
     </button>
   );
-  const state = s.lockedAt ? (s.results.length ? '경기 기록됨' : '팀 확정') : split ? '팀 나눔' : '모집 중';
+  const state = s.results.length ? '경기 기록됨' : s.lockedAt ? '팀 확정' : s.confirmedAt ? '개최 확정' : split ? '팀 나눔' : '모집 중';
+  const full = s.members.length >= size;
   return (
     <article className={`scard ${s.mine ? 'mine' : ''} ${s.lockedAt ? 'locked' : ''}`}>
       <div className="shead">
         <div className="ptime"><b>{partyTime(s.startAt, now).split(' ')[1]}</b><span>{partyTime(s.startAt, now).split(' ')[0]}</span></div>
         <div className="pmain">
-          <div className="phead"><span className={`pbadge ${s.lockedAt ? 'go' : ''}`}>{state}</span><span className="pcount"><b>{s.members.length}</b>/{size}</span></div>
+          <div className="phead"><span className={`pbadge ${s.confirmedAt || s.lockedAt || s.results.length ? 'go' : ''}`}>{state}</span><span className="pcount"><b>{s.members.length}</b>/{size}{s.waiting.length > 0 && <span className="meta"> · 대기 {s.waiting.length}</span>}</span></div>
           {s.note && <p className="pnote">{s.note}</p>}
         </div>
         <div className="pact">
           {!s.lockedAt && (s.mine
             ? s.hostId !== undefined && !s.host && <button type="button" className="btn" disabled={busy === k('leave')} onClick={() => act('leave')}>빠지기</button>
-            : <button type="button" className={`btn ${s.members.length >= size ? '' : 'primary'}`} disabled={s.members.length >= size || busy === k('join')} onClick={() => act('join')}>{s.members.length >= size ? '다 찼어요' : '참여'}</button>)}
+            : <button type="button" className={`btn ${full ? '' : 'primary'}`} disabled={busy === k('join')} onClick={() => act('join')}>{full ? '대기 신청' : '참여'}</button>)}
         </div>
       </div>
       {s.results.length > 0 && <div className="sscore">
@@ -327,8 +328,11 @@ function ScrimCard({ s, size, now, busy, run, api, onMember }: { s: Scrim; size:
           <div className="sfaces">{teams[t].map((m) => <Face key={m.id} m={m} />)}</div>
         </div>))}</div>
         : <div className="sfaces grid">{Array.from({ length: size }, (_, i) => s.members[i] ? <Face key={s.members[i].id} m={s.members[i]} /> : <span key={`e${i}`} className="sface empty"><span className="ph">?</span><span className="nm">빈 자리</span></span>)}</div>}
+      {s.waiting.length > 0 && <div className="swait"><span className="meta">대기</span>{s.waiting.map((w, i) => <span key={w.id} className="wchip"><b>{i + 1}</b><MemberFace nick={w.nick} skin={w.skin} champion={w.main} size={20} />{w.nick}</span>)}<span className="meta">· 참가자가 빠지면 1번부터 자동으로 들어가요</span></div>}
       {s.host && <div className="shost">
-        {!s.lockedAt && <button type="button" className="btn sm primary" disabled={busy === k('balance')} onClick={() => act('balance')}>{split ? '다시 나누기' : '팀 자동 나누기'}</button>}
+        {!s.confirmedAt ? <button type="button" className="btn sm primary" disabled={!full || busy === k('confirm')} title={full ? '' : `${size}명이 모이면 누를 수 있어요`} onClick={() => act('confirm')}>개최 확정</button>
+          : <button type="button" className="btn sm" disabled={busy === k('unconfirm')} onClick={() => act('unconfirm')}>개최 확정 취소</button>}
+        {!s.lockedAt && <button type="button" className="btn sm" disabled={busy === k('balance')} onClick={() => act('balance')}>{split ? '다시 나누기' : '팀 자동 나누기'}</button>}
         {split && !s.lockedAt && <button type="button" className="btn sm" disabled={busy === k('lock')} onClick={() => act('lock')}>팀 확정</button>}
         {s.lockedAt && <button type="button" className="btn sm" disabled={busy === k('unlock')} onClick={() => act('unlock')}>팀 다시 풀기</button>}
         {canSwap && <span className="meta">{pick ? '바꿀 상대 팀 사람을 누르세요' : '두 사람을 차례로 누르면 팀을 바꿔요'}</span>}
@@ -370,6 +374,33 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
           );
         })}</div>
       )}
+    </section>
+  );
+}
+
+// ───────── 지금 디스코드: 음성 채널에 누가 있는지 (서버 위젯) ─────────
+
+export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url: string) => void; admin?: boolean }) {
+  const { data, reload } = useLoad<DiscordNow>(api, '/api/discord/now');
+  useEffect(() => { const t = setInterval(reload, 30_000); return () => clearInterval(t); }, [reload]);
+  if (!data) return null;
+  const open = (u: string | null) => { if (!u) return; if (onOpen) onOpen(u); else window.open(u, '_blank', 'noopener'); };
+  if (!data.enabled) return admin ? <section className="card pad dnow off"><b>지금 디스코드</b><span className="meta">디스코드 서버 설정에서 '서버 위젯'을 켜면 음성방에 누가 있는지 여기에 떠요.</span></section> : null;
+  return (
+    <section className="card pad dnow">
+      <div className="card-head"><h2>지금 디스코드</h2><span className="sp" /><span className="meta">온라인 {data.online}명 · 음성 {data.inVoice}명</span>
+        {data.invite && <button type="button" className="btn sm" onClick={() => open(data.invite)}>디스코드 열기</button>}</div>
+      <div className="vchans">{data.channels.map((c) => (
+        <div key={c.id} className={`vchan ${c.members.length ? 'live' : ''}`}>
+          <div className="vh"><span className="vi" aria-hidden="true">🔊</span><b>{c.name}</b><span className="meta">{c.members.length ? `${c.members.length}명` : '비어 있음'}</span></div>
+          {c.members.length > 0 && <div className="vmembers">{c.members.map((m) => (
+            <span key={m.name} className="vm" title={m.name}>
+              {m.memberId || !m.avatar ? <MemberFace nick={m.name} skin={m.skin} champion={m.main} size={28} /> : <img className="face" src={m.avatar} width={28} height={28} alt="" loading="lazy" />}
+              <span>{m.name}</span>{(m.muted || m.deaf) && <i className="vmute">{m.deaf ? '소리 끔' : '마이크 끔'}</i>}
+            </span>
+          ))}</div>}
+        </div>
+      ))}</div>
     </section>
   );
 }
