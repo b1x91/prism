@@ -3,6 +3,8 @@
 //! 규칙
 //! - 공백·기호를 뺀 글자끼리 비교한다 (인식기가 띄어쓰기를 틀리는 경우가 많다)
 //! - 4글자 이상 이름은 한 글자 틀려도 같은 것으로 본다
+//! - 2글자 이하 이름("흡수", "범람", "꽝")은 단어 하나가 통째로 같을 때만 (설명 속 "흡수량"을 이름으로 착각하지 않게)
+//! - 게임 화면 글자가 데이터와 다른 증강은 별칭으로도 찾는다 (ALIASES)
 //! - 한 줄에서 겹치는 후보는 긴 이름을 먼저 고른다 ("거인" < "거인 학살자")
 //! - 카드는 가로로 놓이므로 x 위치로 묶고, 묶음마다 가장 위(제목)에 있는 것 하나만 쓴다
 
@@ -26,6 +28,9 @@ struct RawData {
     augments: Vec<RawAug>,
 }
 
+/// 게임 화면에 실제로 쓰인 이름이 데이터(CommunityDragon)와 다른 증강: (ID, 화면 이름)
+const ALIASES: &[(u32, &str)] = &[(2111, "꽝!")]; // 데이터는 "꽁!"
+
 pub struct Matcher {
     names: Vec<(u32, Vec<char>)>,
 }
@@ -46,7 +51,9 @@ impl Matcher {
     /// 앱에 묶인 증강 데이터(packages/core/data/mayhem-augments.json)에서 이름표를 만든다
     pub fn from_json(json: &str) -> Self {
         let d: RawData = serde_json::from_str(json).unwrap_or(RawData { augments: vec![] });
-        let names = d.augments.into_iter().filter(|a| !a.disabled).map(|a| (a.id, norm(&a.name))).filter(|(_, n)| n.len() >= 2).collect();
+        let mut names: Vec<(u32, Vec<char>)> = d.augments.into_iter().filter(|a| !a.disabled).map(|a| (a.id, norm(&a.name))).filter(|(_, n)| !n.is_empty()).collect();
+        let known: Vec<u32> = names.iter().map(|n| n.0).collect();
+        names.extend(ALIASES.iter().filter(|(id, _)| known.contains(id)).map(|(id, n)| (*id, norm(n))));
         Self { names }
     }
 
@@ -55,12 +62,16 @@ impl Matcher {
         // 줄 글자와 각 글자의 위치(그 글자가 속한 단어의 위치)
         let mut chars = Vec::new();
         let mut pos = Vec::new();
-        for w in words {
+        // 글자마다 단어 번호 (짧은 이름은 단어 하나와 통째로 같아야 한다)
+        let mut wid = Vec::new();
+        for (i, w) in words.iter().enumerate() {
             for c in norm(&w.text) {
                 chars.push(c);
                 pos.push((w.x, w.y));
+                wid.push(i);
             }
         }
+        let whole = |s: usize, n: usize| (s == 0 || wid[s - 1] != wid[s]) && (s + n == wid.len() || wid[s + n] != wid[s + n - 1]) && wid[s] == wid[s + n - 1];
         let mut hits = Vec::new();
         for (id, name) in &self.names {
             let n = name.len();
@@ -70,7 +81,7 @@ impl Matcher {
             let allow = if n >= 4 { 1 } else { 0 };
             for s in 0..=chars.len() - n {
                 let diff = chars[s..s + n].iter().zip(name).filter(|(a, b)| a != b).count();
-                if diff <= allow {
+                if diff <= allow && (n > 2 || whole(s, n)) {
                     hits.push(Hit { id: *id, start: s, len: n, x: pos[s].0, y: pos[s].1 });
                 }
             }
@@ -154,6 +165,23 @@ mod tests {
         let m = Matcher::from_json(DATA);
         let lines = vec![vec![w("최상급조준경", 100.0, 10.0), w("부차", 200.0, 10.0)]];
         assert_eq!(m.find(&lines, 1600.0), vec![id_of("최상급 조준경 부착")]);
+    }
+
+    #[test]
+    fn 짧은_이름은_설명_속에서_찾지_않는다() {
+        // 실제 화면: 꽝! / 범람 / 점멸 난사, 설명에 "보호막 흡수량"
+        let m = Matcher::from_json(DATA);
+        let lines = vec![
+            vec![w("꽝!", 700.0, 345.0)],
+            vec![w("범람", 990.0, 345.0)],
+            vec![w("점멸", 1270.0, 345.0), w("난사", 1310.0, 345.0)],
+            vec![w("강철", 640.0, 400.0), w("주먹", 680.0, 400.0), w("효과로", 720.0, 400.0)],
+            vec![w("스킬의", 920.0, 425.0), w("체력", 960.0, 425.0), w("회복량,", 1000.0, 425.0), w("보호막", 1040.0, 425.0), w("흡수량", 1080.0, 425.0)],
+        ];
+        assert_eq!(m.find(&lines, 2000.0), vec![2111, id_of("범람"), id_of("점멸 난사")]);
+        // 제목이 안 읽혀도 설명 속 "흡수량"을 흡수로 잡지 않는다
+        let only_desc = vec![vec![w("보호막", 1040.0, 425.0), w("흡수량", 1080.0, 425.0)]];
+        assert!(m.find(&only_desc, 2000.0).is_empty());
     }
 
     #[test]

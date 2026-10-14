@@ -21,6 +21,9 @@ export default defineConfig(({ command }) => ({
         stringArray: true,
         stringArrayEncoding: ['base64'],
         stringArrayThreshold: 1,
+        // import('…') 경로는 그대로 둔다. 숨기면 Vite 가 묶지 못해 실행할 때 모듈을 못 찾는다
+        // (0.8.2~0.9.2: 증강 인식 소식·스킨·아이템 설명·창 제목이 이 때문에 끊겼다)
+        reservedStrings: ['^@tauri-apps/', '^\\.{1,2}/', '\\.json$'],
         stringArrayRotate: true,
         stringArrayShuffle: true,
         splitStrings: false,
