@@ -136,8 +136,26 @@ pub fn create_overlay(app: &tauri::App) -> tauri::Result<()> {
         .build()?;
     let _ = w.set_ignore_cursor_events(true);
     imp::prepare_overlay(&w);
+    // 오른쪽 위 구석의 작은 프리즘: 자동 인식이 이 게임 화면을 보고 있다는 표시 (게임 창이 맨 앞일 때만)
+    let b = tauri::WebviewWindowBuilder::new(app, "badge", tauri::WebviewUrl::App("badge.html".into()))
+        .title("Prism")
+        .decorations(false)
+        .transparent(true)
+        .shadow(false)
+        .always_on_top(true)
+        .skip_taskbar(true)
+        .resizable(false)
+        .focused(false)
+        .visible(false)
+        .inner_size(BADGE, BADGE)
+        .build()?;
+    let _ = b.set_ignore_cursor_events(true);
+    imp::prepare_overlay(&b);
     Ok(())
 }
+
+/// 구석 표시 크기 (논리 픽셀)
+const BADGE: f64 = 32.0;
 
 #[cfg(windows)]
 mod imp {
@@ -251,6 +269,8 @@ mod imp {
         // 마지막으로 카드를 본 때, 게임 창이 뒤로 간 때
         let mut seen_at: Option<std::time::Instant> = None;
         let mut away_at: Option<std::time::Instant> = None;
+        // 구석 표시를 놓은 게임 화면 위치 (None = 숨김)
+        let mut badge_at: Option<RECT> = None;
         let mut pids: (Vec<u32>, Option<std::time::Instant>) = (Vec::new(), None);
         loop {
             let s = v.settings.lock().unwrap().clone();
@@ -265,6 +285,9 @@ mod imp {
                 continue;
             }
             let (Some((h, _)), Some(eng)) = (front, eng.as_ref()) else {
+                if badge_at.take().is_some() {
+                    hide_window(&app, "badge");
+                }
                 v.stage(if !s.enabled { "off" } else if !allowed { "wait" } else if game.is_none() { "no-game" } else { "back" }, 0, how);
                 v.hide(&app);
                 band = None;
@@ -275,6 +298,10 @@ mod imp {
                 continue;
             };
             let Some(rc) = client_rect(h) else { std::thread::sleep(EVERY); continue };
+            if badge_at != Some(rc) {
+                show_badge(&app, &rc);
+                badge_at = Some(rc);
+            }
             let (x, y, w, hh) = region(&rc);
             if w < 200 || hh < 100 { std::thread::sleep(EVERY); continue; }
             // 카드가 떠 있으면 제목 줄만, 아니면 넓게
@@ -331,7 +358,11 @@ mod imp {
     }
 
     fn hwnd_of(app: &AppHandle) -> Option<HWND> {
-        let w = app.get_webview_window("overlay")?;
+        hwnd_by(app, "overlay")
+    }
+
+    fn hwnd_by(app: &AppHandle, label: &str) -> Option<HWND> {
+        let w = app.get_webview_window(label)?;
         w.hwnd().ok().map(|h| HWND(h.0 as _))
     }
 
@@ -355,6 +386,25 @@ mod imp {
         let (x, y) = if position == "top" { (rc.left + (gw - ow) / 2, rc.top + m) } else { (rc.right - ow - m, rc.top + gh * 30 / 100) };
         unsafe {
             let _ = SetWindowPos(h, Some(HWND_TOPMOST), x, y, ow, oh, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        }
+    }
+
+    /// 게임 화면 오른쪽 위 구석에 작은 프리즘
+    fn show_badge(app: &AppHandle, rc: &RECT) {
+        let Some(h) = hwnd_by(app, "badge") else { return };
+        let scale = app.get_webview_window("badge").and_then(|w| w.scale_factor().ok()).unwrap_or(1.0);
+        let size = (super::BADGE * scale) as i32;
+        let m = (6.0 * scale) as i32;
+        unsafe {
+            let _ = SetWindowPos(h, Some(HWND_TOPMOST), rc.right - size - m, rc.top + m, size, size, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+        }
+    }
+
+    fn hide_window(app: &AppHandle, label: &str) {
+        if let Some(h) = hwnd_by(app, label) {
+            unsafe {
+                let _ = ShowWindow(h, SW_HIDE);
+            }
         }
     }
 
