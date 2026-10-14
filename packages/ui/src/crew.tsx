@@ -405,7 +405,7 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
             </span>
           ))}</div>}
           <span className="vact">
-            <button type="button" className={`vbtn ${copied === c.id ? 'done' : ''}`} onClick={() => copy(c.id, c.link)} title="채널 링크 복사">{copied === c.id ? '복사됨' : '링크 복사'}</button>
+            {c.invite && <button type="button" className={`vbtn ${copied === c.id ? 'done' : ''}`} onClick={() => copy(c.id, c.invite!)} title="누구나 들어올 수 있는 초대 링크">{copied === c.id ? '복사됨' : '초대 링크 복사'}</button>}
             <button type="button" className="vbtn go" onClick={() => open(c.link)} title="디스코드에서 이 채널 열기">들어가기</button>
           </span>
         </div>

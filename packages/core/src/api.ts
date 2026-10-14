@@ -52,4 +52,4 @@ export type Perms = { party: boolean; scrim: boolean; prospects: boolean; modera
 /** 지금 디스코드 (서버 위젯) */
 export type VoiceMember = { name: string; avatar: string; muted: boolean; deaf: boolean; memberId: string | null; skin: number | null; main: number | null };
 export type OnlineMember = { name: string; avatar: string; status: string; memberId: string | null; skin: number | null; main: number | null };
-export type DiscordNow = { enabled: false; invite: string | null } | { enabled: true; online: number; inVoice: number; invite: string | null; channels: { id: string; name: string; link: string; members: VoiceMember[] }[]; members: OnlineMember[] };
+export type DiscordNow = { enabled: false; invite: string | null } | { enabled: true; online: number; inVoice: number; invite: string | null; channels: { id: string; name: string; link: string; invite: string | null; members: VoiceMember[] }[]; members: OnlineMember[] };
