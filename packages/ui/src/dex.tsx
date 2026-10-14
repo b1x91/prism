@@ -224,6 +224,7 @@ function ChampEntry({ id, no, e, m, dex, onChampion }: { id: number; no: number;
         <span className="dxe-pic"><ChampImg id={id} size={112} />{!m.seen && <i className="q" aria-hidden="true">?</i>}<Ring m={m} /></span>
         <div><span className="no">{NO(no)}</span><h2>{c.name}</h2><div className="dxe-types"><StageTag m={m} />{types.map((t) => <span key={t} className="pill">{t}</span>)}</div></div>
       </div>
+      {m.master && <div className="dxe-crown"><PrismMark size={24} /><div><b>이 챔피언의 장인</b><span>챔피언 페이지와 랭킹에 이름이 올랐어요</span></div></div>}
       <p className="dxe-text">{e ? `${flavor} ${day(e.first)}에 처음 만나 지금까지 ${e.n}판, ${e.w}번 이겼다.` : `아직 만나지 못한 챔피언이에요. ${flavor} 주사위나 대기석에서 보이면 잡아 보세요.`}</p>
       <Journey m={m} specialList={
         <div className="dxe-sub"><span className="k">이 챔피언에게 S티어인 증강 <small>{m.special.tried.length}/{m.special.ids.length}</small></span>
@@ -249,6 +250,7 @@ function AugEntry({ id, no, e, m, dex, onAugment, onChampion }: { id: number; no
         <span className="dxe-pic aug"><AugRing id={id} size={104} />{!m.seen && <i className="q" aria-hidden="true">?</i>}<Ring m={m} /></span>
         <div><span className="no">{NO(no)}</span><h2>{a.name}</h2><div className="dxe-types"><StageTag m={m} /><span className={`pill rar-${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.note && <span className="pill">{a.note}</span>}</div></div>
       </div>
+      {m.master && <div className="dxe-crown"><PrismMark size={24} /><div><b>이 증강의 장인</b><span>증강 페이지와 랭킹에 이름이 올랐어요</span></div></div>}
       <p className="dxe-text">{a.desc}</p>
       <Journey m={m} specialList={
         <div className="dxe-sub"><span className="k">이 증강이 {m.special.tier}티어로 맞는 챔피언 <small>{m.special.tried.length}/{m.special.ids.length}</small></span>

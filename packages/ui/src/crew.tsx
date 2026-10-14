@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type DiscordNow, type Parties, type Party, type Prospects, type Scrim, type ScrimMember, type Scrims } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, MemberFace } from './basics';
 import { AugmentLink } from './augment';
+import { Icon } from './icons';
 
 /** 서버 데이터 한 덩이 불러오기 (다시 불러오기 함수 포함) */
 export function useLoad<T>(api: Api, path: string | null) {
@@ -112,7 +113,6 @@ export function ChampionCrew({ api, championId }: { api: Api; championId: number
           <div className="record"><span className="k">모임 승률</span><span className="v">{pct(data.crew.w, data.crew.n)}</span><span className="s">{data.crew.n}판</span></div>
           <div className="record"><span className="k">내 승률</span><span className="v">{pct(data.me.w, data.me.n)}</span><span className="s">{data.me.n}판</span></div>
         </div>
-        {data.masters.length > 0 && <><h3 style={{ fontSize: 14, margin: '20px 0 8px' }}>장인</h3><div className="list">{data.masters.map((m) => <div key={m.id} className="item"><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={32} /><span className="title">{m.nick}</span><span className="meta">{m.n}판 {pct(m.w, m.n)}</span></div>)}</div></>}
         {data.topAugments.length > 0 && <><h3 style={{ fontSize: 14, margin: '20px 0 8px' }}>모임이 많이 고른 증강</h3><div className="list">{data.topAugments.map((a) => <AugmentLink key={a.id} id={a.id} champion={championId} className="item"><AugImg id={a.id} size={28} /><span className="title"><AugName id={a.id} /></span><span className="meta">{a.n}회 {pct(a.w, a.n)}</span></AugmentLink>)}</div></>}
       </section>
       <section className="card pad">
@@ -381,6 +381,39 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
 
 // ───────── 지금 디스코드: 음성 채널에 누가 있는지 (서버 위젯) ─────────
 
+/** 접속 중인 사람: 얼굴 몇 개만 겹쳐 보이고, 누르면 디스코드 열기 + 전체 목록 */
+function OnlinePeek({ data, onOpenDiscord }: { data: Extract<DiscordNow, { enabled: true }>; onOpenDiscord: () => void }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const off = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    addEventListener('mousedown', off); addEventListener('keydown', esc);
+    return () => { removeEventListener('mousedown', off); removeEventListener('keydown', esc); };
+  }, [open]);
+  // 겹쳐 보일 얼굴: Prism 회원 먼저
+  const peek = [...data.members].sort((a, b) => Number(Boolean(b.memberId)) - Number(Boolean(a.memberId))).slice(0, 5);
+  return (
+    <div className="dn-peek" ref={ref}>
+      <button type="button" className={`dn-who ${open ? 'on' : ''}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`접속 중 ${data.online}명`}>
+        <span className="dn-stack">{peek.map((m) => <span key={m.name} className="dn-f"><MemberFace nick={m.name} skin={m.skin} champion={m.main} size={28} /></span>)}</span>
+        <span className="dn-n"><i className="dot" />{data.online}</span>
+      </button>
+      {open && <div className="dn-pop" role="dialog" aria-label="지금 디스코드에 접속 중인 사람">
+        <div className="dn-pop-h"><span>접속 중 <b>{data.online}</b>명 · 음성 <b>{data.inVoice}</b>명</span>
+          {data.invite && <button type="button" className="btn sm primary" onClick={onOpenDiscord}><Icon name="discord" />디스코드 열기</button>}</div>
+        <div className="dn-list">{data.members.map((m) => (
+          <span key={m.name} className={`om ${m.status}`} title={m.name}>
+            <span className="op"><MemberFace nick={m.name} skin={m.skin} champion={m.main} size={28} /><i /></span>
+            <span className="on">{m.name}</span>
+          </span>
+        ))}{data.online > data.members.length && <span className="meta dn-more">외 {data.online - data.members.length}명</span>}</div>
+      </div>}
+    </div>
+  );
+}
+
 export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url: string) => void; admin?: boolean }) {
   const { data, reload } = useLoad<DiscordNow>(api, '/api/discord/now');
   const [copied, setCopied] = useState<string | null>(null);
@@ -393,8 +426,8 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
   if (!data.enabled) return admin ? <section className="card pad dnow off"><b>지금 디스코드</b><span className="meta">디스코드 서버 설정에서 '서버 위젯'을 켜면 음성방에 누가 있는지 여기에 떠요.</span></section> : null;
   return (
     <section className="card pad dnow">
-      <div className="card-head"><h2>지금 디스코드</h2><span className="sp" /><span className="meta">접속 중 {data.online}명 · 음성 {data.inVoice}명</span>
-        {data.invite && <button type="button" className="btn sm" onClick={() => open(data.invite)}>디스코드 열기</button>}</div>
+      <div className="card-head"><h2>지금 디스코드</h2><span className="sp" />
+        <OnlinePeek data={data} onOpenDiscord={() => open(data.invite)} /></div>
       <div className="vchans">{data.channels.map((c) => (
         <div key={c.id} className={`vchan ${c.members.length ? 'live' : ''}`}>
           <div className="vh"><span className="vi" aria-hidden="true">🔊</span><b>{c.name}</b><span className="meta">{c.members.length ? `${c.members.length}명` : '비어 있음'}</span></div>
@@ -410,12 +443,6 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
           </span>
         </div>
       ))}</div>
-      {data.members.length > 0 && <div className="onl">{data.members.map((m) => (
-        <span key={m.name} className={`om ${m.status}`} title={m.name}>
-          <span className="op"><MemberFace nick={m.name} skin={m.skin} champion={m.main} size={32} /><i /></span>
-          <span className="on">{m.name}</span>
-        </span>
-      ))}</div>}
     </section>
   );
 }

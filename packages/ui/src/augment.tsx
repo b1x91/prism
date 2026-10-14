@@ -169,7 +169,7 @@ export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
 }
 
 /** 증강 상세: 설명, 성향·필요한 것, 잘 맞는 챔피언, 같은 성향 증강 (모두 게임 데이터 기준, 승률 없음) */
-export function AugmentDetail({ id, onChampion, onAugment, onBack }: { id: number; onChampion?: (id: number) => void; onAugment?: (id: number) => void; onBack?: () => void }) {
+export function AugmentDetail({ id, onChampion, onAugment, onBack, after }: { id: number; onChampion?: (id: number) => void; onAugment?: (id: number) => void; onBack?: () => void; after?: ReactNode }) {
   const a = AUGMENT[id];
   if (!a) return <Empty>없는 증강입니다.</Empty>;
   const t = augmentTraits(a);
@@ -193,6 +193,7 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack }: { id: numbe
           {t.reqs.map((x) => <span key={x} className="pill warn">필요: {x}</span>)}
         </div>}
       </section>
+      {after}
       <section className="card pad">
         <div className="card-head"><h2>잘 맞는 챔피언</h2><span className="sp" /><span className="meta">잘 맞음 {champs.best}명 / {champs.total}명</span></div>
         {champs.list.length ? <div className="fit-champs">{champs.list.map((f) => (

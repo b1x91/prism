@@ -53,3 +53,9 @@ export type Perms = { party: boolean; scrim: boolean; prospects: boolean; modera
 export type VoiceMember = { name: string; avatar: string; muted: boolean; deaf: boolean; memberId: string | null; skin: number | null; main: number | null };
 export type OnlineMember = { name: string; avatar: string; status: string; memberId: string | null; skin: number | null; main: number | null };
 export type DiscordNow = { enabled: false; invite: string | null } | { enabled: true; online: number; inVoice: number; invite: string | null; channels: { id: string; name: string; link: string; invite: string | null; members: VoiceMember[] }[]; members: OnlineMember[] };
+
+/** 장인 (도감 마스터 여정, server/src/artisans.ts) */
+export type Artisan = { id: string; nick: string; master: boolean; done: number; total: number; n: number; w: number; special: boolean } & FaceInfo;
+export type Artisans = { artisans: Artisan[] };
+export type ArtisanRank = { id: string; nick: string; masters: number; masterIds: number[]; caught: number; goals: number; best: { id: number; done: number; w: number } | null } & FaceInfo;
+export type ArtisanRanking = { champions: ArtisanRank[]; augments: ArtisanRank[] };

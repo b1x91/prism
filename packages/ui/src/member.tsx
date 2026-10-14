@@ -9,6 +9,7 @@ import {
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, MemberFace, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
+import { ArtisanRankingView } from './artisan';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { RecentGames } from './game';
@@ -21,8 +22,9 @@ const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as
 type RankBy = 'games' | 'winrate' | 'month';
 
 export function RankingView({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (id: string) => void }) {
-  const [by, setBy] = useState<RankBy>('games');
-  const { data, error } = useLoad<Ranking>(api, by === 'month' ? '/api/ranking?period=month' : '/api/ranking');
+  const [by, setBy] = useState<RankBy | 'champ-art' | 'aug-art'>('games');
+  const art = by === 'champ-art' || by === 'aug-art';
+  const { data, error } = useLoad<Ranking>(api, art ? null : by === 'month' ? '/api/ranking?period=month' : '/api/ranking');
   const skins = useSkins();
   const rows = useMemo(() => {
     const r = (data?.rows ?? []).slice();
@@ -31,13 +33,14 @@ export function RankingView({ api, meId, onOpen }: { api: Api; meId?: string; on
   }, [data, by]);
   return (
     <div className="stack" style={{ gap: 16 }}>
-      <div className="row wrapr"><Seg value={by} options={[['games', '판수'], ['winrate', '승률'], ['month', '이번 달']]} onChange={setBy} />
-        <span className="meta">{by === 'winrate' ? `${data?.minWinrate ?? 10}판 이상 기록한 회원만` : by === 'month' ? '이번 달 판수' : '지금까지 기록된 판수'}</span></div>
+      <div className="row wrapr"><Seg value={by} options={[['games', '판수'], ['winrate', '승률'], ['month', '이번 달'], ['champ-art', '챔피언 장인'], ['aug-art', '증강 장인']]} onChange={setBy} />
+        <span className="meta">{art ? '도감 마스터 여정을 모두 이룬 수 (같으면 이룬 목표 수)' : by === 'winrate' ? `${data?.minWinrate ?? 10}판 이상 기록한 회원만` : by === 'month' ? '이번 달 판수' : '지금까지 기록된 판수'}</span></div>
+      {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
-      {data && !rows.length && <Empty>{by === 'winrate' ? '아직 조건을 채운 회원이 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
-      {rows.length >= 3 && <div className="podium">{[1, 0, 2].map((i) => <Podium key={rows[i].id} r={rows[i]} rank={i + 1} by={by} skins={skins} onOpen={onOpen} />)}</div>}
-      {rows.length > (rows.length >= 3 ? 3 : 0) && <div className="card rank-list">
-        {rows.map((r, i) => (rows.length >= 3 && i < 3 ? null : <RankRow key={r.id} r={r} rank={i + 1} by={by} me={r.id === meId} skins={skins} onOpen={onOpen} />))}
+      {!art && data && !rows.length && <Empty>{by === 'winrate' ? '아직 조건을 채운 회원이 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
+      {!art && rows.length >= 3 && <div className="podium">{[1, 0, 2].map((i) => <Podium key={rows[i].id} r={rows[i]} rank={i + 1} by={by as RankBy} skins={skins} onOpen={onOpen} />)}</div>}
+      {!art && rows.length > (rows.length >= 3 ? 3 : 0) && <div className="card rank-list">
+        {rows.map((r, i) => (rows.length >= 3 && i < 3 ? null : <RankRow key={r.id} r={r} rank={i + 1} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />))}
       </div>}
     </div>
   );

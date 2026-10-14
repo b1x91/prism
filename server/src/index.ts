@@ -4,6 +4,7 @@
  * /links 는 공개(디스코드·카카오톡 주소). 가입 전인 사람도 들어올 길이 있어야 하므로.
  */
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
+import { artisanRanking, augmentArtisans, championArtisans } from './artisans.js';
 import { addTip, augmentStats, board, myDex, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setConsent, setProfile, toggleLike } from './crew.js';
 import { ingest } from './ingest.js';
 import { memberPage, ranking } from './members.js';
@@ -41,6 +42,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && pathname === '/api/board') return board(env, me);
   if (m === 'POST' && pathname === '/api/tips') return addTip(req, env, me);
   if (m === 'GET' && pathname === '/api/notes') return listNotes(env, me);
+  if (m === 'GET' && pathname === '/api/ranking/artisans') return artisanRanking(env);
   if (m === 'GET' && pathname === '/api/ranking') return ranking(env, new URL(req.url).searchParams.get('period'));
   if (m === 'POST' && pathname === '/api/notes') return addNote(req, env, me);
   if (m === 'GET' && pathname === '/api/parties') return listParties(env, me);
@@ -54,6 +56,8 @@ async function route(req: Request, env: Env): Promise<Response> {
     return augmentStats(env, Number.isInteger(c) && c > 0 ? c : null);
   }
 
+  const art = pathname.match(/^\/api\/artisans\/(champion|augment)\/(\d+)$/);
+  if (m === 'GET' && art) return art[1] === 'champion' ? championArtisans(env, Number(art[2])) : augmentArtisans(env, Number(art[2]));
   const champ = pathname.match(/^\/api\/champions\/(\d+)$/);
   if (m === 'GET' && champ) return getChampion(env, me, Number(champ[1]));
   const member = pathname.match(/^\/api\/members\/([0-9A-Za-z_-]{1,40})$/);

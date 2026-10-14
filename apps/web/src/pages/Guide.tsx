@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CHAMPIONS, DATA_VERSION, type AugmentStats } from '@prism/core';
-import { AugmentCompare, AugmentGuide, ChampBanner, ChampGrid, ChampionCrew, Gem, Icon, Seg, useLoad } from '@prism/ui';
+import { Artisans, AugmentCompare, AugmentGuide, ChampBanner, ChampGrid, ChampionCrew, Gem, Icon, Seg, useLoad } from '@prism/ui';
 import { useSession } from '../session';
 
 export function GuidePicker({ to }: { to: (id: number) => string }) {
@@ -35,6 +35,7 @@ export function Guide() {
   const { id } = useParams();
   const championId = Number(id);
   const { api, me } = useSession();
+  const nav = useNavigate();
   const [tab, setTab] = useState<Tab>('guide');
   const stats = useLoad<AugmentStats>(api, me && championId ? `/api/augments?champion=${championId}` : null).data;
   if (!id) return <GuidePicker to={(x) => `/champions/${x}`} />;
@@ -42,6 +43,7 @@ export function Guide() {
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
       <ChampBanner id={championId} eyebrow="아수라장 증강 가이드" actions={<Link className="btn sm" to="/champions">다른 챔피언</Link>} />
+      {me && <Artisans api={api} kind="champion" id={championId} onMember={(m) => nav(`/members/${m}`)} />}
       <div className="row wrapr">
         <Seg value={tab} options={[['guide', '어울리는 증강'], ['compare', '증강 3개 비교'], ['crew', '모임 기록']]} onChange={setTab} />
         <span className="sp" /><span className="meta">게임 데이터 {DATA_VERSION} 기준</span>

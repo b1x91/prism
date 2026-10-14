@@ -1,15 +1,18 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ACTIVE_AUGMENTS, DATA_VERSION } from '@prism/core';
-import { AugmentDetail, AugmentDex } from '@prism/ui';
+import { Artisans, AugmentDetail, AugmentDex } from '@prism/ui';
+import { useSession } from '../session';
 
 export function Augments() {
   const { id } = useParams();
   const nav = useNavigate();
+  const { api, me } = useSession();
   useEffect(() => { scrollTo(0, 0); }, [id]);
   if (id) return (
-    <section className="section tight"><div className="wrap">
-      <AugmentDetail id={Number(id)} onChampion={(c) => nav(`/champions/${c}`)} onAugment={(a) => nav(`/augments/${a}`)} onBack={() => nav('/augments')} />
+    <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
+      <AugmentDetail id={Number(id)} onChampion={(c) => nav(`/champions/${c}`)} onAugment={(a) => nav(`/augments/${a}`)} onBack={() => nav('/augments')}
+        after={me && <Artisans api={api} kind="augment" id={Number(id)} onMember={(m) => nav(`/members/${m}`)} />} />
     </div></section>
   );
   return (

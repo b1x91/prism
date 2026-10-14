@@ -98,7 +98,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
         <div className="k">팀에 넣으면</div>
         <div className="row wrapr" style={{ gap: 6 }}>{fitText.warn ? <span className="pill warn">팀이 {fitText.warn}</span> : fitText.fills.length ? fitText.fills.map((x) => <span key={x} className="pill ok">{x} 보완</span>) : <span className="k">{needs.length ? `부족한 ${needs.join('·')} 보완 안 됨` : '팀 구성 무난'}</span>}</div>
         {best.length > 0 && <><div className="k">어울리는 증강</div><div className="row wrapr" style={{ gap: 6 }}>{best.map((f) => <span key={f.id} className="pill dark"><AugImg id={f.id} size={18} />{GAME_DATA.augments.find((a) => a.id === f.id)?.name}</span>)}</div></>}
-        {cc?.masters?.[0] && <div className="k row" style={{ gap: 6 }}><Gem size={14} src="/brand/prism-32.png" />장인 <b style={{ color: '#fff' }}>{cc.masters[0].nick}</b> · {cc.masters[0].n}판 {pct(cc.masters[0].w, cc.masters[0].n)}</div>}
+        {cc?.masters?.[0] && <div className="k row" style={{ gap: 6 }}>최다 <b style={{ color: '#fff' }}>{cc.masters[0].nick}</b> · {cc.masters[0].n}판 {pct(cc.masters[0].w, cc.masters[0].n)}</div>}
       </div>
     </article>
   );
