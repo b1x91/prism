@@ -122,6 +122,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
         <span><i className="dst seen" /><b>만남</b> 1판</span><span className="arr" aria-hidden="true">→</span>
         <span><Crystal /><b>포획</b> 3승</span><span className="arr" aria-hidden="true">→</span>
         <span><i className="pip s on" /><b>{kind === 'champions' ? 'S티어 증강' : '잘 맞는 챔피언'}</b> 골라 보기 · 5·10·30·50승</span><span className="arr" aria-hidden="true">→</span>
+        {kind === 'champions' && <><span><i className="pip g on" /><b>역할 챌린지</b> · 마지막 관문</span><span className="arr" aria-hidden="true">→</span></>}
         <span><PrismMark /><b>마스터</b></span>
       </div>
 
