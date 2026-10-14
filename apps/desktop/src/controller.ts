@@ -332,9 +332,13 @@ export async function diagnostics(version: string): Promise<string> {
   const latest = state.games[0];
   const detail = latest ? await bridge.lcuGet(`/lol-match-history/v1/games/${latest.gameId}`).catch((e) => ({ error: String(e) })) : null;
   const augs = [...new Set(state.games.flatMap((g) => g.augments))];
+  // 게임 위 작은 창(자동 인식) 상태: 켜짐·위치, 인식기, 마지막으로 읽은 글자와 증강
+  const vision = await bridge.visionGet().catch((e) => ({ error: String(e) }));
   return JSON.stringify({
     exportedAt: new Date().toISOString(),
     appVersion: version,
+    visionReady: Boolean(state.me?.consent),
+    vision,
     phase: state.phase,
     mayhemGames: state.games.length,
     gamesWithAugments: state.personal.augmentGames,
