@@ -44,7 +44,7 @@ export function Crew() {
   if (!me) return <Intro />;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <div className="page-head"><div><h1>Prism</h1><p>{me.nick}님, 오늘 밤도 한 판.</p></div><span className="sp" /><Channels links={links} /></div>
+      <div className="page-head"><div><h1>Prism</h1><p>{me.nick}님, 오늘 밤도 한 판.</p></div></div>
       <DiscordNowCard api={api} admin={me.tier === 'admin'} />
       <PartyBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
       <ScrimBoard api={api} onMember={(id) => nav(`/members/${id}`)} />

@@ -382,7 +382,7 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
 // ───────── 지금 디스코드: 음성 채널에 누가 있는지 (서버 위젯) ─────────
 
 /** 접속 중인 사람: 얼굴 몇 개만 겹쳐 보이고, 누르면 디스코드 열기 + 전체 목록 */
-function OnlinePeek({ data, onOpenDiscord }: { data: Extract<DiscordNow, { enabled: true }>; onOpenDiscord: () => void }) {
+function OnlinePeek({ data }: { data: Extract<DiscordNow, { enabled: true }> }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -405,7 +405,6 @@ function OnlinePeek({ data, onOpenDiscord }: { data: Extract<DiscordNow, { enabl
         <div className="dn-pop-h">
           <span className="dn-cnt"><i className="dot" />온라인 <b>{data.online}</b></span>
           {data.inVoice > 0 && <span className="dn-cnt voice">음성 <b>{data.inVoice}</b></span>}
-          {data.invite && <button type="button" className="dn-open" onClick={onOpenDiscord} title="디스코드 열기" aria-label="디스코드 열기"><Icon name="discord" /></button>}
         </div>
         {groups.map(([label, list]) => list.length > 0 && <div key={label} className="dn-group">
           <span className="dn-gl">{label} <small>{list.length}</small></span>
@@ -416,7 +415,7 @@ function OnlinePeek({ data, onOpenDiscord }: { data: Extract<DiscordNow, { enabl
             </span>
           ))}</div>
         </div>)}
-        {data.online > data.members.length && <button type="button" className="dn-more" onClick={onOpenDiscord}>+{data.online - data.members.length}명은 디스코드에서 보기</button>}
+        {data.online > data.members.length && <span className="dn-more">외 {data.online - data.members.length}명</span>}
       </div>}
     </div>
   );
@@ -435,7 +434,7 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
   return (
     <section className="card pad dnow">
       <div className="card-head"><h2>지금 디스코드</h2><span className="sp" />
-        <OnlinePeek data={data} onOpenDiscord={() => open(data.invite)} /></div>
+        <OnlinePeek data={data} /></div>
       <div className="vchans">{data.channels.map((c) => (
         <div key={c.id} className={`vchan ${c.members.length ? 'live' : ''}`}>
           <div className="vh"><span className="vi" aria-hidden="true">🔊</span><b>{c.name}</b><span className="meta">{c.members.length ? `${c.members.length}명` : '비어 있음'}</span></div>

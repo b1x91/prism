@@ -961,9 +961,6 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .dn-cnt b { color: var(--text); font-variant-numeric: tabular-nums; }
 .dn-cnt .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
 .dn-cnt.voice::before { content: ""; width: 1px; height: 12px; background: var(--line-2); margin-right: 6px; }
-.dn-open { margin-left: auto; display: inline-grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: var(--r-s); background: #5865f2; color: #fff; cursor: pointer; }
-.dn-open:hover { background: #4752c4; }
-.dn-open svg { width: 18px; height: 18px; }
 .dn-group { display: grid; gap: 4px; }
 .dn-gl { font-size: var(--fs-xs); font-weight: 750; color: var(--text-3); padding: 0 4px; }
 .dn-gl small { font-size: var(--fs-xs); font-weight: 600; }
@@ -975,8 +972,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .dn-m .op i { position: absolute; right: -2px; bottom: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); box-shadow: 0 0 0 2px var(--surface); }
 .dn-m.online .op i { background: var(--ok); } .dn-m.idle .op i { background: var(--gold); } .dn-m.dnd .op i { background: var(--lose); }
 .dn-m .on { font-size: var(--fs-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dn-more { justify-self: start; padding: 4px; border: 0; background: none; color: var(--text-3); font: inherit; font-size: var(--fs-xs); font-weight: 650; cursor: pointer; }
-.dn-more:hover { color: var(--accent); }
+.dn-more { padding: 0 4px; color: var(--text-3); font-size: var(--fs-xs); font-weight: 650; }
 @media (prefers-reduced-motion: reduce) { .dn-pop { animation: none; } }
 /* 장인 랭킹: 휴대폰에서 숫자 줄바꿈 없이 */
 .rank-row .num { white-space: nowrap; }
