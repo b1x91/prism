@@ -14,6 +14,8 @@ pub struct Word {
     pub text: String,
     pub x: f32,
     pub y: f32,
+    /// 단어 폭 (제목 가운데를 구하려고. 이름 길이와 상관없이 카드 위치가 같게 나온다)
+    pub w: f32,
 }
 
 #[derive(Deserialize)]
@@ -67,7 +69,7 @@ impl Matcher {
         for (i, w) in words.iter().enumerate() {
             for c in norm(&w.text) {
                 chars.push(c);
-                pos.push((w.x, w.y));
+                pos.push((w.x, w.y, w.x + w.w));
                 wid.push(i);
             }
         }
@@ -82,7 +84,7 @@ impl Matcher {
             for s in 0..=chars.len() - n {
                 let diff = chars[s..s + n].iter().zip(name).filter(|(a, b)| a != b).count();
                 if diff <= allow && (n > 2 || whole(s, n)) {
-                    hits.push(Hit { id: *id, start: s, len: n, x: pos[s].0, y: pos[s].1 });
+                    hits.push(Hit { id: *id, start: s, len: n, x: (pos[s].0 + pos[s + n - 1].2) / 2.0, y: pos[s].1 });
                 }
             }
         }
@@ -105,7 +107,7 @@ impl Matcher {
         self.find_at(lines, width).into_iter().map(|f| f.0).collect()
     }
 
-    /// find 와 같고, 각 제목의 위치(x, y)도 함께 (다음 확인 때 제목 줄만 읽기 위해)
+    /// find 와 같고, 각 제목의 위치(가운데 x, y)도 함께 (다음 확인 때 제목 줄만 읽기 위해)
     pub fn find_at(&self, lines: &[Vec<Word>], width: f32) -> Vec<(u32, f32, f32)> {
         let mut all: Vec<Hit> = lines.iter().flat_map(|l| self.line_hits(l)).collect();
         all.sort_by(|a, b| a.x.partial_cmp(&b.x).unwrap_or(std::cmp::Ordering::Equal));
@@ -134,12 +136,45 @@ impl Matcher {
     }
 }
 
+/// 카드 세 칸을 위치(가운데 x)로 기억한다. 한 장을 새로고침하는 동안 그 칸 제목이 잠깐 안 읽혀도
+/// 다른 칸은 그대로 두고, 새 이름이 읽히면 그 칸만 바꾼다 (예전에는 2개만 읽힌 순간 추천에서 하나가 사라졌다)
+#[derive(Default)]
+pub struct Slots {
+    s: Vec<(f32, u32)>,
+}
+
+impl Slots {
+    pub fn clear(&mut self) {
+        self.s.clear();
+    }
+    pub fn is_empty(&self) -> bool {
+        self.s.is_empty()
+    }
+    /// 읽은 제목들(ID, 가운데 x, y) 반영 → 왼쪽부터 칸별 ID
+    pub fn update(&mut self, hits: &[(u32, f32, f32)], width: f32) -> Vec<u32> {
+        let tol = (width * 0.08).max(40.0);
+        for &(id, x, _) in hits {
+            let near = self.s.iter().enumerate().map(|(i, s)| (i, (s.0 - x).abs())).min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
+            match near {
+                Some((i, d)) if d < tol || self.s.len() >= 3 => self.s[i] = (x, id),
+                _ => self.s.push((x, id)),
+            }
+            // 같은 증강이 다른 칸에 남아 있으면 (옛 위치) 지운다
+            let keep = self.s.iter().position(|s| s.1 == id && (s.0 - x).abs() < f32::EPSILON);
+            let mut i = 0;
+            self.s.retain(|s| { let k = s.1 != id || Some(i) == keep; i += 1; k });
+        }
+        self.s.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        self.s.iter().map(|s| s.1).collect()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     const DATA: &str = include_str!("../../../../packages/core/data/mayhem-augments.json");
     fn w(t: &str, x: f32, y: f32) -> Word {
-        Word { text: t.into(), x, y }
+        Word { text: t.into(), x, y, w: 36.0 * t.chars().count() as f32 }
     }
     fn id_of(name: &str) -> u32 {
         let d: serde_json::Value = serde_json::from_str(DATA).unwrap();
@@ -182,6 +217,18 @@ mod tests {
         // 제목이 안 읽혀도 설명 속 "흡수량"을 흡수로 잡지 않는다
         let only_desc = vec![vec![w("보호막", 1040.0, 425.0), w("흡수량", 1080.0, 425.0)]];
         assert!(m.find(&only_desc, 2000.0).is_empty());
+    }
+
+    #[test]
+    fn 한_장을_새로고침해도_나머지는_그대로() {
+        let mut s = Slots::default();
+        assert_eq!(s.update(&[(1, 700.0, 0.0), (2, 1000.0, 0.0), (3, 1290.0, 0.0)], 2000.0), vec![1, 2, 3]);
+        // 가운데 카드가 바뀌는 중: 양쪽 둘만 읽힘 → 세 칸 그대로
+        assert_eq!(s.update(&[(1, 702.0, 0.0), (3, 1288.0, 0.0)], 2000.0), vec![1, 2, 3]);
+        // 새 이름이 읽히면 그 칸만
+        assert_eq!(s.update(&[(9, 995.0, 0.0)], 2000.0), vec![1, 9, 3]);
+        // 이름 길이가 달라 가운데가 조금 달라도 같은 칸
+        assert_eq!(s.update(&[(7, 1330.0, 0.0)], 2000.0), vec![1, 9, 7]);
     }
 
     #[test]

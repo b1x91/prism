@@ -6,7 +6,7 @@
 //! - 게임 프로세스·메모리·입력은 건드리지 않는다. 롤에 요청도 하지 않는다
 //! - 작은 창은 클릭이 통과하고, 포커스를 가져가지 않으며, 화면 녹화·캡처에도 찍히지 않는다
 
-use crate::matcher::{Matcher, Word};
+use crate::matcher::{Matcher, Slots, Word};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -15,7 +15,7 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Emitter, Manager};
 
 const AUGMENTS_JSON: &str = include_str!("../../../../packages/core/data/mayhem-augments.json");
-const EVERY: Duration = Duration::from_millis(1200);
+const EVERY: Duration = Duration::from_millis(600);
 /// 카드가 보이는 동안: 새로고침을 바로 따라가도록 자주, 제목 줄만 좁게 읽는다
 const FAST: Duration = Duration::from_millis(350);
 const IDLE: Duration = Duration::from_secs(4);
@@ -219,7 +219,7 @@ mod imp {
             let mut words = Vec::new();
             for word in line.Words()? {
                 let r = word.BoundingRect()?;
-                words.push(Word { text: word.Text()?.to_string(), x: r.X, y: r.Y });
+                words.push(Word { text: word.Text()?.to_string(), x: r.X, y: r.Y, w: r.Width });
             }
             text.push_str(&line.Text()?.to_string());
             text.push('\n');
@@ -242,6 +242,7 @@ mod imp {
         // 제목 줄 (찾는 영역 안에서의 y, 높이). 카드가 보이는 동안만 쓴다
         let mut band: Option<(i32, i32)> = None;
         let mut last: Vec<u32> = Vec::new();
+        let mut slots = Slots::default();
         let mut pids: (Vec<u32>, Option<std::time::Instant>) = (Vec::new(), None);
         loop {
             let s = v.settings.lock().unwrap().clone();
@@ -254,6 +255,7 @@ mod imp {
                 v.hide(&app);
                 band = None;
                 last.clear();
+                slots.clear();
                 std::thread::sleep(if game.is_some() { EVERY } else { IDLE });
                 continue;
             };
@@ -267,8 +269,10 @@ mod imp {
             match found {
                 Some((lines, text)) => {
                     let hits = v.matcher.find_at(&lines, w as f32);
-                    v.stage(if hits.len() >= 2 { "found" } else { "reading" }, hits.len() as u32, how);
-                    if hits.len() >= 2 {
+                    // 처음엔 2장 이상 보여야 카드 화면으로 보고, 그 뒤로는 한 장만 읽혀도 그 칸을 갱신한다
+                    let seen = hits.len() >= 2 || (!slots.is_empty() && !hits.is_empty());
+                    v.stage(if seen { "found" } else { "reading" }, hits.len() as u32, how);
+                    if seen {
                         misses = 0;
                         if band.is_none() {
                             // 제목 줄 위아래로 여유를 두고 기억
@@ -278,7 +282,7 @@ mod imp {
                             let y0 = (top - m).max(0);
                             band = Some((y0, (bottom - y0 + m * 2).min(hh - y0)));
                         }
-                        let ids: Vec<u32> = hits.iter().map(|h| h.0).collect();
+                        let ids = slots.update(&hits, w as f32);
                         if ids != last || !shown {
                             last = ids.clone();
                             v.publish(&app, ids, text);
@@ -294,6 +298,7 @@ mod imp {
                         } else if band.is_none() && misses >= 3 && shown {
                             // 고른 뒤 카드가 사라짐
                             last.clear();
+                            slots.clear();
                             v.publish(&app, vec![], String::new());
                             v.hide(&app);
                         }
