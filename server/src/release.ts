@@ -5,6 +5,8 @@
  *  - GET /app/download/:tag/:file        그 버전의 설치 파일 (버전마다 바뀌지 않는 주소 — 스토어 등록용)
  * 저장소가 비공개면 RELEASE_TOKEN(읽기 전용 GitHub 토큰, 서버 비밀값)으로 읽는다. 공개면 없어도 된다.
  * 설치 파일은 버전 주소 기준으로 Cloudflare 캐시에 둔다 (GitHub 요청을 줄인다).
+ * 토큰이 없으면 GitHub API 를 쓰지 않는다: 무인증 API 는 IP 당 시간 60회라 Cloudflare 에서는 자주 403 이 난다.
+ * 대신 공개 주소(github.com/…/releases/…)로 받는다 — 이 주소에는 그런 한도가 없다.
  */
 import { HttpError, json, type Env } from './util.js';
 
@@ -27,6 +29,17 @@ async function asset(env: Env, id: number) {
 
 type Rel = { tag_name: string; body?: string; assets: { id: number; name: string; size: number }[] };
 
+const web = (env: Env, path: string, redirect: RequestRedirect = 'follow') =>
+  fetch(`https://github.com/${repo(env)}${path}`, { headers: { 'User-Agent': 'prism-server' }, redirect });
+
+/** 최신 태그: /releases/latest 가 /releases/tag/<태그> 로 보내는 것을 읽는다 (API 없이) */
+async function latestTag(env: Env): Promise<string> {
+  const r = await web(env, '/releases/latest', 'manual');
+  const tag = (r.headers.get('Location') ?? '').match(/\/releases\/tag\/([^/?#]+)/)?.[1];
+  if (!tag) throw new HttpError(502, `배포 정보를 가져오지 못했습니다 (${r.status}).`);
+  return decodeURIComponent(tag);
+}
+
 async function release(env: Env, tag?: string): Promise<Rel> {
   const r = await gh(env, tag ? `/releases/tags/${encodeURIComponent(tag)}` : '/releases/latest');
   if (r.status === 404) throw new HttpError(404, '배포된 버전을 찾지 못했습니다.');
@@ -40,7 +53,8 @@ export async function latest(req: Request, env: Env) {
   const key = new Request(new URL('/app/latest', req.url).toString());
   const hit = await cache.match(key);
   if (hit) return hit;
-  const rel = await release(env);
+  // 크기를 모르면 0 (앱은 실행 파일 머리만 확인한다)
+  const rel: Rel = env.RELEASE_TOKEN ? await release(env) : { tag_name: await latestTag(env), assets: [{ id: 0, name: ASSET, size: 0 }] };
   const a = rel.assets.find((x) => x.name === ASSET);
   const res = json({
     version: rel.tag_name.replace(/^app-v/, '').replace(/^v/, ''),
@@ -57,24 +71,31 @@ export async function latest(req: Request, env: Env) {
 /** 설치 파일. 태그가 없으면 최신판으로 보낸다 (버전 주소로 이동) */
 export async function download(req: Request, env: Env, tag?: string, file?: string) {
   if (!tag) {
-    const rel = await release(env);
-    return Response.redirect(`${origin(req, env)}/app/download/${encodeURIComponent(rel.tag_name)}/${ASSET}`, 302);
+    const t = env.RELEASE_TOKEN ? (await release(env)).tag_name : await latestTag(env);
+    return Response.redirect(`${origin(req, env)}/app/download/${encodeURIComponent(t)}/${ASSET}`, 302);
   }
   if (file !== ASSET) throw new HttpError(404, 'not found');
   const cache = (caches as unknown as { default: Cache }).default;
   const key = new Request(new URL(`/app/download/${encodeURIComponent(tag)}/${ASSET}`, req.url).toString());
   const hit = await cache.match(key);
   if (hit) return hit;
-  const rel = await release(env, tag);
-  const a = rel.assets.find((x) => x.name === ASSET);
-  if (!a) throw new HttpError(404, '설치 파일이 없습니다.');
-  const r = await asset(env, a.id);
+  let r: Response;
+  if (env.RELEASE_TOKEN) {
+    const rel = await release(env, tag);
+    const a = rel.assets.find((x) => x.name === ASSET);
+    if (!a) throw new HttpError(404, '설치 파일이 없습니다.');
+    r = await asset(env, a.id);
+  } else {
+    r = await web(env, `/releases/download/${encodeURIComponent(tag)}/${ASSET}`);
+    if (r.status === 404) throw new HttpError(404, '설치 파일이 없습니다.');
+  }
   if (!r.ok || !r.body) throw new HttpError(502, `설치 파일을 가져오지 못했습니다 (${r.status}).`);
+  const len = r.headers.get('Content-Length');
   const res = new Response(r.body, {
     headers: {
       'Content-Type': 'application/vnd.microsoft.portable-executable',
       'Content-Disposition': `attachment; filename="${ASSET}"`,
-      'Content-Length': String(a.size),
+      ...(len ? { 'Content-Length': len } : {}),
       // 버전 주소의 내용은 바뀌지 않는다
       'Cache-Control': 'public, max-age=31536000, immutable',
     },

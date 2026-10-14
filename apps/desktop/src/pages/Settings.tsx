@@ -82,14 +82,17 @@ function VisionSettings() {
         <div><span className="k">작은 창 위치</span><span><Seg value={v.settings.position} options={[['right', '오른쪽'], ['top', '위']]} onChange={(p) => save(v.settings.enabled, p)} /></span></div>
         <div><span className="k">상태</span><span className="stack" style={{ gap: 4 }}>
           <span className={`vs ${st.tone}`}><i />{st.text}</span>
-          <span className="muted">{r.last_at ? <>마지막 인식 {ago(r.last_at)} · {r.last_ids.map((id) => AUGMENT[id]?.name ?? `#${id}`).join(', ')}</> : '아직 인식한 증강이 없습니다'}</span>
+          {r.last_at && r.last_ids.length ? <span className="stack" style={{ gap: 4 }}>
+            <b>마지막으로 읽은 증강 · {ago(r.last_at)}</b>
+            <span className="row wrapr" style={{ gap: 8 }}>{r.last_ids.map((id) => <span key={id} className="pill"><AugImg id={id} size={20} />{AUGMENT[id]?.name ?? `#${id}`}</span>)}</span>
+          </span> : <span className="muted">아직 인식한 증강이 없습니다</span>}
         </span></div>
-        <div><span className="k">인식 시험</span><span className="stack" style={{ gap: 8 }}>
+        <div><span className="k">직접 시험</span><span className="stack" style={{ gap: 8 }}>
           <span className="muted">증강 고르는 화면을 <b>Win+Shift+S</b> 로 찍은 뒤 누르면, 같은 방식으로 읽어 봅니다.</span>
           <span><button type="button" className="btn sm" onClick={async () => { setErr(''); setTest(null); try { setTest(await bridge.visionTest()); } catch (e) { setErr(e instanceof Error ? e.message : String(e)); } }}>찍은 화면으로 시험</button></span>
           {err && <span className="l">{err}</span>}
           {test && <span className="stack" style={{ gap: 8 }}>
-            <span className="row wrapr" style={{ gap: 8 }}>{test.ids.length ? test.ids.map((id) => <span key={id} className="pill"><AugImg id={id} size={20} />{AUGMENT[id]?.name}</span>) : <span className="l">증강을 찾지 못했습니다</span>}</span>
+            <span className="row wrapr" style={{ gap: 8 }}>{test.ids.length ? test.ids.map((id) => <span key={id} className="pill"><AugImg id={id} size={20} />{AUGMENT[id]?.name}</span>) : <span className="muted">찍은 그림에서는 증강 이름을 찾지 못했어요. 증강 카드 세 장이 보이게 찍었는지 확인해주세요.</span>}</span>
             <details><summary className="meta">읽은 글자 보기</summary><pre className="ocr">{test.text || '(없음)'}</pre></details>
           </span>}
         </span></div>
