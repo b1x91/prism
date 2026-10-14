@@ -999,7 +999,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .md-score span { color: rgba(255, 255, 255, .5); font-size: var(--fs-xl); } .md-score small { color: rgba(255, 255, 255, .55); font-size: var(--fs-xs); }
 .md-x { color: rgba(255, 255, 255, .8); }
 .md-x:hover { background: rgba(255, 255, 255, .12); color: #fff; }
-.md-body { overflow-y: auto; padding: var(--s3) var(--s4) var(--s4); display: grid; gap: var(--s3); }
+.md-body { overflow-y: auto; padding: var(--s3) var(--s4) var(--s4); display: grid; align-content: start; gap: var(--s3); }
 .md-load { padding: var(--s6); text-align: center; }
 .md-team { display: grid; gap: 2px; }
 .md-th { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s2) 4px; font-size: var(--fs-sm); }
@@ -1065,19 +1065,19 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .slot .situ b { display: block; color: var(--text); }
 .slot .situ.neg { background: color-mix(in srgb, var(--lose) 12%, transparent); color: var(--lose); }
 /* 이 판에서 배울 점 */
-.md-lessons { display: grid; gap: var(--s2); padding: var(--s3); border-radius: var(--r-m); border: 1px solid var(--line); background: var(--surface-2); }
-.md-lessons.empty { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; font-size: var(--fs-sm); }
-.mdl-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--s2); }
-.mdl-h b { font-size: var(--fs-md); } .mdl-h .meta { font-size: var(--fs-xs); }
-.mdl { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: var(--s2); align-items: start; padding: var(--s2); border-radius: var(--r-s); background: var(--surface); }
-.mdl-i { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; font-size: var(--fs-xs); font-weight: 900; }
+.md-lessons { display: grid; }
+.md-lessons .md-th .meta { font-size: var(--fs-xs); font-weight: 500; color: var(--text-3); }
+.mdl { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: var(--s2); align-items: start; padding: var(--s2); }
+.mdl + .mdl { border-top: 1px solid var(--line); }
+.mdl-i { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; font-size: var(--fs-xs); font-weight: 900; }
 .mdl-i svg { width: 12px; height: 12px; }
 .mdl.good .mdl-i { background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
 .mdl.tip .mdl-i { background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--gold); }
 .mdl-t { display: grid; gap: 2px; min-width: 0; font-size: var(--fs-sm); }
 .mdl-t b { font-weight: 750; word-break: keep-all; }
 .mdl-t > span { color: var(--text-2); font-size: var(--fs-xs); word-break: keep-all; }
-.mdl-x { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--s2); margin-top: 4px; }
+.mdl-x { display: flex; flex-wrap: wrap; align-items: center; gap: 4px var(--s3); margin-top: 4px; }
 .mdl-x .item-ic img { width: 24px; height: 24px; border-radius: 4px; display: block; }
-.mdl-aug { display: inline-flex !important; align-items: center; gap: 4px; padding: 2px var(--s2) 2px 2px !important; border-radius: var(--r-pill) !important; background: var(--surface-2) !important; font-size: var(--fs-xs); font-weight: 650; }
-.mdl-more { justify-self: start; padding: 2px var(--s2); border: 0; background: none; color: var(--accent); font: inherit; font-size: var(--fs-xs); font-weight: 750; cursor: pointer; }
+.mdl-aug { display: inline-flex !important; align-items: center; gap: 4px; padding: 0 !important; background: none !important; color: var(--text); font-size: var(--fs-xs); font-weight: 650; }
+.mdl-aug:hover span { text-decoration: underline; }
+.mdl-more { justify-self: start; margin-left: 28px; padding: 0 0 var(--s2); border: 0; background: none; color: var(--accent); font: inherit; font-size: var(--fs-xs); font-weight: 750; cursor: pointer; }

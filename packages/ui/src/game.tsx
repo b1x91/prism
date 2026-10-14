@@ -223,10 +223,10 @@ function Lessons({ m, g }: { m: MatchDetail; g: CardGame }) {
   const items = useItemDetail(true);
   const [all, setAll] = useState(false);
   const r = reviewMatch(m, { championId: g.championId, win: g.win }, items);
-  if (!r.known) return <section className="md-lessons empty"><b>이 판에서 배울 점</b><span className="meta">상대 조합을 알 수 있는 판에서 보여 드려요.</span></section>;
+  if (!r.known) return <section className="md-lessons"><div className="md-th"><b>이 판에서 배울 점</b><span className="meta">상대 조합을 알 수 있는 판에서 보여 드려요.</span></div></section>;
   return (
     <section className="md-lessons">
-      <div className="mdl-h"><b>이 판에서 배울 점</b><span className="meta">이번 판 조합에 비춘 아이템·증강</span></div>
+      <div className="md-th"><b>이 판에서 배울 점</b><span className="meta">이번 판 조합에 비춘 아이템·증강</span></div>
       {r.lessons.length ? (all ? r.lessons : r.lessons.slice(0, 3)).map((l, i) => (
         <div key={i} className={`mdl ${l.kind}`}>
           <span className="mdl-i" aria-hidden="true">{l.kind === 'good' ? <Icon name="check" /> : '▸'}</span>
