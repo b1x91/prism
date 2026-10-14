@@ -681,3 +681,15 @@ svg.light { position: absolute; inset: 0; z-index: 0; pointer-events: none; over
 .vm .face, .vm .initial { border-radius: 50%; flex: none; }
 .vm span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vmute { flex: none; font-style: normal; font-size: var(--fs-xs); font-weight: 650; height: 18px; padding: 0 6px; border-radius: var(--r-pill); background: var(--surface-3); color: var(--text-3); line-height: 18px; }
+
+.lolc { color: var(--gold); font-weight: 750; }
+.onl { display: flex; flex-wrap: wrap; gap: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--line); }
+.om { display: inline-flex; align-items: center; gap: var(--s2); height: 40px; padding: 0 var(--s3) 0 4px; border-radius: var(--r-pill); background: var(--surface-2); max-width: 240px; }
+.om.lol { background: color-mix(in srgb, var(--gold) 14%, var(--surface-2)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 45%, transparent); }
+.om .op { position: relative; flex: none; line-height: 0; }
+.om .op .face, .om .op .initial { border-radius: 50%; }
+.om .op i { position: absolute; right: -1px; bottom: -1px; width: 10px; height: 10px; border-radius: 50%; background: var(--text-3); box-shadow: 0 0 0 2px var(--surface-2); }
+.om.online .op i { background: var(--ok); } .om.idle .op i { background: var(--gold); } .om.dnd .op i { background: var(--lose); }
+.om .on { font-size: var(--fs-sm); font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.om .og { flex: none; font-size: var(--fs-xs); font-weight: 750; color: var(--gold); }
+.om .og.other { color: var(--text-3); font-weight: 600; max-width: 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
