@@ -145,7 +145,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
                 {x.master ? <span className="mark master" aria-hidden="true"><Gem size={16} src="/brand/prism-32.png" /></span> : x.caught && <span className="mark ball" aria-hidden="true" />}
                 <span className="pic">{kind === 'champions' ? <ChampImg id={id} size={56} /> : <AugRing id={id} size={56} />}{!x.seen && <i className="q" aria-hidden="true">?</i>}</span>
                 <span className="nm">{x.seen ? nameOf(kind, id) : '???'}</span>
-                {x.seen ? <Pips m={x} /> : <span className="pips empty" />}
+                <Pips m={x} />
               </button>
             );
           })}</div> : <p className="meta dex-none">{q ? '만난 것 중에 맞는 이름이 없어요.' : show === 'missing' ? `모든 ${what}을 만났어요!` : show === 'master' ? '아직 마스터한 것이 없어요. 오른쪽 여정을 따라가 보세요.' : '아직 없어요. 한 판 하고 오면 채워져요.'}</p>}
