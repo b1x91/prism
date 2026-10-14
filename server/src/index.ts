@@ -2,6 +2,7 @@
  * Prism 서버 (Cloudflare Worker + D1).
  * 모든 /api/* 는 로그인한 회원만. 회원 데이터는 어떤 형태로도 비로그인 응답에 넣지 않는다.
  * /links 는 공개(디스코드·카카오톡 주소). 가입 전인 사람도 들어올 길이 있어야 하므로.
+ * /public/:id 는 본인이 켠 공개 링크만 (모임 정보 없이 그 사람의 강점, v3.24).
  */
 import { download, latest } from './release.js';
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
@@ -14,6 +15,7 @@ import { deleteProspect, listProspects } from './prospects.js';
 import { discordNow } from './discord-now.js';
 import { listScrims, openScrim, scrimAction } from './scrims.js';
 import { cancelParty, joinParty, leaveParty, listParties, openParty } from './parties.js';
+import { buy, equip, getShop, markDaily, publicProfile, setShare } from './shop.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 
 async function route(req: Request, env: Env): Promise<Response> {
@@ -33,16 +35,23 @@ async function route(req: Request, env: Env): Promise<Response> {
   const dl = pathname.match(/^\/app\/download\/([0-9A-Za-z._-]{1,40})\/([0-9A-Za-z._-]{1,60})$/);
   if (m === 'GET' && dl) return download(req, env, decodeURIComponent(dl[1]), dl[2]);
 
+  const pub = pathname.match(/^\/public\/([0-9A-Za-z_-]{1,40})$/);
+  if (m === 'GET' && pub) return publicProfile(env, pub[1]);
+
   if (!pathname.startsWith('/api/')) throw new HttpError(404, 'not found');
   const me = await authenticate(req, env);
 
   if (m === 'GET' && pathname === '/api/me') return getMe(env, me);
   if (m === 'GET' && pathname === '/api/me/games') return myGames(env, me);
+  if (m === 'GET' && pathname === '/api/shop') return getShop(env, me);
+  if (m === 'POST' && pathname === '/api/shop/buy') return buy(req, env, me);
+  if (m === 'POST' && pathname === '/api/me/equip') return equip(req, env, me);
+  if (m === 'POST' && pathname === '/api/me/share') return setShare(req, env, me);
   if (m === 'GET' && pathname === '/api/me/dex') return myDex(env, me);
   if (m === 'POST' && pathname === '/api/me/riot') return linkRiot(req, env, me);
   if (m === 'POST' && pathname === '/api/me/consent') return setConsent(req, env, me);
   if (m === 'POST' && pathname === '/api/me/profile') return setProfile(req, env, me);
-  if (m === 'POST' && pathname === '/api/me/presence') return setPresence(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
+  if (m === 'POST' && pathname === '/api/me/presence') { await markDaily(env, me.id); return setPresence(env, me, await req.json<Record<string, unknown>>().catch(() => ({}))); }
   if (m === 'GET' && pathname === '/api/crew/targets') return crewTargets(env);
   if (m === 'POST' && pathname === '/api/ingest') return ingest(req, env, me);
   if (m === 'POST' && pathname === '/api/champselect') return champSelect(req, env, me);

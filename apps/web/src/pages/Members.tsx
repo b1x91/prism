@@ -1,6 +1,8 @@
-import { useNavigate, useParams } from 'react-router-dom';
-import { Empty, Icon, MemberView, RankingView } from '@prism/ui';
-import { useSession } from '../session';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Empty, Gem, Icon, MemberView, ProfileHero, PublicProfileView, RankingView, ShopView } from '@prism/ui';
+import type { PublicProfile } from '@prism/core';
+import { SERVER, useSession } from '../session';
 
 function NeedLogin({ what }: { what: string }) {
   const { login } = useSession();
@@ -30,7 +32,37 @@ export function MemberPage() {
   return (
     <section className="section tight"><div className="wrap">
       <MemberView key={target} api={api} id={target} onChampion={(c) => nav(`/champions/${c}`)}
-        actions={target === me.id ? <button type="button" className="btn sm" onClick={logout}>로그아웃</button> : undefined} />
+        actions={target === me.id ? <><button type="button" className="btn sm primary" onClick={() => nav('/shop')}><Icon name="bag" />상점</button><button type="button" className="btn sm" onClick={logout}>로그아웃</button></> : undefined} />
+    </div></section>
+  );
+}
+
+export function ShopPage() {
+  const { me, ready, api } = useSession();
+  if (!ready) return null;
+  if (!me) return <NeedLogin what="상점" />;
+  return (
+    <section className="section tight"><div className="wrap">
+      <ShopView api={api} preview={(deco) => <ProfileHero nick={me.nick} skin={me.skin} deco={deco} corner={<span className="pill dark">미리 보기</span>} />} />
+    </div></section>
+  );
+}
+
+/** 공유 링크 (로그인 없이): 그 사람의 강점만. 모임 정보는 없다 */
+export function PublicPage() {
+  const { id } = useParams();
+  const [data, setData] = useState<PublicProfile | null>(null);
+  const [err, setErr] = useState('');
+  useEffect(() => {
+    if (!id) return;
+    fetch(`${SERVER}/public/${encodeURIComponent(id)}`).then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.error ?? '불러오지 못했어요'); setData(j); }).catch((e) => setErr(e instanceof Error ? e.message : String(e)));
+  }, [id]);
+  useEffect(() => { if (data) document.title = `${data.nick} · Prism`; }, [data]);
+  if (err) return <section className="section"><div className="wrap"><Empty action={<Link className="btn primary" to="/">Prism 둘러보기</Link>}>{err}</Empty></div></section>;
+  if (!data) return <section className="section"><div className="wrap"><p className="meta">불러오는 중…</p></div></section>;
+  return (
+    <section className="section tight"><div className="wrap">
+      <PublicProfileView data={data} join={<Link className="btn sm primary" to="/"><Gem size={14} src="/brand/prism-32.png" />Prism 알아보기</Link>} />
     </div></section>
   );
 }

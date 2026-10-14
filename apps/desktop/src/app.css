@@ -1,8 +1,10 @@
 /* 데스크톱 앱 전용. 토큰 밖의 값은 쓰지 않는다 (CLAUDE.md v3.1-10) */
 html, body, #root { height: 100%; }
 body { overflow: hidden; background: var(--bg); }
-.shell { display: grid; grid-template-columns: 208px minmax(0, 1fr); height: 100%; }
-.main { overflow-y: auto; padding: var(--s7); background: var(--glow), var(--bg); }
+.shell { --side: 208px; display: grid; grid-template-columns: var(--side) minmax(0, 1fr); height: 100%; }
+.main { overflow-y: auto; overflow-x: clip; padding: var(--s7); background: var(--glow), var(--bg); }
+/* 내 페이지 머리: 본문 좌우 끝까지, 위로 붙게 (v3.24) */
+.main .phero { width: calc(100vw - var(--side)); margin: calc(-1 * var(--s7)) 0 0 calc(50% - (100vw - var(--side)) / 2); }
 .main > * { max-width: var(--wide); margin: 0 auto; }
 .h1 { margin: 0; font-size: var(--fs-2xl); font-weight: 800; letter-spacing: -.02em; }
 
@@ -124,7 +126,7 @@ body { overflow: hidden; background: var(--bg); }
 .seat .sub { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; }
 
 @media (max-width: 900px) {
-  .shell { grid-template-columns: 72px minmax(0, 1fr); }
+  .shell { --side: 72px; grid-template-columns: var(--side) minmax(0, 1fr); }
   .brand-word, .side-arrows, .brand-line { display: none; } .side-brand { justify-content: center; padding: 0; } .side-nav a, .side-nav button { font-size: 0; justify-content: center; padding: 0; } .side-nav button small { display: none; }
   .side-ch span, .side-status, .side-me span:last-child { display: none; }
   .side-foot { flex-direction: column; } .side-foot .btn { padding: 0; width: 40px; font-size: 0; }
@@ -210,7 +212,7 @@ body { overflow: hidden; background: var(--bg); }
 .side-me-card .side-me { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--s2); padding: var(--s1); border-radius: var(--r-s); color: var(--text); text-decoration: none; }
 /* 내 정보·설정은 마우스를 올려도 바탕이 바뀌지 않는다 */
 .side-me-card .gear:hover { background: none; color: var(--text-2); }
-.side-me-card .gear.active:hover { color: var(--accent); background: var(--accent-soft); }
+.side-me-card .gear.active:hover { color: var(--text-2); background: none; }
 .side-me-card .face, .side-me-card .initial { width: 36px; height: 36px; border-radius: var(--r-m); flex: none; object-fit: cover; }
 .side-me-card .who { display: grid; min-width: 0; }
 .side-me-card .who b { font-size: var(--fs-sm); font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -219,7 +221,7 @@ body { overflow: hidden; background: var(--bg); }
 .side-me-card .st .rl::after { content: '·'; margin-left: 6px; color: var(--text-3); }
 .side-me-card .bad { color: var(--lose); }
 .side-me-card .fp .pdot { box-shadow: 0 0 0 2px var(--surface); }
-.side-me-card .gear.active { color: var(--accent); background: var(--accent-soft); }
+.side-me-card .gear.active { color: var(--text-2); background: none; }
 .side-me-card .gear svg { width: 18px; height: 18px; }
 @media (max-width: 900px) { .side-me-card { flex-direction: column; padding: var(--s1); } .side-me-card .who { display: none; } }
 
@@ -289,3 +291,7 @@ body { overflow: hidden; background: var(--bg); }
 @keyframes live-ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
 @media (max-width: 900px) { .side-nav a .live-dot { position: absolute; top: 6px; right: 6px; margin: 0; } }
 @media (prefers-reduced-motion: reduce) { .side-nav a.live, .side-nav a .live-dot { animation: none; } .side-nav a.live { background: color-mix(in srgb, var(--accent) 14%, transparent); } }
+
+/* 사이드바 내 정보·설정: 누른 뒤 남는 외곽선·하이라이트 없음 (v3.24) */
+.side-me-card .side-me, .side-me-card .gear { outline: none; -webkit-tap-highlight-color: transparent; }
+.side-me-card .side-me:focus, .side-me-card .side-me:focus-visible, .side-me-card .gear:focus, .side-me-card .gear:focus-visible { outline: none; box-shadow: none; }

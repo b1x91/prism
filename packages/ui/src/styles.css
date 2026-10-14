@@ -1233,3 +1233,133 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 
 .pkinds .chip, .ptimes .chip { white-space: nowrap; }
 @media (max-width: 640px) { .parties > .card-head { flex-wrap: wrap; } .parties > .card-head .meta { flex-basis: 100%; } .parties > .card-head .sp { display: none; } }
+
+/* ───────── 내 페이지 머리 (v3.24): 좌우 끝까지, 꾸밈 적용 ───────── */
+.phero { position: relative; isolation: isolate; overflow: hidden; width: 100vw; margin-left: calc(50% - 50vw); min-height: 360px; display: flex; align-items: stretch; color: #fff; background: #07090f; }
+.phero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; z-index: -3; transform: scale(1.02); }
+.phero::before { content: ""; position: absolute; inset: 0; z-index: -2; background: linear-gradient(90deg, rgba(7, 9, 15, .92) 0%, rgba(7, 9, 15, .55) 50%, rgba(7, 9, 15, .15) 100%), linear-gradient(0deg, rgba(7, 9, 15, .85) 0%, transparent 55%); }
+.phero-in { position: relative; width: 100%; max-width: var(--wide); margin: 0 auto; padding: 88px var(--s7) var(--s7); display: flex; flex-direction: column; justify-content: flex-end; }
+.phero-corner { position: absolute; top: var(--s5); left: var(--s7); display: flex; gap: var(--s2); }
+.phero-actions { position: absolute; top: var(--s5); right: var(--s7); display: flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--s2); }
+.phero-actions .btn { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .2); color: #fff; backdrop-filter: blur(8px); }
+.phero-actions .btn:hover { background: rgba(255, 255, 255, .22); }
+.phero-actions .btn.primary { background: var(--accent); border-color: var(--accent); }
+.phero-main { display: flex; align-items: flex-end; gap: var(--s6); }
+.phero-face { flex: none; display: grid; place-items: center; padding: 4px; border-radius: 28px; background: rgba(255, 255, 255, .14); box-shadow: 0 12px 40px rgba(0, 0, 0, .5); }
+.phero-face .face, .phero-face .initial { width: 112px !important; height: 112px !important; border-radius: 24px; object-fit: cover; }
+.phero-txt { min-width: 0; display: grid; gap: var(--s2); }
+.phero-title { justify-self: start; padding: 2px var(--s3); border-radius: var(--r-pill); background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .22); font-size: var(--fs-sm); font-weight: 750; letter-spacing: .02em; }
+.phero-name { margin: 0; font-size: var(--fs-d2, 56px); font-weight: 900; letter-spacing: -.035em; line-height: 1.02; overflow-wrap: anywhere; }
+.phero-intro { margin: 0; max-width: 560px; color: rgba(255, 255, 255, .82); font-size: var(--fs-md); }
+.phero-chips { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.phero-chips .pill.dark, .phero-corner .pill.dark { background: rgba(255, 255, 255, .12); color: #fff; border: 1px solid rgba(255, 255, 255, .16); }
+@media (max-width: 760px) {
+  .phero { min-height: 300px; }
+  .phero-in { padding: var(--s8) var(--s5) var(--s5); gap: var(--s3); }
+  .phero-corner, .phero-actions { position: static; justify-content: flex-start; }
+  .phero-main { flex-direction: column; align-items: flex-start; gap: var(--s4); }
+  .phero-face .face, .phero-face .initial { width: 80px !important; height: 80px !important; border-radius: 18px; }
+  .phero-name { font-size: var(--fs-d1, 40px); }
+}
+
+/* 꾸밈: 머리 테두리 (머리 아래 띠 + 얼굴 테두리) */
+.phero[class*="frame-"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; z-index: 2; }
+.phero.frame-gold .phero-face { background: linear-gradient(135deg, #fff1b8, #e0a82e 45%, #8a5a10); box-shadow: 0 0 28px rgba(240, 190, 80, .55); }
+.phero.frame-gold::after { background: linear-gradient(90deg, transparent, #f2c14e, transparent); }
+.phero.frame-ember .phero-face { background: linear-gradient(160deg, #ffd27a, #ff6a2b 50%, #b3121b); box-shadow: 0 0 32px rgba(255, 98, 40, .65); animation: ph-ember 2.4s ease-in-out infinite; }
+.phero.frame-ember::after { background: linear-gradient(90deg, transparent, #ff6a2b, #ffd27a, #ff6a2b, transparent); }
+.phero.frame-frost .phero-face { background: linear-gradient(160deg, #ffffff, #8fd3ff 45%, #2f6fe4); box-shadow: 0 0 32px rgba(120, 200, 255, .6); }
+.phero.frame-frost::after { background: linear-gradient(90deg, transparent, #8fd3ff, #ffffff, #8fd3ff, transparent); }
+.phero.frame-prism .phero-face { background: conic-gradient(from var(--dx-ang), var(--spectrum-1), var(--spectrum-2), var(--spectrum-3), var(--spectrum-4), var(--spectrum-5), var(--spectrum-6), var(--spectrum-7), var(--spectrum-1)); box-shadow: 0 0 36px color-mix(in srgb, var(--spectrum-6) 55%, transparent); animation: dx-spin 6s linear infinite; }
+.phero.frame-prism::after { background: var(--spectrum); }
+@keyframes ph-ember { 50% { box-shadow: 0 0 44px rgba(255, 140, 60, .85); } }
+
+/* 꾸밈: 머리 효과 (조각 14개로) */
+.phero-fx { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.phero-fx i { position: absolute; display: block; }
+.phero-fx i:nth-child(1) { left: 6%; --d: 0s; } .phero-fx i:nth-child(2) { left: 14%; --d: 1.1s; } .phero-fx i:nth-child(3) { left: 22%; --d: 2.3s; } .phero-fx i:nth-child(4) { left: 30%; --d: .6s; }
+.phero-fx i:nth-child(5) { left: 38%; --d: 1.8s; } .phero-fx i:nth-child(6) { left: 46%; --d: 3.1s; } .phero-fx i:nth-child(7) { left: 54%; --d: .3s; } .phero-fx i:nth-child(8) { left: 62%; --d: 2.6s; }
+.phero-fx i:nth-child(9) { left: 70%; --d: 1.4s; } .phero-fx i:nth-child(10) { left: 78%; --d: 3.6s; } .phero-fx i:nth-child(11) { left: 86%; --d: .9s; } .phero-fx i:nth-child(12) { left: 94%; --d: 2s; }
+.phero-fx i:nth-child(13) { left: 50%; --d: 4.2s; } .phero-fx i:nth-child(14) { left: 66%; --d: 4.8s; }
+.phero.fx-sparkle .phero-fx i { width: 4px; height: 4px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px 2px rgba(255, 255, 255, .9); top: 20%; animation: ph-twinkle 3.2s ease-in-out var(--d) infinite; opacity: 0; }
+.phero.fx-sparkle .phero-fx i:nth-child(odd) { top: 45%; } .phero.fx-sparkle .phero-fx i:nth-child(3n) { top: 12%; }
+@keyframes ph-twinkle { 0%, 100% { opacity: 0; transform: scale(.4); } 50% { opacity: 1; transform: scale(1.2); } }
+.phero.fx-petals .phero-fx i { width: 10px; height: 7px; border-radius: 70% 0; background: linear-gradient(135deg, #ffd1e3, #ff8fb8); top: -10%; animation: ph-fall 9s linear var(--d) infinite; opacity: .85; }
+@keyframes ph-fall { to { transform: translate(-60px, 420px) rotate(540deg); } }
+.phero.fx-rays .phero-fx { background: repeating-conic-gradient(from 0deg at 82% 20%, rgba(255, 255, 255, .12) 0deg 6deg, transparent 6deg 18deg); animation: ph-rays 30s linear infinite; mask-image: radial-gradient(circle at 82% 20%, #000 0%, transparent 70%); }
+.phero.fx-rays .phero-fx i { display: none; }
+@keyframes ph-rays { to { transform: rotate(8deg) scale(1.05); } }
+.phero.fx-aurora .phero-fx { background: linear-gradient(115deg, transparent 20%, rgba(80, 255, 200, .22) 35%, rgba(120, 140, 255, .26) 50%, rgba(200, 120, 255, .2) 65%, transparent 80%); background-size: 220% 100%; animation: ph-aurora 12s ease-in-out infinite alternate; filter: blur(12px); }
+.phero.fx-aurora .phero-fx i { display: none; }
+@keyframes ph-aurora { from { background-position: 0% 0; } to { background-position: 100% 0; } }
+
+/* 꾸밈: 이름 효과 (무지개 글자는 쓰지 않는다 — 1.5절) */
+.phero-name.name-glow { text-shadow: 0 0 18px rgba(255, 255, 255, .55), 0 0 2px rgba(255, 255, 255, .9); }
+.phero-name.name-gold { background: linear-gradient(180deg, #fff6d0 0%, #f2c14e 55%, #b8801a 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 10px rgba(240, 190, 80, .45)); }
+.phero-name.name-galaxy { background: linear-gradient(100deg, #b9d2ff, #6f8cff 35%, #a98bff 65%, #e8ddff); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: ph-galaxy 6s ease-in-out infinite alternate; filter: drop-shadow(0 2px 12px rgba(120, 130, 255, .5)); }
+@keyframes ph-galaxy { to { background-position: 100% 0; } }
+@media (prefers-reduced-motion: reduce) { .phero .phero-face, .phero-fx, .phero-fx i, .phero-name { animation: none !important; } .phero.fx-sparkle .phero-fx i { opacity: .7; } }
+
+/* 공유 */
+.share { position: relative; display: inline-flex; gap: var(--s2); }
+.share .btn .icon { width: 14px; height: 14px; }
+.share-pop { position: absolute; z-index: 5; top: calc(100% + var(--s2)); right: 0; width: 280px; padding: var(--s3); display: grid; gap: var(--s2); border-radius: var(--r-m); background: var(--surface); color: var(--text); border: 1px solid var(--line-2); box-shadow: 0 12px 32px rgba(0, 0, 0, .25); }
+.share-pop .btn { justify-self: start; background: var(--surface-2) !important; color: var(--text) !important; border-color: var(--line) !important; }
+
+/* 피스 */
+.piece { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
+.piece b { font-size: inherit; font-weight: 850; }
+.piece small { font-size: var(--fs-xs); color: var(--text-3); font-weight: 700; }
+
+/* 상점 */
+.shop-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--s4); }
+.shop-bal { display: grid; align-content: center; gap: var(--s2); }
+.shop-bal .k { font-size: var(--fs-sm); color: var(--text-3); font-weight: 700; }
+.shop-bal .piece { font-size: var(--fs-2xl); }
+.earn-list { display: grid; gap: 2px; }
+.earn-row { display: grid; grid-template-columns: 180px minmax(0, 1fr) 72px; gap: var(--s3); align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
+.earn-row:last-child { border-bottom: 0; }
+.earn-row .num { text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; color: var(--accent); }
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s3); margin-bottom: var(--s3); }
+.shop-item { display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; align-items: center; gap: var(--s3); padding: var(--s3); border-radius: var(--r-m); border: 1px solid var(--line); background: var(--surface); transition: border-color .15s, box-shadow .15s; }
+.shop-item:hover { border-color: var(--text-3); }
+.shop-item.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.shop-nm { display: grid; gap: 2px; min-width: 0; }
+.shop-nm b { font-size: var(--fs-md); }
+.shop-act .btn { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.shop-sw { width: 56px; height: 56px; border-radius: var(--r-m); display: grid; place-items: center; background: #10131f; color: #fff; overflow: hidden; font-size: var(--fs-xs); font-weight: 800; text-align: center; line-height: 1.2; padding: 4px; }
+.shop-sw i { width: 32px; height: 32px; border-radius: 10px; background: #2a3150; }
+.shop-sw.frame-gold i { box-shadow: 0 0 0 3px #f2c14e, 0 0 14px rgba(240, 190, 80, .7); }
+.shop-sw.frame-ember i { box-shadow: 0 0 0 3px #ff6a2b, 0 0 16px rgba(255, 98, 40, .8); }
+.shop-sw.frame-frost i { box-shadow: 0 0 0 3px #8fd3ff, 0 0 16px rgba(120, 200, 255, .8); }
+.shop-sw.frame-prism i { border: 3px solid transparent; background: linear-gradient(#2a3150, #2a3150) padding-box, var(--spectrum) border-box; }
+.shop-sw.fx-sparkle { background: radial-gradient(circle at 30% 30%, #fff 0 2px, transparent 3px), radial-gradient(circle at 70% 60%, #fff 0 2px, transparent 3px), radial-gradient(circle at 45% 80%, #fff 0 1.5px, transparent 2.5px), #10131f; }
+.shop-sw.fx-petals { background: radial-gradient(ellipse 6px 4px at 30% 35%, #ff8fb8 98%, transparent), radial-gradient(ellipse 6px 4px at 65% 65%, #ffd1e3 98%, transparent), #10131f; }
+.shop-sw.fx-rays { background: repeating-conic-gradient(from 0deg at 80% 20%, rgba(255, 255, 255, .25) 0deg 6deg, transparent 6deg 18deg), #10131f; }
+.shop-sw.fx-aurora { background: linear-gradient(115deg, #10131f 15%, #2bd9a8 40%, #7a8cff 60%, #c58cff 75%, #10131f 90%); }
+.shop-sw.fx-sparkle i, .shop-sw.fx-petals i, .shop-sw.fx-rays i, .shop-sw.fx-aurora i { display: none; }
+.shop-sw.name { font-size: var(--fs-md); font-weight: 900; }
+.shop-sw.name-glow { text-shadow: 0 0 10px rgba(255, 255, 255, .8); }
+.shop-sw.name-gold { color: #f2c14e; }
+.shop-sw.name-galaxy { color: #a9b8ff; text-shadow: 0 0 10px rgba(120, 130, 255, .8); }
+.shop-sw.title { background: var(--surface-2); color: var(--text); font-size: var(--fs-xs); }
+@media (max-width: 760px) { .shop-top { grid-template-columns: 1fr; } .earn-row { grid-template-columns: minmax(0, 1fr) 64px; } .earn-row .meta { grid-column: 1 / -1; grid-row: 2; } }
+
+/* 공개 페이지 */
+.pub-roles { display: grid; gap: var(--s3); }
+.pub-role { display: grid; grid-template-columns: 64px minmax(0, 1fr) 40px; align-items: center; gap: var(--s3); font-size: var(--fs-sm); }
+.pub-role .bar { height: 8px; border-radius: var(--r-pill); background: var(--surface-2); overflow: hidden; }
+.pub-role .bar > span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.pub-role small { text-align: right; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.pub-levels { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s2); }
+.pub-lv { display: grid; justify-items: center; gap: 2px; padding: var(--s3) var(--s1); border-radius: var(--r-m); background: var(--surface-2); }
+.pub-lv i { font-style: normal; font-size: var(--fs-xs); font-weight: 800; color: var(--text-3); }
+.pub-lv b { font-size: var(--fs-xl); font-weight: 850; font-variant-numeric: tabular-nums; }
+.pub-lv small { font-size: var(--fs-xs); color: var(--text-2); white-space: nowrap; }
+@media (max-width: 640px) { .pub-levels { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.pub-lv.l5 { background: linear-gradient(var(--surface-2), var(--surface-2)) padding-box, var(--spectrum) border-box; border: 2px solid transparent; }
+.pub-masters { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s3); }
+.pub-feats { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: var(--s2); }
+.pub-feat { display: grid; justify-items: center; gap: 2px; padding: var(--s3); border-radius: var(--r-m); background: var(--surface-2); }
+.pub-feat b { font-size: var(--fs-2xl); font-weight: 900; }
+.pub-feat small { font-size: var(--fs-xs); color: var(--text-2); font-weight: 700; }

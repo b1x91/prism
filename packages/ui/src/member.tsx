@@ -13,6 +13,7 @@ import { ArtisanRankingView } from './artisan';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { RecentGames } from './game';
+import { ProfileHero, ShareButton } from './shop';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
@@ -76,9 +77,12 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
   const { data, error, reload } = useLoad<MemberPage>(api, `/api/members/${encodeURIComponent(id)}`);
   const skins = useSkins();
   const [edit, setEdit] = useState(false);
+  const [shareOn, setShared] = useState<boolean | null>(null);
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <p className="meta">불러오는 중…</p>;
   const { member: m, total } = data;
+  const deco = m.deco ?? {};
+  const shared = shareOn ?? Boolean(m.shared);
   const main = data.champions[0]?.id ?? null;
   const skin = m.skin && skins?.[m.skin] ? skins[m.skin] : null;
   const art = skin?.splash ?? (main ? cdragon(CHAMPIONS[main]?.splash) : '');
@@ -89,18 +93,12 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
   return (
     <div className="stack" style={{ gap: 16 }}>
-      <div className="banner mbanner">
-        {art && <img className="bg" alt="" src={art} />}
-        {/* 역할은 머리 왼쪽 위 */}
-        <div className="mrole">{m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}</div>
-        <div className="actions">{m.self && <button type="button" className="btn sm" onClick={() => setEdit(!edit)}>{edit ? '닫기' : '프로필 꾸미기'}</button>}{actions}</div>
-        <div>
-          <div className="eyebrow">판수 {data.rank}위 · {shortDate(m.joinedAt)} 가입{m.presence && m.presence !== 'off' && <> · <PresenceTag p={m.presence} /></>}</div>
-          <h1>{m.nick}</h1>
-          {m.intro && <p className="intro">{m.intro}</p>}
-          {skin && <span className="pill dark">{skin.name}</span>}
-        </div>
-      </div>
+      <ProfileHero nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
+        corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
+        actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit(!edit)}>{edit ? '닫기' : '프로필 꾸미기'}</button>}
+          {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}
+        chips={<><span className="pill dark">판수 {data.rank}위</span><span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
+          {skin && <span className="pill dark">{skin.name}</span>}{m.presence && m.presence !== 'off' && <span className="pill dark"><PresenceTag p={m.presence} /></span>}</>} />
       {edit && m.self && <ProfileEditor api={api} page={data} skins={skins} onSaved={() => { setEdit(false); reload(); }} />}
       {m.self && !m.riotId && <section className="card pad"><b>아직 롤 계정이 연결되지 않았어요</b><div className="muted">PC의 Prism 앱에서 로그인한 뒤 맨 위의 <b>"동의하고 연결"</b>을 누르면, 그때부터 판이 여기에 쌓입니다. 앱에 이미 보이는 최근 판도 함께 올라와요.</div></section>}
       {!m.self && <SynergyCard data={data} />}

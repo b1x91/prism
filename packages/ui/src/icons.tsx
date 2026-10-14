@@ -22,6 +22,7 @@ const P: Record<string, ReactElement> = {
   download: <><path d="M12 4v11M7 10l5 5 5-5" /><path d="M5 19h14" /></>,
   chevL: <path d="M15 5l-7 7 7 7" />,
   chevR: <path d="M9 5l7 7-7 7" />,
+  bag: <><path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></>,
   link: <><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1" /><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" /></>,
   trash: <><path d="M4 7h16M10 11v6M14 11v6" /><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" /></>,
   chevD: <path d="M6 9l6 6 6-6" />,

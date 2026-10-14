@@ -4,7 +4,7 @@ import { AugmentOpen, ChannelIcons, FacePresence, MatchSource, Gem, Icon, Member
 import type { MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
-const NAV: [string, string, IconName][] = [['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
+const NAV: [string, string, IconName][] = [['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users'], ['/shop', '상점', 'bag']];
 
 export function Layout() {
   const { me, login, links, api } = useSession();

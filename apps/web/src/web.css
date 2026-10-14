@@ -130,3 +130,7 @@ main { min-height: calc(100vh - 64px - 120px); }
 .legal h3 { margin: var(--s4) 0 var(--s1); font-size: var(--fs-md); color: var(--text); }
 .legal ul { margin: 0; padding-left: var(--s5); display: grid; gap: var(--s1); }
 .legal p { margin: var(--s2) 0; }
+
+/* 내 페이지·공개 페이지 머리는 화면 좌우 끝까지 (v3.24) */
+body { overflow-x: clip; }
+.section.tight .phero { margin-top: calc(-1 * var(--s6)); }

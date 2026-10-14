@@ -74,6 +74,12 @@ export async function myGames(env: Env, me: Member) {
  * 판 목록(최근 100판)과 달리 개수 제한 없이 집계만 보낸다.
  */
 export async function myDex(env: Env, me: Member) {
+  return json(await dexRows(env, me.id));
+}
+
+/** 한 회원의 도감 재료 (도감 화면·피스 계산·공개 링크가 같이 쓴다) */
+export async function dexRows(env: Env, id: string) {
+  const me = { id };
   const [champs, augs, pairs, feats] = await env.DB.batch([
     env.DB.prepare('SELECT champion_id AS id, COUNT(*) AS n, SUM(win) AS w, MIN(played_at) AS first, MAX(played_at) AS last FROM participants WHERE member_id = ? GROUP BY champion_id').bind(me.id),
     env.DB.prepare(
@@ -88,7 +94,7 @@ export async function myDex(env: Env, me: Member) {
   ]);
   const known = await knownFeats(env);
   const challenges = tallyByMember(feats.results as Parameters<typeof tallyByMember>[0], known).get(me.id) ?? { counts: {}, known };
-  return json({ champions: champs.results, augments: augs.results, pairs: pairs.results, challenges });
+  return { champions: champs.results, augments: augs.results, pairs: pairs.results, challenges } as unknown as import('../../packages/core/src/history.js').DexRows;
 }
 
 /** 앱이 로그인된 롤 계정을 연결한다. 클라이언트에 로그인된 계정이라 아이콘 인증을 대신한다 */

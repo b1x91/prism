@@ -14,3 +14,4 @@ export * from './situation';
 export * from './review';
 export * from './presence';
 export * from './challenges';
+export * from './shop';
