@@ -955,15 +955,28 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .dn-f .face, .dn-f .initial { border-radius: 50%; }
 .dn-n { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); font-weight: 750; font-variant-numeric: tabular-nums; }
 .dn-n .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
-.dn-pop { position: absolute; top: calc(100% + 8px); right: 0; z-index: 50; width: 320px; max-width: calc(100vw - 32px); padding: var(--s3); border-radius: var(--r-l); background: var(--surface); border: 1px solid var(--line); box-shadow: 0 16px 40px rgba(0, 0, 0, .25); display: grid; gap: var(--s3); animation: tip-in .12s ease-out; }
-.dn-pop-h { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); color: var(--text-2); }
-.dn-pop-h b { color: var(--text); }
-.dn-pop-h .btn { margin-left: auto; }
-.dn-list { display: grid; gap: 2px; max-height: 320px; overflow-y: auto; }
-.dn-list .om { max-width: none; height: 36px; background: none; padding: 0 var(--s2) 0 4px; border-radius: var(--r-s); }
-.dn-list .om:hover { background: var(--surface-2); }
-.dn-list .om .op i { box-shadow: 0 0 0 2px var(--surface); }
-.dn-more { padding: 4px var(--s2); }
+.dn-pop { position: absolute; top: calc(100% + 8px); right: 0; z-index: 50; width: 340px; max-width: calc(100vw - 32px); max-height: 420px; overflow-y: auto; padding: var(--s2) var(--s3) var(--s3); border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--line-2); box-shadow: 0 12px 32px rgba(0, 0, 0, .28), 0 0 0 1px rgba(0, 0, 0, .04); display: grid; gap: var(--s2); animation: tip-in .12s ease-out; }
+.dn-pop-h { position: sticky; top: calc(-1 * var(--s2)); z-index: 1; display: flex; align-items: center; gap: var(--s3); margin: calc(-1 * var(--s2)) calc(-1 * var(--s3)) 0; padding: var(--s2) var(--s2) var(--s2) var(--s3); background: var(--surface); border-bottom: 1px solid var(--line); }
+.dn-cnt { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-sm); color: var(--text-2); }
+.dn-cnt b { color: var(--text); font-variant-numeric: tabular-nums; }
+.dn-cnt .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.dn-cnt.voice::before { content: ""; width: 1px; height: 12px; background: var(--line-2); margin-right: 6px; }
+.dn-open { margin-left: auto; display: inline-grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: var(--r-s); background: #5865f2; color: #fff; cursor: pointer; }
+.dn-open:hover { background: #4752c4; }
+.dn-open svg { width: 18px; height: 18px; }
+.dn-group { display: grid; gap: 4px; }
+.dn-gl { font-size: var(--fs-xs); font-weight: 750; color: var(--text-3); padding: 0 4px; }
+.dn-gl small { font-size: var(--fs-xs); font-weight: 600; }
+.dn-list { display: grid; grid-template-columns: 1fr 1fr; gap: 2px var(--s1); }
+.dn-m { display: flex; align-items: center; gap: var(--s2); min-width: 0; height: 32px; padding: 0 4px; border-radius: var(--r-s); }
+.dn-m:hover { background: var(--surface-2); }
+.dn-m .op { position: relative; flex: none; line-height: 0; }
+.dn-m .op .face, .dn-m .op .initial { border-radius: 50%; }
+.dn-m .op i { position: absolute; right: -2px; bottom: -2px; width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); box-shadow: 0 0 0 2px var(--surface); }
+.dn-m.online .op i { background: var(--ok); } .dn-m.idle .op i { background: var(--gold); } .dn-m.dnd .op i { background: var(--lose); }
+.dn-m .on { font-size: var(--fs-sm); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dn-more { justify-self: start; padding: 4px; border: 0; background: none; color: var(--text-3); font: inherit; font-size: var(--fs-xs); font-weight: 650; cursor: pointer; }
+.dn-more:hover { color: var(--accent); }
 @media (prefers-reduced-motion: reduce) { .dn-pop { animation: none; } }
 /* 장인 랭킹: 휴대폰에서 숫자 줄바꿈 없이 */
 .rank-row .num { white-space: nowrap; }

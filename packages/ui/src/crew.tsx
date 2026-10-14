@@ -394,6 +394,7 @@ function OnlinePeek({ data, onOpenDiscord }: { data: Extract<DiscordNow, { enabl
   }, [open]);
   // 겹쳐 보일 얼굴: Prism 회원 먼저
   const peek = [...data.members].sort((a, b) => Number(Boolean(b.memberId)) - Number(Boolean(a.memberId))).slice(0, 5);
+  const groups: [string, typeof data.members][] = [['Prism 회원', data.members.filter((m) => m.memberId)], ['그 외', data.members.filter((m) => !m.memberId)]];
   return (
     <div className="dn-peek" ref={ref}>
       <button type="button" className={`dn-who ${open ? 'on' : ''}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`접속 중 ${data.online}명`}>
@@ -401,14 +402,21 @@ function OnlinePeek({ data, onOpenDiscord }: { data: Extract<DiscordNow, { enabl
         <span className="dn-n"><i className="dot" />{data.online}</span>
       </button>
       {open && <div className="dn-pop" role="dialog" aria-label="지금 디스코드에 접속 중인 사람">
-        <div className="dn-pop-h"><span>접속 중 <b>{data.online}</b>명 · 음성 <b>{data.inVoice}</b>명</span>
-          {data.invite && <button type="button" className="btn sm primary" onClick={onOpenDiscord}><Icon name="discord" />디스코드 열기</button>}</div>
-        <div className="dn-list">{data.members.map((m) => (
-          <span key={m.name} className={`om ${m.status}`} title={m.name}>
-            <span className="op"><MemberFace nick={m.name} skin={m.skin} champion={m.main} size={28} /><i /></span>
-            <span className="on">{m.name}</span>
-          </span>
-        ))}{data.online > data.members.length && <span className="meta dn-more">외 {data.online - data.members.length}명</span>}</div>
+        <div className="dn-pop-h">
+          <span className="dn-cnt"><i className="dot" />온라인 <b>{data.online}</b></span>
+          {data.inVoice > 0 && <span className="dn-cnt voice">음성 <b>{data.inVoice}</b></span>}
+          {data.invite && <button type="button" className="dn-open" onClick={onOpenDiscord} title="디스코드 열기" aria-label="디스코드 열기"><Icon name="discord" /></button>}
+        </div>
+        {groups.map(([label, list]) => list.length > 0 && <div key={label} className="dn-group">
+          <span className="dn-gl">{label} <small>{list.length}</small></span>
+          <div className="dn-list">{list.map((m) => (
+            <span key={m.name} className={`dn-m ${m.status}`} title={m.name}>
+              <span className="op"><MemberFace nick={m.name} skin={m.skin} champion={m.main} size={24} /><i /></span>
+              <span className="on">{m.name}</span>
+            </span>
+          ))}</div>
+        </div>)}
+        {data.online > data.members.length && <button type="button" className="dn-more" onClick={onOpenDiscord}>+{data.online - data.members.length}명은 디스코드에서 보기</button>}
       </div>}
     </div>
   );
