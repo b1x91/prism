@@ -1,13 +1,15 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
-import { AugmentOpen, ChannelIcons, Gem, Icon, MemberFace, Seg, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AugmentOpen, ChannelIcons, MatchSource, Gem, Icon, MemberFace, Seg, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import type { MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
 const NAV: [string, string, IconName][] = [['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
 
 export function Layout() {
-  const { me, login, links } = useSession();
+  const { me, login, links, api } = useSession();
   const { pathname } = useLocation();
+  const matchSource = useCallback((id: number) => (me ? api.get<MatchDetail>(`/api/games/${id}`).catch(() => null) : Promise.resolve(null)), [api, me]);
   const [menu, setMenu] = useState(false);
   useEffect(() => { scrollTo(0, 0); setMenu(false); }, [pathname]);
   const nav = useNavigate();
@@ -25,7 +27,7 @@ export function Layout() {
         <button type="button" className="icon-btn menu-btn" aria-label="메뉴 열기" aria-expanded={menu} onClick={() => setMenu(true)}><Icon name="menu" /></button>
       </div></header>
       <MobileMenu open={menu} onClose={() => setMenu(false)} />
-      <main><AugmentOpen.Provider value={openAug}><Outlet /></AugmentOpen.Provider></main>
+      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><Outlet /></MatchSource.Provider></AugmentOpen.Provider></main>
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>
         <span>Prism은 Riot Games의 공식 서비스가 아니며 Riot Games와 무관합니다. League of Legends 및 관련 이미지는 Riot Games의 자산입니다.</span>

@@ -269,7 +269,7 @@ export function AugmentLink({ id, champion, className = '', inline, children }: 
   const open = useContext(AugmentOpen);
   return (
     <Hover className={`hov-aug ${inline ? 'inline' : ''}`} tip={() => <AugmentTip id={id} champion={champion} link={Boolean(open)} />}>
-      {open ? <button type="button" className={`aug-link ${className}`} onClick={() => open(id)}>{children}</button> : <span className={`aug-link ${className}`}>{children}</span>}
+      {open ? <button type="button" className={`aug-link ${className}`} onClick={(e) => { e.stopPropagation(); open(id); }}>{children}</button> : <span className={`aug-link ${className}`}>{children}</span>}
     </Hover>
   );
 }

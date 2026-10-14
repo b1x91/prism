@@ -292,3 +292,25 @@ export async function board(env: Env, me: Member) {
     me: { nick: me.nick },
   });
 }
+
+/**
+ * 한 판 상세: 그 판의 기록(시간·팀 합계)과 함께한 Prism 회원들의 기록.
+ * 비회원 기록은 저장하지 않으므로 여기에는 없다 (앱은 롤이 켜져 있으면 클라이언트에서 10명 전체를 읽어 합친다).
+ */
+export async function gameDetail(env: Env, gameId: number) {
+  const m = await env.DB.prepare('SELECT game_id AS gameId, queue_id AS queueId, played_at AS playedAt, duration, team_totals AS teamTotals FROM matches WHERE game_id = ?')
+    .bind(gameId).first<{ gameId: number; queueId: number; playedAt: number; duration: number; teamTotals: string }>();
+  if (!m) throw new HttpError(404, '기록되지 않은 판입니다.');
+  const { results } = await env.DB.prepare(
+    `SELECT p.member_id AS memberId, m.nick, ${FACE('m')}, p.champion_id AS championId, p.team_id AS teamId, p.win, p.kills, p.deaths, p.assists,
+            p.dmg_champ AS damageToChampions, p.dmg_taken AS damageTaken, p.gold AS goldEarned, p.items, p.augments
+     FROM participants p JOIN members m ON m.id = p.member_id WHERE p.game_id = ?`,
+  ).bind(gameId).all<any>();
+  let totals: Record<string, { win?: boolean; kills?: number }> = {};
+  try { totals = JSON.parse(m.teamTotals || '{}'); } catch { /* 옛 기록 */ }
+  return json({
+    gameId: m.gameId, playedAt: m.playedAt, duration: m.duration, custom: m.queueId !== 2400, full: false,
+    teams: Object.fromEntries(Object.entries(totals).map(([t, v]) => [t, { win: Boolean(v.win), kills: v.kills ?? null }])),
+    players: results.map((r) => ({ ...r, win: r.win === 1, name: r.nick, items: r.items ? JSON.parse(r.items) : [], augments: r.augments ? JSON.parse(r.augments) : [] })),
+  });
+}

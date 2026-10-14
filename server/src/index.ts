@@ -5,7 +5,7 @@
  */
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
 import { artisanRanking, augmentArtisans, championArtisans } from './artisans.js';
-import { addTip, augmentStats, board, myDex, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setConsent, setProfile, toggleLike } from './crew.js';
+import { addTip, augmentStats, board, gameDetail, myDex, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setConsent, setProfile, toggleLike } from './crew.js';
 import { ingest } from './ingest.js';
 import { memberPage, ranking } from './members.js';
 import { addNote, deleteNote, links, listNotes } from './notes.js';
@@ -58,6 +58,8 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   const art = pathname.match(/^\/api\/artisans\/(champion|augment)\/(\d+)$/);
   if (m === 'GET' && art) return art[1] === 'champion' ? championArtisans(env, Number(art[2])) : augmentArtisans(env, Number(art[2]));
+  const gm = pathname.match(/^\/api\/games\/(\d+)$/);
+  if (m === 'GET' && gm) return gameDetail(env, Number(gm[1]));
   const champ = pathname.match(/^\/api\/champions\/(\d+)$/);
   if (m === 'GET' && champ) return getChampion(env, me, Number(champ[1]));
   const member = pathname.match(/^\/api\/members\/([0-9A-Za-z_-]{1,40})$/);

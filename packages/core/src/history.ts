@@ -233,3 +233,44 @@ export function mergeDex(a: Dex, b: Dex): Dex {
   for (const p of [...a.pairs, ...b.pairs]) { const k = `${p.aug}:${p.champ}`; const o = pairs.get(k); if (!o || p.n > o.n) pairs.set(k, p); }
   return { champions: m(a.champions, b.champions), augments: m(a.augments, b.augments), pairs: [...pairs.values()] };
 }
+
+// ───────── 한 판 상세 ─────────
+
+export type MatchPlayer = {
+  name: string | null; memberId?: string | null; nick?: string | null; skin?: number | null; main?: number | null;
+  championId: number; teamId: number; win: boolean; kills: number; deaths: number; assists: number;
+  damageToChampions: number | null; damageTaken: number | null; goldEarned: number | null; items: number[]; augments: number[];
+};
+export type MatchDetail = {
+  gameId: number; playedAt: number; duration: number; custom: boolean;
+  /** 10명 전체가 있는가 (서버만이면 함께한 Prism 회원만) */
+  full: boolean;
+  teams: Record<string, { win: boolean; kills: number | null }>;
+  players: MatchPlayer[];
+};
+
+/** 롤 클라이언트 상세(10명) → 화면용 */
+export function matchFromLcu(d: any): MatchDetail | null {
+  if (!d?.gameId || !Array.isArray(d.participants)) return null;
+  const g = toIngestGame(d);
+  const players: MatchPlayer[] = g.participants.map((p: any) => ({
+    name: p.riotId ? String(p.riotId).split('#')[0] : null, championId: p.championId, teamId: p.teamId, win: p.win,
+    kills: p.kills, deaths: p.deaths, assists: p.assists, damageToChampions: p.damageToChampions ?? null, damageTaken: p.damageTaken ?? null,
+    goldEarned: p.goldEarned ?? null, items: p.items, augments: p.augments,
+  }));
+  const teams: MatchDetail['teams'] = {};
+  for (const p of players) {
+    const t = (teams[p.teamId] ??= { win: p.win, kills: 0 });
+    t.kills = (t.kills ?? 0) + p.kills;
+  }
+  return { gameId: g.gameId, playedAt: g.playedAt, duration: g.duration, custom: g.queueId !== MAYHEM_QUEUE, full: players.length >= 10, teams, players };
+}
+
+/** 서버(회원 얼굴) + 클라이언트(10명) 합치기. 같은 판에서 팀+챔피언은 한 명뿐이라 그것으로 맞춘다 */
+export function mergeMatch(server: MatchDetail | null, lcu: MatchDetail | null): MatchDetail | null {
+  if (!lcu) return server;
+  if (!server) return lcu;
+  const key = (p: MatchPlayer) => `${p.teamId}:${p.championId}`;
+  const members = new Map(server.players.map((p) => [key(p), p]));
+  return { ...lcu, players: lcu.players.map((p) => { const m = members.get(key(p)); return m ? { ...p, memberId: m.memberId, nick: m.nick, skin: m.skin, main: m.main, name: m.nick ?? p.name } : p; }) };
+}
