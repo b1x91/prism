@@ -861,7 +861,7 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .dx .q { font-size: var(--fs-xl); } .dxe-pic .q { font-size: 56px; }
 .dx.unk .nm { color: var(--text-3); letter-spacing: .1em; }
 
-.dex-entry { position: sticky; top: var(--s4); padding: var(--s4); }
+.dex-entry { position: sticky; top: var(--s4); padding: var(--s4); max-height: calc(100vh - var(--s7)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
 .dex-entry .dex-close, .dex-scrim { display: none; }
 .dxe { display: grid; gap: var(--s3); }
 .dxe-hero { display: grid; justify-items: center; gap: var(--s3); text-align: center; padding: var(--s4) 0 var(--s2); border-radius: var(--r-m); background: radial-gradient(80% 90% at 50% 30%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%); }
@@ -1099,9 +1099,16 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .jrole { display: flex; align-items: baseline; gap: var(--s2); padding-top: var(--s2); border-top: 1px solid var(--line); }
 .jrole .k { font-size: var(--fs-xs); font-weight: 750; color: var(--text-3); }
 .jrole .meta { font-size: var(--fs-xs); }
-.jsteps .jl { display: grid; min-width: 0; }
-.jsteps .jl em { font-style: normal; font-size: var(--fs-xs); font-weight: 800; color: var(--spectrum-6); }
-.jsteps .jl small { font-size: var(--fs-xs); font-weight: 500; color: var(--text-3); word-break: keep-all; }
+/* 역할 도전 한 칸: [표시] 이름 ……… 횟수 / 설명 / 막대 */
+.jsteps li.rl { grid-template-columns: 20px minmax(0, 1fr) auto; grid-template-areas: "c l v" ". h h" ". b b"; row-gap: 4px; align-items: center; padding: var(--s1) 0; }
+.jsteps li.rl .jc { grid-area: c; }
+.jsteps li.rl .jl { grid-area: l; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--s2); min-width: 0; word-break: keep-all; }
+.jsteps li.rl .jl b { font-weight: 650; }
+.jsteps li.rl .jl em { font-style: normal; font-size: var(--fs-xs); font-weight: 800; color: var(--spectrum-6); }
+.jsteps li.rl .jv { grid-area: v; }
+.jsteps li.rl .jhint { grid-area: h; font-size: var(--fs-xs); color: var(--text-3); line-height: 1.45; word-break: keep-all; }
+.jsteps li.rl .jbar { grid-area: b; }
+.jsteps li.rl.done .jl b { color: var(--text); }
 .jsteps li.gate .jc { background: none; }
 .jsteps li.gate.done .jc { background: var(--ok); }
 .jsteps li.off { opacity: .5; }

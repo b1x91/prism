@@ -14,25 +14,70 @@ type Widget = {
 
 const TTL = 20;
 
-async function widget(env: Env): Promise<Widget | null> {
+/**
+ * 위젯 읽기. 결과는 셋 중 하나:
+ *  - Widget: 정상
+ *  - 'off': 디스코드가 '위젯 꺼짐'이라고 분명히 답함 (403)
+ *  - null: 잠깐 실패 (시간 초과·너무 많은 요청 429·5xx). 이때는 꺼졌다고 하지 않고 마지막 정상값을 쓴다
+ * (예전에는 잠깐 실패도 '꺼짐'으로 보여 켜 둔 위젯 안내가 아무 때나 떴다)
+ */
+let memo: { w: Widget; at: number } | null = null;
+let backoffUntil = 0;
+const KEEP = 15 * 60_000; // 마지막 정상값을 쓸 수 있는 시간
+
+async function fetchWidget(env: Env): Promise<Widget | 'off' | null> {
   const url = `https://discord.com/api/guilds/${env.DISCORD_GUILD_ID}/widget.json`;
   const cache = (caches as unknown as { default: Cache }).default;
   const key = new Request(url);
-  let res = await cache.match(key);
-  if (!res) {
-    const r = await fetch(url, { signal: AbortSignal.timeout(8000) }).catch(() => null);
-    if (!r) return null;
-    res = new Response(await r.text(), { status: r.status, headers: { 'Content-Type': 'application/json', 'Cache-Control': `max-age=${TTL}` } });
-    await cache.put(key, res.clone()).catch(() => {});
+  const hit = await cache.match(key);
+  if (hit) return (await hit.json()) as Widget;
+  if (Date.now() < backoffUntil) return null;
+  const r = await fetch(url, { signal: AbortSignal.timeout(8000) }).catch(() => null);
+  if (!r) return null;
+  if (r.status === 403) return 'off';
+  if (r.status === 429) {
+    const after = Number(r.headers.get('Retry-After') ?? '') || 30;
+    backoffUntil = Date.now() + Math.min(after, 300) * 1000;
+    return null;
   }
-  if (!res.ok) return null; // 위젯 꺼짐(403) 등
-  return (await res.json()) as Widget;
+  if (!r.ok) return null;
+  const text = await r.text();
+  try {
+    const w = JSON.parse(text) as Widget;
+    await cache.put(key, new Response(text, { headers: { 'Content-Type': 'application/json', 'Cache-Control': `max-age=${TTL}` } })).catch(() => {});
+    return w;
+  } catch {
+    return null;
+  }
+}
+
+async function widget(env: Env): Promise<Widget | 'off' | null> {
+  const got = await fetchWidget(env);
+  const now = Date.now();
+  if (got && got !== 'off') {
+    // 마지막 정상값: 이 Worker 메모리 + D1 (다른 Worker 인스턴스도 쓰도록, 1분에 한 번만 쓴다)
+    if (!memo || now - memo.at > 60_000) {
+      await env.DB.prepare('INSERT INTO ext_cache (k, v, at) VALUES (?, ?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at')
+        .bind('discord-widget', JSON.stringify(got), now).run().catch(() => {});
+    }
+    memo = { w: got, at: now };
+    return got;
+  }
+  if (got === 'off') return 'off';
+  if (memo && now - memo.at < KEEP) return memo.w;
+  const row = await env.DB.prepare('SELECT v, at FROM ext_cache WHERE k = ?').bind('discord-widget').first<{ v: string; at: number }>().catch(() => null);
+  if (row && now - row.at < KEEP) {
+    try { const w = JSON.parse(row.v) as Widget; memo = { w, at: row.at }; return w; } catch { /* 깨진 값 */ }
+  }
+  return null;
 }
 
 export async function discordNow(env: Env) {
   // 로컬 개발(DEV_LOGIN=1)에서만: 위젯이 꺼져 있으면 화면 확인용 예시 (배포 환경에서는 DEV_LOGIN 을 절대 켜지 않는다)
-  const w = (await widget(env)) ?? (env.DEV_LOGIN === '1' ? DEV_SAMPLE : null);
-  if (!w) return json({ enabled: false, invite: env.DISCORD_INVITE_URL ?? null });
+  const got = await widget(env);
+  const w = got && got !== 'off' ? got : env.DEV_LOGIN === '1' ? DEV_SAMPLE : null;
+  // 꺼짐은 디스코드가 분명히 '꺼짐'이라고 할 때만. 잠깐 실패면 unavailable (화면은 이전 내용을 그대로 둔다)
+  if (!w) return json(got === 'off' ? { enabled: false, invite: env.DISCORD_INVITE_URL ?? null } : { enabled: true, unavailable: true, invite: env.DISCORD_INVITE_URL ?? null });
   const inVoice = w.members.filter((m) => m.channel_id);
   const names = [...new Set(w.members.map((m) => m.username))];
   const faces = new Map<string, { id: string; skin: number | null; main: number | null }>();

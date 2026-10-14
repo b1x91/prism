@@ -177,10 +177,19 @@ const nextText = (g: Goal) => (g.key === 'special' || g.role ? `${g.label}${g.ta
 
 function Journey({ m, specialList }: { m: Mastery; specialList: ReactNode }) {
   const base = m.goals.filter((g) => !g.role), role = m.goals.filter((g) => g.role);
-  const step = (g: Goal) => (
-    <li key={g.key} className={`${g.key === 'special' ? 'sp' : ''} ${g.done ? 'done' : ''} ${m.next === g ? 'next' : ''} ${g.gate ? 'gate' : ''} ${g.off ? 'off' : ''}`}>
-      <span className="jc" aria-hidden="true">{g.done ? <Icon name="check" /> : g.gate ? <PrismMark size={14} /> : g.key === 'special' ? '◆' : ''}</span>
-      <span className="jl">{g.gate && <em>마스터 관문</em>}{g.label}{g.hint && <small>{g.off ? '아직 이 기록을 받지 못했어요 · 마스터 조건에서 빠져요' : g.hint}</small>}</span>
+  const step = (g: Goal) => g.role ? (
+    // 역할 도전: 이름·횟수 한 줄 → 설명 → 막대 (좁은 칸에서도 줄바꿈이 흐트러지지 않게)
+    <li key={g.key} className={`rl ${g.done ? 'done' : ''} ${m.next === g ? 'next' : ''} ${g.gate ? 'gate' : ''} ${g.off ? 'off' : ''}`}>
+      <span className="jc" aria-hidden="true">{g.done ? <Icon name="check" /> : g.gate ? <PrismMark size={14} /> : ''}</span>
+      <span className="jl">{g.gate && <em>마스터 관문</em>}<b>{g.label}</b></span>
+      <span className="jv">{g.cur}/{g.target}</span>
+      {g.hint && <small className="jhint">{g.off ? '아직 이 기록을 받지 못했어요 · 마스터 조건에서 빠져요' : g.hint}</small>}
+      <span className="jbar"><span style={{ width: `${(g.cur / g.target) * 100}%` }} /></span>
+    </li>
+  ) : (
+    <li key={g.key} className={`${g.key === 'special' ? 'sp' : ''} ${g.done ? 'done' : ''} ${m.next === g ? 'next' : ''}`}>
+      <span className="jc" aria-hidden="true">{g.done ? <Icon name="check" /> : g.key === 'special' ? '◆' : ''}</span>
+      <span className="jl">{g.label}</span>
       {g.key === 'special'
         ? <span className="jv">{m.special.tried.length}/{m.special.ids.length} 경험</span>
         : <><span className="jbar"><span style={{ width: `${(g.cur / g.target) * 100}%` }} /></span><span className="jv">{g.cur}/{g.target}</span></>}

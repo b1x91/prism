@@ -3,7 +3,7 @@
  * 롤 클라이언트에는 읽기만 한다. 고르기·교체는 사용자가 롤에서 직접 한다.
  */
 import { useState } from 'react';
-import { CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, guideOf, GAME_DATA, needsOf, pct, teamFit, type ChampionProfile } from '@prism/core';
+import { CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, guideOf, GAME_DATA, needsOf, pct, teamFit, verdictOf, type ChampionProfile } from '@prism/core';
 import { AugImg, ChampImg, Gem, Seg } from '@prism/ui';
 import type { ChampSelect, CrewSelect } from '../controller';
 import type { Personal } from '@prism/core';
@@ -27,7 +27,18 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
     balance: (a, b) => fit(b).score - fit(a).score || (mine(b)?.n ?? 0) - (mine(a)?.n ?? 0),
   };
   const bench = cs.bench.slice().sort(by[sort]);
-  const reco = needs.length ? bench.map((id) => ({ id, f: fit(id) })).filter((x) => x.f.fills.length && !x.f.warn).sort((a, b) => b.f.score - a.f.score)[0]?.id : undefined;
+  // 나까지 넣은 5명 기준 평가. 지금 내 챔피언(또는 미리보기)으로 이미 균형이면 추천을 띄우지 않는다
+  const meNow = preview ?? cs.mine;
+  const team = meNow && CHAMPIONS[meNow] ? [...base, CHAMPIONS[meNow]] : base;
+  const teamComp = comp(team);
+  const teamNeeds = needsOf(teamComp);
+  const verdict = team.length >= 5 || (meNow && base.length) ? verdictOf(teamComp, teamNeeds) : null;
+  // 추천: 바꾸면 부족한 게 실제로 줄어드는 대기석 챔피언만 (가장 많이 줄어드는 것)
+  const reco = teamNeeds.length
+    ? bench.map((id) => ({ id, left: needsOf(comp([...base, CHAMPIONS[id]].filter(Boolean))).length, f: fit(id) }))
+      .filter((x) => x.left < teamNeeds.length && !x.f.warn)
+      .sort((a, b) => a.left - b.left || b.f.score - a.f.score)[0]?.id
+    : undefined;
   const shown = preview && cs.bench.includes(preview) ? preview : cs.mine ?? bench[0];
   const mates = Object.fromEntries((crew?.teammates ?? []).map((m) => [m.puuid, m]));
   const setS = (s: Sort) => { setSort(s); try { localStorage.setItem('prism-bench-sort', s); } catch { /* 없음 */ } };
@@ -49,8 +60,9 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
         </div>
         <div className="cs-comp">
           <div className="line"><span>팀원 {base.length}명</span><span>AP <b>{fmt(c.ap)}</b></span><span>AD <b>{fmt(c.ad)}</b></span><span>앞라인 <b>{fmt(c.front)}</b></span><span>CC <b>{ccWord(c)}</b></span></div>
-          <div className="line">{base.length ? (needs.length ? <><span className="meta">부족</span>{needs.map((n) => <span key={n} className="pill warn">{n}</span>)}</> : <span className="pill ok">팀 구성 균형 좋음</span>) : <span className="meta">팀원 챔피언이 정해지면 팀 구성이 보입니다</span>}
-            {reco && <><span className="meta" style={{ marginLeft: 8 }}>추천</span><b>{CHAMPIONS[reco]?.name}</b></>}</div>
+          <div className="line">{verdict ? <span className={`verdict ${verdict.grade}`}>{verdict.grade === 'gold' && <i aria-hidden="true" />}{verdict.label}</span>
+            : base.length ? (needs.length ? <><span className="meta">부족</span>{needs.map((n) => <span key={n} className="pill warn">{n}</span>)}</> : <span className="pill ok">밸런스 좋음</span>) : <span className="meta">팀원 챔피언이 정해지면 팀 구성이 보입니다</span>}
+            {reco && <><span className="meta" style={{ marginLeft: 8 }}>바꾸면 좋아요</span><b>{CHAMPIONS[reco]?.name}</b></>}</div>
         </div>
       </div>
       <div className="cs-layout">

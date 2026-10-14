@@ -41,3 +41,14 @@ export function teamFit(t: ChampionProfile | undefined, needs: Need[], base: Cha
   const warn = after.n >= 5 && after.ap === 0 ? 'AD만 5명' : after.n >= 5 && after.ad === 0 ? 'AP만 5명' : null;
   return { fills, warn, score: fills.length * 10 - (warn ? 6 : 0) + t.style.damage };
 }
+
+export type Verdict = { grade: 'gold' | 'good' | 'fair' | 'poor'; label: string };
+
+/** 5명(나 포함) 팀 밸런스 평가. 부족한 게 없으면 좋음, 고루 넉넉하면 황금 밸런스 */
+export function verdictOf(c: Comp, needs: Need[]): Verdict {
+  if (!needs.length) {
+    const gold = c.ap >= 2 && c.ad >= 2 && c.front >= 1.5 && c.n > 0 && c.cc / c.n >= 2.3;
+    return gold ? { grade: 'gold', label: '황금 밸런스' } : { grade: 'good', label: '밸런스 좋음' };
+  }
+  return needs.length === 1 ? { grade: 'fair', label: `조금 아쉬움 · ${needs[0]} 부족` } : { grade: 'poor', label: `불균형 · ${needs.join('·')} 부족` };
+}

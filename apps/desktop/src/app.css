@@ -29,9 +29,14 @@ body { overflow: hidden; background: var(--bg); }
 .side-update:disabled { opacity: .7; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .brand-mark::before, .brand-word, .side-update .dot { animation: none; } }
 .side-nav { display: grid; gap: var(--s1); }
-.side-nav a { display: flex; align-items: center; gap: var(--s3); height: 40px; padding: 0 var(--s3); border-radius: var(--r-m); color: var(--text-2); font-weight: 650; text-decoration: none; }
-.side-nav a svg { width: 20px; height: 20px; }
-.side-nav a:hover { background: var(--surface-2); color: var(--text); }
+.side-nav a, .side-nav button { display: flex; align-items: center; gap: var(--s3); height: 40px; padding: 0 var(--s3); border: 0; border-radius: var(--r-m); background: none; color: var(--text-2); font: inherit; font-weight: 650; text-align: left; text-decoration: none; cursor: pointer; }
+.side-nav a svg, .side-nav button svg { width: 20px; height: 20px; flex: none; }
+.side-nav a:hover, .side-nav button:not(:disabled):hover { background: var(--surface-2); color: var(--text); }
+.side-nav button:disabled { opacity: .5; cursor: default; }
+.side-nav button small { margin-left: auto; font-size: var(--fs-xs); font-weight: 600; color: var(--text-3); }
+.side-chan { margin-bottom: var(--s2); }
+.side-chan button:not(:disabled):hover svg { color: #5865f2; }
+.side-chan button:nth-child(2):not(:disabled):hover svg { color: #e0b800; }
 .side-nav a.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
 .side-nav a.active svg { color: var(--accent); }
 .side-chs { display: grid; gap: var(--s1); }
@@ -120,7 +125,7 @@ body { overflow: hidden; background: var(--bg); }
 
 @media (max-width: 900px) {
   .shell { grid-template-columns: 72px minmax(0, 1fr); }
-  .brand-word, .side-arrows, .brand-line { display: none; } .side-brand { justify-content: center; padding: 0; } .side-nav a { font-size: 0; } .side-nav a { justify-content: center; padding: 0; }
+  .brand-word, .side-arrows, .brand-line { display: none; } .side-brand { justify-content: center; padding: 0; } .side-nav a, .side-nav button { font-size: 0; justify-content: center; padding: 0; } .side-nav button small { display: none; }
   .side-ch span, .side-status, .side-me span:last-child { display: none; }
   .side-foot { flex-direction: column; } .side-foot .btn { padding: 0; width: 40px; font-size: 0; }
   .main { padding: var(--s5); }
@@ -237,8 +242,6 @@ body { overflow: hidden; background: var(--bg); }
 @media (max-width: 900px) { .nogame { grid-template-columns: minmax(0, 1fr); padding: var(--s5); } .nogame h1 { font-size: var(--fs-2xl); } }
 
 /* 사이드바 아래 디스코드·카카오톡 */
-.side .chis { padding: 0 var(--s2); }
-@media (max-width: 900px) { .side .chis { flex-direction: column; align-items: center; padding: 0; } }
 
 /* ───────── 오늘의 챔피언 ───────── */
 .today { display: grid; gap: var(--s3); }
@@ -262,3 +265,16 @@ body { overflow: hidden; background: var(--bg); }
 .vs i { width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex: none; }
 .vs.ok i { background: var(--ok); } .vs.warn i { background: var(--warn); } .vs.bad i { background: var(--lose); } .vs.bad { color: var(--lose); }
 .row > .vs { margin-left: auto; }
+
+/* 운영진 카드: 글자 대신 프리즘 테두리가 천천히 돌고 은은하게 빛난다 */
+.side-me-card.prism { position: relative; border: 1.5px solid transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, conic-gradient(from var(--dx-ang), var(--spectrum-1), var(--spectrum-2), var(--spectrum-3), var(--spectrum-4), var(--spectrum-5), var(--spectrum-6), var(--spectrum-7), var(--spectrum-1)) border-box; box-shadow: 0 0 14px color-mix(in srgb, var(--spectrum-6) 28%, transparent); animation: dx-spin 6s linear infinite; }
+.side-me-card.prism::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .35) 48%, transparent 60%); background-size: 260% 100%; background-position: 160% 0; animation: dx-sheen 5s ease-in-out infinite; mix-blend-mode: soft-light; }
+@media (prefers-reduced-motion: reduce) { .side-me-card.prism { animation: none; } .side-me-card.prism::after { display: none; } }
+
+/* 팀 밸런스 평가 */
+.verdict { display: inline-flex; align-items: center; gap: 6px; padding: 2px var(--s3); border-radius: var(--r-pill); font-size: var(--fs-sm); font-weight: 750; }
+.verdict.good { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+.verdict.fair { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
+.verdict.poor { background: color-mix(in srgb, var(--lose) 14%, transparent); color: var(--lose); }
+.verdict.gold { color: var(--text); background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(90deg, var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-7)) border-box; border: 1.5px solid transparent; }
+.verdict.gold i { width: 10px; height: 10px; transform: rotate(45deg); border-radius: 2px; background: linear-gradient(135deg, var(--spectrum-2), var(--spectrum-6)); }

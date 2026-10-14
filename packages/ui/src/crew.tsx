@@ -422,9 +422,13 @@ function OnlinePeek({ data }: { data: Extract<DiscordNow, { enabled: true }> }) 
 }
 
 export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url: string) => void; admin?: boolean }) {
-  const { data, reload } = useLoad<DiscordNow>(api, '/api/discord/now');
+  const { data: got, reload } = useLoad<DiscordNow>(api, '/api/discord/now');
   const [copied, setCopied] = useState<string | null>(null);
   useEffect(() => { const t = setInterval(reload, 30_000); return () => clearInterval(t); }, [reload]);
+  // 디스코드가 잠깐 답하지 않으면(unavailable) 이전 내용을 그대로 둔다
+  const last = useRef<DiscordNow | null>(null);
+  if (got && !(got as { unavailable?: boolean }).unavailable) last.current = got;
+  const data = last.current;
   if (!data) return null;
   const copy = async (id: string, link: string) => {
     try { await navigator.clipboard.writeText(link); setCopied(id); setTimeout(() => setCopied((x) => (x === id ? null : x)), 2000); } catch { /* 클립보드 막힘 */ }

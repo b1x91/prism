@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { AugmentOpen, ChannelIcons, FacePresence, Icon, MatchNote, MatchSource, MemberFace, useLoad, useSkins, type IconName } from '@prism/ui';
+import { AugmentOpen, DiscordGlyph, FacePresence, KakaoGlyph, Icon, MatchNote, MatchSource, MemberFace, useLoad, useSkins, type IconName } from '@prism/ui';
 import { matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail, type Presence } from '@prism/core';
 import { getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
@@ -87,6 +87,8 @@ function App() {
   const [label, tone] = STATUS[s.status];
   // 이 창을 보고 있으니 앱은 떠 있다. 롤이 켜져 있으면 앱+게임
   const presence: Presence = LOL_ON.has(s.status) ? 'both' : 'app';
+  // 운영진은 글자 대신 카드가 프리즘처럼 빛난다
+  const staff = s.me?.tier === 'admin' || (s.me?.role?.level ?? 0) >= 5;
   const skins = useSkins();
   const main = useRef<HTMLElement>(null);
   const riotName = s.summoner?.riotId.split('#')[0];
@@ -114,11 +116,15 @@ function App() {
         {up.error && up.info?.available && <span className="side-err l">{up.error}</span>}
         <nav className="side-nav">{NAV.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'}><Icon name={i} />{l}</NavLink>)}</nav>
         <span className="sp" />
-        <ChannelIcons links={links} size={32} onOpen={(u) => bridge.openUrl(u)} />
-        {s.me && <div className="side-me-card">
+        {/* 모임 채널: 메뉴와 같은 모양으로 아래쪽에 */}
+        <nav className="side-nav side-chan" aria-label="모임 채널">
+          <button type="button" disabled={!links.discord} onClick={() => links.discord && bridge.openUrl(links.discord)} title="디스코드 열기"><DiscordGlyph />디스코드</button>
+          <button type="button" disabled={!links.kakao} onClick={() => links.kakao && bridge.openUrl(links.kakao)} title={links.kakao ? '카카오톡 오픈채팅 열기' : '카카오톡 · 곧 열립니다'}><KakaoGlyph />카카오톡{!links.kakao && <small>준비 중</small>}</button>
+        </nav>
+        {s.me && <div className={`side-me-card ${staff ? 'prism' : ''}`}>
           <NavLink to="/me" className="side-me" title="내 페이지">
             <FacePresence p={presence}><MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} /></FacePresence>
-            <span className="who"><b>{s.me.nick}</b><span className={`st ${tone}`}>{s.me.role && <em className="rl" style={{ color: s.me.role.color }}>{s.me.role.name}</em>}{label}{riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}</span></span>
+            <span className="who"><b>{s.me.nick}</b><span className={`st ${tone}`}>{label}{riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}</span></span>
           </NavLink>
           <NavLink to="/settings" className="icon-btn gear" title="설정" aria-label="설정"><Icon name="gear" /></NavLink>
         </div>}
