@@ -22,6 +22,9 @@ const P: Record<string, ReactElement> = {
   download: <><path d="M12 4v11M7 10l5 5 5-5" /><path d="M5 19h14" /></>,
   chevL: <path d="M15 5l-7 7 7 7" />,
   chevR: <path d="M9 5l7 7-7 7" />,
+  link: <><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1" /><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1" /></>,
+  trash: <><path d="M4 7h16M10 11v6M14 11v6" /><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3" /></>,
+  chevD: <path d="M6 9l6 6 6-6" />,
   login: <><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" /><path d="M10 17l5-5-5-5M15 12H4" /></>,
 };
 const FILLED: Record<string, ReactElement> = {

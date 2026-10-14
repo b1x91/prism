@@ -103,3 +103,26 @@ export function augMastery(id: number, e: DexEntry | undefined, pairs: DexPair[]
   const tried = [...new Set(pairs.filter((p) => p.aug === id && set.has(p.champ)).map((p) => p.champ))];
   return build(e, { tier: best.tier, ids: best.ids, tried }, `${best.tier}티어 챔피언으로 골라 보기`);
 }
+
+/**
+ * 도감 레벨 0~5 (v3.20): 0 미발견 · 1 만남(1판) · 2 포획(3승) · 3 숙련(목표 절반) · 4 정예(마지막 목표 하나만 남음, 챔피언은 관문만) · 5 마스터
+ */
+export type DexLevel = 0 | 1 | 2 | 3 | 4 | 5;
+export const DEX_LEVEL_KO: Record<DexLevel, string> = { 0: '미발견', 1: '만남', 2: '포획', 3: '숙련', 4: '정예', 5: '마스터' };
+export const DEX_LEVEL_RULE: Record<DexLevel, string> = {
+  0: '아직 만나지 못했어요',
+  1: '한 판 해 봤어요',
+  2: `${CATCH_WINS}승을 거뒀어요`,
+  3: '마스터 목표를 절반 넘게 이뤘어요',
+  4: '마지막 목표 하나만 남았어요',
+  5: '모든 목표를 이뤘어요',
+};
+export function dexLevel(m: Mastery): DexLevel {
+  if (m.master) return 5;
+  if (!m.seen) return 0;
+  if (!m.caught) return 1;
+  const left = m.goals.filter((g) => !g.off && !g.done);
+  if (left.length === 1 || (left.length > 0 && left.every((g) => g.gate))) return 4;
+  if (m.total > 0 && m.done * 2 >= m.total) return 3;
+  return 2;
+}

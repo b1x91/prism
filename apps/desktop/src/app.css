@@ -208,7 +208,9 @@ body { overflow: hidden; background: var(--bg); }
 /* ───────── 사이드바 아래: 내 프로필 + 롤 연결 상태 + 설정 ───────── */
 .side-me-card { display: flex; align-items: center; gap: var(--s2); padding: var(--s2); border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--line); }
 .side-me-card .side-me { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--s2); padding: var(--s1); border-radius: var(--r-s); color: var(--text); text-decoration: none; }
-.side-me-card .side-me:hover { background: var(--surface-2); }
+/* 내 정보·설정은 마우스를 올려도 바탕이 바뀌지 않는다 */
+.side-me-card .gear:hover { background: none; color: var(--text-2); }
+.side-me-card .gear.active:hover { color: var(--accent); background: var(--accent-soft); }
 .side-me-card .face, .side-me-card .initial { width: 36px; height: 36px; border-radius: var(--r-m); flex: none; object-fit: cover; }
 .side-me-card .who { display: grid; min-width: 0; }
 .side-me-card .who b { font-size: var(--fs-sm); font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

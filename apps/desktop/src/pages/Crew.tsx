@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { BoardView, Empty, Icon, DiscordNowCard, Notes, PartyBoard, ProspectBoard, ScrimBoard, useLoad } from '@prism/ui';
+import { BoardView, Empty, Icon, DiscordNowCard, Notes, PartyBoard, ProspectBoard, useLoad } from '@prism/ui';
 import { withDefaults, type Links } from '@prism/core';
 import type { State } from '../controller';
 import { api, bridge } from '../bridge';
@@ -14,7 +14,6 @@ export function CrewPage({ s, onLogin }: { s: State; onLogin: () => void }) {
       <div className="row"><h1 className="h1">Prism</h1></div>
       <DiscordNowCard api={api} onOpen={(u) => bridge.openUrl(u)} admin={s.me.tier === 'admin'} />
       <PartyBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
-      <ScrimBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
       {s.me.perms?.prospects !== false && <ProspectBoard api={api} invite={links.discord} admin={Boolean(s.me.perms?.moderate)} />}
       <Notes api={api} />
       <BoardView api={api} />

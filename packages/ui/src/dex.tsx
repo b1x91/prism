@@ -4,8 +4,8 @@
  * 못 만난 것은 번호와 흐린 그림(???). 누르면 도감 설명과 다음 목표.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity } from '@prism/core';
-import { ChampImg, Gem, Seg } from './basics';
+import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel } from '@prism/core';
+import { ChampImg, Gem, Select, Seg } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
 
@@ -24,7 +24,8 @@ export function useDex(api: Api | null, games: Game[] = []) {
 }
 
 type Kind = 'champions' | 'augments';
-type Show = 'all' | 'seen' | 'caught' | 'master' | 'missing';
+/** 전체 · 내 도감(모두 / 레벨 1~5) · 미발견 */
+type Show = 'all' | 'mine' | 'l1' | 'l2' | 'l3' | 'l4' | 'l5' | 'missing';
 type Sort = 'no' | 'progress' | 'most' | 'recent';
 
 const RARITY_ORDER: Rarity[] = ['silver', 'gold', 'prismatic'];
@@ -39,7 +40,7 @@ const BADGES: [number, string][] = [[10, '첫 발자국'], [25, '탐험가'], [5
 
 const nameOf = (kind: Kind, id: number) => (kind === 'champions' ? CHAMPIONS[id]?.name : AUGMENT[id]?.name) ?? `#${id}`;
 const match = (name: string, q: string) => { const t = q.replace(/\s/g, ''); const n = name.replace(/\s/g, ''); return n.includes(t) || initials(n).includes(t); };
-const stageOf = (m: Mastery) => (m.master ? '마스터' : m.caught ? '포획' : m.seen ? '만남' : '미발견');
+const stageOf = (m: Mastery) => DEX_LEVEL_KO[dexLevel(m)];
 const stageKey = (m: Mastery) => (m.master ? 'master' : m.caught ? 'caught' : m.seen ? 'seen' : 'unk');
 
 export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onChampion?: (id: number) => void; onAugment?: (id: number) => void; loading?: boolean }) {
@@ -61,6 +62,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
   const seen = ids.filter((id) => m(id).seen).length;
   const caught = ids.filter((id) => m(id).caught).length;
   const masters = ids.filter((id) => m(id).master).length;
+  const levelCount = (l: DexLevel) => ids.filter((id) => dexLevel(m(id)) === l).length;
   const goalsDone = ids.reduce((s, id) => s + m(id).done, 0), goalsAll = ids.reduce((s, id) => s + m(id).total, 0);
   const rate = goalsAll ? Math.floor((goalsDone / goalsAll) * 100) : 0;
   const next = BADGES.find(([p]) => rate < p);
@@ -74,9 +76,8 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
   const list = ids.filter((id) => {
     const x = m(id);
     if (group !== 'all' && groupOf(id) !== group) return false;
-    if (show === 'seen' && !(x.seen && !x.caught)) return false;
-    if (show === 'caught' && !(x.caught && !x.master)) return false;
-    if (show === 'master' && !x.master) return false;
+    if (show === 'mine' && !x.seen) return false;
+    if (show.startsWith('l') && dexLevel(x) !== Number(show.slice(1))) return false;
     if (show === 'missing' && x.seen) return false;
     const t = q.trim();
     if (!t) return true;
@@ -107,8 +108,8 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
           <b>{rate}<small>%</small></b>
           <span className="dex-bar" role="progressbar" aria-valuenow={rate} aria-valuemin={0} aria-valuemax={100}><span style={{ width: `${(goalsDone / Math.max(goalsAll, 1)) * 100}%` }} /></span>
           <div className="dex-tally">
-            <span><i className="dst seen" />만남 <b>{seen}</b></span>
-            <span><Crystal />포획 <b>{caught}</b></span>
+            <span><i className="dst seen" />발견 <b>{seen}</b></span>
+            <span><Crystal />포획 이상 <b>{caught}</b></span>
             <span><PrismMark />마스터 <b>{masters}</b></span>
             <span className="of">/ {ids.length}</span>
           </div>
@@ -117,22 +118,25 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
         <div className="dex-badges">{BADGES.map(([p, l]) => <span key={p} className={`dex-badge ${rate >= p ? 'on' : ''}`} title={`마스터 여정 ${p}%`}><i />{l}<small>{p}%</small></span>)}</div>
       </header>
 
-      <div className="dex-rules">
-        <span><i className="dst seen" /><b>만남</b> 1판</span><span className="arr" aria-hidden="true">→</span>
-        <span><Crystal /><b>포획</b> 3승</span><span className="arr" aria-hidden="true">→</span>
-        <span><i className="pip s on" /><b>{kind === 'champions' ? 'S티어 증강' : '잘 맞는 챔피언'}</b> 골라 보기 · 5·10·30·50승</span><span className="arr" aria-hidden="true">→</span>
-        {kind === 'champions' && <><span><i className="pip g on" /><b>역할 챌린지</b> · 마지막 관문</span><span className="arr" aria-hidden="true">→</span></>}
-        <span><PrismMark /><b>마스터</b></span>
-      </div>
+      {/* 전체 · 내 도감(레벨 1~5) · 미발견 */}
+      <nav className="dex-levels" aria-label="도감 보기">
+        <button type="button" className={show === 'all' ? 'on' : ''} onClick={() => setShow('all')}>전체<small>{ids.length}</small></button>
+        <span className="dl-group">
+          <button type="button" className={`dl-mine ${show === 'mine' ? 'on' : ''}`} onClick={() => setShow('mine')} title="만난 것 모두">내 도감<small>{seen}</small></button>
+          {([1, 2, 3, 4, 5] as DexLevel[]).map((l) => (
+            <button key={l} type="button" className={`dl-lv l${l} ${show === `l${l}` ? 'on' : ''}`} onClick={() => setShow(`l${l}` as Show)} title={`Lv.${l} ${DEX_LEVEL_KO[l]} · ${DEX_LEVEL_RULE[l]}`}>
+              <i className="lv">Lv{l}</i>{DEX_LEVEL_KO[l]}<small>{levelCount(l)}</small>
+            </button>
+          ))}
+        </span>
+        <button type="button" className={show === 'missing' ? 'on' : ''} onClick={() => setShow('missing')} title="아직 만나지 못한 것">미발견<small>{ids.length - seen}</small></button>
+      </nav>
 
       <div className="dex-body">
         <section className="dex-list card">
           <div className="dex-tools">
-            <Seg value={show} options={[['all', '전체'], ['seen', '만남'], ['caught', '포획'], ['master', '마스터'], ['missing', '미발견']]} onChange={setShow} />
             <label className="dex-search"><Icon name="search" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="만난 것 이름 또는 번호" /></label>
-            <select className="dex-sort" value={sort} onChange={(e) => setSort(e.target.value as Sort)} aria-label="정렬">
-              <option value="no">번호순</option><option value="progress">진척도순</option><option value="most">많이 한 순</option><option value="recent">최근 만난 순</option>
-            </select>
+            <Select label="정렬" value={sort} onChange={setSort} options={[['no', '번호순'], ['progress', '진척도순'], ['most', '많이 한 순'], ['recent', '최근 만난 순']]} />
           </div>
           <div className="dex-groups">{groups.map(([g, l]) => { const [f, t] = groupCount(g); return <button key={g} type="button" className={`chip ${group === g ? 'on' : ''}`} onClick={() => setGroup(g)} title="포획 / 전체">{l}<small>{f}/{t}</small></button>; })}</div>
           {list.length ? <div className={`dex-grid ${kind}`}>{list.map((id) => {
@@ -148,7 +152,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
                 <Pips m={x} />
               </button>
             );
-          })}</div> : <p className="meta dex-none">{q ? '만난 것 중에 맞는 이름이 없어요.' : show === 'missing' ? `모든 ${what}을 만났어요!` : show === 'master' ? '아직 마스터한 것이 없어요. 오른쪽 여정을 따라가 보세요.' : '아직 없어요. 한 판 하고 오면 채워져요.'}</p>}
+          })}</div> : <p className="meta dex-none">{q ? '만난 것 중에 맞는 이름이 없어요.' : show === 'missing' ? `모든 ${what}을 만났어요!` : show.startsWith('l') ? `아직 ${DEX_LEVEL_KO[Number(show.slice(1)) as DexLevel]} 단계인 것이 없어요.` : '아직 없어요. 한 판 하고 오면 채워져요.'}</p>}
         </section>
 
         {sheet && <button type="button" className="dex-scrim" aria-label="닫기" onClick={() => setSheet(false)} />}
@@ -258,7 +262,7 @@ function Stats({ e }: { e: DexEntry }) {
 }
 
 function StageTag({ m }: { m: Mastery }) {
-  return <span className={`stage-tag ${stageKey(m)}`}>{m.master ? <PrismMark size={14} /> : m.caught ? <Crystal size={12} /> : null}{stageOf(m)}</span>;
+  return <span className={`stage-tag ${stageKey(m)}`}>{m.master ? <PrismMark size={14} /> : m.caught ? <Crystal size={12} /> : null}{m.seen && <small>Lv.{dexLevel(m)}</small>}{stageOf(m)}</span>;
 }
 
 function ChampEntry({ id, no, e, m, dex, onChampion }: { id: number; no: number; e?: DexEntry; m: Mastery; dex: Dex; onChampion?: (id: number) => void }) {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type DiscordNow, type Parties, type Party, type Prospects, type Scrim, type ScrimMember, type Scrims } from '@prism/core';
-import { AugImg, ChampImg, Empty, Gem, MemberFace } from './basics';
+import { AugImg, ChampImg, Empty, Gem, IconBtn, MemberFace } from './basics';
 import { AugmentLink } from './augment';
 import { Icon } from './icons';
 
@@ -185,53 +185,69 @@ export function useParties(api: Api | null, every = 20_000) {
   return { data, error, reload };
 }
 
+/** 같이 할 판 + 내전을 한 곳에서: 여는 칸은 하나(5인 / 내전 고르기), 목록은 시간순으로 섞어서 */
 export function PartyBoard({ api, onMember }: { api: Api; onMember?: (id: string) => void }) {
   const { data, error, reload } = useParties(api);
-  const [busy, setBusy] = useState<number | 'new' | null>(null);
+  const scr = useLoad<Scrims>(api, '/api/scrims');
+  useEffect(() => { const t = setInterval(scr.reload, 20_000); return () => clearInterval(t); }, [scr.reload]);
+  const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
-  const run = async (key: number | 'new', f: () => Promise<unknown>) => { setBusy(key); setMsg(''); try { await f(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); reload(); } };
+  const [kind, setKind] = useState<'party' | 'scrim'>('party');
+  const run = async (key: string, f: () => Promise<unknown>) => { setBusy(key); setMsg(''); try { await f(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); reload(); scr.reload(); } };
   const size = data?.size ?? 5, now = data?.now ?? Date.now();
+  const canHost = Boolean(scr.data?.canHost);
+  const list = [
+    ...(data?.parties ?? []).map((p) => ({ at: p.startAt, key: `p${p.id}`, el: <PartyCard key={`p${p.id}`} p={p} size={size} now={now} busy={busy} run={run} api={api} onMember={onMember} /> })),
+    ...(scr.data?.scrims ?? []).map((x) => ({ at: x.startAt, key: `s${x.id}`, el: <ScrimCard key={`s${x.id}`} s={x} size={scr.data!.size} now={scr.data!.now} busy={busy} run={run} api={api} onMember={onMember} /> })),
+  ].sort((a, b) => a.at - b.at);
+  const loaded = Boolean(data && scr.data);
   return (
     <section className="card pad parties">
-      <div className="card-head"><h2>같이 할 판</h2><span className="sp" /><span className="meta">시간을 정해 열면 회원들이 자리를 채워요</span></div>
-      <PartyComposer busy={busy === 'new'} onOpen={(startAt, note) => run('new', () => api.post('/api/parties', { startAt, note }))} />
+      <div className="card-head"><h2>같이 할 판</h2><span className="sp" /><span className="meta">{kind === 'scrim' ? '우리끼리 5:5 · 결과는 사용자 설정 판 기록에서 자동으로' : '시간을 정해 열면 회원들이 자리를 채워요'}</span></div>
+      <PartyComposer busy={busy === 'new'} kind={kind} onKind={setKind} canScrim={canHost}
+        onOpen={(startAt, note) => run('new', () => api.post(kind === 'scrim' ? '/api/scrims' : '/api/parties', { startAt, note }))} />
       {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
-      {error && <p className="meta">{error}</p>}
+      {(error || scr.error) && <p className="meta">{error || scr.error}</p>}
       <div className="plist">
-        {data?.parties.map((p) => {
-          const [label, tone] = partyBadge(p, size, now);
-          const full = p.members.length >= size;
-          const host = p.members.find((m) => m.id === p.hostId) ?? p.members[0];
-          return (
-            <article key={p.id} className={`pcard ${tone} ${p.mine ? 'mine' : ''}`}>
-              <div className="ptime"><b>{partyTime(p.startAt, now).split(' ')[1]}</b><span>{partyTime(p.startAt, now).split(' ')[0]}</span></div>
-              <div className="pmain">
-                <div className="phead"><span className={`pbadge ${tone}`}>{label}</span><span className="pcount"><b>{p.members.length}</b>/{size}</span>
-                  {host && <span className="phost meta">{host.nick} 님이 열었어요</span>}</div>
-                {p.note && <p className="pnote">{p.note}</p>}
-                <div className="pslots">{Array.from({ length: size }, (_, i) => {
-                  const m = p.members[i];
-                  return m
-                    ? <button key={m.id} type="button" className="pslot on" onClick={() => onMember?.(m.id)} title={m.nick}><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={44} /><span>{m.nick}</span>{m.id === p.hostId && <i className="crown">방장</i>}</button>
-                    : <span key={`e${i}`} className="pslot"><span className="ph">?</span><span>빈 자리</span></span>;
-                })}</div>
-              </div>
-              <div className="pact">
-                {p.mine
-                  ? <button type="button" className="btn" disabled={busy === p.id} onClick={() => run(p.id, () => api.post(`/api/parties/${p.id}/leave`, {}))}>빠지기</button>
-                  : <button type="button" className={`btn ${full ? '' : 'primary'}`} disabled={full || busy === p.id} onClick={() => run(p.id, () => api.post(`/api/parties/${p.id}/join`, {}))}>{full ? '다 찼어요' : '참여'}</button>}
-                {p.host && <button type="button" className="linkbtn meta" disabled={busy === p.id} onClick={() => run(p.id, () => api.post(`/api/parties/${p.id}/cancel`, {}))}>판 취소</button>}
-              </div>
-            </article>
-          );
-        })}
-        {data && !data.parties.length && <Empty>아직 열린 판이 없어요. 위에서 시간을 골라 먼저 열어보세요.</Empty>}
+        {list.map((x) => x.el)}
+        {loaded && !list.length && <Empty>아직 열린 판이 없어요. 위에서 시간을 골라 먼저 열어보세요.</Empty>}
       </div>
     </section>
   );
 }
 
-function PartyComposer({ busy, onOpen, verb = '판 열기', placeholder = '한 줄 메모 (선택) 예: 디코 음성방에서 만나요' }: { busy: boolean; onOpen: (startAt: number, note: string) => void; verb?: string; placeholder?: string }) {
+function PartyCard({ p, size, now, busy, run, api, onMember }: { p: Party; size: number; now: number; busy: string | null; run: (k: string, f: () => Promise<unknown>) => void; api: Api; onMember?: (id: string) => void }) {
+  const [label, tone] = partyBadge(p, size, now);
+  const full = p.members.length >= size;
+  const host = p.members.find((m) => m.id === p.hostId) ?? p.members[0];
+  const k = `p${p.id}`;
+  return (
+    <article className={`pcard ${tone} ${p.mine ? 'mine' : ''}`}>
+      <div className="ptime"><b>{partyTime(p.startAt, now).split(' ')[1]}</b><span>{partyTime(p.startAt, now).split(' ')[0]}</span></div>
+      <div className="pmain">
+        <div className="phead"><span className="pkind">5인</span><span className={`pbadge ${tone}`}>{label}</span><span className="pcount"><b>{p.members.length}</b>/{size}</span>
+          {host && <span className="phost meta">{host.nick} 님이 열었어요</span>}</div>
+        {p.note && <p className="pnote">{p.note}</p>}
+        <div className="pslots">{Array.from({ length: size }, (_, i) => {
+          const m = p.members[i];
+          return m
+            ? <button key={m.id} type="button" className="pslot on" onClick={() => onMember?.(m.id)} title={m.nick}><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={44} /><span>{m.nick}</span>{m.id === p.hostId && <i className="crown">방장</i>}</button>
+            : <span key={`e${i}`} className="pslot"><span className="ph">?</span><span>빈 자리</span></span>;
+        })}</div>
+      </div>
+      <div className="pact">
+        {p.mine
+          ? <button type="button" className="btn" disabled={busy === k} onClick={() => run(k, () => api.post(`/api/parties/${p.id}/leave`, {}))}>빠지기</button>
+          : <button type="button" className={`btn ${full ? '' : 'primary'}`} disabled={full || busy === k} onClick={() => run(k, () => api.post(`/api/parties/${p.id}/join`, {}))}>{full ? '다 찼어요' : '참여'}</button>}
+        {p.host && <button type="button" className="linkbtn meta" disabled={busy === k} onClick={() => run(k, () => api.post(`/api/parties/${p.id}/cancel`, {}))}>판 취소</button>}
+      </div>
+    </article>
+  );
+}
+
+function PartyComposer({ busy, onOpen, kind, onKind, canScrim }: { busy: boolean; onOpen: (startAt: number, note: string) => void; kind: 'party' | 'scrim'; onKind: (k: 'party' | 'scrim') => void; canScrim: boolean }) {
+  const verb = kind === 'scrim' ? '내전 열기' : '판 열기';
+  const placeholder = kind === 'scrim' ? '한 줄 메모 (선택) 예: 단판, 디코 내전방' : '한 줄 메모 (선택) 예: 디코 음성방에서 만나요';
   const [now] = useState(() => Date.now());
   const quick = useMemo(() => quickTimes(now), [now]);
   const [at, setAt] = useState<number>(quick[3][1]);
@@ -242,6 +258,10 @@ function PartyComposer({ busy, onOpen, verb = '판 열기', placeholder = '한 �
   return (
     <form className="pcompose" onSubmit={(e) => { e.preventDefault(); onOpen(custom ? fromCustom(custom) : at, note); setNote(''); }}>
       <div className="ptimes">
+        <span className="pkinds" role="radiogroup" aria-label="종류">
+          <button type="button" role="radio" aria-checked={kind === 'party'} className={`chip ${kind === 'party' ? 'on' : ''}`} onClick={() => onKind('party')}>5인 같이 하기</button>
+          <button type="button" role="radio" aria-checked={kind === 'scrim'} className={`chip ${kind === 'scrim' ? 'on' : ''}`} disabled={!canScrim} title={canScrim ? '우리끼리 5:5' : '내전은 우수회원 이상이 열 수 있어요. 열린 내전에는 누구나 참여할 수 있어요.'} onClick={() => onKind('scrim')}>내전 5:5</button>
+        </span>
         {quick.map(([l, t]) => <button key={l} type="button" className={`chip ${!custom && at === t ? 'on' : ''}`} onClick={() => { setAt(t); setCustom(''); }}>{l}</button>)}
         <label className={`chip time ${custom ? 'on' : ''}`}>직접<input type="time" value={custom} onChange={(e) => setCustom(e.target.value)} /></label>
       </div>
@@ -257,28 +277,6 @@ function PartyComposer({ busy, onOpen, verb = '판 열기', placeholder = '한 �
 
 const TEAM = { 1: '블루팀', 2: '레드팀' } as const;
 const avg = (ms: ScrimMember[]) => (ms.length ? ms.reduce((s, m) => s + m.rating, 0) / ms.length : 0);
-
-export function ScrimBoard({ api, onMember }: { api: Api; onMember?: (id: string) => void }) {
-  const { data, error, reload } = useLoad<Scrims>(api, '/api/scrims');
-  useEffect(() => { const t = setInterval(reload, 20_000); return () => clearInterval(t); }, [reload]);
-  const [busy, setBusy] = useState<string | null>(null);
-  const [msg, setMsg] = useState('');
-  const run = async (key: string, f: () => Promise<unknown>) => { setBusy(key); setMsg(''); try { await f(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); reload(); } };
-  return (
-    <section className="card pad parties scrims">
-      <div className="card-head"><h2>내전</h2><span className="sp" /><span className="meta">우리끼리 5:5 · 결과는 사용자 설정 판 기록에서 자동으로</span></div>
-      {data?.canHost
-        ? <PartyComposer busy={busy === 'new'} verb="내전 열기" placeholder="한 줄 메모 (선택) 예: 단판, 디코 내전방" onOpen={(startAt, note) => run('new', () => api.post('/api/scrims', { startAt, note }))} />
-        : data && <p className="meta" style={{ margin: 0 }}>내전은 우수회원 이상이 열 수 있어요. 열린 내전에는 누구나 참여할 수 있어요.</p>}
-      {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
-      {error && <p className="meta">{error}</p>}
-      <div className="plist">
-        {data?.scrims.map((s) => <ScrimCard key={s.id} s={s} size={data.size} now={data.now} busy={busy} run={run} api={api} onMember={onMember} />)}
-        {data && !data.scrims.length && <Empty>예정된 내전이 없어요.</Empty>}
-      </div>
-    </section>
-  );
-}
 
 function ScrimCard({ s, size, now, busy, run, api, onMember }: { s: Scrim; size: number; now: number; busy: string | null; run: (k: string, f: () => Promise<unknown>) => void; api: Api; onMember?: (id: string) => void }) {
   const [pick, setPick] = useState<string | null>(null);
@@ -310,7 +308,7 @@ function ScrimCard({ s, size, now, busy, run, api, onMember }: { s: Scrim; size:
       <div className="shead">
         <div className="ptime"><b>{partyTime(s.startAt, now).split(' ')[1]}</b><span>{partyTime(s.startAt, now).split(' ')[0]}</span></div>
         <div className="pmain">
-          <div className="phead"><span className={`pbadge ${s.confirmedAt || s.lockedAt || s.results.length ? 'go' : ''}`}>{state}</span><span className="pcount"><b>{s.members.length}</b>/{size}{s.waiting.length > 0 && <span className="meta"> · 대기 {s.waiting.length}</span>}</span></div>
+          <div className="phead"><span className="pkind scrim">내전</span><span className={`pbadge ${s.confirmedAt || s.lockedAt || s.results.length ? 'go' : ''}`}>{state}</span><span className="pcount"><b>{s.members.length}</b>/{size}{s.waiting.length > 0 && <span className="meta"> · 대기 {s.waiting.length}</span>}</span></div>
           {s.note && <p className="pnote">{s.note}</p>}
         </div>
         <div className="pact">
@@ -349,6 +347,7 @@ function ScrimCard({ s, size, now, busy, run, api, onMember }: { s: Scrim; size:
 export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: string | null; admin?: boolean }) {
   const { data, error, reload } = useLoad<Prospects>(api, '/api/prospects');
   const [copied, setCopied] = useState<string | null>(null);
+  const [del, setDel] = useState<string | null>(null);
   const copy = async (puuid: string) => {
     if (!invite) return;
     try { await navigator.clipboard.writeText(invite); setCopied(puuid); setTimeout(() => setCopied(null), 2000); } catch { /* 클립보드 막힘 */ }
@@ -368,8 +367,12 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
                 <div className="meta">같이 {p.n}판 · 그 판 승률 {pct(p.w, p.n)}{p.mates.length > 0 && <> · {p.mates.map((m) => `${m.nick} ${m.n}판`).join(', ')}</>} · {ago(p.lastAt)}</div>
               </div>
               <div className="pbtns">
-                {invite && <button type="button" className="btn sm" onClick={() => copy(p.puuid)}>{copied === p.puuid ? '복사했어요' : '초대 링크 복사'}</button>}
-                {admin && <button type="button" className="linkbtn meta" onClick={async () => { await api.del(`/api/prospects/${p.puuid}`).catch(() => {}); reload(); }}>기록 지우기</button>}
+                {invite && <IconBtn icon="link" label={copied === p.puuid ? '복사했어요' : '초대 링크 복사'} done={copied === p.puuid} onClick={() => copy(p.puuid)} />}
+                {admin && <IconBtn icon="trash" tone="danger" done={false} label={del === p.puuid ? '한 번 더 누르면 지워요' : '이 분의 기록 지우기'} onClick={async () => {
+                  // 실수로 지우지 않게 두 번 눌러야 지운다
+                  if (del !== p.puuid) { setDel(p.puuid); setTimeout(() => setDel((x) => (x === p.puuid ? null : x)), 3000); return; }
+                  setDel(null); await api.del(`/api/prospects/${p.puuid}`).catch(() => {}); reload();
+                }} armed={del === p.puuid} />}
               </div>
             </div>
           );
@@ -449,8 +452,8 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
             </span>
           ))}</div>}
           <span className="vact">
-            {c.invite && <button type="button" className={`vbtn ${copied === c.id ? 'done' : ''}`} onClick={() => copy(c.id, c.invite!)} title="누구나 들어올 수 있는 초대 링크">{copied === c.id ? '복사됨' : '초대 링크 복사'}</button>}
-            <button type="button" className="vbtn go" onClick={() => open(c.link)} title="디스코드에서 이 채널 열기">들어가기</button>
+            {c.invite && <IconBtn icon="link" label={copied === c.id ? '복사했어요' : '초대 링크 복사 (누구나 들어올 수 있어요)'} done={copied === c.id} onClick={() => copy(c.id, c.invite!)} />}
+            <IconBtn icon="login" tone="go" label="디스코드에서 이 채널 들어가기" onClick={() => open(c.link)} />
           </span>
         </div>
       ))}</div>

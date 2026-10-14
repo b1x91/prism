@@ -189,7 +189,7 @@ export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: 
         </div>
         <div className="md-body">
           {m && !loading && <Lessons m={m} g={g} />}
-          {loading ? <p className="meta md-load">불러오는 중…</p> : m && teamIds.map((t) => {
+          {loading ? <MatchSkeleton /> : m && teamIds.map((t) => {
             const list = m.players.filter((p) => p.teamId === t).sort((a, b) => Number(isMe(b)) - Number(isMe(a)) || (b.damageToChampions ?? 0) - (a.damageToChampions ?? 0));
             const win = list[0]?.win;
             return (
@@ -218,16 +218,26 @@ export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: 
   );
 }
 
+/** 판 상세를 불러오는 동안: 실제 모양대로 자리를 잡아 두고 빛이 지나간다 (창 크기가 바뀌지 않게) */
+function MatchSkeleton() {
+  const row = (k: number) => <div key={k} className="md-row sk-row"><i className="sk sq" /><i className="sk ln" /><i className="sk ln s" /><i className="sk ln" /><i className="sk ln w" /></div>;
+  return (
+    <div className="md-skel" aria-label="불러오는 중" role="status">
+      <section className="md-lessons"><i className="sk ln t" />{[0, 1, 2].map((k) => <div key={k} className="sk-l"><i className="sk dot" /><i className="sk ln" /></div>)}</section>
+      {[0, 1].map((t) => <section key={t} className="md-team"><i className="sk ln t" />{[0, 1, 2, 3, 4].map(row)}</section>)}
+    </div>
+  );
+}
+
 /** 이 판에서 배울 점: 조합에 비춘 아이템·증강 복기 */
 function Lessons({ m, g }: { m: MatchDetail; g: CardGame }) {
   const items = useItemDetail(true);
-  const [all, setAll] = useState(false);
   const r = reviewMatch(m, { championId: g.championId, win: g.win }, items);
   if (!r.known) return <section className="md-lessons"><div className="md-th"><b>이 판에서 배울 점</b><span className="meta">상대 조합을 알 수 있는 판에서 보여 드려요.</span></div></section>;
   return (
     <section className="md-lessons">
       <div className="md-th"><b>이 판에서 배울 점</b><span className="meta">이번 판 조합에 비춘 아이템·증강</span></div>
-      {r.lessons.length ? (all ? r.lessons : r.lessons.slice(0, 3)).map((l, i) => (
+      {r.lessons.length ? r.lessons.map((l, i) => (
         <div key={i} className={`mdl ${l.kind}`}>
           <span className="mdl-i" aria-hidden="true">{l.kind === 'good' ? <Icon name="check" /> : '▸'}</span>
           <div className="mdl-t">
@@ -240,7 +250,6 @@ function Lessons({ m, g }: { m: MatchDetail; g: CardGame }) {
           </div>
         </div>
       )) : <div className="mdl good"><span className="mdl-i" aria-hidden="true"><Icon name="check" /></span><div className="mdl-t"><b>조합에 맞게 잘 챙겼어요</b><span>눈에 띄게 아쉬운 아이템·증강이 없어요.</span></div></div>}
-      {r.lessons.length > 3 && <button type="button" className="mdl-more" onClick={() => setAll(!all)}>{all ? '접기' : `${r.lessons.length - 3}개 더 보기`}</button>}
     </section>
   );
 }

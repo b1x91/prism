@@ -1,7 +1,7 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AUGMENT, CHAMPIONS, cdragon, champIcon, augIcon, loadSkins, withDefaults, PRESENCE_LABEL, type DiscordRole, type Links, type Presence, type Skin } from '@prism/core';
-import { Icon } from './icons';
+import { Icon, type IconName } from './icons';
 
 export function Gem({ size = 28, float, src = '/brand/prism-64.png' }: { size?: number; float?: boolean; src?: string }) {
   return <span className={`gem${float ? ' float' : ''}`} style={{ ['--size' as string]: `${size}px` }}><img src={src} alt="" /></span>;
@@ -31,6 +31,51 @@ export function AugImg({ id, size = 36 }: { id: number; size?: number }) {
 
 export function Empty({ children, action }: { children: ReactNode; action?: ReactNode }) {
   return <div className="empty"><Gem /><div>{children}</div>{action}</div>;
+}
+
+/** 아이콘만 있는 작은 버튼. 이름은 마우스를 올리면(title) · 화면 읽기(aria-label)로 */
+export function IconBtn({ icon, label, onClick, tone, done, armed, disabled }: { icon: IconName; label: string; onClick: () => void; tone?: 'go' | 'danger'; done?: boolean; armed?: boolean; disabled?: boolean }) {
+  return <button type="button" className={`ibtn ${tone ?? ''} ${done ? 'done' : ''} ${armed ? 'armed' : ''}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}><Icon name={done ? 'check' : icon} /></button>;
+}
+
+/**
+ * 드롭다운 (브라우저 기본 select 대신, 앱 전체 공용). 눌러서 열고, 바깥·Esc 로 닫힌다. 위아래 화살표·Enter 로도 고른다.
+ */
+export function Select<T extends string>({ value, options, onChange, label }: { value: T; options: [T, string][]; onChange: (v: T) => void; label: string }) {
+  const [open, setOpen] = useState(false);
+  const [hi, setHi] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const cur = options.find(([k]) => k === value);
+  useEffect(() => {
+    if (!open) return;
+    setHi(Math.max(0, options.findIndex(([k]) => k === value)));
+    const off = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); };
+    addEventListener('mousedown', off);
+    return () => removeEventListener('mousedown', off);
+  }, [open, options, value]);
+  const key = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') { setOpen(false); return; }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!open) { setOpen(true); return; }
+      setHi((h) => (h + (e.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length);
+    }
+    if ((e.key === 'Enter' || e.key === ' ') && open) { e.preventDefault(); onChange(options[hi][0]); setOpen(false); }
+  };
+  return (
+    <div className={`sel ${open ? 'open' : ''}`} ref={ref} onKeyDown={key}>
+      <button type="button" className="sel-btn" aria-haspopup="listbox" aria-expanded={open} aria-label={label} onClick={() => setOpen(!open)}>
+        <span>{cur?.[1]}</span><Icon name="chevD" />
+      </button>
+      {open && <div className="sel-pop" role="listbox" aria-label={label}>
+        {options.map(([k, l], i) => (
+          <button key={k} type="button" role="option" aria-selected={k === value} className={`sel-opt ${k === value ? 'on' : ''} ${i === hi ? 'hi' : ''}`} onMouseEnter={() => setHi(i)} onClick={() => { onChange(k); setOpen(false); }}>
+            <span>{l}</span>{k === value && <Icon name="check" />}
+          </button>
+        ))}
+      </div>}
+    </div>
+  );
 }
 
 export function Seg<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {

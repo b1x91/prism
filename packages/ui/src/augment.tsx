@@ -156,10 +156,10 @@ export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
     .sort((a, b) => ORDER.indexOf(a.rarity) - ORDER.indexOf(b.rarity) || a.name.localeCompare(b.name, 'ko'));
   return (
     <div className="stack">
-      <div className="row wrapr">
-        <input className="input" style={{ flex: 1, minWidth: 200 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름·효과 검색 (예: 치명타, 보호막, ㅂㅅ)" />
+      <div className="adex-tools">
+        <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름·효과 검색 (예: 치명타, 보호막, ㅂㅅ)" />
         <Seg value={r} options={[['all', '전체'], ...ORDER.map((x) => [x, RARITY_KO[x]] as [Rarity, string])]} onChange={setR} />
-        <span className="meta">{list.length}개</span>
+        <span className="meta cnt">{list.length}개</span>
       </div>
       {list.length ? ORDER.filter((x) => list.some((a) => a.rarity === x)).map((x) => (
         <section key={x} className="stack" style={{ gap: 12 }}>
