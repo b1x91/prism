@@ -1,9 +1,12 @@
-//! 앱 업데이트: GitHub Releases 최신판을 확인하고, 받아서 설치 프로그램을 조용히 실행한 뒤 앱을 다시 켠다.
+//! 앱 업데이트: Prism 서버(/app/latest)에서 최신판을 확인하고, 받아서 설치 프로그램을 조용히 실행한 뒤 앱을 다시 켠다.
+//! 서버는 GitHub Release 를 대신 내준다 (저장소를 비공개로 돌려도 동작). 서버 주소가 없는 빌드만 GitHub 를 직접 본다.
 //! 설치 프로그램(NSIS)의 /P = 진행 창만 보이는 자동 설치(실행 중인 Prism 은 설치 프로그램이 닫는다), /R = 끝나면 다시 실행.
-//! 받는 곳은 이 저장소의 Release 로만 한정한다.
+//! 받는 곳은 Prism 서버의 /app/download/ (또는 이 저장소의 Release) 로만 한정한다.
 
 use serde::Serialize;
 use std::time::Duration;
+
+use crate::server::server_url;
 
 const REPO: &str = "b1x91/prism";
 const ASSET: &str = "Prism-Setup.exe";
@@ -35,6 +38,37 @@ fn ver(s: &str) -> Vec<u64> {
 }
 
 pub async fn check() -> Result<Info, String> {
+    match server_url() {
+        Some(base) => check_server(base).await,
+        None => check_github().await,
+    }
+}
+
+/// Prism 서버: { version, notes, size, url }
+async fn check_server(base: &str) -> Result<Info, String> {
+    let r = client()?
+        .get(format!("{base}/app/latest"))
+        .send()
+        .await
+        .map_err(|_| "업데이트 정보를 가져오지 못했습니다. 인터넷 연결을 확인해주세요.".to_string())?;
+    if !r.status().is_success() {
+        return Err(format!("업데이트 확인 실패 ({})", r.status().as_u16()));
+    }
+    let d: serde_json::Value = r.json().await.map_err(|e| e.to_string())?;
+    let latest = d["version"].as_str().unwrap_or("").to_string();
+    let url = d["url"].as_str().unwrap_or("").to_string();
+    Ok(Info {
+        current: CURRENT.into(),
+        available: !url.is_empty() && ver(&latest) > ver(CURRENT),
+        latest,
+        notes: d["notes"].as_str().unwrap_or("").chars().take(600).collect(),
+        url,
+        size: d["size"].as_u64().unwrap_or(0),
+    })
+}
+
+/// 서버 주소가 없는 빌드 (개발용): GitHub Release 를 직접
+async fn check_github() -> Result<Info, String> {
     let r = client()?
         .get(format!("https://api.github.com/repos/{REPO}/releases/latest"))
         .header("Accept", "application/vnd.github+json")
@@ -60,13 +94,21 @@ pub async fn check() -> Result<Info, String> {
     })
 }
 
+/// 받아도 되는 주소: Prism 서버의 /app/download/ 또는 이 저장소의 Release
+fn allowed(url: &str) -> bool {
+    match server_url() {
+        Some(base) => url.starts_with(&format!("{base}/app/download/")),
+        None => url.starts_with(&format!("https://github.com/{REPO}/releases/download/")),
+    }
+}
+
 /// 새 버전을 받아 설치를 시작한다. 성공하면 호출한 쪽이 앱을 끝낸다
 pub async fn install() -> Result<(), String> {
     let info = check().await?;
     if !info.available {
         return Err("이미 최신 버전입니다.".into());
     }
-    if !info.url.starts_with(&format!("https://github.com/{REPO}/releases/download/")) {
+    if !allowed(&info.url) {
         return Err("업데이트 주소가 올바르지 않습니다.".into());
     }
     let bytes = reqwest::Client::builder()

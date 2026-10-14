@@ -3,6 +3,7 @@
  * 모든 /api/* 는 로그인한 회원만. 회원 데이터는 어떤 형태로도 비로그인 응답에 넣지 않는다.
  * /links 는 공개(디스코드·카카오톡 주소). 가입 전인 사람도 들어올 길이 있어야 하므로.
  */
+import { download, latest } from './release.js';
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
 import { artisanRanking, augmentArtisans, championArtisans } from './artisans.js';
 import { addTip, augmentStats, board, gameDetail, myDex, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setPresence, setConsent, setProfile, toggleLike } from './crew.js';
@@ -26,6 +27,11 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/app/token') return exchangeCode(req, env);
   if (m === 'POST' && pathname === '/api/logout') return logout(req, env);
   if (m === 'GET' && pathname === '/links') return json(links(env));
+  // 앱 설치 파일·업데이트 정보 (로그인 없이)
+  if (m === 'GET' && pathname === '/app/latest') return latest(req, env);
+  if (m === 'GET' && pathname === '/app/download') return download(req, env);
+  const dl = pathname.match(/^\/app\/download\/([0-9A-Za-z._-]{1,40})\/([0-9A-Za-z._-]{1,60})$/);
+  if (m === 'GET' && dl) return download(req, env, decodeURIComponent(dl[1]), dl[2]);
 
   if (!pathname.startsWith('/api/')) throw new HttpError(404, 'not found');
   const me = await authenticate(req, env);

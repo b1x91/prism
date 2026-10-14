@@ -132,6 +132,13 @@
 4. **마스터 무대.** 마스터한 챔피언·증강의 도감 설명 머리는 어두운 무대 + 챔피언 그림 + 도는 스펙트럼 빛무리·빛살·반짝임, 이름은 브랜드 글자 크기(40). 처음 열 때(기기마다 한 번, localStorage `prism-dex-conquered`) 섬광 → 빛 터짐 → 그림 → 이름 → '정복' 도장. 그림을 누르면 다시 재생. 동작 줄이기면 멈춘 그림 (`MasterStage`, `packages/ui/src/dex.tsx`).
 3. **[검증필요]** 롤 클라이언트 전적 상세에 `largestMultiKill`·`timeCCingOthers`·`totalHealsOnTeammates`·`totalDamageShieldedOnTeammates` 가 실제로 들어 있는지. 어떤 값이 한 번도 안 들어오면 그 도전은 '기록 없음'으로 빠지고 마스터 조건에서도 빠진다 (예: 서포터 회복 도전). 실제 PC 에서 설정 → 진단으로 확인.
 
+## v3.17 변경 (2026-10-14, 사용자 결정) — 앞 블록과 충돌하면 이 블록이 우선
+
+1. **설치 파일은 Prism 서버가 내준다** (v3.4-1 의 'GitHub Release 를 직접'을 바꾼다, `server/src/release.ts`). `/app/latest`(업데이트 확인) · `/app/download`(최신판, 웹 '앱 받기') · `/app/download/:태그/Prism-Setup.exe`(버전 고정 주소, 스토어 등록용). 원본은 그대로 GitHub Release. 저장소를 비공개로 돌리면 Secrets `RELEASE_TOKEN`(이 저장소 Contents 읽기 전용) → deploy-server 가 Worker 비밀값으로 넣는다. 앱(0.8.6~)은 서버로만 확인·다운로드하고 받는 주소도 서버 `/app/download/` 로만 허용.
+2. **저장소 비공개 전환 순서:** RELEASE_TOKEN 넣기 → deploy-server → 회원 앱이 0.8.6 이상으로 업데이트된 뒤 비공개 (0.8.5 이하는 GitHub 를 직접 보므로 비공개 뒤에는 업데이트를 못 찾는다).
+3. **개인정보 처리방침** 웹 `/privacy` (`apps/web/src/pages/Privacy.tsx`, 초안). 저장 항목이 바뀌면 함께 고친다. 웹 아래쪽·앱 설정에 링크.
+4. 롤 계정을 연결한 회원은 수집 동의를 철회해도 포텐 멤버(비회원 기록)로 모으지 않는다.
+
 ---
 
 ## 0. 작업 방식

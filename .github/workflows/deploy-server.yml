@@ -60,6 +60,16 @@ jobs:
             echo "::warning::DISCORD_CLIENT_SECRET 이 없어 디스코드 로그인은 아직 안 됩니다."
           fi
       - if: steps.cfg.outputs.ok == 'true'
+        name: 설치 파일 읽기 토큰 넣기 (저장소가 비공개일 때 필요)
+        env:
+          RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+        run: |
+          if [ -n "$RELEASE_TOKEN" ]; then
+            printf '%s' "$RELEASE_TOKEN" | npx wrangler secret put RELEASE_TOKEN --config server/wrangler.toml
+          else
+            echo "::notice::RELEASE_TOKEN 이 없습니다. 저장소가 공개인 동안은 괜찮지만, 비공개로 바꾸기 전에 넣어야 앱 업데이트·다운로드가 됩니다."
+          fi
+      - if: steps.cfg.outputs.ok == 'true'
         name: 서버 주소 알리기
         run: |
           URL=$(node scripts/ci/server-url.mjs)

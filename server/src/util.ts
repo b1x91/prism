@@ -11,6 +11,9 @@ export interface Env {
   VOICE_INVITES?: string; // 음성 채널별 초대 링크 "채널ID=https://discord.gg/xxx,..." (만료 없음으로 만든 것)
   KAKAO_OPENCHAT_URL?: string; // 모임 카카오톡 오픈채팅 주소 (공개)
   WEB_ORIGINS?: string; // 웹 사이트 주소 (쉼표 구분). 예: https://przm.web.app,https://przm.gg
+  RELEASE_REPO?: string; // 앱 설치 파일을 올리는 GitHub 저장소 (owner/repo)
+  RELEASE_API?: string; // 시험용 GitHub API 주소 (비우면 api.github.com)
+  RELEASE_TOKEN?: string; // 저장소가 비공개일 때 Release 를 읽는 GitHub 토큰 (비밀값, 읽기 전용)
   DEV_LOGIN?: string; // '1' 이면 로컬 개발용 가짜 로그인 허용. 배포 환경에서는 절대 켜지 않는다
 }
 

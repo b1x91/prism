@@ -54,6 +54,7 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
           <div><span className="k">창 닫기</span><span className="muted">창을 닫아도 트레이에서 계속 기록합니다. 끝내려면 트레이 아이콘 → 끝내기.</span></div>
           <div><span className="k">문제 알리기</span><span className="row wrapr" style={{ gap: 8 }}><button type="button" className="btn sm" onClick={() => run(async () => { await navigator.clipboard.writeText(await diagnostics(VERSION)); setMsg('복사했습니다. 디스코드에 붙여넣어 보내주세요. 다른 플레이어 이름은 지워져 있습니다.'); })}>확인용 정보 복사</button></span></div>
           <div><span className="k">게임 중 증강 보기</span><span className="muted">롤을 "테두리 없는 창 모드"로 두면 Alt+Tab 전환이 빠릅니다.</span></div>
+          <div><span className="k">개인정보 처리방침</span><span className="row wrapr" style={{ gap: 8 }}><button type="button" className="btn sm" onClick={() => void bridge.openUrl('https://przm.web.app/privacy')}>보기</button></span></div>
         </div>
       </section>
     </div>

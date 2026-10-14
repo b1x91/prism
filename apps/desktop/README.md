@@ -1,4 +1,4 @@
-# Prism 앱 (Windows, v0.8.5)
+# Prism 앱 (Windows, v0.8.6)
 
 롤 클라이언트 옆에 켜두는 도우미. 혼자 써도 쓸모 있고, Prism 회원이면 모임 기능이 열린다.
 웹(przm.web.app)과 같은 화면 코드(`packages/ui`, `packages/core`)를 앱 안에 묶어 넣는다. 원격 웹을 띄우지 않는다.
@@ -61,17 +61,19 @@ apps/desktop/
 - 캡처한 그림은 저장·전송하지 않는다. 게임 프로세스·메모리·입력은 건드리지 않는다
 
 ## 앱 안에서 업데이트 (0.5.3부터)
-- 켜질 때(5초 뒤)와 6시간마다 이 저장소의 GitHub Release 최신판을 확인한다
+- 켜질 때(5초 뒤)와 6시간마다 Prism 서버 `/app/latest` 로 최신판을 확인한다 (0.8.6부터. 서버가 GitHub Release 를 대신 내주므로 저장소를 비공개로 돌려도 된다. 서버 주소가 없는 개발 빌드만 GitHub 를 직접 본다)
 - 새 버전이 있으면 사이드바에 "새 버전 · 업데이트" 알림, 설정 → 버전에도 버튼
 - 누르면 `Prism-Setup.exe` 를 받아 크기·실행 파일 여부를 확인하고, 설치 프로그램을 `/P /R` 로 실행한 뒤 앱을 끈다
   (`/P` 진행 창만 보이는 자동 설치, 실행 중인 Prism 은 설치 프로그램이 닫음 / `/R` 설치 후 다시 실행)
-- 받는 주소는 `github.com/b1x91/prism/releases/download/` 로만 허용 (`src-tauri/src/update.rs`)
+- 받는 주소는 Prism 서버의 `/app/download/` 로만 허용 (`src-tauri/src/update.rs`, 서버 `server/src/release.ts`)
 - 0.5.2 이하에는 이 기능이 없어서 0.5.3 은 한 번 직접 받아 설치해야 한다
 
 ## 설치 파일 만들기
 GitHub Actions `build-desktop` (Windows). 회원 서버 주소는 Variables `PRISM_SERVER_URL`, 없으면 Cloudflare 계정에서 찾아 앱에 넣는다 (서버가 없으면 모임 기능 없이 가이드만).
-- 태그 `app-v0.5.0` 을 올리면 GitHub Release 에 `Prism-Setup.exe` 가 붙는다. 이름이 항상 같아서 받는 주소가 고정된다:
-  `https://github.com/b1x91/prism/releases/latest/download/Prism-Setup.exe` (웹의 "앱 받기")
+- 태그 `app-v0.5.0` 을 올리면 GitHub Release 에 `Prism-Setup.exe` 가 붙는다. 회원·웹은 Prism 서버를 거쳐 받는다:
+  - 최신판 `{서버}/app/download` (웹의 "앱 받기")
+  - 버전 고정 `{서버}/app/download/app-v0.8.6/Prism-Setup.exe` (스토어 등록처럼 바뀌지 않는 주소가 필요할 때)
+  - 저장소가 비공개면 Secrets `RELEASE_TOKEN`(이 저장소 Contents 읽기 전용 토큰)을 넣고 deploy-server 를 다시 돌린다
 - 또는 Actions 탭 → build-desktop → Run workflow ("릴리스로 공개" 켜짐) → 버전(`tauri.conf.json`)으로 태그와 Release 를 만든다. 끄면 Artifacts 로만 남는다
 - 새 버전을 낼 때는 `tauri.conf.json` 의 `version` 을 올린 뒤 실행한다 (같은 버전이면 기존 Release 의 파일이 바뀐다)
 - 버전은 `src-tauri/tauri.conf.json` 의 `version`

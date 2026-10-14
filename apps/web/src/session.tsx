@@ -7,7 +7,8 @@ import { ApiError, withDefaults, type Api, type Links, type Me, type Presence } 
 
 export const SERVER = (import.meta.env.VITE_PRISM_SERVER ?? '').replace(/\/$/, '');
 /** Windows 앱 설치 파일 주소. 기본은 GitHub Releases 최신판 (build-desktop 이 늘 같은 이름으로 올린다) */
-export const APP_URL = import.meta.env.VITE_APP_URL || 'https://github.com/b1x91/prism/releases/latest/download/Prism-Setup.exe';
+// 앱 받기: Prism 서버가 GitHub Release 를 대신 내준다 (저장소가 비공개여도 동작)
+export const APP_URL = import.meta.env.VITE_APP_URL || (SERVER ? `${SERVER}/app/download` : 'https://github.com/b1x91/prism/releases/latest/download/Prism-Setup.exe');
 const DEV_LOGIN = import.meta.env.VITE_PRISM_DEV_LOGIN === '1';
 const TOKEN_KEY = 'prism-token';
 const FALLBACK_LINKS: Links = withDefaults({ discord: import.meta.env.VITE_DISCORD_URL || null, kakao: import.meta.env.VITE_KAKAO_URL || null });

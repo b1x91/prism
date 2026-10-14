@@ -105,13 +105,17 @@ export async function ingest(req: Request, env: Env, me: Member) {
 
   // 이번 요청에 등장한 puuid 중 동의한 회원만
   const puuids = [...new Set(games.flatMap((g) => g.participants.map((p) => p.puuid)))];
-  const memberByPuuid = new Map<string, string>();
+  const memberByPuuid = new Map<string, string>(); // 수집에 동의한 회원
+  const linked = new Set<string>(); // 롤 계정을 연결한 회원 전체 (동의를 철회했어도 포텐 멤버로 모으지 않는다)
   for (let i = 0; i < puuids.length; i += 90) {
     const chunk = puuids.slice(i, i + 90);
-    const { results } = await env.DB.prepare(`SELECT id, riot_puuid FROM members WHERE opt_in_at IS NOT NULL AND riot_puuid IN (${chunk.map(() => '?').join(',')})`)
+    const { results } = await env.DB.prepare(`SELECT id, riot_puuid, opt_in_at FROM members WHERE riot_puuid IN (${chunk.map(() => '?').join(',')})`)
       .bind(...chunk)
-      .all<{ id: string; riot_puuid: string }>();
-    for (const r of results) memberByPuuid.set(r.riot_puuid, r.id);
+      .all<{ id: string; riot_puuid: string; opt_in_at: number | null }>();
+    for (const r of results) {
+      linked.add(r.riot_puuid);
+      if (r.opt_in_at !== null) memberByPuuid.set(r.riot_puuid, r.id);
+    }
   }
 
   const now = Date.now();
@@ -221,7 +225,7 @@ export async function ingest(req: Request, env: Env, me: Member) {
     if (crew.length > 0) {
       const custom = g.queueId !== MAYHEM_QUEUE;
       for (const p of g.participants) {
-        if (memberByPuuid.has(p.puuid)) continue;
+        if (memberByPuuid.has(p.puuid) || linked.has(p.puuid)) continue;
         const mates = crew.filter((c) => c.teamId === p.teamId).length;
         if (!custom && mates === 0) continue;
         const augments = ids(p.augments), items = ids(p.items);
