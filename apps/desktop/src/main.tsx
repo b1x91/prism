@@ -13,12 +13,13 @@ import { installUpdate, startUpdates, useUpdate } from './update';
 import { VERSION } from './version';
 import { GamePage } from './pages/Game';
 import { AugmentsPage } from './pages/Augments';
+import { DexPage } from './pages/Dex';
 import { ChampionsPage } from './pages/Champions';
 import { MemberPage, RankingPage } from './pages/Members';
 import { CrewPage } from './pages/Crew';
 import { SettingsPage } from './pages/Settings';
 
-const NAV: [string, string, IconName][] = [['/', '게임', 'game'], ['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
+const NAV: [string, string, IconName][] = [['/', '게임', 'game'], ['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
 
 /** 롤 클라이언트 연결 상태 (사이드바 내 프로필 아래 한 줄) */
 const STATUS: Record<State['status'], [string, string]> = {
@@ -104,6 +105,7 @@ function App() {
           <Route path="champions/:id" element={<ChampionsPage member={!!s.me} record={s.personal.champions} />} />
           <Route path="augments" element={<AugmentsPage />} />
           <Route path="augments/:id" element={<AugmentsPage />} />
+          <Route path="dex" element={<DexPage s={s} />} />
           <Route path="ranking" element={<RankingPage s={s} onLogin={login} />} />
           <Route path="me" element={<MemberPage s={s} onLogin={login} />} />
           <Route path="members/:id" element={<MemberPage s={s} onLogin={login} />} />

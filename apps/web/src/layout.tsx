@@ -3,7 +3,7 @@ import { useCallback, useEffect } from 'react';
 import { AugmentOpen, ChannelIcons, Gem, Icon, MemberFace, toggleTheme, type IconName } from '@prism/ui';
 import { useSession } from './session';
 
-const NAV: [string, string, IconName][] = [['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
+const NAV: [string, string, IconName][] = [['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
 
 export function Layout() {
   const { me, login, links } = useSession();

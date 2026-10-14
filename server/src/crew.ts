@@ -50,6 +50,25 @@ export async function myGames(env: Env, me: Member) {
   return json({ games });
 }
 
+/**
+ * 도감: Prism 에 기록된 내 모든 판으로 만난 챔피언·고른 증강 (처음 만난 날 포함).
+ * 판 목록(최근 100판)과 달리 개수 제한 없이 집계만 보낸다.
+ */
+export async function myDex(env: Env, me: Member) {
+  const [champs, augs, pairs] = await env.DB.batch([
+    env.DB.prepare('SELECT champion_id AS id, COUNT(*) AS n, SUM(win) AS w, MIN(played_at) AS first, MAX(played_at) AS last FROM participants WHERE member_id = ? GROUP BY champion_id').bind(me.id),
+    env.DB.prepare(
+      `SELECT CAST(j.value AS INTEGER) AS id, COUNT(*) AS n, SUM(p.win) AS w, MIN(p.played_at) AS first, MAX(p.played_at) AS last
+       FROM participants p, json_each(p.augments) j WHERE p.member_id = ? AND p.augments IS NOT NULL GROUP BY 1`,
+    ).bind(me.id),
+    env.DB.prepare(
+      `SELECT CAST(j.value AS INTEGER) AS aug, p.champion_id AS champ, COUNT(*) AS n, SUM(p.win) AS w
+       FROM participants p, json_each(p.augments) j WHERE p.member_id = ? AND p.augments IS NOT NULL GROUP BY 1, 2`,
+    ).bind(me.id),
+  ]);
+  return json({ champions: champs.results, augments: augs.results, pairs: pairs.results });
+}
+
 /** 앱이 로그인된 롤 계정을 연결한다. 클라이언트에 로그인된 계정이라 아이콘 인증을 대신한다 */
 export async function linkRiot(req: Request, env: Env, me: Member) {
   const { puuid, riotId } = (await req.json().catch(() => ({}))) as { puuid?: string; riotId?: string };

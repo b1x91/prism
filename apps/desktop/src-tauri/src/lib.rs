@@ -1,6 +1,7 @@
 //! Prism 데스크톱 앱. Rust 는 얇게: 롤 클라이언트 읽기, 서버 중계, 로그인, 트레이·자동 실행.
 //! 화면과 흐름(확인 간격, 업로드, 회원 대신 수집)은 공용 TS 가 맡는다.
 
+mod discord;
 mod lcu;
 mod matcher;
 mod server;
@@ -56,6 +57,12 @@ async fn logout(app: State<'_, Arc<App>>) -> Result<(), String> {
 fn open_url(handle: tauri::AppHandle, url: String) -> Result<(), String> {
     if !(url.starts_with("https://")) {
         return Err("https 주소만 열 수 있습니다.".into());
+    }
+    // 디스코드 주소는 디스코드 앱으로 (앱이 없거나 실패하면 브라우저)
+    if let Some(app) = discord::app_url(&url) {
+        if handle.opener().open_url(app, None::<&str>).is_ok() {
+            return Ok(());
+        }
     }
     handle.opener().open_url(url, None::<&str>).map_err(|e| e.to_string())
 }

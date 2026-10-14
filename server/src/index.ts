@@ -4,7 +4,7 @@
  * /links 는 공개(디스코드·카카오톡 주소). 가입 전인 사람도 들어올 길이 있어야 하므로.
  */
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
-import { addTip, augmentStats, board, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setConsent, setProfile, toggleLike } from './crew.js';
+import { addTip, augmentStats, board, myDex, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setConsent, setProfile, toggleLike } from './crew.js';
 import { ingest } from './ingest.js';
 import { memberPage, ranking } from './members.js';
 import { addNote, deleteNote, links, listNotes } from './notes.js';
@@ -31,6 +31,7 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   if (m === 'GET' && pathname === '/api/me') return getMe(env, me);
   if (m === 'GET' && pathname === '/api/me/games') return myGames(env, me);
+  if (m === 'GET' && pathname === '/api/me/dex') return myDex(env, me);
   if (m === 'POST' && pathname === '/api/me/riot') return linkRiot(req, env, me);
   if (m === 'POST' && pathname === '/api/me/consent') return setConsent(req, env, me);
   if (m === 'POST' && pathname === '/api/me/profile') return setProfile(req, env, me);

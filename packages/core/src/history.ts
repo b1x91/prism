@@ -181,3 +181,55 @@ export function todayPicks(p: Personal, allIds: number[], day = Math.floor(Date.
   const best = [...good.slice(start), ...good.slice(0, start)].map((g) => ({ id: g.id, why: 'best' as const }));
   return [...best, ...(fresh.length ? [{ id: fresh[day % fresh.length], why: 'new' as const }] : [])];
 }
+
+// ───────── 도감: 만난 챔피언·고른 증강 ─────────
+
+export type DexEntry = { n: number; w: number; first: number; last: number };
+export type DexPair = { aug: number; champ: number; n: number; w: number };
+export type Dex = { champions: Record<number, DexEntry>; augments: Record<number, DexEntry>; pairs: DexPair[] };
+/** 서버 /api/me/dex 응답 */
+export type DexRows = { champions: ({ id: number } & DexEntry)[]; augments: ({ id: number } & DexEntry)[]; pairs: DexPair[] };
+
+export function dexFromRows(r: DexRows): Dex {
+  const map = (rows: ({ id: number } & DexEntry)[]) => Object.fromEntries(rows.map(({ id, ...e }) => [id, e]));
+  return { champions: map(r.champions), augments: map(r.augments), pairs: r.pairs };
+}
+
+export function dexFromGames(games: Game[]): Dex {
+  const champions: Record<number, DexEntry> = {}, augments: Record<number, DexEntry> = {};
+  const pairs = new Map<string, DexPair>();
+  const add = (m: Record<number, DexEntry>, id: number, g: Game) => {
+    const e = (m[id] ??= { n: 0, w: 0, first: g.playedAt, last: g.playedAt });
+    e.n++; if (g.win) e.w++;
+    e.first = Math.min(e.first, g.playedAt); e.last = Math.max(e.last, g.playedAt);
+  };
+  for (const g of games) {
+    add(champions, g.championId, g);
+    for (const a of new Set(g.augments)) {
+      add(augments, a, g);
+      const k = `${a}:${g.championId}`;
+      const p = pairs.get(k) ?? { aug: a, champ: g.championId, n: 0, w: 0 };
+      p.n++; if (g.win) p.w++;
+      pairs.set(k, p);
+    }
+  }
+  return { champions, augments, pairs: [...pairs.values()] };
+}
+
+/**
+ * 서버 기록과 이 PC 의 롤 기록을 합친다. 같은 판이 양쪽에 다 있을 수 있어 더하지 않고,
+ * 항목마다 판수가 많은 쪽을 쓰고 처음 만난 날은 이른 쪽을 쓴다.
+ */
+export function mergeDex(a: Dex, b: Dex): Dex {
+  const m = (x: Record<number, DexEntry>, y: Record<number, DexEntry>) => {
+    const out: Record<number, DexEntry> = { ...x };
+    for (const [k, e] of Object.entries(y)) {
+      const o = out[+k];
+      out[+k] = !o ? e : { ...(e.n > o.n ? e : o), first: Math.min(e.first, o.first), last: Math.max(e.last, o.last) };
+    }
+    return out;
+  };
+  const pairs = new Map<string, DexPair>();
+  for (const p of [...a.pairs, ...b.pairs]) { const k = `${p.aug}:${p.champ}`; const o = pairs.get(k); if (!o || p.n > o.n) pairs.set(k, p); }
+  return { champions: m(a.champions, b.champions), augments: m(a.augments, b.augments), pairs: [...pairs.values()] };
+}

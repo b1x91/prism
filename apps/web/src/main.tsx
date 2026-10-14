@@ -11,6 +11,7 @@ import { Augments } from './pages/Augments';
 import { Crew } from './pages/Crew';
 import { MemberPage, RankingPage } from './pages/Members';
 import { AuthDone } from './pages/AuthDone';
+import { DexPage } from './pages/Dex';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -28,6 +29,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="crew" element={<Crew />} />
             <Route path="me" element={<MemberPage />} />
             <Route path="members/:id" element={<MemberPage />} />
+            <Route path="dex" element={<DexPage />} />
             <Route path="ranking" element={<RankingPage />} />
             <Route path="champions" element={<Guide />} />
             <Route path="champions/:id" element={<Guide />} />
