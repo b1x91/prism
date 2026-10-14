@@ -33,11 +33,26 @@ const web = (env: Env, path: string, redirect: RequestRedirect = 'follow') =>
   fetch(`https://github.com/${repo(env)}${path}`, { headers: { 'User-Agent': 'prism-server' }, redirect });
 
 /** 최신 태그: /releases/latest 가 /releases/tag/<태그> 로 보내는 것을 읽는다 (API 없이) */
+async function tagFromWeb(env: Env): Promise<string | null> {
+  const r = await web(env, '/releases/latest', 'manual').catch(() => null);
+  const tag = (r?.headers.get('Location') ?? '').match(/\/releases\/tag\/([^/?#]+)/)?.[1];
+  return tag ? decodeURIComponent(tag) : null;
+}
+
+/**
+ * 최신 태그. GitHub 는 Cloudflare 주소에서 오는 요청을 가끔 막는다(403·429) → 공개 주소, API 순서로 묻고,
+ * 둘 다 실패하면 마지막으로 알아낸 태그(D1 ext_cache)를 쓴다. 업데이트 확인이 그 때문에 끊기지 않게.
+ */
 async function latestTag(env: Env): Promise<string> {
-  const r = await web(env, '/releases/latest', 'manual');
-  const tag = (r.headers.get('Location') ?? '').match(/\/releases\/tag\/([^/?#]+)/)?.[1];
-  if (!tag) throw new HttpError(502, `배포 정보를 가져오지 못했습니다 (${r.status}).`);
-  return decodeURIComponent(tag);
+  const tag = (await tagFromWeb(env)) ?? (await release(env).then((r) => r.tag_name).catch(() => null));
+  if (tag) {
+    await env.DB.prepare('INSERT INTO ext_cache (k, v, at) VALUES (?, ?, ?) ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at')
+      .bind('release-tag', tag, Date.now()).run().catch(() => {});
+    return tag;
+  }
+  const row = await env.DB.prepare('SELECT v FROM ext_cache WHERE k = ?').bind('release-tag').first<{ v: string }>().catch(() => null);
+  if (row?.v) return row.v;
+  throw new HttpError(502, '배포 정보를 가져오지 못했습니다. 잠시 뒤 다시 시도해주세요.');
 }
 
 async function release(env: Env, tag?: string): Promise<Rel> {
@@ -88,6 +103,11 @@ export async function download(req: Request, env: Env, tag?: string, file?: stri
   } else {
     r = await web(env, `/releases/download/${encodeURIComponent(tag)}/${ASSET}`);
     if (r.status === 404) throw new HttpError(404, '설치 파일이 없습니다.');
+    // 공개 주소가 막히면(403·429) API 로 한 번 더
+    if (!r.ok) {
+      const a = await release(env, tag).then((x) => x.assets.find((y) => y.name === ASSET)).catch(() => undefined);
+      if (a) r = await asset(env, a.id);
+    }
   }
   if (!r.ok || !r.body) throw new HttpError(502, `설치 파일을 가져오지 못했습니다 (${r.status}).`);
   const len = r.headers.get('Content-Length');
