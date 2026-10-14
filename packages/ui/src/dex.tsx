@@ -4,7 +4,7 @@
  * 못 만난 것은 번호와 흐린 그림(???). 누르면 도감 설명과 다음 목표.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, RARITY_KO, ROLE_KO, augMastery, champMastery, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Mastery, type Rarity } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity } from '@prism/core';
 import { ChampImg, Gem, Seg } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
@@ -53,7 +53,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
 
   const ids = kind === 'champions' ? CHAMP_IDS : AUG_IDS;
   const got = dex[kind];
-  const ms = useMemo(() => new Map(ids.map((id) => [id, kind === 'champions' ? champMastery(id, got[id], dex.pairs) : augMastery(id, got[id], dex.pairs)])), [ids, kind, got, dex.pairs]);
+  const ms = useMemo(() => new Map(ids.map((id) => [id, kind === 'champions' ? champMastery(id, got[id], dex.pairs, dex.challenges ?? null) : augMastery(id, got[id], dex.pairs)])), [ids, kind, got, dex.pairs, dex.challenges]);
   const no = useMemo(() => new Map(ids.map((id, i) => [id, i])), [ids]);
   const m = (id: number) => ms.get(id)!;
   const now = Date.now();
@@ -142,7 +142,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
               <button key={id} type="button" className={`dx ${stageKey(x)} ${current === id ? 'sel' : ''} ${kind === 'augments' ? AUGMENT[id]?.rarity ?? '' : ''}`} onClick={() => pick(id)} aria-label={x.seen ? `${nameOf(kind, id)} ${stageOf(x)} ${x.done}/${x.total}` : `${NO(no.get(id)!)} 미발견`}>
                 <span className="no">{NO(no.get(id)!)}</span>
                 {fresh && !x.caught && <span className="new">NEW</span>}
-                {x.master ? <span className="mark" role="img" aria-label="마스터" title="마스터 · 목표 6개 모두 달성"><PrismMark size={18} /></span> : x.caught && <span className="mark" role="img" aria-label="포획" title="포획 · 3승 달성"><Crystal size={16} /></span>}
+                {x.master ? <span className="mark" role="img" aria-label="마스터" title={`마스터 · 목표 ${x.total}개 모두 달성`}><PrismMark size={18} /></span> : x.caught && <span className="mark" role="img" aria-label="포획" title="포획 · 3승 달성"><Crystal size={16} /></span>}
                 <span className="pic">{kind === 'champions' ? <ChampImg id={id} size={56} /> : <AugRing id={id} size={56} />}{!x.seen && <i className="q" aria-hidden="true">?</i>}</span>
                 <span className="nm">{x.seen ? nameOf(kind, id) : '???'}</span>
                 <Pips m={x} />
@@ -163,32 +163,39 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
   );
 }
 
-/** 칸 아래 작은 여정 표시: 특별 목표(◆) + 승리 목표 5개 */
+/** 칸 아래 작은 여정 표시: 특별 목표(◆) + 승리 목표 + 역할 챌린지 (관문은 보석 모양) */
 function Pips({ m }: { m: Mastery }) {
   return (
     <span className="pips" title={`${m.done}/${m.total}`}>
-      {m.goals.map((g) => <i key={g.key} className={`pip ${g.key === 'special' ? 's' : ''} ${g.done ? 'on' : ''}`} />)}
+      {m.goals.filter((g) => !g.off).map((g) => <i key={g.key} className={`pip ${g.key === 'special' ? 's' : ''} ${g.role ? 'r' : ''} ${g.gate ? 'g' : ''} ${g.done ? 'on' : ''}`} />)}
     </span>
   );
 }
 
+const nextText = (g: Goal) => (g.key === 'special' || g.role ? `${g.label}${g.target > 1 && g.cur > 0 ? ` (${g.cur}/${g.target})` : ''}` : `${g.label}까지 ${g.target - g.cur}승`);
+
 function Journey({ m, specialList }: { m: Mastery; specialList: ReactNode }) {
+  const base = m.goals.filter((g) => !g.role), role = m.goals.filter((g) => g.role);
+  const step = (g: Goal) => (
+    <li key={g.key} className={`${g.key === 'special' ? 'sp' : ''} ${g.done ? 'done' : ''} ${m.next === g ? 'next' : ''} ${g.gate ? 'gate' : ''} ${g.off ? 'off' : ''}`}>
+      <span className="jc" aria-hidden="true">{g.done ? <Icon name="check" /> : g.gate ? <PrismMark size={14} /> : g.key === 'special' ? '◆' : ''}</span>
+      <span className="jl">{g.gate && <em>마스터 관문</em>}{g.label}{g.hint && <small>{g.off ? '아직 이 기록을 받지 못했어요 · 마스터 조건에서 빠져요' : g.hint}</small>}</span>
+      {g.key === 'special'
+        ? <span className="jv">{m.special.tried.length}/{m.special.ids.length} 경험</span>
+        : <><span className="jbar"><span style={{ width: `${(g.cur / g.target) * 100}%` }} /></span><span className="jv">{g.cur}/{g.target}</span></>}
+    </li>
+  );
   return (
     <div className="journey">
       <div className="jh"><span className="k">마스터 여정</span><b>{m.done}<small>/{m.total}</small></b>
-        {m.next && <span className="jnext">다음 목표 · {m.next.key === 'special' ? m.next.label : `${m.next.label}까지 ${m.next.target - m.next.cur}승`}</span>}
+        {m.next && <span className="jnext">다음 목표 · {nextText(m.next)}</span>}
         {m.master && <span className="jnext master">마스터 달성</span>}
       </div>
-      <ol className="jsteps">{m.goals.map((g) => (
-        <li key={g.key} className={`${g.done ? 'done' : ''} ${m.next === g ? 'next' : ''}`}>
-          <span className="jc" aria-hidden="true">{g.done ? <Icon name="check" /> : g.key === 'special' ? '◆' : ''}</span>
-          <span className="jl">{g.label}</span>
-          {g.key === 'special'
-            ? <span className="jv">{m.special.tried.length}/{m.special.ids.length} 경험</span>
-            : <span className="jbar"><span style={{ width: `${(g.cur / g.target) * 100}%` }} /></span>}
-          {g.key !== 'special' && <span className="jv">{g.cur}/{g.target}</span>}
-        </li>
-      ))}</ol>
+      <ol className="jsteps">{base.map(step)}</ol>
+      {role.length > 0 && <>
+        <div className="jrole"><span className="k">{m.role ? `${CHALLENGE_ROLE_KO[m.role]} 챌린지` : '역할 챌린지'}</span><span className="meta">관문까지 넘어야 마스터</span></div>
+        <ol className="jsteps">{role.map(step)}</ol>
+      </>}
       {specialList}
     </div>
   );

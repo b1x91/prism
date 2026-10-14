@@ -13,3 +13,4 @@ export * from './mastery';
 export * from './situation';
 export * from './review';
 export * from './presence';
+export * from './challenges';

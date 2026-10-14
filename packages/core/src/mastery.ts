@@ -3,15 +3,23 @@
  *  - 챔피언: 그 챔피언에게 S 티어로 맞는 증강을 골라 보기 + 그 챔피언으로 3/5/10/30/50승
  *  - 증강:   그 증강이 가장 잘 맞는 챔피언(대부분 S, 범용 증강은 그 증강의 최고 티어)으로 골라 보기 + 그 증강으로 3/5/10/30/50승
  * 3승이면 '포획'(포켓몬 도감의 잡음), 목표를 모두 이루면 '마스터'.
+ * 챔피언은 역할 챌린지(challenges.ts)까지, 그 마지막 관문을 넘어야 마스터.
  */
 import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS } from './data';
 import { fitOf, fitPoints, tierOf, type FitTier } from './synergy';
 import type { DexEntry, DexPair } from './history';
+import { ROLE_CHALLENGES, challengeRole, type ChallengeRole, type ChallengeTally } from './challenges';
 
 export const WIN_STEPS = [3, 5, 10, 30, 50] as const;
 export const CATCH_WINS = 3;
 
-export type Goal = { key: string; label: string; cur: number; target: number; done: boolean };
+export type Goal = {
+  key: string; label: string; cur: number; target: number; done: boolean;
+  /** 역할 챌린지 */ role?: boolean;
+  /** 마지막 관문 */ gate?: boolean;
+  hint?: string;
+  /** 롤 클라이언트가 이 기록을 주지 않아 도전할 수 없음 (마스터 조건에서 뺀다) */ off?: boolean;
+};
 export type Mastery = {
   seen: boolean;
   caught: boolean;
@@ -24,6 +32,8 @@ export type Mastery = {
   next: Goal | null;
   /** 특별 목표에 해당하는 상대 (챔피언이면 S 티어 증강들, 증강이면 가장 잘 맞는 챔피언들)와 써 본 것 */
   special: { tier: FitTier; ids: number[]; tried: number[] };
+  /** 챔피언 역할 챌린지의 역할 */
+  role?: ChallengeRole | null;
 };
 
 const TIER_ORDER: FitTier[] = ['S', 'A', 'B', 'C', 'D'];
@@ -54,21 +64,37 @@ export function bestChampions(aug: number): { tier: FitTier; ids: number[] } {
   return v;
 }
 
-function build(e: DexEntry | undefined, special: Mastery['special'], specialLabel: string): Mastery {
+function build(e: DexEntry | undefined, special: Mastery['special'], specialLabel: string, extra: Goal[] = [], role?: ChallengeRole | null): Mastery {
   const wins = e?.w ?? 0;
   const goals: Goal[] = [
     { key: 'special', label: specialLabel, cur: Math.min(special.tried.length, 1), target: 1, done: special.tried.length > 0 },
     ...WIN_STEPS.map((t) => ({ key: `w${t}`, label: `${t}승`, cur: Math.min(wins, t), target: t, done: wins >= t })),
+    ...extra,
   ];
-  const done = goals.filter((g) => g.done).length;
-  return { seen: Boolean(e), caught: wins >= CATCH_WINS, master: done === goals.length, goals, done, total: goals.length, next: goals.find((g) => !g.done) ?? null, special };
+  const live = goals.filter((g) => !g.off);
+  const done = live.filter((g) => g.done).length;
+  return { seen: Boolean(e), caught: wins >= CATCH_WINS, master: done === live.length, goals, done, total: live.length, next: live.find((g) => !g.done) ?? null, special, role };
 }
 
-export function champMastery(id: number, e: DexEntry | undefined, pairs: DexPair[]): Mastery {
+/** 챔피언 역할 챌린지 → 목표 (관문은 맨 뒤) */
+function roleGoals(id: number, ch?: ChallengeTally | null): { goals: Goal[]; role: ChallengeRole | null } {
+  const role = challengeRole(id);
+  if (!role) return { goals: [], role };
+  const known = new Set(ch?.known ?? []);
+  const counts = ch?.counts[id] ?? {};
+  const goals = ROLE_CHALLENGES[role].map((c) => {
+    const n = counts[c.key] ?? 0;
+    return { key: `r-${c.key}`, label: c.label, hint: c.hint, cur: Math.min(n, c.target), target: c.target, done: n >= c.target, role: true, gate: c.gate, off: !ch || (c.needs.some((k) => !known.has(k)) && n === 0) };
+  });
+  return { goals: [...goals.filter((g) => !g.gate), ...goals.filter((g) => g.gate)], role };
+}
+
+export function champMastery(id: number, e: DexEntry | undefined, pairs: DexPair[], ch?: ChallengeTally | null): Mastery {
   const ids = sTierAugments(id);
   const set = new Set(ids);
   const tried = [...new Set(pairs.filter((p) => p.champ === id && set.has(p.aug)).map((p) => p.aug))];
-  return build(e, { tier: 'S', ids, tried }, 'S티어 증강 골라 보기');
+  const r = roleGoals(id, ch);
+  return build(e, { tier: 'S', ids, tried }, 'S티어 증강 골라 보기', r.goals, r.role);
 }
 
 export function augMastery(id: number, e: DexEntry | undefined, pairs: DexPair[]): Mastery {

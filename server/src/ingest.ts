@@ -8,6 +8,7 @@
  *      비회원은 '포텐 멤버' 후보만 남긴다 (v3.10): 회원과 같은 팀이었거나 사용자 설정 판이면 prospect_games. 그 밖은 폐기.
  *   5. 같은 팀 5명 수치가 모두 있을 때만 점유율 계산.
  */
+import { featOf, type FeatSource } from '../../packages/core/src/challenges.js';
 import { finite, HttpError, int, json, type Env, type Member } from './util.js';
 
 const MAYHEM_QUEUE = 2400;
@@ -27,6 +28,13 @@ type InParticipant = {
   goldEarned?: number;
   augments?: number[];
   items?: number[];
+  // 도감 역할 챌린지용 (있는 값만)
+  largestMultiKill?: number;
+  pentaKills?: number;
+  quadraKills?: number;
+  ccTime?: number;
+  healsOnTeammates?: number;
+  shieldsOnTeammates?: number;
 };
 type InGame = { gameId: number; queueId: number; gameType?: string; gameMode?: string; mapId?: number; playedAt: number; duration: number; participants: InParticipant[] };
 
@@ -142,7 +150,17 @@ export async function ingest(req: Request, env: Env, me: Member) {
       ).bind(g.gameId, g.queueId, g.playedAt, g.duration, source, me.id, crew.length, JSON.stringify(totals), now),
     );
     if (dup) stmts.push(env.DB.prepare('UPDATE matches SET crew_count = MAX(crew_count, ?) WHERE game_id = ?').bind(crew.length, g.gameId));
+    // 예전에 조합 없이 들어온 판이면 양 팀 챔피언 번호를 채운다 (판 복기용)
+    if (dup) stmts.push(env.DB.prepare("UPDATE matches SET team_totals = ? WHERE game_id = ? AND team_totals NOT LIKE '%champions%'").bind(JSON.stringify(totals), g.gameId));
 
+    // 활약 기록의 재료: 10명 전체 (순위를 가리려고). 회원 것만 저장하고 나머지는 버린다
+    const featSrc = (p: InParticipant): FeatSource => ({
+      teamId: p.teamId, win: p.win, kills: p.kills, deaths: p.deaths, items: ids(p.items) ?? [],
+      damageToChampions: finite(p.damageToChampions) ?? undefined, damageTaken: finite(p.damageTaken) ?? undefined,
+      largestMultiKill: finite(p.largestMultiKill) ?? undefined, pentaKills: finite(p.pentaKills) ?? undefined, quadraKills: finite(p.quadraKills) ?? undefined,
+      ccTime: finite(p.ccTime) ?? undefined, healsOnTeammates: finite(p.healsOnTeammates) ?? undefined, shieldsOnTeammates: finite(p.shieldsOnTeammates) ?? undefined,
+    });
+    const allSrc = g.participants.map(featSrc);
     for (const p of crew) {
       const memberId = memberByPuuid.get(p.puuid)!;
       const team = teams[String(p.teamId) as '100' | '200'];
@@ -178,6 +196,8 @@ export async function ingest(req: Request, env: Env, me: Member) {
           crew.length,
         ),
       );
+      // 활약 기록: 새 판이든, 기록 없이 먼저 들어온 판이든 비어 있으면 채운다
+      stmts.push(env.DB.prepare('UPDATE participants SET feats = ? WHERE game_id = ? AND member_id = ? AND feats IS NULL').bind(JSON.stringify(featOf(featSrc(p), allSrc)), g.gameId, memberId));
       for (const a of new Set(augments ?? [])) {
         stmts.push(
           env.DB.prepare('INSERT OR IGNORE INTO participant_augments (game_id, member_id, augment_id, champion_id, win) VALUES (?, ?, ?, ?, ?)').bind(

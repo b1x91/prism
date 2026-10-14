@@ -102,11 +102,13 @@ async function loadHistory(puuid: string, pages: number) {
   return mayhemGames(out).games;
 }
 
+const UPLOADED = 'prism-uploaded-f1';
 const canUpload = () => Boolean(state.me?.consent);
 
 async function sendGames(ids: number[]) {
   // 보냈음 = 서버가 받아들인 판만. 거절된 판(봇 섞인 커스텀 등)은 앱 버전마다 한 번만 다시 본다
-  const done = new Set<number>(stored('prism-uploaded', []));
+  // (-f1: 도감 역할 챌린지 기록을 채우려고 예전에 보낸 판도 한 번 다시 보낸다. 서버는 같은 판을 다시 저장하지 않고 빈 기록만 채운다)
+  const done = new Set<number>(stored(UPLOADED, []));
   const skipKey = `prism-skipped-${VERSION}`;
   const skipped = new Set<number>(stored(skipKey, []));
   const todo = ids.filter((id) => !done.has(id) && !skipped.has(id));
@@ -123,7 +125,7 @@ async function sendGames(ids: number[]) {
       set({ upload: { ...state.upload, stored: state.upload.stored + r.stored } });
       (r.accepted ?? []).forEach((x) => accepted.add(x));
     }
-    store('prism-uploaded', [...stored<number[]>('prism-uploaded', []), ...part.filter((x) => accepted.has(x))].slice(-2000));
+    store(UPLOADED, [...stored<number[]>(UPLOADED, []), ...part.filter((x) => accepted.has(x))].slice(-2000));
     store(skipKey, [...stored<number[]>(skipKey, []), ...part.filter((x) => !accepted.has(x))].slice(-2000));
   }
 }

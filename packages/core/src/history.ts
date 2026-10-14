@@ -105,6 +105,13 @@ export function toIngestGame(d: any) {
       goldEarned: num(s.goldEarned) ?? undefined,
       augments: augmentsOf(s),
       items: itemsOf(s),
+      // 도감 역할 챌린지 (클라이언트가 주는 값만. 이름이 버전마다 다를 수 있어 둘 다 본다)
+      largestMultiKill: num(s.largestMultiKill) ?? undefined,
+      pentaKills: num(s.pentaKills) ?? undefined,
+      quadraKills: num(s.quadraKills) ?? undefined,
+      ccTime: num(s.timeCCingOthers) ?? undefined,
+      healsOnTeammates: num(s.totalHealsOnTeammates) ?? num(s.totalHealOnTeammates) ?? undefined,
+      shieldsOnTeammates: num(s.totalDamageShieldedOnTeammates) ?? undefined,
     };
   });
   return { gameId: Number(d?.gameId), queueId: Number(d?.queueId), gameType: String(d?.gameType ?? ''), gameMode: String(d?.gameMode ?? ''), mapId: Number(d?.mapId) || 0, playedAt: Number(d?.gameCreation), duration: Number(d?.gameDuration), participants };
@@ -186,13 +193,13 @@ export function todayPicks(p: Personal, allIds: number[], day = Math.floor(Date.
 
 export type DexEntry = { n: number; w: number; first: number; last: number };
 export type DexPair = { aug: number; champ: number; n: number; w: number };
-export type Dex = { champions: Record<number, DexEntry>; augments: Record<number, DexEntry>; pairs: DexPair[] };
+export type Dex = { champions: Record<number, DexEntry>; augments: Record<number, DexEntry>; pairs: DexPair[]; challenges?: import('./challenges').ChallengeTally };
 /** 서버 /api/me/dex 응답 */
-export type DexRows = { champions: ({ id: number } & DexEntry)[]; augments: ({ id: number } & DexEntry)[]; pairs: DexPair[] };
+export type DexRows = { champions: ({ id: number } & DexEntry)[]; augments: ({ id: number } & DexEntry)[]; pairs: DexPair[]; challenges?: import('./challenges').ChallengeTally };
 
 export function dexFromRows(r: DexRows): Dex {
   const map = (rows: ({ id: number } & DexEntry)[]) => Object.fromEntries(rows.map(({ id, ...e }) => [id, e]));
-  return { champions: map(r.champions), augments: map(r.augments), pairs: r.pairs };
+  return { champions: map(r.champions), augments: map(r.augments), pairs: r.pairs, challenges: r.challenges };
 }
 
 export function dexFromGames(games: Game[]): Dex {
@@ -231,7 +238,8 @@ export function mergeDex(a: Dex, b: Dex): Dex {
   };
   const pairs = new Map<string, DexPair>();
   for (const p of [...a.pairs, ...b.pairs]) { const k = `${p.aug}:${p.champ}`; const o = pairs.get(k); if (!o || p.n > o.n) pairs.set(k, p); }
-  return { champions: m(a.champions, b.champions), augments: m(a.augments, b.augments), pairs: [...pairs.values()] };
+  // 역할 챌린지는 서버만 센다 (10명 전체가 필요해서)
+  return { champions: m(a.champions, b.champions), augments: m(a.augments, b.augments), pairs: [...pairs.values()], challenges: a.challenges ?? b.challenges };
 }
 
 // ───────── 한 판 상세 ─────────

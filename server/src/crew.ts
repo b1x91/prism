@@ -5,6 +5,7 @@
 import { can, permsOf, topRole } from './roles.js';
 import { FACE, HttpError, canHostScrim, json, type Env, type Member } from './util.js';
 import { adoptProspect } from './prospects.js';
+import { knownFeats, tallyByMember } from './artisans.js';
 import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
 import skinData from '../../packages/core/data/skins.json';
 import { presenceOf } from '../../packages/core/src/presence.js';
@@ -73,7 +74,7 @@ export async function myGames(env: Env, me: Member) {
  * 판 목록(최근 100판)과 달리 개수 제한 없이 집계만 보낸다.
  */
 export async function myDex(env: Env, me: Member) {
-  const [champs, augs, pairs] = await env.DB.batch([
+  const [champs, augs, pairs, feats] = await env.DB.batch([
     env.DB.prepare('SELECT champion_id AS id, COUNT(*) AS n, SUM(win) AS w, MIN(played_at) AS first, MAX(played_at) AS last FROM participants WHERE member_id = ? GROUP BY champion_id').bind(me.id),
     env.DB.prepare(
       `SELECT CAST(j.value AS INTEGER) AS id, COUNT(*) AS n, SUM(p.win) AS w, MIN(p.played_at) AS first, MAX(p.played_at) AS last
@@ -83,8 +84,11 @@ export async function myDex(env: Env, me: Member) {
       `SELECT CAST(j.value AS INTEGER) AS aug, p.champion_id AS champ, COUNT(*) AS n, SUM(p.win) AS w
        FROM participants p, json_each(p.augments) j WHERE p.member_id = ? AND p.augments IS NOT NULL GROUP BY 1, 2`,
     ).bind(me.id),
+    env.DB.prepare('SELECT member_id, champion_id AS championId, win, kills, deaths, feats FROM participants WHERE member_id = ? AND feats IS NOT NULL').bind(me.id),
   ]);
-  return json({ champions: champs.results, augments: augs.results, pairs: pairs.results });
+  const known = await knownFeats(env);
+  const challenges = tallyByMember(feats.results as Parameters<typeof tallyByMember>[0], known).get(me.id) ?? { counts: {}, known };
+  return json({ champions: champs.results, augments: augs.results, pairs: pairs.results, challenges });
 }
 
 /** 앱이 로그인된 롤 계정을 연결한다. 클라이언트에 로그인된 계정이라 아이콘 인증을 대신한다 */

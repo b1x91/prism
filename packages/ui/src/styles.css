@@ -833,6 +833,10 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .pip.on { background: var(--accent); box-shadow: none; }
 .pip.s { width: 7px; height: 7px; border-radius: 1px; transform: rotate(45deg); margin-right: 2px; }
 .pip.s.on { background: #f3c969; }
+.pip.r { border-radius: 2px; }
+.pip.r.on { background: var(--ok); }
+.pip.g { width: 8px; height: 8px; border-radius: 1px; transform: rotate(45deg); margin-left: 2px; }
+.pip.g.on { background: linear-gradient(135deg, var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-7)); }
 .dx.master .pip.on { background: linear-gradient(135deg, var(--spectrum-2), var(--spectrum-6)); }
 .dx .pic { display: grid; place-items: center; width: 56px; height: 56px; }
 .dx .pic .champ { border-radius: 50%; }
@@ -904,11 +908,11 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .jnext.master { color: var(--spectrum-6); }
 .jsteps { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .jsteps li { display: grid; grid-template-columns: 20px minmax(0, 1fr) 72px 40px; align-items: center; gap: var(--s2); font-size: var(--fs-sm); color: var(--text-2); }
-.jsteps li:first-child { grid-template-columns: 20px minmax(0, 1fr) auto; }
+.jsteps li.sp { grid-template-columns: 20px minmax(0, 1fr) auto; }
 .jc { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--surface-2); color: var(--text-3); font-size: 12px; line-height: 1; }
 .jc .icon, .jc svg { width: 12px; height: 12px; }
 .jsteps li.done .jc { background: var(--accent); color: #fff; }
-.jsteps li:first-child.done .jc { background: #e2b33a; }
+.jsteps li.sp.done .jc { background: #e2b33a; }
 .jsteps li.done .jl { color: var(--text); font-weight: 650; }
 .jsteps li.next { color: var(--text); font-weight: 700; }
 .jsteps li.next .jc { box-shadow: 0 0 0 2px var(--accent); }
@@ -1090,3 +1094,14 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .fp .pdot { position: absolute; right: -3px; bottom: -3px; width: 12px; height: 12px; box-shadow: 0 0 0 2px var(--surface); }
 .ptag { display: inline-flex; align-items: center; gap: 6px; font: inherit; color: inherit; vertical-align: baseline; }
 .banner .ptag { background: none; padding: 0; border: 0; box-shadow: none; }
+
+/* 도감 역할 챌린지 */
+.jrole { display: flex; align-items: baseline; gap: var(--s2); padding-top: var(--s2); border-top: 1px solid var(--line); }
+.jrole .k { font-size: var(--fs-xs); font-weight: 750; color: var(--text-3); }
+.jrole .meta { font-size: var(--fs-xs); }
+.jsteps .jl { display: grid; min-width: 0; }
+.jsteps .jl em { font-style: normal; font-size: var(--fs-xs); font-weight: 800; color: var(--spectrum-6); }
+.jsteps .jl small { font-size: var(--fs-xs); font-weight: 500; color: var(--text-3); word-break: keep-all; }
+.jsteps li.gate .jc { background: none; }
+.jsteps li.gate.done .jc { background: var(--ok); }
+.jsteps li.off { opacity: .5; }
