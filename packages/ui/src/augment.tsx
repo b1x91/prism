@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, gradeUp, rankFits, relatedAugments, topTie, type AugmentStats, type FitTier, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, gradeUp, fitPoints, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
 import { ChampImg } from './basics';
 import { AugImg, Empty, Seg } from './basics';
 import { Icon } from './icons';
@@ -15,16 +15,17 @@ function StatLine({ id, champ, all }: { id: number; champ: StatMap; all: StatMap
   return null;
 }
 
-function GuideRow({ f, showLevel, compact, champ, all, stats }: { f: Fit; showLevel: boolean; compact?: boolean; champ: StatMap; all: StatMap; stats: boolean }) {
+function GuideRow({ f, compact, champ, all, stats, c }: { f: Fit; compact?: boolean; champ: StatMap; all: StatMap; stats: boolean; c: ChampionProfile }) {
   const a = AUGMENT[f.id];
   if (!a) return null;
+  const tier = tierOf(fitPoints(f));
   return (
-    <div className={`ga ${f.level}`}>
-      <AugImg id={a.id} />
-      <span className="nm" title={a.name}>{a.name}</span>
-      {showLevel ? <span className={`lv ${f.level}`}>{LEVEL_KO[f.level]}</span> : <span />}
+    <div className={`ga t-${tier}`}>
+      <AugRing id={a.id} size={40} />
+      <span className="nm" title={a.name}>{a.name}<GradeUp rarity={a.rarity} tier={tier} /></span>
+      <TierBadge tier={tier} />
       <div className="why">
-        {f.missing ? <b>{f.missing}</b> : f.reasons.map((r) => <span key={r}>{r}</span>)}
+        <Explain c={c} id={a.id} tier={tier} />
         {stats && <StatLine id={a.id} champ={champ} all={all} />}
       </div>
       {!compact && <details><summary>{a.note || '효과 보기'}</summary><p>{a.desc}</p></details>}
@@ -32,30 +33,34 @@ function GuideRow({ f, showLevel, compact, champ, all, stats }: { f: Fit; showLe
   );
 }
 
-/** 챔피언 하나의 등급별 증강 궁합. stats 가 있으면 Prism 실전 승률을 붙인다 (회원 전용) */
+/** 챔피언 하나의 등급별 증강 궁합 (어울림 티어 S~D 순). stats 가 있으면 Prism 실전 승률을 붙인다 (회원 전용) */
 export function AugmentGuide({ championId, stats, compact }: { championId: number; stats?: AugmentStats | null; compact?: boolean }) {
   const g = useMemo(() => guideOf(GAME_DATA, championId), [championId]);
   const [all, setAll] = useState(false);
   const [more, setMore] = useState<Record<Rarity, boolean>>({ prismatic: false, gold: false, silver: false });
-  if (!g) return <Empty>챔피언 정보가 없습니다.</Empty>;
+  const c = CHAMPIONS[championId];
+  if (!g || !c) return <Empty>챔피언 정보가 없습니다.</Empty>;
   const champ = toMap(stats?.champion), overall = toMap(stats?.overall);
+  // 티어 점수 순 (같은 점수면 근거가 많은 쪽)
+  const sorted = (r: Rarity) => [...g[r]].sort((x, y) => fitPoints(y) - fitPoints(x) || y.weight - x.weight);
+  const good = (f: Fit) => { const t = tierOf(fitPoints(f)); return t === 'S' || t === 'A'; };
   return (
     <div className="stack">
-      {!compact && <div className="row"><Seg value={all ? 'all' : 'fit'} options={[['fit', '잘 맞는 것'], ['all', '전체 비교']]} onChange={(v) => setAll(v === 'all')} /></div>}
       <div className="gcols">
         {ORDER.map((r) => {
-          const list = all && !compact ? g[r] : g[r].filter((f) => f.level === 'best');
+          const list = all && !compact ? sorted(r) : sorted(r).filter(good);
           const limit = compact ? 4 : more[r] ? list.length : 8;
           return (
             <div key={r} className="card gcol">
-              <h3><i className={`rbar ${r}`} />{RARITY_KO[r]}<span className="meta">잘 맞음 {g[r].filter((f) => f.level === 'best').length}개</span></h3>
-              {list.slice(0, limit).map((f) => <GuideRow key={f.id} f={f} showLevel={all && !compact} compact={compact} champ={champ} all={overall} stats={Boolean(stats)} />)}
-              {!list.length && <p className="meta">없음</p>}
+              <h3><i className={`rbar ${r}`} />{RARITY_KO[r]}<span className="meta">S·A {g[r].filter(good).length}개</span></h3>
+              {list.slice(0, limit).map((f) => <GuideRow key={f.id} f={f} compact={compact} champ={champ} all={overall} stats={Boolean(stats)} c={c} />)}
+              {!list.length && <p className="meta">잘 맞는 증강이 없어요</p>}
               {!compact && list.length > limit && <button type="button" className="btn ghost sm" onClick={() => setMore({ ...more, [r]: true })}>{list.length - limit}개 더 보기</button>}
             </div>
           );
         })}
       </div>
+      {!compact && <button type="button" className="linkbtn meta guide-all" onClick={() => setAll(!all)}>{all ? 'S·A 티어만 보기' : 'B~D 티어까지 모든 증강 보기'}</button>}
     </div>
   );
 }
@@ -153,7 +158,7 @@ export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
           <div className="dex-head"><i className={`rdot ${x}`} /><h3>{RARITY_KO[x]}</h3><span className="meta">{list.filter((a) => a.rarity === x).length}개</span></div>
           <div className="adex">
             {list.filter((a) => a.rarity === x).map((a) => (
-              <button type="button" key={a.id} className="ai" onClick={() => onOpen?.(a.id)}><AugImg id={a.id} size={44} /><span className="nm"><i className={`rdot ${a.rarity}`} />{a.name}</span><span className="note2">{a.note}</span><p>{a.desc}</p></button>
+              <button type="button" key={a.id} className="ai" onClick={() => onOpen?.(a.id)}><AugRing id={a.id} size={48} /><span className="nm">{a.name}</span><span className="note2">{a.note}</span><p>{a.desc}</p></button>
             ))}
           </div>
         </section>
@@ -173,7 +178,7 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack }: { id: numbe
     <div className="stack" style={{ gap: 16 }}>
       <section className={`card pad adet ${a.rarity}`}>
         <div className="adet-head">
-          <AugImg id={a.id} size={72} />
+          <AugRing id={a.id} size={80} />
           <div className="stack" style={{ gap: 8 }}>
             <div className="row wrapr" style={{ gap: 8 }}><span className={`rpill ${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.disabled && <span className="pill">현재 꺼짐</span>}</div>
             <h1>{a.name}</h1>

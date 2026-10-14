@@ -3,6 +3,7 @@
  * 집계는 저장하지 않고 원본에서 계산한다.
  */
 import { FACE, HttpError, canHostScrim, json, type Env, type Member } from './util.js';
+import { adoptProspect } from './prospects.js';
 import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
 import skinData from '../../packages/core/data/skins.json';
 
@@ -58,6 +59,8 @@ export async function linkRiot(req: Request, env: Env, me: Member) {
 export async function setConsent(req: Request, env: Env, me: Member) {
   const { agree } = (await req.json().catch(() => ({}))) as { agree?: boolean };
   await env.DB.prepare('UPDATE members SET opt_in_at = ? WHERE id = ?').bind(agree === true ? Date.now() : null, me.id).run();
+  // 포텐 멤버였다면 그동안 함께한 판을 내 기록으로 (v3.10)
+  if (agree === true && me.riot_puuid) await adoptProspect(env, me.id, me.riot_puuid);
   return json({ ok: true, consent: agree === true });
 }
 

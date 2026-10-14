@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { BoardView, Channels, Gem, Icon, Notes, PartyBoard, ScrimBoard } from '@prism/ui';
+import { BoardView, Channels, Gem, Icon, Notes, PartyBoard, ProspectBoard, ScrimBoard } from '@prism/ui';
 import { useSession } from '../session';
 
 function Intro() {
@@ -47,6 +47,7 @@ export function Crew() {
       <div className="page-head"><div><h1>Prism</h1><p>{me.nick}님, 오늘 밤도 한 판.</p></div><span className="sp" /><Channels links={links} /></div>
       <PartyBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
       <ScrimBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
+      <ProspectBoard api={api} invite={links.discord} admin={me.tier === 'admin'} />
       <Notes api={api} />
       <BoardView api={api} />
     </div></section>

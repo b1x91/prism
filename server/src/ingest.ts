@@ -4,7 +4,8 @@
  *      이미 있는 판은 다시 저장하지 않되, 빠진 회원 기록(나중에 동의한 회원)은 채운다.
  *   2. 10명 전원으로 팀 합계 계산 (있는 필드만).
  *   3. puuid ↔ members.riot_puuid 대조 → crew.
- *   4. matches 1건 + 회원 participants 저장. 비회원 데이터는 여기서 폐기.
+ *   4. matches 1건 + 회원 participants 저장.
+ *      비회원은 '포텐 멤버' 후보만 남긴다 (v3.10): 회원과 같은 팀이었거나 사용자 설정 판이면 prospect_games. 그 밖은 폐기.
  *   5. 같은 팀 5명 수치가 모두 있을 때만 점유율 계산.
  */
 import { finite, HttpError, int, json, type Env, type Member } from './util.js';
@@ -193,6 +194,26 @@ export async function ingest(req: Request, env: Env, me: Member) {
           memberId,
         ),
       );
+    }
+    // 포텐 멤버 후보: 회원이 1명 이상 있는 판에서, 회원과 같은 팀이었거나 사용자 설정(내전) 판에 함께한 비회원
+    if (crew.length > 0) {
+      const custom = g.queueId !== MAYHEM_QUEUE;
+      for (const p of g.participants) {
+        if (memberByPuuid.has(p.puuid)) continue;
+        const mates = crew.filter((c) => c.teamId === p.teamId).length;
+        if (!custom && mates === 0) continue;
+        const augments = ids(p.augments), items = ids(p.items);
+        stmts.push(
+          env.DB.prepare(
+            `INSERT OR IGNORE INTO prospect_games (puuid, game_id, riot_id, champion_id, team_id, win, kills, deaths, assists, dmg_champ, dmg_taken, gold, items, augments, played_at, custom, with_members, crew_count)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          ).bind(
+            p.puuid, g.gameId, typeof p.riotId === 'string' && p.riotId.includes('#') ? p.riotId : null, p.championId, p.teamId, p.win ? 1 : 0,
+            p.kills, p.deaths, p.assists, finite(p.damageToChampions), finite(p.damageTaken), finite(p.goldEarned),
+            items ? JSON.stringify(items) : null, augments ? JSON.stringify(augments) : null, g.playedAt, custom ? 1 : 0, mates, crew.length,
+          ),
+        );
+      }
     }
     if (!dup) result.stored++;
   }

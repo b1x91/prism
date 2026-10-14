@@ -4,7 +4,7 @@ import { AugmentCompare, AugmentGuide, ChampBanner, ChampGrid, ChampionCrew, Seg
 import type { AugmentStats } from '@prism/core';
 import { api } from '../bridge';
 
-export function ChampionsPage({ member }: { member: boolean }) {
+export function ChampionsPage({ member, record }: { member: boolean; record?: Record<number, { n: number; w: number }> }) {
   const { id } = useParams();
   const nav = useNavigate();
   const champ = Number(id) || null;
@@ -14,7 +14,7 @@ export function ChampionsPage({ member }: { member: boolean }) {
   if (!champ) return (
     <div className="stack" style={{ gap: 16 }}>
       <h1 className="h1">챔피언</h1>
-      <section className="card pad"><input className="input" style={{ marginBottom: 16 }} value={q} autoFocus onChange={(e) => setQ(e.target.value)} placeholder="챔피언 검색 (ㅇㄹ → 아리)" /><ChampGrid query={q} onPick={(c) => nav(`/champions/${c}`)} /></section>
+      <section className="card pad"><input className="input" style={{ marginBottom: 16 }} value={q} autoFocus onChange={(e) => setQ(e.target.value)} placeholder="챔피언 검색 (예: '아리' 혹은 'ㅇㄹ')" /><ChampGrid query={q} record={record} onPick={(c) => nav(`/champions/${c}`)} /></section>
     </div>
   );
   return (

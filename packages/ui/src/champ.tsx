@@ -33,11 +33,33 @@ export function ChampSearch({ onPick, placeholder = "챔피언 이름 (예: '아
   );
 }
 
-export function ChampGrid({ onPick, query = '' }: { onPick: (id: number) => void; query?: string }) {
-  const list = CHAMPION_LIST.filter((c) => matchName(c.name, query));
+const ROLES = ['marksman', 'mage', 'assassin', 'fighter', 'tank', 'support'] as const;
+
+/** 챔피언 목록: 역할로 거르기, record 가 있으면 내 판수·승률 표시 (앱) */
+export function ChampGrid({ onPick, query = '', record }: { onPick: (id: number) => void; query?: string; record?: Record<number, { n: number; w: number }> }) {
+  const [role, setRole] = useState<string>('all');
+  const [mine, setMine] = useState(false);
+  const list = CHAMPION_LIST.filter((c) => matchName(c.name, query) && (role === 'all' || c.roles.includes(role)) && (!mine || record?.[c.id]));
   return (
-    <div className="champ-grid">
-      {list.map((c) => <button key={c.id} type="button" onClick={() => onPick(c.id)}><ChampImg id={c.id} size={64} />{c.name}</button>)}
+    <div className="stack" style={{ gap: 16 }}>
+      <div className="role-chips">
+        <button type="button" className={`chip ${role === 'all' ? 'on' : ''}`} onClick={() => setRole('all')}>전체</button>
+        {ROLES.map((r) => <button key={r} type="button" className={`chip ${role === r ? 'on' : ''}`} onClick={() => setRole(r)}>{ROLE_KO[r]}</button>)}
+        {record && <><span className="sp" /><button type="button" className={`chip ${mine ? 'on' : ''}`} onClick={() => setMine(!mine)}>내가 해 본 챔피언</button></>}
+      </div>
+      <div className="champ-grid">
+        {list.map((c) => {
+          const r = record?.[c.id];
+          return (
+            <button key={c.id} type="button" className={record && !r ? 'unmet' : ''} onClick={() => onPick(c.id)}>
+              <span className="cg-pic"><ChampImg id={c.id} size={64} />{r && <span className={`cg-rec ${r.w / r.n >= 0.5 ? 'w' : 'l'}`}>{Math.round((r.w / r.n) * 100)}%</span>}</span>
+              {c.name}
+              {r && <small className="meta">{r.n}판</small>}
+            </button>
+          );
+        })}
+        {!list.length && <p className="meta">찾는 챔피언이 없어요</p>}
+      </div>
     </div>
   );
 }

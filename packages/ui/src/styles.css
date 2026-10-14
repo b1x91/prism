@@ -174,19 +174,22 @@ img.champ { object-view-box: inset(4.5%); }
 .gcol h3 .meta { margin-left: auto; font-weight: 500; }
 .rbar { width: 10px; height: 10px; border-radius: 3px; background: var(--silver); }
 .rbar.gold { background: var(--gold); } .rbar.prismatic { background: var(--spectrum); }
-.ga { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 2px var(--s3); align-items: center; padding: var(--s3) 0; border-top: 1px solid var(--line); }
+.ga { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 2px var(--s3); align-items: center; padding: var(--s3) 0; border-top: 1px solid var(--line); }
 .ga:first-of-type { border-top: 0; }
-.ga > .aug { grid-row: span 2; align-self: start; width: 36px; height: 36px; }
-.ga .nm { font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ga .why { grid-column: 2 / 4; display: flex; flex-wrap: wrap; gap: 2px var(--s2); font-size: var(--fs-xs); color: var(--text-3); }
+.ga > .aug-ring { grid-row: span 2; align-self: start; }
+.ga .nm { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); white-space: normal; overflow: visible; }
+.ga > .tier { grid-row: span 2; align-self: start; }
+.ga .nm { font-weight: 700; min-width: 0; }
+.ga .why { grid-column: 2; display: grid; gap: 2px; justify-items: start; }
 .ga .why b { color: var(--text-2); font-weight: 600; }
 .ga .stat2 { font-size: var(--fs-xs); color: var(--text-2); white-space: nowrap; }
 .ga .stat2 b { color: var(--text); }
-.ga details { grid-column: 2 / 4; font-size: var(--fs-xs); color: var(--text-2); }
+.ga details { grid-column: 2 / 4; margin-top: var(--s1); font-size: var(--fs-xs); color: var(--text-2); }
 .ga summary { cursor: pointer; list-style: none; }
 .ga summary::-webkit-details-marker { display: none; }
 .ga details p { margin: var(--s1) 0 0; white-space: pre-line; line-height: 1.55; color: var(--text-3); }
-.ga.weak, .ga.none { opacity: .5; }
+.ga.t-C, .ga.t-D { opacity: .55; }
+.guide-all { justify-self: center; }
 .lv { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 700; white-space: nowrap; }
 .lv.best { background: var(--accent-soft); color: var(--accent); } .lv.good { background: var(--surface-2); color: var(--text-2); } .lv.weak, .lv.none { color: var(--text-3); }
 
@@ -250,9 +253,9 @@ img.champ { object-view-box: inset(4.5%); }
 
 /* ───────── 증강 도감 ───────── */
 .adex { columns: 300px; column-gap: var(--s3); } /* 카드마다 제 높이 그대로, 세로로 쌓기 */
-.ai { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-content: start; gap: var(--s1) var(--s3); width: 100%; margin: 0 0 var(--s3); padding: var(--s4); border-radius: var(--r-l); background: var(--surface); border: 1px solid var(--line); break-inside: avoid; color: inherit; text-align: left; font: inherit; cursor: pointer; transition: border-color .15s ease, transform .15s ease; }
+.ai { display: grid; grid-template-columns: 48px minmax(0, 1fr); align-content: start; gap: var(--s1) var(--s3); width: 100%; margin: 0 0 var(--s3); padding: var(--s4); border-radius: var(--r-l); background: var(--surface); border: 1px solid var(--line); break-inside: avoid; color: inherit; text-align: left; font: inherit; cursor: pointer; transition: border-color .15s ease, transform .15s ease; }
 .ai:hover { border-color: var(--line-2); transform: translateY(-1px); }
-.ai .aug { width: 44px; height: 44px; grid-row: span 3; }
+.ai .aug-ring { grid-row: span 3; }
 .ai .nm { display: flex; align-items: center; gap: var(--s2); font-weight: 750; }
 .ai .note2 { font-size: var(--fs-sm); color: var(--text-2); }
 .ai p { margin: 0; font-size: var(--fs-xs); color: var(--text-3); white-space: pre-line; line-height: 1.55; }
@@ -626,3 +629,26 @@ svg.light { position: absolute; inset: 0; z-index: 0; pointer-events: none; over
 .sscore .g.t1 { color: #4a7dff; } .sscore .g.t2 { color: #ff5d6c; }
 .shost { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--line); }
 @media (max-width: 720px) { .shead { grid-template-columns: 72px minmax(0, 1fr); } .shead .pact { grid-column: 1 / -1; } .steams { grid-template-columns: minmax(0, 1fr); } .sfaces.grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+
+/* ───────── 포텐 멤버 ───────── */
+.prospects { display: grid; gap: var(--s3); }
+.prospects .card-head { margin-bottom: 0; }
+.plist2 { display: grid; gap: var(--s2); }
+.prow2 { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: var(--s3); align-items: center; padding: var(--s3); border-radius: var(--r-m); background: var(--surface-2); }
+.prow2 .face { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
+.prow2 .face.ph { display: block; background: var(--surface-3); }
+.pinfo { min-width: 0; display: grid; gap: 2px; }
+.pinfo .meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pname { display: flex; align-items: baseline; gap: var(--s1); }
+.pname b { font-size: var(--fs-md); }
+.ptag { margin-left: var(--s2); height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); display: inline-flex; align-items: center; background: var(--accent-soft); color: var(--accent); font-size: var(--fs-xs); font-weight: 750; }
+.pbtns { display: grid; justify-items: end; gap: var(--s1); }
+@media (max-width: 640px) { .prow2 { grid-template-columns: 44px minmax(0, 1fr); } .pbtns { grid-column: 1 / -1; grid-auto-flow: column; justify-content: start; } }
+
+/* 챔피언 목록: 역할 칩, 내 기록 */
+.role-chips { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.role-chips .sp { flex: 1; }
+.champ-grid .cg-pic { position: relative; display: block; line-height: 0; }
+.cg-rec { position: absolute; right: -6px; bottom: -6px; height: 20px; padding: 0 6px; border-radius: var(--r-pill); display: inline-flex; align-items: center; font-size: var(--fs-xs); font-weight: 800; line-height: 1; color: #fff; background: var(--win); box-shadow: 0 0 0 2px var(--surface); font-variant-numeric: tabular-nums; }
+.cg-rec.l { background: var(--text-3); }
+.champ-grid small { margin-top: -4px; }

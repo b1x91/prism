@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type Parties, type Party, type Scrim, type ScrimMember, type Scrims } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type Parties, type Party, type Prospects, type Scrim, type ScrimMember, type Scrims } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, MemberFace } from './basics';
 
 /** 서버 데이터 한 덩이 불러오기 (다시 불러오기 함수 포함) */
@@ -336,5 +336,40 @@ function ScrimCard({ s, size, now, busy, run, api, onMember }: { s: Scrim; size:
         <button type="button" className="linkbtn meta" disabled={busy === k('cancel')} onClick={() => act('cancel')}>내전 취소</button>
       </div>}
     </article>
+  );
+}
+
+// ───────── 포텐 멤버: 같이 여러 판 했거나 내전·사용자 설정 판을 함께한 비회원 (회원 전용) ─────────
+
+export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: string | null; admin?: boolean }) {
+  const { data, error, reload } = useLoad<Prospects>(api, '/api/prospects');
+  const [copied, setCopied] = useState<string | null>(null);
+  const copy = async (puuid: string) => {
+    if (!invite) return;
+    try { await navigator.clipboard.writeText(invite); setCopied(puuid); setTimeout(() => setCopied(null), 2000); } catch { /* 클립보드 막힘 */ }
+  };
+  if (error) return null;
+  return (
+    <section className="card pad prospects">
+      <div className="card-head"><h2>포텐 멤버</h2><span className="sp" /><span className="meta">우리와 {data?.queueMin ?? 3}판 넘게 같이 했거나 내전을 함께한 분들</span></div>
+      {!data ? <p className="meta">불러오는 중…</p> : !data.prospects.length ? <Empty>아직 없어요. 회원과 자주 같이 하는 분이 생기면 여기에 나타나요.</Empty> : (
+        <div className="plist2">{data.prospects.map((p) => {
+          const [name, tag] = (p.riotId ?? '이름 모름').split('#');
+          return (
+            <div key={p.puuid} className="prow2">
+              {p.main ? <img className="face" src={cdragon(CHAMPIONS[p.main]?.tile)} width={44} height={44} alt="" loading="lazy" /> : <span className="face ph" />}
+              <div className="pinfo">
+                <div className="pname"><b>{name}</b>{tag && <span className="meta">#{tag}</span>}{p.customs > 0 && <span className="ptag">내전 {p.customs}</span>}</div>
+                <div className="meta">같이 {p.n}판 · 그 판 승률 {pct(p.w, p.n)}{p.mates.length > 0 && <> · {p.mates.map((m) => `${m.nick} ${m.n}판`).join(', ')}</>} · {ago(p.lastAt)}</div>
+              </div>
+              <div className="pbtns">
+                {invite && <button type="button" className="btn sm" onClick={() => copy(p.puuid)}>{copied === p.puuid ? '복사했어요' : '초대 링크 복사'}</button>}
+                {admin && <button type="button" className="linkbtn meta" onClick={async () => { await api.del(`/api/prospects/${p.puuid}`).catch(() => {}); reload(); }}>기록 지우기</button>}
+              </div>
+            </div>
+          );
+        })}</div>
+      )}
+    </section>
   );
 }

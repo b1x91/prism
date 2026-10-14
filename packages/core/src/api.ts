@@ -40,3 +40,7 @@ export type Parties = { size: number; now: number; parties: Party[] };
 export type ScrimMember = PartyMember & { team: 1 | 2 | null; n: number; w: number; rating: number };
 export type Scrim = { id: number; startAt: number; note: string; hostId: string; lockedAt: number | null; members: ScrimMember[]; mine: boolean; host: boolean; results: { gameId: number; at: number; duration: number; winner: 1 | 2 }[] };
 export type Scrims = { size: number; now: number; canHost: boolean; scrims: Scrim[] };
+
+/** 포텐 멤버 (회원 전용) */
+export type Prospect = { puuid: string; riotId: string | null; n: number; w: number; queued: number; customs: number; lastAt: number; main: number | null; mates: { nick: string; n: number }[] };
+export type Prospects = { prospects: Prospect[]; queueMin: number };

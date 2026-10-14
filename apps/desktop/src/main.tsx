@@ -98,8 +98,8 @@ function App() {
       <main className="main" ref={main}>
         <Page main={main}><Routes>
           <Route index element={<GamePage s={s} />} />
-          <Route path="champions" element={<ChampionsPage member={!!s.me} />} />
-          <Route path="champions/:id" element={<ChampionsPage member={!!s.me} />} />
+          <Route path="champions" element={<ChampionsPage member={!!s.me} record={s.personal.champions} />} />
+          <Route path="champions/:id" element={<ChampionsPage member={!!s.me} record={s.personal.champions} />} />
           <Route path="augments" element={<AugmentsPage />} />
           <Route path="augments/:id" element={<AugmentsPage />} />
           <Route path="ranking" element={<RankingPage s={s} onLogin={login} />} />

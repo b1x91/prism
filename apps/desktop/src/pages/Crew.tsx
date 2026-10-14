@@ -1,10 +1,12 @@
 import { useNavigate } from 'react-router-dom';
-import { BoardView, Empty, Icon, Notes, PartyBoard, ScrimBoard } from '@prism/ui';
+import { BoardView, Empty, Icon, Notes, PartyBoard, ProspectBoard, ScrimBoard, useLoad } from '@prism/ui';
+import { withDefaults, type Links } from '@prism/core';
 import type { State } from '../controller';
 import { api, bridge } from '../bridge';
 
 export function CrewPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   const nav = useNavigate();
+  const links = withDefaults(useLoad<Links>(api, '/links').data);
   if (!s.session.configured) return <section className="card pad"><Empty>Prism 모임 기능은 곧 열립니다.</Empty></section>;
   if (!s.me) return <section className="card pad"><Empty action={<button type="button" className="btn primary" onClick={onLogin}><Icon name="discord" />디스코드로 로그인</button>}>모임 기록, 한 줄 생각, 실전 증강 승률은 Prism 회원에게 열립니다.</Empty></section>;
   return (
@@ -12,6 +14,7 @@ export function CrewPage({ s, onLogin }: { s: State; onLogin: () => void }) {
       <div className="row"><h1 className="h1">Prism</h1><span className="sp" /><button type="button" className="btn sm" onClick={() => bridge.openUrl('https://przm.web.app/crew')}><Icon name="out" />웹에서 열기</button></div>
       <PartyBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
       <ScrimBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
+      <ProspectBoard api={api} invite={links.discord} admin={s.me.tier === 'admin'} />
       <Notes api={api} />
       <BoardView api={api} />
     </div>

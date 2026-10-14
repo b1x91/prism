@@ -8,6 +8,7 @@ import { addTip, augmentStats, board, myGames, champSelect, crewTargets, deleteT
 import { ingest } from './ingest.js';
 import { memberPage, ranking } from './members.js';
 import { addNote, deleteNote, links, listNotes } from './notes.js';
+import { deleteProspect, listProspects } from './prospects.js';
 import { listScrims, openScrim, scrimAction } from './scrims.js';
 import { cancelParty, joinParty, leaveParty, listParties, openParty } from './parties.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
@@ -43,6 +44,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && pathname === '/api/parties') return listParties(env, me);
   if (m === 'POST' && pathname === '/api/parties') return openParty(req, env, me);
   if (m === 'GET' && pathname === '/api/scrims') return listScrims(env, me);
+  if (m === 'GET' && pathname === '/api/prospects') return listProspects(env);
   if (m === 'POST' && pathname === '/api/scrims') return openScrim(req, env, me);
   if (m === 'GET' && pathname === '/api/augments') {
     const c = Number(new URL(req.url).searchParams.get('champion'));
@@ -62,6 +64,8 @@ async function route(req: Request, env: Env): Promise<Response> {
   }
   const sc = pathname.match(/^\/api\/scrims\/(\d+)\/(join|leave|cancel|balance|swap|lock|unlock)$/);
   if (m === 'POST' && sc) return scrimAction(req, env, me, Number(sc[1]), sc[2]);
+  const pr = pathname.match(/^\/api\/prospects\/([0-9A-Za-z_-]{10,100})$/);
+  if (m === 'DELETE' && pr) return deleteProspect(env, me, pr[1]);
   const note = pathname.match(/^\/api\/notes\/(\d+)$/);
   if (m === 'DELETE' && note) return deleteNote(env, me, Number(note[1]));
   const tip = pathname.match(/^\/api\/tips\/(\d+)$/);
