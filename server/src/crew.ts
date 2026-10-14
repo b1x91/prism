@@ -2,7 +2,7 @@
  * Prism 회원 전용 기능. 모든 응답은 회원 데이터이므로 로그인한 회원에게만 준다 (CLAUDE.md 2절 11).
  * 집계는 저장하지 않고 원본에서 계산한다.
  */
-import { FACE, HttpError, json, type Env, type Member } from './util.js';
+import { FACE, HttpError, canHostScrim, json, type Env, type Member } from './util.js';
 import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
 import skinData from '../../packages/core/data/skins.json';
 
@@ -28,6 +28,7 @@ export async function getMe(env: Env, me: Member) {
     consent: Boolean(me.opt_in_at),
     games: row ?? { n: 0, w: 0 },
     skin: me.profile_skin,
+    canScrim: canHostScrim(env, me),
   });
 }
 
@@ -35,12 +36,12 @@ export async function getMe(env: Env, me: Member) {
 export async function myGames(env: Env, me: Member) {
   const r = await env.DB.prepare(
     `SELECT p.game_id AS gameId, p.played_at AS playedAt, m.duration AS duration, p.champion_id AS championId, p.win, p.kills, p.deaths, p.assists,
-            p.dmg_champ AS damageToChampions, p.dmg_taken AS damageTaken, p.gold AS goldEarned, p.items, p.augments
+            p.dmg_champ AS damageToChampions, p.dmg_taken AS damageTaken, p.gold AS goldEarned, p.items, p.augments, m.queue_id AS queueId
      FROM participants p JOIN matches m ON m.game_id = p.game_id WHERE p.member_id = ? ORDER BY p.played_at DESC LIMIT 100`,
   )
     .bind(me.id)
     .all();
-  const games = r.results.map((g: any) => ({ ...g, win: g.win === 1, items: g.items ? JSON.parse(g.items) : [], augments: g.augments ? JSON.parse(g.augments) : [] }));
+  const games = r.results.map((g: any) => ({ ...g, win: g.win === 1, custom: g.queueId !== 2400, items: g.items ? JSON.parse(g.items) : [], augments: g.augments ? JSON.parse(g.augments) : [] }));
   return json({ games });
 }
 

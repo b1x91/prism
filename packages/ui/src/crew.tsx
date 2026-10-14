@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type Parties, type Party } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type Parties, type Party, type Scrim, type ScrimMember, type Scrims } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, MemberFace } from './basics';
 
 /** 서버 데이터 한 덩이 불러오기 (다시 불러오기 함수 포함) */
@@ -230,7 +230,7 @@ export function PartyBoard({ api, onMember }: { api: Api; onMember?: (id: string
   );
 }
 
-function PartyComposer({ busy, onOpen }: { busy: boolean; onOpen: (startAt: number, note: string) => void }) {
+function PartyComposer({ busy, onOpen, verb = '판 열기', placeholder = '한 줄 메모 (선택) 예: 디코 음성방에서 만나요' }: { busy: boolean; onOpen: (startAt: number, note: string) => void; verb?: string; placeholder?: string }) {
   const [now] = useState(() => Date.now());
   const quick = useMemo(() => quickTimes(now), [now]);
   const [at, setAt] = useState<number>(quick[3][1]);
@@ -245,9 +245,96 @@ function PartyComposer({ busy, onOpen }: { busy: boolean; onOpen: (startAt: numb
         <label className={`chip time ${custom ? 'on' : ''}`}>직접<input type="time" value={custom} onChange={(e) => setCustom(e.target.value)} /></label>
       </div>
       <div className="prow">
-        <input className="input" value={note} maxLength={40} onChange={(e) => setNote(e.target.value)} placeholder="한 줄 메모 (선택) 예: 디코 음성방에서 만나요" />
-        <button type="submit" className="btn primary" disabled={busy}>{busy ? '여는 중…' : `${partyTime(custom ? fromCustom(custom) : at, Date.now())} 판 열기`}</button>
+        <input className="input" value={note} maxLength={40} onChange={(e) => setNote(e.target.value)} placeholder={placeholder} />
+        <button type="submit" className="btn primary" disabled={busy}>{busy ? '여는 중…' : `${partyTime(custom ? fromCustom(custom) : at, Date.now())} ${verb}`}</button>
       </div>
     </form>
+  );
+}
+
+// ───────── 내전 (우리끼리 5:5): 10자리, 팀 나누기, 결과는 기록된 사용자 설정 판에서 자동으로 ─────────
+
+const TEAM = { 1: '블루팀', 2: '레드팀' } as const;
+const avg = (ms: ScrimMember[]) => (ms.length ? ms.reduce((s, m) => s + m.rating, 0) / ms.length : 0);
+
+export function ScrimBoard({ api, onMember }: { api: Api; onMember?: (id: string) => void }) {
+  const { data, error, reload } = useLoad<Scrims>(api, '/api/scrims');
+  useEffect(() => { const t = setInterval(reload, 20_000); return () => clearInterval(t); }, [reload]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState('');
+  const run = async (key: string, f: () => Promise<unknown>) => { setBusy(key); setMsg(''); try { await f(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); reload(); } };
+  return (
+    <section className="card pad parties scrims">
+      <div className="card-head"><h2>내전</h2><span className="sp" /><span className="meta">우리끼리 5:5 · 결과는 사용자 설정 판 기록에서 자동으로</span></div>
+      {data?.canHost
+        ? <PartyComposer busy={busy === 'new'} verb="내전 열기" placeholder="한 줄 메모 (선택) 예: 단판, 디코 내전방" onOpen={(startAt, note) => run('new', () => api.post('/api/scrims', { startAt, note }))} />
+        : data && <p className="meta" style={{ margin: 0 }}>내전은 디스코드에서 내전 역할을 받은 회원이 열 수 있어요. 열린 내전에는 누구나 참여할 수 있어요.</p>}
+      {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
+      {error && <p className="meta">{error}</p>}
+      <div className="plist">
+        {data?.scrims.map((s) => <ScrimCard key={s.id} s={s} size={data.size} now={data.now} busy={busy} run={run} api={api} onMember={onMember} />)}
+        {data && !data.scrims.length && <Empty>예정된 내전이 없어요.</Empty>}
+      </div>
+    </section>
+  );
+}
+
+function ScrimCard({ s, size, now, busy, run, api, onMember }: { s: Scrim; size: number; now: number; busy: string | null; run: (k: string, f: () => Promise<unknown>) => void; api: Api; onMember?: (id: string) => void }) {
+  const [pick, setPick] = useState<string | null>(null);
+  const k = (x: string) => `${s.id}:${x}`;
+  const act = (x: string, body: object = {}) => run(k(x), () => api.post(`/api/scrims/${s.id}/${x}`, body));
+  const split = s.members.some((m) => m.team);
+  const teams = { 1: s.members.filter((m) => m.team === 1), 2: s.members.filter((m) => m.team === 2) };
+  const score = { 1: s.results.filter((r) => r.winner === 1).length, 2: s.results.filter((r) => r.winner === 2).length };
+  const canSwap = s.host && split && !s.lockedAt;
+  const onFace = (m: ScrimMember) => {
+    if (!canSwap) return onMember?.(m.id);
+    if (!pick) return setPick(m.id);
+    if (pick === m.id) return setPick(null);
+    const other = s.members.find((x) => x.id === pick);
+    setPick(null);
+    if (other && other.team !== m.team) act('swap', { a: pick, b: m.id });
+  };
+  const Face = ({ m }: { m: ScrimMember }) => (
+    <button type="button" className={`sface ${pick === m.id ? 'picked' : ''}`} onClick={() => onFace(m)} title={canSwap ? '눌러서 다른 팀 사람과 바꾸기' : m.nick}>
+      <MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={40} />
+      <span className="nm">{m.nick}{m.id === s.hostId && <i>방장</i>}</span>
+      <span className="rt">{m.n ? `${pct(m.w, m.n)} · ${m.n}판` : '기록 없음'}</span>
+    </button>
+  );
+  const state = s.lockedAt ? (s.results.length ? '경기 기록됨' : '팀 확정') : split ? '팀 나눔' : '모집 중';
+  return (
+    <article className={`scard ${s.mine ? 'mine' : ''} ${s.lockedAt ? 'locked' : ''}`}>
+      <div className="shead">
+        <div className="ptime"><b>{partyTime(s.startAt, now).split(' ')[1]}</b><span>{partyTime(s.startAt, now).split(' ')[0]}</span></div>
+        <div className="pmain">
+          <div className="phead"><span className={`pbadge ${s.lockedAt ? 'go' : ''}`}>{state}</span><span className="pcount"><b>{s.members.length}</b>/{size}</span></div>
+          {s.note && <p className="pnote">{s.note}</p>}
+        </div>
+        <div className="pact">
+          {!s.lockedAt && (s.mine
+            ? s.hostId !== undefined && !s.host && <button type="button" className="btn" disabled={busy === k('leave')} onClick={() => act('leave')}>빠지기</button>
+            : <button type="button" className={`btn ${s.members.length >= size ? '' : 'primary'}`} disabled={s.members.length >= size || busy === k('join')} onClick={() => act('join')}>{s.members.length >= size ? '다 찼어요' : '참여'}</button>)}
+        </div>
+      </div>
+      {s.results.length > 0 && <div className="sscore">
+        <span className="t1">블루 <b>{score[1]}</b></span><span className="vs">:</span><span className="t2"><b>{score[2]}</b> 레드</span>
+        <span className="games">{s.results.map((r, i) => <span key={r.gameId} className={`g t${r.winner}`}>{i + 1}판 {TEAM[r.winner]} 승 · {Math.round(r.duration / 60)}분</span>)}</span>
+      </div>}
+      {split ? <div className="steams">{([1, 2] as const).map((t) => (
+        <div key={t} className={`steam t${t} ${s.results.length && score[t] > score[(3 - t) as 1 | 2] ? 'won' : ''}`}>
+          <div className="sth"><b>{TEAM[t]}</b><span className="meta">평균 {Math.round(avg(teams[t]) * 100)}%</span></div>
+          <div className="sfaces">{teams[t].map((m) => <Face key={m.id} m={m} />)}</div>
+        </div>))}</div>
+        : <div className="sfaces grid">{Array.from({ length: size }, (_, i) => s.members[i] ? <Face key={s.members[i].id} m={s.members[i]} /> : <span key={`e${i}`} className="sface empty"><span className="ph">?</span><span className="nm">빈 자리</span></span>)}</div>}
+      {s.host && <div className="shost">
+        {!s.lockedAt && <button type="button" className="btn sm primary" disabled={busy === k('balance')} onClick={() => act('balance')}>{split ? '다시 나누기' : '팀 자동 나누기'}</button>}
+        {split && !s.lockedAt && <button type="button" className="btn sm" disabled={busy === k('lock')} onClick={() => act('lock')}>팀 확정</button>}
+        {s.lockedAt && <button type="button" className="btn sm" disabled={busy === k('unlock')} onClick={() => act('unlock')}>팀 다시 풀기</button>}
+        {canSwap && <span className="meta">{pick ? '바꿀 상대 팀 사람을 누르세요' : '두 사람을 차례로 누르면 팀을 바꿔요'}</span>}
+        <span className="sp" />
+        <button type="button" className="linkbtn meta" disabled={busy === k('cancel')} onClick={() => act('cancel')}>내전 취소</button>
+      </div>}
+    </article>
   );
 }

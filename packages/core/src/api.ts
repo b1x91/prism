@@ -14,7 +14,7 @@ export class ApiError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
-export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null };
+export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean };
 /** 회원 얼굴 재료 (서버 FACE): 대표 스킨, 주 챔피언 */
 export type FaceInfo = { skin?: number | null; main?: number | null };
 export type Note = { id: number; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1 } & FaceInfo;
@@ -35,3 +35,8 @@ export type Links = { discord: string | null; kakao: string | null };
 export type PartyMember = { id: string; nick: string } & FaceInfo;
 export type Party = { id: number; startAt: number; note: string; hostId: string; createdAt: number; members: PartyMember[]; mine: boolean; host: boolean };
 export type Parties = { size: number; now: number; parties: Party[] };
+
+/** 내전 */
+export type ScrimMember = PartyMember & { team: 1 | 2 | null; n: number; w: number; rating: number };
+export type Scrim = { id: number; startAt: number; note: string; hostId: string; lockedAt: number | null; members: ScrimMember[]; mine: boolean; host: boolean; results: { gameId: number; at: number; duration: number; winner: 1 | 2 }[] };
+export type Scrims = { size: number; now: number; canHost: boolean; scrims: Scrim[] };

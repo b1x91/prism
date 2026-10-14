@@ -584,3 +584,45 @@ svg.light { position: absolute; inset: 0; z-index: 0; pointer-events: none; over
   .phost { margin-left: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .pbadge.now { animation: none; } }
+
+/* ───────── 디스코드·카카오톡 앱 아이콘 ───────── */
+.chis { display: flex; gap: var(--s2); }
+.chi { display: grid; place-items: center; flex: none; padding: 0; border: 0; border-radius: 28%; cursor: pointer; text-decoration: none; transition: transform .15s ease, box-shadow .15s ease, filter .15s ease; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 2px 6px rgba(0, 0, 0, .12); }
+.chi svg { width: 58%; height: 58%; display: block; }
+.chi.discord { background: #5865f2; color: #fff; }
+.chi.kakao { background: #fee500; color: #3a1d1d; }
+.chi.kakao svg { width: 66%; height: 66%; }
+.chi:not(.soon):hover { transform: translateY(-2px); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .06), 0 6px 14px rgba(0, 0, 0, .2); }
+.chi.soon { filter: grayscale(1); opacity: .4; cursor: default; }
+@media (prefers-reduced-motion: reduce) { .chi { transition: none; } }
+
+/* ───────── 내전 ───────── */
+.scard { display: grid; gap: var(--s4); padding: var(--s4); border-radius: var(--r-l); border: 1px solid var(--line); background: var(--surface); }
+.scard.mine { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+.shead { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; gap: var(--s4); align-items: center; }
+.sfaces { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.sfaces.grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s3); }
+.sface { display: grid; justify-items: center; gap: 2px; padding: var(--s2) var(--s1); border: 1px solid transparent; border-radius: var(--r-m); background: none; color: var(--text); font: inherit; cursor: pointer; min-width: 0; }
+.sface:hover { background: var(--surface-2); }
+.sface.picked { border-color: var(--accent); background: var(--accent-soft); }
+.sface .face, .sface .initial { border-radius: 50%; }
+.sface .nm { display: flex; align-items: center; gap: 4px; max-width: 100%; font-size: var(--fs-xs); font-weight: 700; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.sface .nm i { font-style: normal; height: 16px; padding: 0 4px; border-radius: var(--r-pill); background: var(--gold); color: #fff; font-size: var(--fs-xs); line-height: 16px; }
+.sface .rt { font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.sface.empty { cursor: default; color: var(--text-3); }
+.sface.empty .ph { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; border: 2px dashed var(--line-2); font-weight: 800; }
+.steams { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s3); }
+.steam { display: grid; gap: var(--s2); padding: var(--s3); border-radius: var(--r-m); background: var(--surface-2); border-top: 3px solid #4a7dff; }
+.steam.t2 { border-top-color: #ff5d6c; }
+.steam.won { box-shadow: 0 0 0 2px color-mix(in srgb, var(--win) 60%, transparent); }
+.steam .sfaces { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.sth { display: flex; align-items: baseline; justify-content: space-between; }
+.steam.t1 .sth b { color: #4a7dff; } .steam.t2 .sth b { color: #ff5d6c; }
+.sscore { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2) var(--s3); padding: var(--s3) var(--s4); border-radius: var(--r-m); background: var(--surface-2); font-weight: 750; }
+.sscore b { font-size: var(--fs-2xl); font-variant-numeric: tabular-nums; }
+.sscore .t1 { color: #4a7dff; } .sscore .t2 { color: #ff5d6c; } .sscore .vs { color: var(--text-3); }
+.sscore .games { display: flex; flex-wrap: wrap; gap: var(--s1); margin-left: auto; }
+.sscore .g { height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); display: inline-flex; align-items: center; font-size: var(--fs-xs); background: var(--surface); }
+.sscore .g.t1 { color: #4a7dff; } .sscore .g.t2 { color: #ff5d6c; }
+.shost { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--line); }
+@media (max-width: 720px) { .shead { grid-template-columns: 72px minmax(0, 1fr); } .shead .pact { grid-column: 1 / -1; } .steams { grid-template-columns: minmax(0, 1fr); } .sfaces.grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }

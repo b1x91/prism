@@ -36,16 +36,33 @@ export function Seg<T extends string>({ value, options, onChange }: { value: T; 
   return <div className="seg">{options.map(([k, l]) => <button key={k} type="button" className={value === k ? 'on' : ''} onClick={() => onChange(k)}>{l}</button>)}</div>;
 }
 
-export function Channels({ links, size }: { links?: Links | null; size?: 'lg' }) {
-  const l = withDefaults(links);
-  const st = size === 'lg' ? { height: 48 } : undefined;
+/** 디스코드·카카오톡 앱 아이콘 (글자 없이 아이콘만). 앱에서는 onOpen 으로 브라우저를 연다 */
+const DISCORD_PATH = 'M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z';
+function DiscordGlyph() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d={DISCORD_PATH} /></svg>; }
+function KakaoGlyph() {
   return (
-    <div className="channels">
-      {l.discord && <a className="ch discord" style={st} href={l.discord} target="_blank" rel="noopener noreferrer"><Icon name="discord" />디스코드</a>}
-      {l.kakao ? <a className="ch kakao" style={st} href={l.kakao} target="_blank" rel="noopener noreferrer"><Icon name="talk" />카카오톡</a>
-        : <span className="ch kakao soon" style={st} title="카카오톡 오픈채팅은 곧 열립니다"><Icon name="talk" />카카오톡<small>준비 중</small></span>}
-    </div>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="currentColor" d="M12 3.6c-5.3 0-9.6 3.4-9.6 7.6 0 2.7 1.8 5.1 4.5 6.4l-1 3.6c-.1.3.3.6.6.4l4.3-2.8c.4 0 .8.1 1.2.1 5.3 0 9.6-3.4 9.6-7.7S17.3 3.6 12 3.6z" />
+      <text x="12" y="13.1" textAnchor="middle" fontSize="4.6" fontWeight="900" fontFamily="Arial, sans-serif" fill="#fee500" letterSpacing=".1">TALK</text>
+    </svg>
   );
+}
+
+export function ChannelIcons({ links, size = 36, onOpen }: { links?: Links | null; size?: number; onOpen?: (url: string) => void }) {
+  const l = withDefaults(links);
+  const st = { width: size, height: size };
+  const item = (url: string | null, cls: string, name: string, glyph: ReactNode) => {
+    if (!url) return <span className={`chi ${cls} soon`} style={st} title={`${name} · 곧 열립니다`} aria-label={`${name} (곧 열림)`}>{glyph}</span>;
+    return onOpen
+      ? <button type="button" className={`chi ${cls}`} style={st} title={name} aria-label={name} onClick={() => onOpen(url)}>{glyph}</button>
+      : <a className={`chi ${cls}`} style={st} href={url} target="_blank" rel="noopener noreferrer" title={name} aria-label={name}>{glyph}</a>;
+  };
+  return <div className="chis">{item(l.discord, 'discord', '디스코드', <DiscordGlyph />)}{item(l.kakao, 'kakao', '카카오톡', <KakaoGlyph />)}</div>;
+}
+
+/** (옛 이름) 모임 소통 창구 = 앱 아이콘만 */
+export function Channels({ links, size }: { links?: Links | null; size?: 'lg' }) {
+  return <ChannelIcons links={links} size={size === 'lg' ? 48 : 36} />;
 }
 
 const TONES = ['#5b6b8c', '#6b5b8c', '#5b8c7f', '#8c6b5b', '#7f8c5b', '#5b7f8c', '#8c5b6b', '#6b7a99'];

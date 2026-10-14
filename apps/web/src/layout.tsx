@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useEffect } from 'react';
-import { Gem, Icon, MemberFace, toggleTheme, type IconName } from '@prism/ui';
+import { ChannelIcons, Gem, Icon, MemberFace, toggleTheme, type IconName } from '@prism/ui';
 import { useSession } from './session';
 
 const NAV: [string, string, IconName][] = [['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
@@ -15,11 +15,7 @@ export function Layout() {
         <NavLink to="/" className="brand"><Gem size={28} />Prism</NavLink>
         <nav className="tabs">{NAV.map(([to, label]) => <NavLink key={to} to={to}>{label}</NavLink>)}</nav>
         <span className="sp" />
-        <span className="top-ch">
-          {links.discord && <a className="ch-ic discord" href={links.discord} target="_blank" rel="noopener noreferrer" title="디스코드"><Icon name="discord" /></a>}
-          {links.kakao ? <a className="ch-ic kakao" href={links.kakao} target="_blank" rel="noopener noreferrer" title="카카오톡"><Icon name="talk" /></a>
-            : <span className="ch-ic kakao soon" title="카카오톡 오픈채팅은 곧 열립니다"><Icon name="talk" /></span>}
-        </span>
+        <ChannelIcons links={links} size={32} />
         <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button>
         {me ? <NavLink to="/me" className="me-btn" title="내 페이지"><MemberFace nick={me.nick} skin={me.skin} size={30} /><span>{me.nick}</span></NavLink>
           : <button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />로그인</button>}

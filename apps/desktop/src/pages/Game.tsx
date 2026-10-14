@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { CHAMPIONS, ago, pct, streakOf } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ago, guideOf, pct, streakOf, todayPicks, type Personal } from '@prism/core';
+import { AugRing, TierBadge } from '@prism/ui';
+import { GAME_DATA, fitPoints, tierOf } from '@prism/core';
 import { AugmentCompare, AugmentGuide, ChampBanner, ChampSearch, Empty, MemberFace, RecentGames, Seg, partyTime, useParties } from '@prism/ui';
 import { api } from '../bridge';
 import { useNavigate } from 'react-router-dom';
@@ -20,6 +22,41 @@ function InGame({ championId }: { championId: number | null }) {
       <div className="row"><Seg value={tab} options={[['compare', '뜬 증강 3개 비교'], ['guide', '등급별 가이드']]} onChange={setTab} /></div>
       {tab === 'compare' ? <AugmentCompare championId={id} preset={seen.ids} /> : <AugmentGuide championId={id} compact={false} />}
     </div>
+  );
+}
+
+/** 오늘은 이 챔피언 어때요? 내 기록으로 고른 챔피언 + 등급별로 잘 맞는 증강 */
+function TodayPick({ personal }: { personal: Personal }) {
+  const nav = useNavigate();
+  const picks = todayPicks(personal, Object.keys(CHAMPIONS).map(Number));
+  const [i, setI] = useState(0);
+  if (!picks.length) return null;
+  const pick = picks[i % picks.length];
+  const rec = personal.champions[pick.id];
+  const guide = guideOf(GAME_DATA, pick.id);
+  const mine = personal.augmentsByChampion[pick.id] ?? [];
+  const rows = guide ? (['prismatic', 'gold', 'silver'] as const).map((r) => [r, guide[r].slice(0, 2)] as const) : [];
+  return (
+    <section className="today">
+      <ChampBanner id={pick.id} eyebrow={pick.why === 'best' ? '오늘은 이 챔피언 어때요? · 내 기록에서 가장 잘 이긴 챔피언' : '오늘은 이 챔피언 어때요? · 아직 만나지 못한 챔피언'}
+        actions={<>{picks.length > 1 && <button type="button" className="btn sm" onClick={() => setI(i + 1)}>다른 추천</button>}<button type="button" className="btn sm primary" onClick={() => nav(`/champions/${pick.id}`)}>증강 가이드</button></>}>
+        <p className="today-why">{rec ? <>내 기록 <b>{rec.n}판 {rec.w}승</b> ({pct(rec.w, rec.n)}). 주사위나 대기석에서 보이면 잡아보세요.</> : <>도감을 채울 기회예요. 주사위나 대기석에서 보이면 잡아보세요.</>}</p>
+      </ChampBanner>
+      <div className="today-augs">
+        {rows.map(([r, list]) => (
+          <div key={r} className="ta-col">
+            <span className={`k ${r}`}>{r === 'prismatic' ? '프리즘' : r === 'gold' ? '골드' : '실버'}</span>
+            {list.map((f) => (
+              <div key={f.id} className="ta-row"><AugRing id={f.id} size={36} /><span className="nm">{AUGMENT[f.id]?.name}</span><TierBadge tier={tierOf(fitPoints(f))} /></div>
+            ))}
+          </div>
+        ))}
+        {mine.length > 0 && <div className="ta-col mine">
+          <span className="k">내가 이 챔피언으로 고른 증강</span>
+          {mine.slice(0, 3).map((a) => <div key={a.id} className="ta-row"><AugRing id={a.id} size={36} /><span className="nm">{AUGMENT[a.id]?.name ?? `#${a.id}`}</span><span className="meta">{a.n}번 · {pct(a.w, a.n)}</span></div>)}
+        </div>}
+      </div>
+    </section>
   );
 }
 
@@ -58,6 +95,7 @@ export function GamePage({ s }: { s: State }) {
   return (
     <div className="stack" style={{ gap: 16 }}>
       {s.champSelect ? <ChampSelectPanel cs={s.champSelect} crew={s.crew} personal={P} /> : <NoGame s={s} />}
+      {!s.champSelect && s.status !== 'champ-select' && <TodayPick personal={P} />}
       {!s.champSelect && <h2 className="h2">내 아수라장</h2>}
       {games.length > 0 && <div className="grid4">
         <section className="card stat"><span className="k">아수라장 (최근 100판 중)</span><span className="v">{P.total.n}<small>판</small></span></section>

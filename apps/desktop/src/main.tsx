@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { Icon, MemberFace, useLoad, useSkins, type IconName } from '@prism/ui';
+import { ChannelIcons, Icon, MemberFace, useLoad, useSkins, type IconName } from '@prism/ui';
 import { withDefaults, type Links } from '@prism/core';
 import { getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
@@ -72,15 +72,12 @@ function App() {
   const skins = useSkins();
   const main = useRef<HTMLElement>(null);
   const riotName = s.summoner?.riotId.split('#')[0];
-  const ch = (url: string | null, cls: string, icon: IconName, name: string) => url
-    ? <button type="button" className={`side-ch ${cls}`} onClick={() => bridge.openUrl(url)} title={name}><Icon name={icon} /><span>{name}</span></button>
-    : <span className={`side-ch ${cls} soon`} title={`${name}은 곧 열립니다`}><Icon name={icon} /><span>{name}</span><small>준비 중</small></span>;
   if (!ready) return <Onboarding s={s} onLogin={login} />;
   return (
     <div className="shell">
       <aside className="side">
         <div className="side-brand">
-          <span className="brand-mark"><img src="/brand/prism-64.png" alt="" /></span>
+          <span className="brand-mark"><img src="/brand/prism-256.png" alt="" /></span>
           <span className="brand-word" data-text="Prism">Prism</span>
           <NavArrows />
         </div>
@@ -89,7 +86,7 @@ function App() {
         {up.error && up.info?.available && <span className="side-err l">{up.error}</span>}
         <nav className="side-nav">{NAV.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'}><Icon name={i} />{l}</NavLink>)}</nav>
         <span className="sp" />
-        {<div className="side-chs">{ch(links.discord, 'discord', 'discord', '디스코드')}{ch(links.kakao, 'kakao', 'talk', '카카오톡')}</div>}
+        <ChannelIcons links={links} size={36} onOpen={(u) => bridge.openUrl(u)} />
         {s.me && <div className="side-me-card">
           <NavLink to="/me" className="side-me" title="내 페이지">
             <MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} />

@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { BoardView, Empty, Icon, Notes, PartyBoard } from '@prism/ui';
+import { BoardView, Empty, Icon, Notes, PartyBoard, ScrimBoard } from '@prism/ui';
 import type { State } from '../controller';
 import { api, bridge } from '../bridge';
 
@@ -11,6 +11,7 @@ export function CrewPage({ s, onLogin }: { s: State; onLogin: () => void }) {
     <div className="stack" style={{ gap: 16 }}>
       <div className="row"><h1 className="h1">Prism</h1><span className="sp" /><button type="button" className="btn sm" onClick={() => bridge.openUrl('https://przm.web.app/crew')}><Icon name="out" />웹에서 열기</button></div>
       <PartyBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
+      <ScrimBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
       <Notes api={api} />
       <BoardView api={api} />
     </div>

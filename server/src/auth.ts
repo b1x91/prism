@@ -79,11 +79,11 @@ export async function discordCallback(req: Request, env: Env) {
   });
   if (memRes.status === 404) return page('Prism 회원이 아닙니다', env.DISCORD_INVITE_URL ? `${NOT_A_MEMBER}<br><br><a href="${env.DISCORD_INVITE_URL}">디스코드 들어가기</a> 후 다시 로그인해주세요.` : NOT_A_MEMBER, 403);
   if (!memRes.ok) return page('로그인 실패', `디스코드 응답 오류 (${memRes.status})`, 502);
-  const gm = (await memRes.json()) as { nick?: string | null; user: { id: string; username: string; global_name?: string | null; avatar?: string | null } };
+  const gm = (await memRes.json()) as { nick?: string | null; roles?: string[]; user: { id: string; username: string; global_name?: string | null; avatar?: string | null } };
 
   const id = gm.user.id;
   const name = gm.nick ?? gm.user.global_name ?? gm.user.username;
-  return finishLogin(env, st.redirect, id, name, gm.user.avatar ?? null);
+  return finishLogin(env, st.redirect, id, name, gm.user.avatar ?? null, Array.isArray(gm.roles) ? gm.roles : []);
 }
 
 /** 로컬 개발용 가짜 로그인. DEV_LOGIN=1 일 때만 */
@@ -93,20 +93,21 @@ export async function devLogin(req: Request, env: Env) {
   const redirect = q.get('redirect') ?? '';
   if (!allowedRedirect(redirect, env)) throw new HttpError(400, '허용되지 않은 redirect 입니다.');
   const id = q.get('id') ?? 'dev-1';
-  return finishLogin(env, redirect, id, q.get('name') ?? id, null);
+  // 개발용: roles=역할1,역할2 로 디스코드 역할을 흉내낸다
+  return finishLogin(env, redirect, id, q.get('name') ?? id, null, (q.get('roles') ?? '').split(',').filter(Boolean));
 }
 
-async function finishLogin(env: Env, redirect: string, id: string, name: string, avatar: string | null) {
+async function finishLogin(env: Env, redirect: string, id: string, name: string, avatar: string | null, roles: string[]) {
   const now = Date.now();
   const admins = env.ADMIN_DISCORD_IDS.split(',').map((s) => s.trim()).filter(Boolean);
   // 신규는 guest, 기존은 등급 유지. 관리자 목록에 있으면 admin
   await env.DB.prepare(
-    `INSERT INTO members (id, discord_name, discord_avatar, nick, tier, joined_at, last_seen_at)
-     VALUES (?1, ?2, ?3, ?2, ?4, ?5, ?5)
-     ON CONFLICT (id) DO UPDATE SET discord_name = ?2, discord_avatar = ?3, last_seen_at = ?5,
+    `INSERT INTO members (id, discord_name, discord_avatar, nick, tier, joined_at, last_seen_at, discord_roles)
+     VALUES (?1, ?2, ?3, ?2, ?4, ?5, ?5, ?6)
+     ON CONFLICT (id) DO UPDATE SET discord_name = ?2, discord_avatar = ?3, last_seen_at = ?5, discord_roles = ?6,
        tier = CASE WHEN ?4 = 'admin' THEN 'admin' ELSE members.tier END`,
   )
-    .bind(id, name, avatar, admins.includes(id) ? 'admin' : 'guest', now)
+    .bind(id, name, avatar, admins.includes(id) ? 'admin' : 'guest', now, JSON.stringify(roles.slice(0, 100)))
     .run();
 
   const code = randomToken(24);

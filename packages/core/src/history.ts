@@ -162,3 +162,22 @@ export function streakOf(games: Game[]): { n: number; win: boolean } {
   }
   return { n, win };
 }
+
+/**
+ * 오늘의 챔피언 추천 (게임이 없을 때 게임 화면). 아수라장은 무작위라 '고르는' 게 아니라
+ * 주사위·대기석에서 만나면 잡을 만한 챔피언을 내 기록으로 고른다.
+ * - 2판 이상 한 챔피언을 보정 승률((승+1)/(판+2)) 순으로 상위 6개, 날짜마다 돌아가며 하나
+ * - 기록이 적으면 아직 안 만난 챔피언 중 날짜로 하나 (새 챔피언 도전)
+ */
+export function todayPicks(p: Personal, allIds: number[], day = Math.floor(Date.now() / 864e5)) {
+  const good = Object.entries(p.champions)
+    .map(([id, v]) => ({ id: Number(id), ...v, score: (v.w + 1) / (v.n + 2) }))
+    .filter((x) => x.n >= 2)
+    .sort((a, b) => b.score - a.score || b.n - a.n)
+    .slice(0, 6);
+  const fresh = allIds.filter((id) => !p.champions[id]);
+  // 잘 이긴 챔피언을 먼저 (날짜마다 시작점을 바꿔 매일 다른 챔피언이 앞에), 새 챔피언 도전은 맨 뒤
+  const start = good.length ? day % good.length : 0;
+  const best = [...good.slice(start), ...good.slice(0, start)].map((g) => ({ id: g.id, why: 'best' as const }));
+  return [...best, ...(fresh.length ? [{ id: fresh[day % fresh.length], why: 'new' as const }] : [])];
+}

@@ -72,6 +72,15 @@ export async function refreshSession() {
     }
   }
   set({ session: { ...session, loggedIn: Boolean(me) }, me, sessionChecked: true, sessionError });
+  if (me?.consent && !state.games.length) void loadServerGames();
+}
+
+/** 롤이 꺼져 있어 클라이언트에서 전적을 못 읽을 때: Prism 에 저장된 내 판으로 채운다 (롤이 켜지면 클라이언트 기록으로 바뀐다) */
+async function loadServerGames() {
+  try {
+    const { games } = await api.get<{ games: Game[] }>('/api/me/games');
+    if (!state.games.length && games.length) set({ games, personal: personalStats(games) });
+  } catch { /* 다음 기회에 */ }
 }
 
 // 확인용 정보(diagnostics)에 넣을 마지막 원본. 화면에는 쓰지 않는다
