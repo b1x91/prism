@@ -19,6 +19,11 @@ const EVERY: Duration = Duration::from_millis(600);
 /// 카드가 보이는 동안: 새로고침을 바로 따라가도록 자주, 제목 줄만 좁게 읽는다
 const FAST: Duration = Duration::from_millis(350);
 const IDLE: Duration = Duration::from_secs(4);
+/// 카드가 안 읽혀도 작은 창을 그대로 두는 시간. 새로고침 애니메이션 동안 제목이 잠깐 사라져도 창은 깜빡이지 않는다.
+/// 이만큼 계속 안 보이면 다 고른 것으로 보고 닫는다
+const HOLD: Duration = Duration::from_millis(3000);
+/// 게임 창이 잠깐 뒤로 가도(알림·포커스 튐) 바로 닫지 않는다
+const AWAY: Duration = Duration::from_millis(1500);
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Settings {
@@ -243,6 +248,9 @@ mod imp {
         let mut band: Option<(i32, i32)> = None;
         let mut last: Vec<u32> = Vec::new();
         let mut slots = Slots::default();
+        // 마지막으로 카드를 본 때, 게임 창이 뒤로 간 때
+        let mut seen_at: Option<std::time::Instant> = None;
+        let mut away_at: Option<std::time::Instant> = None;
         let mut pids: (Vec<u32>, Option<std::time::Instant>) = (Vec::new(), None);
         loop {
             let s = v.settings.lock().unwrap().clone();
@@ -250,12 +258,19 @@ mod imp {
             let game = if s.enabled && allowed { game_window(&mut pids) } else { None };
             let front = game.filter(|(h, _)| unsafe { GetForegroundWindow() } == *h);
             let how = game.map(|g| g.1).unwrap_or("");
+            if front.is_some() {
+                away_at = None;
+            } else if game.is_some() && v.shown.load(Ordering::SeqCst) && away_at.get_or_insert_with(std::time::Instant::now).elapsed() < AWAY {
+                std::thread::sleep(FAST);
+                continue;
+            }
             let (Some((h, _)), Some(eng)) = (front, eng.as_ref()) else {
                 v.stage(if !s.enabled { "off" } else if !allowed { "wait" } else if game.is_none() { "no-game" } else { "back" }, 0, how);
                 v.hide(&app);
                 band = None;
                 last.clear();
                 slots.clear();
+                seen_at = None;
                 std::thread::sleep(if game.is_some() { EVERY } else { IDLE });
                 continue;
             };
@@ -274,6 +289,7 @@ mod imp {
                     v.stage(if seen { "found" } else { "reading" }, hits.len() as u32, how);
                     if seen {
                         misses = 0;
+                        seen_at = Some(std::time::Instant::now());
                         if band.is_none() {
                             // 제목 줄 위아래로 여유를 두고 기억
                             let top = hits.iter().map(|h| h.2).fold(f32::MAX, f32::min) as i32;
@@ -295,10 +311,11 @@ mod imp {
                         if band.is_some() && misses >= 2 {
                             // 제목 줄에서 못 찾으면 넓게 다시 (창 크기가 바뀌었을 수도)
                             band = None;
-                        } else if band.is_none() && misses >= 3 && shown {
-                            // 고른 뒤 카드가 사라짐
+                        } else if shown && seen_at.map_or(true, |t| t.elapsed() > HOLD) {
+                            // 한동안 카드가 안 보임 = 다 고름
                             last.clear();
                             slots.clear();
+                            seen_at = None;
                             v.publish(&app, vec![], String::new());
                             v.hide(&app);
                         }
