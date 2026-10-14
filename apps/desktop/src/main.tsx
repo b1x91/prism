@@ -68,7 +68,14 @@ function App() {
   const links = withDefaults(useLoad<Links>(api, s.session.configured ? '/links' : null).data);
   const login = async () => { try { await bridge.login(); } finally { await refreshSession(); } };
   // 챔프 선택·게임이 시작되면 게임 화면으로 (Alt+Tab 했을 때 바로 보이게)
-  useEffect(() => { if (s.status === 'champ-select' || s.status === 'in-game') nav('/'); }, [s.status, nav]);
+  // 상태가 '바뀌는 순간'에만 한 번 이동한다. 그 뒤로는 다른 메뉴를 자유롭게 연다
+  // (예전에는 메뉴를 옮길 때마다 다시 게임 화면으로 끌려와 게임 중 모든 메뉴가 먹통이었다)
+  const prevStatus = useRef(s.status);
+  useEffect(() => {
+    const before = prevStatus.current;
+    prevStatus.current = s.status;
+    if (before !== s.status && (s.status === 'champ-select' || s.status === 'in-game')) nav('/');
+  }, [s.status, nav]);
   const ready = Boolean(s.me?.consent);
   // 게임 위 작은 창(자동 인식)도 동의한 뒤에만 켠다
   // (한 번 놓쳐도 되도록 15초마다 다시 알린다)
