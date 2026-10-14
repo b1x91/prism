@@ -2,6 +2,7 @@
  * 한 줄 생각 — 회원이 남기는 짧은 방명록.
  * 실시간 대화는 디스코드·카카오톡이 맡는다. 여기는 지나가며 한 줄 남기는 곳.
  */
+import { can } from './roles.js';
 import { FACE, HttpError, json, type Env, type Member } from './util.js';
 
 const NOTE_MAX = 60;
@@ -14,11 +15,11 @@ export function links(env: Env) {
 
 export async function listNotes(env: Env, me: Member) {
   const r = await env.DB.prepare(
-    `SELECT n.id, n.text, n.created_at AS createdAt, m.id AS memberId, m.nick, ${FACE('m')}, n.member_id = ?1 AS mine
+    `SELECT n.id, n.text, n.created_at AS createdAt, m.id AS memberId, m.nick, ${FACE('m')}, n.member_id = ?1 AS mine, (n.member_id = ?1 OR ?2 = 1) AS canDelete
      FROM notes n JOIN members m ON m.id = n.member_id
      WHERE n.deleted_at IS NULL ORDER BY n.created_at DESC LIMIT 40`,
   )
-    .bind(me.id)
+    .bind(me.id, can(me, 'moderate') ? 1 : 0)
     .all();
   return json({ notes: r.results, max: NOTE_MAX });
 }
@@ -36,7 +37,7 @@ export async function addNote(req: Request, env: Env, me: Member) {
 
 export async function deleteNote(env: Env, me: Member, id: number) {
   const r = await env.DB.prepare('UPDATE notes SET deleted_at = ? WHERE id = ? AND deleted_at IS NULL AND (member_id = ? OR ? = 1)')
-    .bind(Date.now(), id, me.id, me.tier === 'admin' ? 1 : 0)
+    .bind(Date.now(), id, me.id, can(me, 'moderate') ? 1 : 0)
     .run();
   if (r.meta.changes === 0) throw new HttpError(404, '지울 수 있는 글이 없습니다.');
   return json({ ok: true });

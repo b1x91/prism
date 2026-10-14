@@ -22,6 +22,5 @@ DISCORD_INVITE_URL = "https://discord.gg/rK3U7xB6WQ"
 KAKAO_OPENCHAT_URL = "" # 오픈채팅을 만들면 주소를 넣는다 (그전에는 버튼이 "준비 중")
 # 웹 사이트 주소 (로그인 후 돌아갈 곳, CORS 허용). 쉼표 구분
 WEB_ORIGINS = "https://przm.web.app,https://przm.gg"
-# 내전을 열 수 있는 디스코드 역할 ID (쉼표 구분). 비어 있으면 관리자만. 역할은 회원이 로그인할 때마다 갱신된다
-SCRIM_HOST_ROLES = ""
+# 디스코드 역할별 기능은 server/src/roles.ts (역할 ID·이름·색, 기능별 최소 단계)
 # 비밀값은 wrangler secret put DISCORD_CLIENT_SECRET 로 넣는다 (파일에 쓰지 않는다)

@@ -90,12 +90,13 @@ function App() {
         {s.me && <div className="side-me-card">
           <NavLink to="/me" className="side-me" title="내 페이지">
             <MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} />
-            <span className="who"><b>{s.me.nick}</b><span className={`st ${tone}`}><i className="dot" />{label}{riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}</span></span>
+            <span className="who"><b>{s.me.nick}{s.me.role && <i className="role-dot" style={{ background: s.me.role.color }} title={s.me.role.name} />}</b><span className={`st ${tone}`}><i className="dot" />{label}{riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}</span></span>
           </NavLink>
           <NavLink to="/settings" className="icon-btn gear" title="설정" aria-label="설정"><Icon name="gear" /></NavLink>
         </div>}
       </aside>
       <main className="main" ref={main}>
+        {s.me && !s.me.rolesKnown && <div className="relogin"><span>디스코드 역할(정회원·운영진 등)에 맞는 기능을 열려면 <b>한 번만 다시 로그인</b>해 주세요.</span><button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />다시 로그인</button></div>}
         <Page main={main}><Routes>
           <Route index element={<GamePage s={s} />} />
           <Route path="champions" element={<ChampionsPage member={!!s.me} record={s.personal.champions} />} />

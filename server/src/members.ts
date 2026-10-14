@@ -3,6 +3,7 @@
  * 판수·승률만 순위로 쓴다. 딜량 순위·티어 표시는 하지 않는다 (CLAUDE.md 15절).
  */
 import { HttpError, json, type Env, type Member } from './util.js';
+import { topRole } from './roles.js';
 
 export const RANK_MIN_WINRATE = 10; // 승률 순위는 10판 이상만
 
@@ -16,7 +17,7 @@ const monthStart = () => {
 export async function ranking(env: Env, period: string | null) {
   const since = period === 'month' ? monthStart() : 0;
   const r = await env.DB.prepare(
-    `SELECT m.id, m.nick, m.profile_skin AS skin, COUNT(*) AS n, SUM(p.win) AS w,
+    `SELECT m.id, m.nick, m.profile_skin AS skin, m.discord_roles, COUNT(*) AS n, SUM(p.win) AS w,
        (SELECT q.champion_id FROM participants q WHERE q.member_id = m.id AND q.played_at >= ?1
         GROUP BY q.champion_id ORDER BY COUNT(*) DESC, MAX(q.played_at) DESC LIMIT 1) AS mainChampion
      FROM participants p JOIN members m ON m.id = p.member_id
@@ -24,14 +25,14 @@ export async function ranking(env: Env, period: string | null) {
   )
     .bind(since)
     .all();
-  return json({ period: since ? 'month' : 'all', minWinrate: RANK_MIN_WINRATE, rows: r.results });
+  return json({ period: since ? 'month' : 'all', minWinrate: RANK_MIN_WINRATE, rows: r.results.map(({ discord_roles, ...x }: any) => ({ ...x, role: topRole({ discord_roles }) })) });
 }
 
 /** 회원 페이지: 프로필 + 전체 기록 분석 재료 + (다른 사람이면) 나와 같이 한 판 */
 export async function memberPage(env: Env, me: Member, id: string) {
-  const m = await env.DB.prepare('SELECT id, nick, intro, tier, joined_at AS joinedAt, profile_skin AS skin, riot_id AS riotId FROM members WHERE id = ?')
+  const m = await env.DB.prepare('SELECT id, nick, intro, tier, joined_at AS joinedAt, profile_skin AS skin, riot_id AS riotId, discord_roles FROM members WHERE id = ?')
     .bind(id)
-    .first<{ id: string; nick: string; intro: string; tier: string; joinedAt: number; skin: number | null; riotId: string | null }>();
+    .first<{ id: string; nick: string; intro: string; tier: string; joinedAt: number; skin: number | null; riotId: string | null; discord_roles: string | null }>();
   if (!m) throw new HttpError(404, '없는 회원입니다.');
   const self = id === me.id;
 
@@ -70,7 +71,7 @@ export async function memberPage(env: Env, me: Member, id: string) {
   }
   const [total, champions, augments, recent, rank, picks, together, against, viewerChampions] = await env.DB.batch(queries);
   return json({
-    member: { ...m, riotId: self ? m.riotId : null, self },
+    member: { id: m.id, nick: m.nick, intro: m.intro, tier: m.tier, joinedAt: m.joinedAt, skin: m.skin, riotId: self ? m.riotId : null, self, role: topRole(m) },
     total: total.results[0],
     rank: (rank.results[0] as { rank: number }).rank,
     champions: champions.results,

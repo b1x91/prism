@@ -1,10 +1,11 @@
 /**
  * 내전: 우리끼리 5:5 (사용자 설정 게임).
- * - 여는 사람: 관리자 또는 디스코드 역할 SCRIM_HOST_ROLES 를 가진 회원 (canHostScrim)
+ * - 여는 사람: 역할 표(roles.ts)의 scrim 단계 이상 (우수회원 이상·운영진·관리자)
  * - 참여/빠지기 원탭, 10자리. 팀이 확정되면 참여·빠지기를 막는다 (연 사람이 '팀 다시'로 풀 수 있음)
  * - 팀 나누기: Prism 기록 승률(판수가 적으면 50%에 가깝게 보정)의 합이 가장 비슷한 조합 중 하나를 고른다
  * - 결과: 시작 30분 전 ~ 6시간 뒤에 기록된 사용자 설정 판 중, 이 내전 참가자가 6명 이상인 판을 자동으로 찾아 점수로 보여준다
  */
+import { can } from './roles.js';
 import { FACE, HttpError, canHostScrim, json, type Env, type Member } from './util.js';
 
 const SIZE = 10;
@@ -70,7 +71,7 @@ export async function listScrims(env: Env, me: Member) {
       ...s,
       members: slots.map((x) => ({ ...x, rating: Math.round(rating(x) * 1000) / 1000 })),
       mine: slots.some((x) => x.id === me.id),
-      host: s.hostId === me.id || me.tier === 'admin',
+      host: s.hostId === me.id || can(me, 'moderate'),
       results: s.lockedAt ? await resultsOf(env, s.startAt, slots) : [],
     });
   }
@@ -78,7 +79,7 @@ export async function listScrims(env: Env, me: Member) {
 }
 
 export async function openScrim(req: Request, env: Env, me: Member) {
-  if (!canHostScrim(env, me)) throw new HttpError(403, '내전은 정해진 디스코드 역할이 있는 회원만 열 수 있습니다.');
+  if (!canHostScrim(env, me)) throw new HttpError(403, '내전은 우수회원 이상이 열 수 있습니다.');
   const { startAt, note } = (await req.json().catch(() => ({}))) as { startAt?: number; note?: string };
   const now = Date.now();
   if (typeof startAt !== 'number' || !Number.isFinite(startAt)) throw new HttpError(400, '시간을 골라주세요.');
@@ -96,7 +97,7 @@ async function scrim(env: Env, id: number) {
   if (!s || s.startAt < Date.now() - SHOW_AFTER_START) throw new HttpError(404, '이미 끝났거나 취소된 내전입니다.');
   return s;
 }
-const isHost = (s: { hostId: string }, me: Member) => s.hostId === me.id || me.tier === 'admin';
+const isHost = (s: { hostId: string }, me: Member) => s.hostId === me.id || can(me, 'moderate');
 
 export async function scrimAction(req: Request, env: Env, me: Member, id: number, action: string) {
   const s = await scrim(env, id);

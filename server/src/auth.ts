@@ -71,7 +71,7 @@ export async function discordCallback(req: Request, env: Env) {
     }),
   });
   if (!tokenRes.ok) return page('로그인 실패', `디스코드 응답 오류 (${tokenRes.status})`, 502);
-  const { access_token } = (await tokenRes.json()) as { access_token: string };
+  const { access_token, refresh_token } = (await tokenRes.json()) as { access_token: string; refresh_token?: string };
 
   // 서버 멤버 확인. 비회원이면 404
   const memRes = await discordFetch(`${DISCORD_API}/users/@me/guilds/${env.DISCORD_GUILD_ID}/member`, {
@@ -83,7 +83,7 @@ export async function discordCallback(req: Request, env: Env) {
 
   const id = gm.user.id;
   const name = gm.nick ?? gm.user.global_name ?? gm.user.username;
-  return finishLogin(env, st.redirect, id, name, gm.user.avatar ?? null, Array.isArray(gm.roles) ? gm.roles : []);
+  return finishLogin(env, st.redirect, id, name, gm.user.avatar ?? null, Array.isArray(gm.roles) ? gm.roles : [], refresh_token ?? null);
 }
 
 /** 로컬 개발용 가짜 로그인. DEV_LOGIN=1 일 때만 */
@@ -97,17 +97,18 @@ export async function devLogin(req: Request, env: Env) {
   return finishLogin(env, redirect, id, q.get('name') ?? id, null, (q.get('roles') ?? '').split(',').filter(Boolean));
 }
 
-async function finishLogin(env: Env, redirect: string, id: string, name: string, avatar: string | null, roles: string[]) {
+async function finishLogin(env: Env, redirect: string, id: string, name: string, avatar: string | null, roles: string[], refresh: string | null = null) {
   const now = Date.now();
   const admins = env.ADMIN_DISCORD_IDS.split(',').map((s) => s.trim()).filter(Boolean);
   // 신규는 guest, 기존은 등급 유지. 관리자 목록에 있으면 admin
   await env.DB.prepare(
-    `INSERT INTO members (id, discord_name, discord_avatar, nick, tier, joined_at, last_seen_at, discord_roles)
-     VALUES (?1, ?2, ?3, ?2, ?4, ?5, ?5, ?6)
+    `INSERT INTO members (id, discord_name, discord_avatar, nick, tier, joined_at, last_seen_at, discord_roles, discord_refresh, roles_at)
+     VALUES (?1, ?2, ?3, ?2, ?4, ?5, ?5, ?6, ?7, ?5)
      ON CONFLICT (id) DO UPDATE SET discord_name = ?2, discord_avatar = ?3, last_seen_at = ?5, discord_roles = ?6,
+       discord_refresh = COALESCE(?7, members.discord_refresh), roles_at = ?5,
        tier = CASE WHEN ?4 = 'admin' THEN 'admin' ELSE members.tier END`,
   )
-    .bind(id, name, avatar, admins.includes(id) ? 'admin' : 'guest', now, JSON.stringify(roles.slice(0, 100)))
+    .bind(id, name, avatar, admins.includes(id) ? 'admin' : 'guest', now, JSON.stringify(roles.slice(0, 100)), refresh)
     .run();
 
   const code = randomToken(24);
@@ -140,6 +141,11 @@ export async function authenticate(req: Request, env: Env): Promise<Member> {
   const m = await env.DB.prepare('SELECT m.* FROM app_tokens t JOIN members m ON m.id = t.member_id WHERE t.token_hash = ?').bind(hash).first<Member>();
   if (!m) throw new HttpError(401, '로그인이 만료되었습니다. 다시 로그인해주세요.');
   const now = Date.now();
+  // 디스코드 역할은 12시간마다 다시 확인 (역할이 바뀌어도 다시 로그인하지 않아도 되게)
+  if (m.discord_refresh && now - (m.roles_at ?? 0) > ROLE_TTL) {
+    const roles = await refreshRoles(env, m).catch(() => null);
+    if (roles) { m.discord_roles = JSON.stringify(roles); m.roles_at = now; }
+  }
   // 마지막 접속 시각은 1시간 단위로만 갱신 (쓰기 횟수 절약)
   if (now - m.last_seen_at > 3_600_000) {
     await env.DB.batch([
@@ -154,4 +160,30 @@ export async function logout(req: Request, env: Env) {
   const token = req.headers.get('Authorization')?.match(/^Bearer (.+)$/)?.[1];
   if (token) await env.DB.prepare('DELETE FROM app_tokens WHERE token_hash = ?').bind(await sha256(token)).run();
   return json({ ok: true });
+}
+
+const ROLE_TTL = 12 * 3600_000;
+
+/**
+ * refresh token 으로 디스코드에 다시 물어 역할을 갱신한다. 실패하면 null (다음 기회에).
+ * 디스코드 서버를 나간 사람은 역할을 비운다.
+ */
+async function refreshRoles(env: Env, m: Member): Promise<string[] | null> {
+  const t = await discordFetch(`${DISCORD_API}/oauth2/token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ client_id: env.DISCORD_CLIENT_ID, client_secret: env.DISCORD_CLIENT_SECRET, grant_type: 'refresh_token', refresh_token: m.discord_refresh! }),
+  });
+  if (!t.ok) {
+    // 토큰이 취소·만료됐으면 지우고 (다음 로그인 때 새로 받음), 확인 시각만 미룬다
+    if (t.status === 400 || t.status === 401) await env.DB.prepare('UPDATE members SET discord_refresh = NULL, roles_at = ? WHERE id = ?').bind(Date.now(), m.id).run();
+    return null;
+  }
+  const { access_token, refresh_token } = (await t.json()) as { access_token: string; refresh_token?: string };
+  const r = await discordFetch(`${DISCORD_API}/users/@me/guilds/${env.DISCORD_GUILD_ID}/member`, { headers: { Authorization: `Bearer ${access_token}` } });
+  const roles = r.status === 404 ? [] : r.ok ? (((await r.json()) as { roles?: string[] }).roles ?? []) : null;
+  if (!roles) return null;
+  await env.DB.prepare('UPDATE members SET discord_roles = ?, discord_refresh = COALESCE(?, discord_refresh), roles_at = ? WHERE id = ?')
+    .bind(JSON.stringify(roles.slice(0, 100)), refresh_token ?? null, Date.now(), m.id).run();
+  return roles;
 }

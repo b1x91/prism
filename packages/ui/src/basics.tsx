@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { AUGMENT, CHAMPIONS, cdragon, champIcon, augIcon, loadSkins, withDefaults, type Links, type Skin } from '@prism/core';
+import { AUGMENT, CHAMPIONS, cdragon, champIcon, augIcon, loadSkins, withDefaults, type DiscordRole, type Links, type Skin } from '@prism/core';
 import { Icon } from './icons';
 
 export function Gem({ size = 28, float, src = '/brand/prism-64.png' }: { size?: number; float?: boolean; src?: string }) {
@@ -109,4 +109,10 @@ export function MemberFace({ nick, skin, champion, size = 40, skins }: { nick: s
   const sk = skins ?? loaded;
   const src = skin && sk?.[skin]?.tile ? sk[skin].tile : champion ? cdragon(CHAMPIONS[champion]?.tile) : '';
   return src ? <img className="face" src={src} width={size} height={size} alt="" loading="lazy" style={{ width: size, height: size }} /> : <Initial nick={nick} size={size} />;
+}
+
+/** 디스코드 역할 배지 (디스코드와 같은 색) */
+export function RoleBadge({ role, small }: { role?: DiscordRole | null; small?: boolean }) {
+  if (!role) return null;
+  return <span className={`role-badge ${small ? 'sm' : ''}`} style={{ ['--rc' as string]: role.color }}><i />{role.name}</span>;
 }

@@ -7,7 +7,7 @@ import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, synergyOf,
   type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
 } from '@prism/core';
-import { AugImg, ChampImg, Empty, Gem, MemberFace, Seg, useSkins } from './basics';
+import { AugImg, ChampImg, Empty, Gem, MemberFace, RoleBadge, Seg, useSkins } from './basics';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { RecentGames } from './game';
@@ -49,6 +49,7 @@ function Podium({ r, rank, by, skins, onOpen }: { r: RankingRow; rank: number; b
       {art && <img className="bg" src={art} alt="" loading="lazy" />}
       <span className="place">{rank === 1 && <Gem size={18} src="/brand/prism-32.png" />}{rank}위</span>
       <span className="nm">{r.nick}</span>
+      <RoleBadge role={r.role} small />
       <span className="st"><b>{by === 'winrate' ? pct(r.w, r.n) : `${r.n}판`}</b><span>{by === 'winrate' ? `${r.n}판` : `승률 ${pct(r.w, r.n)}`}</span></span>
     </button>
   );
@@ -59,7 +60,7 @@ function RankRow({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: numb
     <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 ? 'first' : ''}`} onClick={() => onOpen(r.id)}>
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={40} />
-      <span className="who"><b>{r.nick}</b>{r.mainChampion ? <span className="meta">주 챔피언 {CHAMPIONS[r.mainChampion]?.name}</span> : null}</span>
+      <span className="who"><b>{r.nick}<RoleBadge role={r.role} small /></b>{r.mainChampion ? <span className="meta">주 챔피언 {CHAMPIONS[r.mainChampion]?.name}</span> : null}</span>
       <span className={`num ${by !== 'winrate' ? 'key' : ''}`}>{r.n}<small>판</small></span>
       <span className={`num ${by === 'winrate' ? 'key' : ''}`}>{pct(r.w, r.n)}</span>
     </button>
@@ -89,7 +90,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
         {art && <img className="bg" alt="" src={art} />}
         <div className="actions">{m.self && <button type="button" className="btn sm" onClick={() => setEdit(!edit)}>{edit ? '닫기' : '프로필 꾸미기'}</button>}{actions}</div>
         <div>
-          <div className="eyebrow">{TIER_KO[m.tier]} · 판수 {data.rank}위 · {shortDate(m.joinedAt)} 가입</div>
+          <div className="eyebrow">{m.role ? <RoleBadge role={m.role} /> : TIER_KO[m.tier]} · 판수 {data.rank}위 · {shortDate(m.joinedAt)} 가입</div>
           <h1>{m.nick}</h1>
           {m.intro && <p className="intro">{m.intro}</p>}
           {skin && <span className="pill dark">{skin.name}</span>}

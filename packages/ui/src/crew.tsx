@@ -38,7 +38,7 @@ export function Notes({ api }: { api: Api }) {
           <div key={n.id} className="item">
             <MemberFace nick={n.nick} skin={n.skin} champion={n.main} size={28} />
             <div style={{ minWidth: 0 }}><b style={{ marginRight: 8 }}>{n.nick}</b>{n.text}</div>
-            <span className="meta row" style={{ gap: 8 }}>{ago(n.createdAt)}{n.mine ? <button type="button" className="btn ghost sm" onClick={async () => { await api.del(`/api/notes/${n.id}`).catch(() => {}); reload(); }}>지우기</button> : null}</span>
+            <span className="meta row" style={{ gap: 8 }}>{ago(n.createdAt)}{(n.canDelete ?? n.mine) ? <button type="button" className="btn ghost sm" onClick={async () => { await api.del(`/api/notes/${n.id}`).catch(() => {}); reload(); }}>지우기</button> : null}</span>
           </div>
         ))}
         {data && !data.notes.length && <Empty>첫 한 줄을 남겨보세요.</Empty>}
@@ -268,7 +268,7 @@ export function ScrimBoard({ api, onMember }: { api: Api; onMember?: (id: string
       <div className="card-head"><h2>내전</h2><span className="sp" /><span className="meta">우리끼리 5:5 · 결과는 사용자 설정 판 기록에서 자동으로</span></div>
       {data?.canHost
         ? <PartyComposer busy={busy === 'new'} verb="내전 열기" placeholder="한 줄 메모 (선택) 예: 단판, 디코 내전방" onOpen={(startAt, note) => run('new', () => api.post('/api/scrims', { startAt, note }))} />
-        : data && <p className="meta" style={{ margin: 0 }}>내전은 디스코드에서 내전 역할을 받은 회원이 열 수 있어요. 열린 내전에는 누구나 참여할 수 있어요.</p>}
+        : data && <p className="meta" style={{ margin: 0 }}>내전은 우수회원 이상이 열 수 있어요. 열린 내전에는 누구나 참여할 수 있어요.</p>}
       {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
       {error && <p className="meta">{error}</p>}
       <div className="plist">

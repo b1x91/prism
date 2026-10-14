@@ -14,10 +14,10 @@ export class ApiError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
-export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean };
+export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean };
 /** 회원 얼굴 재료 (서버 FACE): 대표 스킨, 주 챔피언 */
 export type FaceInfo = { skin?: number | null; main?: number | null };
-export type Note = { id: number; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1 } & FaceInfo;
+export type Note = { id: number; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1; canDelete?: 0 | 1 } & FaceInfo;
 export type Tip = { id: number; augmentId: number | null; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1; likes: number; liked: 0 | 1 } & FaceInfo;
 export type ChampionInfo = { crew: NW; me: NW; topAugments: { id: number; n: number; w: number }[]; masters: ({ id: string; nick: string; n: number; w: number } & FaceInfo)[]; tips: Tip[] };
 export type AugmentStats = { games: number; overall: { id: number; n: number; w: number }[]; champion: { id: number; n: number; w: number }[] };
@@ -44,3 +44,7 @@ export type Scrims = { size: number; now: number; canHost: boolean; scrims: Scri
 /** 포텐 멤버 (회원 전용) */
 export type Prospect = { puuid: string; riotId: string | null; n: number; w: number; queued: number; customs: number; lastAt: number; main: number | null; mates: { nick: string; n: number }[] };
 export type Prospects = { prospects: Prospect[]; queueMin: number };
+
+/** 디스코드 역할 (가장 높은 것 하나) 과 앱 기능 권한 */
+export type DiscordRole = { key: string; name: string; color: string; level: number };
+export type Perms = { party: boolean; scrim: boolean; prospects: boolean; moderate: boolean };

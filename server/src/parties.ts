@@ -5,6 +5,7 @@
  * - 연 사람이 빠지면 다음으로 일찍 들어온 사람이 이어받는다. 아무도 없으면 취소.
  * - 시작 시각 90분이 지나면 목록에서 빠진다 (따로 닫을 필요 없음).
  */
+import { can } from './roles.js';
 import { FACE, HttpError, json, type Env, type Member } from './util.js';
 
 const SIZE = 5;
@@ -92,7 +93,7 @@ export async function leaveParty(env: Env, me: Member, id: number) {
 
 export async function cancelParty(env: Env, me: Member, id: number) {
   const r = await env.DB.prepare('UPDATE parties SET cancelled_at = ? WHERE id = ? AND cancelled_at IS NULL AND (host_id = ? OR ? = 1)')
-    .bind(Date.now(), id, me.id, me.tier === 'admin' ? 1 : 0).run();
+    .bind(Date.now(), id, me.id, can(me, 'moderate') ? 1 : 0).run();
   if (r.meta.changes === 0) throw new HttpError(404, '취소할 수 있는 판이 없습니다.');
   return json({ ok: true });
 }

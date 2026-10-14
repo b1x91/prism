@@ -1,3 +1,5 @@
+import { can } from './roles.js';
+
 export interface Env {
   DB: D1Database;
   DISCORD_CLIENT_ID: string;
@@ -8,7 +10,6 @@ export interface Env {
   DISCORD_INVITE_URL?: string; // 모임 디스코드 초대 주소 (공개)
   KAKAO_OPENCHAT_URL?: string; // 모임 카카오톡 오픈채팅 주소 (공개)
   WEB_ORIGINS?: string; // 웹 사이트 주소 (쉼표 구분). 예: https://przm.web.app,https://przm.gg
-  SCRIM_HOST_ROLES?: string; // 내전을 열 수 있는 디스코드 역할 ID (쉼표 구분). 관리자는 늘 가능
   DEV_LOGIN?: string; // '1' 이면 로컬 개발용 가짜 로그인 허용. 배포 환경에서는 절대 켜지 않는다
 }
 
@@ -27,6 +28,8 @@ export type Member = {
   last_seen_at: number;
   last_played_at: number | null;
   discord_roles: string | null; // 로그인 때 받은 디스코드 역할 ID 배열 (JSON)
+  discord_refresh: string | null; // 역할을 다시 확인할 때 쓰는 디스코드 refresh token (서버에만)
+  roles_at: number | null; // 역할을 마지막으로 확인한 시각
 };
 
 export class HttpError extends Error {
@@ -92,12 +95,7 @@ export const finite = (v: unknown): number | null => (typeof v === 'number' && N
 export const FACE = (a: string) =>
   `${a}.profile_skin AS skin, (SELECT fp.champion_id FROM participants fp WHERE fp.member_id = ${a}.id GROUP BY fp.champion_id ORDER BY COUNT(*) DESC LIMIT 1) AS main`;
 
-/** 내전을 열 수 있는가: 관리자이거나 SCRIM_HOST_ROLES 의 역할을 가진 회원 (역할은 로그인 때 갱신) */
-export function canHostScrim(env: Env, m: Member) {
-  if (m.tier === 'admin') return true;
-  const allow = (env.SCRIM_HOST_ROLES ?? '').split(',').map((s) => s.trim()).filter(Boolean);
-  if (!allow.length) return false;
-  let roles: string[] = [];
-  try { roles = JSON.parse(m.discord_roles ?? '[]'); } catch { /* 깨진 값은 역할 없음 */ }
-  return roles.some((r) => allow.includes(r));
+/** 내전을 열 수 있는가 (역할 표 roles.ts 의 scrim 단계 이상, 관리자는 늘 가능) */
+export function canHostScrim(_env: Env, m: Member) {
+  return can(m, 'scrim');
 }

@@ -652,3 +652,9 @@ svg.light { position: absolute; inset: 0; z-index: 0; pointer-events: none; over
 .cg-rec { position: absolute; right: -6px; bottom: -6px; height: 20px; padding: 0 6px; border-radius: var(--r-pill); display: inline-flex; align-items: center; font-size: var(--fs-xs); font-weight: 800; line-height: 1; color: #fff; background: var(--win); box-shadow: 0 0 0 2px var(--surface); font-variant-numeric: tabular-nums; }
 .cg-rec.l { background: var(--text-3); }
 .champ-grid small { margin-top: -4px; }
+
+/* 디스코드 역할 배지 */
+.role-badge { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 var(--s2); border-radius: var(--r-pill); background: color-mix(in srgb, var(--rc) 18%, transparent); color: color-mix(in srgb, var(--rc) 75%, var(--text)); font-size: var(--fs-xs); font-weight: 750; white-space: nowrap; vertical-align: middle; }
+.role-badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--rc); box-shadow: 0 0 6px var(--rc); }
+.role-badge.sm { height: 18px; padding: 0 6px; margin-left: var(--s2); }
+.banner .role-badge { background: color-mix(in srgb, var(--rc) 30%, rgba(0, 0, 0, .3)); color: #fff; }

@@ -47,7 +47,7 @@ export function Crew() {
       <div className="page-head"><div><h1>Prism</h1><p>{me.nick}님, 오늘 밤도 한 판.</p></div><span className="sp" /><Channels links={links} /></div>
       <PartyBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
       <ScrimBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
-      <ProspectBoard api={api} invite={links.discord} admin={me.tier === 'admin'} />
+      {me.perms?.prospects !== false && <ProspectBoard api={api} invite={links.discord} admin={Boolean(me.perms?.moderate)} />}
       <Notes api={api} />
       <BoardView api={api} />
     </div></section>

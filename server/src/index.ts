@@ -44,7 +44,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && pathname === '/api/parties') return listParties(env, me);
   if (m === 'POST' && pathname === '/api/parties') return openParty(req, env, me);
   if (m === 'GET' && pathname === '/api/scrims') return listScrims(env, me);
-  if (m === 'GET' && pathname === '/api/prospects') return listProspects(env);
+  if (m === 'GET' && pathname === '/api/prospects') return listProspects(env, me);
   if (m === 'POST' && pathname === '/api/scrims') return openScrim(req, env, me);
   if (m === 'GET' && pathname === '/api/augments') {
     const c = Number(new URL(req.url).searchParams.get('champion'));

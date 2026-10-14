@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AUGMENT, ago } from '@prism/core';
-import { AugImg, Icon, MemberFace, Seg, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
+import { AugImg, Icon, MemberFace, RoleBadge, Seg, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
 import { bridge, type VisionState } from '../bridge';
 import { diagnostics, refreshSession, setConsent, type State } from '../controller';
 import { checkUpdate, installUpdate, useUpdate } from '../update';
@@ -28,6 +28,7 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
         ) : (
           <div className="kv">
             <div><span className="k">계정</span><span className="row" style={{ gap: 8 }}><MemberFace nick={s.me.nick} skin={s.me.skin} size={24} skins={skins} />{s.me.nick}<button type="button" className="btn ghost sm" onClick={() => run(async () => { await bridge.logout(); await refreshSession(); })}>로그아웃</button></span></div>
+            <div><span className="k">디스코드 역할</span><span className="row" style={{ gap: 8 }}>{s.me.role ? <RoleBadge role={s.me.role} /> : <span className="muted">{s.me.rolesKnown ? '역할 없음' : '다시 로그인하면 불러와요'}</span>}</span></div>
             <div><span className="k">롤 계정</span><span>{s.me.riotId ?? '연결 안 됨'}{s.summoner && s.summoner.riotId !== s.me.riotId && <span className="meta"> (지금 클라이언트: {s.summoner.riotId})</span>}</span></div>
             <div><span className="k">기록 수집</span><span>{s.me.consent
               ? <span className="row" style={{ gap: 8 }}><span className="pill ok">동의함</span><button type="button" className="btn ghost sm" onClick={() => confirm('수집 동의를 철회할까요? 철회하면 판이 더 이상 올라가지 않고, 다시 동의하기 전까지 앱을 쓸 수 없습니다.') && run(() => setConsent(false))}>철회</button></span>

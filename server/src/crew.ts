@@ -2,6 +2,7 @@
  * Prism 회원 전용 기능. 모든 응답은 회원 데이터이므로 로그인한 회원에게만 준다 (CLAUDE.md 2절 11).
  * 집계는 저장하지 않고 원본에서 계산한다.
  */
+import { can, permsOf, topRole } from './roles.js';
 import { FACE, HttpError, canHostScrim, json, type Env, type Member } from './util.js';
 import { adoptProspect } from './prospects.js';
 import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
@@ -30,6 +31,9 @@ export async function getMe(env: Env, me: Member) {
     games: row ?? { n: 0, w: 0 },
     skin: me.profile_skin,
     canScrim: canHostScrim(env, me),
+    role: topRole(me),
+    perms: permsOf(me),
+    rolesKnown: me.roles_at !== null || me.discord_roles !== null,
   });
 }
 
@@ -191,7 +195,7 @@ export async function toggleLike(env: Env, me: Member, tipId: number) {
 
 export async function deleteTip(env: Env, me: Member, tipId: number) {
   const r = await env.DB.prepare('UPDATE tips SET deleted_at = ? WHERE id = ? AND deleted_at IS NULL AND (member_id = ? OR ? = 1)')
-    .bind(Date.now(), tipId, me.id, me.tier === 'admin' ? 1 : 0)
+    .bind(Date.now(), tipId, me.id, can(me, 'moderate') ? 1 : 0)
     .run();
   if (r.meta.changes === 0) throw new HttpError(404, '지울 수 있는 팁이 없습니다.');
   return json({ ok: true });
