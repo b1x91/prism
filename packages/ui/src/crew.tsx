@@ -185,15 +185,19 @@ export function useParties(api: Api | null, every = 20_000) {
   return { data, error, reload };
 }
 
-/** 같이 할 판 + 내전을 한 곳에서: 여는 칸은 하나(5인 / 내전 고르기), 목록은 시간순으로 섞어서 */
+/**
+ * 함께 해요!: 같이 할 판 + 내전 + 남기고 싶은 말을 한 곳에서 (v3.23).
+ * 여는 칸은 하나(5인 / 내전 / 한마디), 판은 시간순, 한마디는 그 아래 최근순.
+ */
 export function PartyBoard({ api, onMember }: { api: Api; onMember?: (id: string) => void }) {
   const { data, error, reload } = useParties(api);
   const scr = useLoad<Scrims>(api, '/api/scrims');
   useEffect(() => { const t = setInterval(scr.reload, 20_000); return () => clearInterval(t); }, [scr.reload]);
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
-  const [kind, setKind] = useState<'party' | 'scrim'>('party');
-  const run = async (key: string, f: () => Promise<unknown>) => { setBusy(key); setMsg(''); try { await f(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); reload(); scr.reload(); } };
+  const notes = useLoad<{ notes: Note[]; max: number }>(api, '/api/notes');
+  const [kind, setKind] = useState<Kind>('party');
+  const run = async (key: string, f: () => Promise<unknown>) => { setBusy(key); setMsg(''); try { await f(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); reload(); scr.reload(); notes.reload(); } };
   const size = data?.size ?? 5, now = data?.now ?? Date.now();
   const canHost = Boolean(scr.data?.canHost);
   const list = [
@@ -203,15 +207,25 @@ export function PartyBoard({ api, onMember }: { api: Api; onMember?: (id: string
   const loaded = Boolean(data && scr.data);
   return (
     <section className="card pad parties">
-      <div className="card-head"><h2>같이 할 판</h2><span className="sp" /><span className="meta">{kind === 'scrim' ? '우리끼리 5:5 · 결과는 사용자 설정 판 기록에서 자동으로' : '시간을 정해 열면 회원들이 자리를 채워요'}</span></div>
-      <PartyComposer busy={busy === 'new'} kind={kind} onKind={setKind} canScrim={canHost}
-        onOpen={(startAt, note) => run('new', () => api.post(kind === 'scrim' ? '/api/scrims' : '/api/parties', { startAt, note }))} />
+      <div className="card-head"><h2>함께 해요!</h2><span className="sp" /><span className="meta">디스코드·카카오톡 알림봇을 준비하고 있어요</span></div>
+      <PartyComposer busy={busy === 'new'} kind={kind} onKind={setKind} canScrim={canHost} noteMax={notes.data?.max ?? 60}
+        onOpen={(startAt, note) => run('new', () => kind === 'note' ? api.post('/api/notes', { text: note }) : api.post(kind === 'scrim' ? '/api/scrims' : '/api/parties', { startAt, note }))} />
       {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
       {(error || scr.error) && <p className="meta">{error || scr.error}</p>}
       <div className="plist">
         {list.map((x) => x.el)}
-        {loaded && !list.length && <Empty>아직 열린 판이 없어요. 위에서 시간을 골라 먼저 열어보세요.</Empty>}
+        {loaded && !list.length && !notes.data?.notes.length && <Empty>아직 아무도 없어요. 같이 할 판을 열거나 한마디 남겨 보세요.</Empty>}
       </div>
+      {(notes.data?.notes.length ?? 0) > 0 && <div className="pnotes">
+        {notes.data!.notes.map((n) => (
+          <div key={n.id} className="pnote-row">
+            <MemberFace nick={n.nick} skin={n.skin} champion={n.main} size={28} />
+            <span className="pn-t"><b>{n.nick}</b>{n.text}</span>
+            <span className="meta pn-at">{ago(n.createdAt)}</span>
+            {(n.canDelete ?? n.mine) ? <IconBtn icon="trash" tone="danger" label="지우기" onClick={() => run(`n${n.id}`, () => api.del(`/api/notes/${n.id}`))} /> : <span />}
+          </div>
+        ))}
+      </div>}
     </section>
   );
 }
@@ -245,9 +259,9 @@ function PartyCard({ p, size, now, busy, run, api, onMember }: { p: Party; size:
   );
 }
 
-function PartyComposer({ busy, onOpen, kind, onKind, canScrim }: { busy: boolean; onOpen: (startAt: number, note: string) => void; kind: 'party' | 'scrim'; onKind: (k: 'party' | 'scrim') => void; canScrim: boolean }) {
-  const verb = kind === 'scrim' ? '내전 열기' : '판 열기';
-  const placeholder = kind === 'scrim' ? '한 줄 메모 (선택) 예: 단판, 디코 내전방' : '한 줄 메모 (선택) 예: 디코 음성방에서 만나요';
+type Kind = 'party' | 'scrim' | 'note';
+function PartyComposer({ busy, onOpen, kind, onKind, canScrim, noteMax }: { busy: boolean; onOpen: (startAt: number, note: string) => void; kind: Kind; onKind: (k: Kind) => void; canScrim: boolean; noteMax: number }) {
+  const placeholder = kind === 'note' ? '하고 싶은 말을 남겨 보세요' : kind === 'scrim' ? '한 줄 메모 (선택) 예: 단판, 디코 내전방' : '한 줄 메모 (선택) 예: 디코 음성방에서 만나요';
   const [now] = useState(() => Date.now());
   const quick = useMemo(() => quickTimes(now), [now]);
   const [at, setAt] = useState<number>(quick[3][1]);
@@ -256,18 +270,19 @@ function PartyComposer({ busy, onOpen, kind, onKind, canScrim }: { busy: boolean
   // 직접 고른 시각: 지났으면 내일
   const fromCustom = (v: string) => { const [h, m] = v.split(':').map(Number); const d = new Date(); d.setHours(h, m, 0, 0); if (d.getTime() < Date.now() - 5 * 60_000) d.setDate(d.getDate() + 1); return d.getTime(); };
   return (
-    <form className="pcompose" onSubmit={(e) => { e.preventDefault(); onOpen(custom ? fromCustom(custom) : at, note); setNote(''); }}>
+    <form className="pcompose" onSubmit={(e) => { e.preventDefault(); if (kind === 'note' && !note.trim()) return; onOpen(custom ? fromCustom(custom) : at, note); setNote(''); }}>
       <div className="ptimes">
         <span className="pkinds" role="radiogroup" aria-label="종류">
           <button type="button" role="radio" aria-checked={kind === 'party'} className={`chip ${kind === 'party' ? 'on' : ''}`} onClick={() => onKind('party')}>5인 같이 하기</button>
           <button type="button" role="radio" aria-checked={kind === 'scrim'} className={`chip ${kind === 'scrim' ? 'on' : ''}`} disabled={!canScrim} title={canScrim ? '우리끼리 5:5' : '내전은 우수회원 이상이 열 수 있어요. 열린 내전에는 누구나 참여할 수 있어요.'} onClick={() => onKind('scrim')}>내전 5:5</button>
+          <button type="button" role="radio" aria-checked={kind === 'note'} className={`chip ${kind === 'note' ? 'on' : ''}`} onClick={() => onKind('note')}>한마디</button>
         </span>
-        {quick.map(([l, t]) => <button key={l} type="button" className={`chip ${!custom && at === t ? 'on' : ''}`} onClick={() => { setAt(t); setCustom(''); }}>{l}</button>)}
-        <label className={`chip time ${custom ? 'on' : ''}`}>직접<input type="time" value={custom} onChange={(e) => setCustom(e.target.value)} /></label>
+        {kind !== 'note' && <>{quick.map(([l, t]) => <button key={l} type="button" className={`chip ${!custom && at === t ? 'on' : ''}`} onClick={() => { setAt(t); setCustom(''); }}>{l}</button>)}
+        <label className={`chip time ${custom ? 'on' : ''}`}>직접<input type="time" value={custom} onChange={(e) => setCustom(e.target.value)} /></label></>}
       </div>
       <div className="prow">
-        <input className="input" value={note} maxLength={40} onChange={(e) => setNote(e.target.value)} placeholder={placeholder} />
-        <button type="submit" className="btn primary" disabled={busy}>{busy ? '여는 중…' : `${partyTime(custom ? fromCustom(custom) : at, Date.now())} ${verb}`}</button>
+        <input className="input" value={note} maxLength={kind === 'note' ? noteMax : 40} onChange={(e) => setNote(e.target.value)} placeholder={placeholder} />
+        <button type="submit" className="btn primary" disabled={busy || (kind === 'note' && !note.trim())}>{busy ? '등록 중…' : '등록'}</button>
       </div>
     </form>
   );
@@ -432,7 +447,13 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
   const last = useRef<DiscordNow | null>(null);
   if (got && !(got as { unavailable?: boolean }).unavailable) last.current = got;
   const data = last.current;
-  if (!data) return null;
+  // 아직 못 받았으면(디스코드가 늦거나 잠깐 실패) 자리를 잡아 두고 수집 중이라고 알린다 — 사라지지 않게
+  if (!data) return (
+    <section className="card pad dnow loading" aria-busy="true">
+      <div className="card-head"><h2>지금 디스코드</h2><span className="sp" /><span className="dn-collect"><i className="dn-spin" aria-hidden="true" />정보를 수집하고 있습니다</span></div>
+      <div className="vchans">{[0, 1, 2].map((i) => <div key={i} className="vchan sk-chan"><i className="sk ln t" /><i className="sk ln s" /><span className="vact"><i className="sk sq32" /><i className="sk sq32" /></span></div>)}</div>
+    </section>
+  );
   const copy = async (id: string, link: string) => {
     try { await navigator.clipboard.writeText(link); setCopied(id); setTimeout(() => setCopied((x) => (x === id ? null : x)), 2000); } catch { /* 클립보드 막힘 */ }
   };
