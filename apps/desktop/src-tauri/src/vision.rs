@@ -170,7 +170,19 @@ mod imp {
     use windows::Win32::Foundation::{HWND, POINT, RECT};
     use windows::Win32::Graphics::Gdi::*;
     use windows::Win32::System::WinRT::{RoInitialize, RO_INIT_MULTITHREADED};
-    use windows::Win32::UI::HiDpi::GetDpiForWindow;
+    use windows::Win32::UI::HiDpi::{GetDpiForMonitor, MDT_EFFECTIVE_DPI};
+
+    /// 게임 창이 있는 모니터의 실제 배율. 롤 게임 창은 배율을 따로 쓰지 않는 창이라
+    /// GetDpiForWindow(게임 창)는 늘 96(100%)을 돌려준다 → 모니터 배율을 직접 묻는다.
+    /// 작은 창(WebView)은 그 모니터 배율로 그려지므로 창 크기도 같은 배율로 잡아야 글자가 맞는다.
+    fn monitor_scale(h: HWND) -> f64 {
+        let mon = unsafe { MonitorFromWindow(h, MONITOR_DEFAULTTONEAREST) };
+        let (mut x, mut y) = (0u32, 0u32);
+        match unsafe { GetDpiForMonitor(mon, MDT_EFFECTIVE_DPI, &mut x, &mut y) } {
+            Ok(()) if x > 0 => x as f64 / 96.0,
+            _ => 1.0,
+        }
+    }
     use windows::Win32::UI::WindowsAndMessaging::*;
 
     pub fn engine() -> Option<OcrEngine> {
@@ -286,7 +298,7 @@ mod imp {
         let mut seen_at: Option<std::time::Instant> = None;
         let mut away_at: Option<std::time::Instant> = None;
         // 구석 표시를 놓은 게임 화면 위치 (None = 숨김)
-        let mut badge_at: Option<RECT> = None;
+        let mut badge_at: Option<(RECT, u64)> = None;
         let mut pids: (Vec<u32>, Option<std::time::Instant>) = (Vec::new(), None);
         loop {
             let s = v.settings.lock().unwrap().clone();
@@ -315,10 +327,10 @@ mod imp {
             };
             let Some(rc) = client_rect(h) else { std::thread::sleep(EVERY); continue };
             // 게임 창이 있는 모니터의 배율 (모니터마다 배율이 다를 수 있다)
-            let scale = match unsafe { GetDpiForWindow(h) } { 0 => 1.0, d => d as f64 / 96.0 };
-            if badge_at != Some(rc) {
+            let scale = monitor_scale(h);
+            if badge_at != Some((rc, scale.to_bits())) {
                 show_badge(&app, &rc, scale);
-                badge_at = Some(rc);
+                badge_at = Some((rc, scale.to_bits()));
             }
             // 제목 줄을 아직 모르면: 보통은 좁은 띠, 네 번에 한 번은 넓게
             // 제목 줄을 찾았으면 그 줄을 찾은 범위 그대로 (좁은 띠 / 넓게 기준이 다르다)

@@ -51,4 +51,10 @@ function Overlay() {
 }
 
 lockdown();
+// 안전장치: 창이 기준 폭(420)보다 좁게 잡혀도 글자가 두세 자씩 꺾이지 않게 화면 전체를 창 폭에 맞춰 줄인다
+const BASE_W = 420;
+const fit = () => { document.documentElement.style.zoom = String(Math.min(1, innerWidth / BASE_W)); };
+fit();
+addEventListener('resize', fit);
+
 createRoot(document.getElementById('root')!).render(<StrictMode><Overlay /></StrictMode>);
