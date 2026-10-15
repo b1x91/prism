@@ -25,12 +25,20 @@ struct RawAug {
     id: u32,
     name: String,
     #[serde(default)]
+    desc: String,
+    #[serde(default)]
+    note: String,
+    #[serde(default)]
     disabled: bool,
 }
 #[derive(Deserialize)]
 struct RawData {
     augments: Vec<RawAug>,
 }
+
+/// 설명으로 찾을 때: 읽은 묶음의 이만큼이 설명에 들어 있어야 하고, 2등보다 이만큼 앞서야 한다
+const DESC_MIN: f32 = 0.5;
+const DESC_GAP: f32 = 0.15;
 
 /// 게임 화면에 실제로 쓰인 이름이 데이터(CommunityDragon)와 다른 증강: (ID, 화면 이름)
 const ALIASES: &[(u32, &str)] = &[(2111, "꽝!")]; // 데이터는 "꽁!"
@@ -39,6 +47,14 @@ pub struct Matcher {
     names: Vec<(u32, Vec<char>)>,
     /// 이름마다 자모로 푼 것 (names 와 같은 순서)
     jamo: Vec<Vec<u32>>,
+    /// 증강마다 설명(이름·설명·메모)의 두 글자 묶음 — 제목을 못 읽은 카드를 설명 문장으로 알아보려고
+    descs: Vec<(u32, std::collections::HashSet<(char, char)>)>,
+}
+
+/// 한글·숫자만 남긴 두 글자 묶음 (띄어쓰기·기호·색 글자 차이에 흔들리지 않게)
+fn bigrams(s: &str) -> std::collections::HashSet<(char, char)> {
+    let cs: Vec<char> = s.chars().filter(|c| ('\u{AC00}'..='\u{D7A3}').contains(c) || c.is_ascii_digit()).collect();
+    cs.windows(2).map(|w| (w[0], w[1])).collect()
 }
 
 /// 한글 음절을 초성·중성·종성으로 푼다 (그 밖의 글자는 그대로)
@@ -105,11 +121,26 @@ impl Matcher {
     /// 앱에 묶인 증강 데이터(packages/core/data/mayhem-augments.json)에서 이름표를 만든다
     pub fn from_json(json: &str) -> Self {
         let d: RawData = serde_json::from_str(json).unwrap_or(RawData { augments: vec![] });
-        let mut names: Vec<(u32, Vec<char>)> = d.augments.into_iter().filter(|a| !a.disabled).map(|a| (a.id, norm(&a.name))).filter(|(_, n)| !n.is_empty()).collect();
+        let live: Vec<RawAug> = d.augments.into_iter().filter(|a| !a.disabled).collect();
+        let descs = live.iter().map(|a| (a.id, bigrams(&format!("{} {} {}", a.name, a.desc, a.note)))).collect();
+        let mut names: Vec<(u32, Vec<char>)> = live.iter().map(|a| (a.id, norm(&a.name))).filter(|(_, n)| !n.is_empty()).collect();
         let known: Vec<u32> = names.iter().map(|n| n.0).collect();
         names.extend(ALIASES.iter().filter(|(id, _)| known.contains(id)).map(|(id, n)| (*id, norm(n))));
         let jamo = names.iter().map(|(_, n)| jamo_of(n)).collect();
-        Self { names, jamo }
+        Self { names, jamo, descs }
+    }
+
+    /// 카드 한 장의 글자 전체(제목을 못 읽었을 때)로 증강 찾기: 읽은 두 글자 묶음이 설명에 얼마나 들어 있나.
+    /// 게임 화면의 설명은 데이터와 조금 다를 수 있으므로, 1등이 충분히 높고 2등과 차이가 클 때만 (헷갈리면 None)
+    pub fn match_desc(&self, text: &str) -> Option<u32> {
+        let q = bigrams(text);
+        if q.len() < 8 {
+            return None;
+        }
+        let mut sc: Vec<(f32, u32)> = self.descs.iter().map(|(id, d)| (q.iter().filter(|b| d.contains(b)).count() as f32 / q.len() as f32, *id)).collect();
+        sc.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+        let (best, second) = (sc.first()?, sc.get(1).map_or(0.0, |s| s.0));
+        (best.0 >= DESC_MIN && best.0 - second >= DESC_GAP).then_some(best.1)
     }
 
     /// 한 줄(단어 목록)에서 이름 후보 찾기
@@ -240,6 +271,29 @@ impl Slots {
     pub fn len(&self) -> usize {
         self.s.len()
     }
+    pub fn contains(&self, id: u32) -> bool {
+        self.s.iter().any(|s| s.1 == id)
+    }
+    /// 아직 못 읽은 칸의 가운데 x (찾는 영역 기준). 카드 세 장은 게임 화면 가운데를 중심으로 같은 간격이고,
+    /// 찾는 영역도 화면 가운데를 중심으로 잡으므로 가운데 = width/2. 읽은 칸들로 간격을 재서 빈 칸을 짐작한다
+    pub fn missing(&self, width: f32) -> Vec<f32> {
+        let mid = width / 2.0;
+        let side: Vec<f32> = self.s.iter().map(|s| (s.0 - mid).abs()).filter(|d| *d > width * 0.06).collect();
+        if side.is_empty() || self.s.len() >= 3 {
+            return vec![];
+        }
+        let pitch = side.iter().sum::<f32>() / side.len() as f32;
+        if pitch < width * 0.1 || pitch > width * 0.45 {
+            return vec![];
+        }
+        [mid - pitch, mid, mid + pitch].into_iter().filter(|c| self.s.iter().all(|s| (s.0 - c).abs() > pitch * 0.35)).collect()
+    }
+    /// 카드 간격 (빈 칸을 잘라 읽을 폭)
+    pub fn pitch(&self, width: f32) -> Option<f32> {
+        let mid = width / 2.0;
+        let side: Vec<f32> = self.s.iter().map(|s| (s.0 - mid).abs()).filter(|d| *d > width * 0.06).collect();
+        (!side.is_empty()).then(|| side.iter().sum::<f32>() / side.len() as f32)
+    }
     /// 읽은 제목들(ID, 가운데 x, y) 반영 → 왼쪽부터 칸별 ID
     pub fn update(&mut self, hits: &[(u32, f32, f32)], width: f32) -> Vec<u32> {
         let tol = (width * 0.08).max(40.0);
@@ -283,6 +337,25 @@ mod tests {
         let found = m.find(&lines, 1600.0);
         assert_eq!(found[0], id_of("거인 학살자"));
         assert_eq!(*found.last().unwrap(), id_of("최상급 조준경 부착"));
+    }
+
+    #[test]
+    fn 설명으로_찾기() {
+        let m = Matcher::from_json(DATA);
+        // 실제 게임 화면 설명 (데이터 문장과 조금 다르다)
+        assert_eq!(m.match_desc("처치 관여 시 크기가 작아지고 스킬 가속 및 이동 속도를 얻습니다. 사망 시 중첩을 65% 잃습니다."), Some(id_of("축소 엔진")));
+        assert_eq!(m.match_desc("여진과 빙결 강화 핵심 룬을 얻습니다."), Some(id_of("넘을 수 없는 벽")));
+        // 너무 짧거나 흔한 문장은 고르지 않는다
+        assert_eq!(m.match_desc("피해량"), None);
+    }
+
+    #[test]
+    fn 빈_칸_짐작() {
+        let mut s = Slots::default();
+        s.update(&[(1, 300.0, 0.0), (2, 800.0, 0.0)], 1600.0);
+        let miss = s.missing(1600.0);
+        assert_eq!(miss.len(), 1);
+        assert!((miss[0] - 1300.0).abs() < 1.0);
     }
 
     #[test]

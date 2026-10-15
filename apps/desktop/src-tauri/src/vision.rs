@@ -279,6 +279,31 @@ mod imp {
         Ok((lines, text))
     }
 
+    /// 카드 한 장만 잘라 읽기: 두 배로 키워(작은 설명 글자까지) 문자 인식 → 제목(가장 위 이름) → 못 읽으면 설명 문장으로
+    fn read_card(engine: &OcrEngine, x: i32, y: i32, w: i32, h: i32, m: &Matcher) -> Option<u32> {
+        let buf = grab(x, y, w, h)?;
+        let max = OcrEngine::MaxImageDimension().unwrap_or(0) as i32;
+        let (img, iw, ih) = if w * 2 <= max && h * 2 <= max { (upscale2(&buf, w, h), w * 2, h * 2) } else { (buf, w, h) };
+        let (lines, text) = recognize(engine, &img, iw, ih).ok()?;
+        let title = m.find_at(&lines, iw as f32).into_iter().min_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal)).map(|h| h.0);
+        title.or_else(|| m.match_desc(&text))
+    }
+
+    /// 두 배 키우기 (가장 가까운 점). 인식기가 작은 글자를 더 잘 읽는다
+    fn upscale2(src: &[u8], w: i32, h: i32) -> Vec<u8> {
+        let (w2, h2) = (w * 2, h * 2);
+        let mut out = vec![0u8; (w2 * h2 * 4) as usize];
+        for yy in 0..h2 {
+            let row = ((yy / 2) * w) as usize;
+            for xx in 0..w2 {
+                let si = (row + (xx / 2) as usize) * 4;
+                let di = ((yy * w2 + xx) * 4) as usize;
+                out[di..di + 4].copy_from_slice(&src[si..si + 4]);
+            }
+        }
+        out
+    }
+
     /// 찾는 곳: 게임 화면 가운데 (카드가 뜨는 자리). 실제 화면으로 맞춰 가며 조정한다
     /// 카드 제목이 뜨는 가로 띠 (16:9 기준 화면 높이 40% 안팎). 좁게 읽어야 빠르고, 다른 글자에 덜 흔들린다
     fn region(rc: &RECT) -> (i32, i32, i32, i32) {
@@ -362,10 +387,41 @@ mod imp {
                 std::thread::sleep(if v.shown.load(Ordering::SeqCst) { FAST } else { EVERY });
                 continue;
             }
-            // 카드가 떠 있으면 제목 줄만, 아니면 넓게. 세 칸을 다 못 채웠으면 세 번에 한 번은 띠 전체
+            // 칸 위치는 게임 화면 기준 x 로 기억한다 (좁은 띠·넓게 읽기의 시작점이 달라도 같은 칸이 같은 값)
+            let gw = (rc.right - rc.left) as f32;
+            let off = (x - rc.left) as f32;
+            // 세 칸을 다 못 채웠으면 두 번에 한 번은 빈 칸 하나만 잘라 크게 읽는다 (v3.45).
+            // 가로 띠 전체를 한 번에 읽으면 인식기가 한 장의 제목을 놓치는 일이 잦았다 — 그 카드만 따로, 키워서 다시 본다
             tick = tick.wrapping_add(1);
-            let full = band.is_some() && slots.len() < 3 && tick % 3 == 0;
-            let (by, bh) = if full { (0, hh) } else { band.unwrap_or((0, hh)) };
+            if let Some((by0, _)) = band.filter(|_| slots.len() < 3 && tick % 2 == 0) {
+                let miss = slots.missing(gw);
+                if let (false, Some(p)) = (miss.is_empty(), slots.pitch(gw)) {
+                    let c = miss[(tick / 2) as usize % miss.len()];
+                    let half = (p * 0.48) as i32;
+                    let cx = (rc.left + c as i32 - half).max(rc.left);
+                    let cw = (half * 2).min(rc.right - cx);
+                    let (cy, ch) = (y + by0, hh - by0);
+                    if cw > 80 && ch > 60 {
+                        let t0 = std::time::Instant::now();
+                        let id = read_card(eng, cx, cy, cw, ch, &v.matcher).filter(|id| !slots.contains(*id));
+                        v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
+                        if let Some(id) = id {
+                            seen_at = Some(std::time::Instant::now());
+                            let ids = slots.update(&[(id, c, 0.0)], gw);
+                            if ids != last {
+                                last = ids.clone();
+                                v.publish(&app, ids, String::new());
+                                show_overlay(&app, &rc, &s.position, scale);
+                                v.shown.store(true, Ordering::SeqCst);
+                            }
+                        }
+                        std::thread::sleep(FAST);
+                        continue;
+                    }
+                }
+            }
+            // 카드가 떠 있으면 제목 줄만, 아니면 넓게
+            let (by, bh) = band.unwrap_or((0, hh));
             let t0 = std::time::Instant::now();
             let found = grab(x, y + by, w, bh).and_then(|buf| recognize(eng, &buf, w, bh).ok());
             v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
@@ -388,7 +444,8 @@ mod imp {
                             band = Some((y0, (bottom - y0 + m * 2).min(hh - y0)));
                             band_wide = wide;
                         }
-                        let ids = slots.update(&hits, w as f32);
+                        let gh: Vec<(u32, f32, f32)> = hits.iter().map(|h| (h.0, h.1 + off, h.2)).collect();
+                        let ids = slots.update(&gh, gw);
                         if ids != last || !shown {
                             last = ids.clone();
                             v.publish(&app, ids, text);
