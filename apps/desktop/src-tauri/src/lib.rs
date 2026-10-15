@@ -10,6 +10,7 @@ mod vision;
 
 use std::sync::Arc;
 use tauri::menu::{Menu, MenuItem};
+use tauri::Emitter;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Manager, State, WindowEvent};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
@@ -172,10 +173,11 @@ pub fn run() {
                 let _ = w.set_title(&format!("Prism - {}", app.package_info().version));
             }
 
-            // 트레이: 창 열기 / 끝내기. 창을 닫으면 트레이로 숨는다 (기록·대신 수집을 계속하기 위해)
+            // 트레이: 창 열기 / 업데이트 확인 / 끝내기. 창을 닫으면 트레이로 숨는다 (기록·대신 수집을 계속하기 위해)
             let open = MenuItem::with_id(app, "open", "Prism 열기", true, None::<&str>)?;
+            let check = MenuItem::with_id(app, "check", "업데이트 확인", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "끝내기", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&open, &quit])?;
+            let menu = Menu::with_items(app, &[&open, &check, &quit])?;
             TrayIconBuilder::with_id("prism")
                 .icon(app.default_window_icon().cloned().ok_or("아이콘 없음")?)
                 .tooltip("Prism")
@@ -183,6 +185,11 @@ pub fn run() {
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, e| match e.id().as_ref() {
                     "open" => show(app),
+                    // 창을 열고 설정 화면에서 바로 확인한다 (결과가 보이게)
+                    "check" => {
+                        show(app);
+                        let _ = app.emit("check-update", ());
+                    }
                     "quit" => {
                         // 받아 둔 새 버전이 있으면 끝낼 때 조용히 적용 (다시 켜지 않는다)
                         if update::has_ready() {

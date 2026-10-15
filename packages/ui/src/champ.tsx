@@ -36,29 +36,48 @@ export function ChampSearch({ onPick, placeholder = "챔프 이름 (예: '아리
 
 const ROLES = ['marksman', 'mage', 'assassin', 'fighter', 'tank', 'support'] as const;
 
-/** 챔피언 목록: 역할로 거르기, record 가 있으면 내 판수·승률 표시 (앱) */
-export function ChampGrid({ onPick, query = '', record }: { onPick: (id: number) => void; query?: string; record?: Record<number, { n: number; w: number }> }) {
+const ROLE_DOT: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
+
+/** 챔피언 목록: 붙는 도구 줄(검색·역할·내 챔프) + 내 챔프 줄 + 전체 격자. record 가 있으면 내 판수·승률 (앱) */
+export function ChampGrid({ onPick, query = '', onQuery, record }: { onPick: (id: number) => void; query?: string; onQuery?: (q: string) => void; record?: Record<number, { n: number; w: number }> }) {
   const [role, setRole] = useState<string>('all');
   const [mine, setMine] = useState(false);
   const [fav, setFav] = useState(false);
   const favs = useFavs();
   const list = CHAMPION_LIST.filter((c) => matchName(c.name, query) && (role === 'all' || c.roles.includes(role)) && (!mine || record?.[c.id]) && (!fav || favs.champs.includes(c.id)));
+  // 아무것도 거르지 않았을 때만 위에 '내 챔프' 줄
+  const showFavs = favs.champs.length > 0 && !query && role === 'all' && !mine && !fav;
   return (
-    <div className="stack" style={{ gap: 16 }}>
-      <div className="role-chips">
-        {/* 아무것도 고르지 않으면 전체. 고른 것을 다시 누르면 풀린다 */}
-        {ROLES.map((r) => <button key={r} type="button" aria-pressed={role === r} className={`chip ${role === r ? 'on' : ''}`} onClick={() => setRole(role === r ? 'all' : r)}>{ROLE_KO[r]}</button>)}
-        {(record || favs.connected) && <span className="sp" />}
-        {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><Icon name="star" />내 챔프<small>{favs.champs.length}</small></button>}
-        {record && <button type="button" aria-pressed={mine} className={`chip ${mine ? 'on' : ''}`} onClick={() => setMine(!mine)}>내가 해 본 챔프</button>}
+    <div className="stack" style={{ gap: 24 }}>
+      <div className="ltools">
+        {onQuery && <label className="ltools-q"><Icon name="search" /><input value={query} autoFocus onChange={(e) => onQuery(e.target.value)} placeholder="챔프 이름 (예: '아리' 혹은 'ㅇㄹ')" />{query && <button type="button" className="x" aria-label="지우기" onClick={() => onQuery('')}><Icon name="x" /></button>}</label>}
+        <div className="ltools-chips">
+          {/* 아무것도 고르지 않으면 전체. 고른 것을 다시 누르면 풀린다 */}
+          {ROLES.map((r) => <button key={r} type="button" aria-pressed={role === r} className={`chip ${role === r ? 'on' : ''}`} onClick={() => setRole(role === r ? 'all' : r)}><i className="role-dot" style={{ background: ROLE_DOT[r] }} />{ROLE_KO[r]}</button>)}
+          {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><Icon name="star" />내 챔프<small>{favs.champs.length}</small></button>}
+          {record && <button type="button" aria-pressed={mine} className={`chip ${mine ? 'on' : ''}`} onClick={() => setMine(!mine)}>해 본 챔프</button>}
+        </div>
+        <span className="ltools-cnt"><b>{list.length}</b>명</span>
       </div>
+      {showFavs && <section className="cfav">
+        <div className="cfav-h"><Icon name="star" /><h3>내 챔프</h3></div>
+        <div className="cfav-row">{favs.champs.filter((id) => CHAMPIONS[id]).map((id) => {
+          const r = record?.[id];
+          return (
+            <button key={id} type="button" className="cfav-card" onClick={() => onPick(id)}>
+              <img src={cdragon(CHAMPIONS[id].splash)} alt="" loading="lazy" />
+              <span className="cfav-txt"><b>{CHAMPIONS[id].name}</b><small>{ROLE_KO[CHAMPIONS[id].roles[0]]}{r ? ` · ${r.n}판 ${Math.round((r.w / r.n) * 100)}%` : ''}</small></span>
+            </button>
+          );
+        })}</div>
+      </section>}
       <div className="champ-grid">
         {list.map((c) => {
           const r = record?.[c.id];
           return (
             <button key={c.id} type="button" className={record && !r ? 'unmet' : ''} onClick={() => onPick(c.id)}>
               <span className="cg-pic"><ChampImg id={c.id} size={64} /><FavMark kind="champ" id={c.id} />{r && <span className={`cg-rec ${r.w / r.n >= 0.5 ? 'w' : 'l'}`}>{Math.round((r.w / r.n) * 100)}%</span>}</span>
-              {c.name}
+              <span className="cg-nm">{c.name}</span>
               {r && <small className="meta">{r.n}판</small>}
             </button>
           );

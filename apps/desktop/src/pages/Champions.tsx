@@ -14,7 +14,7 @@ export function ChampionsPage({ member, record }: { member: boolean; record?: Re
   if (!champ) return (
     <div className="stack" style={{ gap: 16 }}>
       <h1 className="h1">챔프</h1>
-      <section className="card pad"><input className="input" style={{ marginBottom: 16 }} value={q} autoFocus onChange={(e) => setQ(e.target.value)} placeholder="챔프 검색 (예: '아리' 혹은 'ㅇㄹ')" /><ChampGrid query={q} record={record} onPick={(c) => nav(`/champions/${c}`)} /></section>
+      <ChampGrid query={q} onQuery={setQ} record={record} onPick={(c) => nav(`/champions/${c}`)} />
     </div>
   );
   return (

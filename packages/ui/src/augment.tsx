@@ -18,21 +18,21 @@ function StatLine({ id, champ, all }: { id: number; champ: StatMap; all: StatMap
   return null;
 }
 
-function GuideRow({ f, compact, champ, all, stats, c }: { f: Fit; compact?: boolean; champ: StatMap; all: StatMap; stats: boolean; c: ChampionProfile }) {
+function GuideRow({ f, compact, champ, all, stats, c, cid }: { f: Fit; compact?: boolean; champ: StatMap; all: StatMap; stats: boolean; c: ChampionProfile; cid: number }) {
   const a = AUGMENT[f.id];
   if (!a) return null;
   const tier = tierOf(fitPoints(f));
+  const e = explainFit(c, a);
+  // 한 줄 이름 · 한 줄 이유. 효과 설명·'언제'는 마우스를 올리면 (설명 상자), 누르면 증강 상세
   return (
-    <div className={`ga t-${tier}`}>
+    <AugmentLink id={a.id} champion={cid} className={`ga t-${tier} ${compact ? 'cmp' : ''}`}>
       <AugRing id={a.id} size={40} />
-      <span className="nm" title={a.name}><FavMark kind="aug" id={a.id} inline />{a.name}<GradeUp rarity={a.rarity} tier={tier} /></span>
-      <TierBadge tier={tier} />
-      <div className="why">
-        <Explain c={c} id={a.id} tier={tier} />
-        {stats && <StatLine id={a.id} champ={champ} all={all} />}
-      </div>
-      {!compact && <details><summary>{a.note || '효과 보기'}</summary><p>{a.desc}</p></details>}
-    </div>
+      <span className="ga-main">
+        <span className="nm"><FavMark kind="aug" id={a.id} inline /><span className="t">{a.name}</span><GradeUp rarity={a.rarity} tier={tier} /></span>
+        <span className="ga-why">{e.why}</span>
+      </span>
+      <span className="ga-side"><TierBadge tier={tier} />{stats && <StatLine id={a.id} champ={champ} all={all} />}</span>
+    </AugmentLink>
   );
 }
 
@@ -52,18 +52,18 @@ export function AugmentGuide({ championId, stats, compact }: { championId: numbe
       <div className="gcols">
         {ORDER.map((r) => {
           const list = all && !compact ? sorted(r) : sorted(r).filter(good);
-          const limit = compact ? 4 : more[r] ? list.length : 8;
+          const limit = compact ? 4 : more[r] ? list.length : 6;
           return (
             <div key={r} className="card gcol">
-              <h3><i className={`rbar ${r}`} />{RARITY_KO[r]}<span className="meta">S·A {g[r].filter(good).length}개</span></h3>
-              {list.slice(0, limit).map((f) => <GuideRow key={f.id} f={f} compact={compact} champ={champ} all={overall} stats={Boolean(stats)} c={c} />)}
+              <h3 className={`gcol-h ${r}`}><i className={`rbar ${r}`} />{RARITY_KO[r]}<span className="meta">잘 맞는 증강 {g[r].filter(good).length}개</span></h3>
+              {list.slice(0, limit).map((f) => <GuideRow key={f.id} f={f} compact={compact} champ={champ} all={overall} stats={Boolean(stats)} c={c} cid={championId} />)}
               {!list.length && <p className="meta">잘 맞는 증강이 없어요</p>}
-              {!compact && list.length > limit && <button type="button" className="btn ghost sm" onClick={() => setMore({ ...more, [r]: true })}>{list.length - limit}개 더 보기</button>}
+              {!compact && list.length > limit && <button type="button" className="gcol-more" onClick={() => setMore({ ...more, [r]: true })}>{list.length - limit}개 더 보기<Icon name="arrow" /></button>}
             </div>
           );
         })}
       </div>
-      {!compact && <button type="button" className="linkbtn meta guide-all" onClick={() => setAll(!all)}>{all ? 'S·A 티어만 보기' : 'B~D 티어까지 모든 증강 보기'}</button>}
+      {!compact && <button type="button" className="chip guide-all" onClick={() => setAll(!all)}>{all ? '잘 맞는 증강(S·A)만 보기' : 'B~D 티어까지 모든 증강 보기'}</button>}
     </div>
   );
 }
@@ -152,25 +152,34 @@ export function AugmentCompare({ championId, stats, preset, matchup: given, onMa
 
 export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
   const [q, setQ] = useState('');
-  const [r, setR] = useState<'all' | Rarity>('all');
+  // 등급 칩: 아무것도 고르지 않으면 전체, 고른 것을 다시 누르면 풀린다 (v3.27-3)
+  const [r, setR] = useState<Rarity | null>(null);
   const [fav, setFav] = useState(false);
   const favs = useFavs();
-  const list = ACTIVE_AUGMENTS.filter((a) => (r === 'all' || a.rarity === r) && (!fav || favs.augs.includes(a.id)) && (!q || matchAug(a.name, q) || a.desc.includes(q) || a.note.includes(q)))
-    .sort((a, b) => ORDER.indexOf(a.rarity) - ORDER.indexOf(b.rarity) || a.name.localeCompare(b.name, 'ko'));
+  const hit = (a: (typeof ACTIVE_AUGMENTS)[number]) => (!fav || favs.augs.includes(a.id)) && (!q || matchAug(a.name, q) || a.desc.includes(q) || a.note.includes(q));
+  const base = ACTIVE_AUGMENTS.filter(hit);
+  const list = base.filter((a) => !r || a.rarity === r).sort((a, b) => ORDER.indexOf(a.rarity) - ORDER.indexOf(b.rarity) || a.name.localeCompare(b.name, 'ko'));
   return (
-    <div className="stack">
-      <div className="adex-tools">
-        <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름·효과 검색 (예: 치명타, 보호막, ㅂㅅ)" />
-        <Seg value={r} options={[['all', '전체'], ...ORDER.map((x) => [x, RARITY_KO[x]] as [Rarity, string])]} onChange={setR} />
-        {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><Icon name="star" />내 증강<small>{favs.augs.length}</small></button>}
-        <span className="meta cnt">{list.length}개</span>
+    <div className="stack" style={{ gap: 24 }}>
+      <div className="ltools">
+        <label className="ltools-q"><Icon name="search" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름·효과 검색 (예: 치명타, 보호막, ㅂㅅ)" />{q && <button type="button" className="x" aria-label="지우기" onClick={() => setQ('')}><Icon name="x" /></button>}</label>
+        <div className="ltools-chips">
+          {ORDER.map((x) => <button key={x} type="button" aria-pressed={r === x} className={`chip r-${x} ${r === x ? 'on' : ''}`} onClick={() => setR(r === x ? null : x)}><i className={`rdot ${x}`} />{RARITY_KO[x]}<small>{base.filter((a) => a.rarity === x).length}</small></button>)}
+          {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><Icon name="star" />내 증강<small>{favs.augs.length}</small></button>}
+        </div>
+        <span className="ltools-cnt"><b>{list.length}</b>개</span>
       </div>
       {list.length ? ORDER.filter((x) => list.some((a) => a.rarity === x)).map((x) => (
-        <section key={x} className="stack" style={{ gap: 12 }}>
-          <div className="dex-head"><i className={`rdot ${x}`} /><h3>{RARITY_KO[x]}</h3><span className="meta">{list.filter((a) => a.rarity === x).length}개</span></div>
-          <div className="adex">
+        <section key={x} className="adx-sec">
+          <div className={`adx-head ${x}`}><i className={`rdot ${x}`} /><h3>{RARITY_KO[x]}</h3><span className="meta">{list.filter((a) => a.rarity === x).length}개</span></div>
+          <div className="adx">
             {list.filter((a) => a.rarity === x).map((a) => (
-              <button type="button" key={a.id} className="ai" onClick={() => onOpen?.(a.id)}><FavMark kind="aug" id={a.id} /><AugRing id={a.id} size={48} /><span className="nm">{a.name}</span><span className="note2">{a.note}</span><p>{a.desc}</p></button>
+              <Hover key={a.id} className="adx-hov" tip={() => <AugmentTip id={a.id} link={Boolean(onOpen)} />}>
+                <button type="button" className={`adx-t ${a.rarity}`} onClick={() => onOpen?.(a.id)}>
+                  <AugRing id={a.id} size={44} />
+                  <span className="adx-txt"><span className="nm"><FavMark kind="aug" id={a.id} inline />{a.name}</span><span className="note">{a.note}</span></span>
+                </button>
+              </Hover>
             ))}
           </div>
         </section>
@@ -188,21 +197,27 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack, after }: { id
   const related = relatedAugments(a, AUGMENTS, 8);
   return (
     <div className="stack" style={{ gap: 16 }}>
-      <section className={`card pad adet ${a.rarity}`}>
-        <div className="adet-head">
-          <AugRing id={a.id} size={80} />
-          <div className="stack" style={{ gap: 8 }}>
+      <section className={`adet ${a.rarity}`}>
+        <div className="adet-stage">
+          <AugRing id={a.id} size={96} />
+          <div className="adet-txt">
             <div className="row wrapr" style={{ gap: 8 }}><span className={`rpill ${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.disabled && <span className="pill">현재 꺼짐</span>}</div>
             <h1>{a.name}<FavStar kind="aug" id={a.id} /></h1>
             {a.note && <p className="note">{a.note}</p>}
           </div>
-          {onBack && <button type="button" className="btn sm" onClick={onBack}>도감으로</button>}
+          {onBack && <button type="button" className="btn sm adet-back" onClick={onBack}>도감으로</button>}
         </div>
-        <p className="desc">{a.desc}</p>
-        {(t.prefs.length > 0 || t.reqs.length > 0) && <div className="row wrapr" style={{ gap: 8 }}>
-          {t.prefs.map((x) => <span key={x} className="pill">{x}</span>)}
-          {t.reqs.map((x) => <span key={x} className="pill warn">필요: {x}</span>)}
-        </div>}
+        <div className="adet-body">
+          <p className="desc">{a.desc}</p>
+          <div className="adet-facts">
+            <span><b>{champs.best}</b><small>잘 맞는 챔프</small></span>
+            <span><b>{related.length}</b><small>같은 성향 증강</small></span>
+          </div>
+          {(t.prefs.length > 0 || t.reqs.length > 0) && <div className="row wrapr" style={{ gap: 8 }}>
+            {t.prefs.map((x) => <span key={x} className="pill">{x}</span>)}
+            {t.reqs.map((x) => <span key={x} className="pill warn">필요: {x}</span>)}
+          </div>}
+        </div>
       </section>
       {after}
       <section className="card pad">

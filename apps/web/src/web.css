@@ -144,3 +144,6 @@ body { overflow-x: clip; }
 .mmenu-shop .icon { width: 20px; height: 20px; }
 .mmenu-shop.active { color: var(--text); background: var(--surface); }
 .me-btn .me-txt small { gap: 3px; }
+/* 목록 도구 줄은 상단 바 아래에 붙는다 */
+.ltools { top: calc(64px + var(--s3)); }
+@media (max-width: 720px) { .ltools { top: calc(56px + var(--s2)); } }

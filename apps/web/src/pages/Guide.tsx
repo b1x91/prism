@@ -9,11 +9,8 @@ export function GuidePicker({ to }: { to: (id: number) => string }) {
   const [q, setQ] = useState('');
   return (
     <section className="section tight"><div className="wrap">
-      <div className="page-head"><div><h1>챔프 고르기</h1><p>이름이나 초성으로 찾을 수 있어요.</p></div></div>
-      <div className="card pad">
-        <input className="input" style={{ marginBottom: 20 }} value={q} autoFocus onChange={(e) => setQ(e.target.value)} placeholder="챔프 검색 (ㅇㄹ → 아리)" />
-        <ChampGrid query={q} onPick={(id) => nav(to(id))} />
-      </div>
+      <div className="page-head"><div><h1>챔프 고르기</h1><p>챔프를 누르면 어울리는 증강·3개 비교·모임 기록을 볼 수 있어요.</p></div></div>
+      <ChampGrid query={q} onQuery={setQ} onPick={(id) => nav(to(id))} />
     </div></section>
   );
 }

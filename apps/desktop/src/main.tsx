@@ -9,7 +9,7 @@ import { getState, refreshSession, start, subscribe, type State } from './contro
 import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
 import { api, bridge } from './bridge';
-import { applyUpdate, startUpdates, useUpdate } from './update';
+import { applyUpdate, checkUpdate, startUpdates, useUpdate } from './update';
 import { VERSION } from './version';
 import { GamePage } from './pages/Game';
 import { AugmentsPage } from './pages/Augments';
@@ -70,6 +70,12 @@ function App() {
   // 챔프 선택·게임이 시작되면 게임 화면으로 (Alt+Tab 했을 때 바로 보이게)
   // 상태가 '바뀌는 순간'에만 한 번 이동한다. 그 뒤로는 다른 메뉴를 자유롭게 연다
   // (예전에는 메뉴를 옮길 때마다 다시 게임 화면으로 끌려와 게임 중 모든 메뉴가 먹통이었다)
+  // 트레이 '업데이트 확인': 설정 화면을 열고 바로 확인 (결과가 버전 줄에 보인다)
+  useEffect(() => {
+    let off: (() => void) | undefined;
+    import('@tauri-apps/api/event').then(({ listen }) => listen('check-update', () => { nav('/settings'); void checkUpdate(); }).then((f) => { off = f; })).catch(() => {});
+    return () => off?.();
+  }, [nav]);
   const prevStatus = useRef(s.status);
   useEffect(() => {
     const before = prevStatus.current;
