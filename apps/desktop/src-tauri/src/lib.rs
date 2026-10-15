@@ -136,6 +136,40 @@ fn toast_close(handle: tauri::AppHandle) {
     toast::hide(&handle);
 }
 
+/// 롤 단계 지켜보기 (v3.42). 화면(WebView)의 타이머는 창이 트레이에 있으면 크게 늦춰지므로 단계 확인은 Rust 가 한다.
+/// 큐(매칭·수락 대기) 중에는 0.4초, 평소 1.5초. 단계가 바뀌면 화면에 'lcu-phase' 를 보내고,
+/// 챔프 선택에 들어가는 순간 창을 맨 앞으로 올린다. 게임 중에는 롤에 요청하지 않는다 (lcu.get 이 막는다).
+async fn watch_phase(app: tauri::AppHandle) {
+    use tauri::Emitter;
+    let mut last = String::new();
+    loop {
+        let st = app.state::<Arc<App>>().lcu.status();
+        let phase = if st.in_game {
+            "InProgress".to_string()
+        } else if !st.client {
+            "None".to_string()
+        } else {
+            match app.state::<Arc<App>>().lcu.get("/lol-gameflow/v1/gameflow-phase").await {
+                Ok(v) => v.as_str().unwrap_or("None").to_string(),
+                Err(_) => "None".to_string(),
+            }
+        };
+        if phase != last {
+            let _ = app.emit("lcu-phase", phase.clone());
+            if phase == "ChampSelect" {
+                bring_to_front(app.clone());
+            }
+            last = phase.clone();
+        }
+        let wait = match phase.as_str() {
+            "Matchmaking" | "ReadyCheck" => 400,
+            "InProgress" => 3000,
+            _ => 1500,
+        };
+        tokio::time::sleep(std::time::Duration::from_millis(wait)).await;
+    }
+}
+
 /// 트레이 '업데이트 확인/적용': 창을 열지 않고 결과를 오른쪽 아래 알림으로
 async fn tray_update(app: tauri::AppHandle) {
     if update::managed() {
@@ -262,6 +296,7 @@ pub fn run() {
             toast::create(app)?;
             notice_updated(app.handle(), &dir_for_notice);
             vision.start(app.handle().clone());
+            tauri::async_runtime::spawn(watch_phase(app.handle().clone()));
             // 창 제목에 버전: "Prism - 0.7.0". 크기·위치는 지난번 그대로 (없으면 세로로 넉넉한 기본 크기)
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.set_title(&format!("Prism - {}", app.package_info().version));

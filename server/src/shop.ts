@@ -74,7 +74,8 @@ export async function getShop(env: Env, me: Member) {
 
 export async function buy(req: Request, env: Env, me: Member) {
   if (!can(me, 'shop')) throw new HttpError(403, SHOP_CLOSED);
-  const { id } = (await req.json().catch(() => ({}))) as { id?: string };
+  // equip: 사면서 바로 장착할지 (예전 앱은 보내지 않으므로 기본은 장착 — 새 화면은 산 뒤 '바로 착용할까요?'를 묻는다)
+  const { id, equip: wear } = (await req.json().catch(() => ({}))) as { id?: string; equip?: boolean };
   const item = id ? SHOP_ITEM[id] : undefined;
   if (!item) throw new HttpError(400, '없는 상품입니다.');
   const s = await state(env, me.id, me);
@@ -82,9 +83,10 @@ export async function buy(req: Request, env: Env, me: Member) {
   const price = priceFor(item.price, s.rates.discount);
   if (s.balance < price) throw new HttpError(400, `피스가 ${price - s.balance}개 모자라요.`);
   await env.DB.prepare('INSERT OR IGNORE INTO shop_owned (member_id, item_id, price, bought_at) VALUES (?, ?, ?, ?)').bind(me.id, item.id, price, Date.now()).run();
-  // 사면 바로 장착
-  const deco: Deco = { ...s.deco, [item.slot]: item.id };
-  await env.DB.prepare('UPDATE members SET deco = ? WHERE id = ?').bind(JSON.stringify(deco), me.id).run();
+  if (wear !== false) {
+    const deco: Deco = { ...s.deco, [item.slot]: item.id };
+    await env.DB.prepare('UPDATE members SET deco = ? WHERE id = ?').bind(JSON.stringify(deco), me.id).run();
+  }
   return json(await state(env, me.id, me));
 }
 

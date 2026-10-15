@@ -94,8 +94,7 @@ function App() {
     const before = prevStatus.current;
     prevStatus.current = s.status;
     if (before !== s.status && (s.status === 'champ-select' || s.status === 'in-game')) nav('/');
-    // 챔프 선택에 들어가는 순간 Prism 창을 맨 앞으로 (트레이에 있어도 띄운다)
-    if (before !== s.status && s.status === 'champ-select') void bridge.bringToFront().catch(() => {});
+    // 챔프 선택에 들어가는 순간 창을 맨 앞으로 올리는 것은 Rust(watch_phase)가 한다 — 트레이에 있을 때도 늦지 않게
   }, [s.status, nav]);
   const ready = Boolean(s.me?.consent);
   // 게임 위 작은 창(자동 인식)도 동의한 뒤에만 켠다

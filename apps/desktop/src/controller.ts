@@ -297,6 +297,8 @@ export function start() {
   setInterval(() => void pingPresence(), 10_000);
   document.addEventListener('visibilitychange', () => void pingPresence());
   void loop();
+  // Rust 가 롤 단계 변화를 알려 주면 기다리지 않고 바로 다시 읽는다 (창이 트레이에 있어 타이머가 늦어도)
+  import('@tauri-apps/api/event').then(({ listen }) => listen('lcu-phase', () => void checkNow())).catch(() => {});
 }
 
 /** 확인 고리: 다음 확인을 예약해 두고, '지금 확인'을 누르면 기다리지 않고 바로 다시 본다 */

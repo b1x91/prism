@@ -14,6 +14,7 @@ import { useLoad } from './crew';
 import { BgScene } from './bgscene';
 import { NickName } from './studio';
 import { Icon } from './icons';
+import { BuyDialog } from './buy';
 
 const SLOTS: ShopSlot[] = ['bg', 'frame', 'fx', 'name', 'title'];
 /** 산 배경이 없을 때 깔리는 기본 색 (회원마다 정해진 색 — 이름으로 고른다, 바뀌지 않는다). 상점의 '배경'으로 바꿀 수 있다 */
@@ -160,6 +161,7 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
   const [slot, setSlot] = useState<ShopSlot | 'hot'>('hot');
   const [hot] = useState(() => SHOP.map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x));
   const [owned, setOwned] = useState(false);
+  const [buying, setBuying] = useState<ShopItem | null>(null);
   const run = async (k: string, f: () => Promise<unknown>) => { setBusy(k); setMsg(''); try { await f(); reload(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); } };
   useEffect(() => { if (data) setPieces(data.balance); }, [data]);
   if (error) return <Empty>{error}</Empty>;
@@ -186,9 +188,10 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
         <label className="shop-own"><span>보유하고 있는 아이템 보기</span><Toggle on={owned} label="보유하고 있는 아이템 보기" onChange={setOwned} /></label>
       </div>
       {list.length ? <div className="shop-grid">{list.map((x) => <ShopCard key={x.id} x={x} me={me} data={data} busy={busy === x.id}
-        onBuy={() => run(x.id, () => api.post('/api/shop/buy', { id: x.id }))}
+        onBuy={() => setBuying(x)}
         onEquip={(on) => run(x.id, () => api.post('/api/me/equip', { slot: x.slot, id: on ? x.id : null }))} />)}</div>
         : <Empty>아직 보유한 {slot === 'hot' ? '아이템이' : `${SLOT_KO[slot]}가`} 없어요.</Empty>}
+      {buying && <BuyDialog api={api} item={buying} data={data} me={me} onClose={() => setBuying(null)} onDone={(s) => { setBuying(null); setPieces(s.balance); reload(); }} />}
     </div>
   );
 }
