@@ -3,7 +3,7 @@
  * 기준은 도감과 같다 (packages/core/src/mastery.ts, 서버 server/src/artisans.ts).
  */
 import { useMemo } from 'react';
-import { AUGMENT, CHAMPIONS, type Api, type ArtisanRank, type ArtisanRanking, type Artisans as ArtisansData } from '@prism/core';
+import { AUGMENT, CHAMPIONS, type Api, type ArtisanRank, type ArtisanRanking, type Artisans as ArtisansData, shortNick } from '@prism/core';
 import { ChampImg, Empty, LockedMore, MemberFace, useSkins } from './basics';
 import { NickName } from './studio';
 import { AugRing } from './augment';
@@ -74,7 +74,7 @@ function ArtRow({ r, rank, kind, me, skins, onOpen }: { r: ArtisanRank; rank: nu
     <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 && r.masters > 0 ? 'first' : ''}`} onClick={() => onOpen(r.id)}>
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.main} skins={skins} size={40} />
-      <span className="who"><b>{r.nick}</b>
+      <span className="who"><b>{shortNick(r.nick)}</b>
         {r.masterIds.length ? <span className="art-icons">{r.masterIds.map(icon)}</span>
           : r.best ? <span className="meta">가장 가까운 {(kind === 'champions' ? CHAMPIONS[r.best.id]?.name : AUGMENT[r.best.id]?.name) ?? ''} · {r.best.done}/6</span> : null}</span>
       <span className="num key">{r.masters > 0 && <PrismMark size={16} />}{r.masters}<small>장인</small></span>

@@ -20,3 +20,10 @@ export const matchName = (name: string, q: string) => {
   const n = name.replace(/\s/g, '');
   return n.includes(t) || initials(n).includes(t);
 };
+
+/** 좁은 자리용 이름: 롤 이름의 '#태그'를 뗀다 (전체 이름은 공용 NickName — 내 페이지 머리·랭킹 등) */
+export const shortNick = (nick: string | null | undefined) => {
+  const s = nick ?? '';
+  const i = s.lastIndexOf('#');
+  return i > 0 ? s.slice(0, i) : s;
+};

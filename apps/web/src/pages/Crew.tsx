@@ -1,5 +1,6 @@
 import { BoardView, ChannelButtons, Gem, Icon, DiscordNowCard, ProspectBoard } from '@prism/ui';
 import { useSession } from '../session';
+import { shortNick } from '@prism/core';
 
 function Intro() {
   const { login, links } = useSession();
@@ -42,7 +43,7 @@ export function Crew() {
   if (!me) return <Intro />;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <div className="page-head crew-head"><div><h1>Prism</h1><p>{me.nick}님, 오늘 밤도 한 판.</p></div><ChannelButtons links={links} /></div>
+      <div className="page-head crew-head"><div><h1>Prism</h1><p>{shortNick(me.nick)}님, 오늘 밤도 한 판.</p></div><ChannelButtons links={links} /></div>
       <DiscordNowCard api={api} admin={me.tier === 'admin'} />
       {<ProspectBoard api={api} invite={links.discord} admin={Boolean(me.perms?.moderate)} />}
       <BoardView api={api} />

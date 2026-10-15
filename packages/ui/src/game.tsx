@@ -3,7 +3,7 @@
  * 앱의 최근 판과 회원 페이지가 함께 쓴다.
  */
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { AUGMENT, CHAMPIONS, ITEM, ago, cdragon, loadItemDetail, reviewMatch, type ItemDetail, type MatchDetail, type MatchPlayer } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ITEM, ago, cdragon, loadItemDetail, reviewMatch, type ItemDetail, type MatchDetail, type MatchPlayer, shortNick } from '@prism/core';
 import { ChampImg, Empty, Hover, MemberFace } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
@@ -199,7 +199,7 @@ export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: 
                   <div key={`${p.championId}-${i}`} className={`md-row ${isMe(p) ? 'me' : ''}`}>
                     <button type="button" className="md-champ" onClick={() => onChampion?.(p.championId)} disabled={!onChampion} title={CHAMPIONS[p.championId]?.name}><ChampImg id={p.championId} size={36} /></button>
                     <span className="md-who">
-                      <b>{p.memberId ? <><MemberFace nick={p.nick ?? '?'} skin={p.skin} champion={p.main} size={16} />{p.nick}</> : (p.name ?? (isMe(p) ? '나' : '플레이어'))}</b>
+                      <b>{p.memberId ? <><MemberFace nick={p.nick ?? '?'} skin={p.skin} champion={p.main} size={16} />{shortNick(p.nick)}</> : (p.name ?? (isMe(p) ? '나' : '플레이어'))}</b>
                       <small>{CHAMPIONS[p.championId]?.name}</small>
                     </span>
                     <span className="md-kda"><b>{p.kills}/<span className="l">{p.deaths}</span>/{p.assists}</b><small>{kda(p)} KDA</small></span>

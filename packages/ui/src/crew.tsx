@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type DiscordNow, type Parties, type Party, type Prospects, type Scrim, type ScrimMember, type Scrims } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type DiscordNow, type Parties, type Party, type Prospects, type Scrim, type ScrimMember, type Scrims, shortNick } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, IconBtn, LockedMore, MemberFace } from './basics';
 import { AugmentLink } from './augment';
 import { Icon } from './icons';
@@ -39,7 +39,7 @@ export function Notes({ api }: { api: Api }) {
         {data?.notes.map((n) => (
           <div key={n.id} className="item">
             <MemberFace nick={n.nick} skin={n.skin} champion={n.main} size={28} />
-            <div style={{ minWidth: 0 }}><b style={{ marginRight: 8 }}>{n.nick}</b>{n.text}</div>
+            <div style={{ minWidth: 0 }}><b style={{ marginRight: 8 }}>{shortNick(n.nick)}</b>{n.text}</div>
             <span className="meta row" style={{ gap: 8 }}>{ago(n.createdAt)}{(n.canDelete ?? n.mine) ? <button type="button" className="btn ghost sm" onClick={async () => { await api.del(`/api/notes/${n.id}`).catch(() => {}); reload(); }}>지우기</button> : null}</span>
           </div>
         ))}
@@ -69,7 +69,7 @@ export function BoardView({ api }: { api: Api }) {
           {b.records.map((r) => (
             <div key={r.key} className="record">
               <span className="k">{r.nick && <Gem size={14} src="/brand/prism-32.png" />}{r.label}</span>
-              {r.nick ? <><span className="v">{value(r)}</span><span className="s">{r.nick}{r.championId ? ` · ${CHAMPIONS[r.championId]?.name ?? ''}` : ''}{r.at ? ` · ${shortDate(r.at)}` : ''}</span></> : <span className="s">첫 기록을 기다리는 중입니다.</span>}
+              {r.nick ? <><span className="v">{value(r)}</span><span className="s">{shortNick(r.nick)}{r.championId ? ` · ${CHAMPIONS[r.championId]?.name ?? ''}` : ''}{r.at ? ` · ${shortDate(r.at)}` : ''}</span></> : <span className="s">첫 기록을 기다리는 중입니다.</span>}
             </div>
           ))}
         </div>
@@ -84,7 +84,7 @@ export function BoardView({ api }: { api: Api }) {
         <section className="card pad">
           <div className="card-head"><h2>새 팁</h2></div>
           {b.newTips.length ? <div className="list">{b.newTips.map((tp) => (
-            <div key={tp.id} className="item"><ChampImg id={tp.championId} size={32} /><div style={{ minWidth: 0 }}><div className="title" style={{ fontWeight: 500 }}>{tp.text}</div><div className="meta">{CHAMPIONS[tp.championId]?.name} · {tp.nick}</div></div><span className="meta">{shortDate(tp.createdAt)}</span></div>
+            <div key={tp.id} className="item"><ChampImg id={tp.championId} size={32} /><div style={{ minWidth: 0 }}><div className="title" style={{ fontWeight: 500 }}>{tp.text}</div><div className="meta">{CHAMPIONS[tp.championId]?.name} · {shortNick(tp.nick)}</div></div><span className="meta">{shortDate(tp.createdAt)}</span></div>
           ))}</div> : <Empty>아직 팁이 없습니다.</Empty>}
         </section>
       </div>
@@ -92,7 +92,7 @@ export function BoardView({ api }: { api: Api }) {
         <div className="card-head"><h2>최근 모임 판</h2></div>
         {b.recent.length ? <div className="list">{b.recent.map((g, i) => (
           <div key={i} className="item" style={{ gridTemplateColumns: '72px minmax(0,1fr)' }}><span className="meta">{ago(g.at)}</span>
-            <div className="row wrapr" style={{ gap: 8 }}>{g.crew.map((c, j) => <span key={j} className="pill"><ChampImg id={c.championId} size={18} /><b className={c.win ? 'w' : 'l'}>{c.nick}</b>{c.k}/{c.d}/{c.a}</span>)}</div></div>
+            <div className="row wrapr" style={{ gap: 8 }}>{g.crew.map((c, j) => <span key={j} className="pill"><ChampImg id={c.championId} size={18} /><b className={c.win ? 'w' : 'l'}>{shortNick(c.nick)}</b>{c.k}/{c.d}/{c.a}</span>)}</div></div>
         ))}</div> : <Empty>회원 두 명 이상이 함께한 판이 아직 없습니다.</Empty>}
       </section>
     </div>
@@ -220,7 +220,7 @@ export function PartyBoard({ api, onMember }: { api: Api; onMember?: (id: string
         {notes.data!.notes.map((n) => (
           <div key={n.id} className="pnote-row">
             <MemberFace nick={n.nick} skin={n.skin} champion={n.main} size={28} />
-            <span className="pn-t"><b>{n.nick}</b>{n.text}</span>
+            <span className="pn-t"><b>{shortNick(n.nick)}</b>{n.text}</span>
             <span className="meta pn-at">{ago(n.createdAt)}</span>
             {(n.canDelete ?? n.mine) ? <IconBtn icon="trash" tone="danger" label="지우기" onClick={() => run(`n${n.id}`, () => api.del(`/api/notes/${n.id}`))} /> : <span />}
           </div>
@@ -240,7 +240,7 @@ function PartyCard({ p, size, now, busy, run, api, onMember }: { p: Party; size:
       <div className="ptime"><b>{partyTime(p.startAt, now).split(' ')[1]}</b><span>{partyTime(p.startAt, now).split(' ')[0]}</span></div>
       <div className="pmain">
         <div className="phead"><span className="pkind">5인</span><span className={`pbadge ${tone}`}>{label}</span><span className="pcount"><b>{p.members.length}</b>/{size}</span>
-          {host && <span className="phost meta">{host.nick} 님이 열었어요</span>}</div>
+          {host && <span className="phost meta">{shortNick(host.nick)} 님이 열었어요</span>}</div>
         {p.note && <p className="pnote">{p.note}</p>}
         <div className="pslots">{Array.from({ length: size }, (_, i) => {
           const m = p.members[i];
@@ -312,7 +312,7 @@ function ScrimCard({ s, size, now, busy, run, api, onMember }: { s: Scrim; size:
   const Face = ({ m }: { m: ScrimMember }) => (
     <button type="button" className={`sface ${pick === m.id ? 'picked' : ''}`} onClick={() => onFace(m)} title={canSwap ? '눌러서 다른 팀 사람과 바꾸기' : m.nick}>
       <MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={40} />
-      <span className="nm">{m.nick}{m.id === s.hostId && <i>방장</i>}</span>
+      <span className="nm">{shortNick(m.nick)}{m.id === s.hostId && <i>방장</i>}</span>
       <span className="rt">{m.n ? `${pct(m.w, m.n)} · ${m.n}판` : '기록 없음'}</span>
     </button>
   );
@@ -379,7 +379,7 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
               {p.main ? <img className="face" src={cdragon(CHAMPIONS[p.main]?.tile)} width={44} height={44} alt="" loading="lazy" /> : <span className="face ph" />}
               <div className="pinfo">
                 <div className="pname"><b>{name}</b>{tag && <span className="meta">#{tag}</span>}{p.customs > 0 && <span className="ptag">내전 {p.customs}</span>}</div>
-                <div className="meta">같이 {p.n}판 · 그 판 승률 {pct(p.w, p.n)}{p.mates.length > 0 && <> · {p.mates.map((m) => `${m.nick} ${m.n}판`).join(', ')}</>} · {ago(p.lastAt)}</div>
+                <div className="meta">같이 {p.n}판 · 그 판 승률 {pct(p.w, p.n)}{p.mates.length > 0 && <> · {p.mates.map((m) => `${shortNick(m.nick)} ${m.n}판`).join(', ')}</>} · {ago(p.lastAt)}</div>
               </div>
               <div className="pbtns">
                 {invite && <IconBtn icon="link" label={copied === p.puuid ? '복사했어요' : '초대 링크 복사'} done={copied === p.puuid} onClick={() => copy(p.puuid)} />}

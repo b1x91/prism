@@ -327,12 +327,12 @@ export async function board(env: Env, me: Member) {
 }
 
 /**
- * 한 판 상세: 그 판의 기록(시간·팀 합계)과 함께한 Prism 회원들의 기록.
- * 비회원 기록은 저장하지 않으므로 여기에는 없다 (앱은 롤이 켜져 있으면 클라이언트에서 10명 전체를 읽어 합친다).
+ * 한 판 상세: 그 판의 기록(시간·팀 합계)과 10명 전체(matches.players, v3.44). 함께한 Prism 회원은 팀+챔프로 맞춰 얼굴을 붙인다.
+ * 10명 기록이 없는 예전 판은 회원 것만 (앱이 다시 보내면 채워진다).
  */
 export async function gameDetail(env: Env, gameId: number) {
-  const m = await env.DB.prepare('SELECT game_id AS gameId, queue_id AS queueId, played_at AS playedAt, duration, team_totals AS teamTotals FROM matches WHERE game_id = ?')
-    .bind(gameId).first<{ gameId: number; queueId: number; playedAt: number; duration: number; teamTotals: string }>();
+  const m = await env.DB.prepare('SELECT game_id AS gameId, queue_id AS queueId, played_at AS playedAt, duration, team_totals AS teamTotals, players FROM matches WHERE game_id = ?')
+    .bind(gameId).first<{ gameId: number; queueId: number; playedAt: number; duration: number; teamTotals: string; players: string | null }>();
   if (!m) throw new HttpError(404, '기록되지 않은 판입니다.');
   const { results } = await env.DB.prepare(
     `SELECT p.member_id AS memberId, m.nick, ${FACE('m')}, p.champion_id AS championId, p.team_id AS teamId, p.win, p.kills, p.deaths, p.assists,
@@ -341,9 +341,18 @@ export async function gameDetail(env: Env, gameId: number) {
   ).bind(gameId).all<any>();
   let totals: Record<string, { win?: boolean; kills?: number; champions?: number[] }> = {};
   try { totals = JSON.parse(m.teamTotals || '{}'); } catch { /* 옛 기록 */ }
+  const members = results.map((r) => ({ ...r, win: r.win === 1, name: r.nick, items: r.items ? JSON.parse(r.items) : [], augments: r.augments ? JSON.parse(r.augments) : [] }));
+  let all: any[] | null = null;
+  try { all = m.players ? JSON.parse(m.players) : null; } catch { /* 깨진 기록 */ }
+  // 10명 기록이 있으면 그것을 쓰고, 회원은 같은 팀+챔프(한 판에 한 명뿐)로 맞춰 얼굴·이름을 붙인다
+  const key = (p: { teamId: number; championId: number }) => `${p.teamId}:${p.championId}`;
+  const byKey = new Map(members.map((p) => [key(p), p]));
+  const players = Array.isArray(all) && all.length >= 10
+    ? all.map((p) => { const mm = byKey.get(key(p)); const name = typeof p.name === 'string' ? p.name.split('#')[0] : null; return mm ? { ...p, ...mm } : { ...p, name }; })
+    : members;
   return json({
-    gameId: m.gameId, playedAt: m.playedAt, duration: m.duration, custom: m.queueId !== 2400, full: false,
+    gameId: m.gameId, playedAt: m.playedAt, duration: m.duration, custom: m.queueId !== 2400, full: players.length >= 10,
     teams: Object.fromEntries(Object.entries(totals).map(([t, v]) => [t, { win: Boolean(v.win), kills: v.kills ?? null, champions: Array.isArray(v.champions) ? v.champions : null }])),
-    players: results.map((r) => ({ ...r, win: r.win === 1, name: r.nick, items: r.items ? JSON.parse(r.items) : [], augments: r.augments ? JSON.parse(r.augments) : [] })),
+    players,
   });
 }

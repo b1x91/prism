@@ -5,7 +5,8 @@
  *   2. 10명 전원으로 팀 합계 계산 (있는 필드만).
  *   3. puuid ↔ members.riot_puuid 대조 → crew.
  *   4. matches 1건 + 회원 participants 저장.
- *      비회원은 '포텐 멤버' 후보만 남긴다 (v3.10): 회원과 같은 팀이었거나 사용자 설정 판이면 prospect_games. 그 밖은 폐기.
+ *      비회원은 '포텐 멤버' 후보만 남긴다 (v3.10): 회원과 같은 팀이었거나 사용자 설정 판이면 prospect_games.
+ *      판 상세용으로 10명 전체의 그 판 기록(롤 이름·챔프·KDA·피해·아이템·증강)은 matches.players 에 둔다 (v3.44, puuid 는 남기지 않음).
  *   5. 같은 팀 5명 수치가 모두 있을 때만 점유율 계산.
  */
 import { featOf, type FeatSource } from '../../packages/core/src/challenges.js';
@@ -144,17 +145,26 @@ export async function ingest(req: Request, env: Env, me: Member) {
       };
     }
 
+    // 판 상세용 10명 (puuid 없이)
+    const players = JSON.stringify(g.participants.map((p) => ({
+      name: typeof p.riotId === 'string' ? p.riotId.slice(0, 40) : null, championId: p.championId, teamId: p.teamId, win: p.win,
+      kills: p.kills, deaths: p.deaths, assists: p.assists, damageToChampions: finite(p.damageToChampions), damageTaken: finite(p.damageTaken),
+      goldEarned: finite(p.goldEarned), items: ids(p.items) ?? [], augments: ids(p.augments) ?? [],
+    })));
+
     const crew = g.participants.filter((p) => memberByPuuid.has(p.puuid));
     if (crew.length >= 2 && !dup) result.crewGames++;
     const stmts: D1PreparedStatement[] = [];
     perGame.push(stmts);
     stmts.push(
       env.DB.prepare(
-        'INSERT OR IGNORE INTO matches (game_id, queue_id, played_at, duration, source, collected_by, crew_count, team_totals, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      ).bind(g.gameId, g.queueId, g.playedAt, g.duration, source, me.id, crew.length, JSON.stringify(totals), now),
+        'INSERT OR IGNORE INTO matches (game_id, queue_id, played_at, duration, source, collected_by, crew_count, team_totals, players, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      ).bind(g.gameId, g.queueId, g.playedAt, g.duration, source, me.id, crew.length, JSON.stringify(totals), players, now),
     );
     if (dup) stmts.push(env.DB.prepare('UPDATE matches SET crew_count = MAX(crew_count, ?) WHERE game_id = ?').bind(crew.length, g.gameId));
     // 예전에 조합 없이 들어온 판이면 양 팀 챔피언 번호를 채운다 (판 복기용)
+    // 예전에 회원 것만 들어온 판이면 10명 기록을 채운다
+    if (dup) stmts.push(env.DB.prepare('UPDATE matches SET players = ? WHERE game_id = ? AND players IS NULL').bind(players, g.gameId));
     if (dup) stmts.push(env.DB.prepare("UPDATE matches SET team_totals = ? WHERE game_id = ? AND team_totals NOT LIKE '%champions%'").bind(JSON.stringify(totals), g.gameId));
 
     // 활약 기록의 재료: 10명 전체 (순위를 가리려고). 회원 것만 저장하고 나머지는 버린다

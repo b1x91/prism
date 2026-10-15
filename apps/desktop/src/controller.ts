@@ -103,7 +103,8 @@ async function loadHistory(puuid: string, pages: number) {
   return mayhemGames(out).games;
 }
 
-const UPLOADED = 'prism-uploaded-f1';
+// -p1: 판 상세용 10명 기록(v3.44)을 채우려고 예전에 보낸 판도 한 번 다시 보낸다
+const UPLOADED = 'prism-uploaded-p1';
 const canUpload = () => Boolean(state.me?.consent);
 
 async function sendGames(ids: number[]) {

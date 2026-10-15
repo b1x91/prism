@@ -124,11 +124,12 @@ body { overflow: hidden; background: var(--bg); }
 .stats2 b { font-size: var(--fs-xl); font-weight: 750; font-variant-numeric: tabular-nums; }
 
 /* 대기석: 큰 카드와 위쪽을 맞춘 한 장의 판. 내용만큼만 높고, 칸은 같은 간격으로 왼쪽부터 */
-.cs-bench { align-self: start; display: grid; gap: var(--s4); min-width: 0; padding: var(--s4) var(--s5) var(--s5); border-radius: var(--r-l); background: var(--surface-2); border: 1px solid var(--line); }
+.cs-bench { align-self: start; display: grid; gap: var(--s3); min-width: 0; padding: var(--s3) var(--s4) var(--s4); border-radius: var(--r-l); background: var(--surface-2); border: 1px solid var(--line); }
 .cs-bench-h { display: flex; align-items: center; gap: var(--s2); min-height: 36px; }
 .cs-bench-h b { font-size: var(--fs-md); font-weight: 800; }
 .cs-bench-n { min-width: 24px; height: 20px; padding: 0 var(--s2); display: inline-grid; place-items: center; border-radius: var(--r-pill); background: var(--surface); color: var(--text-2); font-size: var(--fs-xs); font-weight: 800; font-variant-numeric: tabular-nums; }
-.seat-tray { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: var(--s4) var(--s2); align-content: start; }
+/* 대기석은 많아야 10명 → 5칸 × 2줄로 딱 맞춘다 (빈 칸 없이 왼쪽부터) */
+.seat-tray { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s2); align-content: start; }
 .seat { display: grid; justify-items: center; gap: var(--s1); padding: var(--s2) 0; border: 0; border-radius: var(--r-m); background: none; cursor: pointer; color: inherit; min-width: 0; transition: background .15s; }
 .seat:hover { background: var(--surface); }
 .seat.on { background: var(--surface); box-shadow: inset 0 0 0 1px var(--accent); }
@@ -139,7 +140,7 @@ body { overflow: hidden; background: var(--bg); }
 .seat .mark { position: absolute; top: calc(var(--s2) * -1); left: 50%; translate: -50% 0; white-space: nowrap; height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); background: var(--accent); color: var(--on-accent); font-size: var(--fs-xs); font-weight: 700; display: inline-flex; align-items: center; box-shadow: 0 0 0 2px var(--surface-2); }
 .seat .dmg { position: absolute; right: calc(var(--s1) * -1); bottom: calc(var(--s1) * -1); height: 20px; padding: 0 var(--s1); border-radius: var(--r-s); display: inline-flex; align-items: center; background: var(--surface); box-shadow: 0 0 0 2px var(--surface-2); font-size: var(--fs-xs); font-weight: 700; line-height: 1; }
 .seat .nm { font-size: var(--fs-xs); font-weight: 650; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.seat .sub { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; }
+.seat .sub { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; padding: 0 var(--s1); }
 
 @media (max-width: 900px) {
   .shell { --side: 72px; grid-template-columns: var(--side) minmax(0, 1fr); }
@@ -149,7 +150,6 @@ body { overflow: hidden; background: var(--bg); }
   .main { padding: var(--s5); }
   .cs-layout, .cs-team { grid-template-columns: minmax(0, 1fr); }
   .cs-tile { min-height: 320px; }
-  .seat-tray { flex: none; max-height: 360px; } /* 한 열일 때는 옆 카드 높이를 기준 삼을 수 없으므로 */
   .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (prefers-reduced-motion: reduce) { .seat .pic { transition: none; } .side-status.live .dot, .pulse { animation: none; } }

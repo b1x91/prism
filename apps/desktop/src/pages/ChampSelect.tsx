@@ -3,7 +3,7 @@
  * 롤 클라이언트에는 읽기만 한다. 고르기·교체는 사용자가 롤에서 직접 한다.
  */
 import { useState } from 'react';
-import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, teamFit, tierOf, verdictOf, type ChampionProfile } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, teamFit, tierOf, verdictOf, type ChampionProfile, shortNick } from '@prism/core';
 import { AugRing, AugmentLink, ChampImg, Seg, TierBadge } from '@prism/ui';
 import { checkNow, type ChampSelect, type CrewSelect } from '../controller';
 import { Icon } from '@prism/ui';
@@ -77,7 +77,7 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
             return (
               <div key={i} className={`tm ${i === 0 ? 'me' : ''}`}>
                 {s.championId ? <ChampImg id={s.championId} size={44} /> : <span className="champ ph sk" />}
-                <span className={`who ${m ? 'prism' : ''}`}>{i === 0 ? (preview ? '미리보기' : '나') : m ? `${m.nick} ${pct(m.together.w, m.together.n)}` : CHAMPIONS[s.championId]?.name ?? '선택 중'}</span>
+                <span className={`who ${m ? 'prism' : ''}`}>{i === 0 ? (preview ? '미리보기' : '나') : m ? `${shortNick(m.nick)} ${pct(m.together.w, m.together.n)}` : CHAMPIONS[s.championId]?.name ?? '선택 중'}</span>
               </div>
             );
           })}
@@ -148,7 +148,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
         <div className="cs-rec">
           <div><small>내 기록</small><b>{me?.n ? pct(me.w, me.n) : '–'}</b><span>{me?.n ? `${me.n}판 ${me.w}승` : '처음이에요'}</span>{me?.n ? <i className="wbar"><i style={{ width: `${(me.w / me.n) * 100}%` }} /></i> : null}</div>
           <div><small>모임</small><b>{cc?.crew?.n ? pct(cc.crew.w, cc.crew.n) : '–'}</b><span>{cc?.crew?.n ? `${cc.crew.n}판` : crew ? '기록 없음' : '회원 전용'}</span>{cc?.crew?.n ? <i className="wbar"><i style={{ width: `${(cc.crew.w / cc.crew.n) * 100}%` }} /></i> : null}</div>
-          <div><small>모임 최다</small>{top ? <><b className="who">{top.nick}</b><span>{top.n}판 · {pct(top.w, top.n)}</span></> : <><b>–</b><span>아직 없어요</span></>}</div>
+          <div><small>모임 최다</small>{top ? <><b className="who">{shortNick(top.nick)}</b><span>{top.n}판 · {pct(top.w, top.n)}</span></> : <><b>–</b><span>아직 없어요</span></>}</div>
         </div>
 
         <div className="cs-sec">

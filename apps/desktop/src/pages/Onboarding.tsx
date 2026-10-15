@@ -3,7 +3,7 @@
  * 동의 전에는 서버로 아무것도 보내지 않고, 게임 위 작은 창도 켜지지 않는다.
  */
 import { useState } from 'react';
-import { DEFAULT_LINKS } from '@prism/core';
+import { DEFAULT_LINKS, shortNick } from '@prism/core';
 import { FavChampPick, Gem, Icon } from '@prism/ui';
 import { CHAMPIONS } from '@prism/core';
 import { api, bridge } from '../bridge';
@@ -32,7 +32,7 @@ export function Onboarding({ s, onLogin }: { s: State; onLogin: () => Promise<vo
         <div className="onb-head"><Gem size={44} float src="/brand/prism-256.png" /><div><h1>Prism 시작하기</h1><p className="muted">네 단계만 마치면 바로 쓸 수 있어요.</p></div></div>
 
         {!s.session.configured ? <p className="l">Prism 서버 주소가 없는 설치 파일입니다. 최신 설치 파일을 받아주세요.</p> : <>
-          <Step n={1} done={logged} active={step === 1} title="디스코드로 로그인" sub={logged ? `${s.me!.nick} 님` : 'Prism 디스코드 서버 회원만 들어올 수 있어요'}>
+          <Step n={1} done={logged} active={step === 1} title="디스코드로 로그인" sub={logged ? `${shortNick(s.me!.nick)} 님` : 'Prism 디스코드 서버 회원만 들어올 수 있어요'}>
             {!logged && <div className="row wrapr" style={{ gap: 8 }}>
               <button type="button" className="btn primary" disabled={busy} onClick={() => run(onLogin)}><Icon name="discord" />디스코드로 로그인</button>
               <button type="button" className="btn ghost" onClick={() => bridge.openUrl(DEFAULT_LINKS.discord!)}>아직 서버에 없다면</button>
