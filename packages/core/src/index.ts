@@ -16,3 +16,4 @@ export * from './presence';
 export * from './challenges';
 export * from './shop';
 export * from './missions';
+export * from './duo';

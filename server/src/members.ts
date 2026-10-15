@@ -58,20 +58,26 @@ export async function memberPage(env: Env, me: Member, id: string) {
   ];
   if (!self) {
     queries.push(
-      // 같은 팀으로 한 판
+      // 같은 팀으로 한 판 (판별: 두 사람의 챔프·KDA·승패)
       env.DB.prepare(
-        `SELECT COUNT(*) AS n, COALESCE(SUM(a.win), 0) AS w FROM participants a JOIN participants b
-         ON a.game_id = b.game_id AND a.team_id = b.team_id WHERE a.member_id = ? AND b.member_id = ?`,
+        `SELECT a.played_at AS t, a.win AS w, a.champion_id AS mc, b.champion_id AS tc, a.kills AS mk, a.deaths AS md, a.assists AS ma,
+                b.kills AS tk, b.deaths AS td, b.assists AS ta, a.dmg_champ AS mdmg, b.dmg_champ AS tdmg, a.crew_count AS crew
+         FROM participants a JOIN participants b ON a.game_id = b.game_id AND a.team_id = b.team_id
+         WHERE a.member_id = ? AND b.member_id = ? ORDER BY a.played_at DESC LIMIT 300`,
       ).bind(me.id, id),
       // 상대 팀으로 만난 판 (w = 내가 이긴 판)
       env.DB.prepare(
-        `SELECT COUNT(*) AS n, COALESCE(SUM(a.win), 0) AS w FROM participants a JOIN participants b
-         ON a.game_id = b.game_id AND a.team_id <> b.team_id WHERE a.member_id = ? AND b.member_id = ?`,
+        `SELECT a.played_at AS t, a.win AS w, a.champion_id AS mc, b.champion_id AS tc
+         FROM participants a JOIN participants b ON a.game_id = b.game_id AND a.team_id <> b.team_id
+         WHERE a.member_id = ? AND b.member_id = ? ORDER BY a.played_at DESC LIMIT 300`,
       ).bind(me.id, id),
       champs(me.id),
+      env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w FROM participants WHERE member_id = ?').bind(me.id),
+      env.DB.prepare('SELECT nick, profile_skin AS skin FROM members WHERE id = ?').bind(me.id),
     );
   }
-  const [total, champions, augments, recent, rank, picks, together, against, viewerChampions] = await env.DB.batch(queries);
+  const [total, champions, augments, recent, rank, picks, together, against, viewerChampions, viewerTotal, viewerMe] = await env.DB.batch(queries);
+  const nw = (rows: { w: number }[]) => ({ n: rows.length, w: rows.reduce((x, r) => x + (r.w ? 1 : 0), 0) });
   return json({
     member: { id: m.id, nick: m.nick, intro: m.intro, tier: m.tier, joinedAt: m.joinedAt, skin: m.skin, riotId: self ? m.riotId : null, self, role: topRole(m), presence: presenceOf({ webAt: m.web_seen_at, appAt: m.app_seen_at, lol: Boolean(m.app_lol), open: Boolean(m.app_open) }), deco: parseDeco(m.deco), shared: Boolean(m.share_on) },
     total: total.results[0],
@@ -80,6 +86,10 @@ export async function memberPage(env: Env, me: Member, id: string) {
     augments: augments.results,
     picks: picks.results,
     recent: recent.results.map((g: any) => ({ ...g, win: g.win === 1, augments: g.augments ? JSON.parse(g.augments) : [], items: g.items ? JSON.parse(g.items) : [], custom: g.queueId !== 2400 })),
-    ...(self ? {} : { together: together.results[0], against: against.results[0], viewer: { champions: viewerChampions.results } }),
+    ...(self ? {} : {
+      together: nw(together.results as { w: number }[]), against: nw(against.results as { w: number }[]),
+      viewer: { champions: viewerChampions.results, total: viewerTotal.results[0], ...(viewerMe.results[0] as { nick: string; skin: number | null }) },
+      duo: { together: together.results, against: against.results },
+    }),
   });
 }

@@ -21,8 +21,13 @@ export type MemberPage = {
   recent: MemberGame[];
   together?: NW;
   against?: NW;
-  viewer?: { champions: ChampAgg[] };
+  viewer?: { champions: ChampAgg[]; total?: NW; nick?: string; skin?: number | null };
+  /** 나와 같이 한 판·맞붙은 판 (판별, 최신순) */
+  duo?: { together: DuoGame[]; against: DuoVs[] };
 };
+/** 같은 팀 판: 나(m)·상대(t)의 챔프·KDA·피해 */
+export type DuoGame = { t: number; w: number; mc: number; tc: number; mk: number; md: number; ma: number; tk: number; td: number; ta: number; mdmg: number | null; tdmg: number | null; crew: number };
+export type DuoVs = { t: number; w: number; mc: number; tc: number };
 
 export const ROLE_ORDER = ['marksman', 'mage', 'assassin', 'fighter', 'tank', 'support'] as const;
 
