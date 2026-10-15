@@ -11,6 +11,7 @@ import {
 } from '@prism/core';
 import { ChampImg, Empty, Gem, MemberFace, Toggle, useSkins } from './basics';
 import { useLoad } from './crew';
+import { BgScene } from './bgscene';
 import { Icon } from './icons';
 
 const SLOTS: ShopSlot[] = ['bg', 'frame', 'fx', 'name', 'title'];
@@ -79,11 +80,6 @@ export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, ac
       </div>
     </header>
   );
-}
-
-/** 산 배경 장면 (머리·랭킹 줄 공용). 그림 파일 없이 CSS 로만 그린다 */
-export function BgScene({ id }: { id: string }) {
-  return <span className={`bgx ${id}`} aria-hidden="true">{Array.from({ length: 6 }, (_, i) => <i key={i} />)}</span>;
 }
 
 /** 공유 버튼: 누르면 공개를 켜고 짧은 링크(/p/123)를 복사한다 */

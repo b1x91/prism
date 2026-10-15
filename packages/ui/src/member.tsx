@@ -13,7 +13,8 @@ import { ArtisanRankingView } from './artisan';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { RecentGames } from './game';
-import { BgScene, ProfileHero, ShareButton } from './shop';
+import { ProfileHero, ShareButton } from './shop';
+import { BgScene } from './bgscene';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
@@ -67,7 +68,7 @@ function Podium({ r, rank, by, skins, onOpen }: { r: RankingRow; rank: number; b
 function RankRow({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: number; by: RankBy; me: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
   return (
     <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 ? 'first' : ''} ${r.bg ? 'has-bg' : ''}`} onClick={() => onOpen(r.id)}>
-      {r.bg && <BgScene id={r.bg} />}
+      {r.bg && <BgScene id={r.bg} row />}
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={40} />
       <span className="who"><b>{r.nick}</b>{r.mainChampion ? <span className="meta">주 챔프 {CHAMPIONS[r.mainChampion]?.name}</span> : null}</span>

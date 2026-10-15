@@ -1725,6 +1725,9 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .pod-face .face, .pod-face .initial { width: 64px !important; height: 64px !important; border-radius: var(--r-m); object-fit: cover; }
 .bgx i { position: absolute; display: block; }
 .phero.has-bg { background: #07090f; }
+/* 산 배경은 장면이 보이도록 글자 쪽(왼쪽 아래)만 살짝 어둡게 */
+.phero.has-bg::before { background: linear-gradient(90deg, rgba(7, 9, 15, .62) 0%, rgba(7, 9, 15, .2) 42%, transparent 70%), linear-gradient(0deg, rgba(7, 9, 15, .55) 0%, transparent 45%); }
+.bgx .cr-aura { animation: bg-pulse 5s ease-in-out infinite; }
 /* 랭킹 줄: 장면 위에 왼쪽을 조금 어둡게, 글자는 흰색 */
 .rank-row.has-bg { position: relative; isolation: isolate; overflow: hidden; color: #fff; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .08); }
 .rank-row.has-bg .bgx { z-index: -1; }
@@ -1747,13 +1750,6 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .bgx.bg-abyss i:nth-child(1) { top: 55%; } .bgx.bg-abyss i:nth-child(2) { top: 70%; animation-delay: -7s; animation-duration: 28s; }
 .bgx.bg-abyss i:nth-child(3) { top: 40%; animation-delay: -14s; animation-duration: 34s; opacity: .7; } .bgx.bg-abyss i:nth-child(n+4) { display: none; }
 
-/* 노을 협곡 (일반) */
-.bgx.bg-dusk { background: linear-gradient(180deg, #1a0b1e 0%, #521532 34%, #b8402c 64%, #f29a44 84%, #ffd98c 100%); }
-.bgx.bg-dusk i:nth-child(1) { right: 14%; bottom: 14%; width: 22%; aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle, #fff3c4 0%, #ffc864 45%, rgba(255, 160, 70, 0) 72%); }
-.bgx.bg-dusk i:nth-child(2) { left: 0; right: 0; bottom: 0; height: 34%; background: #2a0e1a; clip-path: polygon(0 60%, 12% 30%, 24% 52%, 38% 18%, 52% 48%, 66% 26%, 80% 56%, 92% 34%, 100% 50%, 100% 100%, 0 100%); }
-.bgx.bg-dusk i:nth-child(3) { left: 0; right: 0; bottom: 0; height: 20%; background: #14060d; clip-path: polygon(0 50%, 18% 20%, 34% 60%, 50% 30%, 70% 64%, 86% 24%, 100% 46%, 100% 100%, 0 100%); }
-.bgx.bg-dusk i:nth-child(n+4) { display: none; }
-
 /* 별 내리는 밤 (희귀) */
 .bgx.bg-starry { background:
   radial-gradient(1.5px 1.5px at 20px 30px, #fff, transparent), radial-gradient(1px 1px at 120px 80px, #fff, transparent), radial-gradient(1px 1px at 60px 140px, #cfe0ff, transparent),
@@ -1767,27 +1763,25 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .bgx.bg-starry i:nth-child(5) { left: 30%; top: 58%; animation-delay: 1.2s; }
 .bgx.bg-starry i:nth-child(6) { left: 70%; top: 8%; width: 80px; height: 1px; border-radius: 1px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff); box-shadow: none; transform: rotate(-24deg); animation: bg-shoot 7s ease-in infinite 2s; opacity: 0; }
 
-/* 용암 균열 (희귀) */
-.bgx.bg-magma { background: radial-gradient(80% 60% at 60% 120%, rgba(255, 90, 20, .55), transparent 65%), radial-gradient(40% 40% at 15% 20%, rgba(120, 30, 10, .4), transparent 70%), linear-gradient(180deg, #0d0605, #1d0a07 60%, #2b0c06); }
-.bgx.bg-magma i { height: 2px; border-radius: 2px; background: linear-gradient(90deg, rgba(255, 120, 40, 0), #ffb347 30%, #ff5a1f 70%, rgba(255, 90, 20, 0)); box-shadow: 0 0 10px 2px rgba(255, 100, 30, .7); animation: bg-pulse 3.4s ease-in-out infinite; }
-.bgx.bg-magma i:nth-child(1) { left: 4%; top: 70%; width: 38%; transform: rotate(-12deg); }
-.bgx.bg-magma i:nth-child(2) { left: 30%; top: 52%; width: 30%; transform: rotate(18deg); animation-delay: .6s; }
-.bgx.bg-magma i:nth-child(3) { left: 52%; top: 78%; width: 44%; transform: rotate(-6deg); animation-delay: 1.2s; }
-.bgx.bg-magma i:nth-child(4) { left: 64%; top: 36%; width: 26%; transform: rotate(-28deg); animation-delay: 1.8s; }
-.bgx.bg-magma i:nth-child(5) { left: 14%; top: 34%; width: 18%; transform: rotate(32deg); animation-delay: 2.4s; height: 1px; }
-.bgx.bg-magma i:nth-child(6) { left: 80%; top: 60%; width: 20%; transform: rotate(40deg); animation-delay: 3s; height: 1px; }
-
-/* 수정 동굴 (영웅) */
-.bgx.bg-crystal { background: radial-gradient(70% 80% at 80% 30%, rgba(90, 220, 255, .35), transparent 65%), linear-gradient(160deg, #061424 0%, #0d2d4a 45%, #1a2050 100%); }
-.bgx.bg-crystal i { bottom: -6%; width: 14%; background: linear-gradient(180deg, rgba(190, 245, 255, .85), rgba(80, 170, 240, .55) 45%, rgba(60, 70, 180, .25)); clip-path: polygon(50% 0, 100% 28%, 82% 100%, 18% 100%, 0 28%); box-shadow: inset 0 0 20px rgba(255, 255, 255, .5); opacity: .85; }
-.bgx.bg-crystal i:nth-child(1) { left: 54%; height: 82%; } .bgx.bg-crystal i:nth-child(2) { left: 66%; height: 60%; width: 11%; transform: rotate(14deg); }
-.bgx.bg-crystal i:nth-child(3) { left: 44%; height: 50%; width: 10%; transform: rotate(-16deg); } .bgx.bg-crystal i:nth-child(4) { left: 78%; height: 92%; width: 16%; }
-.bgx.bg-crystal i:nth-child(5) { left: 90%; height: 46%; width: 10%; transform: rotate(10deg); } .bgx.bg-crystal i:nth-child(6) { left: 32%; height: 34%; width: 8%; transform: rotate(-24deg); opacity: .6; }
-.bgx.bg-crystal::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, .28) 50%, transparent 65%); background-size: 300% 100%; animation: bg-sweep 7s ease-in-out infinite; mix-blend-mode: screen; }
-
+/* SVG 장면 (노을 협곡 · 용암 균열 · 수정 동굴, bgscene.tsx) */
+.bgx.svg svg { position: absolute; inset: 0; display: block; }
+.bgx.bg-dusk { background: #2a0e24; }
+.bgx .dk-sun { filter: drop-shadow(0 0 24px #ffd98a); }
+.bgx .dk-birds { animation: bg-birds 18s ease-in-out infinite alternate; }
+.bgx.bg-magma { background: #1a0c08; }
+.bgx .mg-heat, .bgx .mg-glow { animation: bg-pulse 3.6s ease-in-out infinite; }
+.bgx .mg-embers circle { animation: bg-ember 6s linear infinite; opacity: 0; filter: drop-shadow(0 0 4px #ff8a2a); }
+.bgx.bg-crystal { background: #040817; }
+.bgx .cr-rays { animation: bg-pulse 6s ease-in-out infinite; }
+.bgx .cr-sweep { animation: bg-crsweep 7s ease-in-out infinite; }
+.bgx .cr-spark path { animation: bg-spark 3.2s ease-in-out infinite; opacity: 0; transform-box: fill-box; transform-origin: center; }
+@keyframes bg-birds { from { transform: translate(0, 0); } to { transform: translate(-60px, -14px); } }
+@keyframes bg-ember { 0% { opacity: 0; transform: translate(0, 0); } 10% { opacity: 1; } 80% { opacity: .7; } 100% { opacity: 0; transform: translate(-30px, -420px); } }
+@keyframes bg-crsweep { 0% { transform: skewX(-18deg) translateX(0); } 55%, 100% { transform: skewX(-18deg) translateX(2600px); } }
+@keyframes bg-spark { 0%, 100% { opacity: 0; transform: scale(.3) rotate(0deg); } 50% { opacity: 1; transform: scale(1) rotate(45deg); } }
 @keyframes bg-twinkle { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
 @keyframes bg-mist { from { transform: translateX(0); } to { transform: translateX(170%); } }
 @keyframes bg-shoot { 0% { opacity: 0; translate: 0 0; } 6% { opacity: 1; } 16% { opacity: 0; translate: -160px 70px; } 100% { opacity: 0; translate: -160px 70px; } }
 @keyframes bg-pulse { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 @keyframes bg-sweep { 0% { background-position: 100% 0; } 60%, 100% { background-position: -50% 0; } }
-@media (prefers-reduced-motion: reduce) { .bgx, .bgx *, .bgx::before { animation: none !important; } .bgx.bg-starry i:nth-child(6) { display: none; } }
+@media (prefers-reduced-motion: reduce) { .bgx, .bgx *, .bgx::before { animation: none !important; } .bgx.bg-starry i:nth-child(6), .bgx .mg-embers, .bgx .cr-sweep { display: none; } .bgx .cr-spark path { opacity: .8; } }
