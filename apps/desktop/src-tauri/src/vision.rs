@@ -416,10 +416,13 @@ mod imp {
     /// scale: 게임 창이 있는 모니터의 배율 (작은 창이 지금 있는 모니터가 아니라)
     pub fn show_overlay(app: &AppHandle, rc: &RECT, position: &str, scale: f64) {
         let Some(h) = hwnd_of(app) else { return };
+        // 다시 띄우면 대기 중인 '밀려 나가며 숨기기'를 무른다
+        OV_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         let (ow, oh) = ((420.0 * scale) as i32, (540.0 * scale) as i32);
         let m = (24.0 * scale) as i32;
         let (gw, gh) = (rc.right - rc.left, rc.bottom - rc.top);
-        let (x, y) = if position == "top" { (rc.left + (gw - ow) / 2, rc.top + m) } else { (rc.right - ow - m, rc.top + gh * 30 / 100) };
+        // 오른쪽: 게임 화면 오른쪽 끝에 딱 붙인다 (화면 안의 패널이 오른쪽에서 밀려 들어온다)
+        let (x, y) = if position == "top" { (rc.left + (gw - ow) / 2, rc.top + m) } else { (rc.right - ow, rc.top + gh * 30 / 100) };
         unsafe {
             let _ = SetWindowPos(h, Some(HWND_TOPMOST), x, y, ow, oh, SWP_NOACTIVATE | SWP_SHOWWINDOW);
         }
@@ -443,12 +446,26 @@ mod imp {
         }
     }
 
+    /// 작은 창을 보였다 숨길 때마다 올리는 번호 (숨기기 전 사이에 다시 뜨면 숨기지 않는다)
+    static OV_GEN: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
+    /// 밀려 나가는 시간 (overlay.css .ov.out 과 같게)
+    const SLIDE_OUT_MS: u64 = 320;
+
+    /// 숨기기: 화면에 '밀려 나가기'를 알리고, 끝나면 창을 숨긴다
     pub fn hide_overlay(app: &AppHandle) {
-        if let Some(h) = hwnd_of(app) {
-            unsafe {
-                let _ = ShowWindow(h, SW_HIDE);
+        use tauri::Emitter;
+        let gen = OV_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst) + 1;
+        let _ = app.emit_to("overlay", "overlay-out", ());
+        let app = app.clone();
+        std::thread::spawn(move || {
+            std::thread::sleep(std::time::Duration::from_millis(SLIDE_OUT_MS));
+            if OV_GEN.load(std::sync::atomic::Ordering::SeqCst) != gen { return; }
+            if let Some(h) = hwnd_of(&app) {
+                unsafe {
+                    let _ = ShowWindow(h, SW_HIDE);
+                }
             }
-        }
+        });
     }
 
     /// 인식 시험: 클립보드의 그림(Win+Shift+S 로 찍은 화면)을 같은 방식으로 읽어 본다

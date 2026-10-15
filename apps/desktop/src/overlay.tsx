@@ -3,7 +3,7 @@
  * 클릭이 통과하므로 버튼은 없다. 내 챔피언과의 어울림 순서·티어만 보여준다 (승률 없음).
  * 1위가 비슷하면 같은 순위로 묶고 고르는 건 사용자에게 맡긴다.
  */
-import { StrictMode } from 'react';
+import { StrictMode, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@prism/ui/styles.css';
 import './overlay.css';
@@ -11,9 +11,35 @@ import { AUGMENT, CHAMPIONS, matchupSummary, rankByPriority, topTie } from '@pri
 import { AugRing, ChampImg, Explain, Gem, GradeUp, TierBadge, useFavs } from '@prism/ui';
 import { lastChampion, readMatchup, useSeenAugments } from './vision';
 import { lockdown } from './lockdown';
+import { bridge } from './bridge';
+
+const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+
+/** 밀려 들어오기·나가기: 오른쪽이면 오른쪽 끝에서, 위면 위에서. Rust 가 숨기기 전에 'overlay-out' 을 보낸다 */
+function useSlide(at: number) {
+  const [pos, setPos] = useState<'right' | 'top'>('right');
+  const [out, setOut] = useState(false);
+  const [k, setK] = useState(0);
+  const last = useRef(at);
+  useEffect(() => {
+    if (!inTauri) return;
+    let off: (() => void) | undefined;
+    import('@tauri-apps/api/event').then(({ listen }) => listen('overlay-out', () => setOut(true)).then((f) => { off = f; }));
+    return () => off?.();
+  }, []);
+  // 새로 인식되면(숨겼다 다시 뜨면) 다시 밀려 들어온다
+  useEffect(() => {
+    if (at === last.current) return;
+    last.current = at;
+    bridge.visionGet().then((v) => setPos(v.settings.position)).catch(() => {});
+    setOut((o) => { if (o) setK((n) => n + 1); return false; });
+  }, [at]);
+  return { pos, out, k };
+}
 
 function Overlay() {
-  const { ids } = useSeenAugments();
+  const { ids, at } = useSeenAugments();
+  const slide = useSlide(at);
   const favs = useFavs(); // 내 증강 (앱 창에서 표시한 것, 같은 기기 저장소)
   if (!ids.length) return null;
   const champ = lastChampion();
@@ -24,7 +50,7 @@ function Overlay() {
   const sits = matchupSummary(c, matchup).slice(0, 2);
   const tie = topTie(fits);
   return (
-    <div className="ov">
+    <div key={slide.k} className={`ov at-${slide.pos} ${slide.out ? 'out' : ''}`}>
       <div className="ov-head"><Gem size={16} src="/brand/prism-32.png" /><b>Prism</b>{champ && <><ChampImg id={champ} size={18} /><span>{c?.name}</span></>}</div>
       {sits.length > 0 && <div className="ov-sits">{sits.map((x) => <span key={x.key}>{x.label}</span>)}</div>}
       {fits.length ? fits.map((f) => (
