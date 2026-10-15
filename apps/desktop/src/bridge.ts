@@ -34,6 +34,8 @@ export const bridge = {
   updateInstall: () => call<void>('update_install').catch((e) => { throw err(e); }),
   updatePrepare: () => call<UpdateInfo>('update_prepare').catch((e) => { throw err(e); }),
   updateApply: (background = false) => call<void>('update_apply', { background }).catch((e) => { throw err(e); }),
+  /** 게임 중 라이브 클라이언트 데이터 (게임이 없거나 동의 전이면 실패) */
+  liveGame: () => call<unknown>('live_game'),
   visionGet: () => call<VisionState>('vision_get'),
   visionAllow: (allowed: boolean) => call<void>('vision_allow', { allowed }).catch(() => {}),
   visionSet: (enabled: boolean, position: 'right' | 'top') => call<void>('vision_set', { enabled, position }),

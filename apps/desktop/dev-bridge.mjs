@@ -82,6 +82,11 @@ const CMD = {
   // MOCK_UPDATE=1 이면 새 버전이 있는 것처럼
   update_check: () => ({ current: '0.5.2', latest: process.env.MOCK_UPDATE ? '0.5.3' : '0.5.2', available: Boolean(process.env.MOCK_UPDATE), notes: '' }),
   update_install: () => { throw '개발 모드에서는 설치하지 않습니다.'; },
+  // 게임 중 라이브 클라이언트 데이터 흉내 (그라가스 · 상대 소라카·브랜드·말파이트가 크는 중)
+  live_game: () => ({ me: 'Haze#KR18', mode: 'KIWI', time: 610, players: [
+    ['Gragas', 'ORDER', [3020, 1058], [5, 2, 4], 'Haze#KR18'], ['Jinx', 'ORDER', [3031], [3, 3, 2]], ['Leona', 'ORDER', [3190], [0, 4, 9]], ['Lux', 'ORDER', [6655], [4, 2, 5]], ['Garen', 'ORDER', [3071], [2, 5, 1]],
+    ['Soraka', 'CHAOS', [3107], [0, 1, 12]], ['Brand', 'CHAOS', [6653, 3089], [8, 1, 4]], ['Malphite', 'CHAOS', [3075, 3143], [2, 2, 6]], ['Ornn', 'CHAOS', [3065, 3001], [1, 3, 5]], ['Vayne', 'CHAOS', [3153], [4, 3, 2]],
+  ].map(([c, team, items, [k, d, a], riotId]) => ({ rawChampionName: `game_character_displayname_${c}`, championName: c, team, items: items.map((itemID) => ({ itemID })), scores: { kills: k, deaths: d, assists: a }, riotId: riotId ?? `${c}#KR1` })) }),
   vision_allow: () => null,
   vision_get: () => ({ settings: vision, report: { engine: 'unsupported', last_text: '', last_ids: [], last_at: 0 } }),
   vision_set: ({ enabled, position }) => { vision = { enabled, position }; return null; },

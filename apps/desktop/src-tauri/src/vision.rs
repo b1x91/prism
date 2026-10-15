@@ -505,7 +505,7 @@ mod imp {
         let Some(h) = hwnd_of(app) else { return };
         // 다시 띄우면 대기 중인 '밀려 나가며 숨기기'를 무른다
         OV_GEN.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-        let (ow, oh) = ((420.0 * scale) as i32, (540.0 * scale) as i32);
+        let (ow, oh) = ((420.0 * scale) as i32, (620.0 * scale) as i32);
         let m = (24.0 * scale) as i32;
         let (gw, gh) = (rc.right - rc.left, rc.bottom - rc.top);
         // 오른쪽: 게임 화면 오른쪽 끝에 딱 붙인다 (화면 안의 패널이 오른쪽에서 밀려 들어온다)

@@ -73,3 +73,10 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
 @keyframes tst-out { to { transform: translateY(24px); opacity: 0; } }
 @keyframes tst-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .tst, .tst.out { animation: none; } .tst.out { opacity: 0; } .tst-spin { animation-duration: 2s; } }
+/* 지금 고려할 아이템 (라이브 클라이언트 데이터, v3.46) */
+.ov-items { display: grid; gap: var(--s1); padding-top: var(--s2); border-top: 1px solid rgba(255, 255, 255, .1); }
+.ov-items-h { font-size: var(--fs-xs); font-weight: 800; color: rgba(255, 255, 255, .6); }
+.ov-item { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: var(--s2); align-items: center; }
+.ov-item .item { border-radius: 6px; }
+.ov-item b { font-size: var(--fs-sm); font-weight: 800; color: #ffd98a; }
+.ov-item small { font-size: var(--fs-xs); color: rgba(255, 255, 255, .7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

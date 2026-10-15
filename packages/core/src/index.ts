@@ -17,3 +17,4 @@ export * from './challenges';
 export * from './shop';
 export * from './missions';
 export * from './duo';
+export * from './liveitems';

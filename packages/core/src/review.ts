@@ -11,9 +11,9 @@ import { fitOf, fitPoints, tierOf } from './synergy';
 export type Lesson = { kind: 'good' | 'tip'; title: string; detail?: string; augments?: number[]; items?: number[] };
 export type Review = { lessons: Lesson[]; known: boolean };
 
-type ItemKind = 'antiHeal' | 'armorPen' | 'magicPen' | 'armor' | 'mr' | 'tenacity' | 'pctHp';
+export type ItemKind = 'antiHeal' | 'armorPen' | 'magicPen' | 'armor' | 'mr' | 'tenacity' | 'pctHp';
 
-function kindsOf(id: number, detail: Record<number, ItemDetail> | null): Set<ItemKind> {
+export function kindsOf(id: number, detail: Record<number, ItemDetail> | null): Set<ItemKind> {
   const out = new Set<ItemKind>();
   const d = detail?.[id];
   if (!d) return out;

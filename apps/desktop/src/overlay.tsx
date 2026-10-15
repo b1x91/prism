@@ -7,8 +7,8 @@ import { StrictMode, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import '@prism/ui/styles.css';
 import './overlay.css';
-import { AUGMENT, CHAMPIONS, matchupSummary, rankByPriority, topTie } from '@prism/core';
-import { AugRing, ChampImg, Explain, Gem, GradeUp, TierBadge, useFavs } from '@prism/ui';
+import { AUGMENT, CHAMPIONS, ITEM, adviseItems, liveMatchup, loadItemDetail, matchupSummary, parseLive, rankByPriority, topTie, type ItemDetail, type LiveGame } from '@prism/core';
+import { AugRing, ChampImg, Explain, Gem, GradeUp, ItemIcon, TierBadge, useFavs } from '@prism/ui';
 import { lastChampion, readMatchup, useSeenAugments } from './vision';
 import { lockdown } from './lockdown';
 import { bridge } from './bridge';
@@ -37,15 +37,35 @@ function useSlide(at: number) {
   return { pos, out, k };
 }
 
+/** 작은 창이 떠 있는 동안만 3초마다 라이브 클라이언트 데이터를 읽는다 (현재 아이템·점수, v3.46) */
+function useLive(active: boolean) {
+  const [g, setG] = useState<LiveGame | null>(null);
+  const [detail, setDetail] = useState<Record<number, ItemDetail> | null>(null);
+  useEffect(() => { loadItemDetail().then(setDetail).catch(() => {}); }, []);
+  useEffect(() => {
+    if (!active) return;
+    let on = true;
+    const read = () => bridge.liveGame().then((r) => { if (on) setG(parseLive(r)); }).catch(() => {});
+    read();
+    const t = setInterval(read, 3000);
+    return () => { on = false; clearInterval(t); };
+  }, [active]);
+  return { g, detail };
+}
+
 function Overlay() {
   const { ids, at } = useSeenAugments();
+  const live = useLive(ids.length > 0);
   const slide = useSlide(at);
   const favs = useFavs(); // 내 증강 (앱 창에서 표시한 것, 같은 기기 저장소)
   if (!ids.length) return null;
-  const champ = lastChampion();
+  // 게임 중 데이터가 있으면 그것이 가장 정확하다 (내 챔프·양 팀 조합)
+  const lm = liveMatchup(live.g);
+  const champ = lm?.me ?? lastChampion();
   const c = champ ? CHAMPIONS[champ] : undefined;
   // 티어 = 챔피언과의 어울림, 순위 = 어울림 + 이번 판 조합 (승률 없음)
-  const matchup = readMatchup();
+  const matchup = lm ?? readMatchup();
+  const advice = adviseItems(live.g, live.detail);
   const fits = rankByPriority(c, ids.map((id) => AUGMENT[id]).filter(Boolean), matchup);
   const sits = matchupSummary(c, matchup).slice(0, 2);
   const tie = topTie(fits);
@@ -71,6 +91,17 @@ function Overlay() {
         </div>
       ))}
       {tie && <div className="ov-tie">{tie.length === 2 ? '두' : '세'} 증강 모두 {tie[0].tier}티어, 차이가 작아요 · 취향대로 고르세요</div>}
+      {advice.length > 0 && (
+        <div className="ov-items">
+          <span className="ov-items-h">지금 고려할 아이템</span>
+          {advice.map((a) => (
+            <div key={a.key} className="ov-item">
+              <ItemIcon id={a.items[0]} size={28} />
+              <span className="ov-tx"><b>{a.title}</b><small>{a.why} · {a.items.map((id) => ITEM[id]?.name).filter(Boolean).join(' / ')}</small></span>
+            </div>
+          ))}
+        </div>
+      )}
       {!c && <div className="ov-note">챔프 선택을 거치면 내 챔프 기준으로 순서와 티어를 매겨요</div>}
     </div>
   );
