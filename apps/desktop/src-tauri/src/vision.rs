@@ -24,6 +24,10 @@ const IDLE: Duration = Duration::from_secs(4);
 /// 이만큼 계속 안 보이면 다 고른 것으로 보고 닫는다
 const HOLD: Duration = Duration::from_millis(3000);
 
+fn now_ms() -> u64 {
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0)
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Settings {
     pub enabled: bool,
@@ -60,6 +64,10 @@ pub struct Report {
     pub read_ms: u32,
     /// 게임 창을 찾은 방법: "class" | "process" | ""
     pub window: String,
+    /// 최근 인식 과정 (최대 40줄): 카드 화면을 알아본 순간의 증강, 빈 칸을 잘라 읽은 결과와 읽은 글자.
+    /// 설정 → 문의하기로 복사된다 (게임 화면의 글자만, 그림은 남기지 않는다)
+    #[serde(default)]
+    pub trace: Vec<String>,
 }
 
 pub struct Vision {
@@ -96,6 +104,15 @@ impl Vision {
         r.stage = stage.into();
         r.hits = hits;
         r.window = window.into();
+    }
+
+    fn trace(&self, line: String) {
+        let mut r = self.report.lock().unwrap();
+        r.trace.push(format!("{} {}", now_ms() % 100_000_000, line));
+        let n = r.trace.len();
+        if n > 40 {
+            r.trace.drain(..n - 40);
+        }
     }
 
     fn publish(&self, app: &AppHandle, ids: Vec<u32>, text: String) {
@@ -293,13 +310,27 @@ mod imp {
     }
 
     /// 카드 한 장만 잘라 읽기: 두 배로 키워(작은 설명 글자까지) 문자 인식 → 제목(가장 위 이름) → 못 읽으면 설명 문장으로
-    fn read_card(engine: &OcrEngine, x: i32, y: i32, w: i32, h: i32, m: &Matcher) -> Option<u32> {
-        let buf = grab(x, y, w, h)?;
+    /// 결과: (찾은 증강, 어떻게 찾았나, 읽은 글자)
+    fn read_card(engine: &OcrEngine, x: i32, y: i32, w: i32, h: i32, m: &Matcher) -> (Option<u32>, &'static str, String) {
+        let Some(buf) = grab(x, y, w, h) else { return (None, "capture", String::new()) };
+        let title = |lines: &[Vec<Word>], iw: i32| m.find_at(lines, iw as f32).into_iter().min_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal)).map(|h| h.0);
+        // 1) 원래 크기 (제목은 큰 글자라 이대로가 잘 읽힌다)
+        let (l1, t1) = recognize(engine, &buf, w, h).unwrap_or_default();
+        if let Some(id) = title(&l1, w) {
+            return (Some(id), "title", t1);
+        }
+        // 2) 두 배로 키워서 (작은 설명 글자까지)
         let max = OcrEngine::MaxImageDimension().unwrap_or(0) as i32;
-        let (img, iw, ih) = if w * 2 <= max && h * 2 <= max { (upscale2(&buf, w, h), w * 2, h * 2) } else { (buf, w, h) };
-        let (lines, text) = recognize(engine, &img, iw, ih).ok()?;
-        let title = m.find_at(&lines, iw as f32).into_iter().min_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal)).map(|h| h.0);
-        title.or_else(|| m.match_desc(&text))
+        let (l2, t2) = if w * 2 <= max && h * 2 <= max { recognize(engine, &upscale2(&buf, w, h), w * 2, h * 2).unwrap_or_default() } else { (vec![], String::new()) };
+        if let Some(id) = title(&l2, w * 2) {
+            return (Some(id), "title-2x", t2);
+        }
+        // 3) 설명 문장으로
+        let all = format!("{t1}\n{t2}");
+        match m.match_desc(&all) {
+            Some(id) => (Some(id), "desc", all),
+            None => (None, "none", all),
+        }
     }
 
     /// 두 배 키우기 (가장 가까운 점). 인식기가 작은 글자를 더 잘 읽는다
@@ -430,8 +461,11 @@ mod imp {
                     let (cy, ch) = (y + by0, hh - by0);
                     if cw > 80 && ch > 60 {
                         let t0 = std::time::Instant::now();
-                        let id = read_card(eng, cx, cy, cw, ch, &v.matcher).filter(|id| !slots.contains(*id));
+                        let (got, how_found, text) = read_card(eng, cx, cy, cw, ch, &v.matcher);
                         v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
+                        let dup = got.is_some_and(|id| slots.contains(id));
+                        v.trace(format!("빈칸 x={c:.0} 폭={cw} {how_found}{} {:?} | {}", if dup { "(이미 있음)" } else { "" }, got, text.replace('\n', " / ").chars().take(120).collect::<String>()));
+                        let id = got.filter(|_| !dup);
                         if let Some(id) = id {
                             seen_at = Some(std::time::Instant::now());
                             let ids = slots.update(&[(id, c, 0.0)], gw);
@@ -464,6 +498,7 @@ mod imp {
                         misses = 0;
                         seen_at = Some(std::time::Instant::now());
                         if band.is_none() {
+                            v.trace(format!("카드 화면 {} {:?} x={:?} | {}", if wide { "넓게" } else { "띠" }, hits.iter().map(|h| h.0).collect::<Vec<_>>(), hits.iter().map(|h| (h.1 + off) as i32).collect::<Vec<_>>(), text.replace('\n', " / ").chars().take(160).collect::<String>()));
                             // 제목 줄 위아래로 여유를 두고 기억
                             let top = hits.iter().map(|h| h.2).fold(f32::MAX, f32::min) as i32;
                             let bottom = hits.iter().map(|h| h.2).fold(0.0, f32::max) as i32;
