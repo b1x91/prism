@@ -175,127 +175,125 @@ function Bars({ items }: { items: { key: string; label: string; share: number; c
 }
 
 /**
- * 나와의 시너지 (v3.28): 함께한 판(사실)을 먼저 크게, 성향으로 본 궁합(예상)은 따로.
- * 머리 = 두 얼굴 + 한 줄 평가 / 함께 승률·최근 판·맞대결 / 최고의 조합·역할 궁합 / 한 줄 인사이트
+ * 나와의 시너지 (v3.28 내용 · v3.29 디자인).
+ * 머리 = 두 사람의 무대(왼쪽 내 스킨, 오른쪽 상대 스킨) + 가운데 함께 승률 고리·한 줄 평가
+ * 몸 = 핵심 숫자 한 줄 · 최근 함께한 판 타임라인 · 최고의 조합 카드 · 역할 궁합 · 코치 노트
  */
 function SynergyCard({ data }: { data: MemberPage }) {
   const skins = useSkins();
   const nick = data.member.nick;
   const d = duoOf(data, nick);
   if (!d || !data.viewer) return null;
-  const t = d.together, v = d.vs;
+  const t = d.together, v = d.vs, me = data.viewer;
   const LV = { good: '잘 맞을 것 같아요', ok: '무난해요', weak: '서로 보완이 필요해요' } as const;
   const p = (x: number | null) => (x === null ? '–' : `${Math.round(x * 100)}%`);
   const cn = (id: number) => CHAMPIONS[id]?.name ?? `#${id}`;
+  const art = (skin: number | null | undefined, champ: number | undefined) => (skin && skins?.[skin]?.splash) || (champ ? cdragon(CHAMPIONS[champ]?.splash) : '');
+  const myArt = art(me.skin, me.champions[0]?.id), theirArt = art(data.member.skin, data.champions[0]?.id);
   return (
-    <section className={`card syn2 v-${d.verdict.key}`}>
-      <header className="sy-head">
-        <div className="sy-faces" aria-hidden="true">
-          <span className="sy-face"><MemberFace nick={data.viewer.nick ?? '나'} skin={data.viewer.skin} champion={data.viewer.champions[0]?.id} size={56} skins={skins} /><small>나</small></span>
-          <span className="sy-link"><i /><span className="sy-n"><b>{t.n}</b><small>함께</small></span><i /></span>
-          <span className="sy-face"><MemberFace nick={nick} skin={data.member.skin} champion={data.champions[0]?.id} size={56} skins={skins} /><small>{nick}</small></span>
+    <section className={`card duo v-${d.verdict.key}`}>
+      <header className="duo-stage">
+        {myArt && <img className="duo-bg l" src={myArt} alt="" />}
+        {theirArt && <img className="duo-bg r" src={theirArt} alt="" />}
+        <span className="duo-k">나와의 시너지</span>
+        <div className="duo-pair">
+          <div className="duo-who">
+            <MemberFace nick={me.nick ?? '나'} skin={me.skin} champion={me.champions[0]?.id} size={64} skins={skins} />
+            <b>나</b><small>평균 {p(t.myAvg)}</small>
+          </div>
+          <div className="duo-core">
+            <Ring value={t.n ? t.rate : 0} label={t.n ? p(t.rate) : '–'} sub="함께 승률" />
+            <h2>{d.verdict.label}</h2>
+            <p>{d.verdict.sub}</p>
+          </div>
+          <div className="duo-who">
+            <MemberFace nick={nick} skin={data.member.skin} champion={data.champions[0]?.id} size={64} skins={skins} />
+            <b>{nick}</b><small>평균 {p(t.theirAvg)}</small>
+          </div>
         </div>
-        <div className="sy-verdict">
-          <span className="k">나와의 시너지</span>
-          <h2>{d.verdict.label}</h2>
-          <p>{d.verdict.sub}{t.first ? ` · 첫 판 ${shortDate(t.first)}` : ''}</p>
+        <div className="duo-meta">
+          <span>함께 <b>{t.n}</b>판 · <b>{t.w}</b>승 <b>{t.n - t.w}</b>패</span>
+          {t.first && <span>첫 판 {shortDate(t.first)}</span>}
+          {t.last && <span>마지막 {ago(t.last)}</span>}
         </div>
       </header>
 
-      <div className="sy-grid">
-        <div className="sy-tile">
-          <span className="sy-k">함께할 때 승률</span>
-          <div className="sy-win">
-            <Ring value={t.n ? t.rate : 0} label={t.n ? p(t.rate) : '–'} sub={t.n ? `${t.w}승 ${t.n - t.w}패` : '기록 없음'} />
-            <div className="sy-cmp">
-              <CmpBar label="함께" value={t.n ? t.rate : null} on />
-              <CmpBar label="내 평균" value={t.myAvg} />
-              <CmpBar label={`${nick} 평균`} value={t.theirAvg} />
-              {t.lift !== null && t.n >= 3 && <span className={`sy-lift ${t.lift >= 0 ? 'up' : 'down'}`}>{t.lift >= 0 ? '+' : ''}{t.lift.toFixed(1)}%p<small>내 평균 대비</small></span>}
+      <div className="duo-body">
+        <div className="duo-figs">
+          <div className="duo-fig">
+            <small>내 평균 대비</small>
+            <b className={t.lift === null || t.n < 3 ? '' : t.lift >= 0 ? 'up' : 'down'}>{t.lift === null || t.n < 3 ? '–' : `${t.lift >= 0 ? '+' : ''}${t.lift.toFixed(1)}%p`}</b>
+            <span>함께 {p(t.n ? t.rate : null)} · 평소 {p(t.myAvg)}</span>
+          </div>
+          <div className="duo-fig">
+            <small>지금</small>
+            <b className={t.streak > 0 ? 'up' : t.streak < 0 ? 'down' : ''}>{t.streak > 0 ? `${t.streak}연승` : t.streak < 0 ? `${-t.streak}연패` : '–'}</b>
+            <span>함께 최고 {t.best}연승</span>
+          </div>
+          <div className="duo-fig">
+            <small>함께할 때 KDA</small>
+            <b>{t.kda ? <>{t.kda.me.toFixed(1)}<i>/</i>{t.kda.them.toFixed(1)}</> : '–'}</b>
+            <span>{t.kda ? `나 / ${nick} · 평소 ${t.kda.meAvg?.toFixed(1) ?? '–'} / ${t.kda.themAvg?.toFixed(1) ?? '–'}` : '함께한 판이 쌓이면'}</span>
+          </div>
+          <div className="duo-fig">
+            <small>맞대결</small>
+            <b>{v.n ? <><em className="w">{v.w}</em><i>:</i><em className="l">{v.n - v.w}</em></> : '–'}</b>
+            <span>{v.nemesis ? `${cn(v.nemesis.tc)}에게 ${v.nemesis.l}번 짐` : v.n ? `${v.n}번 맞붙음` : '만난 적 없음'}</span>
+          </div>
+        </div>
+
+        {t.n > 0 && <div className="duo-line">
+          <span className="duo-h">최근 함께한 판</span>
+          <ol className="duo-tl">{t.recent.map((x, i) => <li key={i} className={x ? 'w' : 'l'} title={x ? '승' : '패'}><i />{x ? '승' : '패'}</li>)}</ol>
+        </div>}
+
+        <div className="duo-cols">
+          <div>
+            <span className="duo-h">최고의 조합 <small>내 챔프 + {nick}</small></span>
+            {t.pairs.length ? <div className="duo-combos">{t.pairs.map((x) => (
+              <div key={`${x.mc}-${x.tc}`} className="duo-combo">
+                <span className="pics"><ChampImg id={x.mc} size={44} /><i>+</i><ChampImg id={x.tc} size={44} /></span>
+                <span className="nm">{cn(x.mc)} · {cn(x.tc)}</span>
+                <span className={`rec ${x.w * 2 >= x.n ? 'w' : 'l'}`}>{x.w}승 {x.n - x.w}패</span>
+              </div>
+            ))}</div> : <p className="meta">함께 이긴 조합이 여기에 모여요.</p>}
+          </div>
+          <div>
+            <span className="duo-h">역할 궁합 <small>나 + {nick}</small></span>
+            {t.roles.length ? <div className="duo-roles">{t.roles.map((r) => {
+              const rate = r.w / r.n;
+              return (
+                <div key={`${r.mr}-${r.tr}`} className="duo-role">
+                  <span className="rp"><i style={{ background: ROLE_COLOR[r.mr] }} />{ROLE_KO[r.mr]}<em>+</em><i style={{ background: ROLE_COLOR[r.tr] }} />{ROLE_KO[r.tr]}</span>
+                  <span className="track"><span className={rate >= 0.5 ? 'w' : 'l'} style={{ width: `${Math.max(6, rate * 100)}%` }} /></span>
+                  <b>{Math.round(rate * 100)}%</b><small>{r.n}판</small>
+                </div>
+              );
+            })}</div> : <p className="meta">함께한 판이 쌓이면 어떤 역할끼리 잘 맞는지 보여요.</p>}
+            <div className="duo-guess">
+              <span className="duo-h">성향으로 본 궁합 <small>예상</small></span>
+              {d.style ? <p><b>{LV[d.style.level]}</b>{d.style.reasons.length > 0 && <span> — {d.style.reasons.join(' · ')}</span>}</p> : <p className="meta">두 사람 모두 5판 이상 기록되면 보여요.</p>}
             </div>
           </div>
         </div>
-        <div className="sy-tile">
-          <span className="sy-k">최근 함께한 판</span>
-          {t.n ? <>
-            <div className="sy-strip">{t.recent.map((x, i) => <i key={i} className={x ? 'w' : 'l'} title={x ? '승' : '패'}>{x ? '승' : '패'}</i>)}</div>
-            <div className="sy-facts">
-              <span><small>지금</small><b className={t.streak > 0 ? 'w' : t.streak < 0 ? 'l' : ''}>{t.streak > 0 ? `${t.streak}연승` : t.streak < 0 ? `${-t.streak}연패` : '–'}</b></span>
-              <span><small>최고 연승</small><b>{t.best}</b></span>
-              <span><small>마지막</small><b>{t.last ? ago(t.last) : '–'}</b></span>
-            </div>
-            {t.kda && <div className="sy-kda">
-              <span><small>함께할 때 내 KDA</small><b>{t.kda.me.toFixed(1)}</b>{t.kda.meAvg !== null && <em className={t.kda.me >= t.kda.meAvg ? 'up' : 'down'}>평소 {t.kda.meAvg.toFixed(1)}</em>}</span>
-              <span><small>{nick} KDA</small><b>{t.kda.them.toFixed(1)}</b>{t.kda.themAvg !== null && <em className={t.kda.them >= t.kda.themAvg ? 'up' : 'down'}>평소 {t.kda.themAvg.toFixed(1)}</em>}</span>
-            </div>}
-          </> : <p className="meta sy-empty">같은 팀으로 한 판이 기록되면 여기에 쌓여요.</p>}
-        </div>
-        <div className="sy-tile">
-          <span className="sy-k">맞대결</span>
-          {v.n ? <>
-            <div className="sy-vs">
-              <span className="me"><b>{v.w}</b><small>나</small></span>
-              <span className="sep">:</span>
-              <span className="them"><b>{v.n - v.w}</b><small>{nick}</small></span>
-            </div>
-            <div className="sy-vsbar"><span style={{ width: `${(v.w / v.n) * 100}%` }} /></div>
-            <div className="sy-strip sm">{v.recent.map((x, i) => <i key={i} className={x ? 'w' : 'l'}>{x ? '승' : '패'}</i>)}</div>
-            {v.nemesis && <span className="sy-nem"><ChampImg id={v.nemesis.tc} size={24} /><span>{cn(v.nemesis.tc)}에게 {v.nemesis.l}번 졌어요</span></span>}
-          </> : <p className="meta sy-empty">아직 상대 팀으로 만난 적이 없어요.</p>}
-        </div>
-      </div>
 
-      <div className="sy-grid2">
-        <div className="sy-tile">
-          <span className="sy-k">최고의 조합 <small>내 챔프 + {nick}</small></span>
-          {t.pairs.length ? <div className="sy-pairs">{t.pairs.map((x) => (
-            <div key={`${x.mc}-${x.tc}`} className="sy-pair">
-              <span className="pics"><ChampImg id={x.mc} size={32} /><ChampImg id={x.tc} size={32} /></span>
-              <span className="nm">{cn(x.mc)} <i>+</i> {cn(x.tc)}</span>
-              <span className="rec"><b>{x.w}승 {x.n - x.w}패</b><span className="bar"><span style={{ width: `${(x.w / x.n) * 100}%` }} /></span></span>
-            </div>
-          ))}</div> : <p className="meta sy-empty">함께 이긴 조합이 여기에 모여요.</p>}
-        </div>
-        <div className="sy-tile">
-          <span className="sy-k">역할 궁합 <small>나 / {nick}</small></span>
-          {t.roles.length ? <div className="sy-roles">{t.roles.map((r) => (
-            <div key={`${r.mr}-${r.tr}`} className="sy-role">
-              <span className="rp"><i style={{ background: ROLE_COLOR[r.mr] }} />{ROLE_KO[r.mr]}<em>+</em><i style={{ background: ROLE_COLOR[r.tr] }} />{ROLE_KO[r.tr]}</span>
-              <span className="bar"><span style={{ width: `${(r.w / r.n) * 100}%` }} /></span>
-              <b>{Math.round((r.w / r.n) * 100)}%</b><small>{r.n}판</small>
-            </div>
-          ))}</div> : <p className="meta sy-empty">함께한 판이 쌓이면 어떤 역할끼리 잘 맞는지 보여요.</p>}
-          <div className="sy-style">
-            <span className="sy-k">성향으로 본 궁합 <small>예상</small></span>
-            {d.style ? <>
-              <div className="sy-score"><span className="bar"><span style={{ width: `${d.style.score}%` }} /></span><b>{LV[d.style.level]}</b></div>
-              <div className="sy-chips">{d.style.reasons.map((x) => <span key={x} className="pill">{x}</span>)}</div>
-            </> : <p className="meta">두 사람 모두 5판 이상 기록되면 보여요.</p>}
-          </div>
-        </div>
+        {d.insights.length > 0 && <div className="duo-notes">
+          <span className="duo-h">코치 노트</span>
+          <ul>{d.insights.map((x) => <li key={x.text} className={x.tone}><i />{x.text}</li>)}</ul>
+        </div>}
       </div>
-
-      {d.insights.length > 0 && <ul className="sy-ins">{d.insights.map((x) => (
-        <li key={x.text} className={x.tone}><Icon name={x.tone === 'up' ? 'spark' : x.tone === 'down' ? 'target' : 'users'} />{x.text}</li>
-      ))}</ul>}
     </section>
   );
 }
 
 /** 승률 고리 */
 function Ring({ value, label, sub }: { value: number; label: string; sub: string }) {
-  const r = 38, c = 2 * Math.PI * r;
+  const r = 52, c = 2 * Math.PI * r;
   return (
-    <span className="sy-ring">
-      <svg viewBox="0 0 96 96" aria-hidden="true"><circle cx="48" cy="48" r={r} className="bg" /><circle cx="48" cy="48" r={r} className="fg" strokeDasharray={`${c * value} ${c}`} /></svg>
+    <span className="duo-ring">
+      <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r={r} className="bg" /><circle cx="60" cy="60" r={r} className="fg" strokeDasharray={`${c * value} ${c}`} /></svg>
       <span className="in"><b>{label}</b><small>{sub}</small></span>
     </span>
-  );
-}
-
-function CmpBar({ label, value, on }: { label: string; value: number | null; on?: boolean }) {
-  return (
-    <span className={`sy-cb ${on ? 'on' : ''}`}><small>{label}</small><span className="bar"><span style={{ width: `${(value ?? 0) * 100}%` }} /></span><b>{value === null ? '–' : `${Math.round(value * 100)}%`}</b></span>
   );
 }
 
