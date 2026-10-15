@@ -262,6 +262,11 @@ pub fn has_ready() -> bool {
     READY.lock().unwrap().is_some()
 }
 
+/// 받아 둔 새 버전 번호 (트레이 메뉴 글자)
+pub fn ready_version() -> Option<String> {
+    READY.lock().unwrap().as_ref().map(|r| r.version.clone())
+}
+
 /// 켤 때: 지난번에 받아 둔 새 버전(지금보다 높은 것)이 있으면 그것을 '준비됨'으로 올린다. 낮은 것은 지운다
 pub fn restore() {
     if managed() {

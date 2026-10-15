@@ -92,7 +92,20 @@ async fn update_check() -> Result<update::Info, String> {
 /// 새 버전을 뒤에서 미리 받아 둔다 (설치는 하지 않는다)
 #[tauri::command]
 async fn update_prepare() -> Result<update::Info, String> {
-    update::prepare().await
+    let r = update::prepare().await;
+    refresh_tray();
+    r
+}
+
+/// 트레이 메뉴의 업데이트 줄: 받아 둔 새 버전이 있으면 '업데이트 적용 (v…)', 없으면 '업데이트 확인'
+static TRAY_UPDATE: std::sync::OnceLock<MenuItem<tauri::Wry>> = std::sync::OnceLock::new();
+fn refresh_tray() {
+    if let Some(m) = TRAY_UPDATE.get() {
+        let _ = m.set_text(match update::ready_version() {
+            Some(v) => format!("업데이트 적용 (v{v})"),
+            None => "업데이트 확인".to_string(),
+        });
+    }
 }
 
 /// 받아 둔 새 버전을 창 없이 설치하고 앱을 끝낸다. 설치가 끝나면 다시 켜진다 (background 면 트레이로만)
@@ -178,6 +191,8 @@ pub fn run() {
             let check = MenuItem::with_id(app, "check", "업데이트 확인", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, "quit", "끝내기", true, None::<&str>)?;
             let menu = Menu::with_items(app, &[&open, &check, &quit])?;
+            let _ = TRAY_UPDATE.set(check.clone());
+            refresh_tray();
             TrayIconBuilder::with_id("prism")
                 .icon(app.default_window_icon().cloned().ok_or("아이콘 없음")?)
                 .tooltip("Prism")
@@ -185,10 +200,15 @@ pub fn run() {
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, e| match e.id().as_ref() {
                     "open" => show(app),
-                    // 창을 열고 설정 화면에서 바로 확인한다 (결과가 보이게)
+                    // 받아 둔 새 버전이 있으면 바로 적용 (게임 중이면 적용하지 않고 설정 화면을 연다)
+                    // 없으면 창을 열고 설정 화면에서 바로 확인한다 (결과가 보이게)
                     "check" => {
-                        show(app);
-                        let _ = app.emit("check-update", ());
+                        if update::has_ready() && lcu::game_pids().is_empty() && update::apply(true, false).is_ok() {
+                            app.exit(0);
+                        } else {
+                            show(app);
+                            let _ = app.emit("check-update", ());
+                        }
                     }
                     "quit" => {
                         // 받아 둔 새 버전이 있으면 끝낼 때 조용히 적용 (다시 켜지 않는다)

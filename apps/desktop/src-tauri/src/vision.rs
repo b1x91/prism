@@ -170,6 +170,7 @@ mod imp {
     use windows::Win32::Foundation::{HWND, POINT, RECT};
     use windows::Win32::Graphics::Gdi::*;
     use windows::Win32::System::WinRT::{RoInitialize, RO_INIT_MULTITHREADED};
+    use windows::Win32::UI::HiDpi::GetDpiForWindow;
     use windows::Win32::UI::WindowsAndMessaging::*;
 
     pub fn engine() -> Option<OcrEngine> {
@@ -224,8 +225,14 @@ mod imp {
             if !ok || lines == 0 {
                 return None;
             }
+            let mut lit = 0usize;
             for px in buf.chunks_exact_mut(4) {
                 px[3] = 255;
+                if px[0] as u16 + px[1] as u16 + px[2] as u16 > 24 { lit += 1; }
+            }
+            // 거의 다 검으면 전체 화면(독점) 모드라 화면이 복사되지 않은 것 → '테두리 없는 창 모드' 안내
+            if lit * 100 < buf.len() / 4 {
+                return None;
             }
             Some(buf)
         }
@@ -307,8 +314,10 @@ mod imp {
                 continue;
             };
             let Some(rc) = client_rect(h) else { std::thread::sleep(EVERY); continue };
+            // 게임 창이 있는 모니터의 배율 (모니터마다 배율이 다를 수 있다)
+            let scale = match unsafe { GetDpiForWindow(h) } { 0 => 1.0, d => d as f64 / 96.0 };
             if badge_at != Some(rc) {
-                show_badge(&app, &rc);
+                show_badge(&app, &rc, scale);
                 badge_at = Some(rc);
             }
             // 제목 줄을 아직 모르면: 보통은 좁은 띠, 네 번에 한 번은 넓게
@@ -344,7 +353,7 @@ mod imp {
                         if ids != last || !shown {
                             last = ids.clone();
                             v.publish(&app, ids, text);
-                            show_overlay(&app, &rc, &s.position);
+                            show_overlay(&app, &rc, &s.position, scale);
                             v.shown.store(true, Ordering::SeqCst);
                         }
                     } else {
@@ -392,9 +401,9 @@ mod imp {
         }
     }
 
-    pub fn show_overlay(app: &AppHandle, rc: &RECT, position: &str) {
+    /// scale: 게임 창이 있는 모니터의 배율 (작은 창이 지금 있는 모니터가 아니라)
+    pub fn show_overlay(app: &AppHandle, rc: &RECT, position: &str, scale: f64) {
         let Some(h) = hwnd_of(app) else { return };
-        let scale = app.get_webview_window("overlay").and_then(|w| w.scale_factor().ok()).unwrap_or(1.0);
         let (ow, oh) = ((420.0 * scale) as i32, (540.0 * scale) as i32);
         let m = (24.0 * scale) as i32;
         let (gw, gh) = (rc.right - rc.left, rc.bottom - rc.top);
@@ -405,9 +414,8 @@ mod imp {
     }
 
     /// 게임 화면 오른쪽 위 구석에 작은 프리즘
-    fn show_badge(app: &AppHandle, rc: &RECT) {
+    fn show_badge(app: &AppHandle, rc: &RECT, scale: f64) {
         let Some(h) = hwnd_by(app, "badge") else { return };
-        let scale = app.get_webview_window("badge").and_then(|w| w.scale_factor().ok()).unwrap_or(1.0);
         let size = (super::BADGE * scale) as i32;
         // 게임 화면 오른쪽 위 모서리에 딱 붙인다
         unsafe {
