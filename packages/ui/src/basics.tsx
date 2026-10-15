@@ -116,6 +116,18 @@ export function ChannelIcons({ links, size = 36, onOpen }: { links?: Links | nul
   return <div className="chis">{item(l.discord, 'discord', '디스코드', <DiscordGlyph />)}{item(l.kakao, 'kakao', '카카오톡', <KakaoGlyph />)}</div>;
 }
 
+/** 모임 화면 오른쪽 위: 디스코드 · 카카오톡 (아이콘 + 이름, 한 곳에만) */
+export function ChannelButtons({ links, onOpen }: { links?: Links | null; onOpen?: (url: string) => void }) {
+  const l = withDefaults(links);
+  const item = (url: string | null, cls: string, name: string, glyph: ReactNode) => {
+    if (!url) return <span className={`chb ${cls} soon`} title={`${name} · 곧 열립니다`}>{glyph}{name}</span>;
+    return onOpen
+      ? <button type="button" className={`chb ${cls}`} onClick={() => onOpen(url)}>{glyph}{name}</button>
+      : <a className={`chb ${cls}`} href={url} target="_blank" rel="noopener noreferrer">{glyph}{name}</a>;
+  };
+  return <div className="chbs">{item(l.discord, 'discord', '디스코드', <DiscordGlyph />)}{item(l.kakao, 'kakao', '카카오톡', <KakaoGlyph />)}</div>;
+}
+
 /** (옛 이름) 모임 소통 창구 = 앱 아이콘만 */
 export function Channels({ links, size }: { links?: Links | null; size?: 'lg' }) {
   return <ChannelIcons links={links} size={size === 'lg' ? 48 : 36} />;
@@ -179,7 +191,7 @@ export function FacePresence({ p, title, children }: { p?: Presence | null; titl
 /** 점 + 글자 (회원 페이지 머리) */
 export function PresenceTag({ p }: { p?: Presence | null }) {
   if (!p || p === 'off') return null;
-  return <span className="ptag"><PresenceDot p={p} />{PRESENCE_LABEL[p]}</span>;
+  return <span className="prtag"><PresenceDot p={p} />{PRESENCE_LABEL[p]}</span>;
 }
 
 /** 디스코드 역할 배지 (디스코드와 같은 색) */
@@ -220,3 +232,14 @@ export function Hover({ tip, children, className = '' }: { tip: ReactNode | (() 
   );
 }
 
+
+/** 준회원에게 잘린 목록 끝: 몇 명이 더 있는지 + 어느 등급부터 다 보이는지 */
+export function LockedMore({ more, what = '전체 순위', children }: { more: number; what?: string; children?: ReactNode }) {
+  if (more <= 0 && !children) return null;
+  return (
+    <div className="locked-more">
+      {children}
+      {more > 0 && <div className="lm-foot"><Icon name="lock" /><span><b>{more}명</b> 더 있어요 · <b>정회원</b>부터 {what}를 볼 수 있어요</span></div>}
+    </div>
+  );
+}

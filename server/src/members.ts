@@ -4,7 +4,7 @@
  */
 import { parseDeco } from '../../packages/core/src/shop.js';
 import { HttpError, json, type Env, type Member } from './util.js';
-import { topRole } from './roles.js';
+import { can, LIMITED, topRole } from './roles.js';
 import { presenceOf } from '../../packages/core/src/presence.js';
 
 export const RANK_MIN_WINRATE = 10; // 승률 순위는 10판 이상만
@@ -16,7 +16,7 @@ const monthStart = () => {
 };
 
 /** 랭킹: 기록이 있는 회원 전부 (회원 100명 규모라 정렬은 화면에서). period=month 면 이번 달(KST)만 */
-export async function ranking(env: Env, period: string | null) {
+export async function ranking(env: Env, me: Member, period: string | null, by: string | null = null) {
   const since = period === 'month' ? monthStart() : 0;
   const r = await env.DB.prepare(
     `SELECT m.id, m.nick, m.profile_skin AS skin, m.discord_roles, COUNT(*) AS n, SUM(p.win) AS w,
@@ -27,7 +27,15 @@ export async function ranking(env: Env, period: string | null) {
   )
     .bind(since)
     .all();
-  return json({ period: since ? 'month' : 'all', minWinrate: RANK_MIN_WINRATE, rows: r.results.map(({ discord_roles, ...x }: any) => ({ ...x, role: topRole({ discord_roles }) })) });
+  let rows = r.results.map(({ discord_roles, ...x }: any) => ({ ...x, role: topRole({ discord_roles }) }));
+  // 승률 순위는 서버에서 정렬해야 준회원의 5위까지도 실제 승률 순위가 된다
+  if (by === 'winrate') rows = rows.filter((x: any) => x.n >= RANK_MIN_WINRATE).sort((a: any, b: any) => b.w / b.n - a.w / a.n || b.n - a.n);
+  // 준회원은 판수 5위까지만 (승률·이번 달 정렬은 화면에서 하므로 서버는 판수 순 5명 + 내 줄)
+  if (!can(me, 'rankingAll')) {
+    const mine = rows.findIndex((x: any) => x.id === me.id);
+    return json({ period: since ? 'month' : 'all', minWinrate: RANK_MIN_WINRATE, rows: rows.slice(0, LIMITED), limited: { total: rows.length, mine: mine >= LIMITED ? { ...rows[mine], rank: mine + 1 } : null } });
+  }
+  return json({ period: since ? 'month' : 'all', minWinrate: RANK_MIN_WINRATE, rows });
 }
 
 /** 회원 페이지: 프로필 + 전체 기록 분석 재료 + (다른 사람이면) 나와 같이 한 판 */

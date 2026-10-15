@@ -126,3 +126,20 @@ export function dexLevel(m: Mastery): DexLevel {
   if (m.total > 0 && m.done * 2 >= m.total) return 3;
   return 2;
 }
+
+// ───────── 도감 경험치 (CLAUDE.md v3.32) ─────────
+/** 챔프·증강을 쓸수록 쌓인다: 판 · 승리 · 이룬 목표 · 마스터. 우수회원 ×1.5, 운영진 ×2 (`Rates.dexXp`) */
+export const DEX_XP = { game: 10, win: 5, goal: 20, master: 100 } as const;
+/** 레벨 L 에서 L+1 로 가는 데 필요한 경험치 */
+export const dexXpNeed = (level: number) => 200 + 100 * (level - 1);
+
+export type DexXp = { xp: number; level: number; cur: number; need: number; pct: number; rate: number };
+export function dexXpOf(entries: { n: number; w: number }[], masteries: Mastery[], rate = 1): DexXp {
+  const base = entries.reduce((s, e) => s + e.n * DEX_XP.game + e.w * DEX_XP.win, 0)
+    + masteries.reduce((s, m) => s + m.done * DEX_XP.goal + (m.master ? DEX_XP.master : 0), 0);
+  const xp = Math.round(base * rate);
+  let level = 1, left = xp;
+  while (left >= dexXpNeed(level)) { left -= dexXpNeed(level); level++; }
+  const need = dexXpNeed(level);
+  return { xp, level, cur: left, need, pct: left / need, rate };
+}

@@ -9,5 +9,5 @@ export function DexPage() {
   const { dex, loading } = useDex(me ? api : null);
   if (!ready) return null;
   if (!me) return <section className="section"><div className="wrap"><Empty action={<button type="button" className="btn primary" onClick={login}><Icon name="discord" />디스코드로 로그인</button>}>도감은 Prism 회원에게 열립니다.</Empty></div></section>;
-  return <section className="section tight"><div className="wrap"><DexView dex={dex} loading={loading} onChampion={(c) => nav(`/champions/${c}`)} onAugment={(a) => nav(`/augments/${a}`)} /></div></section>;
+  return <section className="section tight"><div className="wrap"><DexView dex={dex} loading={loading} xpRate={me.rates?.dexXp ?? 1} onChampion={(c) => nav(`/champions/${c}`)} onAugment={(a) => nav(`/augments/${a}`)} /></div></section>;
 }

@@ -4,7 +4,7 @@
  */
 import { useMemo } from 'react';
 import { AUGMENT, CHAMPIONS, WIN_STEPS, type Api, type ArtisanRank, type ArtisanRanking, type Artisans as ArtisansData } from '@prism/core';
-import { ChampImg, Empty, MemberFace, useSkins } from './basics';
+import { ChampImg, Empty, LockedMore, MemberFace, useSkins } from './basics';
 import { AugRing } from './augment';
 import { useLoad } from './crew';
 import { PrismMark } from './dex';
@@ -57,6 +57,7 @@ export function ArtisanRankingView({ api, kind, meId, onOpen }: { api: Api; kind
   return (
     <div className="card rank-list art-rank">
       {rows.map((r, i) => <ArtRow key={r.id} r={r} rank={i + 1} kind={kind} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
+      {data.limited && <LockedMore more={data.limited[kind] - rows.length} />}
     </div>
   );
 }

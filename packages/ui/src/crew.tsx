@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board, type ChampionInfo, type Game, type Note, type DiscordNow, type Parties, type Party, type Prospects, type Scrim, type ScrimMember, type Scrims } from '@prism/core';
-import { AugImg, ChampImg, Empty, Gem, IconBtn, MemberFace } from './basics';
+import { AugImg, ChampImg, Empty, Gem, IconBtn, LockedMore, MemberFace } from './basics';
 import { AugmentLink } from './augment';
 import { Icon } from './icons';
 
@@ -393,6 +393,7 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
           );
         })}</div>
       )}
+      {data?.limited && <LockedMore more={data.limited.total - data.prospects.length} what="전체 목록" />}
     </section>
   );
 }

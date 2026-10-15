@@ -13,15 +13,32 @@ export const ROLES = [
   { id: '793740647227588612', key: 'associate', name: '준회원', color: '#3498db', level: 1 },
 ] as const;
 
-/** 기능별 필요한 최소 단계 (0 = 디스코드 서버 회원이면 누구나) */
+/**
+ * 기능별 필요한 최소 단계 (CLAUDE.md v3.32). 단계 = 준회원 1 · 정회원 2 · 우수회원 3 · 운영진 5 (특별회원은 단계가 아니라 따로 붙는 혜택).
+ * 역할이 없어도 디스코드 서버 회원이면 준회원과 같게 본다 (서버 미가입자는 로그인 자체가 안 된다).
+ */
 export const FEATURES = {
-  party: 0, // 같이 할 판 열기·참여
-  scrim: 3, // 내전 열기·팀 나누기 (우수회원 이상)
-  prospects: 2, // 포텐 멤버 보기 (정회원 이상)
-  moderate: 5, // 남의 글·팁 지우기, 남의 판·내전 취소, 포텐 기록 지우기 (운영진)
+  party: 0, // 같이 할 판 열기·참여 (화면은 지금 없음)
+  scrim: 3, // 내전 열기·팀 나누기 (화면은 지금 없음)
+  prospects: 0, // 포텐 멤버 보기 (준회원은 5명까지)
+  prospectsAll: 2, // 포텐 멤버 전체 (정회원 이상)
+  rankingAll: 2, // 랭킹 전체 (준회원은 5위까지)
+  moderate: 5, // 남의 글·팁 지우기, 포텐 기록 지우기 (운영진)
   shop: 5, // 상점 사기·장착 (지금은 운영진만, 열 때 0 으로)
 } as const;
 export type Feature = keyof typeof FEATURES;
+/** 준회원이 볼 수 있는 랭킹·포텐 멤버 수 */
+export const LIMITED = 5;
+
+/** 단계별 혜택: 피스 모으는 배율 · 도감 경험치 배율 (높은 단계부터) */
+export const RATES: { at: number; piece: number; dexXp: number }[] = [
+  { at: 5, piece: 2, dexXp: 2 }, // 운영진
+  { at: 3, piece: 1.5, dexXp: 1.5 }, // 우수회원
+  { at: 2, piece: 1.5, dexXp: 1 }, // 정회원
+  { at: 0, piece: 1, dexXp: 1 }, // 준회원
+];
+/** 특별회원 상점 할인 (운영진도 받는다) */
+export const SPECIAL_DISCOUNT = 0.5;
 
 export function rolesOf(m: Pick<Member, 'discord_roles'>): string[] {
   try { const r = JSON.parse(m.discord_roles ?? '[]'); return Array.isArray(r) ? r : []; } catch { return []; }
@@ -34,7 +51,18 @@ export function topRole(m: Pick<Member, 'discord_roles'>) {
   return r ? { key: r.key, name: r.name, color: r.color, level: r.level } : null;
 }
 
-/** 관리자(앱 운영자)는 늘 최고 단계 */
-export const levelOf = (m: Member) => (m.tier === 'admin' ? 99 : topRole(m)?.level ?? 0);
-export const can = (m: Member, f: Feature) => levelOf(m) >= FEATURES[f];
-export const permsOf = (m: Member) => Object.fromEntries((Object.keys(FEATURES) as Feature[]).map((f) => [f, can(m, f)])) as Record<Feature, boolean>;
+/** 단계 (특별회원 제외). 관리자(앱 운영자)는 늘 최고 단계 */
+export const levelOf = (m: Pick<Member, 'tier' | 'discord_roles'>) => {
+  if (m.tier === 'admin') return 99;
+  const mine = new Set(rolesOf(m));
+  return Math.max(0, ...ROLES.filter((r) => r.key !== 'special' && mine.has(r.id)).map((r) => r.level));
+};
+export const isSpecial = (m: Pick<Member, 'tier' | 'discord_roles'>) => levelOf(m) >= 5 || rolesOf(m).includes(ROLES.find((r) => r.key === 'special')!.id);
+/** 이 회원의 혜택 */
+export const ratesOf = (m: Pick<Member, 'tier' | 'discord_roles'>) => {
+  const lv = levelOf(m);
+  const r = RATES.find((x) => lv >= x.at)!;
+  return { piece: r.piece, dexXp: r.dexXp, discount: isSpecial(m) ? SPECIAL_DISCOUNT : 0 };
+};
+export const can = (m: Pick<Member, 'tier' | 'discord_roles'>, f: Feature) => levelOf(m) >= FEATURES[f];
+export const permsOf = (m: Pick<Member, 'tier' | 'discord_roles'>) => Object.fromEntries((Object.keys(FEATURES) as Feature[]).map((f) => [f, can(m, f)])) as Record<Feature, boolean>;

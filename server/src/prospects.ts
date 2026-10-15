@@ -2,13 +2,13 @@
  * 포텐 멤버 (CLAUDE.md v3.10): 회원과 같은 팀으로 3판 이상, 또는 사용자 설정·내전 판을 1판 이상 함께한 비회원.
  * 회원 전용. 가입해서 롤 계정을 연결하고 동의하면 그동안의 판이 그 사람의 기록으로 옮겨진다 (adoptProspect).
  */
-import { can } from './roles.js';
+import { can, LIMITED } from './roles.js';
 import { HttpError, json, type Env, type Member } from './util.js';
 
 const QUEUE_MIN = 3;
 
 export async function listProspects(env: Env, me: Member) {
-  if (!can(me, 'prospects')) throw new HttpError(403, '포텐 멤버는 정회원 이상이 볼 수 있습니다.');
+  if (!can(me, 'prospects')) throw new HttpError(403, '포텐 멤버를 볼 수 없습니다.');
   const { results } = await env.DB.prepare(
     `SELECT puuid, MAX(riot_id) AS riotId, COUNT(*) AS n, SUM(win) AS w,
        SUM(CASE WHEN custom = 0 AND with_members > 0 THEN 1 ELSE 0 END) AS queued,
@@ -32,7 +32,10 @@ export async function listProspects(env: Env, me: Member) {
       mates.set(r.puuid, l);
     }
   }
-  return json({ prospects: results.map((r) => ({ ...r, mates: mates.get(r.puuid) ?? [] })), queueMin: QUEUE_MIN });
+  const all = results.map((r) => ({ ...r, mates: mates.get(r.puuid) ?? [] }));
+  // 준회원은 5명까지 (정회원부터 전체)
+  const full = can(me, 'prospectsAll');
+  return json({ prospects: full ? all : all.slice(0, LIMITED), queueMin: QUEUE_MIN, ...(full ? {} : { limited: { total: all.length } }) });
 }
 
 /** 관리자: 기록 지우기 (본인이 원하지 않을 때) */

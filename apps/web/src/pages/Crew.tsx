@@ -1,4 +1,4 @@
-import { BoardView, Channels, Gem, Icon, DiscordNowCard, ProspectBoard } from '@prism/ui';
+import { BoardView, ChannelButtons, Channels, Gem, Icon, DiscordNowCard, ProspectBoard } from '@prism/ui';
 import { useSession } from '../session';
 
 function Intro() {
@@ -42,9 +42,9 @@ export function Crew() {
   if (!me) return <Intro />;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <div className="page-head"><div><h1>Prism</h1><p>{me.nick}님, 오늘 밤도 한 판.</p></div></div>
+      <div className="page-head crew-head"><div><h1>Prism</h1><p>{me.nick}님, 오늘 밤도 한 판.</p></div><ChannelButtons links={links} /></div>
       <DiscordNowCard api={api} admin={me.tier === 'admin'} />
-      {me.perms?.prospects !== false && <ProspectBoard api={api} invite={links.discord} admin={Boolean(me.perms?.moderate)} />}
+      {<ProspectBoard api={api} invite={links.discord} admin={Boolean(me.perms?.moderate)} />}
       <BoardView api={api} />
     </div></section>
   );

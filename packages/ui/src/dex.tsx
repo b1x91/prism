@@ -4,7 +4,7 @@
  * 못 만난 것은 번호와 흐린 그림(???). 누르면 도감 설명과 다음 목표.
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP } from '@prism/core';
 import { ChampImg, Gem, Select, Seg } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
@@ -43,7 +43,7 @@ const match = (name: string, q: string) => { const t = q.replace(/\s/g, ''); con
 const stageOf = (m: Mastery) => DEX_LEVEL_KO[dexLevel(m)];
 const stageKey = (m: Mastery) => (m.master ? 'master' : m.caught ? 'caught' : m.seen ? 'seen' : 'unk');
 
-export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onChampion?: (id: number) => void; onAugment?: (id: number) => void; loading?: boolean }) {
+export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { dex: Dex; onChampion?: (id: number) => void; onAugment?: (id: number) => void; loading?: boolean; xpRate?: number }) {
   const [kind, setKind] = useState<Kind>('champions');
   const [show, setShow] = useState<Show>('all');
   const [sort, setSort] = useState<Sort>('no');
@@ -58,6 +58,12 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
   const no = useMemo(() => new Map(ids.map((id, i) => [id, i])), [ids]);
   const m = (id: number) => ms.get(id)!;
   const now = Date.now();
+  // 도감 경험치: 챔프·증강 모두 (보고 있는 쪽과 상관없이)
+  const xp = useMemo(() => {
+    const cm = CHAMP_IDS.filter((id) => dex.champions[id]).map((id) => champMastery(id, dex.champions[id], dex.pairs, dex.challenges ?? null));
+    const am = AUG_IDS.filter((id) => dex.augments[id]).map((id) => augMastery(id, dex.augments[id], dex.pairs));
+    return dexXpOf([...Object.values(dex.champions), ...Object.values(dex.augments)], [...cm, ...am], xpRate);
+  }, [dex, xpRate]);
 
   const seen = ids.filter((id) => m(id).seen).length;
   const caught = ids.filter((id) => m(id).caught).length;
@@ -102,6 +108,12 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
         <div className="dex-title">
           <h1>도감</h1>
           <Seg value={kind} options={[['champions', '챔프'], ['augments', '증강']]} onChange={(k) => { setKind(k); setGroup('all'); setQ(''); setShow('all'); }} />
+          <div className="dex-xp" title={`판 +${DEX_XP.game} · 승리 +${DEX_XP.win} · 이룬 목표 +${DEX_XP.goal} · 마스터 +${DEX_XP.master}`}>
+            <span className="lv">Lv.{xp.level}</span>
+            <span className="bar"><span style={{ width: `${Math.max(2, Math.round(xp.pct * 100))}%` }} /></span>
+            <span className="num">{xp.cur.toLocaleString()}<small> / {xp.need.toLocaleString()} XP</small></span>
+            {xp.rate > 1 && <span className="rate">경험치 ×{xp.rate}</span>}
+          </div>
         </div>
         <div className="dex-count">
           <span className="k">마스터 여정</span>

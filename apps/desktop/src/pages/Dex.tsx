@@ -7,5 +7,5 @@ import type { State } from '../controller';
 export function DexPage({ s }: { s: State }) {
   const nav = useNavigate();
   const { dex, loading } = useDex(s.me ? api : null, s.games);
-  return <DexView dex={dex} loading={loading} onChampion={(c) => nav(`/champions/${c}`)} onAugment={(a) => nav(`/augments/${a}`)} />;
+  return <DexView dex={dex} loading={loading} xpRate={s.me?.rates?.dexXp ?? 1} onChampion={(c) => nav(`/champions/${c}`)} onAugment={(a) => nav(`/augments/${a}`)} />;
 }

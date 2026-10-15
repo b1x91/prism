@@ -1094,8 +1094,8 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .pdot.both { background: var(--ok); }
 .fp { position: relative; display: inline-flex; flex: none; }
 .fp .pdot { position: absolute; right: -3px; bottom: -3px; width: 12px; height: 12px; box-shadow: 0 0 0 2px var(--surface); }
-.ptag { display: inline-flex; align-items: center; gap: 6px; font: inherit; color: inherit; vertical-align: baseline; }
-.banner .ptag { background: none; padding: 0; border: 0; box-shadow: none; }
+.prtag { display: inline-flex; align-items: center; gap: 6px; font: inherit; color: inherit; vertical-align: baseline; }
+.prtag .pdot { position: static; flex: none; }
 
 /* 도감 역할 챌린지 */
 .jrole { display: flex; align-items: baseline; gap: var(--s2); padding-top: var(--s2); border-top: 1px solid var(--line); }
@@ -1683,3 +1683,37 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
   .ss-card { width: 170px; height: 156px; }
   .ss-txt h1 { font-size: var(--fs-2xl); }
 }
+
+/* 도감 경험치 (v3.32) */
+.dex-xp { display: flex; align-items: center; gap: var(--s2); margin-top: var(--s3); min-width: 0; }
+.dex-xp .lv { flex: none; display: inline-grid; place-items: center; height: 24px; padding: 0 var(--s2); border-radius: var(--r-s); background: linear-gradient(135deg, #ffe08a, #e0a82e); color: #2a1c00; font-size: var(--fs-xs); font-weight: 900; font-variant-numeric: tabular-nums; }
+.dex-xp .bar { flex: 1; min-width: 80px; max-width: 220px; height: 6px; border-radius: 3px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+.dex-xp .bar > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #ffe08a, #e0a82e); }
+.dex-xp .num { font-size: var(--fs-xs); font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dex-xp .num small { font-size: var(--fs-xs); font-weight: 600; color: rgba(255, 255, 255, .6); }
+.dex-xp .rate { flex: none; padding: 2px var(--s2); border-radius: var(--r-pill); background: rgba(242, 193, 78, .18); color: #f2c14e; font-size: var(--fs-xs); font-weight: 850; }
+
+/* ───────── v3.32 ───────── */
+/* 모임 화면 오른쪽 위: 디스코드 · 카카오톡 */
+.crew-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); }
+.chbs { display: flex; gap: var(--s2); }
+.chb { display: inline-flex; align-items: center; gap: var(--s2); height: 36px; padding: 0 var(--s4) 0 var(--s3); border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--text-2); font: inherit; font-size: var(--fs-sm); font-weight: 700; text-decoration: none; cursor: pointer; transition: border-color .15s, color .15s, box-shadow .15s; }
+.chb svg { width: 18px; height: 18px; }
+.chb:hover { color: var(--text); box-shadow: var(--shadow); }
+.chb.discord:hover { border-color: #5865f2; } .chb.discord:hover svg { color: #5865f2; }
+.chb.kakao:hover { border-color: #e0b800; } .chb.kakao:hover svg { color: #e0b800; }
+.chb.soon { opacity: .45; cursor: default; }
+/* 준회원에게 잘린 목록 끝 */
+.locked-more { display: grid; gap: var(--s3); }
+.lm-foot { display: flex; align-items: center; justify-content: center; gap: var(--s2); padding: var(--s4); border-radius: var(--r-l); border: 1px dashed var(--line-2); color: var(--text-2); font-size: var(--fs-sm); text-align: center; }
+.lm-foot .icon { flex: none; width: 16px; height: 16px; color: var(--text-3); }
+.lm-foot b { color: var(--text); }
+.rank-list .locked-more { padding: var(--s3); }
+/* 상점: 특별회원 할인 · 할인 전 가격 */
+.shop-head .shop-sale { margin-left: auto; padding: 4px var(--s3); border-radius: var(--r-pill); background: color-mix(in srgb, #9b59b6 16%, transparent); color: #9b59b6; font-size: var(--fs-sm); font-weight: 850; }
+.sc-price s { margin-left: 4px; font-size: var(--fs-xs); color: var(--text-3); font-weight: 600; }
+/* 피스: 숫자 오른쪽에 아이콘 */
+.piece { gap: 4px; }
+.ms-earned em { font-style: normal; font-size: var(--fs-xs); font-weight: 850; color: #b7790b; padding: 2px 6px; border-radius: var(--r-pill); background: color-mix(in srgb, #e0a82e 16%, transparent); }
+.ms-earned small { margin-right: 4px; }
+.piece-ic { filter: none; }

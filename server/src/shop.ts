@@ -10,7 +10,7 @@ import { EARN, SHOP_ITEM, earnedTotal, levelTotal, parseDeco, type Deco, type Ea
 import { dexRows } from './crew.js';
 import { missionPiecesOf } from './missions.js';
 import { HttpError, json, type Env, type Member } from './util.js';
-import { can } from './roles.js';
+import { can, ratesOf } from './roles.js';
 
 const SHOP_CLOSED = '상점은 준비 중입니다.';
 
@@ -52,19 +52,24 @@ async function earned(env: Env, id: string): Promise<Earned> {
   return { games: gr.n, wins: gr.w, crew: gr.c, levels, together: (t.results[0] as { n: number }).n, daily: (d.results[0] as { n: number }).n, missions };
 }
 
-async function state(env: Env, id: string) {
-  const [e, own, m] = await Promise.all([
+/** 단계별 피스 배율·특별회원 할인 (v3.32) */
+const priceFor = (price: number, discount: number) => Math.round(price * (1 - discount));
+
+async function state(env: Env, id: string, m: Pick<Member, 'tier' | 'discord_roles'>) {
+  const [e, own, row] = await Promise.all([
     earned(env, id),
     env.DB.prepare('SELECT item_id AS id, price FROM shop_owned WHERE member_id = ?').bind(id).all<{ id: string; price: number }>(),
     env.DB.prepare('SELECT deco, share_on FROM members WHERE id = ?').bind(id).first<{ deco: string | null; share_on: number }>(),
   ]);
   const spent = own.results.reduce((s, x) => s + x.price, 0);
-  return { balance: earnedTotal(e) - spent, earned: e, spent, owned: own.results.map((x) => x.id), deco: parseDeco(m?.deco), shared: Boolean(m?.share_on) };
+  const rates = ratesOf(m);
+  const total = Math.round(earnedTotal(e) * rates.piece);
+  return { balance: total - spent, earned: e, spent, owned: own.results.map((x) => x.id), deco: parseDeco(row?.deco), shared: Boolean(row?.share_on), rates };
 }
 
 export async function getShop(env: Env, me: Member) {
   await markDaily(env, me.id);
-  return json(await state(env, me.id));
+  return json(await state(env, me.id, me));
 }
 
 export async function buy(req: Request, env: Env, me: Member) {
@@ -72,21 +77,22 @@ export async function buy(req: Request, env: Env, me: Member) {
   const { id } = (await req.json().catch(() => ({}))) as { id?: string };
   const item = id ? SHOP_ITEM[id] : undefined;
   if (!item) throw new HttpError(400, '없는 상품입니다.');
-  const s = await state(env, me.id);
+  const s = await state(env, me.id, me);
   if (s.owned.includes(item.id)) throw new HttpError(409, '이미 가지고 있어요.');
-  if (s.balance < item.price) throw new HttpError(400, `피스가 ${item.price - s.balance}개 모자라요.`);
-  await env.DB.prepare('INSERT OR IGNORE INTO shop_owned (member_id, item_id, price, bought_at) VALUES (?, ?, ?, ?)').bind(me.id, item.id, item.price, Date.now()).run();
+  const price = priceFor(item.price, s.rates.discount);
+  if (s.balance < price) throw new HttpError(400, `피스가 ${price - s.balance}개 모자라요.`);
+  await env.DB.prepare('INSERT OR IGNORE INTO shop_owned (member_id, item_id, price, bought_at) VALUES (?, ?, ?, ?)').bind(me.id, item.id, price, Date.now()).run();
   // 사면 바로 장착
   const deco: Deco = { ...s.deco, [item.slot]: item.id };
   await env.DB.prepare('UPDATE members SET deco = ? WHERE id = ?').bind(JSON.stringify(deco), me.id).run();
-  return json(await state(env, me.id));
+  return json(await state(env, me.id, me));
 }
 
 /** 장착·해제 (가진 것만) */
 export async function equip(req: Request, env: Env, me: Member) {
   if (!can(me, 'shop')) throw new HttpError(403, SHOP_CLOSED);
   const { slot, id } = (await req.json().catch(() => ({}))) as { slot?: ShopSlot; id?: string | null };
-  const s = await state(env, me.id);
+  const s = await state(env, me.id, me);
   if (!slot || !['frame', 'fx', 'name', 'title'].includes(slot)) throw new HttpError(400, '잘못된 칸입니다.');
   const deco: Deco = { ...s.deco };
   if (id) {
@@ -94,7 +100,7 @@ export async function equip(req: Request, env: Env, me: Member) {
     deco[slot] = id;
   } else delete deco[slot];
   await env.DB.prepare('UPDATE members SET deco = ? WHERE id = ?').bind(JSON.stringify(deco), me.id).run();
-  return json(await state(env, me.id));
+  return json(await state(env, me.id, me));
 }
 
 /** 공개 링크 켜기·끄기 */

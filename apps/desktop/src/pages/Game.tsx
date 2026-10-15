@@ -81,7 +81,7 @@ function NoGame({ s }: { s: State }) {
         <span className="k">이번 주 미션 · {ms.filter((m) => m.done).length}/{ms.length || 3}</span>
         {todo ? <>
           <b>{todo.title}</b>
-          <span className="ng-mprog"><span className="bar"><span style={{ width: `${(todo.progress / todo.target) * 100}%` }} /></span><span className="meta">{todo.progress}/{todo.target}</span><span className="rew"><PieceIcon size={14} />{todo.reward}</span></span>
+          <span className="ng-mprog"><span className="bar"><span style={{ width: `${(todo.progress / todo.target) * 100}%` }} /></span><span className="meta">{todo.progress}/{todo.target}</span><span className="rew">{todo.reward}<PieceIcon size={12} /></span></span>
           <span className="go">미션 보기 →</span>
         </> : <><b>{ms.length ? '이번 주 미션을 다 깼어요!' : '불러오는 중…'}</b><span className="go">미션 보기 →</span></>}
       </button>}

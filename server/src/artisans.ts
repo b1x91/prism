@@ -3,10 +3,11 @@
  *  - 챔피언·증강 상세: 그 챔피언(증강)의 장인(마스터)과 장인의 길에 오른 회원 순위
  *  - 랭킹: 챔피언 장인 / 증강 장인 (마스터 수 → 이룬 목표 수)
  */
+import { can, LIMITED } from './roles.js';
 import { augMastery, champMastery, type Mastery } from '../../packages/core/src/mastery.js';
 import type { DexEntry, DexPair } from '../../packages/core/src/history.js';
 import { parseFeat, tallyChallenges, type ChallengeTally, type FeatGame } from '../../packages/core/src/challenges.js';
-import { FACE, json, type Env } from './util.js';
+import { FACE, json, type Env, type Member } from './util.js';
 
 type FeatRow = { member_id: string; championId: number; win: number; kills: number; deaths: number; feats: string };
 
@@ -76,7 +77,7 @@ export async function augmentArtisans(env: Env, aug: number) {
 }
 
 /** 랭킹: 챔피언 장인 / 증강 장인. 회원마다 마스터 수·이룬 목표 수·대표 마스터 */
-export async function artisanRanking(env: Env) {
+export async function artisanRanking(env: Env, me: Member) {
   const [champRows, augRows, pairs, feats] = await env.DB.batch([
     env.DB.prepare('SELECT member_id, champion_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participants GROUP BY member_id, champion_id'),
     env.DB.prepare('SELECT member_id, augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments GROUP BY member_id, augment_id'),
@@ -107,7 +108,9 @@ export async function artisanRanking(env: Env) {
   const augments = tally(augRows.results as Row[], (id, e, p) => augMastery(id, e, p));
   const f = await faces(env, [...new Set([...champions, ...augments].map((x) => x.id))]);
   const put = <T extends { id: string }>(xs: T[]) => xs.map((x) => ({ ...x, nick: f.get(x.id)?.nick ?? '?', skin: f.get(x.id)?.skin ?? null, main: f.get(x.id)?.main ?? null }));
-  return json({ champions: put(champions), augments: put(augments) });
+  const lim = <T>(l: T[]) => (can(me, 'rankingAll') ? l : l.slice(0, LIMITED));
+  const c = put(champions), a = put(augments);
+  return json({ champions: lim(c), augments: lim(a), ...(can(me, 'rankingAll') ? {} : { limited: { champions: c.length, augments: a.length } }) });
 }
 
 function groupPairs(rows: PairRow[]) {

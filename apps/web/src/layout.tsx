@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
-import { AugmentOpen, DiscordGlyph, FacePresence, KakaoGlyph, MatchSource, Gem, Icon, MemberFace, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AugmentOpen, FacePresence, MatchSource, Gem, Icon, MemberFace, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import type { MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -21,9 +21,9 @@ export function Layout() {
         <NavLink to="/" className="brand"><Gem size={28} />Prism</NavLink>
         <nav className="tabs">{NAV.map(([to, label]) => <NavLink key={to} to={to}>{label}</NavLink>)}</nav>
         <span className="sp" />
-        <span className="top-wide"><Dock links={links} compact />
+        <span className="top-wide"><NavLink to="/shop" className="icon-btn top-shop" title="상점" aria-label="상점"><Icon name="bag" /></NavLink>
           <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>
-        {me ? <NavLink to="/me" className="me-btn" title="내 페이지"><FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={30} /></FacePresence><span className="me-txt"><b>{me.nick}</b>{pieces !== null && <small><PieceIcon size={12} />{pieces.toLocaleString()}</small>}</span></NavLink>
+        {me ? <NavLink to="/me" className="me-btn" title="내 페이지"><FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={30} /></FacePresence><span className="me-txt"><b>{me.nick}</b>{pieces !== null && <small>{pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></NavLink>
           : <button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />로그인</button>}
         <button type="button" className="icon-btn menu-btn" aria-label="메뉴 열기" aria-expanded={menu} onClick={() => setMenu(true)}><Icon name="menu" /></button>
       </div></header>
@@ -34,19 +34,6 @@ export function Layout() {
         <span>Prism은 Riot Games의 공식 서비스가 아니며 Riot Games와 무관합니다. League of Legends 및 관련 이미지는 Riot Games의 자산입니다. · <NavLink to="/privacy" className="foot-link">개인정보 처리방침</NavLink></span>
       </div></footer>
     </>
-  );
-}
-
-/** 상점 · 디스코드 · 카카오톡 한 줄 (PC 상단은 아이콘만, 휴대폰 메뉴 아래는 아이콘 + 이름) */
-function Dock({ links, compact, tab }: { links: { discord?: string | null; kakao?: string | null }; compact?: boolean; tab?: number }) {
-  return (
-    <nav className={`dock3 ${compact ? 'compact' : ''}`} aria-label="상점과 모임 채널">
-      <NavLink to="/shop" className="d-shop" title="상점" tabIndex={tab}><Icon name="bag" /><span>상점</span></NavLink>
-      {links.discord ? <a className="d-discord" href={links.discord} target="_blank" rel="noreferrer" title="디스코드" tabIndex={tab}><DiscordGlyph /><span>디스코드</span></a>
-        : <span className="d-discord off" title="디스코드 · 준비 중"><DiscordGlyph /><span>디스코드</span></span>}
-      {links.kakao ? <a className="d-kakao" href={links.kakao} target="_blank" rel="noreferrer" title="카카오톡 오픈채팅" tabIndex={tab}><KakaoGlyph /><span>카카오톡</span></a>
-        : <span className="d-kakao off" title="카카오톡 · 준비 중"><KakaoGlyph /><span>카카오톡</span></span>}
-    </nav>
   );
 }
 
@@ -74,7 +61,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         <nav className="mmenu-nav">{NAV.map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}</NavLink>)}</nav>
         <span className="sp" />
         <div className="mmenu-foot">
-          <Dock links={links} tab={open ? 0 : -1} />
+          <NavLink to="/shop" className="mmenu-shop" tabIndex={open ? 0 : -1}><Icon name="bag" />상점</NavLink>
           <div className="mmenu-row"><span className="k">화면</span><Seg value={theme} options={[['system', '시스템'], ['light', '라이트'], ['dark', '다크']]} onChange={(m) => { setThemeMode(m); setTheme(m); }} /></div>
         </div>
       </aside>

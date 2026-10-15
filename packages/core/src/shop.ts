@@ -86,7 +86,9 @@ export function parseDeco(s: string | null | undefined): Deco {
 export type Earned = { games: number; wins: number; crew: number; levels: number; together: number; daily: number; missions?: number };
 export const earnedTotal = (e: Earned) => e.games * EARN.game + e.wins * EARN.win + e.crew * EARN.crew + e.levels + e.together * EARN.together + e.daily * EARN.daily + (e.missions ?? 0);
 
-export type Shop = { balance: number; earned: Earned; spent: number; owned: string[]; deco: Deco; shared: boolean };
+export type Shop = { balance: number; earned: Earned; spent: number; owned: string[]; deco: Deco; shared: boolean; rates?: import('./api').Rates };
+/** 특별회원 할인 가격 (서버와 같은 계산) */
+export const priceWith = (price: number, discount = 0) => Math.round(price * (1 - discount));
 
 /** 공개 링크로 보는 그 사람의 강점 (모임 정보 없음) */
 export type PublicProfile = {

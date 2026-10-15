@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { AugmentOpen, DiscordGlyph, FacePresence, KakaoGlyph, Icon, MatchNote, MatchSource, MemberFace, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { AugmentOpen, FacePresence, Icon, MatchNote, MatchSource, MemberFace, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail, type Presence } from '@prism/core';
 import { getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
@@ -121,18 +121,16 @@ function App() {
         {up.error && up.info?.available && <span className="side-err l">{up.error}</span>}
         <nav className="side-nav">{NAV.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}</NavLink>)}</nav>
         <span className="sp" />
-        {/* 아래쪽 한 줄: 상점 · 디스코드 · 카카오톡 */}
-        <nav className="side-dock" aria-label="상점과 모임 채널">
+        {/* 아래쪽 한 줄: 상점 · 설정 (디스코드·카카오톡은 모임 화면 오른쪽 위) */}
+        <nav className="side-dock" aria-label="상점과 설정">
           <NavLink to="/shop" className="dock-shop" title="상점"><Icon name="bag" /><span>상점</span></NavLink>
-          <button type="button" className="dock-discord" disabled={!links.discord} onClick={() => links.discord && bridge.openUrl(links.discord)} title="디스코드 열기"><DiscordGlyph /><span>디스코드</span></button>
-          <button type="button" className="dock-kakao" disabled={!links.kakao} onClick={() => links.kakao && bridge.openUrl(links.kakao)} title={links.kakao ? '카카오톡 오픈채팅 열기' : '카카오톡 · 곧 열립니다'}><KakaoGlyph /><span>카카오톡</span></button>
+          <NavLink to="/settings" className="dock-set" title="설정"><Icon name="gear" /><span>설정</span></NavLink>
         </nav>
         {s.me && <div className={`side-me-card ${staff ? 'prism' : ''}`}>
           <NavLink to="/me" className="side-me" title="내 페이지">
             <FacePresence p={presence} title={`${label}${riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}`}><MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} /></FacePresence>
-            <span className="who"><b>{s.me.nick}</b><span className="st pc" title={`보유 ${PIECE}`}>{pieces === null ? '–' : <><PieceIcon size={13} /><b>{pieces.toLocaleString()}</b></>}</span></span>
+            <span className="who"><b>{s.me.nick}</b><span className="st pc" title={`보유 ${PIECE}`}>{pieces === null ? '–' : <><b>{pieces.toLocaleString()}</b><PieceIcon size={12} /></>}</span></span>
           </NavLink>
-          <NavLink to="/settings" className="icon-btn gear" title="설정" aria-label="설정"><Icon name="gear" /></NavLink>
         </div>}
       </aside>
       <main className="main" ref={main}>

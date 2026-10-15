@@ -5,6 +5,7 @@
  */
 import { missionPieces, missionState, type MGame } from '../../packages/core/src/missions.js';
 import { HttpError, json, type Env, type Member } from './util.js';
+import { ratesOf } from './roles.js';
 
 export async function myGamesForMissions(env: Env, id: string): Promise<MGame[]> {
   const r = await env.DB.prepare('SELECT champion_id AS c, win AS w, played_at AS t FROM participants WHERE member_id = ?').bind(id).all<MGame>();
@@ -16,7 +17,15 @@ export async function missionPiecesOf(env: Env, id: string) {
 }
 
 export async function getMissions(env: Env, me: Member) {
-  return json(missionState(await myGamesForMissions(env, me.id)));
+  const st = missionState(await myGamesForMissions(env, me.id));
+  // 피스 배율(정회원 ×1.5 · 운영진 ×2)을 보상에 그대로 반영해서 보여 준다 (상점 잔액과 같은 계산)
+  const r = ratesOf(me).piece;
+  const x = (n: number) => Math.round(n * r);
+  return json({
+    ...st, rate: r, earned: x(st.earned),
+    week: { ...st.week, missions: st.week.missions.map((m) => ({ ...m, reward: x(m.reward) })) },
+    pioneer: st.pioneer.map((p) => ({ ...p, steps: p.steps.map((q) => ({ ...q, reward: x(q.reward) })) })),
+  });
 }
 
 export async function getFavs(env: Env, me: Member) {

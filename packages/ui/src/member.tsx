@@ -7,7 +7,7 @@ import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
   type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
 } from '@prism/core';
-import { AugImg, ChampImg, Empty, Gem, MemberFace, PresenceTag, RoleBadge, Seg, useSkins } from './basics';
+import { AugImg, ChampImg, Empty, Gem, LockedMore, MemberFace, PresenceTag, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
 import { ArtisanRankingView } from './artisan';
 import { Icon } from './icons';
@@ -25,7 +25,7 @@ type RankBy = 'games' | 'winrate' | 'month';
 export function RankingView({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (id: string) => void }) {
   const [by, setBy] = useState<RankBy | 'champ-art' | 'aug-art'>('games');
   const art = by === 'champ-art' || by === 'aug-art';
-  const { data, error } = useLoad<Ranking>(api, art ? null : by === 'month' ? '/api/ranking?period=month' : '/api/ranking');
+  const { data, error } = useLoad<Ranking>(api, art ? null : by === 'month' ? '/api/ranking?period=month' : by === 'winrate' ? '/api/ranking?by=winrate' : '/api/ranking');
   const skins = useSkins();
   const rows = useMemo(() => {
     const r = (data?.rows ?? []).slice();
@@ -43,6 +43,9 @@ export function RankingView({ api, meId, onOpen }: { api: Api; meId?: string; on
       {!art && rows.length > (rows.length >= 3 ? 3 : 0) && <div className="card rank-list">
         {rows.map((r, i) => (rows.length >= 3 && i < 3 ? null : <RankRow key={r.id} r={r} rank={i + 1} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />))}
       </div>}
+      {!art && data?.limited && <LockedMore more={data.limited.total - rows.length}>
+        {data.limited.mine && by !== 'winrate' && <div className="card rank-list"><RankRow r={data.limited.mine} rank={data.limited.mine.rank} by={by as RankBy} me skins={skins} onOpen={onOpen} /></div>}
+      </LockedMore>}
     </div>
   );
 }
@@ -237,7 +240,7 @@ function SynergyCard({ data }: { data: MemberPage }) {
           <div className="duo-fig">
             <small>내 평균 대비</small>
             <b className={t.lift === null || t.n < 3 ? '' : t.lift >= 0 ? 'up' : 'down'}>{t.lift === null || t.n < 3 ? '–' : `${t.lift >= 0 ? '+' : ''}${t.lift.toFixed(1)}%p`}</b>
-            <span>함께 {p(t.n ? t.rate : null)} · 평소 {p(t.myAvg)}</span>
+            <span>{t.n < 10 ? '판이 적어 평균 쪽으로 보정' : `함께 ${t.n}판 기준`}</span>
           </div>
           <div className="duo-fig">
             <small>지금</small>

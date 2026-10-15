@@ -28,7 +28,7 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
     <div className="ms">
       <header className="ms-head">
         <div><h1>미션</h1><p className="meta">안 해 본 챔프, 덜 해 본 역할로 넓혀 보세요. 깨면 {PIECE}가 들어와요.</p></div>
-        <span className="ms-earned"><PieceIcon size={20} /><b>{data.earned.toLocaleString()}</b><small>미션으로 모은 {PIECE}</small></span>
+        <span className="ms-earned"><small>미션으로 모은 {PIECE}</small><b>{data.earned.toLocaleString()}</b><PieceIcon size={18} />{(data.rate ?? 1) > 1 && <em>×{data.rate}</em>}</span>
       </header>
 
       <section className="card pad ms-week">
@@ -91,7 +91,7 @@ function MissionRow({ m }: { m: Mission }) {
         <small className="meta">{m.hint}</small>
         <span className="ms-prog"><span className="ms-bar"><span style={{ width: `${(m.progress / m.target) * 100}%` }} /></span><small>{m.progress}/{m.target}</small></span>
       </span>
-      <span className={`ms-rew ${m.done ? 'got' : ''}`}><PieceIcon size={18} /><b>{m.reward}</b>{m.done && <small>받음</small>}</span>
+      <span className={`ms-rew ${m.done ? 'got' : ''}`}><b>{m.reward}</b><PieceIcon size={16} />{m.done && <small>받음</small>}</span>
     </div>
   );
 }

@@ -2,7 +2,7 @@
  * Prism 회원 전용 기능. 모든 응답은 회원 데이터이므로 로그인한 회원에게만 준다 (CLAUDE.md 2절 11).
  * 집계는 저장하지 않고 원본에서 계산한다.
  */
-import { can, permsOf, topRole } from './roles.js';
+import { can, levelOf, permsOf, ratesOf, topRole } from './roles.js';
 import { FACE, HttpError, canHostScrim, json, type Env, type Member } from './util.js';
 import { adoptProspect } from './prospects.js';
 import { knownFeats, tallyByMember } from './artisans.js';
@@ -35,6 +35,8 @@ export async function getMe(env: Env, me: Member) {
     canScrim: canHostScrim(env, me),
     role: topRole(me),
     perms: permsOf(me),
+    level: Math.min(levelOf(me), 5),
+    rates: ratesOf(me),
     rolesKnown: me.roles_at !== null || me.discord_roles !== null,
     presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }),
   });

@@ -14,7 +14,7 @@ export class ApiError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
-export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; presence?: import('./presence').Presence };
+export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; level?: number; rates?: Rates; presence?: import('./presence').Presence };
 /** 회원 얼굴 재료 (서버 FACE): 대표 스킨, 주 챔피언 */
 export type FaceInfo = { skin?: number | null; main?: number | null };
 export type Note = { id: number; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1; canDelete?: 0 | 1 } & FaceInfo;
@@ -43,11 +43,13 @@ export type Scrims = { size: number; wait: number; now: number; canHost: boolean
 
 /** 포텐 멤버 (회원 전용) */
 export type Prospect = { puuid: string; riotId: string | null; n: number; w: number; queued: number; customs: number; lastAt: number; main: number | null; mates: { nick: string; n: number }[] };
-export type Prospects = { prospects: Prospect[]; queueMin: number };
+export type Prospects = { prospects: Prospect[]; queueMin: number; limited?: { total: number } };
 
 /** 디스코드 역할 (가장 높은 것 하나) 과 앱 기능 권한 */
 export type DiscordRole = { key: string; name: string; color: string; level: number };
-export type Perms = { party: boolean; scrim: boolean; prospects: boolean; moderate: boolean; shop?: boolean };
+export type Perms = { party: boolean; scrim: boolean; prospects: boolean; moderate: boolean; shop?: boolean; prospectsAll?: boolean; rankingAll?: boolean };
+/** 단계별 혜택: 피스 배율 · 도감 경험치 배율 · 상점 할인(특별회원) */
+export type Rates = { piece: number; dexXp: number; discount: number };
 
 /** 지금 디스코드 (서버 위젯) */
 export type VoiceMember = { name: string; avatar: string; muted: boolean; deaf: boolean; memberId: string | null; skin: number | null; main: number | null };
@@ -58,4 +60,4 @@ export type DiscordNow = { enabled: false; invite: string | null } | { enabled: 
 export type Artisan = { id: string; nick: string; master: boolean; done: number; total: number; n: number; w: number; special: boolean } & FaceInfo;
 export type Artisans = { artisans: Artisan[] };
 export type ArtisanRank = { id: string; nick: string; masters: number; masterIds: number[]; caught: number; goals: number; best: { id: number; done: number; w: number } | null } & FaceInfo;
-export type ArtisanRanking = { champions: ArtisanRank[]; augments: ArtisanRank[] };
+export type ArtisanRanking = { champions: ArtisanRank[]; augments: ArtisanRank[]; limited?: { champions: number; augments: number } };

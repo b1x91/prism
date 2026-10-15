@@ -6,7 +6,7 @@
  */
 import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
-  CHAMPIONS, DEX_LEVEL_KO, PIECE, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
+  CHAMPIONS, DEX_LEVEL_KO, PIECE, priceWith, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
   type Api, type Deco, type DexLevel, type PublicProfile, type Shop, type ShopItem, type ShopSlot,
 } from '@prism/core';
 import { ChampImg, Empty, Gem, MemberFace, Toggle, useSkins } from './basics';
@@ -16,18 +16,12 @@ import { Icon } from './icons';
 const SLOTS: ShopSlot[] = ['frame', 'fx', 'name', 'title'];
 const titleOf = (d?: Deco) => (d?.title ? SHOP.find((x) => x.id === d.title)?.name : undefined);
 
-/** 피스 아이콘: 금빛 조각 하나 (한 가지 색 계열, 면 셋으로만 입체감) */
+/** 피스 아이콘: 납작한 금빛 마름모 하나 (가장 단순하게, 숫자 오른쪽에 둔다) */
 export function PieceIcon({ size = 16 }: { size?: number }) {
-  const u = useId().replace(/:/g, '');
   return (
-    <svg className="piece-ic" width={size} height={size} viewBox="0 0 24 24" aria-hidden="true">
-      <defs>
-        <linearGradient id={`${u}g`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#ffe9a3" /><stop offset="1" stopColor="#f2b233" /></linearGradient>
-      </defs>
-      <path d="M12 2 20.5 9 12 22 3.5 9z" fill={`url(#${u}g)`} />
-      <path d="M12 2 20.5 9H3.5z" fill="#fff4c9" opacity=".75" />
-      <path d="M12 22 20.5 9 15 9z" fill="#c98a12" opacity=".55" />
-      <path d="M12 2 20.5 9 12 22 3.5 9z" fill="none" stroke="#b07a10" strokeWidth="1" strokeLinejoin="round" opacity=".7" />
+    <svg className="piece-ic" width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
+      <path d="M8 1.5 14.5 8 8 14.5 1.5 8z" fill="#f2b233" />
+      <path d="M8 1.5 14.5 8H1.5z" fill="#ffd970" />
     </svg>
   );
 }
@@ -50,7 +44,7 @@ export function usePieces(api: Api | null, every = 300_000) {
 
 /** 피스 아이콘 + 숫자 */
 export function Piece({ n, size = 16 }: { n: number; size?: number }) {
-  return <span className="piece"><PieceIcon size={size} /><b>{n.toLocaleString()}</b><small>{PIECE}</small></span>;
+  return <span className="piece"><b>{n.toLocaleString()}</b><PieceIcon size={size} /></span>;
 }
 
 /** 머리 (좌우 끝까지). 꾸밈: 테두리(frame) · 효과(fx) · 이름(name) · 칭호(title) */
@@ -117,8 +111,7 @@ export function ShopView({ api, me, open = true }: { api: Api; me: Me; open?: bo
 }
 
 /** 상점 준비 중 (운영진 외): 흐린 진열장 몇 개 + 모으고 있는 피스 */
-function ShopSoon({ api, me }: { api: Api; me: Me }) {
-  const bal = usePieces(api);
+function ShopSoon({ me }: { api: Api; me: Me }) {
   const tease: Deco[] = [{ frame: 'frame-prism' }, { fx: 'fx-aurora' }, { title: 'title-ruler', name: 'name-gold' }];
   return (
     <section className="shop-soon">
@@ -128,8 +121,7 @@ function ShopSoon({ api, me }: { api: Api; me: Me }) {
       <div className="ss-txt">
         <span className="ss-k">PRISM SHOP</span>
         <h1>상점 준비 중</h1>
-        <p>머리 테두리 · 머리 효과 · 이름 효과 · 칭호를 준비하고 있어요.<br />피스는 지금도 모이고 있으니, 열리면 모은 피스로 바로 꾸밀 수 있어요.</p>
-        <span className="ss-bal"><PieceIcon size={22} /><b>{bal === null ? '–' : bal.toLocaleString()}</b><small>모은 {PIECE}</small></span>
+        <p>머리 테두리 · 머리 효과 · 이름 효과 · 칭호를 준비하고 있어요.<br />{PIECE}는 지금도 모이고 있으니, 열리면 모은 {PIECE}로 바로 꾸밀 수 있어요.</p>
       </div>
     </section>
   );
@@ -152,8 +144,7 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
     <div className="shop">
       <header className="shop-head">
         <h1>상점</h1>
-        <span className="sp" />
-        <span className="shop-wallet" title={`내 ${PIECE}`}><PieceIcon size={22} /><b>{data.balance.toLocaleString()}</b><small>{PIECE}</small></span>
+        {(data.rates?.discount ?? 0) > 0 && <span className="shop-sale">특별회원 {Math.round((data.rates!.discount) * 100)}% 할인</span>}
       </header>
       {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
       <div className="shop-bar">
@@ -173,7 +164,8 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
 }
 
 function ShopCard({ x, me, data, busy, onBuy, onEquip }: { x: ShopItem; me: Me; data: Shop; busy: boolean; onBuy: () => void; onEquip: (on: boolean) => void }) {
-  const own = data.owned.includes(x.id), on = data.deco[x.slot] === x.id, lack = x.price - data.balance;
+  const disc = data.rates?.discount ?? 0, price = priceWith(x.price, disc);
+  const own = data.owned.includes(x.id), on = data.deco[x.slot] === x.id, lack = price - data.balance;
   // 진열: 그 상품 하나만 무대 위에 (다른 꾸밈은 빼서 상품마다 다르게 보이게)
   const look: Deco = { [x.slot]: x.id };
   return (
@@ -189,7 +181,7 @@ function ShopCard({ x, me, data, busy, onBuy, onEquip }: { x: ShopItem; me: Me; 
         <div className="sc-act">
           {own
             ? <button type="button" className={`btn sm ${on ? '' : 'primary'}`} disabled={busy} onClick={() => onEquip(!on)}>{on ? '해제' : '장착'}</button>
-            : <><span className={`sc-price ${lack > 0 ? 'lack' : ''}`}><PieceIcon size={18} /><b>{x.price.toLocaleString()}</b></span>
+            : <><span className={`sc-price ${lack > 0 ? 'lack' : ''}`}><b>{price.toLocaleString()}</b><PieceIcon size={16} />{disc > 0 && <s>{x.price.toLocaleString()}</s>}</span>
               <button type="button" className="btn sm primary" disabled={busy || lack > 0} onClick={onBuy}>{lack > 0 ? `${lack.toLocaleString()} 부족` : '구매'}</button></>}
         </div>
       </div>

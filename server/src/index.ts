@@ -62,8 +62,8 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && pathname === '/api/board') return board(env, me);
   if (m === 'POST' && pathname === '/api/tips') return addTip(req, env, me);
   if (m === 'GET' && pathname === '/api/notes') return listNotes(env, me);
-  if (m === 'GET' && pathname === '/api/ranking/artisans') return artisanRanking(env);
-  if (m === 'GET' && pathname === '/api/ranking') return ranking(env, new URL(req.url).searchParams.get('period'));
+  if (m === 'GET' && pathname === '/api/ranking/artisans') return artisanRanking(env, me);
+  if (m === 'GET' && pathname === '/api/ranking') { const q = new URL(req.url).searchParams; return ranking(env, me, q.get('period'), q.get('by')); }
   if (m === 'POST' && pathname === '/api/notes') return addNote(req, env, me);
   if (m === 'GET' && pathname === '/api/parties') return listParties(env, me);
   if (m === 'POST' && pathname === '/api/parties') return openParty(req, env, me);

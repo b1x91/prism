@@ -106,6 +106,8 @@ export function missionPieces(all: MGame[], now = Date.now()): number {
 export type MissionState = {
   week: { start: number; end: number; missions: Mission[]; bonus: number; top: RoleShare | null };
   shares: RoleShare[]; pioneer: Pioneer[]; earned: number;
+  /** 피스 배율 (서버가 보상에 이미 곱해서 보낸다) */
+  rate?: number;
   /** 이번 주 '처음 해 보는' 미션 역할에서 아직 안 해 본 챔프 */
   suggest: number[];
 };
