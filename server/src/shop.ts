@@ -93,7 +93,7 @@ export async function equip(req: Request, env: Env, me: Member) {
   if (!can(me, 'shop')) throw new HttpError(403, SHOP_CLOSED);
   const { slot, id } = (await req.json().catch(() => ({}))) as { slot?: ShopSlot; id?: string | null };
   const s = await state(env, me.id, me);
-  if (!slot || !['frame', 'fx', 'name', 'title'].includes(slot)) throw new HttpError(400, '잘못된 칸입니다.');
+  if (!slot || !['bg', 'frame', 'fx', 'name', 'title'].includes(slot)) throw new HttpError(400, '잘못된 칸입니다.');
   const deco: Deco = { ...s.deco };
   if (id) {
     if (SHOP_ITEM[id]?.slot !== slot || !s.owned.includes(id)) throw new HttpError(400, '가지고 있지 않은 꾸밈입니다.');
@@ -103,18 +103,39 @@ export async function equip(req: Request, env: Env, me: Member) {
   return json(await state(env, me.id, me));
 }
 
-/** 공개 링크 켜기·끄기 */
+/** 공유 링크 번호: 없으면 100~999 중 비어 있는 것 하나 (한 번 받으면 바뀌지 않는다) */
+async function shareCode(env: Env, id: string): Promise<number> {
+  const row = await env.DB.prepare('SELECT share_code AS c FROM members WHERE id = ?').bind(id).first<{ c: number | null }>();
+  if (row?.c) return row.c;
+  const used = new Set((await env.DB.prepare('SELECT share_code AS c FROM members WHERE share_code IS NOT NULL').all<{ c: number }>()).results.map((x) => x.c));
+  const free = Array.from({ length: 900 }, (_, i) => 100 + i).filter((c) => !used.has(c));
+  // 다 차면 네 자리로 넓힌다
+  const pool = free.length ? free : Array.from({ length: 9000 }, (_, i) => 1000 + i).filter((c) => !used.has(c));
+  for (let tries = 0; tries < 5; tries++) {
+    const c = pool[Math.floor(Math.random() * pool.length)];
+    const r = await env.DB.prepare('UPDATE members SET share_code = ? WHERE id = ? AND share_code IS NULL').bind(c, id).run().catch(() => null);
+    if (r?.meta.changes) return c;
+    const again = await env.DB.prepare('SELECT share_code AS c FROM members WHERE id = ?').bind(id).first<{ c: number | null }>();
+    if (again?.c) return again.c;
+  }
+  throw new HttpError(500, '링크 번호를 만들지 못했어요. 다시 눌러 주세요.');
+}
+
+/** 공개 링크 켜기·끄기. 켜면 짧은 번호를 함께 준다 */
 export async function setShare(req: Request, env: Env, me: Member) {
   const { on } = (await req.json().catch(() => ({}))) as { on?: boolean };
   await env.DB.prepare('UPDATE members SET share_on = ? WHERE id = ?').bind(on ? 1 : 0, me.id).run();
-  return json({ shared: Boolean(on) });
+  return json({ shared: Boolean(on), code: on ? await shareCode(env, me.id) : null });
 }
 
 /** 공개 링크: 로그인 없이. 본인이 켰을 때만, 모임 정보(순위·함께한 회원·최근 판·역할) 없이 강점만 */
-export async function publicProfile(env: Env, id: string) {
-  const m = await env.DB.prepare('SELECT id, nick, intro, profile_skin AS skin, deco, share_on FROM members WHERE id = ?')
-    .bind(id).first<{ id: string; nick: string; intro: string; skin: number | null; deco: string | null; share_on: number }>();
+export async function publicProfile(env: Env, key: string) {
+  // 짧은 번호(/p/123) 또는 예전 긴 주소(디스코드 ID)
+  const byCode = /^\d{3,4}$/.test(key);
+  const m = await env.DB.prepare(`SELECT id, nick, intro, profile_skin AS skin, deco, share_on FROM members WHERE ${byCode ? 'share_code' : 'id'} = ?`)
+    .bind(byCode ? Number(key) : key).first<{ id: string; nick: string; intro: string; skin: number | null; deco: string | null; share_on: number }>();
   if (!m || !m.share_on) throw new HttpError(404, '공개되지 않은 페이지입니다.');
+  const id = m.id;
   const [total, champs, feats] = await env.DB.batch([
     env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w, COALESCE(SUM(kills), 0) AS k, COALESCE(SUM(deaths), 0) AS d, COALESCE(SUM(assists), 0) AS a FROM participants WHERE member_id = ?').bind(id),
     env.DB.prepare('SELECT champion_id AS id, COUNT(*) AS n, SUM(win) AS w, SUM(kills) AS k, SUM(deaths) AS d, SUM(assists) AS a FROM participants WHERE member_id = ? GROUP BY champion_id ORDER BY n DESC').bind(id),

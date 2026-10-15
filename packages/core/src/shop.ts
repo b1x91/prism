@@ -1,7 +1,7 @@
 /**
  * 피스(Prism 화폐)와 상점 (CLAUDE.md v3.24). 서버와 화면이 같은 표를 쓴다.
  *  - 버는 법: 기록된 판 · 이긴 판 · 모임 판(회원 2명 이상) · 도감 레벨 오르기 · 미션 · 매일 첫 접속 (함께 해요 참여는 예전 기록만)
- *  - 쓰는 곳: 내 페이지 꾸미기 (머리 테두리 · 머리 효과 · 이름 효과 · 칭호)
+ *  - 쓰는 곳: 내 페이지 꾸미기 (배경 · 머리 테두리 · 머리 효과 · 이름 효과 · 칭호). 배경은 랭킹의 내 줄에도 깔린다 (v3.34)
  * 숫자는 여기 한 곳에서 바꾼다. 번 피스는 기록에서 늘 다시 계산하므로 기준을 바꾸면 지난 기록에도 적용된다.
  */
 import type { DexLevel } from './mastery';
@@ -21,14 +21,21 @@ export const EARN = {
 export const LEVEL_REWARD: Record<DexLevel, number> = { 0: 0, 1: 5, 2: 10, 3: 20, 4: 30, 5: 100 };
 export const levelTotal = (l: DexLevel) => ([1, 2, 3, 4, 5] as DexLevel[]).filter((x) => x <= l).reduce<number>((s, x) => s + LEVEL_REWARD[x], 0);
 
-export type ShopSlot = 'frame' | 'fx' | 'name' | 'title';
-export const SLOT_KO: Record<ShopSlot, string> = { frame: '머리 테두리', fx: '머리 효과', name: '이름 효과', title: '칭호' };
+export type ShopSlot = 'bg' | 'frame' | 'fx' | 'name' | 'title';
+export const SLOT_KO: Record<ShopSlot, string> = { bg: '배경', frame: '머리 테두리', fx: '머리 효과', name: '이름 효과', title: '칭호' };
 export type ShopRarity = 'common' | 'rare' | 'epic' | 'legendary';
 export const RARITY_SHOP_KO: Record<ShopRarity, string> = { common: '일반', rare: '희귀', epic: '영웅', legendary: '전설' };
 export type ShopItem = { id: string; slot: ShopSlot; name: string; price: number; desc: string; rarity: ShopRarity };
 
 const it = (id: string, slot: ShopSlot, rarity: ShopRarity, price: number, name: string, desc: string): ShopItem => ({ id, slot, rarity, price, name, desc });
 export const SHOP: ShopItem[] = [
+  // 배경: 머리 뒤 그림 대신 깔리는 장면 (얼굴은 그대로 대표 스킨). 랭킹의 내 줄에도
+  it('bg-dawn', 'bg', 'common', 300, '새벽 다리', '남색 하늘 끝이 분홍빛으로 밝아 온다'),
+  it('bg-abyss', 'bg', 'common', 300, '울부짖는 심연', '차가운 푸른 안개가 깔린 다리'),
+  it('bg-dusk', 'bg', 'common', 350, '노을 협곡', '붉은 노을이 지평선에 걸린다'),
+  it('bg-starry', 'bg', 'rare', 600, '별 내리는 밤', '깊은 밤하늘에 별과 성운이 반짝인다'),
+  it('bg-magma', 'bg', 'rare', 650, '용암 균열', '검은 바위 틈으로 용암이 숨 쉰다'),
+  it('bg-crystal', 'bg', 'epic', 1000, '수정 동굴', '푸른 수정 결정 사이로 빛이 스친다'),
   // 머리 테두리: 얼굴 테두리 + 머리 아래 빛 띠
   it('frame-silver', 'frame', 'common', 200, '은빛 테두리', '단정한 은빛으로 얼굴을 두른다'),
   it('frame-gold', 'frame', 'rare', 400, '금빛 테두리', '묵직한 금빛 테두리와 금빛 띠'),
@@ -104,4 +111,5 @@ export type PublicProfile = {
 
 /** 공개 웹 주소 (공유 링크는 웹으로: 앱이 없어도 열린다) */
 export const SITE_URL = 'https://przm.web.app';
-export const shareUrl = (id: string) => `${SITE_URL}/p/${encodeURIComponent(id)}`;
+/** 공유 링크: 짧은 번호 (`/p/123`, v3.34) */
+export const shareUrl = (code: string | number) => `${SITE_URL}/p/${encodeURIComponent(String(code))}`;

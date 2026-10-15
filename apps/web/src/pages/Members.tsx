@@ -32,7 +32,7 @@ export function MemberPage() {
   return (
     <section className="section tight"><div className="wrap">
       <MemberView key={target} api={api} id={target} onChampion={(c) => nav(`/champions/${c}`)}
-        actions={target === me.id ? <><button type="button" className="btn sm primary" onClick={() => nav('/shop')}><Icon name="bag" />상점</button><button type="button" className="btn sm" onClick={logout}>로그아웃</button></> : undefined} />
+        actions={target === me.id ? <button type="button" className="btn sm" onClick={logout}>로그아웃</button> : undefined} />
     </div></section>
   );
 }

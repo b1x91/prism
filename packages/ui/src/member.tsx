@@ -13,7 +13,7 @@ import { ArtisanRankingView } from './artisan';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { RecentGames } from './game';
-import { ProfileHero, ShareButton } from './shop';
+import { BgScene, ProfileHero, ShareButton } from './shop';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
@@ -53,8 +53,10 @@ export function RankingView({ api, meId, onOpen }: { api: Api; meId?: string; on
 function Podium({ r, rank, by, skins, onOpen }: { r: RankingRow; rank: number; by: RankBy; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
   const art = r.skin && skins?.[r.skin] ? skins[r.skin].splash : r.mainChampion ? cdragon(CHAMPIONS[r.mainChampion]?.splash) : '';
   return (
-    <button type="button" className={`pod p${rank}`} onClick={() => onOpen(r.id)}>
-      {art && <img className="bg" src={art} alt="" loading="lazy" />}
+    <button type="button" className={`pod p${rank} ${r.bg ? 'has-bg' : ''}`} onClick={() => onOpen(r.id)}>
+      {/* 산 배경이 있으면 그 장면 + 얼굴, 없으면 대표 스킨 그림 */}
+      {r.bg ? <><BgScene id={r.bg} /><span className="pod-face"><MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={64} /></span></>
+        : art && <img className="bg" src={art} alt="" loading="lazy" />}
       <span className="place">{rank === 1 && <Gem size={18} src="/brand/prism-32.png" />}{rank}위</span>
       <span className="nm">{r.nick}</span>
       <span className="st"><b>{by === 'winrate' ? pct(r.w, r.n) : `${r.n}판`}</b><span>{by === 'winrate' ? `${r.n}판` : `승률 ${pct(r.w, r.n)}`}</span></span>
@@ -64,7 +66,8 @@ function Podium({ r, rank, by, skins, onOpen }: { r: RankingRow; rank: number; b
 
 function RankRow({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: number; by: RankBy; me: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
   return (
-    <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 ? 'first' : ''}`} onClick={() => onOpen(r.id)}>
+    <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 ? 'first' : ''} ${r.bg ? 'has-bg' : ''}`} onClick={() => onOpen(r.id)}>
+      {r.bg && <BgScene id={r.bg} />}
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={40} />
       <span className="who"><b>{r.nick}</b>{r.mainChampion ? <span className="meta">주 챔프 {CHAMPIONS[r.mainChampion]?.name}</span> : null}</span>

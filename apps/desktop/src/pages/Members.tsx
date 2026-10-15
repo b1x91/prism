@@ -24,8 +24,7 @@ export function MemberPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   const nav = useNavigate();
   if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="회원 페이지" />;
   const target = id ?? s.me.id;
-  return <MemberView key={target} api={api} id={target} onChampion={(c) => nav(`/champions/${c}`)}
-    actions={target === s.me.id ? <button type="button" className="btn sm primary" onClick={() => nav('/shop')}><Icon name="bag" />상점</button> : undefined} />;
+  return <MemberView key={target} api={api} id={target} onChampion={(c) => nav(`/champions/${c}`)} />;
 }
 
 export function ShopPage({ s, onLogin }: { s: State; onLogin: () => void }) {

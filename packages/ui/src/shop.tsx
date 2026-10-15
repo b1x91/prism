@@ -13,7 +13,7 @@ import { ChampImg, Empty, Gem, MemberFace, Toggle, useSkins } from './basics';
 import { useLoad } from './crew';
 import { Icon } from './icons';
 
-const SLOTS: ShopSlot[] = ['frame', 'fx', 'name', 'title'];
+const SLOTS: ShopSlot[] = ['bg', 'frame', 'fx', 'name', 'title'];
 const titleOf = (d?: Deco) => (d?.title ? SHOP.find((x) => x.id === d.title)?.name : undefined);
 
 /** 피스 아이콘: 납작한 금빛 마름모 하나 (가장 단순하게, 숫자 오른쪽에 둔다) */
@@ -56,10 +56,11 @@ export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, ac
 }) {
   const skins = useSkins();
   const title = titleOf(deco);
-  // 배경: 넘겨준 그림 → 대표 스킨 → 주 챔피언
-  const bg = stage ? '' : art || (skin && skins?.[skin]?.splash) || (champion ? cdragon(CHAMPIONS[champion]?.splash) : '');
+  // 배경: 산 배경(bg) → 넘겨준 그림 → 대표 스킨 → 주 챔피언. 산 배경이 있으면 얼굴(대표 스킨)과 겹치지 않는다
+  const bg = stage || deco?.bg ? '' : art || (skin && skins?.[skin]?.splash) || (champion ? cdragon(CHAMPIONS[champion]?.splash) : '');
   return (
-    <header className={`phero ${mini ? 'mini' : ''} ${stage ? 'stage' : ''} ${deco?.frame ?? ''} ${deco?.fx ?? ''}`}>
+    <header className={`phero ${mini ? 'mini' : ''} ${stage ? 'stage' : ''} ${deco?.bg ? 'has-bg' : ''} ${deco?.frame ?? ''} ${deco?.fx ?? ''}`}>
+      {deco?.bg && <BgScene id={deco.bg} />}
       {bg && <img className="phero-bg" alt="" src={bg} />}
       {deco?.fx && <span className="phero-fx" aria-hidden="true">{Array.from({ length: 14 }, (_, i) => <i key={i} />)}</span>}
       <div className="phero-in">
@@ -80,17 +81,28 @@ export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, ac
   );
 }
 
-/** 공유 버튼: 처음 누르면 공개를 켜고 링크를 복사한다 */
+/** 산 배경 장면 (머리·랭킹 줄 공용). 그림 파일 없이 CSS 로만 그린다 */
+export function BgScene({ id }: { id: string }) {
+  return <span className={`bgx ${id}`} aria-hidden="true">{Array.from({ length: 6 }, (_, i) => <i key={i} />)}</span>;
+}
+
+/** 공유 버튼: 누르면 공개를 켜고 짧은 링크(/p/123)를 복사한다 */
 export function ShareButton({ api, id, shared, onChange }: { api: Api; id: string; shared: boolean; onChange?: (on: boolean) => void }) {
   const [done, setDone] = useState(false);
   const [open, setOpen] = useState(false);
+  const [err, setErr] = useState('');
   const copy = async () => {
-    if (!shared) { await api.post('/api/me/share', { on: true }).catch(() => {}); onChange?.(true); }
-    try { await navigator.clipboard.writeText(shareUrl(id)); setDone(true); setTimeout(() => setDone(false), 2000); } catch { /* 클립보드 막힘 */ }
+    setErr('');
+    try {
+      const r = await api.post<{ shared: boolean; code: number | null }>('/api/me/share', { on: true });
+      if (!shared) onChange?.(true);
+      await navigator.clipboard.writeText(shareUrl(r.code ?? id));
+      setDone(true); setTimeout(() => setDone(false), 2000);
+    } catch (e) { setErr(e instanceof Error ? e.message : '복사하지 못했어요'); }
   };
   return (
     <span className="share">
-      <button type="button" className="btn sm" onClick={copy}><Icon name={done ? 'check' : 'link'} />{done ? '링크 복사됨' : '공유 링크'}</button>
+      <button type="button" className="btn sm" onClick={copy} title={err || undefined}><Icon name={done ? 'check' : 'link'} />{done ? '링크 복사됨' : err ? '다시 눌러 주세요' : '공유 링크'}</button>
       {shared && <button type="button" className="btn sm ghost" onClick={() => setOpen(!open)} aria-expanded={open}>공개 중</button>}
       {open && shared && <span className="share-pop">
         <span className="meta">로그인하지 않은 사람도 이 링크로 내 강점(판수·승률·잘하는 챔프·마스터·활약)을 볼 수 있어요. 모임 정보는 보이지 않아요.</span>
@@ -112,7 +124,7 @@ export function ShopView({ api, me, open = true }: { api: Api; me: Me; open?: bo
 
 /** 상점 준비 중 (운영진 외): 흐린 진열장 몇 개 + 모으고 있는 피스 */
 function ShopSoon({ me }: { api: Api; me: Me }) {
-  const tease: Deco[] = [{ frame: 'frame-prism' }, { fx: 'fx-aurora' }, { title: 'title-ruler', name: 'name-gold' }];
+  const tease: Deco[] = [{ frame: 'frame-prism' }, { bg: 'bg-crystal' }, { title: 'title-ruler', name: 'name-gold' }];
   return (
     <section className="shop-soon">
       <div className="ss-stage" aria-hidden="true">
@@ -121,7 +133,7 @@ function ShopSoon({ me }: { api: Api; me: Me }) {
       <div className="ss-txt">
         <span className="ss-k">PRISM SHOP</span>
         <h1>상점 준비 중</h1>
-        <p>머리 테두리 · 머리 효과 · 이름 효과 · 칭호를 준비하고 있어요.<br />{PIECE}는 지금도 모이고 있으니, 열리면 모은 {PIECE}로 바로 꾸밀 수 있어요.</p>
+        <p>배경 · 머리 테두리 · 머리 효과 · 이름 효과 · 칭호를 준비하고 있어요.<br />{PIECE}는 지금도 모이고 있으니, 열리면 모은 {PIECE}로 바로 꾸밀 수 있어요.</p>
       </div>
     </section>
   );
