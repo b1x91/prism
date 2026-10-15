@@ -168,7 +168,7 @@ img.champ { object-view-box: inset(4.5%); }
 .banner::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(7, 9, 15, .94) 0%, rgba(7, 9, 15, .65) 45%, rgba(7, 9, 15, .1) 100%), linear-gradient(0deg, rgba(7, 9, 15, .6), transparent 50%); }
 .banner .eyebrow { font-size: var(--fs-sm); font-weight: 600; color: rgba(255, 255, 255, .7); }
 .banner h1 { margin: var(--s1) 0 var(--s3); font-size: var(--fs-d1); font-weight: 850; letter-spacing: -.03em; line-height: 1.1; }
-.banner .actions { position: absolute; top: var(--s5); right: var(--s5); display: flex; gap: var(--s2); }
+.banner .actions { position: absolute; top: var(--s5); right: var(--s5); display: flex; align-items: center; gap: var(--s2); }
 .banner .btn { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .18); color: #fff; backdrop-filter: blur(8px); }
 .banner .btn:hover { background: rgba(255, 255, 255, .2); }
 @media (max-width: 640px) { .banner { min-height: 200px; padding: var(--s5); } .banner h1 { font-size: var(--fs-2xl); } }
@@ -861,8 +861,7 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .dx .q { font-size: var(--fs-xl); } .dxe-pic .q { font-size: 56px; }
 .dx.unk .nm { color: var(--text-3); letter-spacing: .1em; }
 
-.dex-entry { position: sticky; top: var(--s4); padding: var(--s4) var(--s4) var(--s8); max-height: calc(100vh - var(--s8)); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; scroll-padding-bottom: var(--s8); }
-.dex-entry::after { content: ""; display: block; height: var(--s5); }
+.dex-entry { position: sticky; top: var(--s4); padding: var(--s4); }
 .dex-entry::-webkit-scrollbar { display: none; }
 .dex-entry .dex-close, .dex-scrim { display: none; }
 .dxe { display: grid; gap: var(--s3); }
@@ -1913,7 +1912,8 @@ button.ga:hover { background: var(--surface-2); }
 .adet-txt { min-width: 0; display: grid; gap: var(--s2); }
 .adet-stage h1 { margin: 0; display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-d1); font-weight: 900; letter-spacing: -.03em; line-height: 1.1; }
 .adet-stage .note { margin: 0; color: rgba(255, 255, 255, .78); font-size: var(--fs-md); }
-.adet-back { position: absolute; top: var(--s4); right: var(--s4); background: rgba(255, 255, 255, .12) !important; border-color: rgba(255, 255, 255, .2) !important; color: #fff !important; }
+.adet-corner { position: absolute; top: var(--s4); right: var(--s4); display: flex; align-items: center; gap: var(--s2); }
+.adet-back { background: rgba(255, 255, 255, .12) !important; border-color: rgba(255, 255, 255, .2) !important; color: #fff !important; }
 .adet-body { display: grid; gap: var(--s4); padding: var(--s5) var(--s6) var(--s6); }
 .adet-body .desc { margin: 0; color: var(--text-2); font-size: var(--fs-md); line-height: 1.75; white-space: pre-line; }
 .adet-facts { display: flex; gap: var(--s6); }
@@ -2223,3 +2223,11 @@ button.ga:hover { background: var(--surface-2); }
 .art2-none { margin: 0; padding: var(--s4); border-radius: var(--r-m); background: var(--surface-2); color: var(--text-3); font-size: var(--fs-sm); word-break: keep-all; }
 @media (max-width: 720px) { .art2 { grid-template-columns: 1fr; } .art2-hall { padding: var(--s4); } .art2-road { padding: var(--s4); } }
 @media (prefers-reduced-motion: reduce) { .art2-plaque.on .art2-ring { animation: none; } }
+
+/* 어두운 배너 구석의 좋아요: 옆 버튼과 같은 높이의 반투명 알약 (하트 + 좋아한 수). 터지는 움직임은 그대로 */
+.banner .actions .u022, .adet-corner .u022 { --k: .24; margin: 0; gap: 0; height: 32px; padding: 0 var(--s3) 0 var(--s1); border-radius: var(--r-pill); background: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); color: #fff; backdrop-filter: blur(8px); }
+.banner .actions .u022-btn, .adet-corner .u022-btn { background: transparent; color: #fff; box-shadow: none; }
+.banner .actions .u022.is-on .u022-btn, .adet-corner .u022.is-on .u022-btn { box-shadow: none; }
+.banner .actions .u022.is-on, .adet-corner .u022.is-on { background: rgba(255, 77, 109, .18); box-shadow: inset 0 0 0 1px rgba(255, 122, 147, .45); }
+.banner .actions .u022-o, .adet-corner .u022-o { stroke-width: 3.6; }
+.banner .actions .u022-meta, .adet-corner .u022-meta { font-size: var(--fs-sm); }

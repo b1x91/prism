@@ -52,22 +52,27 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { d
   const [sel, setSel] = useState<Record<Kind, number | null>>({ champions: null, augments: null });
   const [sheet, setSheet] = useState(false); // 좁은 화면: 고르면 아래에서 설명이 올라온다
   const entry = useRef<HTMLElement>(null);
-  // 옆 설명 칸은 화면(스크롤 영역)에 딱 맞는 높이로 — 위 막대·창 높이가 달라도 맨 아래까지 스크롤된다
+  // 옆 설명 칸: 칸 안에 따로 스크롤을 두지 않는다. 페이지와 함께 내려가다가 칸의 끝이 화면 아래에 닿으면 멈춘다
+  // (칸이 화면보다 길면 top 을 음수로 — 어느 위치에서든 끝까지 볼 수 있다)
   useEffect(() => {
     const el = entry.current;
     if (!el) return;
     const fit = () => {
+      el.style.top = '';
       const cs = getComputedStyle(el);
-      if (cs.position !== 'sticky') { el.style.maxHeight = ''; return; }
+      if (cs.position !== 'sticky') return;
       let sp: HTMLElement | null = el.parentElement;
       while (sp && !/(auto|scroll)/.test(getComputedStyle(sp).overflowY)) sp = sp.parentElement;
-      const box = sp ? sp.getBoundingClientRect() : { top: 0, bottom: innerHeight };
-      const top = Math.max(0, box.top) + (parseFloat(cs.top) || 0);
-      el.style.maxHeight = `${Math.max(240, Math.min(innerHeight, box.bottom) - top - 16)}px`;
+      const view = sp ? sp.clientHeight : innerHeight;
+      const base = parseFloat(cs.top) || 0;
+      const gap = 16;
+      el.style.top = `${Math.min(base, view - el.offsetHeight - gap)}px`;
     };
     fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
     addEventListener('resize', fit);
-    return () => removeEventListener('resize', fit);
+    return () => { ro.disconnect(); removeEventListener('resize', fit); };
   }, []);
 
   const ids = kind === 'champions' ? CHAMP_IDS : AUG_IDS;

@@ -98,10 +98,11 @@ export function ChampBanner({ id, eyebrow, actions, children }: { id: number; ey
   return (
     <div className="banner">
       <img className="bg" alt="" src={cdragon(c.splash)} />
-      {actions && <div className="actions">{actions}</div>}
+      {/* 오른쪽 위 구석: 좋아요 + 페이지 버튼 */}
+      <div className="actions"><FavStar kind="champ" id={id} />{actions}</div>
       <div>
         {eyebrow && <div className="eyebrow">{eyebrow}</div>}
-        <h1>{c.name}<FavStar kind="champ" id={id} /></h1>
+        <h1>{c.name}</h1>
         <div className="row wrapr" style={{ gap: 8 }}>{tags.map((t) => <span key={t} className="pill dark">{t}</span>)}</div>
         {children}
       </div>

@@ -21,6 +21,9 @@ const err = (e: unknown) => new ApiError(0, typeof e === 'string' ? e : e instan
 export const bridge = {
   lcuStatus: () => call<{ client: boolean; inGame: boolean }>('lcu_status'),
   discordRunning: () => call<boolean>('discord_running'),
+  bringToFront: () => call<null>('bring_to_front'),
+  toastGet: () => call<ToastMsg | null>('toast_get'),
+  toastClose: () => call<null>('toast_close'),
   lcuGet: <T = any>(path: string) => call<T>('lcu_get', { path }).catch((e) => { throw err(e); }),
   session: () => call<{ configured: boolean; loggedIn: boolean }>('session'),
   login: () => call<void>('login').catch((e) => { throw err(e); }),
@@ -50,3 +53,6 @@ export const api: Api = {
   post: (path, body) => call('api', { method: 'POST', path, body: body ?? {} }).catch((e) => { throw err(e); }) as any,
   del: (path) => call('api', { method: 'DELETE', path }).catch((e) => { throw err(e); }) as any,
 };
+
+/** 오른쪽 아래 알림 (Rust toast.rs) */
+export type ToastMsg = { title: string; body: string; kind: 'info' | 'ok' | 'busy' | 'warn'; at: number };

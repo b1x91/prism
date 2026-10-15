@@ -174,8 +174,9 @@ impl Matcher {
                 }
             }
         }
-        // 덜 틀린 것 → 긴 이름 우선, 겹치면 버림
-        hits.sort_by(|a, b| a.dist.cmp(&b.dist).then(b.len.cmp(&a.len)));
+        // 더 길게 맞는 것 → 덜 틀린 것 우선, 겹치면 버림
+        // ("삼급 조준경 부착"을 똑같이 맞는 짧은 "조준경 부착"이 아니라 "상급 조준경 부착"으로)
+        hits.sort_by(|a, b| b.len.cmp(&a.len).then(a.dist.cmp(&b.dist)));
         let mut taken: Vec<(usize, usize)> = Vec::new();
         hits.into_iter()
             .filter(|h| {
@@ -329,6 +330,19 @@ mod tests {
             ];
             assert_eq!(m.find(&lines, 1800.0), vec![id_of("위력 추구"), id_of("날쌘걸음"), id_of("신난다!")], "{mid}");
         }
+    }
+
+    #[test]
+    fn 긴_이름을_짧은_이름보다_먼저() {
+        let m = Matcher::from_json(DATA);
+        for t in [["상급", "조준경", "부착"], ["삼급", "조준경", "부착"], ["상급", "조준경", "부칙"]] {
+            let line: Vec<Word> = t.iter().enumerate().map(|(i, x)| w(x, 170.0 + i as f32 * 70.0, 300.0)).collect();
+            assert_eq!(m.find(&[line], 1800.0), vec![id_of("상급 조준경 부착")], "{t:?}");
+        }
+        let line = vec![w("최상급", 170.0, 300.0), w("조준경", 260.0, 300.0), w("부착", 330.0, 300.0)];
+        assert_eq!(m.find(&[line], 1800.0), vec![id_of("최상급 조준경 부착")]);
+        let line = vec![w("조준경", 260.0, 300.0), w("부착", 330.0, 300.0)];
+        assert_eq!(m.find(&[line], 1800.0), vec![id_of("조준경 부착")]);
     }
 
     #[test]

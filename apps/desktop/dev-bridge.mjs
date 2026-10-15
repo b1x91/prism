@@ -71,6 +71,8 @@ async function login() {
 const CMD = {
   lcu_status: () => ({ client: scene !== 'no-client', inGame: scene === 'in-game' }),
   discord_running: () => process.env.DISCORD !== '0',
+  bring_to_front: () => null,
+  toast_get: () => null,
   lcu_get: ({ path }) => lcu(path),
   session: () => ({ configured: true, loggedIn: Boolean(token) }),
   login,

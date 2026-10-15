@@ -30,9 +30,9 @@ pub fn managed() -> bool {
 
 #[derive(Serialize, Clone)]
 pub struct Info {
-    current: String,
-    latest: String,
-    available: bool,
+    pub current: String,
+    pub latest: String,
+    pub available: bool,
     notes: String,
     /// 새 버전을 받아 두어 바로 적용할 수 있다
     ready: bool,

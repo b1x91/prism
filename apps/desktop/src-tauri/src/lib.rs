@@ -8,10 +8,10 @@ mod server;
 mod update;
 mod vision;
 mod winstate;
+mod toast;
 
 use std::sync::Arc;
 use tauri::menu::{Menu, MenuItem};
-use tauri::Emitter;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{Manager, State, WindowEvent};
 use tauri_plugin_autostart::{MacosLauncher, ManagerExt};
@@ -114,6 +114,78 @@ fn refresh_tray() {
     }
 }
 
+/// 앱 창을 맨 앞으로 (챔프 선택에 들어가는 순간). 윈도우가 포커스 뺏기를 막으므로 잠깐 '항상 위'로 올렸다 내린다
+#[tauri::command]
+fn bring_to_front(handle: tauri::AppHandle) {
+    if let Some(w) = handle.get_webview_window("main") {
+        let _ = w.show();
+        let _ = w.unminimize();
+        let _ = w.set_always_on_top(true);
+        let _ = w.set_focus();
+        let _ = w.set_always_on_top(false);
+    }
+}
+
+#[tauri::command]
+fn toast_get() -> Option<toast::Toast> {
+    toast::last()
+}
+
+#[tauri::command]
+fn toast_close(handle: tauri::AppHandle) {
+    toast::hide(&handle);
+}
+
+/// 트레이 '업데이트 확인/적용': 창을 열지 않고 결과를 오른쪽 아래 알림으로
+async fn tray_update(app: tauri::AppHandle) {
+    if update::managed() {
+        toast::show(&app, "Microsoft Store가 업데이트해요", "스토어에서 새 버전을 받아 주세요.", "info", 4000);
+        return;
+    }
+    if update::has_ready() {
+        let v = update::ready_version().unwrap_or_default();
+        if !lcu::game_pids().is_empty() {
+            toast::show(&app, "게임 중이에요", &format!("게임이 끝나면 v{v}로 업데이트할게요."), "warn", 4500);
+            return;
+        }
+        toast::show(&app, &format!("v{v}로 업데이트하는 중"), "몇 초 뒤 Prism이 다시 켜져요.", "busy", 6000);
+        tokio::time::sleep(std::time::Duration::from_millis(1600)).await;
+        // 창이 내려가 있었으면 다시 켤 때도 트레이로만
+        let background = app.get_webview_window("main").and_then(|w| w.is_visible().ok()).map(|v| !v).unwrap_or(false);
+        match update::apply(true, background) {
+            Ok(()) => app.exit(0),
+            Err(e) => toast::show(&app, "업데이트를 적용하지 못했어요", &e, "warn", 6000),
+        }
+        return;
+    }
+    toast::show(&app, "업데이트 확인 중…", &format!("지금 버전 v{}", app.package_info().version), "busy", 20000);
+    match update::check().await {
+        Err(e) => toast::show(&app, "업데이트를 확인하지 못했어요", &e, "warn", 6000),
+        Ok(i) if !i.available => toast::show(&app, "최신 버전이에요", &format!("v{}", i.current), "ok", 3500),
+        Ok(i) => {
+            toast::show(&app, &format!("새 버전 v{} 받는 중", i.latest), "다 받으면 알려 드릴게요.", "busy", 60000);
+            let r = update::prepare().await;
+            refresh_tray();
+            match r {
+                Ok(_) => toast::show(&app, &format!("v{} 준비 완료", i.latest), "트레이에서 '업데이트 적용'을 누르거나, 창을 내려 두면 알아서 적용해요.", "ok", 7000),
+                Err(e) => toast::show(&app, "새 버전을 받지 못했어요", &e, "warn", 6000),
+            }
+        }
+    }
+}
+
+/// 업데이트 뒤 처음 켜졌으면 알림 (지난번에 켜진 버전을 기억해 둔다)
+fn notice_updated(app: &tauri::AppHandle, dir: &std::path::Path) {
+    let file = dir.join("last-version");
+    let now = app.package_info().version.to_string();
+    let before = std::fs::read_to_string(&file).ok();
+    let _ = std::fs::create_dir_all(dir);
+    let _ = std::fs::write(&file, &now);
+    if before.is_some_and(|b| b.trim() != now) {
+        toast::show(app, "업데이트 완료", &format!("Prism v{now}로 업데이트했어요."), "ok", 5000);
+    }
+}
+
 /// 받아 둔 새 버전을 창 없이 설치하고 앱을 끝낸다. 설치가 끝나면 다시 켜진다 (background 면 트레이로만)
 #[tauri::command]
 async fn update_apply(handle: tauri::AppHandle, background: Option<bool>) -> Result<(), String> {
@@ -177,6 +249,7 @@ pub fn run() {
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, Some(vec!["--background"])))
         .setup(|app| {
             let dir = app.path().app_config_dir()?;
+            let dir_for_notice = dir.clone();
             let vision = vision::Vision::new(dir.clone());
             app.manage(Arc::new(App { lcu: lcu::Lcu::new(), server: server::Server::new(dir), vision: vision.clone() }));
             // 게임 중 증강 인식 + 게임 위 작은 창 (v3.5)
@@ -186,6 +259,8 @@ pub fn run() {
                 std::process::exit(0);
             }
             vision::create_overlay(app)?;
+            toast::create(app)?;
+            notice_updated(app.handle(), &dir_for_notice);
             vision.start(app.handle().clone());
             // 창 제목에 버전: "Prism - 0.7.0". 크기·위치는 지난번 그대로 (없으면 세로로 넉넉한 기본 크기)
             if let Some(w) = app.get_webview_window("main") {
@@ -211,13 +286,9 @@ pub fn run() {
                     "open" => show(app),
                     // 받아 둔 새 버전이 있으면 바로 적용 (게임 중이면 적용하지 않고 설정 화면을 연다)
                     // 없으면 창을 열고 설정 화면에서 바로 확인한다 (결과가 보이게)
+                    // 창을 열지 않고 오른쪽 아래 알림으로 진행·결과를 알린다
                     "check" => {
-                        if update::has_ready() && lcu::game_pids().is_empty() && update::apply(true, false).is_ok() {
-                            app.exit(0);
-                        } else {
-                            show(app);
-                            let _ = app.emit("check-update", ());
-                        }
+                        tauri::async_runtime::spawn(tray_update(app.clone()));
                     }
                     "quit" => {
                         // 받아 둔 새 버전이 있으면 끝낼 때 조용히 적용 (다시 켜지 않는다)
@@ -262,7 +333,7 @@ pub fn run() {
                 _ => {}
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, discord_running, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
+        .invoke_handler(tauri::generate_handler![lcu_status, discord_running, bring_to_front, toast_get, toast_close, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }

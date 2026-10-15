@@ -6,7 +6,8 @@ import { AUGMENT, isMayhemGame, mayhemGames, personalStats, toIngestGame, type G
 import { api, bridge } from './bridge';
 import { VERSION } from './version';
 
-const INTERVAL = { noClient: 20_000, inGame: 30_000, idle: 15_000, champSelect: 600, error: 10_000 };
+// 대기 중에도 2초마다 단계만 본다 (챔프 선택에 들어가면 바로 알아채게). 최근 판 불러오기는 따로 드물게
+const INTERVAL = { noClient: 20_000, inGame: 30_000, idle: 2_000, champSelect: 600, error: 10_000 };
 const HISTORY_PAGES = 5; // 20판 × 5 = 최근 100판
 const HISTORY_EVERY = 10 * 60_000;
 const AFTER_GAME = 3 * 60_000; // 게임 직후 새 판이 뜰 때까지 30초마다 다시 읽는다
@@ -236,13 +237,7 @@ async function tick(): Promise<number> {
       historyAt = 0;
     }
     if (wasInGame) { wasInGame = false; refreshUntil = Date.now() + AFTER_GAME; }
-    const stale = Date.now() - historyAt > (Date.now() < refreshUntil ? 30_000 : HISTORY_EVERY);
-    if (stale) {
-      const games = await loadHistory(state.summoner!.puuid, HISTORY_PAGES);
-      historyAt = Date.now();
-      set({ games, personal: personalStats(games) });
-      void uploadOwn();
-    }
+    // 단계를 먼저 본다 — 최근 판 불러오기가 길어져도 챔프 선택을 늦게 알아채지 않게
     const phase = await bridge.lcuGet<string>('/lol-gameflow/v1/gameflow-phase');
     // 게임이 시작되는 순간(게임 창이 뜨기 전) 양 팀 챔피언을 한 번 읽는다. 창이 뜨면 Rust 가 요청을 막는다
     const starting = phase === 'GameStart' || phase === 'InProgress' || phase === 'Reconnect';
@@ -251,6 +246,14 @@ async function tick(): Promise<number> {
     else { if (state.champSelect) set({ champSelect: null }); crewKey = ''; }
     const status = phase === 'ChampSelect' ? 'champ-select' : 'idle';
     if (state.phase !== phase || state.status !== status || state.message) set({ phase, status, message: '' });
+    // 최근 판은 챔프 선택·게임 시작이 아닐 때만 (오래 걸릴 수 있다)
+    const stale = Date.now() - historyAt > (Date.now() < refreshUntil ? 30_000 : HISTORY_EVERY);
+    if (stale && phase !== 'ChampSelect' && !starting) {
+      const games = await loadHistory(state.summoner!.puuid, HISTORY_PAGES);
+      historyAt = Date.now();
+      set({ games, personal: personalStats(games) });
+      void uploadOwn();
+    }
     if (phase === 'None' || phase === 'Lobby') void syncCrew();
     if (starting && state.matchup?.source !== 'game') return 1500; // 놓치지 않게 잠깐 자주
     return phase === 'ChampSelect' ? INTERVAL.champSelect : INTERVAL.idle;
@@ -291,8 +294,24 @@ export function start() {
   void refreshSession().then(pingPresence);
   setInterval(() => void pingPresence(), 10_000);
   document.addEventListener('visibilitychange', () => void pingPresence());
-  const loop = async () => setTimeout(loop, await tick().catch(() => INTERVAL.error));
   void loop();
+}
+
+/** 확인 고리: 다음 확인을 예약해 두고, '지금 확인'을 누르면 기다리지 않고 바로 다시 본다 */
+let timer: ReturnType<typeof setTimeout> | undefined;
+let running = false;
+async function loop() {
+  if (running) return;
+  running = true;
+  clearTimeout(timer);
+  const wait = await tick().catch(() => INTERVAL.error);
+  running = false;
+  timer = setTimeout(loop, wait);
+}
+/** 게임 화면의 '지금 확인': 롤 상태(챔프 선택 등)를 바로 다시 읽는다 */
+export async function checkNow() {
+  clearTimeout(timer);
+  await loop();
 }
 
 /** 수집 동의 (지금 클라이언트에 로그인된 롤 계정을 연결) / 철회 */

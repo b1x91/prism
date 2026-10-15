@@ -43,6 +43,6 @@ export default defineConfig(({ command }) => ({
   publicDir: '../../packages/assets/public',
   clearScreen: false,
   server: { port: 5174, host: '127.0.0.1', strictPort: true },
-  // 화면 셋: 앱 본 창(index.html), 게임 위 작은 창(overlay.html), 구석 표시(badge.html). 소스맵은 만들지 않는다.
-  build: { outDir: 'dist', target: 'es2022', sourcemap: false, chunkSizeWarningLimit: 4000, rollupOptions: { input: { main: 'index.html', overlay: 'overlay.html', badge: 'badge.html' } } },
+  // 화면 셋: 앱 본 창(index.html), 게임 위 작은 창(overlay.html), 구석 표시(badge.html), 오른쪽 아래 알림(toast.html). 소스맵은 만들지 않는다.
+  build: { outDir: 'dist', target: 'es2022', sourcemap: false, chunkSizeWarningLimit: 4000, rollupOptions: { input: { main: 'index.html', overlay: 'overlay.html', badge: 'badge.html', toast: 'toast.html' } } },
 }));

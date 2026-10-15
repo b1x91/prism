@@ -5,10 +5,22 @@
 import { useState } from 'react';
 import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, teamFit, tierOf, verdictOf, type ChampionProfile } from '@prism/core';
 import { AugRing, AugmentLink, ChampImg, Seg, TierBadge } from '@prism/ui';
-import type { ChampSelect, CrewSelect } from '../controller';
+import { checkNow, type ChampSelect, type CrewSelect } from '../controller';
+import { Icon } from '@prism/ui';
 import type { Personal } from '@prism/core';
 
 type Sort = 'mine' | 'balance' | 'crew';
+
+/** '지금 확인': 기다리지 않고 롤 상태(챔프 선택·내 챔프·대기석)를 바로 다시 읽는다 */
+export function CheckNow({ label = '지금 확인' }: { label?: string }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <button type="button" className={`btn sm ghost checknow ${busy ? 'busy' : ''}`} disabled={busy} title="롤 클라이언트를 바로 다시 읽어요"
+      onClick={async () => { setBusy(true); try { await checkNow(); } finally { setTimeout(() => setBusy(false), 300); } }}>
+      <Icon name="refresh" />{label}
+    </button>
+  );
+}
 const fmt = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(1));
 const rate = (r?: { n: number; w: number }) => (r && r.n ? r.w / r.n : -1);
 
@@ -45,7 +57,7 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
   // 아직 아무 챔프도 정해지지 않은 첫 몇 초: 빈 숫자 대신 기다리는 화면
   if (!shown && !base.length && !bench.length) return (
     <section className="card pad cs">
-      <div className="card-head"><h2>챔프 선택</h2><span className="sp" /><span className="pill accent">진행 중</span></div>
+      <div className="card-head"><h2>챔프 선택</h2><span className="sp" /><CheckNow /><span className="pill accent">진행 중</span></div>
       <div className="cs-wait">
         <div className="cs-wait-slots" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <i key={i} className={i === 0 ? 'me' : ''} style={{ animationDelay: `${i * 120}ms` }} />)}</div>
         <div className="cs-wait-t"><b>챔프가 정해지는 중이에요</b><span className="meta">정해지면 우리 팀 구성과 어울리는 증강을 바로 보여 드려요.</span></div>
@@ -57,7 +69,7 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
 
   return (
     <section className="card pad cs">
-      <div className="card-head"><h2>챔프 선택</h2><span className="sp" /><span className="pill accent">진행 중</span></div>
+      <div className="card-head"><h2>챔프 선택</h2><span className="sp" /><CheckNow /><span className="pill accent">진행 중</span></div>
       <div className="cs-team">
         <div className="cs-mates">
           {slots.map((s, i) => {
@@ -80,7 +92,7 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
       {(shown || bench.length > 0) && <div className={`cs-layout ${shown && bench.length ? '' : 'one'}`}>
         {shown && <Featured id={shown} isMine={shown === cs.mine} crew={crew} personal={personal} fitText={fit(shown)} needs={needs} isReco={reco === shown} onBack={preview ? () => setPreview(null) : undefined} />}
         {bench.length > 0 && <div className="cs-bench">
-          <div className="row"><span className="muted">대기석 <b>{bench.length}</b></span><span className="sp" />
+          <div className="cs-bench-h"><b>대기석</b><span className="cs-bench-n">{bench.length}</span><span className="sp" />
             {bench.length > 1 && <Seg value={sort} options={[['balance', '팀 밸런스'], ['mine', '내가 잘하는'], ['crew', '모임 승률']]} onChange={setS} />}</div>
           <div className="seat-tray">
             {bench.map((id) => {

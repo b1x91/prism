@@ -6,7 +6,7 @@ import { AugmentCompare, AugmentGuide, ChampBanner, ChampSearch, Empty, PieceIco
 import { api } from '../bridge';
 import { useNavigate } from 'react-router-dom';
 import { editMatchup, type State } from '../controller';
-import { ChampSelectPanel } from './ChampSelect';
+import { ChampSelectPanel, CheckNow } from './ChampSelect';
 import { useSeenAugments, useVisionState, visionStatus } from '../vision';
 
 /** 게임 중: Alt+Tab 하면 바로 보이는 내 챔피언 증강 가이드 + 3개 비교 */
@@ -73,7 +73,8 @@ function NoGame({ s }: { s: State }) {
   return (
     <section className={`nogame ${s.status}`}>
       <div className="ng-main">
-        <span className="ng-state"><i className="dot" />{s.status === 'no-client' ? '롤 꺼짐' : s.status === 'error' ? '연결 오류' : '롤 연결됨 · 대기 중'}</span>
+        <div className="ng-top"><span className="ng-state"><i className="dot" />{s.status === 'no-client' ? '롤 꺼짐' : s.status === 'error' ? '연결 오류' : '롤 연결됨 · 대기 중'}</span>
+          {s.status !== 'no-client' && <CheckNow label="챔프 선택 바로 확인" />}</div>
         <h1>현재 진행 중인 게임이 없습니다</h1>
         <p>{sub}</p>
       </div>

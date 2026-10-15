@@ -204,10 +204,11 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack, after }: { id
           <AugRing id={a.id} size={96} />
           <div className="adet-txt">
             <div className="row wrapr" style={{ gap: 8 }}><span className={`rpill ${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.disabled && <span className="pill">현재 꺼짐</span>}</div>
-            <h1>{a.name}<FavStar kind="aug" id={a.id} /></h1>
+            <h1>{a.name}</h1>
             {a.note && <p className="note">{a.note}</p>}
           </div>
-          {onBack && <button type="button" className="btn sm adet-back" onClick={onBack}>도감으로</button>}
+          {/* 오른쪽 위 구석: 좋아요 + 도감으로 */}
+          <div className="adet-corner"><FavStar kind="aug" id={a.id} />{onBack && <button type="button" className="btn sm adet-back" onClick={onBack}>도감으로</button>}</div>
         </div>
         <div className="adet-body">
           <p className="desc">{a.desc}</p>
