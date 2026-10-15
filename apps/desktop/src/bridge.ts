@@ -20,6 +20,7 @@ const err = (e: unknown) => new ApiError(0, typeof e === 'string' ? e : e instan
 
 export const bridge = {
   lcuStatus: () => call<{ client: boolean; inGame: boolean }>('lcu_status'),
+  discordRunning: () => call<boolean>('discord_running'),
   lcuGet: <T = any>(path: string) => call<T>('lcu_get', { path }).catch((e) => { throw err(e); }),
   session: () => call<{ configured: boolean; loggedIn: boolean }>('session'),
   login: () => call<void>('login').catch((e) => { throw err(e); }),

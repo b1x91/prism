@@ -42,32 +42,44 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
   const shown = preview && cs.bench.includes(preview) ? preview : cs.mine ?? bench[0];
   const mates = Object.fromEntries((crew?.teammates ?? []).map((m) => [m.puuid, m]));
   const setS = (s: Sort) => { setSort(s); try { localStorage.setItem('prism-bench-sort', s); } catch { /* 없음 */ } };
+  // 아직 아무 챔프도 정해지지 않은 첫 몇 초: 빈 숫자 대신 기다리는 화면
+  if (!shown && !base.length && !bench.length) return (
+    <section className="card pad cs">
+      <div className="card-head"><h2>챔프 선택</h2><span className="sp" /><span className="pill accent">진행 중</span></div>
+      <div className="cs-wait">
+        <div className="cs-wait-slots" aria-hidden="true">{[0, 1, 2, 3, 4].map((i) => <i key={i} className={i === 0 ? 'me' : ''} style={{ animationDelay: `${i * 120}ms` }} />)}</div>
+        <div className="cs-wait-t"><b>챔프가 정해지는 중이에요</b><span className="meta">정해지면 우리 팀 구성과 어울리는 증강을 바로 보여 드려요.</span></div>
+      </div>
+    </section>
+  );
+  // 우리 팀은 늘 5칸 (아직 안 들어온 팀원은 빈 칸)
+  const slots = [{ championId: shown ?? 0, puuid: 'me' }, ...cs.team, ...Array.from({ length: Math.max(0, 4 - cs.team.length) }, (_, i) => ({ championId: 0, puuid: `empty-${i}` }))];
 
   return (
     <section className="card pad cs">
       <div className="card-head"><h2>챔프 선택</h2><span className="sp" /><span className="pill accent">진행 중</span></div>
       <div className="cs-team">
         <div className="cs-mates">
-          {[{ championId: shown ?? 0, puuid: 'me' }, ...cs.team].map((s, i) => {
+          {slots.map((s, i) => {
             const m = mates[s.puuid];
             return (
               <div key={i} className={`tm ${i === 0 ? 'me' : ''}`}>
-                {s.championId ? <ChampImg id={s.championId} size={44} /> : <span className="champ ph" />}
+                {s.championId ? <ChampImg id={s.championId} size={44} /> : <span className="champ ph sk" />}
                 <span className={`who ${m ? 'prism' : ''}`}>{i === 0 ? (preview ? '미리보기' : '나') : m ? `${m.nick} ${pct(m.together.w, m.together.n)}` : CHAMPIONS[s.championId]?.name ?? '선택 중'}</span>
               </div>
             );
           })}
         </div>
         <div className="cs-comp">
-          <div className="line"><span>팀원 {base.length}명</span><span>AP <b>{fmt(c.ap)}</b></span><span>AD <b>{fmt(c.ad)}</b></span><span>앞라인 <b>{fmt(c.front)}</b></span><span>CC <b>{ccWord(c)}</b></span></div>
+          {base.length > 0 && <div className="line"><span>팀원 {base.length}명</span><span>AP <b>{fmt(c.ap)}</b></span><span>AD <b>{fmt(c.ad)}</b></span><span>앞라인 <b>{fmt(c.front)}</b></span><span>CC <b>{ccWord(c)}</b></span></div>}
           <div className="line">{verdict ? <span className={`verdict ${verdict.grade}`}>{verdict.grade === 'gold' && <i aria-hidden="true" />}{verdict.label}</span>
             : base.length ? (needs.length ? <><span className="meta">부족</span>{needs.map((n) => <span key={n} className="pill warn">{n}</span>)}</> : <span className="pill ok">밸런스 좋음</span>) : <span className="meta">팀원 챔프가 정해지면 팀 구성이 보입니다</span>}
             {reco && <><span className="meta" style={{ marginLeft: 8 }}>바꾸면 좋아요</span><b>{CHAMPIONS[reco]?.name}</b></>}</div>
         </div>
       </div>
-      <div className="cs-layout">
-        {shown ? <Featured id={shown} isMine={shown === cs.mine} crew={crew} personal={personal} fitText={fit(shown)} needs={needs} isReco={reco === shown} onBack={preview ? () => setPreview(null) : undefined} /> : <div />}
-        <div className="cs-bench">
+      {(shown || bench.length > 0) && <div className={`cs-layout ${shown && bench.length ? '' : 'one'}`}>
+        {shown && <Featured id={shown} isMine={shown === cs.mine} crew={crew} personal={personal} fitText={fit(shown)} needs={needs} isReco={reco === shown} onBack={preview ? () => setPreview(null) : undefined} />}
+        {bench.length > 0 && <div className="cs-bench">
           <div className="row"><span className="muted">대기석 <b>{bench.length}</b></span><span className="sp" />
             {bench.length > 1 && <Seg value={sort} options={[['balance', '팀 밸런스'], ['mine', '내가 잘하는'], ['crew', '모임 승률']]} onChange={setS} />}</div>
           <div className="seat-tray">
@@ -82,10 +94,9 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
                 </button>
               );
             })}
-            {!bench.length && <span className="meta">대기석이 비어 있습니다</span>}
           </div>
-        </div>
-      </div>
+        </div>}
+      </div>}
     </section>
   );
 }

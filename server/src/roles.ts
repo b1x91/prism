@@ -3,7 +3,7 @@
  * 역할 이름·색은 디스코드 서버 설정과 같게 둔다 (봇 없이 표시하려고 여기에 적는다).
  * 단계(level)가 높을수록 위 역할. 기능마다 필요한 최소 단계를 FEATURES 에서 정한다.
  */
-import type { Member } from './util.js';
+import { HttpError, type Env, type Member } from './util.js';
 
 export const ROLES = [
   { id: '794017302763798549', key: 'staff', name: '운영진', color: '#607d8b', level: 5 },
@@ -25,7 +25,10 @@ export const FEATURES = {
   rankingAll: 2, // 랭킹 전체 (준회원은 5위까지)
   moderate: 5, // 남의 글·팁 지우기, 포텐 기록 지우기 (운영진)
   shop: 5, // 상점 사기·장착 (지금은 운영진만, 열 때 0 으로)
+  ranking: 5, // 랭킹 보기 — 회원이 RANKING_OPEN_MEMBERS 명 모이기 전까지는 운영진만 (모이면 자동으로 모두에게)
 } as const;
+/** 롤 계정을 연결한 회원이 이만큼 모이면 랭킹이 모두에게 열린다 */
+export const RANKING_OPEN_MEMBERS = 30;
 export type Feature = keyof typeof FEATURES;
 /** 준회원이 볼 수 있는 랭킹·포텐 멤버 수 */
 export const LIMITED = 5;
@@ -66,3 +69,13 @@ export const ratesOf = (m: Pick<Member, 'tier' | 'discord_roles'>) => {
 };
 export const can = (m: Pick<Member, 'tier' | 'discord_roles'>, f: Feature) => levelOf(m) >= FEATURES[f];
 export const permsOf = (m: Pick<Member, 'tier' | 'discord_roles'>) => Object.fromEntries((Object.keys(FEATURES) as Feature[]).map((f) => [f, can(m, f)])) as Record<Feature, boolean>;
+
+/** 랭킹 공개 여부: 운영진이거나, 롤 계정을 연결한 회원이 RANKING_OPEN_MEMBERS 명 이상 */
+export async function rankingGate(env: Env, m: Pick<Member, 'tier' | 'discord_roles'>) {
+  const r = await env.DB.prepare('SELECT COUNT(*) AS n FROM members WHERE riot_puuid IS NOT NULL').first<{ n: number }>();
+  const have = r?.n ?? 0;
+  return { open: can(m, 'ranking') || have >= RANKING_OPEN_MEMBERS, have, need: RANKING_OPEN_MEMBERS };
+}
+export async function assertRanking(env: Env, m: Pick<Member, 'tier' | 'discord_roles'>) {
+  if (!(await rankingGate(env, m)).open) throw new HttpError(403, `랭킹은 회원이 ${RANKING_OPEN_MEMBERS}명 모이면 열려요.`);
+}

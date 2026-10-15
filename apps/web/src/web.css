@@ -147,3 +147,4 @@ body { overflow-x: clip; }
 /* 목록 도구 줄은 상단 바 아래에 붙는다 */
 .ltools { top: calc(64px + var(--s3)); }
 @media (max-width: 720px) { .ltools { top: calc(56px + var(--s2)); } }
+@media (min-width: 981px) { .dex-entry { top: calc(64px + var(--s4)); } }

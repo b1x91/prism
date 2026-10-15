@@ -3,7 +3,7 @@
  * 해 봤다고 채워지지 않는다: 실버(1판) → 골드(3승) → 플래티넘 → 다이아몬드 → 마스터 (S티어 증강 경험·5/10/30/50승·역할 챌린지).
  * 못 만난 것은 번호와 흐린 그림(???). 누르면 도감 설명과 다음 목표.
  */
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP } from '@prism/core';
 import { ChampImg, Gem, Select, Seg } from './basics';
 import { AugRing, AugmentLink } from './augment';
@@ -51,6 +51,24 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { d
   const [q, setQ] = useState('');
   const [sel, setSel] = useState<Record<Kind, number | null>>({ champions: null, augments: null });
   const [sheet, setSheet] = useState(false); // 좁은 화면: 고르면 아래에서 설명이 올라온다
+  const entry = useRef<HTMLElement>(null);
+  // 옆 설명 칸은 화면(스크롤 영역)에 딱 맞는 높이로 — 위 막대·창 높이가 달라도 맨 아래까지 스크롤된다
+  useEffect(() => {
+    const el = entry.current;
+    if (!el) return;
+    const fit = () => {
+      const cs = getComputedStyle(el);
+      if (cs.position !== 'sticky') { el.style.maxHeight = ''; return; }
+      let sp: HTMLElement | null = el.parentElement;
+      while (sp && !/(auto|scroll)/.test(getComputedStyle(sp).overflowY)) sp = sp.parentElement;
+      const box = sp ? sp.getBoundingClientRect() : { top: 0, bottom: innerHeight };
+      const top = Math.max(0, box.top) + (parseFloat(cs.top) || 0);
+      el.style.maxHeight = `${Math.max(240, Math.min(innerHeight, box.bottom) - top - 16)}px`;
+    };
+    fit();
+    addEventListener('resize', fit);
+    return () => removeEventListener('resize', fit);
+  }, []);
 
   const ids = kind === 'champions' ? CHAMP_IDS : AUG_IDS;
   const got = dex[kind];
@@ -132,15 +150,17 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { d
 
       {/* 내 도감(레벨 1~5) · 아직 안 해봄. 아무것도 고르지 않으면 전체, 고른 것을 다시 누르면 풀린다 */}
       <nav className="dex-levels" aria-label="도감 보기">
-        <span className="dl-group">
-          <button type="button" className={`dl-mine ${show === 'mine' ? 'on' : ''}`} onClick={() => setShow(show === 'mine' ? 'all' : 'mine')} title="만난 것 모두">내 도감<small>{seen}</small></button>
-          {([1, 2, 3, 4, 5] as DexLevel[]).map((l) => (
-            <button key={l} type="button" className={`dl-lv l${l} ${show === `l${l}` ? 'on' : ''}`} onClick={() => setShow(show === `l${l}` ? 'all' : (`l${l}` as Show))} title={`Lv.${l} ${DEX_LEVEL_KO[l]} · ${DEX_LEVEL_RULE[l]}`}>
-              <i className="lv">Lv{l}</i>{DEX_LEVEL_KO[l]}<small>{levelCount(l)}</small>
-            </button>
-          ))}
-        </span>
-        <button type="button" className={show === 'missing' ? 'on' : ''} onClick={() => setShow(show === 'missing' ? 'all' : 'missing')} title="아직 한 번도 안 해 본 것">아직 안 해봄<small>{ids.length - seen}</small></button>
+        <button type="button" aria-pressed={show === 'mine'} className={`dlt mine ${show === 'mine' ? 'on' : ''}`} onClick={() => setShow(show === 'mine' ? 'all' : 'mine')} title="만난 것 모두">
+          <b>{seen}</b><span>내 도감</span>
+        </button>
+        <span className="dlt-tiers">{([1, 2, 3, 4, 5] as DexLevel[]).map((l) => (
+          <button key={l} type="button" aria-pressed={show === `l${l}`} className={`dlt l${l} ${show === `l${l}` ? 'on' : ''}`} onClick={() => setShow(show === `l${l}` ? 'all' : (`l${l}` as Show))} title={`Lv.${l} ${DEX_LEVEL_KO[l]} · ${DEX_LEVEL_RULE[l]}`}>
+            <i className="gem" aria-hidden="true" /><b>{levelCount(l)}</b><span>{DEX_LEVEL_KO[l]}</span>
+          </button>
+        ))}</span>
+        <button type="button" aria-pressed={show === 'missing'} className={`dlt miss ${show === 'missing' ? 'on' : ''}`} onClick={() => setShow(show === 'missing' ? 'all' : 'missing')} title="아직 한 번도 안 해 본 것">
+          <b>{ids.length - seen}</b><span>아직 안 해봄</span>
+        </button>
       </nav>
 
       <div className="dex-body">
@@ -168,7 +188,7 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { d
         </section>
 
         {sheet && <button type="button" className="dex-scrim" aria-label="닫기" onClick={() => setSheet(false)} />}
-        <aside className={`dex-entry card ${sheet ? 'open' : ''}`} aria-live="polite">
+        <aside ref={entry} className={`dex-entry card ${sheet ? 'open' : ''}`} aria-live="polite">
           <button type="button" className="dex-close icon-btn" aria-label="닫기" onClick={() => setSheet(false)}><Icon name="x" /></button>
           {kind === 'champions'
             ? <ChampEntry id={current} no={no.get(current) ?? 0} e={got[current]} m={m(current)} dex={dex} onChampion={onChampion} />

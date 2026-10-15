@@ -43,4 +43,4 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
 @keyframes ov-sweep { 0%, 100% { opacity: 0; } 50% { opacity: .75; } }
 @media (prefers-reduced-motion: reduce) { .ov-corner .star, .ov-corner .glint, .ov-corner .sweep { animation: none; } }
 /* 내 증강 표시 (v3.27) */
-.ov-fav { margin-right: 4px; font-style: normal; color: #f5b82e; text-shadow: 0 0 6px rgba(245, 184, 46, .6); }
+.ov-fav { margin-right: 4px; font-style: normal; color: #ff4d6d; text-shadow: 0 0 6px rgba(255, 77, 109, .6); }

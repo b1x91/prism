@@ -2,6 +2,8 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { CHAMPIONS, CHAMPION_LIST, ROLE_KO, cdragon, matchName } from '@prism/core';
 import { ChampImg } from './basics';
 import { FavMark, FavStar, useFavs } from './favs';
+import { HeartIcon } from './likeheart';
+import { ToolSearch } from './ltools';
 import { Icon } from './icons';
 
 /** 이름·초성으로 챔피언 찾기 (위아래 키, Enter) */
@@ -50,17 +52,17 @@ export function ChampGrid({ onPick, query = '', onQuery, record }: { onPick: (id
   return (
     <div className="stack" style={{ gap: 24 }}>
       <div className="ltools">
-        {onQuery && <label className="ltools-q"><Icon name="search" /><input value={query} autoFocus onChange={(e) => onQuery(e.target.value)} placeholder="챔프 이름 (예: '아리' 혹은 'ㅇㄹ')" />{query && <button type="button" className="x" aria-label="지우기" onClick={() => onQuery('')}><Icon name="x" /></button>}</label>}
+        {onQuery && <ToolSearch value={query} onChange={onQuery} label="챔프 검색" placeholder="챔프 이름 (예: 아리, ㅇㄹ)" />}
         <div className="ltools-chips">
           {/* 아무것도 고르지 않으면 전체. 고른 것을 다시 누르면 풀린다 */}
           {ROLES.map((r) => <button key={r} type="button" aria-pressed={role === r} className={`chip ${role === r ? 'on' : ''}`} onClick={() => setRole(role === r ? 'all' : r)}><i className="role-dot" style={{ background: ROLE_DOT[r] }} />{ROLE_KO[r]}</button>)}
-          {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><Icon name="star" />내 챔프<small>{favs.champs.length}</small></button>}
+          {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><HeartIcon size={13} />내 챔프<small>{favs.champs.length}</small></button>}
           {record && <button type="button" aria-pressed={mine} className={`chip ${mine ? 'on' : ''}`} onClick={() => setMine(!mine)}>해 본 챔프</button>}
         </div>
         <span className="ltools-cnt"><b>{list.length}</b>명</span>
       </div>
       {showFavs && <section className="cfav">
-        <div className="cfav-h"><Icon name="star" /><h3>내 챔프</h3></div>
+        <div className="cfav-h"><HeartIcon size={16} /><h3>내 챔프</h3></div>
         <div className="cfav-row">{favs.champs.filter((id) => CHAMPIONS[id]).map((id) => {
           const r = record?.[id];
           return (

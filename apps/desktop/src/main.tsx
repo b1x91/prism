@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { AugmentOpen, FacePresence, Icon, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
-import { PIECE, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail, type Presence } from '@prism/core';
+import { AugmentOpen, Icon, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { PIECE, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
@@ -33,6 +33,19 @@ const STATUS: Record<State['status'], [string, string]> = {
 };
 
 const LOL_ON = new Set<State['status']>(['idle', 'champ-select', 'in-game']);
+
+/** 디스코드가 켜져 있는지 (20초마다 OS 프로세스 목록만 본다) */
+function useDiscordRunning() {
+  const [on, setOn] = useState(false);
+  useEffect(() => {
+    let live = true;
+    const check = () => bridge.discordRunning().then((v) => { if (live) setOn(v); }).catch(() => {});
+    check();
+    const t = setInterval(check, 20_000);
+    return () => { live = false; clearInterval(t); };
+  }, []);
+  return on;
+}
 
 /** 뒤로·앞으로 (마우스 뒤로가기 버튼과 같은 기록을 쓴다) */
 const hidx = () => (window.history.state as { idx?: number } | null)?.idx ?? 0;
@@ -95,7 +108,11 @@ function App() {
   // 내 챔프·내 증강: 로그인되면 서버 목록으로 맞춘다
   useEffect(() => { connectFavs(s.me ? api : null); }, [s.me?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   // 이 창을 보고 있으니 앱은 떠 있다. 롤이 켜져 있으면 앱+게임
-  const presence: Presence = LOL_ON.has(s.status) ? 'both' : 'app';
+  // 내 카드 점: 롤 클라이언트 · 디스코드 두 가지만 (회색 둘 다 꺼짐 / 파랑 디스코드 / 빨강 롤 / 프리즘 둘 다)
+  const discord = useDiscordRunning();
+  const lol = LOL_ON.has(s.status);
+  const dot = lol && discord ? 'both' : lol ? 'lol' : discord ? 'discord' : 'off';
+  const dotLabel = { both: '롤 클라이언트 · 디스코드 켜짐', lol: '롤 클라이언트 켜짐', discord: '디스코드 켜짐', off: '롤 클라이언트 · 디스코드 꺼짐' }[dot];
   // 운영진은 글자 대신 카드가 프리즘처럼 빛난다
   // 게임·챔프 선택 중에는 '게임' 메뉴가 반짝인다 (다른 화면에 있다가도 바로 돌아오게)
   const playing = s.status === 'in-game' || s.status === 'champ-select';
@@ -135,8 +152,8 @@ function App() {
         </nav>
         {s.me && <div className={`side-me-card ${staff ? 'prism' : ''}`}>
           <NavLink to="/me" className="side-me" title="내 페이지">
-            <FacePresence p={presence} title={`${label}${riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}`}><MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} /></FacePresence>
-            <span className="who"><b><NickName nick={s.me.nick} /></b><span className="st pc" title={`보유 ${PIECE}`}>{pieces === null ? '–' : <><b>{pieces.toLocaleString()}</b><PieceIcon size={12} /></>}</span></span>
+            <span className="fp" title={`${dotLabel} · ${label}${riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}`}><MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} /><i className={`sdot ${dot}`} role="img" aria-label={dotLabel} /></span>
+            <span className="who"><b><NickName nick={s.me.nick} /></b><span className="st pc" data-pieces title={`보유 ${PIECE}`}>{pieces === null ? '–' : <><b>{pieces.toLocaleString()}</b><PieceIcon size={12} /></>}</span></span>
           </NavLink>
         </div>}
       </aside>

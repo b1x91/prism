@@ -73,6 +73,13 @@ fn scan_game() -> bool {
     sys.processes().values().any(|p| is_named(p, GAME_PROCESS))
 }
 
+/// 디스코드가 켜져 있는지 (OS 프로세스 목록만 본다. 사이드바 내 카드 점)
+pub fn discord_running() -> bool {
+    let mut sys = System::new();
+    sys.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::nothing());
+    sys.processes().values().any(|p| ["Discord.exe", "DiscordPTB.exe", "DiscordCanary.exe"].iter().any(|n| is_named(p, n)))
+}
+
 /// 게임(인게임) 프로세스 번호들 (작은 창이 게임 창을 찾을 때 쓴다)
 pub fn game_pids() -> Vec<u32> {
     let mut sys = System::new();

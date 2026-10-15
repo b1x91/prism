@@ -32,7 +32,7 @@ function Overlay() {
           <span className="ov-rk">{f.tied && f.rank === 1 && <small>공동</small>}<b>{f.rank}</b><small>위</small></span>
           <AugRing id={f.id} size={44} />
           <span className="ov-tx">
-            <span className="ov-nm">{favs.augs.includes(f.id) && <i className="ov-fav" title="내 증강">★</i>}<b>{AUGMENT[f.id]?.name}</b><GradeUp rarity={AUGMENT[f.id].rarity} tier={f.tier} /></span>
+            <span className="ov-nm">{favs.augs.includes(f.id) && <i className="ov-fav" title="내 증강">♥</i>}<b>{AUGMENT[f.id]?.name}</b><GradeUp rarity={AUGMENT[f.id].rarity} tier={f.tier} /></span>
             {f.reasons[0] ? <span className={`ov-situ ${f.bonus < 0 ? 'neg' : ''}`}>{f.lifted && f.rank === 1 ? '이번 판 1순위 · ' : ''}{f.reasons[0]}</span> : <Explain c={c!} id={f.id} tier={f.tier} />}
           </span>
           <TierBadge tier={f.tier} />
@@ -41,7 +41,7 @@ function Overlay() {
         <div key={id} className="ov-row">
           <span className="ov-rk">·</span>
           <AugRing id={id} size={44} />
-          <span className="ov-tx"><span className="ov-nm">{favs.augs.includes(id) && <i className="ov-fav" title="내 증강">★</i>}<b>{AUGMENT[id]?.name}</b></span></span>
+          <span className="ov-tx"><span className="ov-nm">{favs.augs.includes(id) && <i className="ov-fav" title="내 증강">♥</i>}<b>{AUGMENT[id]?.name}</b></span></span>
         </div>
       ))}
       {tie && <div className="ov-tie">{tie.length === 2 ? '두' : '세'} 증강 모두 {tie[0].tier}티어, 차이가 작아요 · 취향대로 고르세요</div>}

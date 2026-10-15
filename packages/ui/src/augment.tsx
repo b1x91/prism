@@ -2,6 +2,8 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, fitOf, gradeUp, fitPoints, rankByPriority, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type Matchup, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
 import { ChampImg } from './basics';
 import { FavMark, FavStar, useFavs } from './favs';
+import { HeartIcon } from './likeheart';
+import { ToolSearch } from './ltools';
 import { AugImg, Empty, Hover, Seg } from './basics';
 import { Icon } from './icons';
 import { MatchupBar } from './situation';
@@ -162,10 +164,10 @@ export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
   return (
     <div className="stack" style={{ gap: 24 }}>
       <div className="ltools">
-        <label className="ltools-q"><Icon name="search" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름·효과 검색 (예: 치명타, 보호막, ㅂㅅ)" />{q && <button type="button" className="x" aria-label="지우기" onClick={() => setQ('')}><Icon name="x" /></button>}</label>
+        <ToolSearch value={q} onChange={setQ} label="증강 검색" placeholder="이름·효과 (예: 치명타, 보호막)" />
         <div className="ltools-chips">
           {ORDER.map((x) => <button key={x} type="button" aria-pressed={r === x} className={`chip r-${x} ${r === x ? 'on' : ''}`} onClick={() => setR(r === x ? null : x)}><i className={`rdot ${x}`} />{RARITY_KO[x]}<small>{base.filter((a) => a.rarity === x).length}</small></button>)}
-          {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><Icon name="star" />내 증강<small>{favs.augs.length}</small></button>}
+          {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><HeartIcon size={13} />내 증강<small>{favs.augs.length}</small></button>}
         </div>
         <span className="ltools-cnt"><b>{list.length}</b>개</span>
       </div>

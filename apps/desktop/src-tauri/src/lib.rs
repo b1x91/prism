@@ -28,6 +28,11 @@ fn lcu_status(app: State<'_, Arc<App>>) -> lcu::Status {
 }
 
 #[tauri::command]
+fn discord_running() -> bool {
+    lcu::discord_running()
+}
+
+#[tauri::command]
 async fn lcu_get(app: State<'_, Arc<App>>, path: String) -> Result<serde_json::Value, String> {
     app.lcu.get(&path).await
 }
@@ -240,7 +245,7 @@ pub fn run() {
                 let _ = window.hide();
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
+        .invoke_handler(tauri::generate_handler![lcu_status, discord_running, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }

@@ -16,7 +16,8 @@ import { discordNow } from './discord-now.js';
 import { listScrims, openScrim, scrimAction } from './scrims.js';
 import { cancelParty, joinParty, leaveParty, listParties, openParty } from './parties.js';
 import { buy, equip, getShop, markDaily, publicProfile, setShare } from './shop.js';
-import { getFavs, getMissions, setFav } from './missions.js';
+import { claimMissions, favCount, getFavs, getMissions, setFav } from './missions.js';
+import { assertRanking } from './roles.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 
 async function route(req: Request, env: Env): Promise<Response> {
@@ -50,8 +51,10 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/me/share') return setShare(req, env, me);
   if (m === 'GET' && pathname === '/api/me/dex') return myDex(env, me);
   if (m === 'GET' && pathname === '/api/me/missions') return getMissions(env, me);
+  if (m === 'POST' && pathname === '/api/me/missions/claim') return claimMissions(req, env, me);
   if (m === 'GET' && pathname === '/api/me/favs') return getFavs(env, me);
   if (m === 'POST' && pathname === '/api/me/favs') return setFav(req, env, me);
+  if (m === 'GET' && pathname === '/api/favs/count') { const q = new URL(req.url).searchParams; return favCount(env, q.get('kind'), Number(q.get('id'))); }
   if (m === 'POST' && pathname === '/api/me/riot') return linkRiot(req, env, me);
   if (m === 'POST' && pathname === '/api/me/consent') return setConsent(req, env, me);
   if (m === 'POST' && pathname === '/api/me/profile') return setProfile(req, env, me);
@@ -62,8 +65,8 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && pathname === '/api/board') return board(env, me);
   if (m === 'POST' && pathname === '/api/tips') return addTip(req, env, me);
   if (m === 'GET' && pathname === '/api/notes') return listNotes(env, me);
-  if (m === 'GET' && pathname === '/api/ranking/artisans') return artisanRanking(env, me);
-  if (m === 'GET' && pathname === '/api/ranking') { const q = new URL(req.url).searchParams; return ranking(env, me, q.get('period'), q.get('by')); }
+  if (m === 'GET' && pathname === '/api/ranking/artisans') { await assertRanking(env, me); return artisanRanking(env, me); }
+  if (m === 'GET' && pathname === '/api/ranking') { await assertRanking(env, me); const q = new URL(req.url).searchParams; return ranking(env, me, q.get('period'), q.get('by')); }
   if (m === 'POST' && pathname === '/api/notes') return addNote(req, env, me);
   if (m === 'GET' && pathname === '/api/parties') return listParties(env, me);
   if (m === 'POST' && pathname === '/api/parties') return openParty(req, env, me);

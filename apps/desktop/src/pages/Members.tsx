@@ -14,7 +14,7 @@ export function RankingPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   return (
     <div className="stack" style={{ gap: 16 }}>
       <h1 className="h1">랭킹</h1>
-      <RankingView api={api} meId={s.me.id} onOpen={(id) => nav(`/members/${id}`)} />
+      <RankingView api={api} meId={s.me.id} open={s.me.perms?.ranking !== false} gate={s.me.rankingGate} onOpen={(id) => nav(`/members/${id}`)} />
     </div>
   );
 }

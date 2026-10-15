@@ -78,7 +78,7 @@ function NoGame({ s }: { s: State }) {
         <p>{sub}</p>
       </div>
       {s.me && <button type="button" className="ng-party" onClick={() => nav('/missions')}>
-        <span className="k">이번 주 미션 · {ms.filter((m) => m.done).length}/{ms.length || 3}</span>
+        <span className="k">이번 주 미션 · {ms.filter((m) => m.done).length}/{ms.length || 3}{(data?.ready ?? 0) > 0 && <> · 받을 보상 {data!.ready}<PieceIcon size={12} /></>}</span>
         {todo ? <>
           <b>{todo.title}</b>
           <span className="ng-mprog"><span className="bar"><span style={{ width: `${(todo.progress / todo.target) * 100}%` }} /></span><span className="meta">{todo.progress}/{todo.target}</span><span className="rew">{todo.reward}<PieceIcon size={12} /></span></span>

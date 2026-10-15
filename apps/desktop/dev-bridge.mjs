@@ -1,7 +1,7 @@
 /**
  * 개발용: 브라우저에서 앱 화면을 볼 때 Rust 명령 대신 응답하는 작은 서버 (127.0.0.1:5199).
  * 롤 클라이언트는 모의 데이터. 서버는 로컬 wrangler(8787, DEV_LOGIN=1)를 쓴다.
- *   node apps/desktop/dev-bridge.mjs        장면 바꾸기: POST /scene {"scene":"champ-select"|"in-game"|"idle"|"no-client"}
+ *   node apps/desktop/dev-bridge.mjs        장면 바꾸기: POST /scene {"scene":"champ-select"|"cs-empty"|"cs-solo"|"in-game"|"idle"|"no-client"}
  * 배포 앱에는 들어가지 않는다.
  */
 import { createServer } from 'node:http';
@@ -37,8 +37,10 @@ const CS = {
 
 const lcu = (path) => {
   if (path === '/lol-summoner/v1/current-summoner') return ME;
-  if (path === '/lol-gameflow/v1/gameflow-phase') return scene === 'champ-select' ? 'ChampSelect' : 'Lobby';
-  if (path === '/lol-champ-select/v1/session') return CS;
+  if (path === '/lol-gameflow/v1/gameflow-phase') return scene === 'champ-select' || scene.startsWith('cs-') ? 'ChampSelect' : 'Lobby';
+  // cs-empty: 챔프가 정해지기 전 / cs-solo: 내 챔프만 (대기석·팀원 없음)
+  if (path === '/lol-champ-select/v1/session') return scene === 'cs-empty' ? { localPlayerCellId: 0, myTeam: [0, 1, 2, 3, 4].map((i) => ({ cellId: i, championId: 0, puuid: i ? `p${i}` : ME.puuid })), benchChampions: [] }
+    : scene === 'cs-solo' ? { localPlayerCellId: 0, myTeam: [{ cellId: 0, championId: 222, puuid: ME.puuid }, ...[1, 2, 3, 4].map((i) => ({ cellId: i, championId: 0, puuid: `p${i}` }))], benchChampions: [] } : CS;
   const d = path.match(/^\/lol-match-history\/v1\/games\/(\d+)$/);
   if (d) {
     const g = games.find((x) => x.gameId === +d[1]);
@@ -68,6 +70,7 @@ async function login() {
 
 const CMD = {
   lcu_status: () => ({ client: scene !== 'no-client', inGame: scene === 'in-game' }),
+  discord_running: () => process.env.DISCORD !== '0',
   lcu_get: ({ path }) => lcu(path),
   session: () => ({ configured: true, loggedIn: Boolean(token) }),
   login,

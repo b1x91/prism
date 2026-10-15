@@ -17,7 +17,7 @@ export function RankingPage() {
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
       <div className="page-head"><div><h1>랭킹</h1><p>Prism에 기록된 아수라장 판수와 승률. 이름을 누르면 그 회원의 페이지로 갑니다.</p></div></div>
-      <RankingView api={api} meId={me.id} onOpen={(id) => nav(`/members/${id}`)} />
+      <RankingView api={api} meId={me.id} open={me.perms?.ranking !== false} gate={me.rankingGate} onOpen={(id) => nav(`/members/${id}`)} />
     </div></section>
   );
 }

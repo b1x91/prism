@@ -32,6 +32,14 @@ export function PieceIcon({ size = 16 }: { size?: number }) {
 let pieceBal: number | null = null;
 const pieceSubs = new Set<() => void>();
 const setPieces = (n: number | null) => { pieceBal = n; pieceSubs.forEach((f) => f()); };
+/** 받은 피스를 잔액에 더한다 — 숫자가 dur 동안 차오른다 (미션 받기) */
+export function addPieces(n: number, dur = 700) {
+  if (pieceBal === null || !n) return;
+  const from = pieceBal, to = from + n, t0 = performance.now();
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { setPieces(to); return; }
+  const step = (t: number) => { const k = Math.min(1, (t - t0) / dur); setPieces(Math.round(from + (to - from) * (1 - (1 - k) ** 3))); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
 export function usePieces(api: Api | null, every = 300_000) {
   const n = useSyncExternalStore((f) => { pieceSubs.add(f); return () => { pieceSubs.delete(f); }; }, () => pieceBal);
   useEffect(() => {
@@ -140,14 +148,17 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
   const { data, error, reload } = useLoad<Shop>(api, '/api/shop');
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
-  const [slot, setSlot] = useState<ShopSlot>('frame');
+  // '인기'가 첫 탭. 지금은 판매 기록이 적어 무작위로 섞는다 (들어올 때마다 한 번)
+  const [slot, setSlot] = useState<ShopSlot | 'hot'>('hot');
+  const [hot] = useState(() => SHOP.map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x));
   const [owned, setOwned] = useState(false);
   const run = async (k: string, f: () => Promise<unknown>) => { setBusy(k); setMsg(''); try { await f(); reload(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); } };
   useEffect(() => { if (data) setPieces(data.balance); }, [data]);
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <div className="shop-skel" role="status" aria-label="불러오는 중">{Array.from({ length: 6 }, (_, i) => <i key={i} className="sk" />)}</div>;
-  const list = SHOP.filter((x) => x.slot === slot && (!owned || data.owned.includes(x.id)))
-    .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || b.price - a.price);
+  const list = slot === 'hot' ? hot.filter((x) => !owned || data.owned.includes(x.id))
+    : SHOP.filter((x) => x.slot === slot && (!owned || data.owned.includes(x.id)))
+      .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || b.price - a.price);
   const count = (sl: ShopSlot) => [SHOP.filter((x) => x.slot === sl && data.owned.includes(x.id)).length, SHOP.filter((x) => x.slot === sl).length];
   return (
     <div className="shop">
@@ -157,7 +168,9 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
       </header>
       {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
       <div className="shop-bar">
-        <nav className="shop-tabs" aria-label="종류">{SLOTS.map((sl) => {
+        <nav className="shop-tabs" aria-label="종류">
+          <button type="button" className={`hot ${slot === 'hot' ? 'on' : ''}`} onClick={() => setSlot('hot')}><Icon name="spark" />인기</button>
+          {SLOTS.map((sl) => {
           const [o, t] = count(sl);
           return <button key={sl} type="button" className={slot === sl ? 'on' : ''} onClick={() => setSlot(sl)}>{SLOT_KO[sl]}<small>{o}/{t}</small></button>;
         })}</nav>
@@ -167,7 +180,7 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
       {list.length ? <div className="shop-grid">{list.map((x) => <ShopCard key={x.id} x={x} me={me} data={data} busy={busy === x.id}
         onBuy={() => run(x.id, () => api.post('/api/shop/buy', { id: x.id }))}
         onEquip={(on) => run(x.id, () => api.post('/api/me/equip', { slot: x.slot, id: on ? x.id : null }))} />)}</div>
-        : <Empty>아직 보유한 {SLOT_KO[slot]}가 없어요.</Empty>}
+        : <Empty>아직 보유한 {slot === 'hot' ? '아이템이' : `${SLOT_KO[slot]}가`} 없어요.</Empty>}
     </div>
   );
 }

@@ -24,7 +24,30 @@ const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as
 
 type RankBy = 'games' | 'winrate' | 'month';
 
-export function RankingView({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (id: string) => void }) {
+/** 랭킹. 회원이 충분히 모이기 전(open=false)에는 '준비 중' 화면 (운영진은 미리 본다) */
+export function RankingView({ api, meId, onOpen, open = true, gate }: { api: Api; meId?: string; onOpen: (id: string) => void; open?: boolean; gate?: { have: number; need: number } }) {
+  if (!open) return <RankingSoon gate={gate} />;
+  return <RankingOpen api={api} meId={meId} onOpen={onOpen} />;
+}
+
+function RankingSoon({ gate }: { gate?: { have: number; need: number } }) {
+  const have = gate?.have ?? 0, need = gate?.need ?? 30;
+  return (
+    <section className="rk-soon">
+      <div className="rk-soon-stage" aria-hidden="true">
+        {[2, 1, 3].map((r) => <span key={r} className={`rk-soon-ped p${r}`}><i />{r}</span>)}
+      </div>
+      <div className="rk-soon-txt">
+        <span className="ss-k">PRISM LEADERBOARD</span>
+        <h1>랭킹 준비 중</h1>
+        <p>회원이 {need}명 모이면 모두에게 열려요. 그동안 쌓인 판은 그대로 순위에 들어가요.</p>
+        <div className="rk-soon-gauge"><span className="rk-soon-bar"><span style={{ width: `${Math.min(100, (have / need) * 100)}%` }} /></span><b>{have}<small>/{need}명</small></b></div>
+      </div>
+    </section>
+  );
+}
+
+function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (id: string) => void }) {
   const [by, setBy] = useState<RankBy | 'champ-art' | 'aug-art'>('games');
   const art = by === 'champ-art' || by === 'aug-art';
   const { data, error } = useLoad<Ranking>(api, art ? null : by === 'month' ? '/api/ranking?period=month' : by === 'winrate' ? '/api/ranking?by=winrate' : '/api/ranking');
@@ -41,9 +64,9 @@ export function RankingView({ api, meId, onOpen }: { api: Api; meId?: string; on
       {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
       {!art && data && !rows.length && <Empty>{by === 'winrate' ? '아직 조건을 채운 회원이 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
-      {!art && rows.length >= 3 && <div className="podium">{[1, 0, 2].map((i) => <Podium key={rows[i].id} r={rows[i]} rank={i + 1} by={by as RankBy} skins={skins} onOpen={onOpen} />)}</div>}
-      {!art && rows.length > (rows.length >= 3 ? 3 : 0) && <div className="card rank-list">
-        {rows.map((r, i) => (rows.length >= 3 && i < 3 ? null : <RankRow key={r.id} r={r} rank={i + 1} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />))}
+      {!art && rows.length > 0 && <Leaderboard rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
+      {!art && rows.length > 3 && <div className="card rank-list">
+        {rows.slice(3).map((r, i) => <RankRow key={r.id} r={r} rank={i + 4} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
       </div>}
       {!art && data?.limited && <LockedMore more={data.limited.total - rows.length}>
         {data.limited.mine && by !== 'winrate' && <div className="card rank-list"><RankRow r={data.limited.mine} rank={data.limited.mine.rank} by={by as RankBy} me skins={skins} onOpen={onOpen} /></div>}
@@ -52,16 +75,32 @@ export function RankingView({ api, meId, onOpen }: { api: Api; meId?: string; on
   );
 }
 
-function Podium({ r, rank, by, skins, onOpen }: { r: RankingRow; rank: number; by: RankBy; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
+/** 상위 3명 무대: 가운데 1위가 가장 높고, 조명·받침대가 순서대로 올라온다 */
+function Leaderboard({ rows, by, meId, skins, onOpen }: { rows: RankingRow[]; by: RankBy; meId?: string; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
+  return (
+    <section className="lb" aria-label="상위 3명">
+      <span className="lb-beam b1" aria-hidden="true" /><span className="lb-beam b2" aria-hidden="true" /><span className="lb-beam b3" aria-hidden="true" />
+      <div className="lb-row">{[2, 1, 3].map((rank) => {
+        const r = rows[rank - 1];
+        return <div key={rank} className={`lb-slot p${rank}`}>
+          {r ? <Podium r={r} rank={rank} by={by} me={r.id === meId} skins={skins} onOpen={onOpen} /> : <div className="lb-card empty"><span className="lb-q">?</span><span className="lb-empty">아직 비어 있어요</span></div>}
+          <div className="lb-ped"><b>{rank}</b></div>
+        </div>;
+      })}</div>
+    </section>
+  );
+}
+
+function Podium({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: number; by: RankBy; me: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
   const art = r.skin && skins?.[r.skin] ? skins[r.skin].splash : r.mainChampion ? cdragon(CHAMPIONS[r.mainChampion]?.splash) : '';
   return (
-    <button type="button" className={`pod p${rank} ${r.bg ? 'has-bg' : ''}`} onClick={() => onOpen(r.id)}>
-      {/* 산 배경이 있으면 그 장면 + 얼굴, 없으면 대표 스킨 그림 */}
-      {r.bg ? <><BgScene id={r.bg} /><span className="pod-face"><MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={64} /></span></>
-        : art && <img className="bg" src={art} alt="" loading="lazy" />}
-      <span className="place">{rank === 1 && <Gem size={18} src="/brand/prism-32.png" />}{rank}위</span>
-      <span className="nm"><NickName nick={r.nick} /></span>
-      <span className="st"><b>{by === 'winrate' ? pct(r.w, r.n) : `${r.n}판`}</b><span>{by === 'winrate' ? `${r.n}판` : `승률 ${pct(r.w, r.n)}`}</span></span>
+    <button type="button" className={`lb-card ${me ? 'me' : ''}`} onClick={() => onOpen(r.id)}>
+      {/* 산 배경이 있으면 그 장면, 없으면 대표 스킨 그림 */}
+      {r.bg ? <BgScene id={r.bg} /> : art && <img className="lb-art" src={art} alt="" loading="lazy" />}
+      {rank === 1 && <span className="lb-crown" aria-hidden="true"><Gem size={28} src="/brand/prism-32.png" /></span>}
+      <span className="lb-face"><MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={rank === 1 ? 88 : 72} /></span>
+      <span className="lb-nm"><NickName nick={r.nick} /></span>
+      <span className="lb-st"><b>{by === 'winrate' ? pct(r.w, r.n) : `${r.n}판`}</b><small>{by === 'winrate' ? `${r.n}판` : `승률 ${pct(r.w, r.n)}`}</small></span>
     </button>
   );
 }

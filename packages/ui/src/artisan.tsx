@@ -3,44 +3,50 @@
  * 기준은 도감과 같다 (packages/core/src/mastery.ts, 서버 server/src/artisans.ts).
  */
 import { useMemo } from 'react';
-import { AUGMENT, CHAMPIONS, WIN_STEPS, type Api, type ArtisanRank, type ArtisanRanking, type Artisans as ArtisansData } from '@prism/core';
+import { AUGMENT, CHAMPIONS, type Api, type ArtisanRank, type ArtisanRanking, type Artisans as ArtisansData } from '@prism/core';
 import { ChampImg, Empty, LockedMore, MemberFace, useSkins } from './basics';
+import { NickName } from './studio';
 import { AugRing } from './augment';
 import { useLoad } from './crew';
 import { PrismMark } from './dex';
 
-/** 챔피언·증강 상세의 장인 칸: 장인(마스터)은 크게 빛나게, 그 아래 장인의 길에 오른 회원 */
+/** 챔피언·증강 상세의 장인 칸 (v3.38): 왼쪽 장인 명패(없으면 빈 자리), 오른쪽 장인의 길 순위. 늘 보인다 */
 export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champion' | 'augment'; id: number; onMember?: (id: string) => void }) {
   const { data } = useLoad<ArtisansData>(api, `/api/artisans/${kind}/${id}`);
   const skins = useSkins();
-  if (!data) return null;
-  const masters = data.artisans.filter((a) => a.master);
-  const road = data.artisans.filter((a) => !a.master && a.done > 0).slice(0, 5);
   const what = kind === 'champion' ? '챔프' : '증강';
-  if (!masters.length && !road.length) return null;
+  const masters = data?.artisans.filter((a) => a.master) ?? [];
+  const road = data?.artisans.filter((a) => !a.master && a.done > 0).slice(0, 5) ?? [];
   return (
-    <section className="card pad artisans">
-      <div className="card-head"><h2><PrismMark size={20} />장인</h2><span className="sp" /><span className="meta">이 {what}의 마스터 여정을 모두 이룬 회원</span></div>
-      <div className={`art-body ${road.length ? 'two' : ''}`}>
-      {masters.length ? <div className="art-hall">{masters.map((a) => (
-        <button key={a.id} type="button" className="art-card" onClick={() => onMember?.(a.id)}>
-          <span className="art-face"><MemberFace nick={a.nick} skin={a.skin} champion={a.main} size={64} skins={skins} /></span>
-          <span className="art-tag"><PrismMark size={14} />장인</span>
-          <b className="art-nm">{a.nick}</b>
-          <span className="art-st">{a.w}승 · {a.n}판</span>
-        </button>
-      ))}</div> : <p className="art-empty">아직 장인이 없어요. 첫 장인의 영광은 누가 차지할까요?</p>}
-      {road.length > 0 && <div className="art-road">
-        <span className="k">장인의 길</span>
-        {road.map((a) => (
-          <button key={a.id} type="button" className="art-row" onClick={() => onMember?.(a.id)}>
-            <MemberFace nick={a.nick} skin={a.skin} champion={a.main} size={32} skins={skins} />
-            <span className="nm">{a.nick}</span>
-            <span className="pips" aria-label={`${a.done}/${a.total}`}><i className={`pip s ${a.special ? 'on' : ''}`} />{WIN_STEPS.map((t) => <i key={t} className={`pip ${a.w >= t ? 'on' : ''}`} />)}</span>
-            <span className="meta">{a.done}/{a.total} · {a.w}승</span>
+    <section className="card art2" aria-label="장인">
+      <div className="art2-hall">
+        <span className="art2-k"><PrismMark size={14} />장인</span>
+        {!data ? <div className="art2-plaque sk" /> : masters.length ? <div className="art2-masters">{masters.slice(0, 3).map((a) => (
+          <button key={a.id} type="button" className="art2-plaque on" onClick={() => onMember?.(a.id)}>
+            <span className="art2-ring"><MemberFace nick={a.nick} skin={a.skin} champion={a.main} size={56} skins={skins} /></span>
+            <b className="art2-nm"><NickName nick={a.nick} /></b>
+            <small>{a.w}승 · {a.n}판</small>
           </button>
-        ))}
-      </div>}
+        ))}{masters.length > 3 && <span className="art2-more">+{masters.length - 3}</span>}</div>
+          : <div className="art2-plaque empty">
+            <span className="art2-ring"><span className="art2-q">?</span></span>
+            <b className="art2-nm">첫 장인을 기다려요</b>
+            <small>이 {what}의 마스터 여정을 모두 이루면 여기에 이름이 올라요</small>
+          </div>}
+      </div>
+      <div className="art2-road">
+        <div className="art2-road-h"><b>장인의 길</b><span className="meta">이룬 목표 순</span></div>
+        {!data ? <div className="art2-rows">{[0, 1, 2].map((i) => <i key={i} className="sk art2-skrow" />)}</div>
+          : road.length ? <ol className="art2-rows">{road.map((a, i) => (
+            <li key={a.id}><button type="button" className="art2-row" onClick={() => onMember?.(a.id)}>
+              <span className="rk">{i + 1}</span>
+              <MemberFace nick={a.nick} skin={a.skin} champion={a.main} size={28} skins={skins} />
+              <span className="nm"><NickName nick={a.nick} /></span>
+              <span className="art2-prog"><span style={{ width: `${(a.done / Math.max(1, a.total)) * 100}%` }} /></span>
+              <span className="art2-n"><b>{a.done}</b>/{a.total}</span>
+            </button></li>
+          ))}</ol>
+          : <p className="art2-none">아직 이 {what}로 목표를 이룬 회원이 없어요. 먼저 길을 열어 보세요.</p>}
       </div>
     </section>
   );

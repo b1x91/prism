@@ -1,11 +1,11 @@
 /**
- * 내 챔프 · 내 증강 (CLAUDE.md v3.27). 별을 눌러 좋아하는 챔프·증강을 표시한다.
+ * 내 챔프 · 내 증강 (CLAUDE.md v3.27). 하트(좋아요)를 눌러 좋아하는 챔프·증강을 표시한다 (v3.38 하트 터짐).
  * 서버(/api/me/favs)가 진실이고, 이 기기에도 localStorage `prism-favs` 로 남겨
  * 로그인 전·게임 위 작은 창에서도 바로 읽을 수 있게 한다.
  */
 import { useEffect, useState, useSyncExternalStore } from 'react';
+import { HeartBurst, HeartIcon } from './likeheart';
 import type { Api } from '@prism/core';
-import { Icon } from './icons';
 
 export type FavKind = 'champ' | 'aug';
 type Favs = { champs: number[]; augs: number[] };
@@ -47,24 +47,26 @@ export async function toggleFav(kind: FavKind, id: number) {
   try { set(await api.post<Favs>('/api/me/favs', { kind, id, on })); } catch { set(prev); }
 }
 
-/** 별 버튼 (로그인 전에는 숨긴다) */
+/** 좋아요 하트 버튼 + 좋아한 회원 수 (로그인 전에는 숨긴다) */
 export function FavStar({ kind, id, size = 'md' }: { kind: FavKind; id: number; size?: 'sm' | 'md' }) {
   const f = useFavs();
   const on = f.has(kind, id);
-  const [pop, setPop] = useState(false);
-  useEffect(() => { if (!pop) return; const t = setTimeout(() => setPop(false), 400); return () => clearTimeout(t); }, [pop]);
+  const [count, setCount] = useState<number | null>(null);
+  useEffect(() => {
+    setCount(null);
+    if (!f.connected || !api) return;
+    let live = true;
+    api.get<{ n: number }>(`/api/favs/count?kind=${kind}&id=${id}`).then((r) => { if (live) setCount(r.n); }).catch(() => {});
+    return () => { live = false; };
+  }, [f.connected, kind, id]);
   if (!f.connected) return null;
-  const label = on ? `${kind === 'champ' ? '내 챔프' : '내 증강'}에서 빼기` : `${kind === 'champ' ? '내 챔프' : '내 증강'}로 표시`;
-  return (
-    <button type="button" className={`fav ${size} ${on ? 'on' : ''} ${pop ? 'pop' : ''}`} aria-pressed={on} aria-label={label} title={label}
-      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPop(!on); void toggleFav(kind, id); }}>
-      <Icon name="star" />
-    </button>
-  );
+  const what = kind === 'champ' ? '내 챔프' : '내 증강';
+  const label = on ? `좋아요 취소 (${what}에서 빼기)` : `좋아요 (${what}로 표시)`;
+  return <HeartBurst on={on} count={count} label={label} size={size} onToggle={() => { setCount((c) => (c == null ? c : Math.max(0, c + (on ? -1 : 1)))); void toggleFav(kind, id); }} />;
 }
 
-/** 작은 별 표시 (목록 칸 구석, inline 이면 이름 옆) */
+/** 작은 하트 표시 (목록 칸 구석, inline 이면 이름 옆) */
 export function FavMark({ kind, id, inline }: { kind: FavKind; id: number; inline?: boolean }) {
   const f = useFavs();
-  return f.has(kind, id) ? <span className={`fav-mark ${inline ? 'in' : ''}`} role="img" aria-label={kind === 'champ' ? '내 챔프' : '내 증강'}><Icon name="star" /></span> : null;
+  return f.has(kind, id) ? <span className={`fav-mark ${inline ? 'in' : ''}`} role="img" aria-label={kind === 'champ' ? '내 챔프' : '내 증강'}><HeartIcon size={inline ? 13 : 11} /></span> : null;
 }
