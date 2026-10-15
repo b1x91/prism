@@ -3,6 +3,8 @@
 //! 규칙
 //! - 공백·기호를 뺀 글자끼리 비교한다 (인식기가 띄어쓰기를 틀리는 경우가 많다)
 //! - 4글자 이상 이름은 한 글자 틀려도 같은 것으로 본다
+//! - 3글자 이상 이름은 한글을 자모로 풀어 비교해, 받침·모음 몇 개 틀리거나 글자 하나 빠지고 더해져도 찾는다
+//!   ("날쌘걸음"을 "날쎈겉음"으로 읽어도). 단어째 읽힌 구간만, 글자 빠짐은 5글자 이상 이름만. 비슷한 후보가 여럿이면 덜 틀린 쪽
 //! - 2글자 이하 이름("흡수", "범람", "꽝")은 단어 하나가 통째로 같을 때만 (설명 속 "흡수량"을 이름으로 착각하지 않게)
 //! - 게임 화면 글자가 데이터와 다른 증강은 별칭으로도 찾는다 (ALIASES)
 //! - 한 줄에서 겹치는 후보는 긴 이름을 먼저 고른다 ("거인" < "거인 학살자")
@@ -35,6 +37,54 @@ const ALIASES: &[(u32, &str)] = &[(2111, "꽝!")]; // 데이터는 "꽁!"
 
 pub struct Matcher {
     names: Vec<(u32, Vec<char>)>,
+    /// 이름마다 자모로 푼 것 (names 와 같은 순서)
+    jamo: Vec<Vec<u32>>,
+}
+
+/// 한글 음절을 초성·중성·종성으로 푼다 (그 밖의 글자는 그대로)
+fn jamo_of(cs: &[char]) -> Vec<u32> {
+    let mut out = Vec::with_capacity(cs.len() * 3);
+    for &c in cs {
+        let u = c as u32;
+        if (0xAC00..=0xD7A3).contains(&u) {
+            let i = u - 0xAC00;
+            out.push(0x1_0000 + i / 588);
+            out.push(0x2_0000 + (i % 588) / 28);
+            if i % 28 > 0 {
+                out.push(0x3_0000 + i % 28);
+            }
+        } else {
+            out.push(u);
+        }
+    }
+    out
+}
+
+/// 편집 거리 (넣기·빼기·바꾸기 한 번씩 1). limit 를 넘으면 limit+1
+fn edit(a: &[u32], b: &[u32], limit: usize) -> usize {
+    if a.len().abs_diff(b.len()) > limit {
+        return limit + 1;
+    }
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    let mut cur = vec![0; b.len() + 1];
+    for i in 1..=a.len() {
+        cur[0] = i;
+        let mut row_min = cur[0];
+        for j in 1..=b.len() {
+            cur[j] = (prev[j] + 1).min(cur[j - 1] + 1).min(prev[j - 1] + usize::from(a[i - 1] != b[j - 1]));
+            row_min = row_min.min(cur[j]);
+        }
+        if row_min > limit {
+            return limit + 1;
+        }
+        std::mem::swap(&mut prev, &mut cur);
+    }
+    prev[b.len()]
+}
+
+/// 자모 몇 개까지 틀려도 되나 (이름 자모 수의 1/5, 3글자 이상만)
+fn jamo_allow(n_chars: usize, n_jamo: usize) -> usize {
+    if n_chars < 3 { 0 } else { (n_jamo / 5).max(1) }
 }
 
 fn norm(s: &str) -> Vec<char> {
@@ -45,6 +95,8 @@ struct Hit {
     id: u32,
     start: usize,
     len: usize,
+    /// 틀린 정도 (0 = 똑같음)
+    dist: usize,
     x: f32,
     y: f32,
 }
@@ -56,7 +108,8 @@ impl Matcher {
         let mut names: Vec<(u32, Vec<char>)> = d.augments.into_iter().filter(|a| !a.disabled).map(|a| (a.id, norm(&a.name))).filter(|(_, n)| !n.is_empty()).collect();
         let known: Vec<u32> = names.iter().map(|n| n.0).collect();
         names.extend(ALIASES.iter().filter(|(id, _)| known.contains(id)).map(|(id, n)| (*id, norm(n))));
-        Self { names }
+        let jamo = names.iter().map(|(_, n)| jamo_of(n)).collect();
+        Self { names, jamo }
     }
 
     /// 한 줄(단어 목록)에서 이름 후보 찾기
@@ -73,23 +126,56 @@ impl Matcher {
                 wid.push(i);
             }
         }
+        // 단어 경계에 딱 맞는 구간인가 (자모 비교는 제목처럼 단어째 읽힌 것만 — 설명 속 "궁극기를"을 "궁극기 봇"으로 잡지 않게)
+        let bound = |s: usize, n: usize| (s == 0 || wid[s - 1] != wid[s]) && (s + n == wid.len() || wid[s + n] != wid[s + n - 1]);
         let whole = |s: usize, n: usize| (s == 0 || wid[s - 1] != wid[s]) && (s + n == wid.len() || wid[s + n] != wid[s + n - 1]) && wid[s] == wid[s + n - 1];
         let mut hits = Vec::new();
-        for (id, name) in &self.names {
+        let center = |s: usize, n: usize| (pos[s].0 + pos[s + n - 1].2) / 2.0;
+        for (k, (id, name)) in self.names.iter().enumerate() {
             let n = name.len();
-            if n > chars.len() {
+            // 1) 글자 단위: 같은 길이에서 4글자 이상은 한 글자까지
+            if n <= chars.len() {
+                let allow = if n >= 4 { 1 } else { 0 };
+                for s in 0..=chars.len() - n {
+                    let diff = chars[s..s + n].iter().zip(name).filter(|(a, b)| a != b).count();
+                    if diff <= allow && (n > 2 || whole(s, n)) {
+                        hits.push(Hit { id: *id, start: s, len: n, dist: diff * 3, x: center(s, n), y: pos[s].1 });
+                    }
+                }
+            }
+            // 2) 자모 단위: 받침·모음이 조금 틀리거나 글자 하나 빠지고 더해져도 (3글자 이상)
+            let nj = &self.jamo[k];
+            let allow = jamo_allow(n, nj.len());
+            if allow == 0 {
                 continue;
             }
-            let allow = if n >= 4 { 1 } else { 0 };
-            for s in 0..=chars.len() - n {
-                let diff = chars[s..s + n].iter().zip(name).filter(|(a, b)| a != b).count();
-                if diff <= allow && (n > 2 || whole(s, n)) {
-                    hits.push(Hit { id: *id, start: s, len: n, x: (pos[s].0 + pos[s + n - 1].2) / 2.0, y: pos[s].1 });
+            // 글자 하나 빠진 구간은 5글자 이상 이름만 (짧은 이름은 설명 속 "소환사"를 "소환술사"로 잡게 된다)
+            let shortest = if n >= 5 { n - 1 } else { n };
+            for len in shortest..=n + 1 {
+                if len > chars.len() {
+                    continue;
+                }
+                for s in 0..=chars.len() - len {
+                    if !bound(s, len) {
+                        continue;
+                    }
+                    let win = &chars[s..s + len];
+                    // 빠른 거르기: 이름의 글자 중 절반 이상이 그대로 들어 있어야 자모를 비교한다
+                    let same = name.iter().filter(|c| win.contains(c)).count();
+                    if same * 2 < n {
+                        continue;
+                    }
+                    let d = edit(&jamo_of(win), nj, allow);
+                    // 5글자 이상은 글자 하나가 통째로 빠지거나 더해져도
+                    let cd = if n >= 5 { edit(&win.iter().map(|&c| c as u32).collect::<Vec<_>>(), &name.iter().map(|&c| c as u32).collect::<Vec<_>>(), 1) } else { 9 };
+                    if d <= allow || cd <= 1 {
+                        hits.push(Hit { id: *id, start: s, len, dist: d.min(cd * 3), x: center(s, len), y: pos[s].1 });
+                    }
                 }
             }
         }
-        // 긴 이름 우선, 겹치면 버림
-        hits.sort_by(|a, b| b.len.cmp(&a.len));
+        // 덜 틀린 것 → 긴 이름 우선, 겹치면 버림
+        hits.sort_by(|a, b| a.dist.cmp(&b.dist).then(b.len.cmp(&a.len)));
         let mut taken: Vec<(usize, usize)> = Vec::new();
         hits.into_iter()
             .filter(|h| {
@@ -229,6 +315,32 @@ mod tests {
         assert_eq!(s.update(&[(9, 995.0, 0.0)], 2000.0), vec![1, 9, 3]);
         // 이름 길이가 달라 가운데가 조금 달라도 같은 칸
         assert_eq!(s.update(&[(7, 1330.0, 0.0)], 2000.0), vec![1, 9, 7]);
+    }
+
+    #[test]
+    fn 자모가_조금_틀려도_세장_모두() {
+        // 실제 화면: 위력 추구 / 날쌘걸음 / 신난다! — 가운데를 여러 모양으로 잘못 읽어도 찾는다
+        let m = Matcher::from_json(DATA);
+        for mid in ["날쎈겉음", "날쌘 걸음", "날쌘걸음.", "날썬걸음", "닐쌘걸음", "날쌘걸음:"] {
+            let lines = vec![
+                vec![w("위력", 380.0, 300.0), w("추구", 440.0, 300.0)],
+                vec![w(mid, 700.0, 296.0)],
+                vec![w("신난다!", 1000.0, 290.0)],
+            ];
+            assert_eq!(m.find(&lines, 1800.0), vec![id_of("위력 추구"), id_of("날쌘걸음"), id_of("신난다!")], "{mid}");
+        }
+    }
+
+    #[test]
+    fn 설명_문장을_이름으로_잡지_않는다() {
+        // 카드 설명 몇 줄 (이름은 안 읽힘) → 아무것도, 또는 엉뚱한 증강이 나오면 안 된다
+        let m = Matcher::from_json(DATA);
+        let lines = vec![
+            vec![w("처치", 900.0, 400.0), w("관여", 940.0, 400.0), w("시", 980.0, 400.0), w("4초", 1000.0, 400.0), w("동안", 1040.0, 400.0), w("이동", 1080.0, 400.0), w("속도", 1120.0, 400.0)],
+            vec![w("최후의", 300.0, 420.0), w("의식", 360.0, 420.0), w("사용", 400.0, 420.0), w("시", 440.0, 420.0), w("커서", 460.0, 420.0), w("방향으로", 500.0, 420.0)],
+        ];
+        let found = m.find(&lines, 1800.0);
+        assert!(found.is_empty(), "{found:?}");
     }
 
     #[test]

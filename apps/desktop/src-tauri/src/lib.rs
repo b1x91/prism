@@ -7,6 +7,7 @@ mod matcher;
 mod server;
 mod update;
 mod vision;
+mod winstate;
 
 use std::sync::Arc;
 use tauri::menu::{Menu, MenuItem};
@@ -186,9 +187,12 @@ pub fn run() {
             }
             vision::create_overlay(app)?;
             vision.start(app.handle().clone());
-            // 창 제목에 버전: "Prism - 0.7.0"
+            // 창 제목에 버전: "Prism - 0.7.0". 크기·위치는 지난번 그대로 (없으면 세로로 넉넉한 기본 크기)
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.set_title(&format!("Prism - {}", app.package_info().version));
+                if let Ok(d) = app.path().app_config_dir() {
+                    winstate::restore(&w, &d);
+                }
             }
 
             // 트레이: 창 열기 / 업데이트 확인 / 끝내기. 창을 닫으면 트레이로 숨는다 (기록·대신 수집을 계속하기 위해)
@@ -231,18 +235,31 @@ pub fn run() {
                 })
                 .build(app)?;
 
-            // 윈도우 시작 시 자동 실행으로 켜졌으면 창 없이 트레이로만
-            if std::env::args().any(|a| a == "--background") {
+            // 윈도우 시작 시 자동 실행으로 켜졌으면 창 없이 트레이로만 (창은 크기를 맞춘 뒤에 보인다 — 깜빡임 없게)
+            if !std::env::args().any(|a| a == "--background") {
                 if let Some(w) = app.get_webview_window("main") {
-                    let _ = w.hide();
+                    let _ = w.show();
                 }
             }
             Ok(())
         })
         .on_window_event(|window, event| {
-            if let WindowEvent::CloseRequested { api, .. } = event {
-                api.prevent_close();
-                let _ = window.hide();
+            let keep = || {
+                if let (Some(w), Ok(d)) = (window.app_handle().get_webview_window(window.label()), window.app_handle().path().app_config_dir()) {
+                    if w.label() == "main" {
+                        winstate::save(&w, &d);
+                    }
+                }
+            };
+            match event {
+                WindowEvent::CloseRequested { api, .. } => {
+                    keep();
+                    api.prevent_close();
+                    let _ = window.hide();
+                }
+                // 크기·위치를 바꾸면 기억 (다음에 켤 때·업데이트로 다시 켜질 때 그대로)
+                WindowEvent::Resized(_) | WindowEvent::Moved(_) => keep(),
+                _ => {}
             }
         })
         .invoke_handler(tauri::generate_handler![lcu_status, discord_running, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
