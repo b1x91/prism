@@ -214,6 +214,19 @@ mod imp {
         })
     }
 
+    /// 두 창이 같은 프로세스의 창인가
+    fn same_process(a: HWND, b: HWND) -> bool {
+        if a.is_invalid() || b.is_invalid() {
+            return false;
+        }
+        let (mut pa, mut pb) = (0u32, 0u32);
+        unsafe {
+            let _ = GetWindowThreadProcessId(a, Some(&mut pa as *mut u32));
+            let _ = GetWindowThreadProcessId(b, Some(&mut pb as *mut u32));
+        }
+        pa != 0 && pa == pb
+    }
+
     /// 게임 창 화면 좌표 (클라이언트 영역)
     fn client_rect(h: HWND) -> Option<RECT> {
         let mut rc = RECT::default();
@@ -352,7 +365,8 @@ mod imp {
             }
             // 최소화만 아니면 읽는다 (맨 앞이 아니어도)
             let game = game.filter(|(h, _)| !unsafe { IsIconic(*h) }.as_bool());
-            let front = game.is_some_and(|(h, _)| unsafe { GetForegroundWindow() } == h);
+            // 맨 앞 = 맨 앞 창이 게임 창이거나 같은 게임 프로세스의 창 (전체 화면 모드에서는 포커스를 가진 창이 그림 창과 다를 수 있다)
+            let front = game.is_some_and(|(h, _)| { let fg = unsafe { GetForegroundWindow() }; fg == h || same_process(fg, h) });
             let how = game.map(|g| g.1).unwrap_or("");
             if game.is_some() && eng.is_none() && !warned_engine {
                 warned_engine = true;
@@ -383,7 +397,8 @@ mod imp {
                 if badge_at.take().is_some() {
                     hide_window(&app, "badge");
                 }
-            } else if badge_at != Some((rc, scale.to_bits())) {
+            } else if badge_at != Some((rc, scale.to_bits())) || tick % 8 == 0 {
+                // 한 번 띄운 뒤에도 몇 초마다 다시 맨 위로 — 게임(특히 전체 화면)이 나중에 맨 위를 차지하면 구석 표시가 그 밑에 깔렸다
                 show_badge(&app, &rc, scale);
                 badge_at = Some((rc, scale.to_bits()));
             }
