@@ -1,7 +1,8 @@
 //! 게임 중 증강 자동 인식과 게임 위 작은 창 (CLAUDE.md v3.5 사용자 결정, Windows 전용).
 //!
 //! 지키는 것
-//! - 게임 창이 맨 앞에 있을 때만 화면 가운데 일부를 복사해 Windows 내장 문자 인식으로 읽는다
+//! - 게임 창이 화면에 떠 있으면(최소화 아님) 화면 가운데 일부를 복사해 Windows 내장 문자 인식으로 읽는다
+//!   (게임이 막 시작돼 포커스가 다른 창에 있어도 읽는다 — 예전엔 게임 화면을 한 번 눌러야 떴다)
 //! - 캡처한 그림은 메모리에서만 쓰고 저장·전송하지 않는다
 //! - 게임 프로세스·메모리·입력은 건드리지 않는다. 롤에 요청도 하지 않는다
 //! - 작은 창은 클릭이 통과하고, 포커스를 가져가지 않으며, 화면 녹화·캡처에도 찍히지 않는다
@@ -22,8 +23,6 @@ const IDLE: Duration = Duration::from_secs(4);
 /// 카드가 안 읽혀도 작은 창을 그대로 두는 시간. 새로고침 애니메이션 동안 제목이 잠깐 사라져도 창은 깜빡이지 않는다.
 /// 이만큼 계속 안 보이면 다 고른 것으로 보고 닫는다
 const HOLD: Duration = Duration::from_millis(3000);
-/// 게임 창이 잠깐 뒤로 가도(알림·포커스 튐) 바로 닫지 않는다
-const AWAY: Duration = Duration::from_millis(1500);
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Settings {
@@ -207,6 +206,14 @@ mod imp {
         if pids.0.contains(&pid) { Some((fg, "process")) } else { None }
     }
 
+    /// 읽을 자리(가운데 줄의 세 점)에 보이는 창이 모두 게임 창인가
+    fn uncovered(h: HWND, x: i32, y: i32, w: i32, hh: i32) -> bool {
+        [1, 2, 3].iter().all(|k| {
+            let at = unsafe { WindowFromPoint(POINT { x: x + w * k / 4, y: y + hh / 2 }) };
+            !at.is_invalid() && unsafe { GetAncestor(at, GA_ROOT) } == h
+        })
+    }
+
     /// 게임 창 화면 좌표 (클라이언트 영역)
     fn client_rect(h: HWND) -> Option<RECT> {
         let mut rc = RECT::default();
@@ -296,23 +303,29 @@ mod imp {
         let mut slots = Slots::default();
         // 마지막으로 카드를 본 때, 게임 창이 뒤로 간 때
         let mut seen_at: Option<std::time::Instant> = None;
-        let mut away_at: Option<std::time::Instant> = None;
         // 구석 표시를 놓은 게임 화면 위치 (None = 숨김)
         let mut badge_at: Option<(RECT, u64)> = None;
         let mut pids: (Vec<u32>, Option<std::time::Instant>) = (Vec::new(), None);
+        // 한 번 찾은 게임 창 (창 종류 이름으로 못 찾는 경우, 포커스가 다른 데 가도 놓치지 않게)
+        let mut known: Option<HWND> = None;
+        // 제목 줄만 읽는 동안 몇 번에 한 번은 띠 전체를 다시 본다 (늦게 뜬 카드·높이가 다른 카드를 놓치지 않게)
+        let mut tick: u32 = 0;
         loop {
             let s = v.settings.lock().unwrap().clone();
             let allowed = v.allowed.load(Ordering::SeqCst);
-            let game = if s.enabled && allowed { game_window(&mut pids) } else { None };
-            let front = game.filter(|(h, _)| unsafe { GetForegroundWindow() } == *h);
-            let how = game.map(|g| g.1).unwrap_or("");
-            if front.is_some() {
-                away_at = None;
-            } else if game.is_some() && v.shown.load(Ordering::SeqCst) && away_at.get_or_insert_with(std::time::Instant::now).elapsed() < AWAY {
-                std::thread::sleep(FAST);
-                continue;
+            let mut game = if s.enabled && allowed { game_window(&mut pids) } else { None };
+            if game.is_some() {
+                known = game.map(|g| g.0);
+            } else if s.enabled && allowed && !pids.0.is_empty() {
+                game = known.filter(|h| unsafe { IsWindow(Some(*h)) }.as_bool()).map(|h| (h, "process"));
+            } else {
+                known = None;
             }
-            let (Some((h, _)), Some(eng)) = (front, eng.as_ref()) else {
+            // 최소화만 아니면 읽는다 (맨 앞이 아니어도)
+            let game = game.filter(|(h, _)| !unsafe { IsIconic(*h) }.as_bool());
+            let front = game.is_some_and(|(h, _)| unsafe { GetForegroundWindow() } == h);
+            let how = game.map(|g| g.1).unwrap_or("");
+            let (Some((h, _)), Some(eng)) = (game, eng.as_ref()) else {
                 if badge_at.take().is_some() {
                     hide_window(&app, "badge");
                 }
@@ -328,7 +341,12 @@ mod imp {
             let Some(rc) = client_rect(h) else { std::thread::sleep(EVERY); continue };
             // 게임 창이 있는 모니터의 배율 (모니터마다 배율이 다를 수 있다)
             let scale = monitor_scale(h);
-            if badge_at != Some((rc, scale.to_bits())) {
+            // 구석 표시는 게임 창이 맨 앞일 때만 (다른 창 위에 뜨지 않게)
+            if !front {
+                if badge_at.take().is_some() {
+                    hide_window(&app, "badge");
+                }
+            } else if badge_at != Some((rc, scale.to_bits())) {
                 show_badge(&app, &rc, scale);
                 badge_at = Some((rc, scale.to_bits()));
             }
@@ -337,8 +355,17 @@ mod imp {
             let wide = if band.is_some() { band_wide } else { misses % 4 == 3 };
             let (x, y, w, hh) = if wide { region_wide(&rc) } else { region(&rc) };
             if w < 200 || hh < 100 { std::thread::sleep(EVERY); continue; }
-            // 카드가 떠 있으면 제목 줄만, 아니면 넓게
-            let (by, bh) = band.unwrap_or((0, hh));
+            // 맨 앞이 아닐 때는 다른 창이 읽을 자리를 가리고 있으면 읽지 않는다 (Prism 창의 증강 이름을 카드로 착각하지 않게).
+            // 띄워 둔 작은 창은 그대로 둔다
+            if !front && !uncovered(h, x, y, w, hh) {
+                v.stage("back", 0, how);
+                std::thread::sleep(if v.shown.load(Ordering::SeqCst) { FAST } else { EVERY });
+                continue;
+            }
+            // 카드가 떠 있으면 제목 줄만, 아니면 넓게. 세 칸을 다 못 채웠으면 세 번에 한 번은 띠 전체
+            tick = tick.wrapping_add(1);
+            let full = band.is_some() && slots.len() < 3 && tick % 3 == 0;
+            let (by, bh) = if full { (0, hh) } else { band.unwrap_or((0, hh)) };
             let t0 = std::time::Instant::now();
             let found = grab(x, y + by, w, bh).and_then(|buf| recognize(eng, &buf, w, bh).ok());
             v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
@@ -371,7 +398,10 @@ mod imp {
                     } else {
                         misses += 1;
                         v.report.lock().unwrap().last_text = text.chars().take(400).collect();
-                        if band.is_some() && misses >= 2 {
+                        if !front {
+                            // 게임 창이 뒤로 갔을 때(다른 창이 가림)는 안 보인다고 닫지 않는다 — 돌아와서 다시 본다
+                            misses = 0;
+                        } else if band.is_some() && misses >= 2 {
                             // 제목 줄에서 못 찾으면 넓게 다시 (창 크기가 바뀌었을 수도)
                             band = None;
                         } else if shown && seen_at.map_or(true, |t| t.elapsed() > HOLD) {

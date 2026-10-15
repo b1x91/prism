@@ -13,7 +13,7 @@ import { ArtisanRankingView } from './artisan';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { RecentGames } from './game';
-import { ProfileHero, ShareButton } from './shop';
+import { ProfileHero, ShareButton, baseTint } from './shop';
 import { BgScene } from './bgscene';
 import { NickName, ProfileStudio } from './studio';
 
@@ -92,11 +92,10 @@ function Leaderboard({ rows, by, meId, skins, onOpen }: { rows: RankingRow[]; by
 }
 
 function Podium({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: number; by: RankBy; me: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
-  const art = r.skin && skins?.[r.skin] ? skins[r.skin].splash : r.mainChampion ? cdragon(CHAMPIONS[r.mainChampion]?.splash) : '';
   return (
     <button type="button" className={`lb-card ${me ? 'me' : ''}`} onClick={() => onOpen(r.id)}>
-      {/* 산 배경이 있으면 그 장면, 없으면 대표 스킨 그림 */}
-      {r.bg ? <BgScene id={r.bg} /> : art && <img className="lb-art" src={art} alt="" loading="lazy" />}
+      {/* 산 배경이 있으면 그 장면, 없으면 회원마다 정해진 기본 색 (프로필 머리와 같은 규칙) */}
+      {r.bg ? <BgScene id={r.bg} /> : <span className="phero-tint" style={{ ['--tint' as string]: baseTint(r.nick) }} aria-hidden="true" />}
       {rank === 1 && <span className="lb-crown" aria-hidden="true"><Gem size={28} src="/brand/prism-32.png" /></span>}
       <span className="lb-face"><MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={rank === 1 ? 88 : 72} /></span>
       <span className="lb-nm"><NickName nick={r.nick} /></span>

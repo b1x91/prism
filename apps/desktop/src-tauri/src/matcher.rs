@@ -237,6 +237,9 @@ impl Slots {
     pub fn is_empty(&self) -> bool {
         self.s.is_empty()
     }
+    pub fn len(&self) -> usize {
+        self.s.len()
+    }
     /// 읽은 제목들(ID, 가운데 x, y) 반영 → 왼쪽부터 칸별 ID
     pub fn update(&mut self, hits: &[(u32, f32, f32)], width: f32) -> Vec<u32> {
         let tol = (width * 0.08).max(40.0);
@@ -280,6 +283,19 @@ mod tests {
         let found = m.find(&lines, 1600.0);
         assert_eq!(found[0], id_of("거인 학살자"));
         assert_eq!(*found.last().unwrap(), id_of("최상급 조준경 부착"));
+    }
+
+    #[test]
+    fn 제목_높이가_달라도_세장() {
+        // 실제 화면 (0.9.34): 점멸 난사 / 신성한 중재 / 축소 엔진, 설명에 "점멸 사용 가능 횟수"
+        let m = Matcher::from_json(DATA);
+        let lines = vec![
+            vec![w("축소", 1300.0, 60.0), w("엔진", 1370.0, 60.0)],
+            vec![w("신성한", 780.0, 78.0), w("중재", 860.0, 78.0)],
+            vec![w("점멸", 250.0, 100.0), w("난사", 320.0, 100.0)],
+            vec![w("점멸", 150.0, 180.0), w("사용", 210.0, 180.0), w("가능", 270.0, 180.0)],
+        ];
+        assert_eq!(m.find(&lines, 1600.0), vec![id_of("점멸 난사"), id_of("신성한 중재"), id_of("축소 엔진")]);
     }
 
     #[test]
