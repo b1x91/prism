@@ -1571,7 +1571,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .db-bar > i { display: none; }
 .db-sub { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--s1) var(--s3); font-size: var(--fs-xs); color: rgba(255, 255, 255, .7); }
 .db-sub b { color: #fff; font-weight: 800; }
-/* 감독 리포트 */
+/* 코치 리포트 */
 .duo-report { display: grid; gap: var(--s5); padding: var(--s6); border-radius: var(--r-l); background: var(--surface-2); border: 1px solid var(--line); }
 .dr-head { display: grid; gap: 4px; }
 .dr-badge { justify-self: start; padding: 2px var(--s2); border-radius: var(--r-s); background: #0b0d14; color: var(--sy); font-size: var(--fs-xs); font-weight: 900; letter-spacing: .08em; }

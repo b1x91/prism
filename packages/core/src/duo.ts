@@ -170,7 +170,7 @@ export function bondOf(T: DuoGame[], now = Date.now()): Bond {
   };
 }
 
-// ───────── 감독 리포트 (강점 · 보완점 · 다음 판 작전) ─────────
+// ───────── 코치 리포트 (강점 · 보완점 · 다음 판 작전) ─────────
 
 export type CoachItem = { key: string; tone: 'good' | 'fix'; title: string; evidence: string; action: string; call: string; weight: number };
 export type CoachReport = { ready: boolean; need: number; items: CoachItem[]; plan: string[] };

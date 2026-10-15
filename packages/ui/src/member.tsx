@@ -339,7 +339,7 @@ function SynergyCard({ data }: { data: MemberPage }) {
 
         <div className="duo-report">
           <div className="dr-head">
-            <span className="dr-badge">감독 리포트</span>
+            <span className="dr-badge">코치 리포트</span>
             <h3>더 잘 맞추려면</h3>
             <span className="meta">함께한 {t.n}판 분석 · 판이 쌓일수록 정확해져요</span>
           </div>
