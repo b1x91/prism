@@ -4,6 +4,7 @@
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ApiError, withDefaults, type Api, type Links, type Me, type Presence } from '@prism/core';
+import { connectFavs } from '@prism/ui';
 
 export const SERVER = (import.meta.env.VITE_PRISM_SERVER ?? '').replace(/\/$/, '');
 /** Windows 앱 설치 파일 주소. 기본은 GitHub Releases 최신판 (build-desktop 이 늘 같은 이름으로 올린다) */
@@ -55,6 +56,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     refresh();
     if (SERVER) fetch(`${SERVER}/links`).then((r) => r.json()).then((l: Links) => setLinks({ discord: l.discord ?? FALLBACK_LINKS.discord, kakao: l.kakao ?? FALLBACK_LINKS.kakao })).catch(() => {});
   }, [refresh]);
+  // 내 챔프·내 증강: 로그인되면 서버 목록으로 맞춘다
+  useEffect(() => { connectFavs(me ? api : null); }, [me?.id, api]); // eslint-disable-line react-hooks/exhaustive-deps
   // 접속 상태 점: 화면을 보고 있는 동안 60초마다 '웹 접속'을 알리고, 앱·게임 상태가 섞인 결과를 받는다
   const loggedIn = Boolean(me);
   useEffect(() => {

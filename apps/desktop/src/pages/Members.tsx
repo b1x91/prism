@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { Empty, Icon, MemberView, RankingView, ShopView } from '@prism/ui';
+import { Empty, Icon, MemberView, MissionsView, RankingView, ShopView } from '@prism/ui';
 import type { State } from '../controller';
 import { api } from '../bridge';
 
@@ -34,4 +34,10 @@ export function ShopPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   // 대표 스킨이 없으면 가장 많이 한 챔피언으로 미리 보기
   const top = Object.entries(s.personal.champions).sort((a, b) => b[1].n - a[1].n)[0]?.[0];
   return <ShopView api={api} me={{ nick: me.nick, skin: me.skin, champion: top ? Number(top) : null }} />;
+}
+
+export function MissionsPage({ s, onLogin }: { s: State; onLogin: () => void }) {
+  const nav = useNavigate();
+  if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="미션" />;
+  return <MissionsView api={api} onChampion={(id) => nav(`/champions/${id}`)} />;
 }

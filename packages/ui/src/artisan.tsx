@@ -16,7 +16,7 @@ export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champio
   if (!data) return null;
   const masters = data.artisans.filter((a) => a.master);
   const road = data.artisans.filter((a) => !a.master && a.done > 0).slice(0, 5);
-  const what = kind === 'champion' ? '챔피언' : '증강';
+  const what = kind === 'champion' ? '챔프' : '증강';
   if (!masters.length && !road.length) return null;
   return (
     <section className="card pad artisans">

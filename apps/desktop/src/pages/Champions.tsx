@@ -13,13 +13,13 @@ export function ChampionsPage({ member, record }: { member: boolean; record?: Re
   const stats = useLoad<AugmentStats>(api, member && champ ? `/api/augments?champion=${champ}` : null).data;
   if (!champ) return (
     <div className="stack" style={{ gap: 16 }}>
-      <h1 className="h1">챔피언</h1>
-      <section className="card pad"><input className="input" style={{ marginBottom: 16 }} value={q} autoFocus onChange={(e) => setQ(e.target.value)} placeholder="챔피언 검색 (예: '아리' 혹은 'ㅇㄹ')" /><ChampGrid query={q} record={record} onPick={(c) => nav(`/champions/${c}`)} /></section>
+      <h1 className="h1">챔프</h1>
+      <section className="card pad"><input className="input" style={{ marginBottom: 16 }} value={q} autoFocus onChange={(e) => setQ(e.target.value)} placeholder="챔프 검색 (예: '아리' 혹은 'ㅇㄹ')" /><ChampGrid query={q} record={record} onPick={(c) => nav(`/champions/${c}`)} /></section>
     </div>
   );
   return (
     <div className="stack" style={{ gap: 16 }}>
-      <ChampBanner id={champ} eyebrow="아수라장 증강" actions={<button type="button" className="btn sm" onClick={() => nav('/champions')}>다른 챔피언</button>} />
+      <ChampBanner id={champ} eyebrow="아수라장 증강" actions={<button type="button" className="btn sm" onClick={() => nav('/champions')}>다른 챔프</button>} />
       {member && <Artisans api={api} kind="champion" id={champ} onMember={(m) => nav(`/members/${m}`)} />}
       <div className="row"><Seg value={tab} options={member ? [['guide', '어울리는 증강'], ['compare', '증강 3개 비교'], ['crew', '모임 기록']] : [['guide', '어울리는 증강'], ['compare', '증강 3개 비교']]} onChange={setTab} /></div>
       {tab === 'guide' && <AugmentGuide championId={champ} stats={stats} />}

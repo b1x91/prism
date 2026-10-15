@@ -8,6 +8,7 @@ import { dexFromRows } from '../../packages/core/src/history.js';
 import { parseFeat } from '../../packages/core/src/challenges.js';
 import { EARN, SHOP_ITEM, earnedTotal, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
 import { dexRows } from './crew.js';
+import { missionPiecesOf } from './missions.js';
 import { HttpError, json, type Env, type Member } from './util.js';
 
 const HOUR = 3_600_000;
@@ -43,9 +44,9 @@ async function earned(env: Env, id: string): Promise<Earned> {
     env.DB.prepare('SELECT COUNT(*) AS n FROM piece_daily WHERE member_id = ?').bind(id),
   ]);
   const gr = g.results[0] as { n: number; w: number; c: number };
-  const { champs, augs } = await levelsOf(env, id);
+  const [{ champs, augs }, missions] = await Promise.all([levelsOf(env, id), missionPiecesOf(env, id)]);
   const levels = [...champs, ...augs].reduce((s, x) => s + levelTotal(dexLevel(x.m)), 0);
-  return { games: gr.n, wins: gr.w, crew: gr.c, levels, together: (t.results[0] as { n: number }).n, daily: (d.results[0] as { n: number }).n };
+  return { games: gr.n, wins: gr.w, crew: gr.c, levels, together: (t.results[0] as { n: number }).n, daily: (d.results[0] as { n: number }).n, missions };
 }
 
 async function state(env: Env, id: string) {

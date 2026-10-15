@@ -22,7 +22,7 @@ export function MatchupBar({ me, matchup, onChange, auto }: { me?: number | null
             <button key={`${id}-${i}`} type="button" className="mu-c" disabled={!onChange} title={onChange ? `${CHAMPIONS[id]?.name} 빼기` : CHAMPIONS[id]?.name}
               onClick={() => onChange?.({ ...matchup, [side]: ids.filter((_, j) => j !== i) })}><ChampImg id={id} size={32} />{onChange && <i className="mu-x"><Icon name="x" /></i>}</button>
           ))}
-          {onChange && ids.length < max && <button type="button" className={`mu-c add ${adding === side ? 'on' : ''}`} onClick={() => setAdding(adding === side ? null : side)} aria-label={`${label}에 챔피언 넣기`}>+</button>}
+          {onChange && ids.length < max && <button type="button" className={`mu-c add ${adding === side ? 'on' : ''}`} onClick={() => setAdding(adding === side ? null : side)} aria-label={`${label}에 챔프 넣기`}>+</button>}
           {!onChange && ids.length === 0 && <span className="meta">{side === 'enemies' ? '게임이 시작되면 채워져요' : '챔프 선택 때 채워져요'}</span>}
         </span>
       </div>
@@ -39,7 +39,7 @@ export function MatchupBar({ me, matchup, onChange, auto }: { me?: number | null
       </div>
       {row('allies', 4, '우리 팀')}
       {row('enemies', 5, '상대 팀')}
-      {adding && onChange && <div className="mu-add"><ChampSearch autoFocus placeholder={adding === 'enemies' ? '상대 챔피언 (예: 말파이트, ㅁㅍㅇㅌ)' : '우리 팀 챔피언'} onPick={(id) => {
+      {adding && onChange && <div className="mu-add"><ChampSearch autoFocus placeholder={adding === 'enemies' ? '상대 챔프 (예: 말파이트, ㅁㅍㅇㅌ)' : '우리 팀 챔프'} onPick={(id) => {
         const list = matchup[adding];
         const next = { ...matchup, [adding]: [...list, id].slice(0, adding === 'enemies' ? 5 : 4) };
         onChange(next);

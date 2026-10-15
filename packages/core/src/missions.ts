@@ -1,0 +1,122 @@
+/**
+ * 미션 (CLAUDE.md v3.27). 도감과 이어서, 안 해 본 챔프와 덜 한 역할로 넓히게 한다.
+ *  - 이번 주 미션 3개: 지난주까지의 내 기록으로 정해지고(주 중에 바뀌지 않는다), 이번 주 판으로 채운다.
+ *    한 역할에 치우친 사람일수록 보상이 크다 (BIAS_BONUS).
+ *  - 역할 개척: 역할마다 해 본 챔프 수가 단계를 넘으면 보상.
+ * 보상(피스)은 기록에서 늘 다시 계산한다. 숫자는 여기 한 곳에서 바꾼다.
+ */
+import { CHAMPIONS } from './data';
+import { challengeRole, CHALLENGE_ROLE_KO, type ChallengeRole } from './challenges';
+
+/** 판 하나: 챔프 · 승(1/0) · 시각 */
+export type MGame = { c: number; w: number; t: number };
+
+export const MISSION_ROLES: ChallengeRole[] = ['marksman', 'mage', 'assassin', 'fighter', 'tank', 'support'];
+export const MISSION_ROLE_KO = CHALLENGE_ROLE_KO;
+
+/** 주간 미션 기본 보상 */
+export const MISSION_REWARD = { fresh: 40, weak: 40, spread: 30 } as const;
+/** 가장 많이 한 역할의 비율이 이 이상이면 보상 배수 (큰 것부터) */
+export const BIAS_BONUS: [number, number][] = [[0.7, 2], [0.5, 1.5]];
+/** 역할 개척 단계: 그 역할 챔프를 몇 개 해 봤나 (half·all 은 그 역할 챔프 수의 절반·전부) */
+export const PIONEER_STEPS: { at: number | 'half' | 'all'; reward: number }[] = [
+  { at: 3, reward: 20 }, { at: 8, reward: 40 }, { at: 'half', reward: 100 }, { at: 'all', reward: 300 },
+];
+
+const DAY = 86_400_000, HOUR = 3_600_000, WEEK = 7 * DAY;
+/** 이번 주 월요일 0시 (한국 시간) */
+export function weekStart(t: number) {
+  const d = Math.floor((t + 9 * HOUR) / DAY);
+  const monday = d - ((d + 3) % 7); // 1970-01-01 은 목요일
+  return monday * DAY - 9 * HOUR;
+}
+
+/** 역할별 챔프 (도전 역할 기준: 서포터 태그 우선, 서포터+탱커는 탱커) */
+export const ROLE_POOL: Record<ChallengeRole, number[]> = Object.fromEntries(MISSION_ROLES.map((r) => [r, [] as number[]])) as Record<ChallengeRole, number[]>;
+for (const id of Object.keys(CHAMPIONS).map(Number).sort((a, b) => a - b)) { const r = challengeRole(id); if (r) ROLE_POOL[r].push(id); }
+
+export type RoleShare = { role: ChallengeRole; n: number; share: number };
+/** 역할별 판수·비율 (많은 순) */
+export function roleShares(games: MGame[]): RoleShare[] {
+  const n: Record<string, number> = {};
+  for (const g of games) { const r = challengeRole(g.c); if (r) n[r] = (n[r] ?? 0) + 1; }
+  const total = Object.values(n).reduce((s, x) => s + x, 0);
+  return MISSION_ROLES.map((role) => ({ role, n: n[role] ?? 0, share: total ? (n[role] ?? 0) / total : 0 })).sort((a, b) => b.n - a.n);
+}
+export const bonusOf = (top: number) => BIAS_BONUS.find(([at]) => top >= at)?.[1] ?? 1;
+
+export type Mission = {
+  key: 'fresh' | 'weak' | 'spread';
+  title: string; hint: string; role?: ChallengeRole;
+  target: number; progress: number; done: boolean; reward: number;
+};
+
+/** 그 주의 미션 (주 시작 전 기록으로 정하고, 그 주 판으로 채운다) */
+export function weekMissions(all: MGame[], ws: number): { missions: Mission[]; bonus: number; top: RoleShare | null } {
+  const prior = all.filter((g) => g.t < ws), week = all.filter((g) => g.t >= ws && g.t < ws + WEEK);
+  const shares = roleShares(prior);
+  const top = shares[0]?.n ? shares[0] : null;
+  const bonus = bonusOf(top?.share ?? 0);
+  // 덜 한 역할 순 (같으면 주마다 돌아가는 순서로)
+  const rot = Math.floor(ws / WEEK) % MISSION_ROLES.length;
+  const order = (r: ChallengeRole) => (MISSION_ROLES.indexOf(r) - rot + MISSION_ROLES.length) % MISSION_ROLES.length;
+  const weak = [...shares].sort((a, b) => a.n - b.n || order(a.role) - order(b.role)).map((x) => x.role);
+  const seen = new Set(prior.map((g) => g.c));
+  // 1) 가장 덜 한 역할에서 안 해 본 챔프 (그 역할을 다 해 봤으면 그다음 역할)
+  const r1 = weak.find((r) => ROLE_POOL[r].some((c) => !seen.has(c))) ?? weak[0];
+  const left1 = ROLE_POOL[r1].filter((c) => !seen.has(c)).length;
+  const t1 = Math.min(2, Math.max(1, left1));
+  const fresh = new Set(week.filter((g) => challengeRole(g.c) === r1 && !seen.has(g.c)).map((g) => g.c)).size;
+  // 2) 그다음으로 덜 한 역할로 승리
+  const r2 = weak.find((r) => r !== r1) ?? r1;
+  const wins = week.filter((g) => g.w && challengeRole(g.c) === r2).length;
+  // 3) 서로 다른 역할 3개
+  const roles = new Set(week.map((g) => challengeRole(g.c)).filter(Boolean)).size;
+  const R = (base: number) => Math.round(base * bonus);
+  const missions: Mission[] = [
+    { key: 'fresh', role: r1, title: `처음 해 보는 ${CHALLENGE_ROLE_KO[r1]} 챔프 ${t1}개`, hint: `아직 안 해 본 ${CHALLENGE_ROLE_KO[r1]} 챔프로 한 판씩`, target: t1, progress: Math.min(fresh, t1), done: fresh >= t1, reward: R(MISSION_REWARD.fresh) },
+    { key: 'weak', role: r2, title: `${CHALLENGE_ROLE_KO[r2]}로 2승`, hint: `덜 해 본 역할인 ${CHALLENGE_ROLE_KO[r2]} 챔프로 두 번 이기기`, target: 2, progress: Math.min(wins, 2), done: wins >= 2, reward: R(MISSION_REWARD.weak) },
+    { key: 'spread', title: '서로 다른 역할 3개', hint: '이번 주에 역할이 다른 챔프 셋으로 한 판씩', target: 3, progress: Math.min(roles, 3), done: roles >= 3, reward: R(MISSION_REWARD.spread) },
+  ];
+  return { missions, bonus, top };
+}
+
+export type Pioneer = { role: ChallengeRole; played: number; pool: number; steps: { at: number; reward: number; done: boolean }[] };
+/** 역할 개척: 역할마다 해 본 챔프 수와 단계 */
+export function pioneer(all: MGame[]): Pioneer[] {
+  const seen = new Set(all.map((g) => g.c));
+  return MISSION_ROLES.map((role) => {
+    const pool = ROLE_POOL[role].length, played = ROLE_POOL[role].filter((c) => seen.has(c)).length;
+    const ats = PIONEER_STEPS.map((s) => ({ at: s.at === 'all' ? pool : s.at === 'half' ? Math.ceil(pool / 2) : Math.min(s.at, pool), reward: s.reward }));
+    return { role, played, pool, steps: ats.map((s) => ({ ...s, done: played >= s.at })) };
+  });
+}
+
+/** 지금까지 미션으로 번 피스 (지난 모든 주 + 이번 주 + 역할 개척) */
+export function missionPieces(all: MGame[], now = Date.now()): number {
+  if (!all.length) return 0;
+  let sum = 0;
+  const first = Math.min(...all.map((g) => g.t));
+  for (let ws = weekStart(first); ws <= now; ws += WEEK) sum += weekMissions(all, ws).missions.reduce((s, m) => s + (m.done ? m.reward : 0), 0);
+  for (const p of pioneer(all)) sum += p.steps.reduce((s, x) => s + (x.done ? x.reward : 0), 0);
+  return sum;
+}
+
+/** 미션 화면 */
+export type MissionState = {
+  week: { start: number; end: number; missions: Mission[]; bonus: number; top: RoleShare | null };
+  shares: RoleShare[]; pioneer: Pioneer[]; earned: number;
+  /** 이번 주 '처음 해 보는' 미션 역할에서 아직 안 해 본 챔프 */
+  suggest: number[];
+};
+export function missionState(all: MGame[], now = Date.now()): MissionState {
+  const ws = weekStart(now);
+  const w = weekMissions(all, ws);
+  const seen = new Set(all.map((g) => g.c));
+  const r = w.missions[0].role!;
+  return {
+    week: { start: ws, end: ws + WEEK, ...w },
+    shares: roleShares(all), pioneer: pioneer(all), earned: missionPieces(all, now),
+    suggest: ROLE_POOL[r].filter((c) => !seen.has(c)),
+  };
+}

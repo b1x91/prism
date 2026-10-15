@@ -9,9 +9,9 @@ import { CHAMPIONS, ITEM } from './data';
 /** 한 판의 활약 기록. null = 그 판에서는 알 수 없음 */
 export type Feat = {
   multi: number | null;      // 가장 큰 연속 처치 (2 더블 · 3 트리플 · 4 쿼드라 · 5 펜타)
-  dmgTop: boolean | null;    // 10명 중 챔피언 피해량 1위
+  dmgTop: boolean | null;    // 10명 중 챔프 피해량 1위
   dmgTeamTop: boolean | null;
-  share: number | null;      // 우리 팀 챔피언 피해량 중 내 몫 (0~1)
+  share: number | null;      // 우리 팀 챔프 피해량 중 내 몫 (0~1)
   takenTop: boolean | null;  // 10명 중 받은 피해 1위
   takenTeamTop: boolean | null;
   ccTop: boolean | null;     // 10명 중 군중 제어 시간 1위
@@ -90,12 +90,12 @@ const ALLY_STEP = 20_000, ALLY_GATE = 40_000; // 아수라장 소라카 평균 �
 
 export const ROLE_CHALLENGES: Record<ChallengeRole, Challenge[]> = {
   marksman: [
-    { key: 'dmgTop', label: '피해량 1위 3번', hint: '한 판 10명 중 챔피언에게 준 피해가 가장 많게', target: 3, needs: ['dmgTop'], test: (g) => g.f.dmgTop === true },
+    { key: 'dmgTop', label: '피해량 1위 3번', hint: '한 판 10명 중 챔프에게 준 피해가 가장 많게', target: 3, needs: ['dmgTop'], test: (g) => g.f.dmgTop === true },
     { key: 'quadra', label: '쿼드라킬', hint: '혼자 연달아 넷을 처치', target: 1, needs: ['multi'], test: (g) => (g.f.multi ?? 0) >= 4 },
     { key: 'penta', label: '펜타킬', hint: '혼자 연달아 다섯을 처치', target: 1, gate: true, needs: ['multi'], test: (g) => (g.f.multi ?? 0) >= 5 },
   ],
   mage: [
-    { key: 'dmgTop', label: '피해량 1위 3번', hint: '한 판 10명 중 챔피언에게 준 피해가 가장 많게', target: 3, needs: ['dmgTop'], test: (g) => g.f.dmgTop === true },
+    { key: 'dmgTop', label: '피해량 1위 3번', hint: '한 판 10명 중 챔프에게 준 피해가 가장 많게', target: 3, needs: ['dmgTop'], test: (g) => g.f.dmgTop === true },
     { key: 'quadra', label: '쿼드라킬', hint: '혼자 연달아 넷을 처치', target: 1, needs: ['multi'], test: (g) => (g.f.multi ?? 0) >= 4 },
     { key: 'carry', label: '팀 피해의 35%를 넣고 승리', hint: '우리 팀이 넣은 피해의 3분의 1 넘게를 혼자', target: 1, gate: true, needs: ['share'], test: (g) => g.win && (g.f.share ?? 0) >= 0.35 },
   ],

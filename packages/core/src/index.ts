@@ -15,3 +15,4 @@ export * from './review';
 export * from './presence';
 export * from './challenges';
 export * from './shop';
+export * from './missions';

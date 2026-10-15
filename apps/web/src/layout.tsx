@@ -1,10 +1,10 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
-import { AugmentOpen, ChannelIcons, FacePresence, MatchSource, Gem, Icon, MemberFace, Seg, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AugmentOpen, ChannelIcons, FacePresence, MatchSource, Gem, Icon, MemberFace, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import type { MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
-const NAV: [string, string, IconName][] = [['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users'], ['/shop', '상점', 'bag']];
+const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users'], ['/shop', '상점', 'bag']];
 
 export function Layout() {
   const { me, login, links, api } = useSession();
@@ -13,6 +13,7 @@ export function Layout() {
   const [menu, setMenu] = useState(false);
   useEffect(() => { scrollTo(0, 0); setMenu(false); }, [pathname]);
   const nav = useNavigate();
+  const pieces = usePieces(me ? api : null);
   const openAug = useCallback((id: number) => nav(`/augments/${id}`), [nav]);
   return (
     <>
@@ -22,7 +23,7 @@ export function Layout() {
         <span className="sp" />
         <span className="top-wide"><ChannelIcons links={links} size={32} />
           <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>
-        {me ? <NavLink to="/me" className="me-btn" title="내 페이지"><FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={30} /></FacePresence><span>{me.nick}</span></NavLink>
+        {me ? <NavLink to="/me" className="me-btn" title="내 페이지"><FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={30} /></FacePresence><span className="me-txt"><b>{me.nick}</b>{pieces !== null && <small><PieceIcon size={12} />{pieces.toLocaleString()}</small>}</span></NavLink>
           : <button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />로그인</button>}
         <button type="button" className="icon-btn menu-btn" aria-label="메뉴 열기" aria-expanded={menu} onClick={() => setMenu(true)}><Icon name="menu" /></button>
       </div></header>

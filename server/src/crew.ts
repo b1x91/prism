@@ -218,7 +218,7 @@ export async function getChampion(env: Env, me: Member, championId: number) {
 
 export async function addTip(req: Request, env: Env, me: Member) {
   const { championId, augmentId, text } = (await req.json().catch(() => ({}))) as { championId?: number; augmentId?: number; text?: string };
-  if (!Number.isInteger(championId) || championId! <= 0) throw new HttpError(400, '챔피언이 없습니다.');
+  if (!Number.isInteger(championId) || championId! <= 0) throw new HttpError(400, '챔프가 없습니다.');
   const t = typeof text === 'string' ? text.trim() : '';
   if (!t) throw new HttpError(400, '내용을 입력해주세요.');
   if (t.length > TIP_MAX) throw new HttpError(400, `${TIP_MAX}자까지 쓸 수 있습니다.`);

@@ -86,8 +86,8 @@ const REQUIRE: Record<string, { ok: (c: ChampionProfile) => boolean; label: stri
 
 /** 이유 칩에 쓰는 말 (어울림이 높을 때만 표시) */
 const REASON: Record<string, (c: ChampionProfile) => string> = {
-  ap: () => 'AP 챔피언',
-  ad: () => 'AD 챔피언',
+  ap: () => 'AP 챔프',
+  ad: () => 'AD 챔프',
   attack: () => '평타 위주',
   crit: () => '치명타',
   ability: () => '스킬 위주',
@@ -221,20 +221,20 @@ const iGa = (w: string) => { const ch = w.charCodeAt(w.length - 1); return ch >=
 /** 이 챔피언에게 왜 맞는지 (성향 태그별) */
 const WHY: Record<string, string> = {
   haste: '스킬을 자주 써서 교전을 계속 열 수 있어요',
-  ability: '스킬로 싸우는 챔피언이라 효과를 다 받아요',
+  ability: '스킬로 싸우는 챔프라 효과를 다 받아요',
   ult: '궁극기를 더 자주, 더 세게 써요',
-  attack: '평타로 싸우는 챔피언이라 효과를 다 받아요',
-  crit: '치명타 아이템을 가는 챔피언이라 바로 이득이에요',
-  ap: 'AP 챔피언이라 그대로 강해져요',
-  ad: 'AD 챔피언이라 그대로 강해져요',
+  attack: '평타로 싸우는 챔프라 효과를 다 받아요',
+  crit: '치명타 아이템을 가는 챔프라 바로 이득이에요',
+  ap: 'AP 챔프라 그대로 강해져요',
+  ad: 'AD 챔프라 그대로 강해져요',
   tank: '앞에서 버티는 역할이 더 단단해져요',
   bruiser: '싸움 한가운데서 오래 버티는 전사형에 맞아요',
   sustain: '회복으로 긴 싸움을 버텨요',
-  mobile: '많이 움직이는 챔피언이라 효과를 자주 터뜨려요',
+  mobile: '많이 움직이는 챔프라 효과를 자주 터뜨려요',
   ranged: '원거리라 안전하게 효과를 써요',
-  melee: '붙어서 싸우는 챔피언에 맞아요',
+  melee: '붙어서 싸우는 챔프에 맞아요',
   burst: '한 번에 몰아치는 순간 딜에 맞아요',
-  any: '어느 챔피언이 써도 손해 없는 범용 증강이에요',
+  any: '어느 챔프가 써도 손해 없는 범용 증강이에요',
   gamble: '운에 따라 결과가 갈리는 증강이에요',
 };
 /** 조건을 갖췄을 때 */
@@ -287,7 +287,7 @@ export function explainFit(c: ChampionProfile, a: MayhemAugment): { why: string;
   // 성향이 안 맞을 때 쓰는 말 (가장 안 맞는 성향 기준)
   const weakWhy = () => {
     const worst = prefs.filter((t) => REASON[t]).sort((x, y) => AFFINITY[x](c) - AFFINITY[y](c))[0];
-    return worst ? `${REASON[worst]({} as ChampionProfile)} 증강이라 이 챔피언에겐 효과가 작아요` : '이 챔피언에겐 효과가 작아요';
+    return worst ? `${REASON[worst]({} as ChampionProfile)} 증강이라 이 챔프에겐 효과가 작아요` : '이 챔프에겐 효과가 작아요';
   };
   let why: string, key: string | null = null;
   if (missing) why = `${REQUIRE[missing].label}${iGa(REQUIRE[missing].label)} 없어 효과를 거의 못 봐요`;
@@ -297,7 +297,7 @@ export function explainFit(c: ChampionProfile, a: MayhemAugment): { why: string;
     // 가장 잘 맞는 성향 (범용·운은 다른 성향이 없을 때만)
     const ranked = prefs.filter((t) => WHY[t]).sort((x, y) => AFFINITY[y](c) - AFFINITY[x](c) || Number(x === 'any' || x === 'gamble') - Number(y === 'any' || y === 'gamble'));
     const best = ranked.find((t) => t !== 'any' && t !== 'gamble') ?? ranked[0];
-    if (!best) why = '어느 챔피언이 써도 무난해요';
+    if (!best) why = '어느 챔프가 써도 무난해요';
     else if (best === 'any' || best === 'gamble' || AFFINITY[best](c) >= 0.6) { key = best; why = WHY[best]; }
     else why = weakWhy();
   }

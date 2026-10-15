@@ -34,7 +34,7 @@ export function RankingView({ api, meId, onOpen }: { api: Api; meId?: string; on
   }, [data, by]);
   return (
     <div className="stack" style={{ gap: 16 }}>
-      <div className="row wrapr"><Seg value={by} options={[['games', '판수'], ['winrate', '승률'], ['month', '이번 달'], ['champ-art', '챔피언 장인'], ['aug-art', '증강 장인']]} onChange={setBy} />
+      <div className="row wrapr"><Seg value={by} options={[['games', '판수'], ['winrate', '승률'], ['month', '이번 달'], ['champ-art', '챔프 장인'], ['aug-art', '증강 장인']]} onChange={setBy} />
         <span className="meta">{art ? '도감 마스터 여정을 모두 이룬 수 (같으면 이룬 목표 수)' : by === 'winrate' ? `${data?.minWinrate ?? 10}판 이상 기록한 회원만` : by === 'month' ? '이번 달 판수' : '지금까지 기록된 판수'}</span></div>
       {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
@@ -64,7 +64,7 @@ function RankRow({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: numb
     <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 ? 'first' : ''}`} onClick={() => onOpen(r.id)}>
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={40} />
-      <span className="who"><b>{r.nick}</b>{r.mainChampion ? <span className="meta">주 챔피언 {CHAMPIONS[r.mainChampion]?.name}</span> : null}</span>
+      <span className="who"><b>{r.nick}</b>{r.mainChampion ? <span className="meta">주 챔프 {CHAMPIONS[r.mainChampion]?.name}</span> : null}</span>
       <span className={`num ${by !== 'winrate' ? 'key' : ''}`}>{r.n}<small>판</small></span>
       <span className={`num ${by === 'winrate' ? 'key' : ''}`}>{pct(r.w, r.n)}</span>
     </button>
@@ -111,7 +111,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
       <RecentGames games={games} limit={8} onChampion={onChampion} />
       {total.n > 0 && <div className="grid2">
         <section className="card pad">
-          <div className="card-head"><h2>주 챔피언</h2><span className="sp" /><span className="meta">만난 챔피언 {data.champions.length} / {Object.keys(CHAMPIONS).length}</span></div>
+          <div className="card-head"><h2>주 챔프</h2><span className="sp" /><span className="meta">만난 챔프 {data.champions.length} / {Object.keys(CHAMPIONS).length}</span></div>
           <div className="list">{data.champions.slice(0, 6).map((c) => (
             <button type="button" key={c.id} className="item linkish" onClick={() => onChampion?.(c.id)}>
               <ChampImg id={c.id} size={32} /><span className="title">{CHAMPIONS[c.id]?.name}</span>
@@ -124,7 +124,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
           <Bars items={S.roles.map((r) => ({ key: r.key, label: ROLE_KO[r.key] ?? r.key, share: r.share, color: ROLE_COLOR[r.key] }))} />
           <div className="k-title">피해 유형</div>
           <Bars items={S.damage.map((d) => ({ key: d.key, label: d.key === 'MIX' ? '혼합' : d.key, share: d.share, color: d.key === 'AP' ? 'var(--spectrum-6)' : d.key === 'AD' ? 'var(--spectrum-2)' : 'var(--text-3)' }))} />
-          <p className="meta" style={{ margin: 0 }}>앞라인 챔피언 {Math.round(S.front * 100)}% · {S.cc >= 2.3 ? 'CC 많은 챔피언 선호' : S.cc < 1.8 ? 'CC 적은 챔피언 위주' : 'CC 보통'}</p>
+          <p className="meta" style={{ margin: 0 }}>앞라인 챔프 {Math.round(S.front * 100)}% · {S.cc >= 2.3 ? 'CC 많은 챔프 선호' : S.cc < 1.8 ? 'CC 적은 챔프 위주' : 'CC 보통'}</p>
         </section>
       </div>}
       {picksN > 0 && <>
@@ -150,9 +150,9 @@ function AugmentHabits({ data }: { data: MemberPage }) {
     <section className="card pad habits">
       <div className="card-head"><h2>증강 고르는 습관</h2><span className="sp" /><span className="meta">고른 증강 {H.picks}개 · 평소 승률 {p(H.base)}</span></div>
       {f && (f.good.n + f.rest.n) > 0 && <div className="fitcmp">
-        <div className="fc-row"><span className="k">챔피언에 잘 맞는 증강 (S·A)</span><span className="tr"><span style={{ width: p(f.good.n ? f.good.w / f.good.n : 0) }} /></span><b>{f.good.n ? pct(f.good.w, f.good.n) : '–'}</b><span className="meta">{f.good.n}개</span></div>
+        <div className="fc-row"><span className="k">챔프에 잘 맞는 증강 (S·A)</span><span className="tr"><span style={{ width: p(f.good.n ? f.good.w / f.good.n : 0) }} /></span><b>{f.good.n ? pct(f.good.w, f.good.n) : '–'}</b><span className="meta">{f.good.n}개</span></div>
         <div className="fc-row rest"><span className="k">그 밖의 증강</span><span className="tr"><span style={{ width: p(f.rest.n ? f.rest.w / f.rest.n : 0) }} /></span><b>{f.rest.n ? pct(f.rest.w, f.rest.n) : '–'}</b><span className="meta">{f.rest.n}개</span></div>
-        <p className="insight">{fitGap === null ? '양쪽 모두 5개 이상 쌓이면 차이를 알려드려요.' : fitGap >= 0.03 ? <>챔피언에 맞는 증강을 골랐을 때 <b className="w">{d(fitGap)}</b> 더 이겼어요. 가이드를 믿어도 좋아요.</> : fitGap <= -0.03 ? <>맞는 증강보다 <b>다른 증강을 골랐을 때</b> 더 이겼어요 ({d(-fitGap)}). 나만의 조합이 있는 편이에요.</> : <>어떤 증강을 골라도 승률 차이가 크지 않아요.</>}</p>
+        <p className="insight">{fitGap === null ? '양쪽 모두 5개 이상 쌓이면 차이를 알려드려요.' : fitGap >= 0.03 ? <>챔프에 맞는 증강을 골랐을 때 <b className="w">{d(fitGap)}</b> 더 이겼어요. 가이드를 믿어도 좋아요.</> : fitGap <= -0.03 ? <>맞는 증강보다 <b>다른 증강을 골랐을 때</b> 더 이겼어요 ({d(-fitGap)}). 나만의 조합이 있는 편이에요.</> : <>어떤 증강을 골라도 승률 차이가 크지 않아요.</>}</p>
       </div>}
       <div className="k-title">성향별 승률 <span className="meta">· 오른쪽은 평소 승률과의 차이</span></div>
       <div className="tagrows">{H.tags.map((t) => (
@@ -219,10 +219,10 @@ function ProfileEditor({ api, page, skins, onSaved }: { api: Api; page: MemberPa
       </div>
       <div className="tiers">{SKIN_TIERS.map((t) => <span key={t.name} className={`pill ${n >= t.need ? 'ok' : ''}`}>{t.name} {t.need ? `${t.need}판` : '바로'}</span>)}</div>
       <div className="row wrapr" style={{ gap: 8 }}>
-        <span className="k">챔피언</span>
+        <span className="k">챔프</span>
         {champ && <span className="pill accent"><ChampImg id={champ} size={18} />{CHAMPIONS[champ]?.name}</span>}
         {page.champions.slice(0, 6).filter((c) => c.id !== champ).map((c) => <button key={c.id} type="button" className="pill btnlike" onClick={() => setChamp(c.id)}><ChampImg id={c.id} size={18} />{CHAMPIONS[c.id]?.name}</button>)}
-        <input className="input sm" style={{ maxWidth: 200 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="다른 챔피언 (초성 가능)" />
+        <input className="input sm" style={{ maxWidth: 200 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="다른 챔프 (초성 가능)" />
       </div>
       {champs.length > 0 && <div className="row wrapr" style={{ gap: 8 }}>{champs.map((c) => <button key={c.id} type="button" className="pill btnlike" onClick={() => { setChamp(c.id); setQ(''); }}><ChampImg id={c.id} size={18} />{c.name}</button>)}</div>}
       {!skins ? <p className="meta">스킨 불러오는 중…</p> : champ && (

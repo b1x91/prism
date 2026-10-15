@@ -16,6 +16,7 @@ import { discordNow } from './discord-now.js';
 import { listScrims, openScrim, scrimAction } from './scrims.js';
 import { cancelParty, joinParty, leaveParty, listParties, openParty } from './parties.js';
 import { buy, equip, getShop, markDaily, publicProfile, setShare } from './shop.js';
+import { getFavs, getMissions, setFav } from './missions.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 
 async function route(req: Request, env: Env): Promise<Response> {
@@ -48,6 +49,9 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/me/equip') return equip(req, env, me);
   if (m === 'POST' && pathname === '/api/me/share') return setShare(req, env, me);
   if (m === 'GET' && pathname === '/api/me/dex') return myDex(env, me);
+  if (m === 'GET' && pathname === '/api/me/missions') return getMissions(env, me);
+  if (m === 'GET' && pathname === '/api/me/favs') return getFavs(env, me);
+  if (m === 'POST' && pathname === '/api/me/favs') return setFav(req, env, me);
   if (m === 'POST' && pathname === '/api/me/riot') return linkRiot(req, env, me);
   if (m === 'POST' && pathname === '/api/me/consent') return setConsent(req, env, me);
   if (m === 'POST' && pathname === '/api/me/profile') return setProfile(req, env, me);

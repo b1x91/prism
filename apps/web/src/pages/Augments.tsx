@@ -17,7 +17,7 @@ export function Augments() {
   );
   return (
     <section className="section tight"><div className="wrap">
-      <div className="page-head"><div><h1>증강</h1><p>아수라장 증강 {ACTIVE_AUGMENTS.length}개를 등급별로. 누르면 잘 맞는 챔피언과 같은 성향의 증강을 볼 수 있어요. · 게임 데이터 {DATA_VERSION}</p></div></div>
+      <div className="page-head"><div><h1>증강</h1><p>아수라장 증강 {ACTIVE_AUGMENTS.length}개를 등급별로. 누르면 잘 맞는 챔프와 같은 성향의 증강을 볼 수 있어요. · 게임 데이터 {DATA_VERSION}</p></div></div>
       <AugmentDex onOpen={(a) => nav(`/augments/${a}`)} />
     </div></section>
   );

@@ -1,10 +1,11 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { CHAMPIONS, CHAMPION_LIST, ROLE_KO, cdragon, matchName } from '@prism/core';
 import { ChampImg } from './basics';
+import { FavMark, FavStar, useFavs } from './favs';
 import { Icon } from './icons';
 
 /** 이름·초성으로 챔피언 찾기 (위아래 키, Enter) */
-export function ChampSearch({ onPick, placeholder = "챔피언 이름 (예: '아리' 혹은 'ㅇㄹ')", autoFocus }: { onPick: (id: number) => void; placeholder?: string; autoFocus?: boolean }) {
+export function ChampSearch({ onPick, placeholder = "챔프 이름 (예: '아리' 혹은 'ㅇㄹ')", autoFocus }: { onPick: (id: number) => void; placeholder?: string; autoFocus?: boolean }) {
   const [q, setQ] = useState('');
   const [idx, setIdx] = useState(0);
   const hits = useMemo(() => (q.trim() ? CHAMPION_LIST.filter((c) => matchName(c.name, q)).slice(0, 6) : []), [q]);
@@ -39,26 +40,30 @@ const ROLES = ['marksman', 'mage', 'assassin', 'fighter', 'tank', 'support'] as 
 export function ChampGrid({ onPick, query = '', record }: { onPick: (id: number) => void; query?: string; record?: Record<number, { n: number; w: number }> }) {
   const [role, setRole] = useState<string>('all');
   const [mine, setMine] = useState(false);
-  const list = CHAMPION_LIST.filter((c) => matchName(c.name, query) && (role === 'all' || c.roles.includes(role)) && (!mine || record?.[c.id]));
+  const [fav, setFav] = useState(false);
+  const favs = useFavs();
+  const list = CHAMPION_LIST.filter((c) => matchName(c.name, query) && (role === 'all' || c.roles.includes(role)) && (!mine || record?.[c.id]) && (!fav || favs.champs.includes(c.id)));
   return (
     <div className="stack" style={{ gap: 16 }}>
       <div className="role-chips">
-        <button type="button" className={`chip ${role === 'all' ? 'on' : ''}`} onClick={() => setRole('all')}>전체</button>
-        {ROLES.map((r) => <button key={r} type="button" className={`chip ${role === r ? 'on' : ''}`} onClick={() => setRole(r)}>{ROLE_KO[r]}</button>)}
-        {record && <><span className="sp" /><button type="button" className={`chip ${mine ? 'on' : ''}`} onClick={() => setMine(!mine)}>내가 해 본 챔피언</button></>}
+        {/* 아무것도 고르지 않으면 전체. 고른 것을 다시 누르면 풀린다 */}
+        {ROLES.map((r) => <button key={r} type="button" aria-pressed={role === r} className={`chip ${role === r ? 'on' : ''}`} onClick={() => setRole(role === r ? 'all' : r)}>{ROLE_KO[r]}</button>)}
+        {(record || favs.connected) && <span className="sp" />}
+        {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><Icon name="star" />내 챔프<small>{favs.champs.length}</small></button>}
+        {record && <button type="button" aria-pressed={mine} className={`chip ${mine ? 'on' : ''}`} onClick={() => setMine(!mine)}>내가 해 본 챔프</button>}
       </div>
       <div className="champ-grid">
         {list.map((c) => {
           const r = record?.[c.id];
           return (
             <button key={c.id} type="button" className={record && !r ? 'unmet' : ''} onClick={() => onPick(c.id)}>
-              <span className="cg-pic"><ChampImg id={c.id} size={64} />{r && <span className={`cg-rec ${r.w / r.n >= 0.5 ? 'w' : 'l'}`}>{Math.round((r.w / r.n) * 100)}%</span>}</span>
+              <span className="cg-pic"><ChampImg id={c.id} size={64} /><FavMark kind="champ" id={c.id} />{r && <span className={`cg-rec ${r.w / r.n >= 0.5 ? 'w' : 'l'}`}>{Math.round((r.w / r.n) * 100)}%</span>}</span>
               {c.name}
               {r && <small className="meta">{r.n}판</small>}
             </button>
           );
         })}
-        {!list.length && <p className="meta">찾는 챔피언이 없어요</p>}
+        {!list.length && <p className="meta">찾는 챔프가 없어요</p>}
       </div>
     </div>
   );
@@ -75,7 +80,7 @@ export function ChampBanner({ id, eyebrow, actions, children }: { id: number; ey
       {actions && <div className="actions">{actions}</div>}
       <div>
         {eyebrow && <div className="eyebrow">{eyebrow}</div>}
-        <h1>{c.name}</h1>
+        <h1>{c.name}<FavStar kind="champ" id={id} /></h1>
         <div className="row wrapr" style={{ gap: 8 }}>{tags.map((t) => <span key={t} className="pill dark">{t}</span>)}</div>
         {children}
       </div>

@@ -168,13 +168,13 @@ export function MemberFace({ nick, skin, champion, size = 40, skins }: { nick: s
 }
 
 /** 접속 상태 점 하나 (웹 회색 · 앱 파랑 · 게임 주황 · 앱+게임 초록). 접속 안 함이면 그리지 않는다 */
-export function PresenceDot({ p }: { p?: Presence | null }) {
+export function PresenceDot({ p, title }: { p?: Presence | null; title?: string }) {
   if (!p || p === 'off') return null;
-  return <i className={`pdot ${p}`} title={PRESENCE_LABEL[p]} aria-label={PRESENCE_LABEL[p]} />;
+  return <i className={`pdot ${p}`} title={title ?? PRESENCE_LABEL[p]} aria-label={title ?? PRESENCE_LABEL[p]} />;
 }
 /** 얼굴 오른쪽 아래에 접속 점 */
-export function FacePresence({ p, children }: { p?: Presence | null; children: ReactNode }) {
-  return <span className="fp">{children}<PresenceDot p={p} /></span>;
+export function FacePresence({ p, title, children }: { p?: Presence | null; title?: string; children: ReactNode }) {
+  return <span className="fp">{children}<PresenceDot p={p} title={title} /></span>;
 }
 /** 점 + 글자 (회원 페이지 머리) */
 export function PresenceTag({ p }: { p?: Presence | null }) {

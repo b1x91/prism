@@ -69,7 +69,7 @@ function VisionSettings() {
     <section className="card pad">
       <div className="card-head"><h2>게임 중 증강 자동 인식</h2><span className="sp" />
         <Toggle on={v.settings.enabled} label="게임 중 증강 자동 인식" onChange={(on) => void save(on, v.settings.position)} /></div>
-      <p className="muted" style={{ marginTop: 0 }}>증강을 고르는 화면이 뜨면 앱이 알아보고, 게임 위 작은 창에 내 챔피언에게 맞는 순서를 보여줍니다. 롤을 <b>테두리 없는 창 모드</b>로 두어야 보여요.</p>
+      <p className="muted" style={{ marginTop: 0 }}>증강을 고르는 화면이 뜨면 앱이 알아보고, 게임 위 작은 창에 내 챔프에게 맞는 순서를 보여줍니다. 롤을 <b>테두리 없는 창 모드</b>로 두어야 보여요.</p>
       <div className="kv">
         <div style={v.settings.enabled ? undefined : { opacity: 0.5 }}><span className="k">작은 창 위치</span><span><Seg value={v.settings.position} options={[['right', '오른쪽'], ['top', '위']]} onChange={(p) => save(v.settings.enabled, p)} /></span></div>
       </div>

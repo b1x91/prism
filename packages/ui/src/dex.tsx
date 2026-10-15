@@ -68,8 +68,8 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
   const next = BADGES.find(([p]) => rate < p);
 
   const groups: [string, string][] = kind === 'champions'
-    ? [['all', '전체'], ...Object.entries(ROLE_KO)]
-    : [['all', '전체'], ...RARITY_ORDER.map((r) => [r, RARITY_KO[r]] as [string, string])];
+    ? Object.entries(ROLE_KO)
+    : RARITY_ORDER.map((r) => [r, RARITY_KO[r]] as [string, string]);
   const groupOf = (id: number) => (kind === 'champions' ? CHAMPIONS[id]?.roles[0] : AUGMENT[id]?.rarity);
   const groupCount = (g: string) => { const all = ids.filter((id) => g === 'all' || groupOf(id) === g); return [all.filter((id) => m(id).caught).length, all.length]; };
 
@@ -93,7 +93,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
   const closest = ids.filter((id) => m(id).seen && !m(id).master).sort((a, b) => m(b).done - m(a).done || (got[b]?.w ?? 0) - (got[a]?.w ?? 0))[0];
   const current = sel[kind] ?? closest ?? ids.find((id) => m(id).seen) ?? ids[0];
   const pick = (id: number) => { setSel({ ...sel, [kind]: id }); setSheet(true); };
-  const what = kind === 'champions' ? '챔피언' : '증강';
+  const what = kind === 'champions' ? '챔프' : '증강';
 
   return (
     <div className="dex">
@@ -101,7 +101,7 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
         <span className="dex-lens" aria-hidden="true"><Gem size={44} /></span>
         <div className="dex-title">
           <h1>도감</h1>
-          <Seg value={kind} options={[['champions', '챔피언'], ['augments', '증강']]} onChange={(k) => { setKind(k); setGroup('all'); setQ(''); setShow('all'); }} />
+          <Seg value={kind} options={[['champions', '챔프'], ['augments', '증강']]} onChange={(k) => { setKind(k); setGroup('all'); setQ(''); setShow('all'); }} />
         </div>
         <div className="dex-count">
           <span className="k">마스터 여정</span>
@@ -118,18 +118,17 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
         <div className="dex-badges">{BADGES.map(([p, l]) => <span key={p} className={`dex-badge ${rate >= p ? 'on' : ''}`} title={`마스터 여정 ${p}%`}><i />{l}<small>{p}%</small></span>)}</div>
       </header>
 
-      {/* 전체 · 내 도감(레벨 1~5) · 아직 안 해봄 */}
+      {/* 내 도감(레벨 1~5) · 아직 안 해봄. 아무것도 고르지 않으면 전체, 고른 것을 다시 누르면 풀린다 */}
       <nav className="dex-levels" aria-label="도감 보기">
-        <button type="button" className={show === 'all' ? 'on' : ''} onClick={() => setShow('all')}>전체<small>{ids.length}</small></button>
         <span className="dl-group">
-          <button type="button" className={`dl-mine ${show === 'mine' ? 'on' : ''}`} onClick={() => setShow('mine')} title="만난 것 모두">내 도감<small>{seen}</small></button>
+          <button type="button" className={`dl-mine ${show === 'mine' ? 'on' : ''}`} onClick={() => setShow(show === 'mine' ? 'all' : 'mine')} title="만난 것 모두">내 도감<small>{seen}</small></button>
           {([1, 2, 3, 4, 5] as DexLevel[]).map((l) => (
-            <button key={l} type="button" className={`dl-lv l${l} ${show === `l${l}` ? 'on' : ''}`} onClick={() => setShow(`l${l}` as Show)} title={`Lv.${l} ${DEX_LEVEL_KO[l]} · ${DEX_LEVEL_RULE[l]}`}>
+            <button key={l} type="button" className={`dl-lv l${l} ${show === `l${l}` ? 'on' : ''}`} onClick={() => setShow(show === `l${l}` ? 'all' : (`l${l}` as Show))} title={`Lv.${l} ${DEX_LEVEL_KO[l]} · ${DEX_LEVEL_RULE[l]}`}>
               <i className="lv">Lv{l}</i>{DEX_LEVEL_KO[l]}<small>{levelCount(l)}</small>
             </button>
           ))}
         </span>
-        <button type="button" className={show === 'missing' ? 'on' : ''} onClick={() => setShow('missing')} title="아직 한 번도 안 해 본 것">아직 안 해봄<small>{ids.length - seen}</small></button>
+        <button type="button" className={show === 'missing' ? 'on' : ''} onClick={() => setShow(show === 'missing' ? 'all' : 'missing')} title="아직 한 번도 안 해 본 것">아직 안 해봄<small>{ids.length - seen}</small></button>
       </nav>
 
       <div className="dex-body">
@@ -138,7 +137,8 @@ export function DexView({ dex, onChampion, onAugment, loading }: { dex: Dex; onC
             <label className="dex-search"><Icon name="search" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="만난 것 이름 또는 번호" /></label>
             <Select label="정렬" value={sort} onChange={setSort} options={[['no', '번호순'], ['progress', '진척도순'], ['most', '많이 한 순'], ['recent', '최근 만난 순']]} />
           </div>
-          <div className="dex-groups">{groups.map(([g, l]) => { const [f, t] = groupCount(g); return <button key={g} type="button" className={`chip ${group === g ? 'on' : ''}`} onClick={() => setGroup(g)} title="골드 이상 / 전체">{l}<small>{f}/{t}</small></button>; })}</div>
+          {/* 유형: 아무것도 고르지 않으면 전체. 고른 것을 다시 누르면 풀린다 */}
+          <div className="dex-groups" role="group" aria-label="유형">{groups.map(([g, l]) => { const [f, t] = groupCount(g); return <button key={g} type="button" aria-pressed={group === g} className={`chip ${group === g ? 'on' : ''}`} onClick={() => setGroup(group === g ? 'all' : g)} title={group === g ? '다시 누르면 전체' : '골드 이상 / 전체'}>{l}<small>{f}/{t}</small></button>; })}</div>
           {list.length ? <div className={`dex-grid ${kind}`}>{list.map((id) => {
             const x = m(id), e = got[id];
             const fresh = e && now - e.first < NEW_MS;
@@ -282,13 +282,13 @@ function ChampEntry({ id, no, e, m, dex, onChampion }: { id: number; no: number;
           <span className="dxe-pic"><ChampImg id={id} size={112} />{!m.seen && <i className="q" aria-hidden="true">?</i>}<Ring m={m} /></span>
           <div><span className="no">{NO(no)}</span><h2>{c.name}</h2><div className="dxe-types"><StageTag m={m} />{types.map((t) => <span key={t} className="pill">{t}</span>)}</div></div>
         </div>}
-      <p className="dxe-text">{e ? `${flavor} ${day(e.first)}에 처음 만나 지금까지 ${e.n}판, ${e.w}번 이겼다.` : `아직 만나지 못한 챔피언이에요. ${flavor} 주사위나 대기석에서 보이면 잡아 보세요.`}</p>
+      <p className="dxe-text">{e ? `${flavor} ${day(e.first)}에 처음 만나 지금까지 ${e.n}판, ${e.w}번 이겼다.` : `아직 만나지 못한 챔프예요. ${flavor} 주사위나 대기석에서 보이면 잡아 보세요.`}</p>
       <Journey m={m} specialList={
-        <div className="dxe-sub"><span className="k">이 챔피언에게 S티어인 증강 <small>{m.special.tried.length}/{m.special.ids.length}</small></span>
+        <div className="dxe-sub"><span className="k">이 챔프에게 S티어인 증강 <small>{m.special.tried.length}/{m.special.ids.length}</small></span>
           <div className="sgrid">{sList.map((a) => <AugmentLink key={a} id={a} champion={id} inline className={`sitem ${tried.has(a) ? 'on' : ''}`}><AugRing id={a} size={32} /></AugmentLink>)}
             {m.special.ids.length > sList.length && <span className="smore">+{m.special.ids.length - sList.length}</span>}</div></div>} />
       {e && <Stats e={e} />}
-      {augs.length > 0 && <div className="dxe-sub"><span className="k">이 챔피언으로 자주 고른 증강</span>
+      {augs.length > 0 && <div className="dxe-sub"><span className="k">이 챔프로 자주 고른 증강</span>
         <div className="dxe-augs">{augs.map((p) => <AugmentLink key={p.aug} id={p.aug} champion={id} className="dxe-aug"><AugRing id={p.aug} size={32} /><span className="nm">{AUGMENT[p.aug]?.name ?? `#${p.aug}`}</span><span className="meta">{p.n}판 {p.w}승</span></AugmentLink>)}</div></div>}
       {onChampion && <button type="button" className="btn sm primary" onClick={() => onChampion(id)}>증강 가이드</button>}
     </div>
@@ -311,11 +311,11 @@ function AugEntry({ id, no, e, m, dex, onAugment, onChampion }: { id: number; no
         </div>}
       <p className="dxe-text">{a.desc}</p>
       <Journey m={m} specialList={
-        <div className="dxe-sub"><span className="k">이 증강이 {m.special.tier}티어로 맞는 챔피언 <small>{m.special.tried.length}/{m.special.ids.length}</small></span>
+        <div className="dxe-sub"><span className="k">이 증강이 {m.special.tier}티어로 맞는 챔프 <small>{m.special.tried.length}/{m.special.ids.length}</small></span>
           <div className="sgrid">{best.map((c) => <button key={c} type="button" className={`sitem champ ${tried.has(c) ? 'on' : ''}`} onClick={() => onChampion?.(c)} title={CHAMPIONS[c]?.name}><ChampImg id={c} size={32} /></button>)}
             {m.special.ids.length > best.length && <span className="smore">+{m.special.ids.length - best.length}</span>}</div></div>} />
       {e && <Stats e={e} />}
-      {champs.length > 0 && <div className="dxe-sub"><span className="k">이 증강을 고른 챔피언</span>
+      {champs.length > 0 && <div className="dxe-sub"><span className="k">이 증강을 고른 챔프</span>
         <div className="dxe-champs">{champs.map((p) => <button key={p.champ} type="button" className="dxe-champ" onClick={() => onChampion?.(p.champ)} title={`${CHAMPIONS[p.champ]?.name} ${p.n}판 ${p.w}승`}><ChampImg id={p.champ} size={36} /><span>{p.n}</span></button>)}</div></div>}
       {onAugment && <button type="button" className="btn sm primary" onClick={() => onAugment(id)}>증강 자세히 보기</button>}
     </div>

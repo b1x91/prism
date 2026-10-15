@@ -3,8 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { AugmentOpen, DiscordGlyph, FacePresence, KakaoGlyph, Icon, MatchNote, MatchSource, MemberFace, useLoad, useSkins, type IconName } from '@prism/ui';
-import { matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail, type Presence } from '@prism/core';
+import { AugmentOpen, DiscordGlyph, FacePresence, KakaoGlyph, Icon, MatchNote, MatchSource, MemberFace, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { PIECE, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail, type Presence } from '@prism/core';
 import { getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
@@ -15,14 +15,14 @@ import { GamePage } from './pages/Game';
 import { AugmentsPage } from './pages/Augments';
 import { DexPage } from './pages/Dex';
 import { ChampionsPage } from './pages/Champions';
-import { MemberPage, RankingPage, ShopPage } from './pages/Members';
+import { MemberPage, MissionsPage, RankingPage, ShopPage } from './pages/Members';
 import { CrewPage } from './pages/Crew';
 import { SettingsPage } from './pages/Settings';
 import { lockdown } from './lockdown';
 
-const NAV: [string, string, IconName][] = [['/', '게임', 'game'], ['/champions', '챔피언', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users'], ['/shop', '상점', 'bag']];
+const NAV: [string, string, IconName][] = [['/', '게임', 'game'], ['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users'], ['/shop', '상점', 'bag']];
 
-/** 롤 클라이언트 연결 상태 (사이드바 내 프로필 아래 한 줄) */
+/** 롤 클라이언트 연결 상태 (사이드바 내 얼굴의 점에 마우스를 올리면) */
 const STATUS: Record<State['status'], [string, string]> = {
   starting: ['준비 중', ''],
   'no-client': ['롤 꺼짐', ''],
@@ -84,7 +84,10 @@ function App() {
     const t = setInterval(() => void bridge.visionAllow(ready), 15_000);
     return () => clearInterval(t);
   }, [ready]);
-  const [label, tone] = STATUS[s.status];
+  const [label] = STATUS[s.status];
+  const pieces = usePieces(s.me ? api : null);
+  // 내 챔프·내 증강: 로그인되면 서버 목록으로 맞춘다
+  useEffect(() => { connectFavs(s.me ? api : null); }, [s.me?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   // 이 창을 보고 있으니 앱은 떠 있다. 롤이 켜져 있으면 앱+게임
   const presence: Presence = LOL_ON.has(s.status) ? 'both' : 'app';
   // 운영진은 글자 대신 카드가 프리즘처럼 빛난다
@@ -125,8 +128,8 @@ function App() {
         </nav>
         {s.me && <div className={`side-me-card ${staff ? 'prism' : ''}`}>
           <NavLink to="/me" className="side-me" title="내 페이지">
-            <FacePresence p={presence}><MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} /></FacePresence>
-            <span className="who"><b>{s.me.nick}</b><span className={`st ${tone}`}>{label}{riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}</span></span>
+            <FacePresence p={presence} title={`${label}${riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}`}><MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} /></FacePresence>
+            <span className="who"><b>{s.me.nick}</b><span className="st pc" title={`보유 ${PIECE}`}>{pieces === null ? '–' : <><PieceIcon size={13} /><b>{pieces.toLocaleString()}</b></>}</span></span>
           </NavLink>
           <NavLink to="/settings" className="icon-btn gear" title="설정" aria-label="설정"><Icon name="gear" /></NavLink>
         </div>}
@@ -145,6 +148,7 @@ function App() {
           <Route path="members/:id" element={<MemberPage s={s} onLogin={login} />} />
           <Route path="crew" element={<CrewPage s={s} onLogin={login} />} />
           <Route path="shop" element={<ShopPage s={s} onLogin={login} />} />
+          <Route path="missions" element={<MissionsPage s={s} onLogin={login} />} />
           <Route path="settings" element={<SettingsPage s={s} onLogin={login} discord={links.discord} />} />
           <Route path="*" element={<GamePage s={s} />} />
         </Routes></Page></MatchNote.Provider></MatchSource.Provider></AugmentOpen.Provider>

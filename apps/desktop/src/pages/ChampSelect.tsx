@@ -61,7 +61,7 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
         <div className="cs-comp">
           <div className="line"><span>팀원 {base.length}명</span><span>AP <b>{fmt(c.ap)}</b></span><span>AD <b>{fmt(c.ad)}</b></span><span>앞라인 <b>{fmt(c.front)}</b></span><span>CC <b>{ccWord(c)}</b></span></div>
           <div className="line">{verdict ? <span className={`verdict ${verdict.grade}`}>{verdict.grade === 'gold' && <i aria-hidden="true" />}{verdict.label}</span>
-            : base.length ? (needs.length ? <><span className="meta">부족</span>{needs.map((n) => <span key={n} className="pill warn">{n}</span>)}</> : <span className="pill ok">밸런스 좋음</span>) : <span className="meta">팀원 챔피언이 정해지면 팀 구성이 보입니다</span>}
+            : base.length ? (needs.length ? <><span className="meta">부족</span>{needs.map((n) => <span key={n} className="pill warn">{n}</span>)}</> : <span className="pill ok">밸런스 좋음</span>) : <span className="meta">팀원 챔프가 정해지면 팀 구성이 보입니다</span>}
             {reco && <><span className="meta" style={{ marginLeft: 8 }}>바꾸면 좋아요</span><b>{CHAMPIONS[reco]?.name}</b></>}</div>
         </div>
       </div>
@@ -107,10 +107,10 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
     <article className={`cs-tile ${isMine ? 'mine' : ''}`}>
       <img className="bg" alt="" src={cdragon(ch.splash)} />
       <div className="cs-top">
-        <span className={`cs-tag ${isMine ? 'mine' : ''}`}>{isMine ? '내 챔피언' : '대기석 미리보기'}</span>
+        <span className={`cs-tag ${isMine ? 'mine' : ''}`}>{isMine ? '내 챔프' : '대기석 미리보기'}</span>
         {isReco && <span className="cs-tag reco">팀 추천</span>}
         <span className="sp" />
-        {onBack && <button type="button" className="btn sm back" onClick={onBack}>내 챔피언 보기</button>}
+        {onBack && <button type="button" className="btn sm back" onClick={onBack}>내 챔프 보기</button>}
       </div>
       <div className="body">
         <div className="cs-name">
@@ -118,7 +118,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
           <div className="cs-chips">{[ROLE_KO[ch.roles[0]], ch.roles[1] && ROLE_KO[ch.roles[1]], ch.damage === 'MIX' ? 'AP·AD' : ch.damage, RANGE_KO[ch.range]].filter(Boolean).map((t) => <span key={t as string}>{t}</span>)}</div>
         </div>
 
-        <div className="cs-style" aria-label="챔피언 성향">{STYLE.map(([k, l]) => (
+        <div className="cs-style" aria-label="챔프 성향">{STYLE.map(([k, l]) => (
           <span key={k} className="cs-st"><small>{l}</small><span className="pips">{[1, 2, 3].map((n) => <i key={n} className={ch.style[k] >= n ? 'on' : ''} />)}</span></span>
         ))}</div>
 
@@ -149,7 +149,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
         </div>}
 
         {myAugs.length > 0 && <div className="cs-sec">
-          <span className="cs-h">내가 이 챔피언으로 고른 증강</span>
+          <span className="cs-h">내가 이 챔프로 고른 증강</span>
           <div className="cs-mine">{myAugs.map((a) => <AugmentLink key={a.id} id={a.id} champion={id} inline className="cs-chip"><AugRing id={a.id} size={22} /><span>{AUGMENT[a.id]?.name}</span><small>{a.n}번 · {pct(a.w, a.n)}</small></AugmentLink>)}</div>
         </div>}
       </div>

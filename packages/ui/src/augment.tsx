@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, fitOf, gradeUp, fitPoints, rankByPriority, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type Matchup, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
 import { ChampImg } from './basics';
+import { FavMark, FavStar, useFavs } from './favs';
 import { AugImg, Empty, Hover, Seg } from './basics';
 import { Icon } from './icons';
 import { MatchupBar } from './situation';
@@ -12,7 +13,7 @@ const toMap = (rows?: { id: number; n: number; w: number }[]): StatMap => Object
 
 function StatLine({ id, champ, all }: { id: number; champ: StatMap; all: StatMap }) {
   const c = champ[id], o = all[id];
-  if (c?.n) return <span className="stat2">이 챔피언 <b>{pct(c.w, c.n)}</b> {c.n}판</span>;
+  if (c?.n) return <span className="stat2">이 챔프 <b>{pct(c.w, c.n)}</b> {c.n}판</span>;
   if (o?.n) return <span className="stat2">모임 <b>{pct(o.w, o.n)}</b> {o.n}판</span>;
   return null;
 }
@@ -24,7 +25,7 @@ function GuideRow({ f, compact, champ, all, stats, c }: { f: Fit; compact?: bool
   return (
     <div className={`ga t-${tier}`}>
       <AugRing id={a.id} size={40} />
-      <span className="nm" title={a.name}>{a.name}<GradeUp rarity={a.rarity} tier={tier} /></span>
+      <span className="nm" title={a.name}><FavMark kind="aug" id={a.id} inline />{a.name}<GradeUp rarity={a.rarity} tier={tier} /></span>
       <TierBadge tier={tier} />
       <div className="why">
         <Explain c={c} id={a.id} tier={tier} />
@@ -41,7 +42,7 @@ export function AugmentGuide({ championId, stats, compact }: { championId: numbe
   const [all, setAll] = useState(false);
   const [more, setMore] = useState<Record<Rarity, boolean>>({ prismatic: false, gold: false, silver: false });
   const c = CHAMPIONS[championId];
-  if (!g || !c) return <Empty>챔피언 정보가 없습니다.</Empty>;
+  if (!g || !c) return <Empty>챔프 정보가 없습니다.</Empty>;
   const champ = toMap(stats?.champion), overall = toMap(stats?.overall);
   // 티어 점수 순 (같은 점수면 근거가 많은 쪽)
   const sorted = (r: Rarity) => [...g[r]].sort((x, y) => fitPoints(y) - fitPoints(x) || y.weight - x.weight);
@@ -110,7 +111,7 @@ export function AugmentCompare({ championId, stats, preset, matchup: given, onMa
           return (
             <div key={i} className={`slot filled ${picked.length >= 2 && f.rank === 1 ? 'top' : ''}`}>
               <AugRing id={id} size={48} />
-              <span className="nm">{AUGMENT[id].name}</span>
+              <span className="nm"><FavMark kind="aug" id={id} inline />{AUGMENT[id].name}</span>
               <span className="why">{c && <Explain c={c} id={id} tier={f.tier} />}<GradeUp rarity={AUGMENT[id].rarity} tier={f.tier} />
                 {f.reasons.length > 0 && <span className={`situ ${f.bonus < 0 ? 'neg' : ''}`}>{f.lifted && f.rank === 1 && <b>이번 판 1순위</b>}{f.reasons[0]}</span>}</span>
               {picked.length >= 2 && <span className={`place p${f.rank}`}>{f.tied && <small>공동</small>}<b>{f.rank}</b><small>위</small></span>}
@@ -152,13 +153,16 @@ export function AugmentCompare({ championId, stats, preset, matchup: given, onMa
 export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
   const [q, setQ] = useState('');
   const [r, setR] = useState<'all' | Rarity>('all');
-  const list = ACTIVE_AUGMENTS.filter((a) => (r === 'all' || a.rarity === r) && (!q || matchAug(a.name, q) || a.desc.includes(q) || a.note.includes(q)))
+  const [fav, setFav] = useState(false);
+  const favs = useFavs();
+  const list = ACTIVE_AUGMENTS.filter((a) => (r === 'all' || a.rarity === r) && (!fav || favs.augs.includes(a.id)) && (!q || matchAug(a.name, q) || a.desc.includes(q) || a.note.includes(q)))
     .sort((a, b) => ORDER.indexOf(a.rarity) - ORDER.indexOf(b.rarity) || a.name.localeCompare(b.name, 'ko'));
   return (
     <div className="stack">
       <div className="adex-tools">
         <input className="input" value={q} onChange={(e) => setQ(e.target.value)} placeholder="이름·효과 검색 (예: 치명타, 보호막, ㅂㅅ)" />
         <Seg value={r} options={[['all', '전체'], ...ORDER.map((x) => [x, RARITY_KO[x]] as [Rarity, string])]} onChange={setR} />
+        {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><Icon name="star" />내 증강<small>{favs.augs.length}</small></button>}
         <span className="meta cnt">{list.length}개</span>
       </div>
       {list.length ? ORDER.filter((x) => list.some((a) => a.rarity === x)).map((x) => (
@@ -166,7 +170,7 @@ export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
           <div className="dex-head"><i className={`rdot ${x}`} /><h3>{RARITY_KO[x]}</h3><span className="meta">{list.filter((a) => a.rarity === x).length}개</span></div>
           <div className="adex">
             {list.filter((a) => a.rarity === x).map((a) => (
-              <button type="button" key={a.id} className="ai" onClick={() => onOpen?.(a.id)}><AugRing id={a.id} size={48} /><span className="nm">{a.name}</span><span className="note2">{a.note}</span><p>{a.desc}</p></button>
+              <button type="button" key={a.id} className="ai" onClick={() => onOpen?.(a.id)}><FavMark kind="aug" id={a.id} /><AugRing id={a.id} size={48} /><span className="nm">{a.name}</span><span className="note2">{a.note}</span><p>{a.desc}</p></button>
             ))}
           </div>
         </section>
@@ -189,7 +193,7 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack, after }: { id
           <AugRing id={a.id} size={80} />
           <div className="stack" style={{ gap: 8 }}>
             <div className="row wrapr" style={{ gap: 8 }}><span className={`rpill ${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.disabled && <span className="pill">현재 꺼짐</span>}</div>
-            <h1>{a.name}</h1>
+            <h1>{a.name}<FavStar kind="aug" id={a.id} /></h1>
             {a.note && <p className="note">{a.note}</p>}
           </div>
           {onBack && <button type="button" className="btn sm" onClick={onBack}>도감으로</button>}
@@ -202,15 +206,15 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack, after }: { id
       </section>
       {after}
       <section className="card pad">
-        <div className="card-head"><h2>잘 맞는 챔피언</h2><span className="sp" /><span className="meta">잘 맞음 {champs.best}명 / {champs.total}명</span></div>
+        <div className="card-head"><h2>잘 맞는 챔프</h2><span className="sp" /><span className="meta">잘 맞음 {champs.best}명 / {champs.total}명</span></div>
         {champs.list.length ? <div className="fit-champs">{champs.list.map((f) => (
           <button type="button" key={f.id} className="fc" onClick={() => onChampion?.(f.id)}>
             <ChampImg id={f.id} size={48} />
             <span className="nm">{CHAMPIONS[f.id]?.name}</span>
             <span className={`lv ${f.level}`}>{LEVEL_KO[f.level]}</span>
             <span className="why">{f.reasons.slice(0, 2).join(' · ')}</span>
-          </button>))}</div> : <Empty>특별히 잘 맞는 챔피언이 없는 증강입니다.</Empty>}
-        <p className="meta" style={{ margin: '16px 0 0' }}>챔피언 역할·피해 유형·스킬과 증강 효과를 맞춰 본 어울림입니다. 증강 자체의 세기와는 다를 수 있어요.</p>
+          </button>))}</div> : <Empty>특별히 잘 맞는 챔프가 없는 증강입니다.</Empty>}
+        <p className="meta" style={{ margin: '16px 0 0' }}>챔프 역할·피해 유형·스킬과 증강 효과를 맞춰 본 어울림입니다. 증강 자체의 세기와는 다를 수 있어요.</p>
       </section>
       {related.length > 0 && <section className="card pad">
         <div className="card-head"><h2>같은 성향의 증강</h2><span className="sp" /><span className="meta">함께 노리면 빌드 방향이 맞아요</span></div>
@@ -225,14 +229,14 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack, after }: { id
 
 /** 어울림 티어 배지 (지금 챔피언과의 궁합, 승률 아님) */
 export function TierBadge({ tier }: { tier: FitTier }) {
-  return <span className={`tier t-${tier}`} title="지금 챔피언과의 어울림 티어"><b>{tier}</b></span>;
+  return <span className={`tier t-${tier}`} title="지금 챔프와의 어울림 티어"><b>{tier}</b></span>;
 }
 
 /** S 티어가 제 등급을 넘을 때: 실버 → 골드급, 골드 → 프리즘급 */
 export function GradeUp({ rarity, tier }: { rarity: Rarity; tier: FitTier }) {
   const up = gradeUp(rarity, tier);
   if (!up) return null;
-  return <span className={`gradeup ${up}`}>이 챔피언에겐 {up === 'prismatic' ? '프리즘급' : '골드급'}</span>;
+  return <span className={`gradeup ${up}`}>이 챔프에겐 {up === 'prismatic' ? '프리즘급' : '골드급'}</span>;
 }
 
 /** 원형 증강 아이콘 (등급 테두리) */

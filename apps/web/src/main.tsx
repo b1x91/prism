@@ -9,7 +9,7 @@ import { Home } from './pages/Home';
 import { Compare, Guide } from './pages/Guide';
 import { Augments } from './pages/Augments';
 import { Crew } from './pages/Crew';
-import { MemberPage, RankingPage, ShopPage, PublicPage } from './pages/Members';
+import { MemberPage, MissionsPage, RankingPage, ShopPage, PublicPage } from './pages/Members';
 import { AuthDone } from './pages/AuthDone';
 import { DexPage } from './pages/Dex';
 import { Privacy } from './pages/Privacy';
@@ -33,6 +33,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="dex" element={<DexPage />} />
             <Route path="ranking" element={<RankingPage />} />
             <Route path="shop" element={<ShopPage />} />
+            <Route path="missions" element={<MissionsPage />} />
             <Route path="p/:id" element={<PublicPage />} />
             <Route path="champions" element={<Guide />} />
             <Route path="champions/:id" element={<Guide />} />

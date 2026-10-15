@@ -1,6 +1,6 @@
 /**
  * 피스(Prism 화폐)와 상점 (CLAUDE.md v3.24). 서버와 화면이 같은 표를 쓴다.
- *  - 버는 법: 기록된 판 · 이긴 판 · 모임 판(회원 2명 이상) · 도감 레벨 오르기 · 함께 해요 참여 · 매일 첫 접속
+ *  - 버는 법: 기록된 판 · 이긴 판 · 모임 판(회원 2명 이상) · 도감 레벨 오르기 · 미션 · 매일 첫 접속 (함께 해요 참여는 예전 기록만)
  *  - 쓰는 곳: 내 페이지 꾸미기 (머리 테두리 · 머리 효과 · 이름 효과 · 칭호)
  * 숫자는 여기 한 곳에서 바꾼다. 번 피스는 기록에서 늘 다시 계산하므로 기준을 바꾸면 지난 기록에도 적용된다.
  */
@@ -82,8 +82,9 @@ export function parseDeco(s: string | null | undefined): Deco {
 }
 
 /** 번 피스 내역 */
-export type Earned = { games: number; wins: number; crew: number; levels: number; together: number; daily: number };
-export const earnedTotal = (e: Earned) => e.games * EARN.game + e.wins * EARN.win + e.crew * EARN.crew + e.levels + e.together * EARN.together + e.daily * EARN.daily;
+/** missions: 미션으로 번 피스 (core/missions.ts) */
+export type Earned = { games: number; wins: number; crew: number; levels: number; together: number; daily: number; missions?: number };
+export const earnedTotal = (e: Earned) => e.games * EARN.game + e.wins * EARN.win + e.crew * EARN.crew + e.levels + e.together * EARN.together + e.daily * EARN.daily + (e.missions ?? 0);
 
 export type Shop = { balance: number; earned: Earned; spent: number; owned: string[]; deco: Deco; shared: boolean };
 

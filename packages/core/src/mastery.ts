@@ -101,7 +101,7 @@ export function augMastery(id: number, e: DexEntry | undefined, pairs: DexPair[]
   const best = bestChampions(id);
   const set = new Set(best.ids);
   const tried = [...new Set(pairs.filter((p) => p.aug === id && set.has(p.champ)).map((p) => p.champ))];
-  return build(e, { tier: best.tier, ids: best.ids, tried }, `${best.tier}티어 챔피언으로 골라 보기`);
+  return build(e, { tier: best.tier, ids: best.ids, tried }, `${best.tier}티어 챔프로 골라 보기`);
 }
 
 /**

@@ -10,3 +10,5 @@ export * from './dex';
 export * from './artisan';
 export * from './situation';
 export * from './shop';
+export * from './favs';
+export * from './missions';

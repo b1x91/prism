@@ -35,7 +35,7 @@ export type State = {
   personal: Personal;
   champSelect: ChampSelect | null;
   crew: CrewSelect;
-  lastChampion: number | null; // 마지막 챔프 선택의 내 챔피언 (게임 중 가이드용)
+  lastChampion: number | null; // 마지막 챔프 선택의 내 챔프 (게임 중 가이드용)
   matchup: MatchupState | null;
   session: { configured: boolean; loggedIn: boolean };
   /** 첫 세션 확인이 끝났는지, 서버에 닿지 못했는지 (첫 화면 판단용) */

@@ -1,5 +1,4 @@
-import { useNavigate } from 'react-router-dom';
-import { BoardView, Channels, Gem, Icon, DiscordNowCard, PartyBoard, ProspectBoard } from '@prism/ui';
+import { BoardView, Channels, Gem, Icon, DiscordNowCard, ProspectBoard } from '@prism/ui';
 import { useSession } from '../session';
 
 function Intro() {
@@ -27,7 +26,7 @@ function Intro() {
       <section className="section tight"><div className="wrap">
         <h2 className="h">회원에게 열리는 것</h2><p className="lead">기록은 회원에게만 보입니다.</p>
         <div className="grid3">
-          {[['실전 증강 승률', '우리가 실제로 고른 증강이 얼마나 이겼는지'], ['같이 하면 이기는 사람', '모임 판에서 승률이 높은 조합'], ['함께 해요', '오늘 같이 할 판을 열고, 하고 싶은 말을 남기는 곳']].map(([t, d]) => (
+          {[['실전 증강 승률', '우리가 실제로 고른 증강이 얼마나 이겼는지'], ['같이 하면 이기는 사람', '모임 판에서 승률이 높은 조합'], ['미션', '안 해 본 챔프와 역할로 넓히고 피스를 받는 곳']].map(([t, d]) => (
             <div key={t} className="card pad locked"><div className="blur"><h3 style={{ margin: '0 0 16px' }}>{t}</h3>{sk(5)}</div>
               <div className="over"><div><Icon name="lock" style={{ width: 20, height: 20, color: 'var(--text-3)' }} /><div style={{ fontWeight: 750, fontSize: 16, marginTop: 8 }}>{t}</div><div className="meta" style={{ marginTop: 4 }}>{d}</div></div></div></div>
           ))}
@@ -39,14 +38,12 @@ function Intro() {
 
 export function Crew() {
   const { me, ready, api, links } = useSession();
-  const nav = useNavigate();
   if (!ready) return null;
   if (!me) return <Intro />;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
       <div className="page-head"><div><h1>Prism</h1><p>{me.nick}님, 오늘 밤도 한 판.</p></div></div>
       <DiscordNowCard api={api} admin={me.tier === 'admin'} />
-      <PartyBoard api={api} onMember={(id) => nav(`/members/${id}`)} />
       {me.perms?.prospects !== false && <ProspectBoard api={api} invite={links.discord} admin={Boolean(me.perms?.moderate)} />}
       <BoardView api={api} />
     </div></section>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Empty, Gem, Icon, MemberView, PublicProfileView, RankingView, ShopView } from '@prism/ui';
+import { Empty, Gem, Icon, MemberView, MissionsView, PublicProfileView, RankingView, ShopView } from '@prism/ui';
 import type { PublicProfile } from '@prism/core';
 import { SERVER, useSession } from '../session';
 
@@ -63,6 +63,18 @@ export function PublicPage() {
   return (
     <section className="section tight"><div className="wrap">
       <PublicProfileView data={data} join={<Link className="btn sm primary" to="/"><Gem size={14} src="/brand/prism-32.png" />Prism 알아보기</Link>} />
+    </div></section>
+  );
+}
+
+export function MissionsPage() {
+  const { me, ready, api } = useSession();
+  const nav = useNavigate();
+  if (!ready) return null;
+  if (!me) return <NeedLogin what="미션" />;
+  return (
+    <section className="section tight"><div className="wrap">
+      <MissionsView api={api} onChampion={(id) => nav(`/champions/${id}`)} />
     </div></section>
   );
 }
