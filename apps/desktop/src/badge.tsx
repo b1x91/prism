@@ -42,7 +42,9 @@ function Badge() {
       <path d="M10.5 4.5H27.5V21.5Z M32 0L27.5 4.5" fill="none" stroke="rgba(255,255,255,.7)" strokeWidth=".55" strokeLinejoin="round" />
       <path d="M16 4.5 27.5 4.5 27.5 16Z" fill="url(#pc-sheen)" opacity=".5" />
       {/* 반짝임: 네 갈래 별빛 */}
-      <path d="M24.6 5.4 25.2 7.6 27.4 8.2 25.2 8.8 24.6 11 24 8.8 21.8 8.2 24 7.6Z" fill="#fff" />
+      <path className="star" d="M24.6 5.4 25.2 7.6 27.4 8.2 25.2 8.8 24.6 11 24 8.8 21.8 8.2 24 7.6Z" fill="#fff" />
+      {/* 한 번씩 빛이 스친다 */}
+      <path className="glint" d="M10.5 4.5H27.5V21.5Z" fill="url(#pc-sheen)" />
       <path d="M0.6 0 31.4 30.8" stroke="rgba(8,10,24,.75)" strokeWidth="1.2" />
       {found && <path className="sweep" d="M10.5 4.5H27.5V21.5Z" fill="url(#pc-sheen)" />}
     </svg>

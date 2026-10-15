@@ -31,9 +31,14 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
 @keyframes ov-badge-pulse { 50% { filter: drop-shadow(0 0 2px rgba(169, 184, 255, .5)); } }
 @media (prefers-reduced-motion: reduce) { .ov-badge.found img { animation: none; } }
 
-/* 모서리 삼각형 (v3.25): 보고 있음 = 조금 차분하게, 증강 카드를 알아봄 = 밝게 + 빛이 스친다 */
-.ov-corner { display: block; width: 32px; height: 32px; opacity: .82; filter: saturate(.85); transition: opacity .2s, filter .2s; }
-.ov-corner.found { opacity: 1; filter: saturate(1.15) drop-shadow(0 0 5px rgba(120, 200, 255, .9)); }
+/* 모서리 삼각형 (v3.25): 작게(게임 화면을 가리지 않게), 한 번씩 반짝임. 증강 카드를 알아보면 밝게 + 자주 */
+.ov-corner { display: block; width: 20px; height: 20px; opacity: .85; filter: saturate(.9); transition: opacity .2s, filter .2s; }
+.ov-corner.found { opacity: 1; filter: saturate(1.15) drop-shadow(0 0 4px rgba(120, 200, 255, .9)); }
+.ov-corner .star { transform-box: fill-box; transform-origin: center; animation: ov-star 4.5s ease-in-out infinite; }
+.ov-corner .glint { opacity: 0; animation: ov-glint 4.5s ease-in-out infinite; }
+.ov-corner.found .star, .ov-corner.found .glint { animation-duration: 1.6s; }
+@keyframes ov-star { 0%, 70%, 100% { transform: scale(.55) rotate(0deg); opacity: .7; } 82% { transform: scale(1.6) rotate(45deg); opacity: 1; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 3px rgba(150, 220, 255, .9)); } }
+@keyframes ov-glint { 0%, 68%, 100% { opacity: 0; } 80% { opacity: .9; } }
 .ov-corner .sweep { opacity: 0; animation: ov-sweep 1.6s ease-in-out infinite; }
 @keyframes ov-sweep { 0%, 100% { opacity: 0; } 50% { opacity: .75; } }
-@media (prefers-reduced-motion: reduce) { .ov-corner .sweep { animation: none; opacity: .4; } }
+@media (prefers-reduced-motion: reduce) { .ov-corner .star, .ov-corner .glint, .ov-corner .sweep { animation: none; } }
