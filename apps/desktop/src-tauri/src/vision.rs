@@ -335,6 +335,10 @@ mod imp {
         let mut known: Option<HWND> = None;
         // 제목 줄만 읽는 동안 몇 번에 한 번은 띠 전체를 다시 본다 (늦게 뜬 카드·높이가 다른 카드를 놓치지 않게)
         let mut tick: u32 = 0;
+        // 인식이 동작할 수 없는 PC 에 한 번 알린다 (오른쪽 아래 알림). 구석 표시·작은 창이 왜 안 뜨는지 사용자가 알 수 있게
+        let mut warned_engine = false;
+        let mut warned_capture = false;
+        let mut capture_fails = 0u32;
         loop {
             let s = v.settings.lock().unwrap().clone();
             let allowed = v.allowed.load(Ordering::SeqCst);
@@ -350,6 +354,14 @@ mod imp {
             let game = game.filter(|(h, _)| !unsafe { IsIconic(*h) }.as_bool());
             let front = game.is_some_and(|(h, _)| unsafe { GetForegroundWindow() } == h);
             let how = game.map(|g| g.1).unwrap_or("");
+            if game.is_some() && eng.is_none() && !warned_engine {
+                warned_engine = true;
+                crate::toast::show(&app, "증강 자동 인식을 쓸 수 없어요", "이 PC에 한국어 문자 인식이 없어요. Windows 설정 → 시간 및 언어 → 언어에서 '한국어'를 추가해 주세요.", "warn", 9000);
+            }
+            if game.is_none() {
+                warned_capture = false;
+                capture_fails = 0;
+            }
             let (Some((h, _)), Some(eng)) = (game, eng.as_ref()) else {
                 if badge_at.take().is_some() {
                     hide_window(&app, "badge");
@@ -428,6 +440,7 @@ mod imp {
             let shown = v.shown.load(Ordering::SeqCst);
             match found {
                 Some((lines, text)) => {
+                    capture_fails = 0;
                     let hits = v.matcher.find_at(&lines, w as f32);
                     // 처음엔 2장 이상 보여야 카드 화면으로 보고, 그 뒤로는 한 장만 읽혀도 그 칸을 갱신한다
                     let seen = hits.len() >= 2 || (!slots.is_empty() && !hits.is_empty());
@@ -473,7 +486,13 @@ mod imp {
                 }
                 None => {
                     v.stage("capture", 0, how);
-                    misses += 1
+                    misses += 1;
+                    // 맨 앞인데 계속 검게 복사되면 '전체 화면' 모드 — 이때는 작은 창·구석 표시도 게임 위에 뜨지 못한다
+                    capture_fails += 1;
+                    if front && capture_fails >= 4 && !warned_capture {
+                        warned_capture = true;
+                        crate::toast::show(&app, "게임 화면을 읽지 못하고 있어요", "롤 설정 → 비디오 → 창 모드를 '테두리 없음'으로 바꿔 주세요. 전체 화면에서는 Prism 표시가 게임 위에 뜨지 않아요.", "warn", 9000);
+                    }
                 }
             }
             std::thread::sleep(if v.shown.load(Ordering::SeqCst) { FAST } else { EVERY });
