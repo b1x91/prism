@@ -11,5 +11,6 @@ export * from './artisan';
 export * from './situation';
 export * from './shop';
 export * from './bgscene';
+export * from './studio';
 export * from './favs';
 export * from './missions';

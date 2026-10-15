@@ -12,6 +12,7 @@ import {
 import { ChampImg, Empty, Gem, MemberFace, Toggle, useSkins } from './basics';
 import { useLoad } from './crew';
 import { BgScene } from './bgscene';
+import { NickName } from './studio';
 import { Icon } from './icons';
 
 const SLOTS: ShopSlot[] = ['bg', 'frame', 'fx', 'name', 'title'];
@@ -71,7 +72,7 @@ export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, ac
           <span className="phero-face"><MemberFace nick={nick} skin={skin} champion={champion} skins={skins} size={stage ? 72 : mini ? 48 : 112} /></span>
           <div className="phero-txt">
             {title && <span className={`phero-title r-${SHOP_ITEM[deco!.title!]?.rarity ?? 'common'}`}>{title}</span>}
-            <h1 className={`phero-name ${deco?.name ?? ''}`}>{nick}</h1>
+            <h1 className={`phero-name ${deco?.name ?? ''}`}><NickName nick={nick} /></h1>
             {intro && <p className="phero-intro">{intro}</p>}
             {chips && <div className="phero-chips">{chips}</div>}
           </div>

@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
-import { AugmentOpen, FacePresence, MatchSource, Gem, Icon, MemberFace, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AugmentOpen, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import type { MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -23,7 +23,7 @@ export function Layout() {
         <span className="sp" />
         <span className="top-wide"><NavLink to="/shop" className="icon-btn top-shop" title="상점" aria-label="상점"><Icon name="bag" /></NavLink>
           <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>
-        {me ? <NavLink to="/me" className="me-btn" title="내 페이지"><FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={30} /></FacePresence><span className="me-txt"><b>{me.nick}</b>{pieces !== null && <small>{pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></NavLink>
+        {me ? <NavLink to="/me" className="me-btn" title="내 페이지"><FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={30} /></FacePresence><span className="me-txt"><b><NickName nick={me.nick} /></b>{pieces !== null && <small>{pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></NavLink>
           : <button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />로그인</button>}
         <button type="button" className="icon-btn menu-btn" aria-label="메뉴 열기" aria-expanded={menu} onClick={() => setMenu(true)}><Icon name="menu" /></button>
       </div></header>
@@ -56,7 +56,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           <NavLink to="/" className="brand" tabIndex={open ? 0 : -1}><Gem size={28} />Prism</NavLink>
           <button type="button" className="icon-btn" aria-label="메뉴 닫기" tabIndex={open ? 0 : -1} onClick={onClose}><Icon name="x" /></button>
         </div>
-        {me ? <NavLink to="/me" className="mmenu-me" tabIndex={open ? 0 : -1}><FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={40} /></FacePresence><span><b>{me.nick}</b><small>내 페이지</small></span></NavLink>
+        {me ? <NavLink to="/me" className="mmenu-me" tabIndex={open ? 0 : -1}><FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={40} /></FacePresence><span><b><NickName nick={me.nick} /></b><small>내 페이지</small></span></NavLink>
           : <button type="button" className="btn primary mmenu-login" tabIndex={open ? 0 : -1} onClick={login}><Icon name="discord" />디스코드로 로그인</button>}
         <nav className="mmenu-nav">{NAV.map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}</NavLink>)}</nav>
         <span className="sp" />

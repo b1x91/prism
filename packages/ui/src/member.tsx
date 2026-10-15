@@ -15,6 +15,7 @@ import { useLoad } from './crew';
 import { RecentGames } from './game';
 import { ProfileHero, ShareButton } from './shop';
 import { BgScene } from './bgscene';
+import { NickName, ProfileStudio } from './studio';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
@@ -59,7 +60,7 @@ function Podium({ r, rank, by, skins, onOpen }: { r: RankingRow; rank: number; b
       {r.bg ? <><BgScene id={r.bg} /><span className="pod-face"><MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={64} /></span></>
         : art && <img className="bg" src={art} alt="" loading="lazy" />}
       <span className="place">{rank === 1 && <Gem size={18} src="/brand/prism-32.png" />}{rank}위</span>
-      <span className="nm">{r.nick}</span>
+      <span className="nm"><NickName nick={r.nick} /></span>
       <span className="st"><b>{by === 'winrate' ? pct(r.w, r.n) : `${r.n}판`}</b><span>{by === 'winrate' ? `${r.n}판` : `승률 ${pct(r.w, r.n)}`}</span></span>
     </button>
   );
@@ -71,7 +72,7 @@ function RankRow({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: numb
       {r.bg && <BgScene id={r.bg} row />}
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={40} />
-      <span className="who"><b>{r.nick}</b>{r.mainChampion ? <span className="meta">주 챔프 {CHAMPIONS[r.mainChampion]?.name}</span> : null}</span>
+      <span className="who"><b><NickName nick={r.nick} /></b>{r.mainChampion ? <span className="meta">주 챔프 {CHAMPIONS[r.mainChampion]?.name}</span> : null}</span>
       <span className={`num ${by !== 'winrate' ? 'key' : ''}`}>{r.n}<small>판</small></span>
       <span className={`num ${by === 'winrate' ? 'key' : ''}`}>{pct(r.w, r.n)}</span>
     </button>
@@ -102,11 +103,11 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
     <div className="stack" style={{ gap: 16 }}>
       <ProfileHero nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
-        actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit(!edit)}>{edit ? '닫기' : '프로필 꾸미기'}</button>}
+        actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit(true)}><Icon name="spark" />프로필 꾸미기</button>}
           {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}
         chips={<><span className="pill dark">판수 {data.rank}위</span><span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
           {skin && <span className="pill dark">{skin.name}</span>}{m.presence && m.presence !== 'off' && <span className="pill dark"><PresenceTag p={m.presence} /></span>}</>} />
-      {edit && m.self && <ProfileEditor api={api} page={data} skins={skins} onSaved={() => { setEdit(false); reload(); }} />}
+      {edit && m.self && <ProfileStudio api={api} page={data} skins={skins} onClose={() => setEdit(false)} onSaved={() => { setEdit(false); reload(); }} />}
       {m.self && !m.riotId && <section className="card pad"><b>아직 롤 계정이 연결되지 않았어요</b><div className="muted">PC의 Prism 앱에서 로그인한 뒤 맨 위의 <b>"동의하고 연결"</b>을 누르면, 그때부터 판이 여기에 쌓입니다. 앱에 이미 보이는 최근 판도 함께 올라와요.</div></section>}
       {!m.self && <SynergyCard data={data} />}
       <div className="grid4">
@@ -347,53 +348,3 @@ function Ring({ value, label, sub }: { value: number; label: string; sub: string
 
 // ───────── 프로필 꾸미기 ─────────
 
-function ProfileEditor({ api, page, skins, onSaved }: { api: Api; page: MemberPage; skins: Record<number, Skin> | null; onSaved: () => void }) {
-  const m = page.member;
-  const [nick, setNick] = useState(m.nick);
-  const [intro, setIntro] = useState(m.intro);
-  const [pick, setPick] = useState<number | null>(m.skin);
-  const [champ, setChamp] = useState<number | null>(m.skin ? Math.floor(m.skin / 1000) : page.champions[0]?.id ?? null);
-  const [q, setQ] = useState('');
-  const [msg, setMsg] = useState('');
-  const n = page.total.n;
-  const list = useMemo(() => (skins && champ ? Object.values(skins).filter((s) => s.championId === champ).sort((a, b) => a.tier - b.tier || a.id - b.id) : []), [skins, champ]);
-  const champs = useMemo(() => CHAMPION_LIST.filter((c) => !q || matchName(c.name, q)).slice(0, q ? 24 : 0), [q]);
-  const next = SKIN_TIERS.find((t) => t.need > n);
-  const save = async () => {
-    setMsg('');
-    try { await api.post('/api/me/profile', { nick, intro, skin: pick }); onSaved(); }
-    catch (e) { setMsg(e instanceof Error ? e.message : String(e)); }
-  };
-  return (
-    <section className="card pad stack" style={{ gap: 16 }}>
-      <div className="card-head" style={{ margin: 0 }}><h2>프로필 꾸미기</h2><span className="sp" /><span className="meta">기록된 {n}판{next ? ` · ${next.need}판이 되면 ${next.name} 스킨` : ' · 모든 스킨 사용 가능'}</span></div>
-      <div className="grid2">
-        <label className="field"><span className="k">닉네임</span><input className="input" maxLength={20} value={nick} onChange={(e) => setNick(e.target.value)} /></label>
-        <label className="field"><span className="k">한 줄 소개</span><input className="input" maxLength={60} value={intro} onChange={(e) => setIntro(e.target.value)} placeholder="예: 탱커 좋아합니다" /></label>
-      </div>
-      <div className="tiers">{SKIN_TIERS.map((t) => <span key={t.name} className={`pill ${n >= t.need ? 'ok' : ''}`}>{t.name} {t.need ? `${t.need}판` : '바로'}</span>)}</div>
-      <div className="row wrapr" style={{ gap: 8 }}>
-        <span className="k">챔프</span>
-        {champ && <span className="pill accent"><ChampImg id={champ} size={18} />{CHAMPIONS[champ]?.name}</span>}
-        {page.champions.slice(0, 6).filter((c) => c.id !== champ).map((c) => <button key={c.id} type="button" className="pill btnlike" onClick={() => setChamp(c.id)}><ChampImg id={c.id} size={18} />{CHAMPIONS[c.id]?.name}</button>)}
-        <input className="input sm" style={{ maxWidth: 200 }} value={q} onChange={(e) => setQ(e.target.value)} placeholder="다른 챔프 (초성 가능)" />
-      </div>
-      {champs.length > 0 && <div className="row wrapr" style={{ gap: 8 }}>{champs.map((c) => <button key={c.id} type="button" className="pill btnlike" onClick={() => { setChamp(c.id); setQ(''); }}><ChampImg id={c.id} size={18} />{c.name}</button>)}</div>}
-      {!skins ? <p className="meta">스킨 불러오는 중…</p> : champ && (
-        <div className="skin-grid">
-          {list.map((s) => {
-            const need = skinNeed(s.tier), locked = n < need;
-            return (
-              <button key={s.id} type="button" className={`skin ${pick === s.id ? 'on' : ''} ${locked ? 'locked' : ''} t${s.tier}`} disabled={locked} onClick={() => setPick(s.id)} title={locked ? `${SKIN_TIERS[s.tier].name} · ${need}판부터` : s.name}>
-                <img src={s.tile} alt="" loading="lazy" />
-                <span className="nm">{s.id === baseSkin(champ) ? '기본' : s.name}</span>
-                <span className="tg">{locked ? <><Icon name="lock" />{need}판</> : SKIN_TIERS[s.tier].name}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-      <div className="row"><button type="button" className="btn primary" onClick={save}>저장</button>{pick && <button type="button" className="btn ghost" onClick={() => setPick(null)}>스킨 빼기</button>}{msg && <span className="l">{msg}</span>}</div>
-    </section>
-  );
-}

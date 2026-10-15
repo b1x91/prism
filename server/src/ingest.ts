@@ -214,7 +214,7 @@ export async function ingest(req: Request, env: Env, me: Member) {
         );
       }
       stmts.push(
-        env.DB.prepare('UPDATE members SET last_played_at = MAX(COALESCE(last_played_at, 0), ?), riot_id = COALESCE(?, riot_id) WHERE id = ?').bind(
+        env.DB.prepare('UPDATE members SET last_played_at = MAX(COALESCE(last_played_at, 0), ?1), riot_id = COALESCE(?2, riot_id), nick = COALESCE(?2, nick) WHERE id = ?3').bind(
           g.playedAt,
           typeof p.riotId === 'string' && p.riotId.includes('#') ? p.riotId : null,
           memberId,

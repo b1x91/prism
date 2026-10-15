@@ -1,22 +1,35 @@
 /**
  * 상점 '배경' 장면 (CLAUDE.md v3.34). 머리 뒤·랭킹 줄에 깔린다.
- * 노을 협곡 · 용암 균열 · 수정 동굴은 SVG 로 그린 장면(겹 능선·바위 질감·결정 면), 나머지는 CSS.
- * 그림 파일 없이 코드로만 그리고, 움직임은 CSS(동작 줄이기 존중)로만 준다.
+ * 수정 동굴은 생성 일러스트(packages/assets/public/bg) 위에 빛 알갱이를 얹고,
+ * 노을 협곡 · 용암 균열은 SVG 로 그린 장면(겹 능선·식은 용암 판), 나머지는 CSS.
+ * 움직임은 CSS(동작 줄이기 존중)로만 준다.
  */
 import { useId, type ReactNode } from 'react';
 
 /** 납작한 칸(랭킹 줄)에서 보여 줄 띠: 장면마다 가장 그럴듯한 높이 */
-const ROW_VIEW: Record<string, string> = { 'bg-dusk': '0 330 1600 120', 'bg-crystal': '0 250 1600 200', 'bg-magma': '0 380 1600 160' };
+const ROW_VIEW: Record<string, string> = { 'bg-dusk': '0 330 1600 120', 'bg-magma': '0 380 1600 160' };
 
 const SVG_SCENES: Record<string, (k: string, view?: string) => ReactNode> = {
   'bg-dusk': dusk,
   'bg-magma': magma,
-  'bg-crystal': crystal,
+};
+
+/** 그림 장면 (생성 일러스트, packages/assets/public/bg). pos: 넓은 칸 / row: 랭킹 줄에서 보여 줄 위치 */
+const IMG_SCENES: Record<string, { src: string; pos: string; row: string }> = {
+  'bg-crystal': { src: '/bg/crystal-v1.webp', pos: '62% 55%', row: '60% 72%' },
 };
 
 /** row: 랭킹 줄처럼 아주 납작한 칸 */
 export function BgScene({ id, row }: { id: string; row?: boolean }) {
   const k = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const img = IMG_SCENES[id];
+  if (img) return (
+    <span className={`bgx ${id} img`} aria-hidden="true">
+      <img src={img.src} alt="" loading="lazy" decoding="async" style={{ objectPosition: row ? img.row : img.pos }} />
+      <span className="bgx-motes">{Array.from({ length: 10 }, (_, i) => <i key={i} />)}</span>
+      <span className="bgx-sheen" />
+    </span>
+  );
   const svg = SVG_SCENES[id];
   if (svg) return <span className={`bgx ${id} svg`} aria-hidden="true">{svg(k, row ? ROW_VIEW[id] : undefined)}</span>;
   return <span className={`bgx ${id}`} aria-hidden="true">{Array.from({ length: 6 }, (_, i) => <i key={i} />)}</span>;
@@ -160,73 +173,3 @@ const EMBERS: [number, number, number, number][] = [
   [180, 560, 3, 0], [420, 590, 2, 1.4], [610, 570, 3.5, 2.6], [760, 600, 2, .8], [940, 580, 3, 3.4],
   [1080, 600, 2.5, 1.9], [1230, 575, 3, 4.2], [1390, 595, 2, 2.2], [1500, 585, 3, .4], [300, 600, 2, 3.8],
 ];
-
-// ───────── 수정 동굴: 위에서 드는 빛줄기 · 뒤(흐림)/앞(선명) 결정 무리 · 면마다 다른 밝기 · 반짝임 ─────────
-type Cr = [x: number, base: number, w: number, h: number, rot: number];
-const BACK: Cr[] = [[330, 640, 34, 260, -14], [400, 640, 26, 190, 8], [880, 640, 30, 230, -6], [1240, 640, 40, 300, 10], [1330, 640, 28, 200, -12], [1500, 640, 34, 280, 6]];
-const FRONT: Cr[] = [
-  [1060, 640, 58, 470, -4], [1150, 640, 46, 360, 12], [985, 640, 40, 300, -18], [1235, 640, 34, 250, 22], [1120, 640, 30, 210, 30],
-  [1420, 640, 52, 420, -8], [1500, 640, 38, 300, 14], [1360, 640, 30, 220, -24],
-  [140, 640, 46, 340, 10], [70, 640, 34, 240, -16], [220, 640, 30, 200, 24],
-];
-function crystalPath([x, base, w, h]: Cr) {
-  const sh = base - h * 0.78, tip = base - h;
-  return {
-    left: `M${x - w} ${base}L${x - w} ${sh}L${x} ${tip}L${x + w * 0.12} ${base}Z`,
-    right: `M${x + w * 0.12} ${base}L${x} ${tip}L${x + w} ${sh}L${x + w} ${base}Z`,
-    capL: `M${x - w} ${sh}L${x} ${tip}L${x - w * 0.15} ${sh + h * 0.06}Z`,
-    edge: `M${x} ${tip}L${x + w * 0.12} ${base}`,
-  };
-}
-function crystalGroup(list: Cr[], k: string, front: boolean) {
-  return list.map((c, i) => {
-    const p = crystalPath(c);
-    return (
-      <g key={i} transform={`rotate(${c[4]} ${c[0]} ${c[1]})`}>
-        <path d={p.left} fill={`url(#${k}${front ? 'fl' : 'bl'})`} />
-        <path d={p.right} fill={`url(#${k}${front ? 'fr' : 'br'})`} />
-        <path d={p.capL} fill="#eafcff" opacity={front ? 0.22 : 0.08} />
-        {front && <path d={p.edge} stroke="#e8fbff" strokeOpacity=".85" strokeWidth="2" />}
-        {front && <path d={`M${c[0] - c[2] * 0.55} ${c[1]}L${c[0] - c[2] * 0.55} ${c[1] - c[3] * 0.7}`} stroke="#bff3ff" strokeOpacity=".35" strokeWidth={c[2] * 0.18} strokeLinecap="round" />}
-      </g>
-    );
-  });
-}
-function crystal(k: string, view?: string) {
-  return (
-    <svg {...box(view, 'xMidYMax slice')}>
-      <defs>
-        <linearGradient id={`${k}bg`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#040817" /><stop offset=".55" stopColor="#0a1a3a" /><stop offset="1" stopColor="#10264a" />
-        </linearGradient>
-        <radialGradient id={`${k}lt`} cx=".66" cy="-.1" r=".9">
-          <stop offset="0" stopColor="#9fe8ff" stopOpacity=".55" /><stop offset=".5" stopColor="#4a7cff" stopOpacity=".12" /><stop offset="1" stopColor="#4a7cff" stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id={`${k}ray`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#bff3ff" stopOpacity=".32" /><stop offset="1" stopColor="#bff3ff" stopOpacity="0" /></linearGradient>
-        <linearGradient id={`${k}fl`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#c9f6ff" /><stop offset=".25" stopColor="#4fd6ff" /><stop offset=".7" stopColor="#2a6cf0" /><stop offset="1" stopColor="#3a1fa8" /></linearGradient>
-        <linearGradient id={`${k}fr`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#5cc8ff" /><stop offset=".35" stopColor="#1f7ee0" /><stop offset=".75" stopColor="#1d3aa8" /><stop offset="1" stopColor="#24105e" /></linearGradient>
-        <linearGradient id={`${k}bl`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#b08cff" /><stop offset="1" stopColor="#2a1a6e" /></linearGradient>
-        <linearGradient id={`${k}br`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#7a52e6" /><stop offset="1" stopColor="#190f45" /></linearGradient>
-        <radialGradient id={`${k}aura`} cx=".5" cy=".5" r=".5"><stop offset="0" stopColor="#38d6ff" stopOpacity=".55" /><stop offset=".6" stopColor="#5a4dff" stopOpacity=".18" /><stop offset="1" stopColor="#5a4dff" stopOpacity="0" /></radialGradient>
-        <radialGradient id={`${k}floor`} cx=".7" cy="1" r=".55"><stop offset="0" stopColor="#6fe3ff" stopOpacity=".55" /><stop offset="1" stopColor="#6fe3ff" stopOpacity="0" /></radialGradient>
-        <filter id={`${k}blur`}><feGaussianBlur stdDeviation="5" /></filter>
-        <filter id={`${k}glow`} x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="10" result="g" /><feMerge><feMergeNode in="g" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-      </defs>
-      <rect width="1600" height="600" fill={`url(#${k}bg)`} />
-      <rect width="1600" height="600" fill={`url(#${k}lt)`} />
-      <g className="cr-rays" fill={`url(#${k}ray)`}>
-        <path d="M960 0h70l-150 600h-150z" /><path d="M1100 0h40l60 600h-120z" opacity=".7" /><path d="M1220 0h90l200 600h-170z" opacity=".5" />
-      </g>
-      <g filter={`url(#${k}blur)`} opacity=".75">{crystalGroup(BACK, k, false)}</g>
-      <rect width="1600" height="600" fill={`url(#${k}floor)`} />
-      <ellipse className="cr-aura" cx="1130" cy="430" rx="420" ry="300" fill={`url(#${k}aura)`} />
-      <ellipse className="cr-aura" cx="150" cy="500" rx="240" ry="200" fill={`url(#${k}aura)`} />
-      <g filter={`url(#${k}glow)`}>{crystalGroup(FRONT, k, true)}</g>
-      <rect className="cr-sweep" x="-600" width="400" height="600" fill="#ffffff" opacity=".14" transform="skewX(-18)" />
-      <g className="cr-spark" fill="#ffffff">
-        {SPARKS.map(([x, y, r, d], i) => <path key={i} d={`M${x} ${y - r}L${x + r * 0.25} ${y - r * 0.25}L${x + r} ${y}L${x + r * 0.25} ${y + r * 0.25}L${x} ${y + r}L${x - r * 0.25} ${y + r * 0.25}L${x - r} ${y}L${x - r * 0.25} ${y - r * 0.25}Z`} style={{ animationDelay: `${d}s` }} />)}
-      </g>
-    </svg>
-  );
-}
-const SPARKS: [number, number, number, number][] = [[1062, 200, 14, 0], [1418, 250, 11, 1.3], [1150, 300, 9, 2.4], [140, 330, 10, .7], [985, 360, 8, 3.1], [1500, 360, 9, 1.9], [760, 120, 6, 2.8], [520, 220, 5, .4]];

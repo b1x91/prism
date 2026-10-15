@@ -105,7 +105,9 @@ export async function linkRiot(req: Request, env: Env, me: Member) {
   if (!puuid || typeof puuid !== 'string') throw new HttpError(400, 'puuid 가 없습니다.');
   const owner = await env.DB.prepare('SELECT id FROM members WHERE riot_puuid = ?').bind(puuid).first<{ id: string }>();
   if (owner && owner.id !== me.id) throw new HttpError(409, '이 롤 계정은 이미 다른 회원에게 연결되어 있습니다.');
-  await env.DB.prepare('UPDATE members SET riot_puuid = ?, riot_id = ? WHERE id = ?').bind(puuid, typeof riotId === 'string' ? riotId : null, me.id).run();
+  const rid = typeof riotId === 'string' && riotId.includes('#') ? riotId.trim().slice(0, 40) : null;
+  // 표시 이름 = 롤 계정 이름 (이름#태그)
+  await env.DB.prepare('UPDATE members SET riot_puuid = ?1, riot_id = ?2, nick = COALESCE(?3, nick) WHERE id = ?4').bind(puuid, rid, rid, me.id).run();
   return json({ ok: true });
 }
 
@@ -118,10 +120,9 @@ export async function setConsent(req: Request, env: Env, me: Member) {
 }
 
 export async function setProfile(req: Request, env: Env, me: Member) {
-  const { nick, intro, skin } = (await req.json().catch(() => ({}))) as { nick?: string; intro?: string; skin?: number | null };
-  const n = typeof nick === 'string' ? nick.trim().slice(0, 20) : me.nick;
+  // 이름은 바꿀 수 없다: 롤 계정 이름(이름#태그)을 따라간다 (v3.35). 소개·대표 스킨만
+  const { intro, skin } = (await req.json().catch(() => ({}))) as { intro?: string; skin?: number | null };
   const i = typeof intro === 'string' ? intro.trim().slice(0, 60) : me.intro;
-  if (!n) throw new HttpError(400, '닉네임을 입력해주세요.');
   let s = me.profile_skin;
   if (skin === null) s = null;
   else if (skin !== undefined) {
@@ -133,7 +134,7 @@ export async function setProfile(req: Request, env: Env, me: Member) {
     if ((row?.n ?? 0) < need) throw new HttpError(403, `${SKIN_TIERS[tier].name} 스킨은 ${need}판부터 쓸 수 있어요.`);
     s = skin;
   }
-  await env.DB.prepare('UPDATE members SET nick = ?, intro = ?, profile_skin = ? WHERE id = ?').bind(n, i, s, me.id).run();
+  await env.DB.prepare('UPDATE members SET intro = ?, profile_skin = ? WHERE id = ?').bind(i, s, me.id).run();
   return json({ ok: true });
 }
 
