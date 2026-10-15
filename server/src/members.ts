@@ -61,8 +61,9 @@ export async function memberPage(env: Env, me: Member, id: string) {
       // 같은 팀으로 한 판 (판별: 두 사람의 챔프·KDA·승패)
       env.DB.prepare(
         `SELECT a.played_at AS t, a.win AS w, a.champion_id AS mc, b.champion_id AS tc, a.kills AS mk, a.deaths AS md, a.assists AS ma,
-                b.kills AS tk, b.deaths AS td, b.assists AS ta, a.dmg_champ AS mdmg, b.dmg_champ AS tdmg, a.crew_count AS crew
+                b.kills AS tk, b.deaths AS td, b.assists AS ta, a.dmg_champ AS mdmg, b.dmg_champ AS tdmg, a.crew_count AS crew, x.duration AS dur
          FROM participants a JOIN participants b ON a.game_id = b.game_id AND a.team_id = b.team_id
+         JOIN matches x ON x.game_id = a.game_id
          WHERE a.member_id = ? AND b.member_id = ? ORDER BY a.played_at DESC LIMIT 300`,
       ).bind(me.id, id),
       // 상대 팀으로 만난 판 (w = 내가 이긴 판)

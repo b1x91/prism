@@ -4,7 +4,7 @@
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
-  AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago,
+  AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
   type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, MemberFace, PresenceTag, RoleBadge, Seg, useSkins } from './basics';
@@ -185,6 +185,8 @@ function SynergyCard({ data }: { data: MemberPage }) {
   const d = duoOf(data, nick);
   if (!d || !data.viewer) return null;
   const t = d.together, v = d.vs, me = data.viewer;
+  const bond = bondOf(data.duo?.together ?? []);
+  const coach = coachOf(data, nick);
   const LV = { good: '잘 맞을 것 같아요', ok: '무난해요', weak: '서로 보완이 필요해요' } as const;
   const p = (x: number | null) => (x === null ? '–' : `${Math.round(x * 100)}%`);
   const cn = (id: number) => CHAMPIONS[id]?.name ?? `#${id}`;
@@ -211,10 +213,22 @@ function SynergyCard({ data }: { data: MemberPage }) {
             <b>{nick}</b><small>평균 {p(t.theirAvg)}</small>
           </div>
         </div>
+        <div className="duo-bond" title={`함께 1판 +${BOND_POINT.game} · 함께 이긴 판 +${BOND_POINT.win} · 함께한 주 +${BOND_POINT.week}`}>
+          <div className="db-top">
+            <span className="db-lv">Lv.{bond.grade}</span>
+            <b>{bond.name}</b>
+            <span className="db-score">{bond.score.toLocaleString()}<small>관계 점수</small></span>
+          </div>
+          <div className="db-bar"><span style={{ width: `${Math.max(3, Math.round(bond.pct * 100))}%` }} />{BOND_GRADES.slice(1).map((g, i) => <i key={g.at} className={bond.grade > i + 1 ? 'on' : ''} />)}</div>
+          <div className="db-sub">
+            <span>{bond.next ? <>다음 등급 <b>{bond.next.name}</b>까지 <b>{bond.toNext.toLocaleString()}</b>점</> : '최고 등급에 올랐어요'}</span>
+            <span>꾸준함 <b>{bond.recentWeeks}</b>/4주 · 함께 <b>{t.n}</b>판 <b>{t.w}</b>승</span>
+          </div>
+        </div>
         <div className="duo-meta">
-          <span>함께 <b>{t.n}</b>판 · <b>{t.w}</b>승 <b>{t.n - t.w}</b>패</span>
           {t.first && <span>첫 판 {shortDate(t.first)}</span>}
           {t.last && <span>마지막 {ago(t.last)}</span>}
+          <span>함께한 주 {bond.weeks}주</span>
         </div>
       </header>
 
@@ -277,10 +291,37 @@ function SynergyCard({ data }: { data: MemberPage }) {
           </div>
         </div>
 
-        {d.insights.length > 0 && <div className="duo-notes">
-          <span className="duo-h">코치 노트</span>
-          <ul>{d.insights.map((x) => <li key={x.text} className={x.tone}><i />{x.text}</li>)}</ul>
-        </div>}
+        <div className="duo-report">
+          <div className="dr-head">
+            <span className="dr-badge">감독 리포트</span>
+            <h3>더 잘 맞추려면</h3>
+            <span className="meta">함께한 {t.n}판 분석 · 판이 쌓일수록 정확해져요</span>
+          </div>
+          {!coach.ready ? <p className="dr-wait">함께 {coach.need}판 더 하면 리포트가 열려요. 지금은 데이터를 모으는 중입니다.</p> : <>
+            {coach.plan.length > 0 && <div className="dr-plan">
+              <span className="k">다음 판 작전</span>
+              <ol>{coach.plan.map((x, i) => <li key={x}><b>{i + 1}</b>{x}</li>)}</ol>
+            </div>}
+            <div className="dr-cols">
+              {(['fix', 'good'] as const).map((tone) => {
+                const list = coach.items.filter((x) => x.tone === tone);
+                return (
+                  <div key={tone} className={`dr-col ${tone}`}>
+                    <span className="dr-ch"><i />{tone === 'fix' ? '보완점' : '강점'}<small>{list.length}</small></span>
+                    {list.length ? list.map((x) => (
+                      <article key={x.key} className="dr-item">
+                        <b>{x.title}</b>
+                        <span className="ev">{x.evidence}</span>
+                        <p>{x.action}</p>
+                      </article>
+                    )) : <p className="meta">{tone === 'fix' ? '두드러진 약점이 아직 보이지 않아요.' : '판이 더 쌓이면 강점이 보여요.'}</p>}
+                  </div>
+                );
+              })}
+            </div>
+          </>}
+          {d.insights.length > 0 && <ul className="dr-brief">{d.insights.map((x) => <li key={x.text} className={x.tone}><i />{x.text}</li>)}</ul>}
+        </div>
       </div>
     </section>
   );
