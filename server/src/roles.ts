@@ -19,6 +19,7 @@ export const FEATURES = {
   scrim: 3, // 내전 열기·팀 나누기 (우수회원 이상)
   prospects: 2, // 포텐 멤버 보기 (정회원 이상)
   moderate: 5, // 남의 글·팁 지우기, 남의 판·내전 취소, 포텐 기록 지우기 (운영진)
+  shop: 5, // 상점 사기·장착 (지금은 운영진만, 열 때 0 으로)
 } as const;
 export type Feature = keyof typeof FEATURES;
 

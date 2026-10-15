@@ -47,7 +47,7 @@ export type Prospects = { prospects: Prospect[]; queueMin: number };
 
 /** 디스코드 역할 (가장 높은 것 하나) 과 앱 기능 권한 */
 export type DiscordRole = { key: string; name: string; color: string; level: number };
-export type Perms = { party: boolean; scrim: boolean; prospects: boolean; moderate: boolean };
+export type Perms = { party: boolean; scrim: boolean; prospects: boolean; moderate: boolean; shop?: boolean };
 
 /** 지금 디스코드 (서버 위젯) */
 export type VoiceMember = { name: string; avatar: string; muted: boolean; deaf: boolean; memberId: string | null; skin: number | null; main: number | null };

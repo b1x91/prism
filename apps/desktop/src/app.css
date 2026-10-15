@@ -349,3 +349,21 @@ body { overflow: hidden; background: var(--bg); }
 .ng-mprog .bar > span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
 .ng-mprog .rew { display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-sm); font-weight: 800; font-variant-numeric: tabular-nums; }
 .side-me-card .st.pc b { flex: none; overflow: visible; }
+
+/* 사이드바 아래 한 줄: 상점 · 디스코드 · 카카오톡 (v3.31) */
+.side-dock { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin: 0 0 var(--s3); padding: 6px; border-radius: var(--r-l); background: var(--surface-2); border: 1px solid var(--line); }
+.side-dock a, .side-dock button { display: grid; justify-items: center; align-content: center; gap: 4px; height: 56px; padding: 0; border: 0; border-radius: var(--r-m); background: transparent; color: var(--text-2); font: inherit; text-decoration: none; cursor: pointer; transition: background .15s, color .15s, transform .15s; }
+.side-dock svg { width: 20px; height: 20px; }
+.side-dock span { font-size: var(--fs-xs); font-weight: 700; letter-spacing: -.01em; }
+.side-dock a:hover, .side-dock button:not(:disabled):hover { background: var(--surface); color: var(--text); transform: translateY(-1px); box-shadow: var(--shadow); }
+.side-dock a.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.side-dock .dock-shop:hover svg, .side-dock .dock-shop.active svg { color: #e0a82e; }
+.side-dock .dock-discord:not(:disabled):hover svg { color: #5865f2; }
+.side-dock .dock-kakao:not(:disabled):hover svg { color: #e0b800; }
+.side-dock button:disabled { opacity: .45; cursor: default; }
+@media (max-width: 900px) {
+  .side-dock { grid-template-columns: 1fr; padding: 4px; }
+  .side-dock a, .side-dock button { height: 40px; }
+  .side-dock span { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .side-dock a, .side-dock button { transition: none; } .side-dock a:hover, .side-dock button:hover { transform: none; } }

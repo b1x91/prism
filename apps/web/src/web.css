@@ -137,3 +137,18 @@ body { overflow-x: clip; }
 /* 상단 내 이름 + 보유 피스 */
 .me-btn .me-txt { display: inline-flex; align-items: center; gap: var(--s2); }
 .me-btn .me-txt small { display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-xs); font-weight: 800; color: var(--text-2); font-variant-numeric: tabular-nums; }
+
+/* 상점 · 디스코드 · 카카오톡 한 줄 (v3.31) */
+.dock3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 6px; border-radius: var(--r-l); background: var(--surface-2); border: 1px solid var(--line); }
+.dock3 > a, .dock3 > span { display: grid; justify-items: center; align-content: center; gap: 4px; height: 56px; border-radius: var(--r-m); color: var(--text-2); text-decoration: none; transition: background .15s, color .15s; }
+.dock3 svg { width: 20px; height: 20px; }
+.dock3 span span, .dock3 a span { font-size: var(--fs-xs); font-weight: 700; }
+.dock3 > a:hover, .dock3 > a.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.dock3 .d-shop:hover svg, .dock3 .d-shop.active svg { color: #e0a82e; }
+.dock3 .d-discord:hover svg { color: #5865f2; }
+.dock3 .d-kakao:hover svg { color: #e0b800; }
+.dock3 .off { opacity: .45; }
+.dock3.compact { display: inline-flex; gap: 2px; padding: 3px; border-radius: var(--r-pill); }
+.dock3.compact > a, .dock3.compact > span { width: 36px; height: 32px; border-radius: var(--r-pill); }
+.dock3.compact span span, .dock3.compact a span { display: none; }
+.dock3.compact svg { width: 18px; height: 18px; }

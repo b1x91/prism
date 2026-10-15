@@ -20,7 +20,7 @@ import { CrewPage } from './pages/Crew';
 import { SettingsPage } from './pages/Settings';
 import { lockdown } from './lockdown';
 
-const NAV: [string, string, IconName][] = [['/', '게임', 'game'], ['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users'], ['/shop', '상점', 'bag']];
+const NAV: [string, string, IconName][] = [['/', '게임', 'game'], ['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
 
 /** 롤 클라이언트 연결 상태 (사이드바 내 얼굴의 점에 마우스를 올리면) */
 const STATUS: Record<State['status'], [string, string]> = {
@@ -121,10 +121,11 @@ function App() {
         {up.error && up.info?.available && <span className="side-err l">{up.error}</span>}
         <nav className="side-nav">{NAV.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}</NavLink>)}</nav>
         <span className="sp" />
-        {/* 모임 채널: 메뉴와 같은 모양으로 아래쪽에 */}
-        <nav className="side-nav side-chan" aria-label="모임 채널">
-          <button type="button" disabled={!links.discord} onClick={() => links.discord && bridge.openUrl(links.discord)} title="디스코드 열기"><DiscordGlyph />디스코드</button>
-          <button type="button" disabled={!links.kakao} onClick={() => links.kakao && bridge.openUrl(links.kakao)} title={links.kakao ? '카카오톡 오픈채팅 열기' : '카카오톡 · 곧 열립니다'}><KakaoGlyph />카카오톡{!links.kakao && <small>준비 중</small>}</button>
+        {/* 아래쪽 한 줄: 상점 · 디스코드 · 카카오톡 */}
+        <nav className="side-dock" aria-label="상점과 모임 채널">
+          <NavLink to="/shop" className="dock-shop" title="상점"><Icon name="bag" /><span>상점</span></NavLink>
+          <button type="button" className="dock-discord" disabled={!links.discord} onClick={() => links.discord && bridge.openUrl(links.discord)} title="디스코드 열기"><DiscordGlyph /><span>디스코드</span></button>
+          <button type="button" className="dock-kakao" disabled={!links.kakao} onClick={() => links.kakao && bridge.openUrl(links.kakao)} title={links.kakao ? '카카오톡 오픈채팅 열기' : '카카오톡 · 곧 열립니다'}><KakaoGlyph /><span>카카오톡</span></button>
         </nav>
         {s.me && <div className={`side-me-card ${staff ? 'prism' : ''}`}>
           <NavLink to="/me" className="side-me" title="내 페이지">

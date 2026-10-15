@@ -10,6 +10,9 @@ import { EARN, SHOP_ITEM, earnedTotal, levelTotal, parseDeco, type Deco, type Ea
 import { dexRows } from './crew.js';
 import { missionPiecesOf } from './missions.js';
 import { HttpError, json, type Env, type Member } from './util.js';
+import { can } from './roles.js';
+
+const SHOP_CLOSED = '상점은 준비 중입니다.';
 
 const HOUR = 3_600_000;
 /** 한국 날짜 (매일 첫 접속) */
@@ -65,6 +68,7 @@ export async function getShop(env: Env, me: Member) {
 }
 
 export async function buy(req: Request, env: Env, me: Member) {
+  if (!can(me, 'shop')) throw new HttpError(403, SHOP_CLOSED);
   const { id } = (await req.json().catch(() => ({}))) as { id?: string };
   const item = id ? SHOP_ITEM[id] : undefined;
   if (!item) throw new HttpError(400, '없는 상품입니다.');
@@ -80,6 +84,7 @@ export async function buy(req: Request, env: Env, me: Member) {
 
 /** 장착·해제 (가진 것만) */
 export async function equip(req: Request, env: Env, me: Member) {
+  if (!can(me, 'shop')) throw new HttpError(403, SHOP_CLOSED);
   const { slot, id } = (await req.json().catch(() => ({}))) as { slot?: ShopSlot; id?: string | null };
   const s = await state(env, me.id);
   if (!slot || !['frame', 'fx', 'name', 'title'].includes(slot)) throw new HttpError(400, '잘못된 칸입니다.');

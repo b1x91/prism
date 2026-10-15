@@ -33,7 +33,7 @@ export function ShopPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   const me = s.me;
   // 대표 스킨이 없으면 가장 많이 한 챔피언으로 미리 보기
   const top = Object.entries(s.personal.champions).sort((a, b) => b[1].n - a[1].n)[0]?.[0];
-  return <ShopView api={api} me={{ nick: me.nick, skin: me.skin, champion: top ? Number(top) : null }} />;
+  return <ShopView api={api} open={Boolean(me.perms?.shop)} me={{ nick: me.nick, skin: me.skin, champion: top ? Number(top) : null }} />;
 }
 
 export function MissionsPage({ s, onLogin }: { s: State; onLogin: () => void }) {

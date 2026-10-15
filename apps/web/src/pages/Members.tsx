@@ -43,7 +43,7 @@ export function ShopPage() {
   if (!me) return <NeedLogin what="상점" />;
   return (
     <section className="section tight"><div className="wrap">
-      <ShopView api={api} me={{ nick: me.nick, skin: me.skin }} />
+      <ShopView api={api} open={Boolean(me.perms?.shop)} me={{ nick: me.nick, skin: me.skin }} />
     </div></section>
   );
 }

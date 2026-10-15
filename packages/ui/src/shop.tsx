@@ -111,7 +111,31 @@ export function ShareButton({ api, id, shared, onChange }: { api: Api; id: strin
 type Me = { nick: string; skin?: number | null; champion?: number | null };
 const RARITY_ORDER = ['legendary', 'epic', 'rare', 'common'] as const;
 
-export function ShopView({ api, me }: { api: Api; me: Me }) {
+export function ShopView({ api, me, open = true }: { api: Api; me: Me; open?: boolean }) {
+  if (!open) return <ShopSoon api={api} me={me} />;
+  return <ShopOpen api={api} me={me} />;
+}
+
+/** 상점 준비 중 (운영진 외): 흐린 진열장 몇 개 + 모으고 있는 피스 */
+function ShopSoon({ api, me }: { api: Api; me: Me }) {
+  const bal = usePieces(api);
+  const tease: Deco[] = [{ frame: 'frame-prism' }, { fx: 'fx-aurora' }, { title: 'title-ruler', name: 'name-gold' }];
+  return (
+    <section className="shop-soon">
+      <div className="ss-stage" aria-hidden="true">
+        {tease.map((d, i) => <div key={i} className={`ss-card c${i}`}><ProfileHero stage nick={me.nick} skin={me.skin} champion={me.champion} deco={d} /></div>)}
+      </div>
+      <div className="ss-txt">
+        <span className="ss-k">PRISM SHOP</span>
+        <h1>상점 준비 중</h1>
+        <p>머리 테두리 · 머리 효과 · 이름 효과 · 칭호를 준비하고 있어요.<br />피스는 지금도 모이고 있으니, 열리면 모은 피스로 바로 꾸밀 수 있어요.</p>
+        <span className="ss-bal"><PieceIcon size={22} /><b>{bal === null ? '–' : bal.toLocaleString()}</b><small>모은 {PIECE}</small></span>
+      </div>
+    </section>
+  );
+}
+
+function ShopOpen({ api, me }: { api: Api; me: Me }) {
   const { data, error, reload } = useLoad<Shop>(api, '/api/shop');
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
