@@ -245,7 +245,9 @@ async function tick(): Promise<number> {
     if (starting && state.matchup?.source !== 'game') await loadMatchup().catch(() => {});
     if (phase === 'ChampSelect') await loadChampSelect();
     else { if (state.champSelect) set({ champSelect: null }); crewKey = ''; }
-    const status = phase === 'ChampSelect' ? 'champ-select' : 'idle';
+    // 챔프 선택이 끝나고 게임 창이 뜨기 전(GameStart·InProgress·Reconnect)도 '게임 중'으로 본다 —
+    // 예전엔 이 몇 초 동안 '진행 중인 게임이 없습니다'가 잠깐 보였다
+    const status = phase === 'ChampSelect' ? 'champ-select' : starting ? 'in-game' : 'idle';
     if (state.phase !== phase || state.status !== status || state.message) set({ phase, status, message: '' });
     // 최근 판은 챔프 선택·게임 시작이 아닐 때만 (오래 걸릴 수 있다)
     const stale = Date.now() - historyAt > (Date.now() < refreshUntil ? 30_000 : HISTORY_EVERY);
