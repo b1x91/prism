@@ -67,6 +67,8 @@ jobs:
       # 서버에 새 버전을 바로 알린다 (GitHub 가 서버의 확인 요청을 막아도 업데이트가 늦지 않게)
       - if: startsWith(github.ref, 'refs/tags/app-v') || inputs.release
         name: 서버에 새 버전 알리기
+        # 설치 파일은 이미 올라갔으므로, 여기서 실패해도 빌드 전체를 실패로 만들지 않는다 (서버는 GitHub 로도 새 버전을 찾는다)
+        continue-on-error: true
         shell: bash
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -75,4 +77,8 @@ jobs:
         run: |
           [ -n "$CLOUDFLARE_API_TOKEN" ] || { echo "::notice::CLOUDFLARE_API_TOKEN 이 없어 건너뜁니다"; exit 0; }
           [[ "$TAG" =~ ^app-v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "이상한 태그: $TAG"; exit 1; }
+          # 저장소의 wrangler.toml 에는 D1 ID 가 비어 있다 (deploy-server 는 ensure-d1 로 채운다) → 이름으로 찾아 채운다
+          ID=$(npx wrangler d1 list --json | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const d=JSON.parse(s).find(x=>x.name==='prism');process.stdout.write(d?d.uuid:'')})")
+          [ -n "$ID" ] || { echo "::warning::D1 'prism' 을 찾지 못해 건너뜁니다"; exit 0; }
+          sed -i "s/database_id = \"[^\"]*\"/database_id = \"$ID\"/" server/wrangler.toml
           npx wrangler d1 execute prism --remote --config server/wrangler.toml --command "INSERT INTO ext_cache (k, v, at) VALUES ('release-tag', '$TAG', $(date +%s)000) ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at"
