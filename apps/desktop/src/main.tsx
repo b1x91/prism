@@ -145,7 +145,7 @@ function App() {
           <Route path="members/:id" element={<MemberPage s={s} onLogin={login} />} />
           <Route path="crew" element={<CrewPage s={s} onLogin={login} />} />
           <Route path="shop" element={<ShopPage s={s} onLogin={login} />} />
-          <Route path="settings" element={<SettingsPage s={s} onLogin={login} />} />
+          <Route path="settings" element={<SettingsPage s={s} onLogin={login} discord={links.discord} />} />
           <Route path="*" element={<GamePage s={s} />} />
         </Routes></Page></MatchNote.Provider></MatchSource.Provider></AugmentOpen.Provider>
       </main>

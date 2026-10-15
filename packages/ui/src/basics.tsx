@@ -78,6 +78,11 @@ export function Select<T extends string>({ value, options, onChange, label }: { 
   );
 }
 
+/** 켜기·끄기 스위치 (지금 상태가 한눈에 보이게). 오른쪽 = 켜짐 */
+export function Toggle({ on, onChange, label, disabled }: { on: boolean; onChange: (v: boolean) => void; label: string; disabled?: boolean }) {
+  return <button type="button" role="switch" aria-checked={on} aria-label={label} className={`toggle ${on ? 'on' : ''}`} disabled={disabled} onClick={() => onChange(!on)}><i /></button>;
+}
+
 export function Seg<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
   return <div className="seg">{options.map(([k, l]) => <button key={k} type="button" className={value === k ? 'on' : ''} onClick={() => onChange(k)}>{l}</button>)}</div>;
 }
