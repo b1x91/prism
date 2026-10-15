@@ -16,6 +16,13 @@ import { NickName } from './studio';
 import { Icon } from './icons';
 
 const SLOTS: ShopSlot[] = ['bg', 'frame', 'fx', 'name', 'title'];
+/** 산 배경이 없을 때 깔리는 기본 색 (회원마다 정해진 색 — 이름으로 고른다, 바뀌지 않는다). 상점의 '배경'으로 바꿀 수 있다 */
+const BASE_TINTS = ['#3b5bdb', '#7048e8', '#0c8599', '#2b8a3e', '#c2255c', '#e8590c', '#5f3dc4', '#1971c2'];
+export function baseTint(seed: string) {
+  let h = 0;
+  for (const c of seed) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return BASE_TINTS[h % BASE_TINTS.length];
+}
 const titleOf = (d?: Deco) => (d?.title ? SHOP.find((x) => x.id === d.title)?.name : undefined);
 
 /** 피스 아이콘: 납작한 금빛 마름모 하나 (가장 단순하게, 숫자 오른쪽에 둔다) */
@@ -66,12 +73,13 @@ export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, ac
 }) {
   const skins = useSkins();
   const title = titleOf(deco);
-  // 배경: 산 배경(bg) → 넘겨준 그림 → 대표 스킨 → 주 챔피언. 산 배경이 있으면 얼굴(대표 스킨)과 겹치지 않는다
-  const bg = stage || deco?.bg ? '' : art || (skin && skins?.[skin]?.splash) || (champion ? cdragon(CHAMPIONS[champion]?.splash) : '');
+  // 배경: 산 배경(bg)이 있으면 그 장면, 없으면 회원마다 정해진 기본 색 (스킨 그림은 얼굴에만 — 배경은 상점에서 산다)
+  void art; // 예전 호출부 호환 (배경 그림은 이제 쓰지 않는다)
+  const tint = stage || deco?.bg ? '' : baseTint(nick);
   return (
     <header className={`phero ${mini ? 'mini' : ''} ${stage ? 'stage' : ''} ${deco?.bg ? 'has-bg' : ''} ${deco?.frame ?? ''} ${deco?.fx ?? ''}`}>
       {deco?.bg && <BgScene id={deco.bg} />}
-      {bg && <img className="phero-bg" alt="" src={bg} />}
+      {tint && <span className="phero-tint" style={{ ['--tint' as string]: tint }} aria-hidden="true" />}
       {deco?.fx && <span className="phero-fx" aria-hidden="true">{Array.from({ length: 14 }, (_, i) => <i key={i} />)}</span>}
       <div className="phero-in">
         {corner && <div className="phero-corner">{corner}</div>}

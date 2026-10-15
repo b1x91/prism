@@ -13,7 +13,7 @@ import {
 import { ChampImg } from './basics';
 import { Icon } from './icons';
 import { BgScene } from './bgscene';
-import { PieceIcon, ProfileHero } from './shop';
+import { PieceIcon, ProfileHero, baseTint } from './shop';
 
 type Tab = 'skin' | ShopSlot | 'intro';
 const TABS: [Tab, string][] = [['skin', '대표 스킨'], ['bg', SLOT_KO.bg], ['frame', SLOT_KO.frame], ['fx', SLOT_KO.fx], ['name', SLOT_KO.name], ['title', SLOT_KO.title], ['intro', '소개']];
@@ -157,8 +157,9 @@ function DecoPanel({ slot, shop, deco, me, onPick }: { slot: ShopSlot; shop: Sho
       {!owned && <p className="meta pst-hint">아직 가진 {SLOT_KO[slot]}가 없어요. 상점에서 {PIECE}로 모을 수 있어요.</p>}
       <div className="pst-grid deco">
         <button type="button" className={`pst-tile none ${!cur ? 'on' : ''}`} onClick={() => onPick(null)}>
-          <span className="pst-art"><span className="pst-none"><Icon name="x" /></span></span>
-          <span className="pst-nm">없음</span><span className="pst-sub">기본 모습</span>
+          {slot === 'bg'
+            ? <><span className="pst-art"><span className="phero-tint" style={{ ['--tint' as string]: baseTint(me.nick) }} /></span><span className="pst-nm">기본 색</span><span className="pst-sub">처음 정해진 색</span></>
+            : <><span className="pst-art"><span className="pst-none"><Icon name="x" /></span></span><span className="pst-nm">없음</span><span className="pst-sub">기본 모습</span></>}
         </button>
         {items.map((x) => {
           const has = shop.owned.includes(x.id);

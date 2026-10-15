@@ -7,7 +7,7 @@ import { api, bridge } from './bridge';
 import { VERSION } from './version';
 
 // 대기 중에도 2초마다 단계만 본다 (챔프 선택에 들어가면 바로 알아채게). 최근 판 불러오기는 따로 드물게
-const INTERVAL = { noClient: 20_000, inGame: 30_000, idle: 2_000, champSelect: 600, error: 10_000 };
+const INTERVAL = { noClient: 20_000, inGame: 30_000, idle: 2_000, queue: 500, champSelect: 600, error: 10_000 };
 const HISTORY_PAGES = 5; // 20판 × 5 = 최근 100판
 const HISTORY_EVERY = 10 * 60_000;
 const AFTER_GAME = 3 * 60_000; // 게임 직후 새 판이 뜰 때까지 30초마다 다시 읽는다
@@ -256,6 +256,8 @@ async function tick(): Promise<number> {
     }
     if (phase === 'None' || phase === 'Lobby') void syncCrew();
     if (starting && state.matchup?.source !== 'game') return 1500; // 놓치지 않게 잠깐 자주
+    // 큐를 돌리는 중(매칭·수락 대기)이면 챔프 선택에 들어가는 순간을 바로 잡도록 자주 본다
+    if (phase === 'Matchmaking' || phase === 'ReadyCheck') return INTERVAL.queue;
     return phase === 'ChampSelect' ? INTERVAL.champSelect : INTERVAL.idle;
   } catch (e) {
     set({ status: 'error', message: e instanceof Error ? e.message : String(e), summoner: null });

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, fitOf, gradeUp, fitPoints, rankByPriority, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type Matchup, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, augIcon, augShift, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, fitOf, gradeUp, fitPoints, rankByPriority, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type Matchup, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
 import { ChampImg } from './basics';
 import { FavMark, FavStar, useFavs } from './favs';
 import { HeartIcon } from './likeheart';
@@ -224,7 +224,7 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack, after }: { id
       </section>
       {after}
       <section className="card pad">
-        <div className="card-head"><h2>잘 맞는 챔프</h2><span className="sp" /><span className="meta">잘 맞음 {champs.best}명 / {champs.total}명</span></div>
+        <div className="card-head"><h2>잘 맞는 챔프</h2><span className="sp" /><span className="meta">잘 맞음 {champs.best} / {champs.total} 챔프</span></div>
         {champs.list.length ? <div className="fit-champs">{champs.list.map((f) => (
           <button type="button" key={f.id} className="fc" onClick={() => onChampion?.(f.id)}>
             <ChampImg id={f.id} size={48} />
@@ -259,7 +259,9 @@ export function GradeUp({ rarity, tier }: { rarity: Rarity; tier: FitTier }) {
 
 /** 원형 증강 아이콘 (등급 테두리) */
 export function AugRing({ id, size = 40 }: { id: number; size?: number }) {
-  return <span className={`aug-ring ${AUGMENT[id]?.rarity ?? ''}`} style={{ width: size, height: size }}><AugImg id={id} size={size - 6} /></span>;
+  // 고리 안 어두운 원은 그대로 두고, 그 안의 무늬만 가운데로 옮긴다 (아이콘 그림마다 무늬 위치가 다르다)
+  const [dx, dy] = augShift(id);
+  return <span className={`aug-ring ${AUGMENT[id]?.rarity ?? ''}`} style={{ width: size, height: size }}><span className="aug-disc"><img className="aug" src={augIcon(id)} width={size - 6} height={size - 6} alt={AUGMENT[id]?.name ?? ''} loading="lazy" style={dx || dy ? { transform: `translate(${dx}%, ${dy}%)` } : undefined} /></span></span>;
 }
 
 /** 왜 맞는지 + 언제 더 좋은지 (C·D 티어에는 '언제'를 붙이지 않는다) */

@@ -14,3 +14,4 @@ export * from './bgscene';
 export * from './studio';
 export * from './favs';
 export * from './missions';
+export * from './favpick';

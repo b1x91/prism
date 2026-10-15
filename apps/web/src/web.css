@@ -148,3 +148,12 @@ body { overflow-x: clip; }
 .ltools { top: calc(64px + var(--s3)); }
 @media (max-width: 720px) { .ltools { top: calc(56px + var(--s2)); } }
 @media (min-width: 981px) { .dex-entry { top: calc(64px + var(--s4)); } }
+/* 소개 카드: 디스코드·카카오톡 버튼을 가운데에, 원래 색 그대로 (v3.41) */
+.ch-brand .chbs { justify-content: center; flex-wrap: wrap; gap: var(--s3); }
+.ch-brand .chb { height: 48px; padding: 0 var(--s5) 0 var(--s4); border: 0; font-size: var(--fs-md); font-weight: 800; box-shadow: var(--shadow); transition: transform .15s, filter .15s; }
+.ch-brand .chb svg { width: 22px; height: 22px; }
+.ch-brand .chb:hover { transform: translateY(-2px); filter: brightness(1.06); }
+.ch-brand .chb.discord { background: #5865f2; color: #fff; }
+.ch-brand .chb.discord svg, .ch-brand .chb.discord:hover svg { color: #fff; }
+.ch-brand .chb.kakao { background: #fee500; color: #191919; }
+.ch-brand .chb.kakao svg, .ch-brand .chb.kakao:hover svg { color: #191919; }

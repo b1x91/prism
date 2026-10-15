@@ -59,7 +59,7 @@ export function ChampGrid({ onPick, query = '', onQuery, record }: { onPick: (id
           {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><HeartIcon size={13} />내 챔프<small>{favs.champs.length}</small></button>}
           {record && <button type="button" aria-pressed={mine} className={`chip ${mine ? 'on' : ''}`} onClick={() => setMine(!mine)}>해 본 챔프</button>}
         </div>
-        <span className="ltools-cnt"><b>{list.length}</b>명</span>
+        <span className="ltools-cnt"><b>{list.length}</b> 챔프</span>
       </div>
       {showFavs && <section className="cfav">
         <div className="cfav-h"><HeartIcon size={16} /><h3>내 챔프</h3></div>

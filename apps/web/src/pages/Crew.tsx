@@ -1,4 +1,4 @@
-import { BoardView, ChannelButtons, Channels, Gem, Icon, DiscordNowCard, ProspectBoard } from '@prism/ui';
+import { BoardView, ChannelButtons, Gem, Icon, DiscordNowCard, ProspectBoard } from '@prism/ui';
 import { useSession } from '../session';
 
 function Intro() {
@@ -11,7 +11,7 @@ function Intro() {
         <h1 style={{ marginTop: 24 }}>매일 밤, 같이 증바람</h1>
         <p className="sub" style={{ margin: '20px auto 32px' }}>Prism은 칼바람 아수라장을 같이 하는 모임입니다. 게임보다 사람이 먼저인 곳. 아는 분의 추천으로 들어올 수 있어요.</p>
         <div className="row wrapr" style={{ justifyContent: 'center' }}>
-          <Channels links={links} size="lg" />
+          <div className="ch-brand"><ChannelButtons links={links} /></div>
           <button type="button" className="btn lg" onClick={login}><Icon name="login" />회원 로그인</button>
         </div>
       </div></section>

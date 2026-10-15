@@ -1,13 +1,17 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
-import { AugmentOpen, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AugmentOpen, WelcomePick, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import type { MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
 const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
 
 export function Layout() {
-  const { me, login, links, api } = useSession();
+  const { me, login, links, api, refresh } = useSession();
+  // 처음 로그인한 회원(대표 스킨 없음)에게 최애 챔프 고르기를 한 번 (나중에를 누르면 이 기기에서는 다시 묻지 않는다)
+  const [welcomeOff, setWelcomeOff] = useState(() => { try { return localStorage.getItem('prism-welcome') === 'done'; } catch { return false; } });
+  const welcome = Boolean(me && !me.skin && !welcomeOff);
+  const closeWelcome = (picked: boolean) => { try { localStorage.setItem('prism-welcome', 'done'); } catch { /* 저장 막힘 */ } setWelcomeOff(true); if (picked) refresh(); };
   const { pathname } = useLocation();
   const matchSource = useCallback((id: number) => (me ? api.get<MatchDetail>(`/api/games/${id}`).catch(() => null) : Promise.resolve(null)), [api, me]);
   const [menu, setMenu] = useState(false);
@@ -28,6 +32,7 @@ export function Layout() {
         <button type="button" className="icon-btn menu-btn" aria-label="메뉴 열기" aria-expanded={menu} onClick={() => setMenu(true)}><Icon name="menu" /></button>
       </div></header>
       <MobileMenu open={menu} onClose={() => setMenu(false)} />
+      {welcome && me && <WelcomePick api={api} nick={me.nick} onClose={closeWelcome} />}
       <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><Outlet /></MatchSource.Provider></AugmentOpen.Provider></main>
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>

@@ -230,7 +230,8 @@ img.champ { object-view-box: inset(4.5%); }
 /* 원형 증강 아이콘: 등급 색 고리, 위아래·좌우 같은 여백 */
 .aug-ring { flex: none; display: grid; place-items: center; border-radius: 50%; padding: 3px; box-sizing: border-box; background: var(--silver); }
 .aug-ring.gold { background: var(--gold); } .aug-ring.prismatic { background: var(--spectrum); }
-.aug-ring .aug { display: block; width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #161b2e; padding: 4px; box-sizing: border-box; }
+.aug-ring .aug-disc { display: block; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; background: #161b2e; }
+.aug-ring .aug { display: block; width: 100%; height: 100%; object-fit: contain; padding: 12%; box-sizing: border-box; }
 
 /* 설명 두 줄: 왜 맞는지 / 언제 더 좋은지 */
 .ex-why { display: block; word-break: keep-all; font-size: var(--fs-sm); color: var(--text-2); line-height: 1.45; }
@@ -1258,6 +1259,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 
 /* ───────── 내 페이지 머리 (v3.24): 좌우 끝까지, 꾸밈 적용 ───────── */
 .phero { position: relative; isolation: isolate; overflow: hidden; width: 100vw; margin-left: calc(50% - 50vw); min-height: 360px; display: flex; align-items: stretch; color: #fff; background: #07090f; }
+.phero-tint { position: absolute; inset: 0; z-index: -3; background: radial-gradient(70% 120% at 85% 0%, color-mix(in srgb, var(--tint) 70%, transparent), transparent 70%), radial-gradient(60% 90% at 10% 110%, color-mix(in srgb, var(--tint) 35%, transparent), transparent 70%), linear-gradient(135deg, color-mix(in srgb, var(--tint) 45%, #07090f), #07090f 75%); }
 .phero-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 20%; z-index: -3; transform: scale(1.02); }
 .phero::before { content: ""; position: absolute; inset: 0; z-index: -2; background: linear-gradient(90deg, rgba(7, 9, 15, .92) 0%, rgba(7, 9, 15, .55) 50%, rgba(7, 9, 15, .15) 100%), linear-gradient(0deg, rgba(7, 9, 15, .85) 0%, transparent 55%); }
 .phero-in { position: relative; width: 100%; max-width: var(--wide); margin: 0 auto; padding: 88px var(--s7) var(--s7); display: flex; flex-direction: column; justify-content: flex-end; }
@@ -2231,3 +2233,33 @@ button.ga:hover { background: var(--surface-2); }
 .banner .actions .u022.is-on, .adet-corner .u022.is-on { background: rgba(255, 77, 109, .18); box-shadow: inset 0 0 0 1px rgba(255, 122, 147, .45); }
 .banner .actions .u022-o, .adet-corner .u022-o { stroke-width: 3.6; }
 .banner .actions .u022-meta, .adet-corner .u022-meta { font-size: var(--fs-sm); }
+
+/* ───────── 최애 챔프 고르기 (v3.41) ───────── */
+.fpk { display: grid; gap: var(--s3); min-width: 0; }
+.fpk-stage { position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: flex-end; gap: var(--s3); height: 132px; padding: var(--s4); border-radius: var(--r-l); background: linear-gradient(135deg, #1b2140, #07090f); color: #fff; }
+.fpk-art { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; animation: fpk-in .45s cubic-bezier(.2, .8, .2, 1) both; }
+.fpk-stage.on::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, rgba(7, 9, 15, .9), rgba(7, 9, 15, .1) 70%); }
+.fpk-face { line-height: 0; border-radius: var(--r-m); box-shadow: 0 0 0 2px #fff, 0 6px 18px rgba(0, 0, 0, .5); overflow: hidden; }
+.fpk-txt { display: grid; gap: 2px; min-width: 0; }
+.fpk-txt b { font-size: var(--fs-xl); font-weight: 850; }
+.fpk-txt small { font-size: var(--fs-xs); color: rgba(255, 255, 255, .75); }
+.fpk-empty { margin: auto; display: inline-flex; align-items: center; gap: var(--s2); font-size: var(--fs-md); font-weight: 700; color: rgba(255, 255, 255, .75); }
+.fpk-empty .icon { width: 18px; height: 18px; color: #ffd970; }
+.fpk-q { display: flex; align-items: center; gap: var(--s2); height: 40px; padding: 0 var(--s3); border-radius: var(--r-m); background: var(--surface-2); color: var(--text-3); border: 1px solid transparent; }
+.fpk-q:focus-within { border-color: var(--accent); background: var(--surface); }
+.fpk-q .icon { width: 18px; height: 18px; flex: none; }
+.fpk-q input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: var(--fs-md); }
+.fpk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: var(--s1); max-height: 280px; overflow-y: auto; padding: var(--s1); margin: calc(var(--s1) * -1); }
+.fpk-c { display: grid; justify-items: center; gap: 4px; padding: var(--s2) var(--s1); border: 0; border-radius: var(--r-m); background: none; color: var(--text-2); font: inherit; font-size: var(--fs-xs); font-weight: 650; cursor: pointer; min-width: 0; }
+.fpk-c span { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fpk-c img { border-radius: var(--r-s); }
+.fpk-c:hover { background: var(--surface-2); color: var(--text); }
+.fpk-c.on { background: var(--accent-soft); color: var(--text); box-shadow: inset 0 0 0 2px var(--accent); }
+.fpk-go { width: 100%; }
+.fpk-modal { position: relative; width: min(560px, 100%); max-height: calc(100vh - var(--s7)); overflow-y: auto; display: grid; gap: var(--s4); padding: var(--s5); border-radius: var(--r-l); background: var(--surface); border: 1px solid var(--line-2); box-shadow: 0 24px 60px rgba(0, 0, 0, .35); }
+.fpk-head { display: flex; align-items: flex-start; gap: var(--s3); }
+.fpk-head > div { flex: 1; min-width: 0; }
+.fpk-head h2 { margin: 0 0 4px; font-size: var(--fs-xl); font-weight: 850; }
+.fpk-head p { margin: 0; }
+@keyframes fpk-in { from { opacity: 0; transform: scale(1.06); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .fpk-art { animation: none; } }

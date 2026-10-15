@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ACTIVE_AUGMENTS, CHAMPIONS, CHAMPION_LIST, cdragon } from '@prism/core';
-import { ChampImg, ChampSearch, Channels, Gem, Icon, LightRefraction } from '@prism/ui';
+import { ChampImg, ChampSearch, ChannelButtons, Gem, Icon, LightRefraction } from '@prism/ui';
 import { APP_URL, useSession } from '../session';
 
 const QUICK = ['아리', '징크스', '가렌', '럭스', '야스오', '말파이트', '세라핀', '이즈리얼'];
@@ -28,7 +28,7 @@ export function Home() {
       <section className="section tight"><div className="wrap">
         <div className="grid3">
           <Link to="/champions" className="feature"><img className="bg" alt="" src={art('카이사')} />
-            <h3>챔프별 증강 가이드</h3><p>{Object.keys(CHAMPIONS).length}명 챔프마다 역할·피해 유형·스킬에 맞춘 증강을 등급별로.</p><span className="go">가이드 보기 <Icon name="arrow" /></span></Link>
+            <h3>챔프별 증강 가이드</h3><p>{Object.keys(CHAMPIONS).length} 챔프마다 역할·피해 유형·스킬에 맞춘 증강을 등급별로.</p><span className="go">가이드 보기 <Icon name="arrow" /></span></Link>
           <Link to="/compare" className="feature"><img className="bg" alt="" src={art('이즈리얼')} />
             <h3>증강 3개 비교</h3><p>지금 뜬 증강 세 개를 고르면, 내 챔프에게 맞는 순서대로. Alt+Tab 한 번이면 됩니다.</p><span className="go">비교하기 <Icon name="arrow" /></span></Link>
           <Link to="/augments" className="feature"><img className="bg" alt="" src={art('럭스')} />
@@ -63,7 +63,7 @@ export function Home() {
           <Gem size={56} float src="/brand/prism-256.png" />
           <h2>매일 밤, 같이 증바람</h2>
           <p>Prism은 아수라장을 같이 하는 모임입니다. 회원이 되면 우리끼리의 실전 증강 승률, 기록, 같이 하면 이기는 사람이 열립니다.</p>
-          <Channels links={links} size="lg" />
+          <div className="ch-brand"><ChannelButtons links={links} /></div>
         </div>
       </div></section>
     </>

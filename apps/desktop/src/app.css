@@ -388,9 +388,10 @@ body { overflow: hidden; background: var(--bg); }
 .sdot { position: absolute; right: -2px; bottom: -2px; width: 12px; height: 12px; border-radius: 50%; background: #8d97a6; box-shadow: 0 0 0 2px var(--surface); }
 .sdot.discord { background: #5865f2; }
 .sdot.lol { background: #eb0029; }
-.sdot.both { background: conic-gradient(from var(--dx-ang, 0deg), var(--spectrum-1), var(--spectrum-2), var(--spectrum-3), var(--spectrum-4), var(--spectrum-5), var(--spectrum-6), var(--spectrum-7), var(--spectrum-1)); animation: dx-spin 3s linear infinite; }
-.sdot.both::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; box-shadow: 0 0 8px rgba(160, 170, 255, .9); animation: sdot-glow 2s ease-in-out infinite; }
-@keyframes sdot-glow { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+.sdot.both { background: radial-gradient(circle at 50% 50%, #fff 0 18%, transparent 46%), conic-gradient(from 210deg, var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-6), var(--spectrum-7), var(--spectrum-1)); }
+/* 반짝임: 가운데에서 빛이 퍼졌다 사그라든다 (돌지 않아 늘 가운데가 맞는다) */
+.sdot.both::after { content: ""; position: absolute; inset: -3px; border-radius: 50%; box-shadow: 0 0 8px rgba(190, 180, 255, .95); animation: sdot-glow 2s ease-in-out infinite; }
+@keyframes sdot-glow { 0%, 100% { opacity: .3; } 50% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .sdot.both, .sdot.both::after { animation: none; } }
 
 .ng-top { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
