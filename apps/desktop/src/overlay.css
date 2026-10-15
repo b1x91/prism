@@ -31,8 +31,9 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
 @keyframes ov-badge-pulse { 50% { filter: drop-shadow(0 0 2px rgba(169, 184, 255, .5)); } }
 @media (prefers-reduced-motion: reduce) { .ov-badge.found img { animation: none; } }
 
-/* 모서리 삼각형 (v3.25): 보고 있음 = 은은하게, 증강 카드를 알아봄 = 밝게 빛남 */
-.ov-corner { display: block; width: 28px; height: 28px; opacity: .72; transition: opacity .2s, filter .2s; }
-.ov-corner.found { opacity: 1; filter: drop-shadow(0 0 4px rgba(170, 150, 255, .95)); animation: ov-corner-pulse 1.2s ease-in-out infinite; }
-@keyframes ov-corner-pulse { 50% { filter: drop-shadow(0 0 1px rgba(170, 150, 255, .5)); } }
-@media (prefers-reduced-motion: reduce) { .ov-corner.found { animation: none; } }
+/* 모서리 삼각형 (v3.25): 보고 있음 = 조금 차분하게, 증강 카드를 알아봄 = 밝게 + 빛이 스친다 */
+.ov-corner { display: block; width: 32px; height: 32px; opacity: .82; filter: saturate(.85); transition: opacity .2s, filter .2s; }
+.ov-corner.found { opacity: 1; filter: saturate(1.15) drop-shadow(0 0 5px rgba(120, 200, 255, .9)); }
+.ov-corner .sweep { opacity: 0; animation: ov-sweep 1.6s ease-in-out infinite; }
+@keyframes ov-sweep { 0%, 100% { opacity: 0; } 50% { opacity: .75; } }
+@media (prefers-reduced-motion: reduce) { .ov-corner .sweep { animation: none; opacity: .4; } }

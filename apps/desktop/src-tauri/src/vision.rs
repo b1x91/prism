@@ -157,7 +157,7 @@ pub fn create_overlay(app: &tauri::App) -> tauri::Result<()> {
 }
 
 /// 구석 표시 크기 (논리 픽셀)
-const BADGE: f64 = 28.0;
+const BADGE: f64 = 32.0;
 
 #[cfg(windows)]
 mod imp {
