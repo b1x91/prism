@@ -79,11 +79,18 @@ export async function latest(req: Request, env: Env) {
   // 크기를 모르면 0 (앱은 실행 파일 머리만 확인한다)
   const rel: Rel = env.RELEASE_TOKEN ? await release(env) : { tag_name: await latestTag(env), assets: [{ id: 0, name: ASSET, size: 0 }] };
   const a = rel.assets.find((x) => x.name === ASSET);
+  // 설치 파일의 SHA-256·크기: 빌드가 끝나면 CI 가 ext_cache 'release-file' 에 {tag, sha256, size} 로 적는다.
+  // 앱은 받은 파일을 이 값으로 확인한 뒤에만 설치한다 (태그가 맞을 때만 보낸다)
+  const file = await env.DB.prepare('SELECT v FROM ext_cache WHERE k = ?').bind('release-file').first<{ v: string }>().catch(() => null);
+  let meta: { tag?: string; sha256?: string; size?: number } = {};
+  try { meta = file ? JSON.parse(file.v) : {}; } catch { /* 옛 값 */ }
+  const same = meta.tag === rel.tag_name;
   const res = json({
     version: rel.tag_name.replace(/^app-v/, '').replace(/^v/, ''),
     tag: rel.tag_name,
     notes: (rel.body ?? '').slice(0, 600),
-    size: a?.size ?? 0,
+    size: a?.size || (same ? meta.size ?? 0 : 0),
+    sha256: same && meta.sha256 && /^[0-9a-f]{64}$/.test(meta.sha256) ? meta.sha256 : '',
     url: a ? `${origin(req, env)}/app/download/${encodeURIComponent(rel.tag_name)}/${ASSET}` : '',
   });
   res.headers.set('Cache-Control', 'public, max-age=120');

@@ -82,3 +82,7 @@ jobs:
           [ -n "$ID" ] || { echo "::warning::D1 'prism' 을 찾지 못해 건너뜁니다"; exit 0; }
           sed -i "s/database_id = \"[^\"]*\"/database_id = \"$ID\"/" server/wrangler.toml
           npx wrangler d1 execute prism --remote --config server/wrangler.toml --command "INSERT INTO ext_cache (k, v, at) VALUES ('release-tag', '$TAG', $(date +%s)000) ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at"
+          # 설치 파일의 SHA-256·크기도 함께 (앱이 받은 파일을 확인한 뒤에만 조용히 설치한다)
+          SHA=$(sha256sum Prism-Setup.exe | cut -d' ' -f1); SIZE=$(stat -c %s Prism-Setup.exe)
+          [[ "$SHA" =~ ^[0-9a-f]{64}$ ]] || { echo "::warning::SHA-256 계산 실패"; exit 0; }
+          npx wrangler d1 execute prism --remote --config server/wrangler.toml --command "INSERT INTO ext_cache (k, v, at) VALUES ('release-file', '{\"tag\":\"$TAG\",\"sha256\":\"$SHA\",\"size\":$SIZE}', $(date +%s)000) ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at"

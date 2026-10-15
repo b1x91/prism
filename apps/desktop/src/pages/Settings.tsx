@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Icon, MemberFace, RoleBadge, Seg, Toggle, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
 import { bridge, type VisionState } from '../bridge';
 import { diagnostics, refreshSession, type State } from '../controller';
-import { checkUpdate, installUpdate, useUpdate } from '../update';
+import { applyUpdate, checkUpdate, useUpdate } from '../update';
 
 import { VERSION } from '../version';
 
@@ -36,9 +36,13 @@ export function SettingsPage({ s, onLogin, discord }: { s: State; onLogin: () =>
         <div className="kv">
           <div><span className="k">버전</span><span className="row wrapr" style={{ gap: 8 }}>
             <span>{VERSION}</span>
-            {up.info?.available
-              ? <button type="button" className="btn sm primary" disabled={up.installing} onClick={installUpdate}>{up.installing ? '받는 중… 잠시 뒤 다시 켜집니다' : `${up.info.latest}으로 업데이트`}</button>
-              : <><span className="meta">{up.checking ? '확인 중…' : up.info ? '최신 버전입니다' : ''}</span><button type="button" className="btn ghost sm" disabled={up.checking} onClick={checkUpdate}>업데이트 확인</button></>}
+            {up.info?.managed
+              ? <span className="meta">Microsoft Store가 업데이트해요</span>
+              : up.info?.ready
+                ? <button type="button" className="btn sm primary" disabled={up.applying} onClick={() => void applyUpdate()}>{up.applying ? '적용하는 중… 잠시 뒤 다시 켜져요' : `${up.info.latest} 적용`}</button>
+                : up.preparing || up.info?.available
+                  ? <span className="meta">{up.preparing ? `새 버전 ${up.info?.latest ?? ''} 받는 중…` : `새 버전 ${up.info?.latest} 있음`}</span>
+                  : <><span className="meta">{up.checking ? '확인 중…' : up.info ? '최신 버전입니다' : ''}</span><button type="button" className="btn ghost sm" disabled={up.checking} onClick={checkUpdate}>업데이트 확인</button></>}
             {up.error && <span className="l">{up.error}</span>}
           </span></div>
           <div><span className="k">화면 테마</span><span><Seg value={theme} options={[['system', '시스템 설정'], ['light', '라이트'], ['dark', '다크']]} onChange={(m) => { setThemeMode(m); setTheme(m); }} /></span></div>

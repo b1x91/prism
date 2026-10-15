@@ -264,7 +264,7 @@ async function tick(): Promise<number> {
 const LOL_ON = new Set<State['status']>(['idle', 'champ-select', 'in-game']);
 let presenceKey = '';
 let presenceAt = 0;
-async function windowOpen() {
+export async function windowOpen() {
   try {
     const { getCurrentWindow } = await import('@tauri-apps/api/window');
     return await getCurrentWindow().isVisible();

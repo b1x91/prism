@@ -28,6 +28,8 @@ export const bridge = {
   autostart: (enable?: boolean) => call<boolean>('autostart', enable === undefined ? {} : { enable }),
   updateCheck: () => call<UpdateInfo>('update_check').catch((e) => { throw err(e); }),
   updateInstall: () => call<void>('update_install').catch((e) => { throw err(e); }),
+  updatePrepare: () => call<UpdateInfo>('update_prepare').catch((e) => { throw err(e); }),
+  updateApply: (background = false) => call<void>('update_apply', { background }).catch((e) => { throw err(e); }),
   visionGet: () => call<VisionState>('vision_get'),
   visionAllow: (allowed: boolean) => call<void>('vision_allow', { allowed }).catch(() => {}),
   visionSet: (enabled: boolean, position: 'right' | 'top') => call<void>('vision_set', { enabled, position }),
@@ -39,7 +41,8 @@ export type VisionState = {
   settings: { enabled: boolean; position: 'right' | 'top' };
   report: { engine: 'ok' | 'no-korean' | 'unsupported' | ''; last_text: string; last_ids: number[]; last_at: number; stage?: VisionStage; stage_at?: number; hits?: number; window?: string; read_ms?: number };
 };
-export type UpdateInfo = { current: string; latest: string; available: boolean; notes: string };
+/** ready: 받아 두어 바로 적용 가능 · managed: Microsoft Store 판(스토어가 업데이트) */
+export type UpdateInfo = { current: string; latest: string; available: boolean; notes: string; ready?: boolean; managed?: boolean };
 
 export const api: Api = {
   get: (path) => call('api', { method: 'GET', path }).catch((e) => { throw err(e); }) as any,

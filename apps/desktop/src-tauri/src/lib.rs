@@ -88,13 +88,26 @@ async fn update_check() -> Result<update::Info, String> {
     update::check().await
 }
 
-/// 받아서 설치 프로그램을 띄운 뒤 앱을 끝낸다 (설치가 끝나면 설치 프로그램이 다시 켠다)
+/// 새 버전을 뒤에서 미리 받아 둔다 (설치는 하지 않는다)
 #[tauri::command]
-async fn update_install(handle: tauri::AppHandle) -> Result<(), String> {
-    update::install().await?;
-    tokio::time::sleep(std::time::Duration::from_millis(400)).await;
+async fn update_prepare() -> Result<update::Info, String> {
+    update::prepare().await
+}
+
+/// 받아 둔 새 버전을 창 없이 설치하고 앱을 끝낸다. 설치가 끝나면 다시 켜진다 (background 면 트레이로만)
+#[tauri::command]
+async fn update_apply(handle: tauri::AppHandle, background: Option<bool>) -> Result<(), String> {
+    update::apply(true, background.unwrap_or(false))?;
+    tokio::time::sleep(std::time::Duration::from_millis(300)).await;
     handle.exit(0);
     Ok(())
+}
+
+/// (예전 이름) 받고 바로 적용
+#[tauri::command]
+async fn update_install(handle: tauri::AppHandle) -> Result<(), String> {
+    update::prepare().await?;
+    update_apply(handle, Some(false)).await
 }
 
 #[tauri::command]
@@ -147,6 +160,11 @@ pub fn run() {
             let vision = vision::Vision::new(dir.clone());
             app.manage(Arc::new(App { lcu: lcu::Lcu::new(), server: server::Server::new(dir), vision: vision.clone() }));
             // 게임 중 증강 인식 + 게임 위 작은 창 (v3.5)
+            // 지난번에 받아 둔 새 버전이 있으면 켜자마자 창 없이 적용하고 새 버전으로 다시 켠다
+            update::restore();
+            if update::apply_on_start(std::env::args().any(|a| a == "--background")) {
+                std::process::exit(0);
+            }
             vision::create_overlay(app)?;
             vision.start(app.handle().clone());
             // 창 제목에 버전: "Prism - 0.7.0"
@@ -165,7 +183,13 @@ pub fn run() {
                 .show_menu_on_left_click(false)
                 .on_menu_event(|app, e| match e.id().as_ref() {
                     "open" => show(app),
-                    "quit" => app.exit(0),
+                    "quit" => {
+                        // 받아 둔 새 버전이 있으면 끝낼 때 조용히 적용 (다시 켜지 않는다)
+                        if update::has_ready() {
+                            let _ = update::apply(false, false);
+                        }
+                        app.exit(0)
+                    }
                     _ => {}
                 })
                 .on_tray_icon_event(|tray, e| {
@@ -189,7 +213,7 @@ pub fn run() {
                 let _ = window.hide();
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, vision_get, vision_set, vision_allow, vision_test])
+        .invoke_handler(tauri::generate_handler![lcu_status, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }
