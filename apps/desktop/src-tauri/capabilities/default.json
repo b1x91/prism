@@ -2,6 +2,6 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "앱 화면이 쓸 수 있는 기능. 롤 클라이언트·서버 접근은 Rust 명령으로만 한다",
-  "windows": ["main", "overlay", "badge", "toast"],
+  "windows": ["main", "overlay", "toast"],
   "permissions": ["core:default"]
 }

@@ -34,27 +34,6 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
 .ov-situ { font-size: var(--fs-xs); font-weight: 700; color: #ffd58a; line-height: 1.4; word-break: keep-all; }
 .ov-situ.neg { color: #ff9a9a; }
 
-/* 구석 표시: 작은 프리즘. 보고 있음 = 은은하게, 증강 카드를 알아봄 = 밝게 빛남 */
-.ov-badge { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: rgba(7, 9, 15, .55); }
-.ov-badge img { width: 20px; height: 20px; opacity: .75; transition: opacity .2s, filter .2s; }
-.ov-badge.found img { opacity: 1; filter: drop-shadow(0 0 6px rgba(169, 184, 255, .95)); animation: ov-badge-pulse 1.2s ease-in-out infinite; }
-@keyframes ov-badge-pulse { 50% { filter: drop-shadow(0 0 2px rgba(169, 184, 255, .5)); } }
-@media (prefers-reduced-motion: reduce) { .ov-badge.found img { animation: none; } }
-
-/* 모서리 삼각형 (v3.25): 작게(게임 화면을 가리지 않게), 한 번씩 반짝임. 증강 카드를 알아보면 밝게 + 자주 */
-.ov-corner { display: block; width: 20px; height: 20px; opacity: .85; filter: saturate(.9); transition: opacity .2s, filter .2s; }
-.ov-corner.found { opacity: 1; filter: saturate(1.15) drop-shadow(0 0 4px rgba(120, 200, 255, .9)); }
-/* 게임 위에 늘 떠 있는 창이라 평소에는 멈춘 그림 (끝없는 움직임은 창 모드 게임의 화면 합성을 매 프레임 깨워 끊김을 만든다, v3.61).
-   증강 카드를 알아본 동안만 반짝인다 */
-.ov-corner .star { transform-box: fill-box; transform-origin: center; transform: scale(.55); opacity: .7; }
-.ov-corner .glint { opacity: 0; }
-.ov-corner.found .star { animation: ov-star 1.6s ease-in-out infinite; }
-.ov-corner.found .glint { animation: ov-glint 1.6s ease-in-out infinite; }
-@keyframes ov-star { 0%, 70%, 100% { transform: scale(.55) rotate(0deg); opacity: .7; } 82% { transform: scale(1.6) rotate(45deg); opacity: 1; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 3px rgba(150, 220, 255, .9)); } }
-@keyframes ov-glint { 0%, 68%, 100% { opacity: 0; } 80% { opacity: .9; } }
-.ov-corner .sweep { opacity: 0; animation: ov-sweep 1.6s ease-in-out infinite; }
-@keyframes ov-sweep { 0%, 100% { opacity: 0; } 50% { opacity: .75; } }
-@media (prefers-reduced-motion: reduce) { .ov-corner .star, .ov-corner .glint, .ov-corner .sweep { animation: none; } }
 /* 내 증강 표시 (v3.27) */
 .ov-fav { margin-right: 4px; font-style: normal; color: #ff4d6d; text-shadow: 0 0 6px rgba(255, 77, 109, .6); }
 

@@ -155,26 +155,8 @@ pub fn create_overlay(app: &tauri::App) -> tauri::Result<()> {
         .build()?;
     let _ = w.set_ignore_cursor_events(true);
     imp::prepare_overlay(&w);
-    // 오른쪽 위 구석의 작은 프리즘: 자동 인식이 이 게임 화면을 보고 있다는 표시 (게임 창이 맨 앞일 때만)
-    let b = tauri::WebviewWindowBuilder::new(app, "badge", tauri::WebviewUrl::App("badge.html".into()))
-        .title("Prism")
-        .decorations(false)
-        .transparent(true)
-        .shadow(false)
-        .always_on_top(true)
-        .skip_taskbar(true)
-        .resizable(false)
-        .focused(false)
-        .visible(false)
-        .inner_size(BADGE, BADGE)
-        .build()?;
-    let _ = b.set_ignore_cursor_events(true);
-    imp::prepare_overlay(&b);
     Ok(())
 }
-
-/// 구석 표시 크기 (논리 픽셀)
-const BADGE: f64 = 20.0;
 
 #[cfg(windows)]
 mod imp {
@@ -373,8 +355,6 @@ mod imp {
         let mut slots = Slots::default();
         // 마지막으로 카드를 본 때, 게임 창이 뒤로 간 때
         let mut seen_at: Option<std::time::Instant> = None;
-        // 구석 표시를 놓은 게임 화면 위치 (None = 숨김)
-        let mut badge_at: Option<(RECT, u64)> = None;
         let mut pids: (Vec<u32>, Option<std::time::Instant>) = (Vec::new(), None);
         // 한 번 찾은 게임 창 (창 종류 이름으로 못 찾는 경우, 포커스가 다른 데 가도 놓치지 않게)
         let mut known: Option<HWND> = None;
@@ -409,9 +389,6 @@ mod imp {
                 capture_fails = 0;
             }
             let (Some((h, _)), Some(eng)) = (game, eng.as_ref()) else {
-                if badge_at.take().is_some() {
-                    hide_window(&app, "badge");
-                }
                 v.stage(if !s.enabled { "off" } else if !allowed { "wait" } else if game.is_none() { "no-game" } else { "back" }, 0, how);
                 v.hide(&app);
                 band = None;
@@ -424,17 +401,6 @@ mod imp {
             let Some(rc) = client_rect(h) else { std::thread::sleep(EVERY); continue };
             // 게임 창이 있는 모니터의 배율 (모니터마다 배율이 다를 수 있다)
             let scale = monitor_scale(h);
-            // 구석 표시는 게임 창이 맨 앞일 때만 (다른 창 위에 뜨지 않게)
-            if !front {
-                if badge_at.take().is_some() {
-                    hide_window(&app, "badge");
-                }
-            } else if badge_at != Some((rc, scale.to_bits())) || (tick % 8 == 0 && badge_buried(&app, h)) {
-                // 게임(특히 전체 화면)이 나중에 맨 위를 차지해 구석 표시가 그 밑에 깔렸을 때만 다시 맨 위로.
-                // 예전엔 몇 초마다 무조건 다시 올렸다 — 창 순서를 자꾸 바꾸면 창 모드 게임의 화면 합성이 흔들린다 (v3.61)
-                show_badge(&app, &rc, scale);
-                badge_at = Some((rc, scale.to_bits()));
-            }
             // 제목 줄을 아직 모르면: 보통은 좁은 띠, 네 번에 한 번은 넓게
             // 제목 줄을 찾았으면 그 줄을 찾은 범위 그대로 (좁은 띠 / 넓게 기준이 다르다)
             let wide = if band.is_some() { band_wide } else { misses % 4 == 3 };
@@ -586,36 +552,6 @@ mod imp {
         let (x, y) = if position == "top" { (rc.left + (gw - ow) / 2, rc.top + m) } else { (rc.right - ow, rc.top + gh * 30 / 100) };
         unsafe {
             let _ = SetWindowPos(h, Some(HWND_TOPMOST), x, y, ow, oh, SWP_NOACTIVATE | SWP_SHOWWINDOW);
-        }
-    }
-
-    /// 구석 표시가 게임 창(또는 같은 게임 프로세스의 창) 밑에 깔렸나: 구석 표시보다 위에 있는 창들을 훑는다
-    fn badge_buried(app: &AppHandle, game: HWND) -> bool {
-        let Some(b) = hwnd_by(app, "badge") else { return false };
-        let mut w = unsafe { GetWindow(b, GW_HWNDPREV) }.unwrap_or_default();
-        for _ in 0..64 {
-            if w.is_invalid() { return false; }
-            if w == game || same_process(w, game) { return true; }
-            w = unsafe { GetWindow(w, GW_HWNDPREV) }.unwrap_or_default();
-        }
-        false
-    }
-
-    /// 게임 화면 오른쪽 위 구석에 작은 프리즘
-    fn show_badge(app: &AppHandle, rc: &RECT, scale: f64) {
-        let Some(h) = hwnd_by(app, "badge") else { return };
-        let size = (super::BADGE * scale) as i32;
-        // 게임 화면 오른쪽 위 모서리에 딱 붙인다
-        unsafe {
-            let _ = SetWindowPos(h, Some(HWND_TOPMOST), rc.right - size, rc.top, size, size, SWP_NOACTIVATE | SWP_SHOWWINDOW);
-        }
-    }
-
-    fn hide_window(app: &AppHandle, label: &str) {
-        if let Some(h) = hwnd_by(app, label) {
-            unsafe {
-                let _ = ShowWindow(h, SW_HIDE);
-            }
         }
     }
 
