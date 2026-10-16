@@ -1,0 +1,5 @@
+[
+  { "name": "내기록", "description": "내 Prism 기록 (판수·승률·KDA·최근 10판·많이 한 챔프)", "type": 1 },
+  { "name": "랭킹", "description": "Prism 판수 랭킹 상위 5명", "type": 1 },
+  { "name": "미션", "description": "이번 주 미션 진행 상황", "type": 1 }
+]

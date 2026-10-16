@@ -23,7 +23,7 @@ export async function missionPiecesOf(env: Env, id: string) {
   return missionPieces(games, claims);
 }
 
-async function stateOf(env: Env, me: Member) {
+export async function stateOf(env: Env, me: Member) {
   const [games, claims] = await Promise.all([myGamesForMissions(env, me.id), claimsOf(env, me.id)]);
   const st = missionState(games, claims);
   // 피스 배율(정회원 ×1.5 · 운영진 ×2)을 보상에 그대로 반영해서 보여 준다 (상점 잔액과 같은 계산)

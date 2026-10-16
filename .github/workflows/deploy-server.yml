@@ -80,6 +80,22 @@ jobs:
             echo "::notice::WELCOME_WEBHOOK_URL 이 없어 멤버 환영 채널에 소개 카드를 올리지 않습니다 (소개는 저장됨)."
           fi
       - if: steps.cfg.outputs.ok == 'true'
+        name: 디스코드 봇 토큰 넣기 + 슬래시 명령 등록
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        run: |
+          if [ -z "$DISCORD_BOT_TOKEN" ]; then
+            echo "::notice::DISCORD_BOT_TOKEN 이 없어 봇(매일 공지·슬래시 명령·자동 승급)은 꺼져 있습니다."
+            exit 0
+          fi
+          printf '%s' "$DISCORD_BOT_TOKEN" | npx wrangler secret put DISCORD_BOT_TOKEN --config server/wrangler.toml
+          APP=$(grep -E '^DISCORD_CLIENT_ID' server/wrangler.toml | sed -E 's/.*"([0-9]+)".*/\1/')
+          GUILD=$(grep -E '^DISCORD_GUILD_ID' server/wrangler.toml | sed -E 's/.*"([0-9]+)".*/\1/')
+          # 서버 전용 명령으로 등록 (바로 반영). 같은 목록을 다시 보내도 그대로 덮어쓴다
+          code=$(curl -sS -o /tmp/cmds.json -w '%{http_code}' -X PUT "https://discord.com/api/v10/applications/$APP/guilds/$GUILD/commands" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" -H "Content-Type: application/json" --data @server/discord-commands.json)
+          if [ "$code" != "200" ]; then echo "::warning::슬래시 명령 등록 실패 ($code): $(head -c 300 /tmp/cmds.json)"; else echo "슬래시 명령 등록 완료"; fi
+      - if: steps.cfg.outputs.ok == 'true'
         name: 서버 주소 알리기
         run: |
           URL=$(node scripts/ci/server-url.mjs)

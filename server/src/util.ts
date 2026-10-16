@@ -15,6 +15,10 @@ export interface Env {
   RELEASE_API?: string; // 시험용 GitHub API 주소 (비우면 api.github.com)
   RELEASE_TOKEN?: string; // 저장소가 비공개일 때 Release 를 읽는 GitHub 토큰 (비밀값, 읽기 전용)
   WELCOME_WEBHOOK_URL?: string; // 디스코드 '멤버 환영' 채널 웹훅 (비밀값). 소개를 처음 채우면 소개 카드를 올린다
+  DISCORD_BOT_TOKEN?: string; // 디스코드 봇 토큰 (비밀값, GitHub Secrets → deploy-server)
+  DISCORD_PUBLIC_KEY?: string; // 슬래시 명령 서명 확인용 공개 키 (공개돼도 되는 값)
+  BOT_CHANNEL_ID?: string; // 봇이 글을 올리는 채널 (매일 밤 공지·첫 기록·승급 축하)
+  WELCOME_CHANNEL_ID?: string; // 멤버 환영 카드 채널 (비우면 BOT_CHANNEL_ID)
   DEV_LOGIN?: string; // '1' 이면 로컬 개발용 가짜 로그인 허용. 배포 환경에서는 절대 켜지 않는다
 }
 

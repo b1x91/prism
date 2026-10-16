@@ -5,6 +5,8 @@
  * /public/:id 는 본인이 켠 공개 링크만 (모임 정보 없이 그 사람의 강점, v3.24).
  */
 import { saveAbout } from './about.js';
+import { dailyPost, interactions } from './bot.js';
+import { promoteSweep } from './promote.js';
 import { download, latest } from './release.js';
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
 import { artisanRanking, augmentArtisans, championArtisans } from './artisans.js';
@@ -32,6 +34,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/app/token') return exchangeCode(req, env);
   if (m === 'POST' && pathname === '/api/logout') return logout(req, env);
   if (m === 'GET' && pathname === '/links') return json(links(env));
+  if (m === 'POST' && pathname === '/discord/interactions') return interactions(req, env);
   // 앱 설치 파일·업데이트 정보 (로그인 없이)
   if (m === 'GET' && pathname === '/app/latest') return latest(req, env);
   if (m === 'GET' && pathname === '/app/download') return download(req, env);
@@ -143,8 +146,10 @@ export default {
     }
   },
 
-  // 만료된 1회용 코드·state 정리 (매일)
-  async scheduled(_controller: ScheduledController, env: Env) {
+  // 매일 밤 20:57 KST: 봇 공지 / 매일 03:17 KST: 만료 코드 정리 + 역할 자동 승급·강등
+  async scheduled(controller: ScheduledController, env: Env) {
+    if (controller.cron === '57 11 * * *') return dailyPost(env).catch((e) => console.error('매일 공지 실패', e));
+    await promoteSweep(env).catch((e) => console.error('역할 자동 승급 실패', e));
     const now = Date.now();
     await env.DB.batch([
       env.DB.prepare('DELETE FROM auth_codes WHERE expires_at < ?').bind(now),

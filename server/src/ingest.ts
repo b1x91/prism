@@ -9,6 +9,7 @@
  *      판 상세용으로 10명 전체의 그 판 기록(롤 이름·챔프·KDA·피해·아이템·증강)은 matches.players 에 둔다 (v3.44, puuid 는 남기지 않음).
  *   5. 같은 팀 5명 수치가 모두 있을 때만 점유율 계산.
  */
+import { firstRecord } from './bot.js';
 import { featOf, type FeatSource } from '../../packages/core/src/challenges.js';
 import { finite, HttpError, int, json, type Env, type Member } from './util.js';
 
@@ -254,6 +255,14 @@ export async function ingest(req: Request, env: Env, me: Member) {
     if (!dup) result.stored++;
   }
 
+  // 이번에 처음 기록이 생기는 회원 (봇이 첫 판을 축하한다, v3.53)
+  const crewIds = [...new Set(memberByPuuid.values())];
+  const before = new Set<string>();
+  if (crewIds.length) {
+    const { results } = await env.DB.prepare(`SELECT DISTINCT member_id FROM participants WHERE member_id IN (${crewIds.map(() => '?').join(',')})`).bind(...crewIds).all<{ member_id: string }>();
+    for (const r of results) before.add(r.member_id);
+  }
+
   // D1 batch 는 트랜잭션으로 실행된다. 한 판이 두 트랜잭션으로 갈라지지 않도록 판 단위로 묶어 보낸다
   let chunk: D1PreparedStatement[] = [];
   for (const stmts of perGame) {
@@ -264,5 +273,10 @@ export async function ingest(req: Request, env: Env, me: Member) {
     chunk.push(...stmts);
   }
   if (chunk.length) await env.DB.batch(chunk);
+  for (const id of crewIds) {
+    if (before.has(id)) continue;
+    const first = await env.DB.prepare('SELECT champion_id AS c, win AS w FROM participants WHERE member_id = ? ORDER BY played_at LIMIT 1').bind(id).first<{ c: number; w: number }>();
+    if (first) await firstRecord(env, id, first.c, Boolean(first.w)).catch(() => {});
+  }
   return json(result);
 }

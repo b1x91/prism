@@ -4,7 +4,7 @@ main = "src/index.ts"
 compatibility_date = "2026-09-01"
 
 [triggers]
-crons = ["17 18 * * *"] # 매일 03:17 KST — 만료 코드 정리
+crons = ["17 18 * * *", "57 11 * * *"] # 매일 03:17 KST — 만료 코드 정리·역할 자동 승급 / 매일 20:57 KST — 봇의 밤 공지
 
 [[d1_databases]]
 binding = "DB"
@@ -27,5 +27,9 @@ KAKAO_OPENCHAT_URL = "" # 오픈채팅을 만들면 주소를 넣는다 (그전�
 WEB_ORIGINS = "https://przm.web.app,https://przm.gg"
 # 앱 설치 파일을 올리는 저장소. 비공개면 비밀값 RELEASE_TOKEN(읽기 전용 GitHub 토큰)이 있어야 /app/* 가 동작한다
 RELEASE_REPO = "b1x91/prism"
+# 디스코드 봇 (v3.53). 토큰은 비밀값 DISCORD_BOT_TOKEN (GitHub Secrets). 공개 키·채널 ID 는 공개돼도 되는 값
+DISCORD_PUBLIC_KEY = "33098ec7b5dcbfa5ba3028dede02253be517df8f79d1cada9064864bc5364611"
+BOT_CHANNEL_ID = "1404769758771019847" # 일반 채팅방
+WELCOME_CHANNEL_ID = "" # 멤버 환영 채널 (비우면 위 채널)
 # 디스코드 역할별 기능은 server/src/roles.ts (역할 ID·이름·색, 기능별 최소 단계)
 # 비밀값은 wrangler secret put DISCORD_CLIENT_SECRET 로 넣는다 (파일에 쓰지 않는다)
