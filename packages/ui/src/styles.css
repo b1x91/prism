@@ -1325,7 +1325,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .phero-name.name-gold { background: linear-gradient(180deg, #fff6d0 0%, #f2c14e 55%, #b8801a 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 2px 10px rgba(240, 190, 80, .45)); }
 .phero-name.name-galaxy { background: linear-gradient(100deg, #b9d2ff, #6f8cff 35%, #a98bff 65%, #e8ddff); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: ph-galaxy 6s ease-in-out infinite alternate; filter: drop-shadow(0 2px 12px rgba(120, 130, 255, .5)); }
 @keyframes ph-galaxy { to { background-position: 100% 0; } }
-@media (prefers-reduced-motion: reduce) { .phero .phero-face, .phero-fx, .phero-fx i, .phero-name { animation: none !important; } .phero.fx-sparkle .phero-fx i { opacity: .7; } }
+@media (prefers-reduced-motion: reduce) { .phero .phero-face, .phero-fx, .phero-fx i, .phero-name { animation: none !important; } .phero.fx-sparkle .phero-fx i, .phero.fx-embers .phero-fx i { opacity: .7; } }
 
 /* 공유 */
 .share { position: relative; display: inline-flex; gap: var(--s2); }
@@ -1383,7 +1383,8 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .shop-card.r-epic { --rc: #a46bff; --rg: rgba(164, 107, 255, .5); }
 .shop-card.r-legendary { --rc: #f2a93b; --rg: rgba(242, 169, 59, .55); }
 .shop-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0, 0, 0, .18), 0 0 0 1px color-mix(in srgb, var(--rc) 50%, transparent); }
-.shop-card.on { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft), var(--shadow); }
+/* 장착 중은 '구매'(파란 버튼)와 헷갈리지 않게 초록 — 테두리·표시 모두 */
+.shop-card.on { border-color: color-mix(in srgb, var(--ok) 70%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 18%, transparent), var(--shadow); }
 /* 무대: 어두운 바탕 + 등급 색 빛 + 바닥 반사 */
 .sc-prev { position: relative; height: 200px; overflow: hidden; background: radial-gradient(120% 90% at 50% 110%, var(--rg), transparent 60%), radial-gradient(60% 50% at 50% 35%, rgba(255, 255, 255, .06), transparent 70%), linear-gradient(180deg, #0c0f1a, #05060b); }
 .sc-prev::after { content: ""; position: absolute; left: 10%; right: 10%; bottom: 18px; height: 1px; background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--rc) 70%, #fff), transparent); opacity: .7; }
@@ -1395,7 +1396,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .sc-rar i { width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); background: var(--rc); box-shadow: 0 0 8px var(--rc); }
 .sc-rar.r-common { --rc: #a3abbd; } .sc-rar.r-rare { --rc: #4a8cff; } .sc-rar.r-epic { --rc: #a46bff; } .sc-rar.r-legendary { --rc: #f2a93b; }
 .sc-tag { position: absolute; top: var(--s3); right: var(--s3); z-index: 4; display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); background: rgba(255, 255, 255, .14); color: #fff; font-size: var(--fs-xs); font-weight: 800; backdrop-filter: blur(6px); }
-.sc-tag.on { background: var(--accent); color: var(--on-accent); }
+.sc-tag.on { background: rgba(8, 24, 16, .72); color: #6ee7a8; box-shadow: inset 0 0 0 1px rgba(110, 231, 168, .55); }
 .sc-tag .icon { width: 12px; height: 12px; }
 .sc-body { display: grid; gap: var(--s1); padding: var(--s3) var(--s4) var(--s4); }
 .sc-nm { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -.01em; }
@@ -1462,8 +1463,19 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .phero.fx-fireflies .phero-fx i { width: 6px; height: 6px; border-radius: 50%; background: #fff1a8; box-shadow: 0 0 12px 3px rgba(255, 220, 100, .8); top: 60%; animation: ph-firefly 6s ease-in-out var(--d) infinite; opacity: 0; }
 .phero.fx-fireflies .phero-fx i:nth-child(3n) { top: 35%; } .phero.fx-fireflies .phero-fx i:nth-child(4n) { top: 80%; }
 @keyframes ph-firefly { 0%, 100% { opacity: 0; transform: translate(0, 0); } 30% { opacity: 1; } 50% { transform: translate(18px, -24px); } 70% { opacity: .8; } }
-.phero.fx-embers .phero-fx i { width: 4px; height: 4px; border-radius: 50%; background: #ffb35a; box-shadow: 0 0 8px 2px rgba(255, 110, 40, .85); bottom: -6%; top: auto; animation: ph-ember-rise 5s ease-in var(--d) infinite; opacity: 0; }
-@keyframes ph-ember-rise { 0% { opacity: 0; transform: translate(0, 0); } 15% { opacity: 1; } 100% { opacity: 0; transform: translate(-20px, -380px); } }
+/* 불씨: 날것으로 타오르는 불똥 + 까맣게 탄 재 + 바닥의 그을린 숯불 기운 (반딧불과 다르게 — 둥근 점·곧은 길 없음) */
+.phero.fx-embers .phero-fx { background: radial-gradient(130% 62% at 50% 120%, rgba(255, 110, 30, .62), rgba(170, 34, 6, .42) 34%, rgba(60, 10, 2, .2) 55%, transparent 72%), radial-gradient(40% 30% at 18% 108%, rgba(255, 140, 40, .35), transparent 70%), radial-gradient(40% 30% at 82% 110%, rgba(255, 90, 20, .3), transparent 70%), linear-gradient(0deg, rgba(20, 6, 2, .95), rgba(20, 6, 2, 0) 40%); animation: ph-smolder 3.4s ease-in-out infinite; }
+@keyframes ph-smolder { 0%, 100% { opacity: .85; } 40% { opacity: 1; } 55% { opacity: .7; } 70% { opacity: .95; } }
+.phero.fx-embers .phero-fx i { bottom: -4%; top: auto; width: 4px; height: 9px; border-radius: 1px 3px 1px 2px; opacity: 0;
+  background: linear-gradient(180deg, #fff4c8, #ffb03a 35%, #f0541a 70%, #9e1d06); box-shadow: 0 0 6px 2px rgba(255, 90, 20, .75), 0 0 14px 4px rgba(255, 60, 10, .25);
+  animation: ph-ember-rise 4.6s cubic-bezier(.3, .6, .4, 1) var(--d) infinite, ph-ember-flick .18s steps(2) infinite; }
+/* 큰 불똥 (더 밝고 빠르게) */
+.phero.fx-embers .phero-fx i:nth-child(4n) { width: 5px; height: 5px; border-radius: 1px; background: #fff7d6; box-shadow: 0 0 8px 3px rgba(255, 150, 40, .9); animation-duration: 3.4s, .14s; }
+/* 탄 재: 까만 조각, 가장자리만 붉게 달아오름, 천천히 뒤집히며 떠오름 */
+.phero.fx-embers .phero-fx i:nth-child(3n) { width: 8px; height: 7px; border-radius: 0; clip-path: polygon(10% 0, 100% 20%, 80% 100%, 0 70%); background: radial-gradient(circle at 70% 30%, #ff6a1f 0 18%, #3a1a10 40%, #160a06 75%); box-shadow: none; animation: ph-ash 7s ease-out var(--d) infinite; }
+@keyframes ph-ember-rise { 0% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 10% { opacity: 1; } 35% { transform: translate(-14px, -120px) rotate(120deg); } 60% { opacity: .9; transform: translate(12px, -230px) rotate(250deg); } 100% { opacity: 0; transform: translate(-8px, -360px) rotate(400deg); } }
+@keyframes ph-ember-flick { 50% { filter: brightness(1.6) saturate(1.2); } }
+@keyframes ph-ash { 0% { opacity: 0; transform: translate(0, 0) rotate(0deg); } 15% { opacity: .9; } 50% { transform: translate(22px, -170px) rotate(220deg); } 100% { opacity: 0; transform: translate(-10px, -330px) rotate(520deg); } }
 .phero.fx-meteor .phero-fx i { width: 120px; height: 2px; border-radius: 2px; background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff); box-shadow: 0 0 8px rgba(200, 220, 255, .9); top: -5%; opacity: 0; transform: rotate(-35deg); animation: ph-meteor 6s ease-in var(--d) infinite; }
 .phero.fx-meteor .phero-fx i:nth-child(n+7) { display: none; }
 @keyframes ph-meteor { 0% { opacity: 0; transform: rotate(-35deg) translate(0, 0); } 5% { opacity: 1; } 22% { opacity: 0; transform: rotate(-35deg) translate(-420px, 0); } 100% { opacity: 0; } }
