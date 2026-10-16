@@ -132,6 +132,7 @@ impl Matcher {
 
     /// 카드 한 장의 글자 전체(제목을 못 읽었을 때)로 증강 찾기: 읽은 두 글자 묶음이 설명에 얼마나 들어 있나.
     /// 게임 화면의 설명은 데이터와 조금 다를 수 있으므로, 1등이 충분히 높고 2등과 차이가 클 때만 (헷갈리면 None)
+    #[allow(dead_code)]
     pub fn match_desc(&self, text: &str) -> Option<u32> {
         self.match_desc_except(text, &[])
     }

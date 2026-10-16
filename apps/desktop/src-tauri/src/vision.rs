@@ -272,6 +272,25 @@ mod imp {
 
     /// 문자 인식 → 줄마다 단어(글자·위치)
     pub fn recognize(engine: &OcrEngine, bgra: &[u8], w: i32, h: i32) -> windows::core::Result<(Vec<Vec<Word>>, String)> {
+        // 인식기가 받는 그림 크기에는 한도가 있다 (보통 한 변 2600). 큰 모니터(4K 등)의 넓은 띠는 넘어서 늘 실패했다 →
+        // 정수 배로 줄여 읽고 글자 위치는 원래 크기로 되돌린다
+        let max = OcrEngine::MaxImageDimension().unwrap_or(2600) as i32;
+        if max > 0 && (w > max || h > max) {
+            let k = ((w.max(h) + max - 1) / max).max(2);
+            let (dw2, dh2) = (w / k, h / k);
+            let mut small = vec![0u8; (dw2 * dh2 * 4) as usize];
+            for yy in 0..dh2 {
+                for xx in 0..dw2 {
+                    let si = (((yy * k) * w + xx * k) * 4) as usize;
+                    let di = ((yy * dw2 + xx) * 4) as usize;
+                    small[di..di + 4].copy_from_slice(&bgra[si..si + 4]);
+                }
+            }
+            let (mut lines, text) = recognize(engine, &small, dw2, dh2)?;
+            let kf = k as f32;
+            for l in lines.iter_mut() { for wd in l.iter_mut() { wd.x *= kf; wd.y *= kf; wd.w *= kf; } }
+            return Ok((lines, text));
+        }
         let dw = DataWriter::new()?;
         dw.WriteBytes(bgra)?;
         let buf = dw.DetachBuffer()?;
@@ -453,7 +472,13 @@ mod imp {
             // 카드가 떠 있으면 제목 줄만, 아니면 넓게
             let (by, bh) = band.unwrap_or((0, hh));
             let t0 = std::time::Instant::now();
-            let found = grab(x, y + by, w, bh).and_then(|buf| recognize(eng, &buf, w, bh).ok());
+            let found = match grab(x, y + by, w, bh) {
+                None => { if capture_fails == 0 { v.trace(format!("복사 실패(검은 화면) 게임={},{} {}x{} 읽는곳={x},{} {w}x{bh}", rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, y + by)); } None }
+                Some(buf) => match recognize(eng, &buf, w, bh) {
+                    Ok(r) => Some(r),
+                    Err(e) => { if capture_fails == 0 { v.trace(format!("인식 오류 {w}x{bh}: {e}")); } None }
+                },
+            };
             v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
             let shown = v.shown.load(Ordering::SeqCst);
             match found {
@@ -553,6 +578,17 @@ mod imp {
         let (x, y) = if position == "top" { (rc.left + (gw - ow) / 2, rc.top + m) } else { (rc.right - ow, rc.top + gh * 30 / 100) };
         unsafe {
             let _ = SetWindowPos(h, Some(HWND_TOPMOST), x, y, ow, oh, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            // 배율이 다른 모니터로 옮기면 Windows 가 창 크기·위치를 다시 잡는다(WM_DPICHANGED) → 실제 자리를 보고 다르면 한 번 더
+            let mut got = RECT::default();
+            if GetWindowRect(h, &mut got).is_ok() && ((got.left - x).abs() > 4 || (got.top - y).abs() > 4 || (got.right - got.left - ow).abs() > 4) {
+                let _ = SetWindowPos(h, Some(HWND_TOPMOST), x, y, ow, oh, SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            }
+            let mut fin = RECT::default();
+            let _ = GetWindowRect(h, &mut fin);
+            let vis = IsWindowVisible(h).as_bool();
+            if let Some(a) = app.try_state::<std::sync::Arc<crate::App>>() {
+                a.vision.trace(format!("작은 창 게임={},{} {}x{} 배율={scale:.2} 목표={x},{} {ow}x{oh} 실제={},{} {}x{} 보임={vis} 모니터={}", rc.left, rc.top, gw, gh, y, fin.left, fin.top, fin.right - fin.left, fin.bottom - fin.top, GetSystemMetrics(SM_CMONITORS)));
+            }
         }
     }
 
