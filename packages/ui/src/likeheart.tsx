@@ -35,8 +35,8 @@ function Roll({ n }: { n: number }) {
   );
 }
 
-export function HeartBurst({ on, count, label, size = 'md', onToggle }: {
-  on: boolean; count?: number | null; label: string; size?: 'sm' | 'md'; onToggle: () => void;
+export function HeartBurst({ on, count, label, size = 'md', onToggle, pending }: {
+  on: boolean; count?: number | null; label: string; size?: 'sm' | 'md'; onToggle: () => void; pending?: boolean;
 }) {
   const gid = `u022-g-${useId().replace(/:/g, '')}`;
   const [pop, setPop] = useState(false);
@@ -64,7 +64,7 @@ export function HeartBurst({ on, count, label, size = 'md', onToggle }: {
           </svg>
         </span>
       </button>
-      {count != null && <span className="u022-meta"><Roll n={count} /></span>}
+      {count != null ? <span className="u022-meta"><Roll n={count} /></span> : pending ? <span className="u022-meta" aria-hidden="true"><i className="sk dk u022-sk" /></span> : null}
     </span>
   );
 }

@@ -92,7 +92,7 @@ export function ChampGrid({ onPick, query = '', onQuery, record }: { onPick: (id
 }
 
 /** 챔피언 일러스트 배너 */
-export function ChampBanner({ id, eyebrow, actions, children }: { id: number; eyebrow?: string; actions?: ReactNode; children?: ReactNode }) {
+export function ChampBanner({ id, eyebrow, actions, foot, children }: { id: number; eyebrow?: string; actions?: ReactNode; foot?: ReactNode; children?: ReactNode }) {
   const c = CHAMPIONS[id];
   if (!c) return null;
   const tags = [ROLE_KO[c.roles[0]], c.roles[1] && ROLE_KO[c.roles[1]], c.damage === 'MIX' ? 'AP·AD' : c.damage, c.range === 'ranged' ? '원거리' : '근접'].filter(Boolean) as string[];
@@ -107,6 +107,7 @@ export function ChampBanner({ id, eyebrow, actions, children }: { id: number; ey
         <div className="row wrapr" style={{ gap: 8 }}>{tags.map((t) => <span key={t} className="pill dark">{t}</span>)}</div>
         {children}
       </div>
+      {foot && <div className="banner-foot">{foot}</div>}
     </div>
   );
 }

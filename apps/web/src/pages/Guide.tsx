@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CHAMPIONS, DATA_VERSION, type AugmentStats } from '@prism/core';
-import { Artisans, AugmentCompare, AugmentGuide, ChampBanner, ChampGrid, ChampionCrew, Gem, Icon, Seg, useLoad } from '@prism/ui';
+import { Artisans, AugmentCompare, AugmentGuide, ChampBanner, ChampGrid, ChampionCrew, Gem, GlassBtn, Icon, Seg, useLoad } from '@prism/ui';
 import { useSession } from '../session';
 
 export function GuidePicker({ to }: { to: (id: number) => string }) {
@@ -39,7 +39,7 @@ export function Guide() {
   if (!CHAMPIONS[championId]) return <div className="wrap section">챔프를 찾을 수 없습니다.</div>;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <ChampBanner id={championId} eyebrow="아수라장 증강 가이드" actions={<Link className="btn sm" to="/champions">다른 챔프</Link>} />
+      <ChampBanner id={championId} eyebrow="아수라장 증강 가이드" actions={<GlassBtn icon="back" label="챔프 목록으로" href="/champions" as={(p) => <Link {...p} />} />} />
       {me && <Artisans api={api} kind="champion" id={championId} onMember={(m) => nav(`/members/${m}`)} />}
       <div className="row wrapr">
         <Seg value={tab} options={[['guide', '어울리는 증강'], ['compare', '증강 3개 비교'], ['crew', '모임 기록']]} onChange={setTab} />
@@ -62,7 +62,7 @@ export function Compare() {
   if (!CHAMPIONS[championId]) return <div className="wrap section">챔프를 찾을 수 없습니다.</div>;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <ChampBanner id={championId} eyebrow="증강 3개 비교" actions={<Link className="btn sm" to="/compare">다른 챔프</Link>}>
+      <ChampBanner id={championId} eyebrow="증강 3개 비교" actions={<GlassBtn icon="back" label="챔프 목록으로" href="/compare" as={(p) => <Link {...p} />} />}>
         <p style={{ margin: '12px 0 0', color: 'rgba(255,255,255,.75)' }}>지금 뜬 증강 세 개를 고르면, 이 챔프에게 맞는 순서대로 보여드려요.</p>
       </ChampBanner>
       <AugmentCompare championId={championId} stats={stats} />

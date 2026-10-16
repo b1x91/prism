@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AUGMENT, CHAMPIONS, ago, guideOf, pct, streakOf, todayPicks, type MissionState, type Personal } from '@prism/core';
-import { AugRing, AugmentLink, Bone, TierBadge } from '@prism/ui';
+import { AugRing, AugmentLink, Bone, GlassBtn, Icon, TierBadge } from '@prism/ui';
 import { GAME_DATA, fitPoints, tierOf } from '@prism/core';
 import { AugmentCompare, AugmentGuide, ChampBanner, ChampSearch, Empty, PieceIcon, RecentGames, Seg, useLoad } from '@prism/ui';
 import { api } from '../bridge';
@@ -19,7 +19,7 @@ function InGame({ championId, matchup }: { championId: number | null; matchup: S
   if (!id) return <section className="card pad"><Empty>이번 판 챔프를 고르면 증강 가이드가 나옵니다.</Empty><ChampSearch onPick={setPick} /></section>;
   return (
     <div className="stack" style={{ gap: 16 }}>
-      <ChampBanner id={id} eyebrow="게임 중 · 증강 고를 때 Alt+Tab" actions={<button type="button" className="btn sm" onClick={() => setPick(null)}>{pick ? '내 챔프로' : '다른 챔프'}</button>} />
+      <ChampBanner id={id} eyebrow="게임 중 · 증강 고를 때 Alt+Tab" actions={pick ? <GlassBtn icon="back" label="내 챔프로" onClick={() => setPick(null)} /> : undefined} />
       <div className="row"><Seg value={tab} options={[['compare', '뜬 증강 3개 비교'], ['guide', '등급별 가이드']]} onChange={setTab} />{vs.text && <span className={`vs ${vs.tone}`} title="게임 중 증강 자동 인식"><i />{vs.text}</span>}</div>
       {tab === 'compare' ? <AugmentCompare championId={id} preset={seen.ids} matchup={matchup ? { allies: matchup.allies, enemies: matchup.enemies } : { allies: [], enemies: [] }} onMatchup={editMatchup} autoMatchup={matchup?.source === 'game' || matchup?.source === 'champ-select'} /> : <AugmentGuide championId={id} compact={false} />}
     </div>
@@ -40,7 +40,8 @@ function TodayPick({ personal }: { personal: Personal }) {
   return (
     <section className="today">
       <ChampBanner id={pick.id} eyebrow={pick.why === 'best' ? '오늘은 이 챔프 어때요? · 내 기록에서 가장 잘 이긴 챔프' : '오늘은 이 챔프 어때요? · 아직 만나지 못한 챔프'}
-        actions={<>{picks.length > 1 && <button type="button" className="btn sm" onClick={() => setI(i + 1)}>다른 추천</button>}<button type="button" className="btn sm primary" onClick={() => nav(`/champions/${pick.id}`)}>증강 가이드</button></>}>
+        actions={picks.length > 1 ? <GlassBtn icon="shuffle" label="다른 추천" onClick={() => setI(i + 1)} /> : undefined}
+        foot={<button type="button" className="btn sm primary" onClick={() => nav(`/champions/${pick.id}`)}>증강 가이드<Icon name="arrow" /></button>}>
         <p className="today-why">{rec ? <>내 기록 <b>{rec.n}판 {rec.w}승</b> ({pct(rec.w, rec.n)}). 주사위나 대기석에서 보이면 잡아보세요.</> : <>도감을 채울 기회예요. 주사위나 대기석에서 보이면 잡아보세요.</>}</p>
       </ChampBanner>
       <div className="today-augs">

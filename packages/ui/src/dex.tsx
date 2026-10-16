@@ -327,7 +327,6 @@ function ChampEntry({ id, no, e, m, dex, onChampion }: { id: number; no: number;
       {e && <Stats e={e} />}
       {augs.length > 0 && <div className="dxe-sub"><span className="k">이 챔프로 자주 고른 증강</span>
         <div className="dxe-augs">{augs.map((p) => <AugmentLink key={p.aug} id={p.aug} champion={id} className="dxe-aug"><AugRing id={p.aug} size={32} /><span className="nm">{AUGMENT[p.aug]?.name ?? `#${p.aug}`}</span><span className="meta">{p.n}판 {p.w}승</span></AugmentLink>)}</div></div>}
-      {onChampion && <button type="button" className="btn sm primary" onClick={() => onChampion(id)}>증강 가이드</button>}
     </div>
   );
 }

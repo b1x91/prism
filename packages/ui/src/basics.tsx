@@ -39,6 +39,13 @@ export function IconBtn({ icon, label, onClick, tone, done, armed, disabled }: {
   return <button type="button" className={`ibtn ${tone ?? ''} ${done ? 'done' : ''} ${armed ? 'armed' : ''}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}><Icon name={done ? 'check' : icon} /></button>;
 }
 
+/** 어두운 배너 위 아이콘 버튼: 좋아요 하트 알약과 같은 높이·둥근 모서리·유리 바탕 (v3.52). 이름은 마우스를 올리면 */
+export function GlassBtn({ icon, label, onClick, href, as: Link }: { icon: IconName; label: string; onClick?: () => void; href?: string; as?: (p: { to: string; className: string; title: string; 'aria-label': string; children: ReactNode }) => ReactNode }) {
+  const inner = <Icon name={icon} />;
+  if (href && Link) return <>{Link({ to: href, className: 'glass-ib', title: label, 'aria-label': label, children: inner })}</>;
+  return <button type="button" className="glass-ib" title={label} aria-label={label} onClick={onClick}>{inner}</button>;
+}
+
 /**
  * 드롭다운 (브라우저 기본 select 대신, 앱 전체 공용). 눌러서 열고, 바깥·Esc 로 닫힌다. 위아래 화살표·Enter 로도 고른다.
  */

@@ -52,17 +52,18 @@ export function FavStar({ kind, id, size = 'md' }: { kind: FavKind; id: number; 
   const f = useFavs();
   const on = f.has(kind, id);
   const [count, setCount] = useState<number | null>(null);
+  const [pending, setPending] = useState(true);
   useEffect(() => {
-    setCount(null);
+    setCount(null); setPending(true);
     if (!f.connected || !api) return;
     let live = true;
-    api.get<{ n: number }>(`/api/favs/count?kind=${kind}&id=${id}`).then((r) => { if (live) setCount(r.n); }).catch(() => {});
+    api.get<{ n: number }>(`/api/favs/count?kind=${kind}&id=${id}`).then((r) => { if (live) setCount(r.n); }).catch(() => {}).finally(() => { if (live) setPending(false); });
     return () => { live = false; };
   }, [f.connected, kind, id]);
   if (!f.connected) return null;
   const what = kind === 'champ' ? '내 챔프' : '내 증강';
   const label = on ? `좋아요 취소 (${what}에서 빼기)` : `좋아요 (${what}로 표시)`;
-  return <HeartBurst on={on} count={count} label={label} size={size} onToggle={() => { setCount((c) => (c == null ? c : Math.max(0, c + (on ? -1 : 1)))); void toggleFav(kind, id); }} />;
+  return <HeartBurst on={on} count={count} label={label} size={size} pending={pending} onToggle={() => { setCount((c) => (c == null ? c : Math.max(0, c + (on ? -1 : 1)))); void toggleFav(kind, id); }} />;
 }
 
 /** 작은 하트 표시 (목록 칸 구석, inline 이면 이름 옆) */

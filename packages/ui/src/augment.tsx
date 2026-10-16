@@ -4,7 +4,7 @@ import { ChampImg } from './basics';
 import { FavMark, FavStar, useFavs } from './favs';
 import { HeartIcon } from './likeheart';
 import { ToolSearch } from './ltools';
-import { AugImg, Empty, Hover, Seg } from './basics';
+import { AugImg, Empty, GlassBtn, Hover, Seg } from './basics';
 import { Icon } from './icons';
 import { MatchupBar } from './situation';
 
@@ -208,7 +208,7 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack, after }: { id
             {a.note && <p className="note">{a.note}</p>}
           </div>
           {/* 오른쪽 위 구석: 좋아요 + 도감으로 */}
-          <div className="adet-corner"><FavStar kind="aug" id={a.id} />{onBack && <button type="button" className="btn sm adet-back" onClick={onBack}>도감으로</button>}</div>
+          <div className="adet-corner"><FavStar kind="aug" id={a.id} />{onBack && <GlassBtn icon="back" label="도감으로" onClick={onBack} />}</div>
         </div>
         <div className="adet-body">
           <p className="desc">{a.desc}</p>

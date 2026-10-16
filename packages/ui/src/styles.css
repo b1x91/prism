@@ -2442,3 +2442,19 @@ button.ga:hover { background: var(--surface-2); }
   .reveal > *, .reveal-rows > * { animation: none; }
   :where(img.fi) { transition: none; }
 }
+
+/* ───────── 배너 위 버튼 통일 (v3.52): 하트 알약과 같은 높이 32 · 둥근 끝 · 유리 바탕 ───────── */
+.glass-ib { flex: none; display: inline-grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 0; border-radius: var(--r-pill); background: rgba(255, 255, 255, .12); box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .2); color: #fff; backdrop-filter: blur(8px); cursor: pointer; transition: background .2s ease, transform .2s ease; }
+.glass-ib:hover { background: rgba(255, 255, 255, .22); }
+.glass-ib:active { transform: scale(.94); }
+.glass-ib:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+.glass-ib .icon { width: 16px; height: 16px; }
+.adet-corner .glass-ib { width: 32px; }
+/* 좋아한 수를 받는 동안: 숫자 자리에 작은 자리표시 */
+.u022-sk { display: inline-block; vertical-align: middle; width: 12px; height: 12px; border-radius: var(--r-s); }
+/* 배너 오른쪽 아래 (주된 이동 버튼) */
+.banner-foot { position: absolute; right: var(--s5); bottom: var(--s5); display: flex; gap: var(--s2); }
+.banner-foot .btn { border-radius: var(--r-pill); }
+.banner-foot .btn.primary { background: var(--accent); border-color: transparent; }
+.banner-foot .btn .icon { width: 14px; height: 14px; }
+@media (max-width: 640px) { .banner-foot { position: static; margin-top: var(--s4); } }
