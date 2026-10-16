@@ -3,6 +3,7 @@ import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board,
 import { AugImg, ChampImg, Empty, Gem, IconBtn, LockedMore, MemberFace } from './basics';
 import { AugmentLink } from './augment';
 import { Icon } from './icons';
+import { BoardSkeleton, ChampionCrewSkeleton, Bone, imgIn, useReveal } from './skeleton';
 
 /** 서버 데이터 한 덩이 불러오기 (다시 불러오기 함수 포함) */
 export function useLoad<T>(api: Api, path: string | null) {
@@ -52,12 +53,13 @@ export function Notes({ api }: { api: Api }) {
 const UNIT: Record<string, string> = { max_kills: '킬', dex_rank: '종', most_played_month: '판' };
 export function BoardView({ api }: { api: Api }) {
   const { data: b, error } = useLoad<Board>(api, '/api/board');
+  const rv = useReveal(Boolean(b));
   if (error) return <Empty>{error}</Empty>;
-  if (!b) return <p className="meta">불러오는 중…</p>;
+  if (!b) return <BoardSkeleton />;
   const t = b.totals;
   const value = (r: Board['records'][number]) => (r.key === 'longest_game' ? <>{Math.round(r.value / 60)}<small className="meta"> 분</small></> : r.key === 'best_winrate' ? pct(r.w ?? 0, r.n ?? 0) : <>{r.value}<small className="meta"> {UNIT[r.key] ?? ''}</small></>);
   return (
-    <div className="stack">
+    <div className={`stack ${rv}`}>
       <div className="grid4">
         {[['연결된 회원', t.linked, '명'], ['기록된 판', t.games, ''], ['이번 주 모임 판', t.crewGamesWeek, `/ ${t.crewGames}`], ['모임 도감', b.crewDex, '종']].map(([k, v, s]) => (
           <section key={k as string} className="card stat"><span className="k">{k}</span><span className="v">{v}<small>{s}</small></span></section>
@@ -103,10 +105,11 @@ export function BoardView({ api }: { api: Api }) {
 export function ChampionCrew({ api, championId }: { api: Api; championId: number }) {
   const { data, error, reload } = useLoad<ChampionInfo>(api, `/api/champions/${championId}`);
   const [text, setText] = useState('');
+  const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <p className="meta">불러오는 중…</p>;
+  if (!data) return <ChampionCrewSkeleton />;
   return (
-    <div className="grid2">
+    <div className={`grid2 ${rv}`}>
       <section className="card pad">
         <div className="card-head"><h2>모임 기록</h2></div>
         <div className="grid2" style={{ gap: 12 }}>
@@ -144,7 +147,7 @@ export function Recent10({ games, href }: { games: Game[]; href?: (championId: n
     <div className="r10">
       {recent.map((g) => (
         <a key={g.gameId} className={g.win ? 'is-w' : 'is-l'} href={href?.(g.championId)} title={`${CHAMPIONS[g.championId]?.name} · ${g.kills}/${g.deaths}/${g.assists} · ${ago(g.playedAt)}`}>
-          <img src={cdragon(CHAMPIONS[g.championId]?.tile)} alt="" loading="lazy" /><span className="res">{g.win ? '승' : '패'}</span>
+          <img className="fi" {...imgIn} src={cdragon(CHAMPIONS[g.championId]?.tile)} alt="" loading="lazy" /><span className="res">{g.win ? '승' : '패'}</span>
         </a>
       ))}
     </div>
@@ -367,16 +370,17 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
     if (!invite) return;
     try { await navigator.clipboard.writeText(invite); setCopied(puuid); setTimeout(() => setCopied(null), 2000); } catch { /* 클립보드 막힘 */ }
   };
+  const rv = useReveal(Boolean(data), 'reveal-rows');
   if (error) return null;
   return (
     <section className="card pad prospects">
       <div className="card-head"><h2>포텐 멤버</h2><span className="sp" /><span className="meta">우리와 {data?.queueMin ?? 3}판 넘게 같이 했거나 내전을 함께한 분들</span></div>
-      {!data ? <p className="meta">불러오는 중…</p> : !data.prospects.length ? <Empty>아직 없어요. 회원과 자주 같이 하는 분이 생기면 여기에 나타나요.</Empty> : (
-        <div className="plist2">{data.prospects.map((p) => {
+      {!data ? <div className="plist2 skf" role="status" aria-label="불러오는 중">{[0, 1, 2].map((i) => <div key={i} className="prow2"><Bone w={44} h={44} r="round" /><span className="sk-row-t"><Bone w="40%" h={14} /><Bone w="72%" h={10} /></span><Bone w={64} h={32} r="m" /></div>)}</div> : !data.prospects.length ? <Empty>아직 없어요. 회원과 자주 같이 하는 분이 생기면 여기에 나타나요.</Empty> : (
+        <div className={`plist2 ${rv}`}>{data.prospects.map((p) => {
           const [name, tag] = (p.riotId ?? '이름 모름').split('#');
           return (
             <div key={p.puuid} className="prow2">
-              {p.main ? <img className="face" src={cdragon(CHAMPIONS[p.main]?.tile)} width={44} height={44} alt="" loading="lazy" /> : <span className="face ph" />}
+              {p.main ? <img className="face fi" {...imgIn} src={cdragon(CHAMPIONS[p.main]?.tile)} width={44} height={44} alt="" loading="lazy" /> : <span className="face ph" />}
               <div className="pinfo">
                 <div className="pname"><b>{name}</b>{tag && <span className="meta">#{tag}</span>}{p.customs > 0 && <span className="ptag">내전 {p.customs}</span>}</div>
                 <div className="meta">같이 {p.n}판 · 그 판 승률 {pct(p.w, p.n)}{p.mates.length > 0 && <> · {p.mates.map((m) => `${shortNick(m.nick)} ${m.n}판`).join(', ')}</>} · {ago(p.lastAt)}</div>

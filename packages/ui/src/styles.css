@@ -115,6 +115,12 @@ img { display: block; }
 .seg { display: inline-flex; padding: 2px; border-radius: var(--r-m); background: var(--surface-2); border: 1px solid var(--line); }
 .seg button { height: 30px; padding: 0 var(--s3); border: 0; border-radius: 10px; background: transparent; font-size: var(--fs-sm); font-weight: 600; color: var(--text-2); cursor: pointer; }
 .seg button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+/* 미끄러지는 고른 표시 (재고 나면 칸 바탕 대신) */
+.seg { position: relative; isolation: isolate; }
+.seg button { position: relative; z-index: 1; transition: color .2s ease; }
+.seg-ind { position: absolute; top: 2px; bottom: 2px; left: 0; z-index: 0; border-radius: 10px; background: var(--surface); box-shadow: var(--shadow); transition: transform .38s cubic-bezier(.16, 1, .3, 1), width .38s cubic-bezier(.16, 1, .3, 1); }
+.seg.live button.on { background: transparent; box-shadow: none; }
+@media (prefers-reduced-motion: reduce) { .seg-ind { transition: none; } }
 .input { height: 40px; padding: 0 var(--s3); border-radius: var(--r-m); border: 1px solid var(--line-2); background: var(--surface); width: 100%; }
 .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
 .pill { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); background: var(--surface-2); color: var(--text-2); font-size: var(--fs-xs); font-weight: 600; white-space: nowrap; }
@@ -297,8 +303,6 @@ img.champ { object-view-box: inset(4.5%); }
 .locked { position: relative; overflow: hidden; }
 .locked .blur { filter: blur(6px); opacity: .7; pointer-events: none; user-select: none; }
 .locked .over { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: var(--s4); background: color-mix(in srgb, var(--bg) 35%, transparent); }
-.sk { display: grid; gap: var(--s3); }
-.sk i { display: block; height: 12px; border-radius: var(--r-pill); background: var(--surface-3); }
 
 /* ── 회원: 랭킹 ── */
 .face { border-radius: var(--r-m); object-fit: cover; flex: none; background: var(--surface-3); }
@@ -738,6 +742,8 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .dex-device .seg { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .1); }
 .dex-device .seg button { color: rgba(255, 255, 255, .6); }
 .dex-device .seg button.on { background: rgba(255, 255, 255, .14); color: #fff; box-shadow: none; }
+.dex-device .seg-ind { background: rgba(255, 255, 255, .14); box-shadow: none; }
+.dex-device .seg.live button.on { background: transparent; }
 .dex-count { grid-area: count; display: grid; gap: var(--s1); padding: var(--s4); border-radius: var(--r-m); background: rgba(0, 0, 0, .25); border: 1px solid rgba(255, 255, 255, .08); }
 .dex-count .k { font-size: var(--fs-xs); font-weight: 700; color: rgba(255, 255, 255, .6); }
 .dex-count b { font-size: var(--fs-2xl); font-variant-numeric: tabular-nums; line-height: 1.1; }
@@ -1173,14 +1179,11 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 /* 판 상세 불러오는 중: 자리표시 + 빛 지나감 */
 .md-skel { display: grid; gap: var(--s3); }
 .md-skel .md-lessons, .md-skel .md-team { display: grid; gap: var(--s3); }
-.sk { display: block; border-radius: var(--r-s); background: linear-gradient(90deg, var(--surface-2) 25%, var(--surface-3) 50%, var(--surface-2) 75%); background-size: 300% 100%; animation: sk-shine 1.4s ease-in-out infinite; }
 .sk.ln { height: 12px; width: 100%; } .sk.ln.t { height: 16px; width: 160px; } .sk.ln.s { width: 60%; } .sk.ln.w { width: 100%; }
 .sk.sq { width: 36px; height: 36px; border-radius: var(--r-s); } .sk.dot { width: 16px; height: 16px; border-radius: 50%; flex: none; }
 .sk-l { display: flex; align-items: center; gap: var(--s3); }
 .md-row.sk-row { grid-template-columns: 36px minmax(0, 1.4fr) 88px minmax(80px, 1fr) 160px; grid-template-areas: none; min-height: 48px; }
 @media (max-width: 640px) { .md-row.sk-row { grid-template-columns: 36px minmax(0, 1fr) 64px; } .md-row.sk-row .sk.ln.w, .md-row.sk-row .sk.ln:nth-child(4) { display: none; } }
-@keyframes sk-shine { from { background-position: 100% 0; } to { background-position: -100% 0; } }
-@media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
 
 /* 같이 할 판 · 내전 한 곳에서: 종류 고르기 + 카드의 종류 표시 */
 .pkinds { display: inline-flex; gap: var(--s2); padding-right: var(--s3); margin-right: var(--s1); border-right: 1px solid var(--line); }
@@ -2366,15 +2369,76 @@ button.ga:hover { background: var(--surface-2); }
 :root { --zoom-ease: cubic-bezier(.2, .8, .2, 1); }
 /* 한 줄만 보이게 자르되(둘째 줄 숨김) 위·옆은 자르지 않는다 — 들린 카드 윗부분과 그림자가 살게 */
 .msn-strip { overflow: visible; clip-path: inset(-16px -16px 0 -16px); }
-.msn-champ img { transition: transform .7s var(--zoom-ease), filter .3s; }
+.msn-champ img { transition: transform .7s var(--zoom-ease), filter .3s, opacity .45s ease; }
 .msn-champ:hover img { transform: scale(1.6); }
-.cfav-card img, .pod .bg, .lb-art, .rcard img, .feature img.bg { transition: transform .7s var(--zoom-ease); }
+.cfav-card img, .pod .bg, .lb-art, .rcard img, .feature img.bg { transition: transform .7s var(--zoom-ease), opacity .45s ease; }
 .cfav-card:hover img, .pod:hover .bg, .lb-card:hover .lb-art, .feature:hover img.bg { transform: scale(1.14); }
 .rcard button:not(:disabled):hover img { transform: scale(1.14); }
-.champ-grid button img, .fpk-c img { transition: transform .35s var(--zoom-ease), box-shadow .2s; }
+.champ-grid button img, .fpk-c img { transition: transform .35s var(--zoom-ease), box-shadow .2s, opacity .45s ease; }
 .champ-grid button:hover img { transform: translateY(-2px) scale(1.08); }
 .fpk-c:hover img { transform: scale(1.1); }
 /* 그림이 커졌다 작아지는 동안 카드의 둥근 모서리 자르기가 잠깐 풀려 아래·옆이 각지게 삐져나오던 것:
    카드를 늘 따로 그려지는 층으로 두면 둥근 자르기가 확대 중에도 유지된다 */
 .msn-champ, .cfav-card, .pod, .lb-card, .rcard button, .feature { will-change: transform; backface-visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .msn-champ img, .cfav-card img, .pod .bg, .lb-art, .rcard img, .feature img.bg, .champ-grid button img, .fpk-c img { transition: none; } }
+
+/* ───────── 자리표시 · 등장 (v3.51, 앱·웹 전역) ─────────
+   뼈대는 같은 바탕 + 빛 한 줄기. 빛은 화면 기준으로 고정돼 모든 뼈대를 한 번에 가로지른다(따로 번쩍이지 않게).
+   빛 가운데에 아주 옅은 푸른·보랏빛을 섞어 프리즘을 지나는 빛처럼. */
+:root { --sk: var(--surface-3); --sk-hi: rgba(255, 255, 255, .72); --sk-tint: rgba(160, 176, 255, .28); --ease-out: cubic-bezier(.16, 1, .3, 1); }
+:root[data-theme="dark"] { --sk-hi: rgba(255, 255, 255, .07); --sk-tint: rgba(150, 168, 255, .09); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --sk-hi: rgba(255, 255, 255, .07); --sk-tint: rgba(150, 168, 255, .09); } }
+.sk { display: block; flex: none; max-width: 100%; height: 12px; border-radius: var(--r-s); background-color: var(--sk);
+  background-image: linear-gradient(105deg, transparent 38%, var(--sk-hi) 47%, var(--sk-tint) 52%, transparent 62%);
+  background-size: 200vw 100%; background-repeat: no-repeat; background-attachment: fixed; animation: sk-sweep 1.9s cubic-bezier(.45, 0, .25, 1) infinite; }
+.sk.dk { --sk: rgba(255, 255, 255, .07); --sk-hi: rgba(255, 255, 255, .1); --sk-tint: rgba(170, 186, 255, .1); }
+.sk.r-m { border-radius: var(--r-m); } .sk.r-l { border-radius: var(--r-l); } .sk.r-pill { border-radius: var(--r-pill); } .sk.r-round { border-radius: 50%; }
+@keyframes sk-sweep { from { background-position: 100vw 0; } to { background-position: -100vw 0; } }
+/* 빠른 불러오기에서는 보이지 않게 0.12초 늦게, 부드럽게 */
+.skf { animation: skf-in .32s ease .12s both; }
+@keyframes skf-in { from { opacity: 0; } to { opacity: 1; } }
+.sk-lines { display: grid; min-width: 0; }
+.sk-head { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s4); }
+.sk-rows { display: grid; gap: var(--s2); }
+.sk-row { display: flex; align-items: center; gap: var(--s3); min-height: 48px; padding: var(--s1) var(--s2); }
+.sk-row-t { flex: 1; display: grid; gap: 6px; min-width: 0; }
+.sk-row.sk-role { display: grid; grid-template-columns: 96px minmax(0, 1fr) minmax(0, 1.4fr); }
+.sk-stat { display: grid; gap: var(--s2); }
+.sk-tile { width: 100%; height: auto; aspect-ratio: 3 / 4; }
+.sk-dexgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: var(--s3); }
+.sk-dexgrid .sk-tile { aspect-ratio: 1; }
+.sk-chips { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s2); }
+/* 회원 머리 자리표시: 실제 머리와 같은 크기의 어두운 무대 */
+.sk-hero { background: linear-gradient(180deg, #11152a, #090b14); }
+.sk-hero-in { display: flex; align-items: flex-end; gap: var(--s5); width: 100%; max-width: 1200px; margin: 0 auto; padding: var(--s8) var(--s6) var(--s6); }
+.sk-hero-t { display: grid; gap: var(--s3); flex: 1; min-width: 0; }
+/* 랭킹 무대 자리표시 */
+.sk-lb { padding-top: var(--s8); }
+.sk-lbcard { cursor: default; align-content: end; gap: var(--s2); }
+.sk-lb .lb-slot.p1 .sk-lbcard { border-color: rgba(255, 255, 255, .12); background: #0d1120; box-shadow: none; }
+.sk-ped { background: rgba(255, 255, 255, .06) !important; box-shadow: none !important; }
+.sk-msn { gap: var(--s3); }
+.sk-msn-champ { width: 100%; height: 168px; }
+.sk-shopcard { display: grid; overflow: hidden; padding: var(--s3) var(--s3) 0; }
+@media (max-width: 640px) { .sk-hero-in { flex-direction: column; align-items: flex-start; padding: var(--s7) var(--s4) var(--s5); } .sk-row.sk-role { grid-template-columns: 72px minmax(0, 1fr); } .sk-row.sk-role .sk:last-child { display: none; } }
+
+/* 데이터가 도착하면: 실제 화면이 위에서부터 차례로 살짝 떠오른다 (한 번만) */
+.reveal > * { animation: rv-in .5s var(--ease-out) both; }
+.reveal > :nth-child(2) { animation-delay: 40ms; } .reveal > :nth-child(3) { animation-delay: 80ms; } .reveal > :nth-child(4) { animation-delay: 120ms; }
+.reveal > :nth-child(5) { animation-delay: 160ms; } .reveal > :nth-child(6) { animation-delay: 200ms; } .reveal > :nth-child(7) { animation-delay: 240ms; } .reveal > :nth-child(n+8) { animation-delay: 280ms; }
+@keyframes rv-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* 목록 줄: 처음 그릴 때 한 줄씩 */
+.reveal-rows > * { animation: rv-in .45s var(--ease-out) both; }
+.reveal-rows > :nth-child(2) { animation-delay: 30ms; } .reveal-rows > :nth-child(3) { animation-delay: 60ms; } .reveal-rows > :nth-child(4) { animation-delay: 90ms; }
+.reveal-rows > :nth-child(5) { animation-delay: 120ms; } .reveal-rows > :nth-child(6) { animation-delay: 150ms; } .reveal-rows > :nth-child(n+7) { animation-delay: 180ms; }
+
+/* 그림은 다 받아진 뒤 서서히 (툭 튀어나오지 않게) */
+/* :where 로 가장 약하게 — 그림마다 따로 정한 투명도(흐린 배경·안 만난 도감 칸)가 늘 이긴다 */
+:where(img.fi) { opacity: 0; transition: opacity .45s ease; }
+:where(img.fi.ld) { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sk { animation: none; } .skf { animation: none; }
+  .reveal > *, .reveal-rows > * { animation: none; }
+  :where(img.fi) { transition: none; }
+}

@@ -7,6 +7,7 @@ import { AUGMENT, CHAMPIONS, ITEM, ago, cdragon, loadItemDetail, reviewMatch, ty
 import { ChampImg, Empty, Hover, MemberFace } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
+import { imgIn } from './skeleton';
 
 /** 아이템 능력치·효과는 처음 마우스를 올릴 때 한 번 불러온다 */
 let details: Record<number, ItemDetail> | null = null;
@@ -121,7 +122,7 @@ export function RecentGames({ games, onChampion, limit = 12, title = '최근 판
           return (
             <Hover key={g.gameId} tip={<GameTip g={g} />} className={`rcard ${g.win ? 'is-w' : 'is-l'}`}>
               <button type="button" onClick={() => setMatch(g)} aria-label={`${c?.name} ${g.win ? '승리' : '패배'} 판 자세히`}>
-                <img src={cdragon(c?.tile)} alt="" loading="lazy" />
+                <img className="fi" {...imgIn} src={cdragon(c?.tile)} alt="" loading="lazy" />
                 <span className="res">{g.win ? '승' : '패'}</span>
                 <span className="kda">{g.kills}/{g.deaths}/{g.assists}</span>
               </button>

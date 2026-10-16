@@ -217,10 +217,11 @@ body { overflow: hidden; background: var(--bg); }
 
 /* ───────── 화면 전환 ───────── */
 .main { position: relative; }
-.page { animation: pg-fwd .32s cubic-bezier(.2, .8, .2, 1); }
+.page { animation: pg-fwd .4s cubic-bezier(.16, 1, .3, 1); }
 .page.back { animation-name: pg-back; }
-@keyframes pg-fwd { from { opacity: 0; transform: translateX(16px); } }
-@keyframes pg-back { from { opacity: 0; transform: translateX(-16px); } }
+/* 앞으로는 오른쪽에서, 뒤로는 왼쪽에서 — 거리는 짧게, 끝은 길게 풀어 부드럽게 (v3.51) */
+@keyframes pg-fwd { from { opacity: 0; transform: translateX(12px); } }
+@keyframes pg-back { from { opacity: 0; transform: translateX(-12px); } }
 @media (prefers-reduced-motion: reduce) { .page { animation: none; } }
 
 /* ───────── 사이드바 아래: 내 프로필 + 롤 연결 상태 + 설정 ───────── */

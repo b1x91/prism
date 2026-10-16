@@ -15,6 +15,7 @@ import { BgScene } from './bgscene';
 import { NickName } from './studio';
 import { Icon } from './icons';
 import { BuyDialog } from './buy';
+import { ShopSkeleton, useReveal } from './skeleton';
 
 const SLOTS: ShopSlot[] = ['bg', 'frame', 'fx', 'name', 'title'];
 /** 산 배경이 없을 때 깔리는 기본 색 (회원마다 정해진 색 — 이름으로 고른다, 바뀌지 않는다). 상점의 '배경'으로 바꿀 수 있다 */
@@ -164,14 +165,15 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
   const [buying, setBuying] = useState<ShopItem | null>(null);
   const run = async (k: string, f: () => Promise<unknown>) => { setBusy(k); setMsg(''); try { await f(); reload(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); } };
   useEffect(() => { if (data) setPieces(data.balance); }, [data]);
+  const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <div className="shop-skel" role="status" aria-label="불러오는 중">{Array.from({ length: 6 }, (_, i) => <i key={i} className="sk" />)}</div>;
+  if (!data) return <ShopSkeleton />;
   const list = slot === 'hot' ? hot.filter((x) => !owned || data.owned.includes(x.id))
     : SHOP.filter((x) => x.slot === slot && (!owned || data.owned.includes(x.id)))
       .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || b.price - a.price);
   const count = (sl: ShopSlot) => [SHOP.filter((x) => x.slot === sl && data.owned.includes(x.id)).length, SHOP.filter((x) => x.slot === sl).length];
   return (
-    <div className="shop">
+    <div className={`shop ${rv}`}>
       <header className="shop-head">
         <h1>상점</h1>
         {(data.rates?.discount ?? 0) > 0 && <span className="shop-sale">특별회원 {Math.round((data.rates!.discount) * 100)}% 할인</span>}

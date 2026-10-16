@@ -16,6 +16,7 @@ import { RecentGames } from './game';
 import { ProfileHero, ShareButton, baseTint } from './shop';
 import { BgScene } from './bgscene';
 import { NickName, ProfileStudio } from './studio';
+import { MemberSkeleton, RankingSkeleton, useReveal } from './skeleton';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
@@ -76,6 +77,7 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
         <span className="meta">{art ? '도감 마스터 여정을 모두 이룬 수 (같으면 이룬 목표 수)' : by === 'winrate' ? `${data?.minWinrate ?? 10}판 이상 기록한 회원만` : by === 'month' ? '이번 달 판수' : '지금까지 기록된 판수'}</span></div>
       {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
+      {!art && !data && !error && <RankingSkeleton />}
       {!art && data && !rows.length && <Empty>{by === 'winrate' ? '아직 조건을 채운 회원이 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
       {!art && rows.length > 0 && <Leaderboard key={`lb-${by}`} play={play} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
       {!art && rows.length > 3 && <div key={`rl-${by}`} className={`card rank-list ${play ? 'lb-in' : ''}`}>
@@ -160,8 +162,9 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
   const skins = useSkins();
   const [edit, setEdit] = useState(false);
   const [shareOn, setShared] = useState<boolean | null>(null);
+  const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <p className="meta">불러오는 중…</p>;
+  if (!data) return <MemberSkeleton />;
   const { member: m, total } = data;
   const deco = m.deco ?? {};
   const shared = shareOn ?? Boolean(m.shared);
@@ -174,7 +177,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
   const picksN = data.augments.reduce((n, a) => n + a.n, 0);
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
   return (
-    <div className="stack" style={{ gap: 16 }}>
+    <div className={`stack ${rv}`} style={{ gap: 16 }}>
       <ProfileHero nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
         actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit(true)}><Icon name="spark" />프로필 꾸미기</button>}

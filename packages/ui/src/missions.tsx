@@ -9,6 +9,7 @@ import { Empty } from './basics';
 import { useLoad } from './crew';
 import { Icon } from './icons';
 import { PieceIcon, addPieces } from './shop';
+import { MissionsSkeleton, imgIn, useReveal } from './skeleton';
 
 const DAY = 86_400_000;
 const left = (end: number, now = Date.now()) => { const d = Math.ceil((end - now) / DAY); return d <= 1 ? '오늘 밤까지' : `${d}일 남음`; };
@@ -62,8 +63,9 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
   // '모두 받기' 뒤: 줄이 '받았어요'로 바뀌어 잠깐 남았다가 부드럽게 접힌다 (카드가 튀지 않게)
   const [got, setGot] = useState<{ n: number; closing: boolean } | null>(null);
   const data = over ?? loaded;
+  const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <div className="ms-skel" role="status" aria-label="불러오는 중"><i className="sk" /><i className="sk" /><i className="sk" /></div>;
+  if (!data) return <MissionsSkeleton />;
 
   const claim = async (key: string, body: { ids?: string[]; all?: boolean }, el: HTMLElement | null) => {
     if (busy) return;
@@ -86,7 +88,7 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
   const suggest = shuffle(data.suggest, Math.floor(w.start / DAY));
   const ready = data.ready ?? 0;
   return (
-    <div className="msn">
+    <div className={`msn ${rv}`}>
       <header className="msn-head">
         <div className="msn-title">
           <span className="msn-kicker">{md(w.start)} – {md(w.end - 1)} · {left(w.end)}</span>
@@ -112,7 +114,7 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
         <div className="msn-try-h"><span className="msn-sec">처음 해 볼 {MISSION_ROLE_KO[r1]} 챔프</span><span className="meta">아직 안 해 본 {data.suggest.length}개 중</span></div>
         <div className="msn-strip">{suggest.slice(0, 8).map((id) => (
           <button key={id} type="button" className="msn-champ" onClick={() => onChampion?.(id)} title={`${CHAMPIONS[id]?.name} 증강 가이드 보기`}>
-            <img src={cdragon(CHAMPIONS[id]?.splash)} alt="" loading="lazy" />
+            <img className="fi" src={cdragon(CHAMPIONS[id]?.splash)} alt="" loading="lazy" {...imgIn} />
             <span className="msn-champ-nm">{CHAMPIONS[id]?.name}</span>
             <span className="msn-new">NEW</span>
           </button>

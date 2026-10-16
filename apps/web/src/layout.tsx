@@ -33,7 +33,7 @@ export function Layout() {
       </div></header>
       <MobileMenu open={menu} onClose={() => setMenu(false)} />
       {welcome && me && <WelcomeFlow api={api} nick={me.nick} needFace={!me.skin} onClose={closeWelcome} />}
-      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><Outlet /></MatchSource.Provider></AugmentOpen.Provider></main>
+      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><div key={pathname} className="route"><Outlet /></div></MatchSource.Provider></AugmentOpen.Provider></main>
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>
         <span>Prism은 Riot Games의 공식 서비스가 아니며 Riot Games와 무관합니다. League of Legends 및 관련 이미지는 Riot Games의 자산입니다. · <NavLink to="/privacy" className="foot-link">개인정보 처리방침</NavLink></span>

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AUGMENT, CHAMPIONS, ago, guideOf, pct, streakOf, todayPicks, type MissionState, type Personal } from '@prism/core';
-import { AugRing, AugmentLink, TierBadge } from '@prism/ui';
+import { AugRing, AugmentLink, Bone, TierBadge } from '@prism/ui';
 import { GAME_DATA, fitPoints, tierOf } from '@prism/core';
 import { AugmentCompare, AugmentGuide, ChampBanner, ChampSearch, Empty, PieceIcon, RecentGames, Seg, useLoad } from '@prism/ui';
 import { api } from '../bridge';
@@ -84,7 +84,7 @@ function NoGame({ s }: { s: State }) {
           <b>{todo.title}</b>
           <span className="ng-mprog"><span className="bar"><span style={{ width: `${(todo.progress / todo.target) * 100}%` }} /></span><span className="meta">{todo.progress}/{todo.target}</span><span className="rew">{todo.reward}<PieceIcon size={12} /></span></span>
           <span className="go">미션 보기 →</span>
-        </> : <><b>{ms.length ? '이번 주 미션을 다 깼어요!' : '불러오는 중…'}</b><span className="go">미션 보기 →</span></>}
+        </> : <>{ms.length ? <b>이번 주 미션을 다 깼어요!</b> : <Bone w="60%" h={16} />}<span className="go">미션 보기 →</span></>}
       </button>}
     </section>
   );

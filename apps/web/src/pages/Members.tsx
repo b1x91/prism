@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Empty, Gem, Icon, MemberView, MissionsView, PublicProfileView, RankingView, ShopView } from '@prism/ui';
+import { Empty, Gem, Icon, MemberSkeleton, MemberView, MissionsView, PageSkeleton, PublicProfileView, RankingView, ShopView } from '@prism/ui';
 import type { PublicProfile } from '@prism/core';
 import { SERVER, useSession } from '../session';
 
@@ -12,7 +12,7 @@ function NeedLogin({ what }: { what: string }) {
 export function RankingPage() {
   const { me, ready, api } = useSession();
   const nav = useNavigate();
-  if (!ready) return null;
+  if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="ranking" /></div></section>;
   if (!me) return <NeedLogin what="랭킹" />;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
@@ -26,7 +26,7 @@ export function MemberPage() {
   const { id } = useParams();
   const { me, ready, api, logout } = useSession();
   const nav = useNavigate();
-  if (!ready) return null;
+  if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="member" /></div></section>;
   if (!me) return <NeedLogin what={id ? '회원 페이지' : '내 페이지'} />;
   const target = id ?? me.id;
   return (
@@ -39,7 +39,7 @@ export function MemberPage() {
 
 export function ShopPage() {
   const { me, ready, api } = useSession();
-  if (!ready) return null;
+  if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="shop" /></div></section>;
   if (!me) return <NeedLogin what="상점" />;
   return (
     <section className="section tight"><div className="wrap">
@@ -59,7 +59,7 @@ export function PublicPage() {
   }, [id]);
   useEffect(() => { if (data) document.title = `${data.nick} · Prism`; }, [data]);
   if (err) return <section className="section"><div className="wrap"><Empty action={<Link className="btn primary" to="/">Prism 둘러보기</Link>}>{err}</Empty></div></section>;
-  if (!data) return <section className="section"><div className="wrap"><p className="meta">불러오는 중…</p></div></section>;
+  if (!data) return <section className="section tight"><div className="wrap"><MemberSkeleton public /></div></section>;
   return (
     <section className="section tight"><div className="wrap">
       <PublicProfileView data={data} join={<Link className="btn sm primary" to="/"><Gem size={14} src="/brand/prism-32.png" />Prism 알아보기</Link>} />
@@ -70,7 +70,7 @@ export function PublicPage() {
 export function MissionsPage() {
   const { me, ready, api } = useSession();
   const nav = useNavigate();
-  if (!ready) return null;
+  if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="missions" /></div></section>;
   if (!me) return <NeedLogin what="미션" />;
   return (
     <section className="section tight"><div className="wrap">

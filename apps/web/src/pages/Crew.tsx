@@ -1,10 +1,10 @@
-import { BoardView, ChannelButtons, Gem, Icon, DiscordNowCard, ProspectBoard } from '@prism/ui';
+import { BoardView, ChannelButtons, Gem, Icon, DiscordNowCard, Lines, PageSkeleton, ProspectBoard } from '@prism/ui';
 import { useSession } from '../session';
 import { shortNick } from '@prism/core';
 
 function Intro() {
   const { login, links } = useSession();
-  const sk = (n: number) => <div className="sk">{Array.from({ length: n }, (_, i) => <i key={i} style={{ width: `${90 - ((i * 17) % 45)}%` }} />)}</div>;
+  const sk = (n: number) => <Lines n={n} gap={12} first={90} />;
   return (
     <>
       <section className="hero"><div className="wrap" style={{ gridTemplateColumns: 'minmax(0,1fr)', textAlign: 'center', justifyItems: 'center' }}>
@@ -39,7 +39,7 @@ function Intro() {
 
 export function Crew() {
   const { me, ready, api, links } = useSession();
-  if (!ready) return null;
+  if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="crew" /></div></section>;
   if (!me) return <Intro />;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>

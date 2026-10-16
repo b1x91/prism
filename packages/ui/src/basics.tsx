@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent
 import { createPortal } from 'react-dom';
 import { AUGMENT, CHAMPIONS, cdragon, champIcon, augIcon, loadSkins, withDefaults, PRESENCE_LABEL, type DiscordRole, type Links, type Presence, type Skin } from '@prism/core';
 import { Icon, type IconName } from './icons';
+import { imgIn } from './skeleton';
 
 export function Gem({ size = 28, float, src = '/brand/prism-64.png' }: { size?: number; float?: boolean; src?: string }) {
   return <span className={`gem${float ? ' float' : ''}`} style={{ ['--size' as string]: `${size}px` }}><img src={src} alt="" /></span>;
@@ -23,10 +24,10 @@ export function Refraction({ gem = 120 }: { gem?: number }) {
 }
 
 export function ChampImg({ id, size = 40, className = '' }: { id: number; size?: number; className?: string }) {
-  return <img className={`champ ${className}`} src={champIcon(id)} width={size} height={size} alt={CHAMPIONS[id]?.name ?? ''} loading="lazy" />;
+  return <img className={`champ fi ${className}`} {...imgIn} src={champIcon(id)} width={size} height={size} alt={CHAMPIONS[id]?.name ?? ''} loading="lazy" />;
 }
 export function AugImg({ id, size = 36 }: { id: number; size?: number }) {
-  return <img className="aug" src={augIcon(id)} width={size} height={size} alt={AUGMENT[id]?.name ?? ''} loading="lazy" />;
+  return <img className="aug fi" {...imgIn} src={augIcon(id)} width={size} height={size} alt={AUGMENT[id]?.name ?? ''} loading="lazy" />;
 }
 
 export function Empty({ children, action }: { children: ReactNode; action?: ReactNode }) {
@@ -83,8 +84,26 @@ export function Toggle({ on, onChange, label, disabled }: { on: boolean; onChang
   return <button type="button" role="switch" aria-checked={on} aria-label={label} className={`toggle ${on ? 'on' : ''}`} disabled={disabled} onClick={() => onChange(!on)}><i /></button>;
 }
 
+/** 고르기 탭: 고른 표시가 다음 칸으로 미끄러져 간다 (v3.51). 재기 전 첫 그림은 칸 자체의 바탕으로 */
 export function Seg<T extends string>({ value, options, onChange }: { value: T; options: [T, string][]; onChange: (v: T) => void }) {
-  return <div className="seg">{options.map(([k, l]) => <button key={k} type="button" className={value === k ? 'on' : ''} onClick={() => onChange(k)}>{l}</button>)}</div>;
+  const box = useRef<HTMLDivElement>(null);
+  const [ind, setInd] = useState<{ x: number; w: number } | null>(null);
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = box.current?.querySelector<HTMLButtonElement>('button.on');
+      if (el) setInd({ x: el.offsetLeft, w: el.offsetWidth });
+    };
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' && box.current ? new ResizeObserver(measure) : null;
+    if (ro && box.current) ro.observe(box.current);
+    return () => ro?.disconnect();
+  }, [value, options.length]);
+  return (
+    <div ref={box} className={`seg ${ind ? 'live' : ''}`}>
+      {ind && <span className="seg-ind" aria-hidden="true" style={{ transform: `translateX(${ind.x}px)`, width: ind.w }} />}
+      {options.map(([k, l]) => <button key={k} type="button" className={value === k ? 'on' : ''} onClick={() => onChange(k)}>{l}</button>)}
+    </div>
+  );
 }
 
 /** 디스코드·카카오톡 앱 아이콘 (글자 없이 아이콘만). 앱에서는 onOpen 으로 브라우저를 연다 */
@@ -176,7 +195,7 @@ export function MemberFace({ nick, skin, champion, size = 40, skins }: { nick: s
   const loaded = useSkins();
   const sk = skins ?? loaded;
   const src = skin && sk?.[skin]?.tile ? sk[skin].tile : champion ? cdragon(CHAMPIONS[champion]?.tile) : '';
-  return src ? <img className="face" src={src} width={size} height={size} alt="" loading="lazy" style={{ width: size, height: size }} /> : <Initial nick={nick} size={size} />;
+  return src ? <img className="face fi" {...imgIn} src={src} width={size} height={size} alt="" loading="lazy" style={{ width: size, height: size }} /> : <Initial nick={nick} size={size} />;
 }
 
 /** 접속 상태 점 하나 (웹 회색 · 앱 파랑 · 게임 주황 · 앱+게임 초록). 접속 안 함이면 그리지 않는다 */

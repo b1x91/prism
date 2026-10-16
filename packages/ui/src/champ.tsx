@@ -5,6 +5,7 @@ import { FavMark, FavStar, useFavs } from './favs';
 import { HeartIcon } from './likeheart';
 import { ToolSearch } from './ltools';
 import { Icon } from './icons';
+import { imgIn } from './skeleton';
 
 /** 이름·초성으로 챔피언 찾기 (위아래 키, Enter) */
 export function ChampSearch({ onPick, placeholder = "챔프 이름 (예: '아리' 혹은 'ㅇㄹ')", autoFocus }: { onPick: (id: number) => void; placeholder?: string; autoFocus?: boolean }) {
@@ -67,7 +68,7 @@ export function ChampGrid({ onPick, query = '', onQuery, record }: { onPick: (id
           const r = record?.[id];
           return (
             <button key={id} type="button" className="cfav-card" onClick={() => onPick(id)}>
-              <img src={cdragon(CHAMPIONS[id].splash)} alt="" loading="lazy" />
+              <img className="fi" {...imgIn} src={cdragon(CHAMPIONS[id].splash)} alt="" loading="lazy" />
               <span className="cfav-txt"><b>{CHAMPIONS[id].name}</b><small>{ROLE_KO[CHAMPIONS[id].roles[0]]}{r ? ` · ${r.n}판 ${Math.round((r.w / r.n) * 100)}%` : ''}</small></span>
             </button>
           );
@@ -97,7 +98,7 @@ export function ChampBanner({ id, eyebrow, actions, children }: { id: number; ey
   const tags = [ROLE_KO[c.roles[0]], c.roles[1] && ROLE_KO[c.roles[1]], c.damage === 'MIX' ? 'AP·AD' : c.damage, c.range === 'ranged' ? '원거리' : '근접'].filter(Boolean) as string[];
   return (
     <div className="banner">
-      <img className="bg" alt="" src={cdragon(c.splash)} />
+      <img className="bg fi" {...imgIn} alt="" src={cdragon(c.splash)} />
       {/* 오른쪽 위 구석: 좋아요 + 페이지 버튼 */}
       <div className="actions"><FavStar kind="champ" id={id} />{actions}</div>
       <div>
