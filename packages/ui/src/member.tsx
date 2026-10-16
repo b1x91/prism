@@ -399,7 +399,7 @@ function AugmentHabits({ data }: { data: MemberPage }) {
       <div className="k-title">성향별 승률 <span className="meta">· 오른쪽은 평소 승률과의 차이</span></div>
       <div className="tagrows">{H.tags.map((t) => (
         <div key={t.key} className={`tagrow ${t.n < 5 ? 'thin' : ''} ${H.best?.key === t.key ? 'best' : ''} ${H.worst?.key === t.key ? 'worst' : ''}`}>
-          <span className="lb">{t.label}{H.best?.key === t.key && <em>가장 잘 이김</em>}{H.worst?.key === t.key && <em>아쉬움</em>}</span>
+          <span className="tg-l">{t.label}{H.best?.key === t.key && <em>가장 잘 이김</em>}{H.worst?.key === t.key && <em>아쉬움</em>}</span>
           <span className="cnt"><span className="tr"><span style={{ width: p(t.share) }} /></span><span className="meta">{t.n}개</span></span>
           <b>{p(t.rate)}</b>
           <span className={`dl ${t.n < 5 ? '' : t.delta >= 0.03 ? 'up' : t.delta <= -0.03 ? 'down' : ''}`}>{t.n < 5 ? '표본 적음' : d(t.delta)}</span>
@@ -412,7 +412,7 @@ function AugmentHabits({ data }: { data: MemberPage }) {
 function Bars({ items }: { items: { key: string; label: string; share: number; color?: string }[] }) {
   return (
     <div className="bars">{items.slice(0, 6).map((x) => (
-      <div key={x.key} className="bar"><span className="lb">{x.label}</span><span className="tr"><span style={{ width: `${Math.round(x.share * 100)}%`, background: x.color ?? 'var(--accent)' }} /></span><b>{Math.round(x.share * 100)}%</b></div>))}</div>
+      <div key={x.key} className="bar"><span className="bar-l">{x.label}</span><span className="tr"><span style={{ width: `${Math.round(x.share * 100)}%`, background: x.color ?? 'var(--accent)' }} /></span><b>{Math.round(x.share * 100)}%</b></div>))}</div>
   );
 }
 
