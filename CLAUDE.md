@@ -368,6 +368,7 @@
 
 1. **나를 소개해요** (`packages/core/src/about.ts`, 화면 `AboutPick`·`WelcomeFlow` `packages/ui/src/about.tsx`). 좋아하는 역할(여러 개) · 자주 접속하는 요일(여러 개) · 시간대(낮 12~18 · 저녁 18~21 · 밤 21~24 · 새벽 24~, 여러 개) · MBTI(16개) — **모두 필수, '비밀' 없음**. 앱 첫 화면은 5단계(로그인 → 롤 → 최애 챔프 → 나를 소개해요 → 동의). 이미 쓰던 회원은 앱·웹에서 창으로 한 번 (최애 챔프가 없으면 그것부터, '나중에'는 이번 실행·접속에서만). 서버 `members.about`(JSON)·`about_posted_at` (`0019_about.sql`), `POST /api/me/about`, `/api/me` 와 회원 페이지에 함께. 회원 페이지 머리 칩에 MBTI·역할·접속.
 2. **멤버 환영 채널 소개 카드** (`server/src/about.ts`): 처음 소개를 채운 한 번만, 디스코드 채널 **웹훅**으로 (봇 없이). 회원 멘션 + 최애 챔프(대표 스킨) 큰 그림 + 최애 챔프·MBTI·역할·주로 접속. 웹훅 주소는 GitHub Secrets `WELCOME_WEBHOOK_URL` → deploy-server 가 Worker 비밀값으로. 없거나 실패하면 저장만 하고 다음 저장 때 다시 시도. 개인정보 처리방침에 적었다.
+3. **오른쪽 아래 알림은 슬라이드 업 · 슬라이드 다운** (`.tst` `tst-in`·`tst-out`): 창 아래 끝에서 통째로 올라오고, 시간이 지나거나 눌러 닫으면 아래로 내려가 사라진다 (Rust `toast::hide` 도 내려가는 0.3초 뒤에 숨김).
 
 ---
 

@@ -65,7 +65,7 @@ pub fn show(app: &AppHandle, title: &str, body: &str, kind: &'static str, ms: u6
             return;
         }
         let _ = app.emit_to("toast", "toast-out", ());
-        std::thread::sleep(std::time::Duration::from_millis(260));
+        std::thread::sleep(std::time::Duration::from_millis(OUT_MS));
         if GEN.load(Ordering::SeqCst) == gen {
             if let Some(w) = app.get_webview_window("toast") {
                 let _ = w.hide();
@@ -74,10 +74,20 @@ pub fn show(app: &AppHandle, title: &str, body: &str, kind: &'static str, ms: u6
     });
 }
 
-/// 화면에서 눌러 닫기
+/// 화면에서 눌러 닫기: 아래로 내려가는 움직임을 보여 준 뒤 숨긴다 (그 사이 새 알림이 오면 숨기지 않는다)
 pub fn hide(app: &AppHandle) {
-    GEN.fetch_add(1, Ordering::SeqCst);
-    if let Some(w) = app.get_webview_window("toast") {
-        let _ = w.hide();
-    }
+    let gen = GEN.fetch_add(1, Ordering::SeqCst) + 1;
+    let _ = app.emit_to("toast", "toast-out", ());
+    let app = app.clone();
+    std::thread::spawn(move || {
+        std::thread::sleep(std::time::Duration::from_millis(OUT_MS));
+        if GEN.load(Ordering::SeqCst) == gen {
+            if let Some(w) = app.get_webview_window("toast") {
+                let _ = w.hide();
+            }
+        }
+    });
 }
+
+/// 내려가는 시간 (overlay.css .tst.out 과 같게)
+const OUT_MS: u64 = 300;
