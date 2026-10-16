@@ -419,6 +419,12 @@ mod imp {
                 continue;
             };
             let Some(rc) = client_rect(h) else { std::thread::sleep(EVERY); continue };
+            // 작은 창이 떠 있는 동안 게임 창이 그 위로 올라오면(다른 모니터를 눌렀다가 게임으로 돌아오는 순간 등 — 게임 창도 맨 위 창이라
+            // 활성화될 때 우리 창 위로 올라간다) 다시 맨 위로. 무조건 올리지 않고 실제로 깔렸을 때만 (창 순서를 자꾸 바꾸면 끊김)
+            if v.shown.load(Ordering::SeqCst) && overlay_buried(&app, h) {
+                raise_overlay(&app);
+                v.trace(format!("작은 창이 게임 밑에 깔려 다시 맨 위로 (맨앞={front})"));
+            }
             // 게임 창이 있는 모니터의 배율 (모니터마다 배율이 다를 수 있다)
             let scale = monitor_scale(h);
             // 제목 줄을 아직 모르면: 보통은 좁은 띠, 네 번에 한 번은 넓게
@@ -543,6 +549,27 @@ mod imp {
             // 화면 복사·문자 인식이 게임과 GPU·CPU 를 계속 다투지 않도록 (v3.61)
             let cost = t0.elapsed();
             std::thread::sleep(if v.shown.load(Ordering::SeqCst) { FAST.max(cost * 2) } else { EVERY.max(cost * 4) });
+        }
+    }
+
+    /// 작은 창이 게임 창(또는 같은 게임 프로세스의 창) 밑에 깔렸나: 작은 창보다 위에 있는 창들을 훑는다
+    fn overlay_buried(app: &AppHandle, game: HWND) -> bool {
+        let Some(o) = hwnd_of(app) else { return false };
+        let mut w = unsafe { GetWindow(o, GW_HWNDPREV) }.unwrap_or_default();
+        for _ in 0..256 {
+            if w.is_invalid() { return false; }
+            if w == game || same_process(w, game) { return true; }
+            w = unsafe { GetWindow(w, GW_HWNDPREV) }.unwrap_or_default();
+        }
+        false
+    }
+
+    /// 작은 창을 자리·크기 그대로 맨 위로
+    fn raise_overlay(app: &AppHandle) {
+        if let Some(h) = hwnd_of(app) {
+            unsafe {
+                let _ = SetWindowPos(h, Some(HWND_TOPMOST), 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+            }
         }
     }
 
