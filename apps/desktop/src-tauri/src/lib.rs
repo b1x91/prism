@@ -75,6 +75,10 @@ fn open_url(handle: tauri::AppHandle, url: String) -> Result<(), String> {
     if !(url.starts_with("https://")) {
         return Err("https 주소만 열 수 있습니다.".into());
     }
+    // 카카오톡 오픈채팅은 전체 브라우저 대신 작은 창으로 (v3.59)
+    if url.starts_with("https://open.kakao.com/") {
+        return kakao_popup(&handle, &url);
+    }
     // 디스코드 주소는 디스코드 앱으로 (앱이 없거나 실패하면 브라우저)
     if let Some(app) = discord::app_url(&url) {
         if handle.opener().open_url(app, None::<&str>).is_ok() {
@@ -82,6 +86,38 @@ fn open_url(handle: tauri::AppHandle, url: String) -> Result<(), String> {
         }
     }
     handle.opener().open_url(url, None::<&str>).map_err(|e| e.to_string())
+}
+
+/**
+ * 카카오톡 오픈채팅 안내 페이지를 작은 창(460×720)으로 띄운다. 이미 떠 있으면 그 창을 앞으로.
+ * 이 창은 권한 목록(capabilities)에 없어 앱 기능을 부를 수 없다. '참여하기'가 부르는 카카오톡 주소(kakaoopen:// 등)와
+ * 카카오 밖으로 나가는 주소는 이 창에서 열지 않고 PC 카카오톡·기본 브라우저로 넘긴다.
+ */
+fn kakao_popup(handle: &tauri::AppHandle, url: &str) -> Result<(), String> {
+    let target = tauri::Url::parse(url).map_err(|e| e.to_string())?;
+    if let Some(w) = handle.get_webview_window("kakao") {
+        let _ = w.navigate(target);
+        let _ = w.unminimize();
+        let _ = w.show();
+        let _ = w.set_focus();
+        return Ok(());
+    }
+    let h = handle.clone();
+    tauri::WebviewWindowBuilder::new(handle, "kakao", tauri::WebviewUrl::External(target))
+        .title("카카오톡 오픈채팅")
+        .inner_size(460.0, 720.0)
+        .min_inner_size(360.0, 480.0)
+        .center()
+        .on_navigation(move |u| {
+            let inside = u.scheme() == "https" && u.host_str().map_or(false, |x| x == "kakao.com" || x.ends_with(".kakao.com"));
+            if !inside {
+                let _ = h.opener().open_url(u.as_str(), None::<&str>);
+            }
+            inside
+        })
+        .build()
+        .map_err(|e| e.to_string())?;
+    Ok(())
 }
 
 #[tauri::command]
@@ -378,6 +414,8 @@ pub fn run() {
                 }
             };
             match event {
+                // 카카오톡 오픈채팅 작은 창은 정말 닫는다 (다른 창은 닫기 = 트레이로 숨기기)
+                WindowEvent::CloseRequested { .. } if window.label() == "kakao" => {}
                 WindowEvent::CloseRequested { api, .. } => {
                     keep();
                     api.prevent_close();

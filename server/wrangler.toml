@@ -22,7 +22,7 @@ DISCORD_INVITE_URL = "https://discord.gg/rK3U7xB6WQ"
 # 음성 채널별 초대 링크 (누구나 그 채널로 바로 들어옴). 비어 있으면 서버 초대 링크를 복사한다
 # 형식: 채널ID=초대주소, ... (ᴠᴏɪᴄᴇ #1 793740647575846942 / #2 793740647575846941 / #3 1405112550999195678)
 VOICE_INVITES = "793740647575846942=https://discord.gg/zMWHDf7hUM,793740647575846941=https://discord.gg/GMTHwpXY6M,1405112550999195678=https://discord.gg/DdpDQbwEsH"
-KAKAO_OPENCHAT_URL = "" # 오픈채팅을 만들면 주소를 넣는다 (그전에는 버튼이 "준비 중")
+KAKAO_OPENCHAT_URL = "https://open.kakao.com/o/gveIYCSi" # 모임 카카오톡 오픈채팅 (2026-10-16 개설, 방 이름 PRSM)
 # 웹 사이트 주소 (로그인 후 돌아갈 곳, CORS 허용). 쉼표 구분
 WEB_ORIGINS = "https://przm.web.app,https://przm.gg"
 # 앱 설치 파일을 올리는 저장소. 비공개면 비밀값 RELEASE_TOKEN(읽기 전용 GitHub 토큰)이 있어야 /app/* 가 동작한다

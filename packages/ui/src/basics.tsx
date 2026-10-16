@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type ReactNode } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { AUGMENT, CHAMPIONS, cdragon, champIcon, augIcon, loadSkins, withDefaults, PRESENCE_LABEL, type DiscordRole, type Links, type Presence, type Skin } from '@prism/core';
 import { Icon, type IconName } from './icons';
@@ -130,6 +130,19 @@ export function KakaoGlyph() {
   );
 }
 
+/**
+ * 카카오톡 오픈채팅은 PC 에서 작은 팝업 창(460×720, 브라우저 창 가운데)으로 연다 — 전체 페이지로 크게 뜨면 부담 (v3.59).
+ * 휴대폰·터치 기기는 그대로 이동해 카카오톡 앱이 받게 둔다. 팝업이 막히면 새 탭으로.
+ */
+function kakaoClick(e: ReactMouseEvent<HTMLAnchorElement>) {
+  if (typeof window === 'undefined' || !window.matchMedia('(pointer: fine)').matches || window.innerWidth < 768) return;
+  e.preventDefault();
+  const w = 460, h = 720;
+  const left = Math.round(window.screenX + (window.outerWidth - w) / 2), top = Math.round(window.screenY + (window.outerHeight - h) / 2);
+  const pop = window.open(e.currentTarget.href, 'prism-kakao', `popup=yes,width=${w},height=${h},left=${left},top=${top}`);
+  if (!pop) window.open(e.currentTarget.href, '_blank', 'noopener');
+}
+
 export function ChannelIcons({ links, size = 36, onOpen }: { links?: Links | null; size?: number; onOpen?: (url: string) => void }) {
   const l = withDefaults(links);
   const st = { width: size, height: size };
@@ -137,7 +150,7 @@ export function ChannelIcons({ links, size = 36, onOpen }: { links?: Links | nul
     if (!url) return <span className={`chi ${cls} soon`} style={st} title={`${name} · 곧 열립니다`} aria-label={`${name} (곧 열림)`}>{glyph}</span>;
     return onOpen
       ? <button type="button" className={`chi ${cls}`} style={st} title={name} aria-label={name} onClick={() => onOpen(url)}>{glyph}</button>
-      : <a className={`chi ${cls}`} style={st} href={url} target="_blank" rel="noopener noreferrer" title={name} aria-label={name}>{glyph}</a>;
+      : <a className={`chi ${cls}`} style={st} href={url} target="_blank" rel="noopener noreferrer" title={name} aria-label={name} onClick={cls === 'kakao' ? kakaoClick : undefined}>{glyph}</a>;
   };
   return <div className="chis">{item(l.discord, 'discord', '디스코드', <DiscordGlyph />)}{item(l.kakao, 'kakao', '카카오톡', <KakaoGlyph />)}</div>;
 }
@@ -149,7 +162,7 @@ export function ChannelButtons({ links, onOpen }: { links?: Links | null; onOpen
     if (!url) return <span className={`chb ${cls} soon`} title={`${name} · 곧 열립니다`}>{glyph}{name}</span>;
     return onOpen
       ? <button type="button" className={`chb ${cls}`} onClick={() => onOpen(url)}>{glyph}{name}</button>
-      : <a className={`chb ${cls}`} href={url} target="_blank" rel="noopener noreferrer">{glyph}{name}</a>;
+      : <a className={`chb ${cls}`} href={url} target="_blank" rel="noopener noreferrer" onClick={cls === 'kakao' ? kakaoClick : undefined}>{glyph}{name}</a>;
   };
   return <div className="chbs">{item(l.discord, 'discord', '디스코드', <DiscordGlyph />)}{item(l.kakao, 'kakao', '카카오톡', <KakaoGlyph />)}</div>;
 }
