@@ -16,7 +16,8 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Emitter, Manager};
 
 const AUGMENTS_JSON: &str = include_str!("../../../../packages/core/data/mayhem-augments.json");
-const EVERY: Duration = Duration::from_millis(600);
+/// 카드가 안 보일 때. 화면 복사·문자 인식이 창 모드 게임과 GPU·CPU 를 나눠 쓰므로 너무 잦지 않게 (v3.61, 0.6 → 0.9초)
+const EVERY: Duration = Duration::from_millis(900);
 /// 카드가 보이는 동안: 새로고침을 바로 따라가도록 자주, 제목 줄만 좁게 읽는다
 const FAST: Duration = Duration::from_millis(350);
 const IDLE: Duration = Duration::from_secs(4);
@@ -428,8 +429,9 @@ mod imp {
                 if badge_at.take().is_some() {
                     hide_window(&app, "badge");
                 }
-            } else if badge_at != Some((rc, scale.to_bits())) || tick % 8 == 0 {
-                // 한 번 띄운 뒤에도 몇 초마다 다시 맨 위로 — 게임(특히 전체 화면)이 나중에 맨 위를 차지하면 구석 표시가 그 밑에 깔렸다
+            } else if badge_at != Some((rc, scale.to_bits())) || (tick % 8 == 0 && badge_buried(&app, h)) {
+                // 게임(특히 전체 화면)이 나중에 맨 위를 차지해 구석 표시가 그 밑에 깔렸을 때만 다시 맨 위로.
+                // 예전엔 몇 초마다 무조건 다시 올렸다 — 창 순서를 자꾸 바꾸면 창 모드 게임의 화면 합성이 흔들린다 (v3.61)
                 show_badge(&app, &rc, scale);
                 badge_at = Some((rc, scale.to_bits()));
             }
@@ -476,7 +478,7 @@ mod imp {
                                 v.shown.store(true, Ordering::SeqCst);
                             }
                         }
-                        std::thread::sleep(FAST);
+                        std::thread::sleep(FAST.max(t0.elapsed() * 2));
                         continue;
                     }
                 }
@@ -545,7 +547,10 @@ mod imp {
                     }
                 }
             }
-            std::thread::sleep(if v.shown.load(Ordering::SeqCst) { FAST } else { EVERY });
+            // 한 번 읽는 데 오래 걸리는 PC 일수록 쉬는 시간을 늘린다 (읽는 시간이 전체의 20%(카드가 보일 때 35%)를 넘지 않게).
+            // 화면 복사·문자 인식이 게임과 GPU·CPU 를 계속 다투지 않도록 (v3.61)
+            let cost = t0.elapsed();
+            std::thread::sleep(if v.shown.load(Ordering::SeqCst) { FAST.max(cost * 2) } else { EVERY.max(cost * 4) });
         }
     }
 
@@ -582,6 +587,18 @@ mod imp {
         unsafe {
             let _ = SetWindowPos(h, Some(HWND_TOPMOST), x, y, ow, oh, SWP_NOACTIVATE | SWP_SHOWWINDOW);
         }
+    }
+
+    /// 구석 표시가 게임 창(또는 같은 게임 프로세스의 창) 밑에 깔렸나: 구석 표시보다 위에 있는 창들을 훑는다
+    fn badge_buried(app: &AppHandle, game: HWND) -> bool {
+        let Some(b) = hwnd_by(app, "badge") else { return false };
+        let mut w = unsafe { GetWindow(b, GW_HWNDPREV) }.unwrap_or_default();
+        for _ in 0..64 {
+            if w.is_invalid() { return false; }
+            if w == game || same_process(w, game) { return true; }
+            w = unsafe { GetWindow(w, GW_HWNDPREV) }.unwrap_or_default();
+        }
+        false
     }
 
     /// 게임 화면 오른쪽 위 구석에 작은 프리즘

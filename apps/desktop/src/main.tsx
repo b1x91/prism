@@ -205,4 +205,11 @@ function Root() {
 start();
 startUpdates();
 lockdown();
+// 창이 포커스를 잃으면(게임을 하는 동안 등) 끝없이 도는 움직임을 멈춘다 — 뒤에 깔린 창도 매 프레임 다시 그리면
+// 창 모드 게임과 화면 합성을 다퉈 끊김이 생긴다 (v3.61). 돌아오면 이어서 움직인다
+const idle = () => document.documentElement.classList.toggle('idle', !document.hasFocus() || document.visibilityState !== 'visible');
+window.addEventListener('blur', idle);
+window.addEventListener('focus', idle);
+document.addEventListener('visibilitychange', idle);
+idle();
 createRoot(document.getElementById('root')!).render(<StrictMode><HashRouter><Root /></HashRouter></StrictMode>);

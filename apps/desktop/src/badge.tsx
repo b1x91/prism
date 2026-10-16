@@ -15,7 +15,7 @@ function Badge() {
     let on = true;
     const load = () => bridge.visionGet().then((v) => on && setFound(v.report.stage === 'found')).catch(() => {});
     load();
-    const t = setInterval(load, 700);
+    const t = setInterval(load, 1500);
     return () => { on = false; clearInterval(t); };
   }, []);
   // 게임 화면 오른쪽 위 모서리에 딱 붙는 프리즘 삼각형: 로고 보석을 모서리에서 잘라 낸 모양.
@@ -43,7 +43,7 @@ function Badge() {
       <path d="M16 4.5 27.5 4.5 27.5 16Z" fill="url(#pc-sheen)" opacity=".5" />
       {/* 반짝임: 네 갈래 별빛 */}
       <path className="star" d="M24.6 5.4 25.2 7.6 27.4 8.2 25.2 8.8 24.6 11 24 8.8 21.8 8.2 24 7.6Z" fill="#fff" />
-      {/* 한 번씩 빛이 스친다 */}
+      {/* 카드를 알아본 동안 빛이 스친다 */}
       <path className="glint" d="M10.5 4.5H27.5V21.5Z" fill="url(#pc-sheen)" />
       <path d="M0.6 0 31.4 30.8" stroke="rgba(8,10,24,.75)" strokeWidth="1.2" />
       {found && <path className="sweep" d="M10.5 4.5H27.5V21.5Z" fill="url(#pc-sheen)" />}

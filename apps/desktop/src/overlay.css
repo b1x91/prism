@@ -44,9 +44,12 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
 /* 모서리 삼각형 (v3.25): 작게(게임 화면을 가리지 않게), 한 번씩 반짝임. 증강 카드를 알아보면 밝게 + 자주 */
 .ov-corner { display: block; width: 20px; height: 20px; opacity: .85; filter: saturate(.9); transition: opacity .2s, filter .2s; }
 .ov-corner.found { opacity: 1; filter: saturate(1.15) drop-shadow(0 0 4px rgba(120, 200, 255, .9)); }
-.ov-corner .star { transform-box: fill-box; transform-origin: center; animation: ov-star 4.5s ease-in-out infinite; }
-.ov-corner .glint { opacity: 0; animation: ov-glint 4.5s ease-in-out infinite; }
-.ov-corner.found .star, .ov-corner.found .glint { animation-duration: 1.6s; }
+/* 게임 위에 늘 떠 있는 창이라 평소에는 멈춘 그림 (끝없는 움직임은 창 모드 게임의 화면 합성을 매 프레임 깨워 끊김을 만든다, v3.61).
+   증강 카드를 알아본 동안만 반짝인다 */
+.ov-corner .star { transform-box: fill-box; transform-origin: center; transform: scale(.55); opacity: .7; }
+.ov-corner .glint { opacity: 0; }
+.ov-corner.found .star { animation: ov-star 1.6s ease-in-out infinite; }
+.ov-corner.found .glint { animation: ov-glint 1.6s ease-in-out infinite; }
 @keyframes ov-star { 0%, 70%, 100% { transform: scale(.55) rotate(0deg); opacity: .7; } 82% { transform: scale(1.6) rotate(45deg); opacity: 1; filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 3px rgba(150, 220, 255, .9)); } }
 @keyframes ov-glint { 0%, 68%, 100% { opacity: 0; } 80% { opacity: .9; } }
 .ov-corner .sweep { opacity: 0; animation: ov-sweep 1.6s ease-in-out infinite; }
