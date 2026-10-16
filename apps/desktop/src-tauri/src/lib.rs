@@ -221,7 +221,7 @@ async fn tray_update(app: tauri::AppHandle) {
             let r = update::prepare().await;
             refresh_tray();
             match r {
-                Ok(_) => toast::show_act(&app, &format!("v{} 준비 완료", i.latest), "누르면 지금 업데이트해요. 창을 내려 두면 알아서 적용해요.", "ok", 10000, "apply"),
+                Ok(_) => toast::show_act(&app, &format!("v{} 준비 완료", i.latest), "새 버전을 받아 두었어요.", "ok", 10000, "apply"),
                 Err(e) => toast::show(&app, "새 버전을 받지 못했어요", &e, "warn", 6000),
             }
         }
@@ -236,7 +236,7 @@ fn notice_updated(app: &tauri::AppHandle, dir: &std::path::Path) {
     let _ = std::fs::create_dir_all(dir);
     let _ = std::fs::write(&file, &now);
     if before.is_some_and(|b| b.trim() != now) {
-        toast::show_act(app, "업데이트 완료", &format!("Prism v{now}로 업데이트했어요. 누르면 열려요."), "ok", 6000, "open");
+        toast::show_act(app, "업데이트 완료", &format!("Prism v{now}로 업데이트했어요."), "ok", 6000, "open");
     }
 }
 
