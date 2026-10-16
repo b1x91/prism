@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, aboutWhen, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
   type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
-  rankScore, byScore,
+  rankScore, byScore, improveOf, type WinTip,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, LockedMore, MemberFace, PresenceTag, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
@@ -189,22 +189,20 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
   return (<Swap on={rv} skeleton={<MemberSkeleton />}>
     <div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
-      <ProfileHero nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
+      <ProfileHero lift={total.n > 0} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
         actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit(true)}><Icon name="spark" />프로필 꾸미기</button>}
           {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}
-        chips={<><span className="pill dark">점수 {data.rank}위</span><span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
+        chips={<><span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
           {skin && <span className="pill dark">{skin.name}</span>}{m.presence && m.presence !== 'off' && <span className="pill dark"><PresenceTag p={m.presence} /></span>}
           {m.about && <><span className="pill dark">{m.about.mbti}</span><span className="pill dark">{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span className="pill dark">{aboutWhen(m.about)}</span></>}</>} />
       {edit && m.self && <ProfileStudio api={api} page={data} skins={skins} onClose={() => setEdit(false)} onSaved={() => { setEdit(false); reload(); }} />}
       {m.self && !m.riotId && <section className="card pad"><b>아직 롤 계정이 연결되지 않았어요</b><div className="muted">PC의 Prism 앱에서 로그인한 뒤 맨 위의 <b>"동의하고 연결"</b>을 누르면, 그때부터 판이 여기에 쌓입니다. 앱에 이미 보이는 최근 판도 함께 올라와요.</div></section>}
+      {total.n > 0 ? <StatBoard data={data} games={games} kda={kda} streak={st} /> : <div className="grid4">
+        <section className="card stat"><span className="k">기록된 판</span><span className="v">0<small>판</small></span></section>
+      </div>}
+      {m.self && total.n > 0 && <ImproveCard data={data} onChampion={onChampion} />}
       {!m.self && <SynergyCard data={data} />}
-      <div className="grid4">
-        <section className="card stat"><span className="k">기록된 판</span><span className="v">{total.n}<small>판</small></span></section>
-        <section className="card stat"><span className="k">승률</span><span className="v">{pct(total.w, total.n)}</span></section>
-        <section className="card stat"><span className="k">KDA</span><span className="v">{kda}</span></section>
-        <section className="card stat"><span className="k">지금</span><span className={`v ${st.win ? 'w' : 'l'}`}>{st.n}<small>{st.win ? '연승' : '연패'}</small></span></section>
-      </div>
       <RecentGames games={games} limit={8} onChampion={onChampion} />
       {total.n > 0 && <div className="grid2">
         <section className="card pad">
@@ -234,6 +232,119 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
       </>}
     </div>
   </Swap>);
+}
+
+/**
+ * 분석판 (v3.56): 머리 아래쪽에 겹쳐 올라오는 한 장. 승률 고리 · Prism 점수와 순위 · 핵심 숫자 · 최근 판 승률 흐름(10판씩 이동 평균).
+ * 최근 10판 승패 띠는 아래 '최근 판' 머리에 있으므로 여기 두지 않는다 (한 화면에 같은 요소 두 번 금지).
+ */
+function StatBoard({ data, games, kda, streak }: { data: MemberPage; games: Game[]; kda: string; streak: { n: number; win: boolean } }) {
+  const { total } = data;
+  const wr = total.n ? total.w / total.n : 0;
+  const per = (x: number) => (total.n ? (x / total.n).toFixed(1) : '–');
+  return (
+    <section className="card pdash">
+      <div className="pd-main">
+        <WinRing value={wr} />
+        <div className="pd-score">
+          <span className="k">Prism 점수</span>
+          <b className="v">{rankScore(total.w, total.n)}<small>점</small></b>
+          <span className="meta">전체 {data.rank}위 · {total.n}판 {total.w}승 {total.n - total.w}패</span>
+        </div>
+      </div>
+      <div className="pd-kpis">
+        <div><span className="k">KDA</span><b>{kda}</b><span className="meta">{per(total.k)} / {per(total.d)} / {per(total.a)}</span></div>
+        <div><span className="k">지금</span><b className={streak.win ? 'w' : 'l'}>{streak.n}<small>{streak.win ? '연승' : '연패'}</small></b><span className="meta">최근 {games.length}판 최고 {bestRun(games)}연승</span></div>
+        <div><span className="k">만난 챔프</span><b>{data.champions.length}<small>챔프</small></b><span className="meta">주 챔프 {CHAMPIONS[data.champions[0]?.id]?.name ?? '–'}</span></div>
+      </div>
+      <Trend games={games} base={wr} />
+    </section>
+  );
+}
+
+/** 최근 판에서 가장 길었던 연승 */
+function bestRun(games: Game[]) {
+  let best = 0, cur = 0;
+  for (const g of games) { cur = g.win ? cur + 1 : 0; best = Math.max(best, cur); }
+  return best;
+}
+
+function WinRing({ value }: { value: number }) {
+  const r = 46, c = 2 * Math.PI * r;
+  return (
+    <span className="pd-ring" role="img" aria-label={`승률 ${Math.round(value * 100)}%`}>
+      <svg viewBox="0 0 108 108" aria-hidden="true"><circle cx="54" cy="54" r={r} className="bg" /><circle cx="54" cy="54" r={r} className="fg" strokeDasharray={`${c * value} ${c}`} /></svg>
+      <span className="in"><b>{Math.round(value * 100)}<small>%</small></b><small>승률</small></span>
+    </span>
+  );
+}
+
+/** 최근 판 승률 흐름: 오래된 판 → 최근 판, 10판씩 묶은 이동 평균 + 내 평균 선 */
+function Trend({ games, base }: { games: Game[]; base: number }) {
+  const W = 10;
+  const g = games.slice().reverse();
+  if (g.length < W + 2) return <div className="pd-trend empty"><span className="k">승률 흐름</span><span className="meta">{W + 2}판이 쌓이면 흐름을 그려 드려요.</span></div>;
+  const pts: number[] = [];
+  for (let i = W; i <= g.length; i++) pts.push(g.slice(i - W, i).filter((x) => x.win).length / W);
+  const w = 320, h = 96, pad = 8;
+  // 세로 범위는 값이 있는 곳 둘레로 (0~100% 전체를 쓰면 선이 한쪽에 붙어 흐름이 안 보인다)
+  const lo = Math.max(0, Math.min(...pts, base) - 0.1), hi = Math.min(1, Math.max(...pts, base) + 0.1);
+  const x = (i: number) => pad + (i / (pts.length - 1)) * (w - pad * 2);
+  const y = (v: number) => pad + (1 - (v - lo) / Math.max(0.01, hi - lo)) * (h - pad * 2);
+  const line = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const last = pts[pts.length - 1], first = pts[0];
+  const diff = Math.round((last - first) * 100);
+  return (
+    <div className="pd-trend">
+      <div className="pd-trend-h"><span className="k">승률 흐름</span><span className="meta">최근 {g.length}판 · 10판씩</span><span className="sp" />
+        <b className={diff > 0 ? 'w' : diff < 0 ? 'l' : ''}>{diff > 0 ? '▲' : diff < 0 ? '▼' : ''} {Math.abs(diff)}%p</b></div>
+      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
+        <defs><linearGradient id="pdg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--accent)" stopOpacity=".28" /><stop offset="1" stopColor="var(--accent)" stopOpacity="0" /></linearGradient></defs>
+        <line x1={pad} x2={w - pad} y1={y(base)} y2={y(base)} className="avg" />
+        {lo < 0.5 && hi > 0.5 && <line x1={pad} x2={w - pad} y1={y(0.5)} y2={y(0.5)} className="half" />}
+        <path d={`${line} L${x(pts.length - 1).toFixed(1)},${h - pad} L${pad},${h - pad} Z`} fill="url(#pdg)" />
+        <path d={line} className="ln" />
+        <circle cx={x(pts.length - 1)} cy={y(last)} r="4" className="dot" />
+      </svg>
+      <div className="pd-trend-f"><span>지금 10판 <b>{Math.round(last * 100)}%</b></span><span className="avgk">내 평균 {Math.round(base * 100)}%</span></div>
+    </div>
+  );
+}
+
+/** 승률을 올리려면 (본인만): 기록을 규칙으로 읽은 실천 카드. 첫 줄이 가장 효과가 큰 한 가지 */
+function ImproveCard({ data, onChampion }: { data: MemberPage; onChampion?: (id: number) => void }) {
+  const tips = useMemo(() => improveOf(data), [data]);
+  const head = <div className="card-head"><h2>승률을 올리려면</h2><span className="sp" /><span className="meta">내 기록 {data.total.n}판을 읽었어요</span></div>;
+  if (data.total.n < 10 || !tips.length) return (
+    <section className="card pad imp">{head}
+      <p className="muted" style={{ margin: 0 }}>{data.total.n < 10 ? `${10 - data.total.n}판만 더 쌓이면 이기는 판과 지는 판의 차이를 찾아 드려요.` : '지금은 크게 갈리는 습관이 보이지 않아요. 고르게 잘 하고 있어요.'}</p>
+    </section>
+  );
+  const [top, ...rest] = tips;
+  return (
+    <section className="card pad imp">{head}
+      <TipRow tip={top} top onChampion={onChampion} />
+      {rest.length > 0 && <div className="imp-rest">{rest.map((t) => <TipRow key={t.key} tip={t} onChampion={onChampion} />)}</div>}
+      <p className="meta imp-foot">지금까지의 기록으로 본 추정이에요. 판이 적은 쪽은 빼고 봤어요.</p>
+    </section>
+  );
+}
+
+function TipRow({ tip, top, onChampion }: { tip: WinTip; top?: boolean; onChampion?: (id: number) => void }) {
+  const gain = tip.gain !== undefined ? Math.round(tip.gain * 100) : null;
+  return (
+    <div className={`tip ${top ? 'top' : ''}`}>
+      <div className="tip-h">
+        {top && <span className="tip-badge">가장 효과가 큰 한 가지</span>}
+        <b className="tip-t">{tip.title}</b>
+        {gain !== null && gain >= 1 && <span className="tip-gain" title="약한 쪽이 강한 쪽만큼 이겼다면 오르는 전체 승률 (추정)">+{gain}%p</span>}
+      </div>
+      <p className="tip-why">{tip.why}</p>
+      {tip.cmp && <div className="tip-cmp">{tip.cmp.map((c, i) => (
+        <div key={c.label} className={`tcm ${i ? 'bad' : 'good'}`}><span className="tcm-l">{c.label}</span><span className="tcm-t"><span style={{ width: `${Math.round((c.n ? c.w / c.n : 0) * 100)}%` }} /></span><b>{pct(c.w, c.n)}</b><span className="meta">{c.n}{c.unit}</span></div>))}</div>}
+      <p className="tip-act"><Icon name="arrow" />{tip.act}{tip.champion && onChampion ? <> <button type="button" className="linkbtn" onClick={() => onChampion(tip.champion!)}>증강 가이드 보기</button></> : null}</p>
+    </div>
+  );
 }
 
 /** 증강 고르는 습관과 승률: 챔피언에 맞게 골랐을 때 / 성향별 (고른 증강 기준) */

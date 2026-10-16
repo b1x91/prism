@@ -2457,3 +2457,77 @@ button.ga:hover { background: var(--surface-2); }
 .banner-foot .btn.primary { background: var(--accent); border-color: transparent; }
 .banner-foot .btn .icon { width: 14px; height: 14px; }
 @media (max-width: 640px) { .banner-foot { position: static; margin-top: var(--s4); } }
+
+/* ───────── 회원 페이지 분석판 · 승률을 올리려면 (v3.56) ─────────
+   분석판은 머리 아래쪽에 48px 겹쳐 올라온다(머리는 그만큼 아래를 비운다). */
+.phero.lift .phero-in, .sk-hero.lift .sk-hero-in { padding-bottom: calc(var(--s7) + 48px); }
+.pdash { position: relative; z-index: 2; margin-top: -64px; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--s6); align-items: center; padding: var(--s6); box-shadow: 0 24px 48px -24px rgba(7, 9, 15, .45), var(--shadow); }
+.pd-main { display: flex; align-items: center; gap: var(--s5); padding-right: var(--s6); border-right: 1px solid var(--line); }
+.pd-ring { position: relative; width: 108px; height: 108px; flex: none; }
+.pd-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.pd-ring circle { fill: none; stroke-width: 8; }
+.pd-ring .bg { stroke: var(--surface-3); }
+.pd-ring .fg { stroke: var(--accent); stroke-linecap: round; }
+.pd-ring .in { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.pd-ring .in b { font-size: var(--fs-2xl); font-weight: 850; line-height: 1; font-variant-numeric: tabular-nums; }
+.pd-ring .in b small { font-size: var(--fs-md); font-weight: 700; margin-left: 1px; }
+.pd-ring .in > small { font-size: var(--fs-xs); color: var(--text-3); font-weight: 700; margin-top: var(--s1); }
+.pd-score { display: grid; gap: var(--s1); }
+.pd-score .k, .pd-kpis .k, .pd-trend .k { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); letter-spacing: .02em; }
+.pd-score .v { font-size: var(--fs-d1); font-weight: 850; line-height: 1; font-variant-numeric: tabular-nums; }
+.pd-score .v small { font-size: var(--fs-md); font-weight: 700; color: var(--text-3); margin-left: var(--s1); }
+.pd-kpis { display: grid; gap: var(--s4); }
+.pd-kpis > div { display: grid; grid-template-columns: 72px auto minmax(0, 1fr); align-items: baseline; gap: var(--s3); }
+.pd-kpis b { font-size: var(--fs-xl); font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pd-kpis b small { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); margin-left: 2px; }
+.pd-kpis .meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pd-trend { display: grid; gap: var(--s2); min-width: 0; }
+.pd-trend.empty { align-content: center; }
+.pd-trend-h { display: flex; align-items: baseline; gap: var(--s2); }
+.pd-trend-h b { font-size: var(--fs-sm); font-weight: 800; font-variant-numeric: tabular-nums; }
+.pd-trend svg { width: 100%; height: 96px; display: block; overflow: visible; }
+.pd-trend .ln { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.pd-trend .avg { stroke: var(--text-3); stroke-width: 1; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
+.pd-trend .half { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.pd-trend .dot { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+.pd-trend-f { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--text-3); }
+.pd-trend-f b { color: var(--text); font-variant-numeric: tabular-nums; }
+.pd-trend-f .avgk::before { content: ""; display: inline-block; width: 12px; border-top: 1px dashed var(--text-3); vertical-align: middle; margin-right: var(--s1); }
+@media (max-width: 1000px) {
+  .pdash { grid-template-columns: auto minmax(0, 1fr); }
+  .pd-trend { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .phero.lift .phero-in, .sk-hero.lift .sk-hero-in { padding-bottom: calc(var(--s5) + 32px); }
+  .pdash { margin-top: -48px; grid-template-columns: minmax(0, 1fr); gap: var(--s5); padding: var(--s5); }
+  .pd-main { padding-right: 0; padding-bottom: var(--s5); border-right: 0; border-bottom: 1px solid var(--line); }
+  .pd-ring { width: 88px; height: 88px; }
+}
+
+/* 승률을 올리려면: 첫 줄은 크게(가장 효과가 큰 한 가지), 나머지는 나란히 */
+.imp .tip { display: grid; gap: var(--s2); }
+.imp .tip.top { padding: var(--s5); border-radius: var(--r-l); background: linear-gradient(135deg, var(--accent-soft), transparent 70%); border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line)); }
+.tip-h { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2); }
+.tip-badge { font-size: var(--fs-xs); font-weight: 800; color: var(--accent); }
+.tip.top .tip-badge { flex-basis: 100%; }
+.tip-t { font-size: var(--fs-md); font-weight: 800; }
+.tip.top .tip-t { font-size: var(--fs-xl); }
+.tip-gain { margin-left: auto; padding: 2px var(--s2); border-radius: var(--r-pill); background: color-mix(in srgb, var(--win) 14%, transparent); color: var(--win); font-size: var(--fs-sm); font-weight: 800; font-variant-numeric: tabular-nums; }
+.tip-why { margin: 0; color: var(--text-2); font-size: var(--fs-sm); }
+.tip-cmp { display: grid; gap: var(--s1); max-width: 520px; }
+.tcm { display: grid; grid-template-columns: 96px minmax(0, 1fr) 40px 48px; align-items: center; gap: var(--s3); font-size: var(--fs-sm); }
+.tcm-l { color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tcm-t { height: 8px; border-radius: var(--r-pill); background: var(--surface-3); overflow: hidden; }
+.tcm-t > span { display: block; height: 100%; border-radius: inherit; }
+.tcm.good .tcm-t > span { background: var(--accent); } .tcm.bad .tcm-t > span { background: var(--text-3); }
+.tip-cmp b { text-align: right; font-variant-numeric: tabular-nums; }
+.tip-cmp .meta { text-align: right; }
+.tip-act { margin: 0; display: flex; align-items: flex-start; gap: var(--s2); font-size: var(--fs-sm); font-weight: 600; }
+.tip-act svg { flex: none; width: 16px; height: 16px; margin-top: 2px; color: var(--accent); }
+.tip.top .tip-act { font-size: var(--fs-md); }
+.imp-rest { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--s5); margin-top: var(--s5); }
+.imp-rest .tip { padding-top: var(--s4); border-top: 1px solid var(--line); }
+.imp-foot { margin: var(--s4) 0 0; }
+.linkbtn { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; font-weight: 700; cursor: pointer; }
+.linkbtn:hover { text-decoration: underline; }
+@media (max-width: 640px) { .tcm { grid-template-columns: 72px minmax(0, 1fr) 36px 40px; gap: var(--s2); } .imp .tip.top { padding: var(--s4); } }

@@ -94,7 +94,7 @@ function Head({ w = 120 }: { w?: number }) {
 export function MemberSkeleton({ public: pub = false }: { public?: boolean }) {
   return (
     <SkeletonFrame className="stack sk-member">
-      <div className="phero sk-hero">
+      <div className={`phero sk-hero ${pub ? '' : 'lift'}`}>
         <div className="sk-hero-in">
           <Bone w={112} h={112} r="l" dark />
           <div className="sk-hero-t">
@@ -104,7 +104,12 @@ export function MemberSkeleton({ public: pub = false }: { public?: boolean }) {
           </div>
         </div>
       </div>
-      <div className="grid4">{[0, 1, 2, 3].map((i) => <section key={i} className="card stat sk-stat"><Bone w={56} h={10} /><Bone w={88} h={28} /></section>)}</div>
+      {pub ? <div className="grid4">{[0, 1, 2, 3].map((i) => <section key={i} className="card stat sk-stat"><Bone w={56} h={10} /><Bone w={88} h={28} /></section>)}</div>
+        : <section className="card pdash">
+          <div className="pd-main"><Bone w={108} h={108} r="round" /><div className="sk-lines" style={{ gap: 8 }}><Bone w={64} h={10} /><Bone w={120} h={40} /><Bone w={150} h={10} /></div></div>
+          <div className="pd-kpis">{[0, 1, 2].map((i) => <div key={i}><Bone w={48} h={10} /><Bone w={56} h={20} /><Bone w="70%" h={10} /></div>)}</div>
+          <div className="pd-trend"><Bone w={140} h={10} /><Bone w="100%" h={96} r="m" /><Bone w="100%" h={10} /></div>
+        </section>}
       {!pub && <section className="card pad"><Head w={88} /><div className="rstrip">{Array.from({ length: 10 }, (_, i) => <Bone key={i} r="m" className="sk-tile" />)}</div></section>}
       <div className="grid2">
         {[0, 1].map((k) => <section key={k} className="card pad"><Head w={k ? 104 : 72} /><div className="sk-rows">{Array.from({ length: 5 }, (_, i) => <Row key={i} face={32} nums={1} />)}</div></section>)}
