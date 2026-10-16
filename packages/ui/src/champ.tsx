@@ -38,7 +38,7 @@ export function ChampSearch({ onPick, placeholder = "챔프 이름 (예: '아리
 
 const ROLES = ['marksman', 'mage', 'assassin', 'fighter', 'tank', 'support'] as const;
 
-const ROLE_DOT: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
+export const ROLE_DOT: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 
 /** 챔피언 목록: 붙는 도구 줄(검색·역할·내 챔프) + 내 챔프 줄 + 전체 격자. record 가 있으면 내 판수·승률 (앱) */
 export function ChampGrid({ onPick, query = '', onQuery, record }: { onPick: (id: number) => void; query?: string; onQuery?: (q: string) => void; record?: Record<number, { n: number; w: number }> }) {

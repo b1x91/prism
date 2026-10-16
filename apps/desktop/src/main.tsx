@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { AugmentOpen, Icon, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { AugmentOpen, Icon, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
@@ -97,6 +97,8 @@ function App() {
     // 챔프 선택에 들어가는 순간 창을 맨 앞으로 올리는 것은 Rust(watch_phase)가 한다 — 트레이에 있을 때도 늦지 않게
   }, [s.status, nav]);
   const ready = Boolean(s.me?.consent);
+  // 이미 동의한 회원 중 최애 챔프·'나를 소개해요'가 없는 사람에게 (v3.47). '나중에'는 이번 실행에서만
+  const [welcomeLater, setWelcomeLater] = useState(false);
   // 게임 위 작은 창(자동 인식)도 동의한 뒤에만 켠다
   // (한 번 놓쳐도 되도록 15초마다 다시 알린다)
   useEffect(() => {
@@ -134,6 +136,7 @@ function App() {
   if (!ready) return <Onboarding s={s} onLogin={login} />;
   return (
     <div className="shell">
+      {s.me && (!s.me.skin || !s.me.about) && !welcomeLater && <WelcomeFlow api={api} nick={s.me.nick} needFace={!s.me.skin} onClose={(done) => { if (!done) setWelcomeLater(true); void refreshSession(); }} />}
       <aside className="side">
         <div className="side-brand">
           <span className="brand-mark"><img src="/brand/prism-256.png" alt="" /></span>

@@ -70,6 +70,16 @@ jobs:
             echo "::notice::RELEASE_TOKEN 이 없습니다. 저장소가 공개인 동안은 괜찮지만, 비공개로 바꾸기 전에 넣어야 앱 업데이트·다운로드가 됩니다."
           fi
       - if: steps.cfg.outputs.ok == 'true'
+        name: 멤버 환영 채널 웹훅 넣기 (소개 카드)
+        env:
+          WELCOME_WEBHOOK_URL: ${{ secrets.WELCOME_WEBHOOK_URL }}
+        run: |
+          if [ -n "$WELCOME_WEBHOOK_URL" ]; then
+            printf '%s' "$WELCOME_WEBHOOK_URL" | npx wrangler secret put WELCOME_WEBHOOK_URL --config server/wrangler.toml
+          else
+            echo "::notice::WELCOME_WEBHOOK_URL 이 없어 멤버 환영 채널에 소개 카드를 올리지 않습니다 (소개는 저장됨)."
+          fi
+      - if: steps.cfg.outputs.ok == 'true'
         name: 서버 주소 알리기
         run: |
           URL=$(node scripts/ci/server-url.mjs)

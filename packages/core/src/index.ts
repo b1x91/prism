@@ -18,3 +18,4 @@ export * from './shop';
 export * from './missions';
 export * from './duo';
 export * from './liveitems';
+export * from './about';

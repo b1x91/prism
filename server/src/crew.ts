@@ -9,6 +9,7 @@ import { knownFeats, tallyByMember } from './artisans.js';
 import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
 import skinData from '../../packages/core/data/skins.json';
 import { presenceOf } from '../../packages/core/src/presence.js';
+import { aboutOf } from './about.js';
 
 /** 스킨 등급 (없는 스킨이면 null) */
 const skinTier = (id: number): number | null => (skinData.skins as unknown as Record<string, [string, number, string, string]>)[id]?.[1] ?? null;
@@ -41,6 +42,7 @@ export async function getMe(env: Env, me: Member) {
     rates: ratesOf(me),
     rolesKnown: me.roles_at !== null || me.discord_roles !== null,
     presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }),
+    about: aboutOf(me),
   });
 }
 

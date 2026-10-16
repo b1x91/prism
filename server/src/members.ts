@@ -3,6 +3,7 @@
  * 판수·승률만 순위로 쓴다. 딜량 순위·티어 표시는 하지 않는다 (CLAUDE.md 15절).
  */
 import { parseDeco } from '../../packages/core/src/shop.js';
+import { cleanAbout } from '../../packages/core/src/about.js';
 import { HttpError, json, type Env, type Member } from './util.js';
 import { can, LIMITED, topRole } from './roles.js';
 import { presenceOf } from '../../packages/core/src/presence.js';
@@ -40,9 +41,9 @@ export async function ranking(env: Env, me: Member, period: string | null, by: s
 
 /** 회원 페이지: 프로필 + 전체 기록 분석 재료 + (다른 사람이면) 나와 같이 한 판 */
 export async function memberPage(env: Env, me: Member, id: string) {
-  const m = await env.DB.prepare('SELECT id, nick, intro, tier, joined_at AS joinedAt, profile_skin AS skin, riot_id AS riotId, discord_roles, web_seen_at, app_seen_at, app_lol, app_open, deco, share_on FROM members WHERE id = ?')
+  const m = await env.DB.prepare('SELECT id, nick, intro, tier, joined_at AS joinedAt, profile_skin AS skin, riot_id AS riotId, discord_roles, web_seen_at, app_seen_at, app_lol, app_open, deco, share_on, about FROM members WHERE id = ?')
     .bind(id)
-    .first<{ id: string; nick: string; intro: string; tier: string; joinedAt: number; skin: number | null; riotId: string | null; discord_roles: string | null; web_seen_at: number; app_seen_at: number; app_lol: number; app_open: number; deco: string | null; share_on: number }>();
+    .first<{ id: string; nick: string; intro: string; tier: string; joinedAt: number; skin: number | null; riotId: string | null; discord_roles: string | null; web_seen_at: number; app_seen_at: number; app_lol: number; app_open: number; deco: string | null; share_on: number; about: string | null }>();
   if (!m) throw new HttpError(404, '없는 회원입니다.');
   const self = id === me.id;
 
@@ -88,7 +89,7 @@ export async function memberPage(env: Env, me: Member, id: string) {
   const [total, champions, augments, recent, rank, picks, together, against, viewerChampions, viewerTotal, viewerMe] = await env.DB.batch(queries);
   const nw = (rows: { w: number }[]) => ({ n: rows.length, w: rows.reduce((x, r) => x + (r.w ? 1 : 0), 0) });
   return json({
-    member: { id: m.id, nick: m.nick, intro: m.intro, tier: m.tier, joinedAt: m.joinedAt, skin: m.skin, riotId: self ? m.riotId : null, self, role: topRole(m), presence: presenceOf({ webAt: m.web_seen_at, appAt: m.app_seen_at, lol: Boolean(m.app_lol), open: Boolean(m.app_open) }), deco: parseDeco(m.deco), shared: Boolean(m.share_on) },
+    member: { id: m.id, nick: m.nick, intro: m.intro, tier: m.tier, joinedAt: m.joinedAt, skin: m.skin, riotId: self ? m.riotId : null, self, role: topRole(m), presence: presenceOf({ webAt: m.web_seen_at, appAt: m.app_seen_at, lol: Boolean(m.app_lol), open: Boolean(m.app_open) }), deco: parseDeco(m.deco), shared: Boolean(m.share_on), about: (() => { try { return m.about ? cleanAbout(JSON.parse(m.about)) : null; } catch { return null; } })() },
     total: total.results[0],
     rank: (rank.results[0] as { rank: number }).rank,
     champions: champions.results,

@@ -14,6 +14,7 @@ export interface Env {
   RELEASE_REPO?: string; // 앱 설치 파일을 올리는 GitHub 저장소 (owner/repo)
   RELEASE_API?: string; // 시험용 GitHub API 주소 (비우면 api.github.com)
   RELEASE_TOKEN?: string; // 저장소가 비공개일 때 Release 를 읽는 GitHub 토큰 (비밀값, 읽기 전용)
+  WELCOME_WEBHOOK_URL?: string; // 디스코드 '멤버 환영' 채널 웹훅 (비밀값). 소개를 처음 채우면 소개 카드를 올린다
   DEV_LOGIN?: string; // '1' 이면 로컬 개발용 가짜 로그인 허용. 배포 환경에서는 절대 켜지 않는다
 }
 
@@ -38,6 +39,8 @@ export type Member = {
   app_seen_at: number;
   app_lol: number;
   app_open: number;
+  about: string | null; // 나를 소개해요 (JSON, v3.47)
+  about_posted_at: number | null; // 멤버 환영 채널에 소개를 올린 때
 };
 
 export class HttpError extends Error {
