@@ -26,12 +26,12 @@ export function MemberPage() {
   const { id } = useParams();
   const { me, ready, api, logout } = useSession();
   const nav = useNavigate();
-  if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="member" /></div></section>;
+  if (!ready) return <section className="section tight"><div className="wrap"><MemberSkeleton self={!id} /></div></section>;
   if (!me) return <NeedLogin what={id ? '회원 페이지' : '내 페이지'} />;
   const target = id ?? me.id;
   return (
     <section className="section tight"><div className="wrap">
-      <MemberView key={target} api={api} id={target} onChampion={(c) => nav(`/champions/${c}`)}
+      <MemberView key={target} api={api} id={target} self={target === me.id} onChampion={(c) => nav(`/champions/${c}`)}
         actions={target === me.id ? <button type="button" className="btn sm" onClick={logout}>로그아웃</button> : undefined} />
     </div></section>
   );

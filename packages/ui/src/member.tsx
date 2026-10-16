@@ -168,14 +168,14 @@ function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: n
 
 // ───────── 회원 페이지 ─────────
 
-export function MemberView({ api, id, onChampion, actions }: { api: Api; id: string; onChampion?: (championId: number) => void; actions?: ReactNode }) {
+export function MemberView({ api, id, self, onChampion, actions }: { api: Api; id: string; self?: boolean; onChampion?: (championId: number) => void; actions?: ReactNode }) {
   const { data, error, reload } = useLoad<MemberPage>(api, `/api/members/${encodeURIComponent(id)}`);
   const skins = useSkins();
   const [edit, setEdit] = useState(false);
   const [shareOn, setShared] = useState<boolean | null>(null);
   const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <MemberSkeleton />;
+  if (!data) return <MemberSkeleton self={self} />;
   const { member: m, total } = data;
   const deco = m.deco ?? {};
   const shared = shareOn ?? Boolean(m.shared);
@@ -187,7 +187,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
   const S = styleOf(data.champions);
   const picksN = data.augments.reduce((n, a) => n + a.n, 0);
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
-  return (<Swap on={rv} skeleton={<MemberSkeleton />}>
+  return (<Swap on={rv} skeleton={<MemberSkeleton self={self} />}>
     <div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
       <ProfileHero lift={total.n > 0} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}

@@ -372,7 +372,7 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
   };
   const rv = useReveal(Boolean(data));
   if (error) return null;
-  const prospectSk = <SkeletonFrame className="plist2">{[0, 1, 2].map((i) => <div key={i} className="prow2"><Bone w={44} h={44} r="round" /><span className="sk-row-t"><Bone w="40%" h={14} /><Bone w="72%" h={10} /></span><Bone w={64} h={32} r="m" /></div>)}</SkeletonFrame>;
+  const prospectSk = <SkeletonFrame className="plist2">{[0, 1, 2].map((i) => <div key={i} className="prow2"><Bone w={44} h={44} r="round" /><span className="sk-row-t"><Bone w="40%" h={14} /><Bone w="72%" h={10} /></span><span className="vact" style={{ marginTop: 0, paddingTop: 0 }}><Bone w={32} h={32} r="m" /><Bone w={32} h={32} r="m" /></span></div>)}</SkeletonFrame>;
   return (
     <section className="card pad prospects">
       <div className="card-head"><h2>함께한 친구들</h2><span className="sp" /><span className="meta">우리와 {data?.queueMin ?? 3}판 넘게 같이 했거나 내전을 함께한 분들</span></div>

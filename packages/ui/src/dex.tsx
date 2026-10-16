@@ -8,6 +8,7 @@ import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMa
 import { ChampImg, Gem, Select, Seg } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
+import { Bone } from './skeleton';
 
 /** 서버에 기록된 내 모든 판 + (앱이면) 이 PC 롤 기록을 합친 도감 */
 export function useDex(api: Api | null, games: Game[] = []) {
@@ -125,7 +126,7 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { d
   const what = kind === 'champions' ? '챔프' : '증강';
 
   return (
-    <div className="dex">
+    <div className={`dex ${loading ? 'dex-loading' : 'dex-ready'}`} aria-busy={loading || undefined}>
       <header className="dex-device">
         <span className="dex-lens" aria-hidden="true"><Gem size={44} /></span>
         <div className="dex-title">
@@ -148,7 +149,7 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { d
             <span><PrismMark />마스터 <b>{masters}</b></span>
             <span className="of">/ {ids.length}</span>
           </div>
-          <span className="meta">{loading ? '기록 불러오는 중…' : next ? `다음 배지 '${next[1]}'까지 ${next[0] - rate}%` : '도감을 완성했어요!'}</span>
+          <span className="meta">{loading ? <Bone w={160} h={12} /> : next ? `다음 배지 '${next[1]}'까지 ${next[0] - rate}%` : '도감을 완성했어요!'}</span>
         </div>
         <div className="dex-badges">{BADGES.map(([p, l]) => <span key={p} className={`dex-badge ${rate >= p ? 'on' : ''}`} title={`마스터 여정 ${p}%`}><i />{l}<small>{p}%</small></span>)}</div>
       </header>
@@ -195,7 +196,8 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { d
         {sheet && <button type="button" className="dex-scrim" aria-label="닫기" onClick={() => setSheet(false)} />}
         <aside ref={entry} className={`dex-entry card ${sheet ? 'open' : ''}`} aria-live="polite">
           <button type="button" className="dex-close icon-btn" aria-label="닫기" onClick={() => setSheet(false)}><Icon name="x" /></button>
-          {kind === 'champions'
+          {loading ? <div className="dex-entry-sk"><Bone w={112} h={112} r="round" /><Bone w={56} h={10} /><Bone w={120} h={28} /><Bone w={160} h={24} r="pill" /><Bone w="100%" h={56} r="m" /><Bone w="100%" h={240} r="m" /><Bone w="100%" h={120} r="m" /></div>
+            : kind === 'champions'
             ? <ChampEntry id={current} no={no.get(current) ?? 0} e={got[current]} m={m(current)} dex={dex} onChampion={onChampion} />
             : <AugEntry id={current} no={no.get(current) ?? 0} e={got[current]} m={m(current)} dex={dex} onAugment={onAugment} onChampion={onChampion} />}
         </aside>

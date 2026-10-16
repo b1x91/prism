@@ -42,7 +42,7 @@ export const fadeCls = (on: boolean) => (on ? 'fade-in' : '');
 /** 그림이 다 받아지면 서서히 (img 에 className="fi" 와 함께) */
 export const imgIn = { onLoad: (e: SyntheticEvent<HTMLImageElement>) => e.currentTarget.classList.add('ld'), onError: (e: SyntheticEvent<HTMLImageElement>) => e.currentTarget.classList.add('ld') };
 
-type BoneProps = { w?: number | string; h?: number | string; r?: 's' | 'm' | 'l' | 'pill' | 'round'; dark?: boolean; className?: string; style?: CSSProperties };
+type BoneProps = { w?: number | string; h?: number | string; r?: 'none' | 's' | 'm' | 'l' | 'pill' | 'round'; dark?: boolean; className?: string; style?: CSSProperties };
 
 /** 뼈대 한 조각 */
 export function Bone({ w, h, r = 's', dark, className = '', style }: BoneProps) {
@@ -91,27 +91,34 @@ function Head({ w = 120 }: { w?: number }) {
 }
 
 /** 회원 페이지: 좌우 끝까지 닿는 머리 + 숫자 넷 + 최근 판 + 두 칸 */
-export function MemberSkeleton({ public: pub = false }: { public?: boolean }) {
+export function MemberSkeleton({ public: pub = false, self }: { public?: boolean; self?: boolean }) {
   return (
     <SkeletonFrame className="stack sk-member">
-      <div className={`phero sk-hero ${pub ? '' : 'lift'}`}>
-        <div className="sk-hero-in">
-          <Bone w={112} h={112} r="l" dark />
-          <div className="sk-hero-t">
-            <Bone w={220} h={36} dark />
-            <Bone w={300} h={12} dark style={{ maxWidth: '80%' }} />
-            <div className="sk-chips">{[64, 72, 56, 80].map((w, i) => <Bone key={i} w={w} h={24} r="pill" dark />)}</div>
+      {/* 머리: 실제 ProfileHero 와 같은 틀 (모서리 역할 · 오른쪽 위 버튼 · 얼굴 + 이름) */}
+      <header className={`phero sk-hero ${pub ? '' : 'lift'}`}>
+        <div className="phero-in">
+          {!pub && <div className="phero-corner"><Bone w={56} h={24} r="pill" dark /></div>}
+          {self && <div className="phero-actions">{[104, 92, 64, 72].map((w, i) => <Bone key={i} w={w} h={32} r="m" dark />)}</div>}
+          <div className="phero-main">
+            <span className="phero-face"><Bone w={112} h={112} r="l" dark className="sk-face" /></span>
+            <div className="phero-txt sk-lines" style={{ gap: 12 }}>
+              <Bone w={220} h={44} dark />
+              <div className="phero-chips">{[80, 64, 72].map((w, i) => <Bone key={i} w={w} h={24} r="pill" dark />)}</div>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
       {pub ? <div className="grid4">{[0, 1, 2, 3].map((i) => <section key={i} className="card stat sk-stat"><Bone w={56} h={10} /><Bone w={88} h={28} /></section>)}</div>
         : <section className="card pdash">
           <div className="pd-head"><Bone w={72} h={16} /><Bone w={140} h={10} /><span className="sp" /><Bone w={112} h={24} r="pill" /><Bone w={112} h={24} r="pill" /></div>
           <div className="pd-grid">
-            {[0, 1, 2, 3].map((i) => <div key={i} className="pd-tile"><Bone w={48} h={10} /><Bone w={96} h={28} /><Bone w="100%" h={8} r="pill" />{i > 0 && <Bone w="70%" h={10} />}</div>)}
+            {[0, 1, 2, 3].map((i) => <div key={i} className="pd-tile"><Bone w={48} h={10} /><Bone w={112} h={36} /><Bone w="100%" h={i === 3 ? 36 : 8} r={i === 3 ? 's' : 'pill'} /><Bone w="60%" h={12} /></div>)}
             <div className="pd-tile pd-trend"><Bone w={140} h={12} /><Bone w="100%" h={120} r="m" /><Bone w="80%" h={10} /></div>
           </div>
         </section>}
+      {/* 내 페이지 = 승률을 올리려면, 남의 페이지 = 나와의 시너지 (모르면 둘 다 그리지 않는다) */}
+      {!pub && self === true && <section className="card pad"><Head w={120} /><Bone w="100%" h={156} r="l" /><div className="grid2">{[0, 1].map((i) => <Bone key={i} w="100%" h={96} r="m" />)}</div></section>}
+      {!pub && self === false && <section className="card sk-duo"><Bone w="100%" h={440} r="none" dark /><div className="sk-lines" style={{ gap: 12, padding: "var(--s5) var(--s6)" }}><div className="grid4">{[0, 1, 2, 3].map((i) => <div key={i} className="sk-lines" style={{ gap: 8 }}><Bone w={64} h={10} /><Bone w={96} h={28} /></div>)}</div></div></section>}
       {!pub && <section className="card pad"><Head w={88} /><div className="rstrip">{Array.from({ length: 10 }, (_, i) => <Bone key={i} r="m" className="sk-tile" />)}</div></section>}
       <div className="grid2">
         {[0, 1].map((k) => <section key={k} className="card pad"><Head w={k ? 104 : 72} /><div className="sk-rows">{Array.from({ length: 5 }, (_, i) => <Row key={i} face={32} nums={1} />)}</div></section>)}
@@ -156,14 +163,21 @@ export function MissionsSkeleton() {
   );
 }
 
-/** 상점: 제목 + 종류 탭 + 진열장 카드 */
+/** 상점: 제목 + 종류 탭·보유 스위치 + 진열장 카드 (무대 200 + 이름·설명·가격/버튼 줄). 실제 카드와 같은 클래스로 */
 export function ShopSkeleton() {
   return (
     <SkeletonFrame className="shop">
-      <header className="shop-head"><Bone w={80} h={28} /></header>
-      <div className="shop-bar"><div className="shop-tabs">{[64, 92, 84, 84, 84, 64].map((w, i) => <Bone key={i} w={w} h={40} r="pill" />)}</div></div>
+      <header className="shop-head"><Bone w={72} h={32} /></header>
+      <div className="shop-bar">
+        <div className="shop-tabs">{[76, 88, 120, 110, 110, 96].map((w, i) => <Bone key={i} w={w} h={40} r="pill" />)}</div>
+        <span className="sp" /><Bone w={132} h={14} /><Bone w={44} h={24} r="pill" />
+      </div>
       <div className="shop-grid">{Array.from({ length: 8 }, (_, i) => (
-        <div key={i} className="card sk-shopcard"><Bone w="100%" h={168} r="m" /><div className="sk-lines" style={{ gap: 8, padding: 'var(--s4)' }}><Bone w="60%" h={16} /><Bone w="40%" h={10} /><Bone w="100%" h={36} r="m" style={{ marginTop: 8 }} /></div></div>
+        <div key={i} className="shop-card sk-shopcard">
+          <div className="sc-prev sk-scprev"><Bone w={80} h={80} r="l" /><Bone w={96} h={20} /></div>
+          <div className="sc-body"><Bone w="55%" h={20} /><Bone w="75%" h={14} style={{ marginTop: 4 }} />
+            <div className="sc-act"><Bone w={64} h={20} /><Bone w={72} h={32} r="m" /></div></div>
+        </div>
       ))}</div>
     </SkeletonFrame>
   );
@@ -174,6 +188,7 @@ export function BoardSkeleton() {
   return (
     <SkeletonFrame className="stack">
       <div className="grid4">{[0, 1, 2, 3].map((i) => <section key={i} className="card stat sk-stat"><Bone w={56} h={10} /><Bone w={72} h={28} /></section>)}</div>
+      <section className="card pad"><Head w={72} /><div className="grid3">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="sk-lines sk-rec" style={{ gap: 10 }}><Bone w={80} h={10} /><Bone w={64} h={28} /><Bone w={120} h={10} /></div>)}</div></section>
       <div className="grid2">{[0, 1].map((k) => <section key={k} className="card pad"><Head w={96} /><div className="sk-rows">{Array.from({ length: 4 }, (_, i) => <Row key={i} face={32} nums={1} />)}</div></section>)}</div>
     </SkeletonFrame>
   );

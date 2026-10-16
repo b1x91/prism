@@ -9,7 +9,7 @@ import { NickName } from './studio';
 import { AugRing } from './augment';
 import { useLoad } from './crew';
 import { PrismMark } from './dex';
-import { RowsSkeleton, useReveal, Swap, fadeCls } from './skeleton';
+import { Bone, SkeletonFrame, useReveal, Swap, fadeCls } from './skeleton';
 
 /** 챔피언·증강 상세의 장인 칸 (v3.38): 왼쪽 장인 명패(없으면 빈 자리), 오른쪽 장인의 길 순위. 늘 보인다 */
 export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champion' | 'augment'; id: number; onMember?: (id: string) => void }) {
@@ -22,7 +22,7 @@ export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champio
     <section className="card art2" aria-label="장인">
       <div className="art2-hall">
         <span className="art2-k"><PrismMark size={14} />장인</span>
-        {!data ? <div className="art2-plaque sk" /> : masters.length ? <div className="art2-masters">{masters.slice(0, 3).map((a) => (
+        {!data ? <div className="art2-plaque"><Bone w={64} h={64} r="round" dark /><Bone w={120} h={14} dark /><Bone w={180} h={10} dark /><Bone w={140} h={10} dark /></div> : masters.length ? <div className="art2-masters">{masters.slice(0, 3).map((a) => (
           <button key={a.id} type="button" className="art2-plaque on" onClick={() => onMember?.(a.id)}>
             <span className="art2-ring"><MemberFace nick={a.nick} skin={a.skin} champion={a.main} size={56} skins={skins} /></span>
             <b className="art2-nm"><NickName nick={a.nick} /></b>
@@ -37,7 +37,7 @@ export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champio
       </div>
       <div className="art2-road">
         <div className="art2-road-h"><b>장인의 길</b><span className="meta">이룬 목표 순</span></div>
-        {!data ? <div className="art2-rows">{[0, 1, 2].map((i) => <i key={i} className="sk art2-skrow" />)}</div>
+        {!data ? <div className="art2-rows">{[0, 1].map((i) => <div key={i} className="art2-row" style={{ cursor: "default" }}><Bone w={12} h={12} /><Bone w={28} h={28} r="round" /><Bone w="60%" h={12} /><Bone w="100%" h={6} r="pill" /><Bone w={28} h={12} /></div>)}</div>
           : road.length ? <ol className="art2-rows">{road.map((a, i) => (
             <li key={a.id}><button type="button" className="art2-row" onClick={() => onMember?.(a.id)}>
               <span className="rk">{i + 1}</span>
@@ -60,9 +60,9 @@ export function ArtisanRankingView({ api, kind, meId, onOpen }: { api: Api; kind
   const rows = useMemo(() => data?.[kind] ?? [], [data, kind]);
   const rv = useReveal(Boolean(data));
   if (error) return <p className="l">{error}</p>;
-  if (!data) return <RowsSkeleton n={6} />;
+  if (!data) return <ArtRankSkeleton />;
   if (!rows.length) return <Empty>아직 마스터 여정을 시작한 회원이 없습니다.</Empty>;
-  return (<Swap on={rv} skeleton={<RowsSkeleton n={6} />}>
+  return (<Swap on={rv} skeleton={<ArtRankSkeleton />}>
     <div className={`card rank-list art-rank ${fadeCls(rv)}`}>
       {rows.map((r, i) => <ArtRow key={r.id} r={r} rank={i + 1} kind={kind} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
       {data.limited && <LockedMore more={data.limited[kind] - rows.length} />}
@@ -82,5 +82,15 @@ function ArtRow({ r, rank, kind, me, skins, onOpen }: { r: ArtisanRank; rank: nu
       <span className="num key">{r.masters > 0 && <PrismMark size={16} />}{r.masters}<small>장인</small></span>
       <span className="num">{r.goals}<small>목표</small></span>
     </button>
+  );
+}
+
+function ArtRankSkeleton() {
+  return (
+    <SkeletonFrame className="card rank-list art-rank">{Array.from({ length: 6 }, (_, i) => (
+      <div key={i} className="rank-row" style={{ cursor: 'default' }}><Bone w={16} h={14} /><Bone w={40} h={40} r="round" />
+        <span className="who"><Bone w={96} h={14} /><span className="art-icons">{[0, 1, 2].map((k) => <Bone key={k} w={24} h={24} r="round" />)}</span></span>
+        <Bone w={48} h={16} /><Bone w={40} h={16} /></div>
+    ))}</SkeletonFrame>
   );
 }

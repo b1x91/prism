@@ -1253,7 +1253,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .dn-collect { display: inline-flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); font-weight: 650; color: var(--text-3); }
 .dn-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line-2); border-top-color: var(--accent); animation: dn-spin .8s linear infinite; }
 @keyframes dn-spin { to { transform: rotate(360deg); } }
-.sk-chan { min-height: 120px; gap: var(--s3); }
+.sk-chan { min-height: 176px; gap: var(--s3); }
 .sk.sq32 { width: 32px; height: 32px; border-radius: var(--r-s); }
 @media (prefers-reduced-motion: reduce) { .dn-spin { animation-duration: 2.4s; } }
 
@@ -1873,15 +1873,17 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .adx-head { display: flex; align-items: center; gap: var(--s2); }
 .adx-head h3 { margin: 0; font-size: var(--fs-lg); font-weight: 800; }
 .adx-head .rdot { width: 10px; height: 10px; }
-.adx { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--s2); }
-.adx-hov { display: block; }
-.adx-t { width: 100%; display: flex; align-items: center; gap: var(--s3); padding: var(--s3); border-radius: var(--r-m); border: 1px solid var(--line); background: var(--surface); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
+.adx { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--s3); }
+/* 줄마다 높이가 달라 틈이 들쭉날쭉하던 것: 타일은 늘 같은 높이 (설명 두 줄 자리) */
+.adx-hov { display: grid; }
+.adx-t { width: 100%; height: 100%; display: flex; align-items: center; gap: var(--s3); padding: var(--s3); border-radius: var(--r-m); border: 1px solid var(--line); background: var(--surface); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
 .adx-t:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--line-2); }
 .adx-t.prismatic:hover { border-color: color-mix(in srgb, var(--spectrum-6) 55%, var(--line)); }
 .adx-t.gold:hover { border-color: color-mix(in srgb, var(--gold) 60%, var(--line)); }
 .adx-txt { min-width: 0; display: grid; gap: 2px; }
-.adx-txt .nm { display: flex; align-items: center; gap: var(--s1); font-weight: 750; font-size: var(--fs-md); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.adx-txt .note { font-size: var(--fs-xs); color: var(--text-3); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.45; }
+.adx-txt .nm { display: flex; align-items: center; gap: var(--s1); min-width: 0; font-weight: 750; font-size: var(--fs-md); white-space: nowrap; }
+.adx-txt .nm > b { min-width: 0; overflow: hidden; text-overflow: ellipsis; font-weight: inherit; }
+.adx-txt .note { font-size: var(--fs-xs); color: var(--text-3); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; line-height: 1.45; min-height: 2.9em; }
 @media (max-width: 640px) { .adx { grid-template-columns: minmax(0, 1fr); } }
 
 /* 챔프 상세: 증강 줄 — 이름 한 줄 · 이유 한 줄 · 오른쪽 티어 */
@@ -2405,7 +2407,7 @@ button.ga:hover { background: var(--surface-2); }
   background-image: linear-gradient(105deg, transparent 38%, var(--sk-hi) 47%, var(--sk-tint) 52%, transparent 62%);
   background-size: 200vw 100%; background-repeat: no-repeat; background-attachment: fixed; animation: sk-sweep 1.9s cubic-bezier(.45, 0, .25, 1) infinite; }
 .sk.dk { --sk: rgba(255, 255, 255, .07); --sk-hi: rgba(255, 255, 255, .1); --sk-tint: rgba(170, 186, 255, .1); }
-.sk.r-m { border-radius: var(--r-m); } .sk.r-l { border-radius: var(--r-l); } .sk.r-pill { border-radius: var(--r-pill); } .sk.r-round { border-radius: 50%; }
+.sk.r-none { border-radius: 0; } .sk.r-m { border-radius: var(--r-m); } .sk.r-l { border-radius: var(--r-l); } .sk.r-pill { border-radius: var(--r-pill); } .sk.r-round { border-radius: 50%; }
 @keyframes sk-sweep { from { background-position: 100vw 0; } to { background-position: -100vw 0; } }
 /* 빠른 불러오기에서는 보이지 않게 0.12초 늦게, 부드럽게 */
 .skf { animation: skf-in .32s ease .12s both; }
@@ -2432,7 +2434,10 @@ button.ga:hover { background: var(--surface-2); }
 .sk-ped { background: rgba(255, 255, 255, .06) !important; box-shadow: none !important; }
 .sk-msn { gap: var(--s3); }
 .sk-msn-champ { width: 100%; height: 168px; }
-.sk-shopcard { display: grid; overflow: hidden; padding: var(--s3) var(--s3) 0; }
+.sk-shopcard { box-shadow: none; }
+.sk-duo { overflow: hidden; }
+.sk-scprev { display: grid; place-content: center; justify-items: center; gap: var(--s3); background: var(--surface-2); }
+.sk-scprev::after { display: none; }
 @media (max-width: 640px) { .sk-hero-in { flex-direction: column; align-items: flex-start; padding: var(--s7) var(--s4) var(--s5); } .sk-row.sk-role { grid-template-columns: 72px minmax(0, 1fr); } .sk-row.sk-role .sk:last-child { display: none; } }
 
 /* 데이터가 도착하면: 같은 자리에서 자리표시가 위에서 서서히 사라지고 실제 화면이 아래에서 서서히 나타난다 (빈 화면 없이, 움직임 없이) */
@@ -2578,3 +2583,21 @@ button.ga:hover { background: var(--surface-2); }
 .linkbtn { border: 0; background: none; padding: 0; color: var(--accent); font: inherit; font-weight: 700; cursor: pointer; }
 .linkbtn:hover { text-decoration: underline; }
 @media (max-width: 640px) { .tcm { grid-template-columns: 72px minmax(0, 1fr) 36px 40px; gap: var(--s2); } .imp .tip.top { padding: var(--s4); } }
+
+/* 도감 불러오는 동안 (v3.62): 빈 도감(0·???)을 보여 주지 않고 같은 자리의 숫자·그림을 뼈대로. 다 오면 그 자리에서 나타난다 */
+.dex-loading :is(.dex-xp .lv, .dex-xp .num, .dex-count b, .dex-tally b, .dlt b, .dex-groups small, .dx .pic, .dx .nm, .dx .pips) {
+  color: transparent !important; border-color: transparent !important; box-shadow: none !important; border-radius: var(--r-s);
+  background-color: var(--sk) !important; background-image: linear-gradient(105deg, transparent 38%, var(--sk-hi) 47%, var(--sk-tint) 52%, transparent 62%) !important;
+  background-size: 200vw 100%; background-repeat: no-repeat; background-attachment: fixed; animation: sk-sweep 1.9s cubic-bezier(.45, 0, .25, 1) infinite; }
+.dex-loading :is(.dex-xp .lv, .dex-xp .num, .dex-count b, .dex-tally b, .dlt b, .dex-groups small, .dx .pic, .dx .nm, .dx .pips) > * { visibility: hidden; }
+.dex-loading .dx .pic { border-radius: 50%; }
+.dex-loading .dx .nm { min-width: 48px; }
+.dex-loading .dx :is(.no, .mark, .new) { visibility: hidden; }
+.dex-loading .dex-bar > span, .dex-loading .dex-xp .bar > span { width: 0 !important; }
+.dex-ready :is(.dex-xp .lv, .dex-xp .num, .dex-count b, .dex-tally b, .dlt b, .dex-groups small, .dx .pic, .dx .nm, .dex-entry) { animation: swap-in .3s ease-out both; }
+.dex-entry-sk { display: grid; justify-items: center; gap: var(--s3); padding-top: var(--s4); }
+@media (prefers-reduced-motion: reduce) { .dex-loading * { animation: none !important; } }
+.dex-loading .dex-count > b { justify-self: start; width: 72px; }
+.dex-loading .dlt b { width: 40px; }
+.sk-rec { padding: var(--s4) var(--s5); border-radius: var(--r-m); background: var(--surface-2); }
+@media (max-width: 760px) { .sk-hero .sk-face { width: 80px !important; height: 80px !important; border-radius: 18px; } }

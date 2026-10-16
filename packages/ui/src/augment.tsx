@@ -179,7 +179,7 @@ export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
               <Hover key={a.id} className="adx-hov" tip={() => <AugmentTip id={a.id} link={Boolean(onOpen)} />}>
                 <button type="button" className={`adx-t ${a.rarity}`} onClick={() => onOpen?.(a.id)}>
                   <AugRing id={a.id} size={44} />
-                  <span className="adx-txt"><span className="nm"><FavMark kind="aug" id={a.id} inline />{a.name}</span><span className="note">{a.note}</span></span>
+                  <span className="adx-txt"><span className="nm"><FavMark kind="aug" id={a.id} inline /><b>{a.name}</b></span><span className="note">{a.note}</span></span>
                 </button>
               </Hover>
             ))}
