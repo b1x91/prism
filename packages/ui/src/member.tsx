@@ -64,9 +64,9 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
       {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
       {!art && data && !rows.length && <Empty>{by === 'winrate' ? '아직 조건을 채운 회원이 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
-      {!art && rows.length > 0 && <Leaderboard rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
-      {!art && rows.length > 3 && <div className="card rank-list">
-        {rows.slice(3).map((r, i) => <RankRow key={r.id} r={r} rank={i + 4} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
+      {!art && rows.length > 0 && <Leaderboard key={`lb-${by}`} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
+      {!art && rows.length > 3 && <div key={`rl-${by}`} className="card rank-list lb-in">
+        {rows.slice(3).map((r, i) => <RankRow key={r.id} r={r} rank={i + 4} i={i} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
       </div>}
       {!art && data?.limited && <LockedMore more={data.limited.total - rows.length}>
         {data.limited.mine && by !== 'winrate' && <div className="card rank-list"><RankRow r={data.limited.mine} rank={data.limited.mine.rank} by={by as RankBy} me skins={skins} onOpen={onOpen} /></div>}
@@ -99,14 +99,34 @@ function Podium({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: numbe
       {rank === 1 && <span className="lb-crown" aria-hidden="true"><Gem size={28} src="/brand/prism-32.png" /></span>}
       <span className="lb-face"><MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={rank === 1 ? 88 : 72} /></span>
       <span className="lb-nm"><NickName nick={r.nick} /></span>
-      <span className="lb-st"><b>{by === 'winrate' ? pct(r.w, r.n) : `${r.n}판`}</b><small>{by === 'winrate' ? `${r.n}판` : `승률 ${pct(r.w, r.n)}`}</small></span>
+      <span className="lb-st"><b><CountUp text={by === 'winrate' ? pct(r.w, r.n) : `${r.n}판`} delay={[0, 1150, 950, 800][rank]} /></b><small>{by === 'winrate' ? `${r.n}판` : `승률 ${pct(r.w, r.n)}`}</small></span>
     </button>
   );
 }
 
-function RankRow({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: number; by: RankBy; me: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
+/** 숫자가 0에서 차오른다 (카드가 다 올라온 뒤, 0.9초). 글자 속 첫 숫자만 바꾼다 — '123판', '56%' */
+function CountUp({ text, delay }: { text: string; delay: number }) {
+  const m = /\d+/.exec(text);
+  const target = m ? Number(m[0]) : 0;
+  const [v, setV] = useState(() => (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches ? target : 0));
+  useEffect(() => {
+    if (!m || (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches)) { setV(target); return; }
+    let raf = 0;
+    const t0 = performance.now() + delay;
+    const tick = (now: number) => {
+      const k = Math.max(0, Math.min(1, (now - t0) / 900));
+      setV(Math.round(target * (1 - Math.pow(1 - k, 3))));
+      if (k < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, delay]); // eslint-disable-line react-hooks/exhaustive-deps
+  return <>{m ? text.slice(0, m.index) + v + text.slice(m.index + m[0].length) : text}</>;
+}
+
+function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: number; i?: number; by: RankBy; me: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
   return (
-    <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 ? 'first' : ''} ${r.bg ? 'has-bg' : ''}`} onClick={() => onOpen(r.id)}>
+    <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 ? 'first' : ''} ${r.bg ? 'has-bg' : ''}`} style={i !== undefined ? { ['--i' as string]: Math.min(i, 12) } : undefined} onClick={() => onOpen(r.id)}>
       {r.bg && <BgScene id={r.bg} row />}
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={40} />
