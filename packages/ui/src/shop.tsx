@@ -15,7 +15,7 @@ import { BgScene } from './bgscene';
 import { NickName } from './studio';
 import { Icon } from './icons';
 import { BuyDialog } from './buy';
-import { ShopSkeleton, useReveal } from './skeleton';
+import { ShopSkeleton, useReveal, Swap, fadeCls } from './skeleton';
 
 const SLOTS: ShopSlot[] = ['bg', 'frame', 'fx', 'name', 'title'];
 /** 산 배경이 없을 때 깔리는 기본 색 (회원마다 정해진 색 — 이름으로 고른다, 바뀌지 않는다). 상점의 '배경'으로 바꿀 수 있다 */
@@ -172,8 +172,8 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
     : SHOP.filter((x) => x.slot === slot && (!owned || data.owned.includes(x.id)))
       .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || b.price - a.price);
   const count = (sl: ShopSlot) => [SHOP.filter((x) => x.slot === sl && data.owned.includes(x.id)).length, SHOP.filter((x) => x.slot === sl).length];
-  return (
-    <div className={`shop ${rv}`}>
+  return (<Swap on={rv} skeleton={<ShopSkeleton />}>
+    <div className={`shop ${fadeCls(rv)}`}>
       <header className="shop-head">
         <h1>상점</h1>
         {(data.rates?.discount ?? 0) > 0 && <span className="shop-sale">특별회원 {Math.round((data.rates!.discount) * 100)}% 할인</span>}
@@ -195,7 +195,7 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
         : <Empty>아직 보유한 {slot === 'hot' ? '아이템이' : `${SLOT_KO[slot]}가`} 없어요.</Empty>}
       {buying && <BuyDialog api={api} item={buying} data={data} me={me} onClose={() => setBuying(null)} onDone={(s) => { setBuying(null); setPieces(s.balance); reload(); }} />}
     </div>
-  );
+  </Swap>);
 }
 
 function ShopCard({ x, me, data, busy, onBuy, onEquip }: { x: ShopItem; me: Me; data: Shop; busy: boolean; onBuy: () => void; onEquip: (on: boolean) => void }) {

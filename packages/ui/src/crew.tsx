@@ -3,7 +3,7 @@ import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board,
 import { AugImg, ChampImg, Empty, Gem, IconBtn, LockedMore, MemberFace } from './basics';
 import { AugmentLink } from './augment';
 import { Icon } from './icons';
-import { BoardSkeleton, ChampionCrewSkeleton, Bone, imgIn, useReveal } from './skeleton';
+import { BoardSkeleton, ChampionCrewSkeleton, Bone, imgIn, useReveal, Swap, fadeCls, SkeletonFrame } from './skeleton';
 
 /** 서버 데이터 한 덩이 불러오기 (다시 불러오기 함수 포함) */
 export function useLoad<T>(api: Api, path: string | null) {
@@ -58,8 +58,8 @@ export function BoardView({ api }: { api: Api }) {
   if (!b) return <BoardSkeleton />;
   const t = b.totals;
   const value = (r: Board['records'][number]) => (r.key === 'longest_game' ? <>{Math.round(r.value / 60)}<small className="meta"> 분</small></> : r.key === 'best_winrate' ? pct(r.w ?? 0, r.n ?? 0) : <>{r.value}<small className="meta"> {UNIT[r.key] ?? ''}</small></>);
-  return (
-    <div className={`stack ${rv}`}>
+  return (<Swap on={rv} skeleton={<BoardSkeleton />}>
+    <div className={`stack ${fadeCls(rv)}`}>
       <div className="grid4">
         {[['연결된 회원', t.linked, '명'], ['기록된 판', t.games, ''], ['이번 주 모임 판', t.crewGamesWeek, `/ ${t.crewGames}`], ['모임 도감', b.crewDex, '종']].map(([k, v, s]) => (
           <section key={k as string} className="card stat"><span className="k">{k}</span><span className="v">{v}<small>{s}</small></span></section>
@@ -98,7 +98,7 @@ export function BoardView({ api }: { api: Api }) {
         ))}</div> : <Empty>회원 두 명 이상이 함께한 판이 아직 없습니다.</Empty>}
       </section>
     </div>
-  );
+  </Swap>);
 }
 
 /** 챔피언별 모임 기록 (모임 승률·장인·인기 증강·팁 쓰기와 공감) */
@@ -108,8 +108,8 @@ export function ChampionCrew({ api, championId }: { api: Api; championId: number
   const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <ChampionCrewSkeleton />;
-  return (
-    <div className={`grid2 ${rv}`}>
+  return (<Swap on={rv} skeleton={<ChampionCrewSkeleton />}>
+    <div className={`grid2 ${fadeCls(rv)}`}>
       <section className="card pad">
         <div className="card-head"><h2>모임 기록</h2></div>
         <div className="grid2" style={{ gap: 12 }}>
@@ -135,7 +135,7 @@ export function ChampionCrew({ api, championId }: { api: Api; championId: number
         </div>
       </section>
     </div>
-  );
+  </Swap>);
 }
 function AugName({ id }: { id: number }) { return <>{AUGMENT[id]?.name ?? `#${id}`}</>; }
 
@@ -370,13 +370,14 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
     if (!invite) return;
     try { await navigator.clipboard.writeText(invite); setCopied(puuid); setTimeout(() => setCopied(null), 2000); } catch { /* 클립보드 막힘 */ }
   };
-  const rv = useReveal(Boolean(data), 'reveal-rows');
+  const rv = useReveal(Boolean(data));
   if (error) return null;
+  const prospectSk = <SkeletonFrame className="plist2">{[0, 1, 2].map((i) => <div key={i} className="prow2"><Bone w={44} h={44} r="round" /><span className="sk-row-t"><Bone w="40%" h={14} /><Bone w="72%" h={10} /></span><Bone w={64} h={32} r="m" /></div>)}</SkeletonFrame>;
   return (
     <section className="card pad prospects">
       <div className="card-head"><h2>포텐 멤버</h2><span className="sp" /><span className="meta">우리와 {data?.queueMin ?? 3}판 넘게 같이 했거나 내전을 함께한 분들</span></div>
-      {!data ? <div className="plist2 skf" role="status" aria-label="불러오는 중">{[0, 1, 2].map((i) => <div key={i} className="prow2"><Bone w={44} h={44} r="round" /><span className="sk-row-t"><Bone w="40%" h={14} /><Bone w="72%" h={10} /></span><Bone w={64} h={32} r="m" /></div>)}</div> : !data.prospects.length ? <Empty>아직 없어요. 회원과 자주 같이 하는 분이 생기면 여기에 나타나요.</Empty> : (
-        <div className={`plist2 ${rv}`}>{data.prospects.map((p) => {
+      {!data ? prospectSk : !data.prospects.length ? <Empty>아직 없어요. 회원과 자주 같이 하는 분이 생기면 여기에 나타나요.</Empty> : (<Swap on={rv} skeleton={prospectSk}>
+        <div className={`plist2 ${fadeCls(rv)}`}>{data.prospects.map((p) => {
           const [name, tag] = (p.riotId ?? '이름 모름').split('#');
           return (
             <div key={p.puuid} className="prow2">
@@ -396,7 +397,7 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
             </div>
           );
         })}</div>
-      )}
+      </Swap>)}
       {data?.limited && <LockedMore more={data.limited.total - data.prospects.length} what="전체 목록" />}
     </section>
   );

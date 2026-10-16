@@ -9,7 +9,7 @@ import { Empty } from './basics';
 import { useLoad } from './crew';
 import { Icon } from './icons';
 import { PieceIcon, addPieces } from './shop';
-import { MissionsSkeleton, imgIn, useReveal } from './skeleton';
+import { MissionsSkeleton, imgIn, useReveal, Swap, fadeCls } from './skeleton';
 
 const DAY = 86_400_000;
 const left = (end: number, now = Date.now()) => { const d = Math.ceil((end - now) / DAY); return d <= 1 ? '오늘 밤까지' : `${d}일 남음`; };
@@ -87,8 +87,8 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
   const r1 = w.missions[0].role;
   const suggest = shuffle(data.suggest, Math.floor(w.start / DAY));
   const ready = data.ready ?? 0;
-  return (
-    <div className={`msn ${rv}`}>
+  return (<Swap on={rv} skeleton={<MissionsSkeleton />}>
+    <div className={`msn ${fadeCls(rv)}`}>
       <header className="msn-head">
         <div className="msn-title">
           <span className="msn-kicker">{md(w.start)} – {md(w.end - 1)} · {left(w.end)}</span>
@@ -146,7 +146,7 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
         })}
       </section>
     </div>
-  );
+  </Swap>);
 }
 
 /** 이번 주 깬 수: 점 세 개가 이어진 고리 */

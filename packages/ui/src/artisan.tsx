@@ -9,7 +9,7 @@ import { NickName } from './studio';
 import { AugRing } from './augment';
 import { useLoad } from './crew';
 import { PrismMark } from './dex';
-import { RowsSkeleton, useReveal } from './skeleton';
+import { RowsSkeleton, useReveal, Swap, fadeCls } from './skeleton';
 
 /** 챔피언·증강 상세의 장인 칸 (v3.38): 왼쪽 장인 명패(없으면 빈 자리), 오른쪽 장인의 길 순위. 늘 보인다 */
 export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champion' | 'augment'; id: number; onMember?: (id: string) => void }) {
@@ -58,16 +58,16 @@ export function ArtisanRankingView({ api, kind, meId, onOpen }: { api: Api; kind
   const { data, error } = useLoad<ArtisanRanking>(api, '/api/ranking/artisans');
   const skins = useSkins();
   const rows = useMemo(() => data?.[kind] ?? [], [data, kind]);
-  const rv = useReveal(Boolean(data), 'reveal-rows');
+  const rv = useReveal(Boolean(data));
   if (error) return <p className="l">{error}</p>;
   if (!data) return <RowsSkeleton n={6} />;
   if (!rows.length) return <Empty>아직 마스터 여정을 시작한 회원이 없습니다.</Empty>;
-  return (
-    <div className={`card rank-list art-rank ${rv}`}>
+  return (<Swap on={rv} skeleton={<RowsSkeleton n={6} />}>
+    <div className={`card rank-list art-rank ${fadeCls(rv)}`}>
       {rows.map((r, i) => <ArtRow key={r.id} r={r} rank={i + 1} kind={kind} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
       {data.limited && <LockedMore more={data.limited[kind] - rows.length} />}
     </div>
-  );
+  </Swap>);
 }
 
 function ArtRow({ r, rank, kind, me, skins, onOpen }: { r: ArtisanRank; rank: number; kind: 'champions' | 'augments'; me: boolean; skins: ReturnType<typeof useSkins>; onOpen: (id: string) => void }) {

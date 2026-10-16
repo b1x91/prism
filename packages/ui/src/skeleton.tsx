@@ -1,22 +1,43 @@
 /**
  * 불러오는 동안의 자리표시 (v3.51). 실제 화면과 같은 틀·크기로 자리를 잡아 두고, 빛 한 줄기가 화면 전체를 한 번에 지나간다
  * (뼈대마다 따로 번쩍이지 않게 — 배경을 화면 기준으로 고정). 0.12초 안에 끝나는 빠른 불러오기에서는 보이지 않게 늦게 나타난다.
- * 데이터가 오면 `.reveal` 이 붙은 실제 화면이 위에서부터 차례로 떠오른다.
+ * 데이터가 오면 같은 자리에서 자리표시가 사라지며 실제 화면이 서서히 나타난다 (`Swap`, 사이에 빈 화면·깜빡임 없이).
  */
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react';
+import { useEffect, useLayoutEffect, useState, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react';
 
-/** 데이터가 처음 도착한 순간에만 '차례로 떠오르기' 클래스를 준다 (잠깐 뒤 떼어 내 다른 움직임과 겹치지 않게) */
-export function useReveal(ready: boolean, cls = 'reveal'): string {
-  const [on, setOn] = useState(false);
-  const done = useRef(false);
-  useEffect(() => {
-    if (!ready || done.current) return;
-    done.current = true; setOn(true);
-    const t = setTimeout(() => setOn(false), 900);
-    return () => clearTimeout(t);
-  }, [ready]);
-  return on ? cls : '';
+/* 지금 떠 있는 자리표시들 (언제부터 실제로 보이는지). 넘겨받기·겹쳐 사라지기 판단에 쓴다 */
+let seq = 0, goneAt = -1e9;
+const shown = new Map<number, number>();
+/** 자리표시가 지금 화면에 실제로 보이는가 (늦게 나타나기 0.12초가 지났는가) */
+export function skeletonVisible(): boolean {
+  const t = performance.now();
+  for (const v of shown.values()) if (v <= t) return true;
+  return false;
 }
+
+/**
+ * 데이터가 도착한 그 렌더에서 바로 '겹쳐 바꾸기'를 켠다 (그린 뒤에 켜면 실제 화면이 한 프레임 보였다가 사라지며 깜빡인다).
+ * 자리표시가 실제로 보이고 있었을 때만 켠다 — 빠른 불러오기는 그냥 바로 보인다.
+ */
+export function useReveal(ready: boolean): boolean {
+  const [s, setS] = useState({ ready, fade: false });
+  if (s.ready !== ready) setS({ ready, fade: ready && skeletonVisible() });
+  useEffect(() => {
+    if (!s.fade) return;
+    const t = setTimeout(() => setS((x) => ({ ...x, fade: false })), 420);
+    return () => clearTimeout(t);
+  }, [s.fade]);
+  return s.fade;
+}
+
+/**
+ * 자리표시 → 실제 화면을 같은 자리에서 겹쳐 바꾼다: 자리표시가 위에서 서서히 사라지는 동안 실제 화면이 아래에서 서서히 나타난다
+ * (그 사이 빈 화면이 끼지 않게). 실제 화면의 맨 바깥 요소에 `fadeCls(on)` 을 준다.
+ */
+export function Swap({ on, skeleton, children }: { on: boolean; skeleton: ReactNode; children: ReactNode }) {
+  return <div className="swap">{children}{on && <div className="swap-sk" aria-hidden="true">{skeleton}</div>}</div>;
+}
+export const fadeCls = (on: boolean) => (on ? 'fade-in' : '');
 
 /** 그림이 다 받아지면 서서히 (img 에 className="fi" 와 함께) */
 export const imgIn = { onLoad: (e: SyntheticEvent<HTMLImageElement>) => e.currentTarget.classList.add('ld'), onError: (e: SyntheticEvent<HTMLImageElement>) => e.currentTarget.classList.add('ld') };
@@ -32,7 +53,14 @@ export function Bone({ w, h, r = 's', dark, className = '', style }: BoneProps) 
 
 /** 자리표시 묶음: 화면 읽기에는 '불러오는 중' 하나로, 보이기는 늦게 */
 export function SkeletonFrame({ children, className = '', label = '불러오는 중' }: { children: ReactNode; className?: string; label?: string }) {
-  return <div className={`skf ${className}`} role="status" aria-busy="true" aria-label={label}>{children}</div>;
+  // 다른 자리표시가 이미 보이고 있었으면(페이지 자리표시 → 화면 자리표시) 늦게 나타나지 않고 그대로 이어받는다 — 사이에 빈 화면이 끼지 않게
+  const [now] = useState(() => skeletonVisible() || performance.now() - goneAt < 250);
+  useLayoutEffect(() => {
+    const id = ++seq;
+    shown.set(id, now ? 0 : performance.now() + 120);
+    return () => { shown.delete(id); goneAt = performance.now(); };
+  }, [now]);
+  return <div className={`skf ${now ? 'now' : ''} ${className}`} role="status" aria-busy="true" aria-label={label}>{children}</div>;
 }
 
 /** 글 줄 여러 개 (길이가 조금씩 다르게) */

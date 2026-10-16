@@ -16,7 +16,7 @@ import { RecentGames } from './game';
 import { ProfileHero, ShareButton, baseTint } from './shop';
 import { BgScene } from './bgscene';
 import { NickName, ProfileStudio } from './studio';
-import { MemberSkeleton, RankingSkeleton, useReveal } from './skeleton';
+import { MemberSkeleton, RankingSkeleton, useReveal, Swap, fadeCls } from './skeleton';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
@@ -66,6 +66,7 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
   const art = by === 'champ-art' || by === 'aug-art';
   const { data, error } = useLoad<Ranking>(api, art ? null : by === 'month' ? '/api/ranking?period=month' : by === 'winrate' ? '/api/ranking?by=winrate' : '/api/ranking');
   const skins = useSkins();
+  const rv = useReveal(!art && Boolean(data));
   const rows = useMemo(() => {
     const r = (data?.rows ?? []).slice();
     if (by === 'winrate') return r.filter((x) => x.n >= (data?.minWinrate ?? 10)).sort((a, b) => b.w / b.n - a.w / a.n || b.n - a.n);
@@ -78,14 +79,16 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
       {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
       {!art && !data && !error && <RankingSkeleton />}
-      {!art && data && !rows.length && <Empty>{by === 'winrate' ? '아직 조건을 채운 회원이 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
-      {!art && rows.length > 0 && <Leaderboard key={`lb-${by}`} play={play} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
-      {!art && rows.length > 3 && <div key={`rl-${by}`} className={`card rank-list ${play ? 'lb-in' : ''}`}>
+      {!art && data && <Swap on={rv} skeleton={<RankingSkeleton />}><div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
+      {!rows.length && <Empty>{by === 'winrate' ? '아직 조건을 채운 회원이 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
+      {rows.length > 0 && <Leaderboard key={`lb-${by}`} play={play} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
+      {rows.length > 3 && <div key={`rl-${by}`} className={`card rank-list ${play ? 'lb-in' : ''}`}>
         {rows.slice(3).map((r, i) => <RankRow key={r.id} r={r} rank={i + 4} i={i} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
       </div>}
-      {!art && data?.limited && <LockedMore more={data.limited.total - rows.length}>
+      {data?.limited && <LockedMore more={data.limited.total - rows.length}>
         {data.limited.mine && by !== 'winrate' && <div className="card rank-list"><RankRow r={data.limited.mine} rank={data.limited.mine.rank} by={by as RankBy} me skins={skins} onOpen={onOpen} /></div>}
       </LockedMore>}
+      </div></Swap>}
     </div>
   );
 }
@@ -176,8 +179,8 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
   const S = styleOf(data.champions);
   const picksN = data.augments.reduce((n, a) => n + a.n, 0);
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
-  return (
-    <div className={`stack ${rv}`} style={{ gap: 16 }}>
+  return (<Swap on={rv} skeleton={<MemberSkeleton />}>
+    <div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
       <ProfileHero nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
         actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit(true)}><Icon name="spark" />프로필 꾸미기</button>}
@@ -222,7 +225,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
         </section>
       </>}
     </div>
-  );
+  </Swap>);
 }
 
 /** 증강 고르는 습관과 승률: 챔피언에 맞게 골랐을 때 / 성향별 (고른 증강 기준) */
