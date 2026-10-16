@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { AUGMENT, CHAMPIONS, cdragon, champIcon, augIcon, loadSkins, withDefaults, PRESENCE_LABEL, type DiscordRole, type Links, type Presence, type Skin } from '@prism/core';
+import { AUGMENT, CHAMPIONS, cdragon, champIcon, augIcon, loadSkins, withDefaults, PRESENCE_LABEL, type DiscordRole, type Links, type Presence, type Skin, josa } from '@prism/core';
 import { Icon, type IconName } from './icons';
 import { imgIn } from './skeleton';
 
@@ -278,7 +278,7 @@ export function LockedMore({ more, what = '전체 순위', children }: { more: n
   return (
     <div className="locked-more">
       {children}
-      {more > 0 && <div className="lm-foot"><Icon name="lock" /><span><b>{more}명</b> 더 있어요 · <b>정회원</b>부터 {what}를 볼 수 있어요</span></div>}
+      {more > 0 && <div className="lm-foot"><Icon name="lock" /><span><b>{more}명</b> 더 있어요 · <b>정회원</b>부터 {josa(what, '을/를')} 볼 수 있어요</span></div>}
     </div>
   );
 }

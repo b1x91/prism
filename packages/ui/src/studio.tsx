@@ -8,8 +8,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   CHAMPIONS, CHAMPION_LIST, PIECE, RARITY_SHOP_KO, SHOP, SKIN_TIERS, SLOT_KO, baseSkin, matchName, priceWith, skinNeed,
-  type Api, type Deco, type MemberPage, type Shop, type ShopSlot, type Skin,
-} from '@prism/core';
+  type Api, type Deco, type MemberPage, type Shop, type ShopSlot, type Skin, josa } from '@prism/core';
 import { ChampImg } from './basics';
 import { Icon } from './icons';
 import { BgScene } from './bgscene';
@@ -154,7 +153,7 @@ function DecoPanel({ slot, shop, deco, me, onPick }: { slot: ShopSlot; shop: Sho
   const owned = items.filter((x) => shop.owned.includes(x.id)).length;
   return (
     <div className="pst-deco">
-      {!owned && <p className="meta pst-hint">아직 가진 {SLOT_KO[slot]}가 없어요. 상점에서 {PIECE}로 모을 수 있어요.</p>}
+      {!owned && <p className="meta pst-hint">아직 가진 {josa(SLOT_KO[slot], '이/가')} 없어요. 상점에서 {PIECE}로 모을 수 있어요.</p>}
       <div className="pst-grid deco">
         <button type="button" className={`pst-tile none ${!cur ? 'on' : ''}`} onClick={() => onPick(null)}>
           {slot === 'bg'

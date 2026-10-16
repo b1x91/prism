@@ -21,6 +21,7 @@ import { cancelParty, joinParty, leaveParty, listParties, openParty } from './pa
 import { buy, equip, getShop, markDaily, publicProfile, setShare } from './shop.js';
 import { claimMissions, favCount, getFavs, getMissions, setFav } from './missions.js';
 import { assertRanking } from './roles.js';
+import { listDiag, saveDiag } from './diag.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 
 async function route(req: Request, env: Env): Promise<Response> {
@@ -63,6 +64,8 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/me/consent') return setConsent(req, env, me);
   if (m === 'POST' && pathname === '/api/me/profile') return setProfile(req, env, me);
   if (m === 'POST' && pathname === '/api/me/about') return saveAbout(req, env, me);
+  if (m === 'POST' && pathname === '/api/me/diag') return saveDiag(req, env, me);
+  if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
   if (m === 'POST' && pathname === '/api/me/presence') { await markDaily(env, me.id); return setPresence(env, me, await req.json<Record<string, unknown>>().catch(() => ({}))); }
   if (m === 'GET' && pathname === '/api/crew/targets') return crewTargets(env);
   if (m === 'POST' && pathname === '/api/ingest') return ingest(req, env, me);

@@ -12,6 +12,7 @@ import { Crew } from './pages/Crew';
 import { MemberPage, MissionsPage, RankingPage, ShopPage, PublicPage } from './pages/Members';
 import { AuthDone } from './pages/AuthDone';
 import { DexPage } from './pages/Dex';
+import { DiagPage } from './pages/Diag';
 import { Privacy } from './pages/Privacy';
 
 createRoot(document.getElementById('root')!).render(
@@ -39,6 +40,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="champions/:id" element={<Guide />} />
             <Route path="auth/done" element={<AuthDone />} />
             <Route path="privacy" element={<Privacy />} />
+            <Route path="admin/diag" element={<DiagPage />} />
             <Route path="*" element={<Home />} />
           </Route>
         </Routes>

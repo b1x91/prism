@@ -1,11 +1,12 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { Empty, Icon, MemberView, MissionsView, RankingView, ShopView } from '@prism/ui';
 import type { State } from '../controller';
+import { josa } from '@prism/core';
 import { api } from '../bridge';
 
 function NeedLogin({ s, onLogin, what }: { s: State; onLogin: () => void; what: string }) {
   if (!s.session.configured) return <section className="card pad"><Empty>Prism 모임 기능은 곧 열립니다.</Empty></section>;
-  return <section className="card pad"><Empty action={<button type="button" className="btn primary" onClick={onLogin}><Icon name="discord" />디스코드로 로그인</button>}>{what}은 Prism 회원에게 열립니다.</Empty></section>;
+  return <section className="card pad"><Empty action={<button type="button" className="btn primary" onClick={onLogin}><Icon name="discord" />디스코드로 로그인</button>}>{josa(what, '은/는')} Prism 회원에게 열립니다.</Empty></section>;
 }
 
 export function RankingPage({ s, onLogin }: { s: State; onLogin: () => void }) {

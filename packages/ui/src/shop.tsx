@@ -7,8 +7,7 @@
 import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   CHAMPIONS, DEX_LEVEL_KO, PIECE, priceWith, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
-  type Api, type Deco, type DexLevel, type PublicProfile, type Shop, type ShopItem, type ShopSlot,
-} from '@prism/core';
+  type Api, type Deco, type DexLevel, type PublicProfile, type Shop, type ShopItem, type ShopSlot, josa } from '@prism/core';
 import { ChampImg, Empty, Gem, MemberFace, Toggle, useSkins } from './basics';
 import { useLoad } from './crew';
 import { BgScene } from './bgscene';
@@ -194,7 +193,7 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
       {list.length ? <div className="shop-grid">{list.map((x) => <ShopCard key={x.id} x={x} me={me} data={data} busy={busy === x.id}
         onBuy={() => setBuying(x)}
         onEquip={(on) => run(x.id, () => api.post('/api/me/equip', { slot: x.slot, id: on ? x.id : null }))} />)}</div>
-        : <Empty>아직 보유한 {slot === 'hot' ? '아이템이' : `${SLOT_KO[slot]}가`} 없어요.</Empty>}
+        : <Empty>아직 보유한 {slot === 'hot' ? '아이템이' : josa(SLOT_KO[slot], '이/가')} 없어요.</Empty>}
       {buying && <BuyDialog api={api} item={buying} data={data} me={me} onClose={() => setBuying(null)} onDone={(s) => { setBuying(null); setPieces(s.balance); reload(); }} />}
     </div>
   </Swap>);

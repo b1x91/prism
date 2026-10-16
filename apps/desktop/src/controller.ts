@@ -302,6 +302,10 @@ export function start() {
   void loop();
   // Rust 가 롤 단계 변화를 알려 주면 기다리지 않고 바로 다시 읽는다 (창이 트레이에 있어 타이머가 늦어도)
   import('@tauri-apps/api/event').then(({ listen }) => listen('lcu-phase', () => void checkNow())).catch(() => {});
+  // 자동 진단 (v3.64): 게임 위 작은 창이 한 판 내내 안 뜨면 Rust 가 그 판의 인식 기록을 넘긴다 → 서버에 남긴다 (관리자만 본다)
+  import('@tauri-apps/api/event').then(({ listen }) => listen<unknown>('vision-diag', (e) => {
+    if (state.me?.consent) void api.post('/api/me/diag', e.payload).catch(() => {});
+  })).catch(() => {});
 }
 
 /** 확인 고리: 다음 확인을 예약해 두고, '지금 확인'을 누르면 기다리지 않고 바로 다시 본다 */

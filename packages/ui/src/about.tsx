@@ -4,7 +4,7 @@
  * 저장하면 서버가 처음 한 번 디스코드 '멤버 환영' 채널에 소개 카드를 올린다.
  */
 import { useState } from 'react';
-import { ABOUT_DAYS, ABOUT_ROLES, ABOUT_TIMES, MBTI_LIST, ROLE_KO, cleanAbout, type About, type Api } from '@prism/core';
+import { ABOUT_DAYS, ABOUT_ROLES, ABOUT_TIMES, MBTI_LIST, ROLE_KO, cleanAbout, type About, type Api, josa } from '@prism/core';
 import { FavChampPick } from './favpick';
 import { ROLE_DOT } from './champ';
 
@@ -45,7 +45,7 @@ export function AboutPick({ api, initial, onDone, verb = '저장' }: { api: Api;
         <div className="abt-mbti">{MBTI_LIST.map((m) => <button key={m} type="button" className={`chip ${mbti === m ? 'on' : ''}`} aria-pressed={mbti === m} onClick={() => setMbti(m)}>{m}</button>)}</div>
       </section>
       {err && <p className="l" style={{ margin: 0 }}>{err}</p>}
-      <button type="button" className="btn primary lg abt-go" disabled={!about || busy} onClick={save}>{busy ? '저장 중…' : about ? verb : `${left.join(' · ')}을 골라 주세요`}</button>
+      <button type="button" className="btn primary lg abt-go" disabled={!about || busy} onClick={save}>{busy ? '저장 중…' : about ? verb : `${josa(left.join(' · '), '을/를')} 골라 주세요`}</button>
     </div>
   );
 }

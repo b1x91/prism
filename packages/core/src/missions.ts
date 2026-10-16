@@ -9,6 +9,7 @@
  */
 import { CHAMPIONS } from './data';
 import { challengeRole, CHALLENGE_ROLE_KO, type ChallengeRole } from './challenges';
+import { josa } from './josa';
 
 /** 판 하나: 챔프 · 승(1/0) · 시각 */
 export type MGame = { c: number; w: number; t: number };
@@ -83,7 +84,7 @@ export function weekMissions(all: MGame[], ws: number): { missions: Mission[]; b
   const R = (base: number) => Math.round(base * bonus);
   const missions: Mission[] = [
     { id: `w:${ws}:fresh`, key: 'fresh', role: r1, title: `처음 해 보는 ${CHALLENGE_ROLE_KO[r1]} 챔프 ${t1}개`, hint: `아직 안 해 본 ${CHALLENGE_ROLE_KO[r1]} 챔프로 한 판씩`, target: t1, progress: Math.min(fresh, t1), done: fresh >= t1, reward: R(MISSION_REWARD.fresh) },
-    { id: `w:${ws}:weak`, key: 'weak', role: r2, title: `${CHALLENGE_ROLE_KO[r2]}로 2승`, hint: `덜 해 본 역할인 ${CHALLENGE_ROLE_KO[r2]} 챔프로 두 번 이기기`, target: 2, progress: Math.min(wins, 2), done: wins >= 2, reward: R(MISSION_REWARD.weak) },
+    { id: `w:${ws}:weak`, key: 'weak', role: r2, title: `${josa(CHALLENGE_ROLE_KO[r2], '으로/로')} 2승`, hint: `덜 해 본 역할인 ${CHALLENGE_ROLE_KO[r2]} 챔프로 두 번 이기기`, target: 2, progress: Math.min(wins, 2), done: wins >= 2, reward: R(MISSION_REWARD.weak) },
     { id: `w:${ws}:spread`, key: 'spread', title: '서로 다른 역할 3개', hint: '이번 주에 역할이 다른 챔프 셋으로 한 판씩', target: 3, progress: Math.min(roles, 3), done: roles >= 3, reward: R(MISSION_REWARD.spread) },
   ];
   return { missions, bonus, top };

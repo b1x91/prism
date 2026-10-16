@@ -4,7 +4,7 @@
  * 깬 미션은 '받기'를 눌러야 피스가 들어온다 — 버튼에서 금빛 조각이 터져 보유 피스로 날아가고, 숫자가 차오른다.
  */
 import { useRef, useState } from 'react';
-import { CHAMPIONS, MISSION_ROLE_KO, PIECE, cdragon, type Api, type Mission, type MissionState } from '@prism/core';
+import { CHAMPIONS, MISSION_ROLE_KO, PIECE, cdragon, type Api, type Mission, type MissionState, josa } from '@prism/core';
 import { Empty } from './basics';
 import { useLoad } from './crew';
 import { Icon } from './icons';
@@ -103,7 +103,7 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
       <div className="msn-cards">{w.missions.map((m, i) => (
         <MissionCard key={m.id} m={m} i={i} fresh={fresh.has(m.id)} busy={busy === m.id} onClaim={(el) => claim(m.id, { ids: [m.id] }, el)} />
       ))}</div>
-      {w.bonus > 1 && w.top && <p className="msn-bonus"><b>보상 ×{w.bonus}</b> 지난주까지 {MISSION_ROLE_KO[w.top.role]}를 {Math.round(w.top.share * 100)}% 했어요. 다른 역할로 넓힐수록 보상이 커요.</p>}
+      {w.bonus > 1 && w.top && <p className="msn-bonus"><b>보상 ×{w.bonus}</b> 지난주까지 {josa(MISSION_ROLE_KO[w.top.role], '을/를')} {Math.round(w.top.share * 100)}% 했어요. 다른 역할로 넓힐수록 보상이 커요.</p>}
 
       {data.past.length > 0 && <section className="msn-past">
         <span className="msn-sec">지난주에 깬 미션</span>

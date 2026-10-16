@@ -7,6 +7,7 @@
 import { CHAMPIONS } from './data';
 import { challengeRole, CHALLENGE_ROLE_KO, type ChallengeRole } from './challenges';
 import { augmentHabits, type MemberPage } from './profile';
+import { josa } from './josa';
 
 export const IMPROVE = {
   /** 한 묶음 최소 판수(증강은 고른 수) */
@@ -95,7 +96,7 @@ export function improveOf(page: MemberPage): WinTip[] {
   if (weak) {
     const gain = weak.g * (weak.v.n / page.total.n);
     const best = [...roles].filter(([, v]) => v.n >= min).sort((a, b) => rate(b[1]) - rate(a[1]))[0];
-    tips.push({ key: 'role', title: `${CHALLENGE_ROLE_KO[weak.r]}로 할 때 약해요`, why: `${CHALLENGE_ROLE_KO[weak.r]} ${pctTxt(rate(weak.v))} (${weak.v.n}판) · 나머지 역할 ${pctTxt(rate(weak.others))}`,
+    tips.push({ key: 'role', title: `${josa(CHALLENGE_ROLE_KO[weak.r], '으로/로')} 할 때 약해요`, why: `${CHALLENGE_ROLE_KO[weak.r]} ${pctTxt(rate(weak.v))} (${weak.v.n}판) · 나머지 역할 ${pctTxt(rate(weak.others))}`,
       act: `${ROLE_ACT[weak.r]}${best && best[0] !== weak.r ? ` 대기석에 ${CHALLENGE_ROLE_KO[best[0]]} 챔프가 있으면 바꿔 와도 좋아요 (${pctTxt(rate(best[1]))}).` : ''}`,
       cmp: [side('나머지 역할', weak.others), side(CHALLENGE_ROLE_KO[weak.r], weak.v)], gain, weight: gain });
   }

@@ -71,8 +71,30 @@ pub struct Report {
     pub trace: Vec<String>,
 }
 
+/// 한 판 동안의 인식 집계 (v3.64 자동 진단). 작은 창이 한 번도 안 뜬 판이면 끝날 때 서버로 보낸다
+#[derive(Serialize, Clone, Default)]
+pub struct GameDiag {
+    pub started: u64,
+    /// 단계별 횟수 (found·reading·back·capture …)
+    pub stages: std::collections::BTreeMap<String, u32>,
+    pub shown: u32,
+    pub raised: u32,
+    pub capture_fails: u32,
+    pub ocr_errors: u32,
+    pub max_hits: u32,
+    pub front: u32,
+    pub not_front: u32,
+    /// 마지막 게임 화면·배율·읽는 곳·모니터 수
+    pub game_rect: [i32; 4],
+    pub scale: f64,
+    pub region: [i32; 4],
+    pub monitors: i32,
+    pub how: String,
+}
+
 pub struct Vision {
     path: PathBuf,
+    pub diag: Mutex<Option<GameDiag>>,
     pub settings: Mutex<Settings>,
     pub report: Mutex<Report>,
     pub matcher: Matcher,
@@ -89,7 +111,7 @@ impl Vision {
     pub fn new(dir: PathBuf) -> Arc<Self> {
         let path = dir.join("vision.json");
         let settings = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
-        Arc::new(Self { path, settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), shown: AtomicBool::new(false), allowed: AtomicBool::new(false) })
+        Arc::new(Self { path, diag: Mutex::new(None), settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), shown: AtomicBool::new(false), allowed: AtomicBool::new(false) })
     }
 
     pub fn set(&self, s: Settings) {
@@ -105,6 +127,17 @@ impl Vision {
         r.stage = stage.into();
         r.hits = hits;
         r.window = window.into();
+        drop(r);
+        if let Some(d) = self.diag.lock().unwrap().as_mut() {
+            *d.stages.entry(stage.to_string()).or_default() += 1;
+            d.max_hits = d.max_hits.max(hits);
+        }
+    }
+
+    fn diag(&self, f: impl FnOnce(&mut GameDiag)) {
+        if let Some(d) = self.diag.lock().unwrap().as_mut() {
+            f(d);
+        }
     }
 
     fn trace(&self, line: String) {
@@ -408,6 +441,14 @@ mod imp {
                 warned_capture = false;
                 capture_fails = 0;
             }
+            // 판의 시작·끝 (게임 창 또는 게임 프로세스가 있는 동안 = 한 판). 끝나면 작은 창이 한 번도 안 떴는지 보고 진단을 보낸다
+            let alive = s.enabled && allowed && (unsafe { FindWindowW(windows::core::w!("RiotWindowClass"), PCWSTR::null()) }.is_ok_and(|w| !w.is_invalid()) || !pids.0.is_empty());
+            let ended = {
+                let mut g = v.diag.lock().unwrap();
+                if alive && g.is_none() { *g = Some(GameDiag { started: now(), ..Default::default() }); }
+                if alive { None } else { g.take() }
+            };
+            if let Some(d) = ended { end_game(&app, &v, d); }
             let (Some((h, _)), Some(eng)) = (game, eng.as_ref()) else {
                 v.stage(if !s.enabled { "off" } else if !allowed { "wait" } else if game.is_none() { "no-game" } else { "back" }, 0, how);
                 v.hide(&app);
@@ -423,6 +464,7 @@ mod imp {
             // 활성화될 때 우리 창 위로 올라간다) 다시 맨 위로. 무조건 올리지 않고 실제로 깔렸을 때만 (창 순서를 자꾸 바꾸면 끊김)
             if v.shown.load(Ordering::SeqCst) && overlay_buried(&app, h) {
                 raise_overlay(&app);
+                v.diag(|d| d.raised += 1);
                 v.trace(format!("작은 창이 게임 밑에 깔려 다시 맨 위로 (맨앞={front})"));
             }
             // 게임 창이 있는 모니터의 배율 (모니터마다 배율이 다를 수 있다)
@@ -432,6 +474,14 @@ mod imp {
             let wide = if band.is_some() { band_wide } else { misses % 4 == 3 };
             let (x, y, w, hh) = if wide { region_wide(&rc) } else { region(&rc) };
             if w < 200 || hh < 100 { std::thread::sleep(EVERY); continue; }
+            v.diag(|d| {
+                if front { d.front += 1 } else { d.not_front += 1 }
+                d.game_rect = [rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top];
+                d.scale = scale;
+                d.region = [x, y, w, hh];
+                d.monitors = unsafe { GetSystemMetrics(SM_CMONITORS) };
+                d.how = how.to_string();
+            });
             // 맨 앞이 아닐 때는 다른 창이 읽을 자리를 가리고 있으면 읽지 않는다 (Prism 창의 증강 이름을 카드로 착각하지 않게).
             // 띄워 둔 작은 창은 그대로 둔다
             if !front && !uncovered(h, x, y, w, hh) {
@@ -468,6 +518,7 @@ mod imp {
                                 v.publish(&app, ids, String::new());
                                 show_overlay(&app, &rc, &s.position, scale);
                                 v.shown.store(true, Ordering::SeqCst);
+                                v.diag(|d| d.shown += 1);
                             }
                         }
                         std::thread::sleep(FAST.max(t0.elapsed() * 2));
@@ -479,10 +530,10 @@ mod imp {
             let (by, bh) = band.unwrap_or((0, hh));
             let t0 = std::time::Instant::now();
             let found = match grab(x, y + by, w, bh) {
-                None => { if capture_fails == 0 { v.trace(format!("복사 실패(검은 화면) 게임={},{} {}x{} 읽는곳={x},{} {w}x{bh}", rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, y + by)); } None }
+                None => { v.diag(|d| d.capture_fails += 1); if capture_fails == 0 { v.trace(format!("복사 실패(검은 화면) 게임={},{} {}x{} 읽는곳={x},{} {w}x{bh}", rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top, y + by)); } None }
                 Some(buf) => match recognize(eng, &buf, w, bh) {
                     Ok(r) => Some(r),
-                    Err(e) => { if capture_fails == 0 { v.trace(format!("인식 오류 {w}x{bh}: {e}")); } None }
+                    Err(e) => { v.diag(|d| d.ocr_errors += 1); if capture_fails == 0 { v.trace(format!("인식 오류 {w}x{bh}: {e}")); } None }
                 },
             };
             v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
@@ -514,6 +565,7 @@ mod imp {
                             v.publish(&app, ids, text);
                             show_overlay(&app, &rc, &s.position, scale);
                             v.shown.store(true, Ordering::SeqCst);
+                            v.diag(|d| d.shown += 1);
                         }
                     } else {
                         misses += 1;
@@ -550,6 +602,26 @@ mod imp {
             let cost = t0.elapsed();
             std::thread::sleep(if v.shown.load(Ordering::SeqCst) { FAST.max(cost * 2) } else { EVERY.max(cost * 4) });
         }
+    }
+
+    /// 판이 끝났을 때: 작은 창이 한 번도 안 떴고 충분히 오래 본 판이면 진단을 화면으로 넘긴다 (화면이 서버로 보낸다, 토큰은 Rust 에만)
+    fn end_game(app: &AppHandle, v: &Vision, d: GameDiag) {
+        let looked: u32 = d.stages.iter().filter(|(k, _)| k.as_str() != "no-game" && k.as_str() != "off" && k.as_str() != "wait").map(|(_, n)| *n).sum();
+        if d.shown > 0 || looked < 40 {
+            return;
+        }
+        let r = v.report.lock().unwrap().clone();
+        let body = serde_json::json!({
+            "kind": "overlay-never-shown",
+            "version": app.package_info().version.to_string(),
+            "position": v.settings.lock().unwrap().position.clone(),
+            "engine": r.engine,
+            "diag": d,
+            "lastText": r.last_text.chars().take(300).collect::<String>(),
+            "trace": r.trace,
+        });
+        use tauri::Emitter;
+        let _ = app.emit("vision-diag", body);
     }
 
     /// 작은 창이 게임 창(또는 같은 게임 프로세스의 창) 밑에 깔렸나: 작은 창보다 위에 있는 창들을 훑는다

@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Empty, Gem, Icon, MemberSkeleton, MemberView, MissionsView, PageSkeleton, PublicProfileView, RankingView, ShopView } from '@prism/ui';
 import type { PublicProfile } from '@prism/core';
+import { josa } from '@prism/core';
 import { SERVER, useSession } from '../session';
 
 function NeedLogin({ what }: { what: string }) {
   const { login } = useSession();
-  return <section className="section"><div className="wrap"><Empty action={<button type="button" className="btn primary" onClick={login}><Icon name="discord" />디스코드로 로그인</button>}>{what}은 Prism 회원에게 열립니다.</Empty></div></section>;
+  return <section className="section"><div className="wrap"><Empty action={<button type="button" className="btn primary" onClick={login}><Icon name="discord" />디스코드로 로그인</button>}>{josa(what, '은/는')} Prism 회원에게 열립니다.</Empty></div></section>;
 }
 
 export function RankingPage() {

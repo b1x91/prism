@@ -3,7 +3,7 @@
  * 롤 클라이언트에는 읽기만 한다. 고르기·교체는 사용자가 롤에서 직접 한다.
  */
 import { useState } from 'react';
-import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, type ChampionProfile, type Comp, type Need, type Verdict, shortNick } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, type ChampionProfile, type Comp, type Need, type Verdict, shortNick, josa } from '@prism/core';
 import { AugRing, AugmentLink, ChampImg, Seg, TierBadge } from '@prism/ui';
 import { checkNow, type ChampSelect, type CrewSelect } from '../controller';
 import { Icon } from '@prism/ui';
@@ -118,7 +118,7 @@ function TeamBoard({ slots, mates, preview, c, needs, verdict, reco, recoAfter, 
       <div className={`tb-verdict ${verdict?.grade ?? 'none'}`}>
         <span className="k">우리 팀 {preview ? '(미리보기 포함)' : ''}</span>
         <b>{verdict ? verdict.label.split(' · ')[0] : '팀 구성을 읽는 중'}</b>
-        <span className="sub">{!verdict ? '팀원 챔프가 정해지면 바로 분석해요' : needs.length ? `${needs.join('·')}가 부족해요` : '부족한 것이 없어요'}</span>
+        <span className="sub">{!verdict ? '팀원 챔프가 정해지면 바로 분석해요' : needs.length ? `${josa(needs.join('·'), '이/가')} 부족해요` : '부족한 것이 없어요'}</span>
         <div className="tb-team">{slots.map((s, i) => {
           const m = mates[s.puuid];
           return (
@@ -212,7 +212,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
 
         {!isMine && <div className="cs-sec">
           <span className="cs-h">팀에 넣으면</span>
-          <div className="cs-fill">{fitText.warn ? <span className="pill warn">팀이 {fitText.warn}</span> : fitText.fills.length ? fitText.fills.map((x) => <span key={x} className="pill ok">{x} 보완</span>) : <span className="cs-muted">{needs.length ? `부족한 ${needs.join('·')}는 채우지 못해요` : '팀 구성 무난'}</span>}</div>
+          <div className="cs-fill">{fitText.warn ? <span className="pill warn">팀이 {fitText.warn}</span> : fitText.fills.length ? fitText.fills.map((x) => <span key={x} className="pill ok">{x} 보완</span>) : <span className="cs-muted">{needs.length ? `부족한 ${josa(needs.join('·'), '은/는')} 채우지 못해요` : '팀 구성 무난'}</span>}</div>
         </div>}
 
         {picks.length > 0 && <div className="cs-sec">

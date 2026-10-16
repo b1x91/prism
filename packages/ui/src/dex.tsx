@@ -4,7 +4,7 @@
  * 못 만난 것은 번호와 흐린 그림(???). 누르면 도감 설명과 다음 목표.
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP, josa } from '@prism/core';
 import { ChampImg, Gem, Select, Seg } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
@@ -190,7 +190,7 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { d
                 <Pips m={x} />
               </button>
             );
-          })}</div> : <p className="meta dex-none">{q ? '만난 것 중에 맞는 이름이 없어요.' : show === 'missing' ? `모든 ${what}을 만났어요!` : show.startsWith('l') ? `아직 ${DEX_LEVEL_KO[Number(show.slice(1)) as DexLevel]} 단계인 것이 없어요.` : '아직 없어요. 한 판 하고 오면 채워져요.'}</p>}
+          })}</div> : <p className="meta dex-none">{q ? '만난 것 중에 맞는 이름이 없어요.' : show === 'missing' ? `모든 ${josa(what, '을/를')} 만났어요!` : show.startsWith('l') ? `아직 ${DEX_LEVEL_KO[Number(show.slice(1)) as DexLevel]} 단계인 것이 없어요.` : '아직 없어요. 한 판 하고 오면 채워져요.'}</p>}
         </section>
 
         {sheet && <button type="button" className="dex-scrim" aria-label="닫기" onClick={() => setSheet(false)} />}

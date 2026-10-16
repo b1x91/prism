@@ -6,6 +6,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { HeartBurst, HeartIcon } from './likeheart';
 import type { Api } from '@prism/core';
+import { josa } from '@prism/core';
 
 export type FavKind = 'champ' | 'aug';
 type Favs = { champs: number[]; augs: number[] };
@@ -62,7 +63,7 @@ export function FavStar({ kind, id, size = 'md' }: { kind: FavKind; id: number; 
   }, [f.connected, kind, id]);
   if (!f.connected) return null;
   const what = kind === 'champ' ? '내 챔프' : '내 증강';
-  const label = on ? `좋아요 취소 (${what}에서 빼기)` : `좋아요 (${what}로 표시)`;
+  const label = on ? `좋아요 취소 (${what}에서 빼기)` : `좋아요 (${josa(what, '으로/로')} 표시)`;
   return <HeartBurst on={on} count={count} label={label} size={size} pending={pending} onToggle={() => { setCount((c) => (c == null ? c : Math.max(0, c + (on ? -1 : 1)))); void toggleFav(kind, id); }} />;
 }
 
