@@ -235,29 +235,55 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
 }
 
 /**
- * 분석판 (v3.56): 머리 아래쪽에 겹쳐 올라오는 한 장. 승률 고리 · Prism 점수와 순위 · 핵심 숫자 · 최근 판 승률 흐름(10판씩 이동 평균).
- * 최근 10판 승패 띠는 아래 '최근 판' 머리에 있으므로 여기 두지 않는다 (한 화면에 같은 요소 두 번 금지).
+ * 분석판 (v3.56 · v3.57 디자인): 머리 아래쪽에 겹쳐 올라오는 한 장.
+ * 머리 줄(분석 요약 · 기록 범위 · 마지막 판) + 지표 타일 넷(승률 · Prism 점수 · KDA · 흐름) + 승률 흐름 차트(축·눈금·평균선).
+ * 타일마다 숫자 하나와 그 숫자를 읽는 작은 그림 하나. 최근 10판 띠는 아래 '최근 판' 머리에만 (같은 요소 두 번 금지).
  */
 function StatBoard({ data, games, kda, streak }: { data: MemberPage; games: Game[]; kda: string; streak: { n: number; win: boolean } }) {
   const { total } = data;
   const wr = total.n ? total.w / total.n : 0;
-  const per = (x: number) => (total.n ? (x / total.n).toFixed(1) : '–');
+  const per = (x: number) => (total.n ? x / total.n : 0);
+  const score = rankScore(total.w, total.n), base = 500;
+  const k = per(total.k), d = per(total.d), a = per(total.a), kdaSum = k + d + a || 1;
+  const champs = Object.keys(CHAMPIONS).length;
+  const last30 = games.slice(0, 30);
   return (
     <section className="card pdash">
-      <div className="pd-main">
-        <WinRing value={wr} />
-        <div className="pd-score">
-          <span className="k">Prism 점수</span>
-          <b className="v">{rankScore(total.w, total.n)}<small>점</small></b>
-          <span className="meta">전체 {data.rank}위 · {total.n}판 {total.w}승 {total.n - total.w}패</span>
+      <header className="pd-head">
+        <span className="pd-title">분석 요약</span>
+        <span className="meta">기록 {total.n}판 · 최근 {last30.length}판 흐름</span>
+        <span className="sp" />
+        <span className="pd-chip">만난 챔프 <b>{data.champions.length}</b> / {champs}</span>
+        {games[0] && <span className="pd-chip">마지막 판 <b>{ago(games[0].playedAt)}</b></span>}
+      </header>
+      <div className="pd-grid">
+        <div className="pd-tile">
+          <span className="pd-k">승률</span>
+          <div className="pd-row"><WinRing value={wr} /><div className="pd-v"><b>{Math.round(wr * 100)}<small>%</small></b><span className="meta">{total.w}승 {total.n - total.w}패</span></div></div>
+          <div className="pd-split" aria-hidden="true"><span className="w" style={{ flex: total.w }} /><span className="l" style={{ flex: total.n - total.w }} /></div>
         </div>
+        <div className="pd-tile">
+          <span className="pd-k">Prism 점수</span>
+          <div className="pd-v"><b>{score}<small>점</small></b><span className="meta">전체 {data.rank}위</span></div>
+          {/* 기준 500점에서 얼마나 떨어졌는지 (가운데가 500) */}
+          <div className="pd-div" aria-hidden="true"><span className={score >= base ? 'up' : 'down'} style={{ width: `${Math.min(50, (Math.abs(score - base) / 200) * 50)}%` }} /><i /></div>
+          <span className="pd-foot"><span>기준 500</span><b className={score >= base ? 'w' : 'l'}>{score >= base ? '+' : '−'}{Math.abs(score - base)}</b></span>
+        </div>
+        <div className="pd-tile">
+          <span className="pd-k">KDA</span>
+          <div className="pd-v"><b>{kda}</b><span className="meta">판당 평균</span></div>
+          <div className="pd-stack" aria-hidden="true"><span className="k" style={{ flex: k / kdaSum }} /><span className="d" style={{ flex: d / kdaSum }} /><span className="a" style={{ flex: a / kdaSum }} /></div>
+          <span className="pd-foot pd-legend"><span><i className="k" />킬 {k.toFixed(1)}</span><span><i className="d" />데스 {d.toFixed(1)}</span><span><i className="a" />어시 {a.toFixed(1)}</span></span>
+        </div>
+        <div className="pd-tile">
+          <span className="pd-k">지금</span>
+          <div className="pd-v"><b className={streak.win ? 'w' : 'l'}>{streak.n}<small>{streak.win ? '연승' : '연패'}</small></b><span className="meta">최고 {bestRun(last30)}연승</span></div>
+          {/* 최근 30판 승패 (왼쪽이 오래된 판) */}
+          <div className="pd-cells" aria-label={`최근 ${last30.length}판 승패`}>{last30.slice().reverse().map((g, i) => <i key={i} className={g.win ? 'w' : 'l'} />)}</div>
+          <span className="pd-foot"><span>최근 {last30.length}판</span><span>지금 →</span></span>
+        </div>
+        <Trend games={games} base={wr} />
       </div>
-      <div className="pd-kpis">
-        <div><span className="k">KDA</span><b>{kda}</b><span className="meta">{per(total.k)} / {per(total.d)} / {per(total.a)}</span></div>
-        <div><span className="k">지금</span><b className={streak.win ? 'w' : 'l'}>{streak.n}<small>{streak.win ? '연승' : '연패'}</small></b><span className="meta">최근 {games.length}판 최고 {bestRun(games)}연승</span></div>
-        <div><span className="k">만난 챔프</span><b>{data.champions.length}<small>챔프</small></b><span className="meta">주 챔프 {CHAMPIONS[data.champions[0]?.id]?.name ?? '–'}</span></div>
-      </div>
-      <Trend games={games} base={wr} />
     </section>
   );
 }
@@ -270,43 +296,51 @@ function bestRun(games: Game[]) {
 }
 
 function WinRing({ value }: { value: number }) {
-  const r = 46, c = 2 * Math.PI * r;
+  const r = 22, c = 2 * Math.PI * r;
   return (
-    <span className="pd-ring" role="img" aria-label={`승률 ${Math.round(value * 100)}%`}>
-      <svg viewBox="0 0 108 108" aria-hidden="true"><circle cx="54" cy="54" r={r} className="bg" /><circle cx="54" cy="54" r={r} className="fg" strokeDasharray={`${c * value} ${c}`} /></svg>
-      <span className="in"><b>{Math.round(value * 100)}<small>%</small></b><small>승률</small></span>
+    <span className="pd-ring" aria-hidden="true">
+      <svg viewBox="0 0 56 56"><circle cx="28" cy="28" r={r} className="bg" /><circle cx="28" cy="28" r={r} className="fg" strokeDasharray={`${c * value} ${c}`} /></svg>
     </span>
   );
 }
 
-/** 최근 판 승률 흐름: 오래된 판 → 최근 판, 10판씩 묶은 이동 평균 + 내 평균 선 */
+/** 승률 흐름: 오래된 판 → 최근 판, 10판씩 묶은 이동 평균 + 내 평균 점선 + 눈금 */
 function Trend({ games, base }: { games: Game[]; base: number }) {
   const W = 10;
-  const g = games.slice().reverse();
-  if (g.length < W + 2) return <div className="pd-trend empty"><span className="k">승률 흐름</span><span className="meta">{W + 2}판이 쌓이면 흐름을 그려 드려요.</span></div>;
+  const g = games.slice(0, 30).reverse();
+  if (g.length < W + 2) return <div className="pd-tile pd-trend empty"><span className="pd-k">승률 흐름</span><span className="meta">{W + 2}판이 쌓이면 흐름을 그려 드려요.</span></div>;
   const pts: number[] = [];
   for (let i = W; i <= g.length; i++) pts.push(g.slice(i - W, i).filter((x) => x.win).length / W);
-  const w = 320, h = 96, pad = 8;
-  // 세로 범위는 값이 있는 곳 둘레로 (0~100% 전체를 쓰면 선이 한쪽에 붙어 흐름이 안 보인다)
-  const lo = Math.max(0, Math.min(...pts, base) - 0.1), hi = Math.min(1, Math.max(...pts, base) + 0.1);
-  const x = (i: number) => pad + (i / (pts.length - 1)) * (w - pad * 2);
-  const y = (v: number) => pad + (1 - (v - lo) / Math.max(0.01, hi - lo)) * (h - pad * 2);
+  const w = 360, h = 120, padL = 0, padR = 6, padT = 10, padB = 10; // 눈금 글자 칸(36px)은 CSS 로 따로 둔다
+  // 세로 범위는 값 둘레로, 눈금은 10% 단위로 맞춘다
+  const lo = Math.max(0, Math.floor((Math.min(...pts, base) - 0.05) * 10) / 10), hi = Math.min(1, Math.ceil((Math.max(...pts, base) + 0.05) * 10) / 10);
+  const x = (i: number) => padL + (i / (pts.length - 1)) * (w - padL - padR);
+  const y = (v: number) => padT + (1 - (v - lo) / Math.max(0.01, hi - lo)) * (h - padT - padB);
+  const ticks = [lo, (lo + hi) / 2, hi];
   const line = pts.map((v, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
-  const last = pts[pts.length - 1], first = pts[0];
+  const last = pts[pts.length - 1], first = pts[0], peak = Math.max(...pts);
   const diff = Math.round((last - first) * 100);
   return (
-    <div className="pd-trend">
-      <div className="pd-trend-h"><span className="k">승률 흐름</span><span className="meta">최근 {g.length}판 · 10판씩</span><span className="sp" />
-        <b className={diff > 0 ? 'w' : diff < 0 ? 'l' : ''}>{diff > 0 ? '▲' : diff < 0 ? '▼' : ''} {Math.abs(diff)}%p</b></div>
-      <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
-        <defs><linearGradient id="pdg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--accent)" stopOpacity=".28" /><stop offset="1" stopColor="var(--accent)" stopOpacity="0" /></linearGradient></defs>
-        <line x1={pad} x2={w - pad} y1={y(base)} y2={y(base)} className="avg" />
-        {lo < 0.5 && hi > 0.5 && <line x1={pad} x2={w - pad} y1={y(0.5)} y2={y(0.5)} className="half" />}
-        <path d={`${line} L${x(pts.length - 1).toFixed(1)},${h - pad} L${pad},${h - pad} Z`} fill="url(#pdg)" />
-        <path d={line} className="ln" />
-        <circle cx={x(pts.length - 1)} cy={y(last)} r="4" className="dot" />
-      </svg>
-      <div className="pd-trend-f"><span>지금 10판 <b>{Math.round(last * 100)}%</b></span><span className="avgk">내 평균 {Math.round(base * 100)}%</span></div>
+    <div className="pd-tile pd-trend">
+      <div className="pd-trend-h"><span className="pd-k">승률 흐름</span><span className="meta">10판씩 이동 평균</span><span className="sp" />
+        <span className={`pd-delta ${diff > 0 ? 'up' : diff < 0 ? 'down' : ''}`}>{diff > 0 ? '▲' : diff < 0 ? '▼' : '–'} {Math.abs(diff)}%p</span></div>
+      {/* 선·면은 칸 높이에 맞춰 늘이고(비율 무시), 눈금 글자와 끝점은 늘어나지 않게 HTML 로 얹는다 */}
+      <div className="pd-plot" aria-hidden="true">
+        <svg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none">
+          <defs><linearGradient id="pdg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--accent)" stopOpacity=".24" /><stop offset="1" stopColor="var(--accent)" stopOpacity="0" /></linearGradient></defs>
+          {ticks.map((t) => <line key={t} x1={padL} x2={w - padR} y1={y(t)} y2={y(t)} className="grid" />)}
+          <line x1={padL} x2={w - padR} y1={y(base)} y2={y(base)} className="avg" />
+          <path d={`${line} L${x(pts.length - 1).toFixed(1)},${h - padB} L${padL},${h - padB} Z`} fill="url(#pdg)" />
+          <path d={line} className="ln" />
+        </svg>
+        {ticks.map((t) => <span key={t} className="tick" style={{ top: `${(y(t) / h) * 100}%` }}>{Math.round(t * 100)}%</span>)}
+        <span className="dot" style={{ left: `calc(36px + (100% - 36px) * ${x(pts.length - 1) / w})`, top: `${(y(last) / h) * 100}%` }} />
+      </div>
+      <div className="pd-trend-f">
+        <span><i className="sw ln" />지금 10판 <b>{Math.round(last * 100)}%</b></span>
+        <span><i className="sw avg" />내 평균 <b>{Math.round(base * 100)}%</b></span>
+        <span>최고 <b>{Math.round(peak * 100)}%</b></span>
+      </div>
     </div>
   );
 }

@@ -106,9 +106,11 @@ export function MemberSkeleton({ public: pub = false }: { public?: boolean }) {
       </div>
       {pub ? <div className="grid4">{[0, 1, 2, 3].map((i) => <section key={i} className="card stat sk-stat"><Bone w={56} h={10} /><Bone w={88} h={28} /></section>)}</div>
         : <section className="card pdash">
-          <div className="pd-main"><Bone w={108} h={108} r="round" /><div className="sk-lines" style={{ gap: 8 }}><Bone w={64} h={10} /><Bone w={120} h={40} /><Bone w={150} h={10} /></div></div>
-          <div className="pd-kpis">{[0, 1, 2].map((i) => <div key={i}><Bone w={48} h={10} /><Bone w={56} h={20} /><Bone w="70%" h={10} /></div>)}</div>
-          <div className="pd-trend"><Bone w={140} h={10} /><Bone w="100%" h={96} r="m" /><Bone w="100%" h={10} /></div>
+          <div className="pd-head"><Bone w={72} h={16} /><Bone w={140} h={10} /><span className="sp" /><Bone w={112} h={24} r="pill" /><Bone w={112} h={24} r="pill" /></div>
+          <div className="pd-grid">
+            {[0, 1, 2, 3].map((i) => <div key={i} className="pd-tile"><Bone w={48} h={10} /><Bone w={96} h={28} /><Bone w="100%" h={8} r="pill" />{i > 0 && <Bone w="70%" h={10} />}</div>)}
+            <div className="pd-tile pd-trend"><Bone w={140} h={12} /><Bone w="100%" h={120} r="m" /><Bone w="80%" h={10} /></div>
+          </div>
         </section>}
       {!pub && <section className="card pad"><Head w={88} /><div className="rstrip">{Array.from({ length: 10 }, (_, i) => <Bone key={i} r="m" className="sk-tile" />)}</div></section>}
       <div className="grid2">

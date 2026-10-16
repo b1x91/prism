@@ -2461,47 +2461,79 @@ button.ga:hover { background: var(--surface-2); }
 /* ───────── 회원 페이지 분석판 · 승률을 올리려면 (v3.56) ─────────
    분석판은 머리 아래쪽에 48px 겹쳐 올라온다(머리는 그만큼 아래를 비운다). */
 .phero.lift .phero-in, .sk-hero.lift .sk-hero-in { padding-bottom: calc(var(--s7) + 48px); }
-.pdash { position: relative; z-index: 2; margin-top: -64px; display: grid; grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.25fr); gap: var(--s6); align-items: center; padding: var(--s6); box-shadow: 0 24px 48px -24px rgba(7, 9, 15, .45), var(--shadow); }
-.pd-main { display: flex; align-items: center; gap: var(--s5); padding-right: var(--s6); border-right: 1px solid var(--line); }
-.pd-ring { position: relative; width: 108px; height: 108px; flex: none; }
+.pdash { position: relative; z-index: 2; margin-top: -64px; padding: 0; overflow: hidden; box-shadow: 0 24px 48px -24px rgba(7, 9, 15, .45), var(--shadow); }
+/* 머리 줄 */
+.pd-head { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2) var(--s3); padding: var(--s4) var(--s6); border-bottom: 1px solid var(--line); }
+.pd-title { font-size: var(--fs-md); font-weight: 800; }
+.pd-chip { display: inline-flex; align-items: baseline; gap: var(--s1); padding: var(--s1) var(--s3); border-radius: var(--r-pill); background: var(--surface-2); border: 1px solid var(--line); font-size: var(--fs-xs); color: var(--text-3); }
+.pd-chip b { color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; }
+/* 타일 넷 + 흐름 차트 (넓은 화면: 타일 2×2 | 차트) */
+.pd-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(0, 1.6fr); grid-template-rows: auto auto; gap: var(--s3); padding: var(--s4); }
+.pd-trend { grid-column: 3; grid-row: 1 / span 2; }
+.pd-tile { display: grid; align-content: start; gap: var(--s3); min-width: 0; padding: var(--s4); border-radius: var(--r-m); background: var(--surface-2); border: 1px solid var(--line); }
+.pd-k { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); letter-spacing: .02em; }
+.pd-row { display: flex; align-items: center; gap: var(--s3); }
+.pd-v { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--s1) var(--s2); }
+.pd-v b { font-size: var(--fs-2xl); font-weight: 850; line-height: 1; font-variant-numeric: tabular-nums; }
+.pd-v b small { font-size: var(--fs-sm); font-weight: 700; color: var(--text-3); margin-left: 2px; }
+.pd-v b.w { color: var(--win); } .pd-v b.l { color: var(--lose); }
+.pd-foot { display: flex; justify-content: space-between; gap: var(--s2); font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.pd-foot b { font-weight: 800; }
+/* 승률 고리 (작게) */
+.pd-ring { width: 48px; height: 48px; flex: none; }
 .pd-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
-.pd-ring circle { fill: none; stroke-width: 8; }
+.pd-ring circle { fill: none; stroke-width: 6; }
 .pd-ring .bg { stroke: var(--surface-3); }
 .pd-ring .fg { stroke: var(--accent); stroke-linecap: round; }
-.pd-ring .in { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
-.pd-ring .in b { font-size: var(--fs-2xl); font-weight: 850; line-height: 1; font-variant-numeric: tabular-nums; }
-.pd-ring .in b small { font-size: var(--fs-md); font-weight: 700; margin-left: 1px; }
-.pd-ring .in > small { font-size: var(--fs-xs); color: var(--text-3); font-weight: 700; margin-top: var(--s1); }
-.pd-score { display: grid; gap: var(--s1); }
-.pd-score .k, .pd-kpis .k, .pd-trend .k { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); letter-spacing: .02em; }
-.pd-score .v { font-size: var(--fs-d1); font-weight: 850; line-height: 1; font-variant-numeric: tabular-nums; }
-.pd-score .v small { font-size: var(--fs-md); font-weight: 700; color: var(--text-3); margin-left: var(--s1); }
-.pd-kpis { display: grid; gap: var(--s4); }
-.pd-kpis > div { display: grid; grid-template-columns: 72px auto minmax(0, 1fr); align-items: baseline; gap: var(--s3); }
-.pd-kpis b { font-size: var(--fs-xl); font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.pd-kpis b small { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); margin-left: 2px; }
-.pd-kpis .meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pd-trend { display: grid; gap: var(--s2); min-width: 0; }
+/* 승·패 나눔 막대 */
+.pd-split { display: flex; gap: 2px; height: 8px; border-radius: var(--r-pill); overflow: hidden; }
+.pd-split .w { background: var(--win); } .pd-split .l { background: color-mix(in srgb, var(--lose) 70%, transparent); }
+/* 점수: 500 을 가운데로 양쪽으로 뻗는 막대 */
+.pd-div { position: relative; height: 8px; border-radius: var(--r-pill); background: var(--surface-3); overflow: hidden; }
+.pd-div > span { position: absolute; top: 0; bottom: 0; }
+.pd-div > span.up { left: 50%; background: var(--accent); border-radius: 0 var(--r-pill) var(--r-pill) 0; }
+.pd-div > span.down { right: 50%; background: var(--lose); border-radius: var(--r-pill) 0 0 var(--r-pill); }
+.pd-div > i { position: absolute; left: 50%; top: -2px; bottom: -2px; width: 2px; margin-left: -1px; background: var(--text-3); }
+/* KDA: 킬·데스·어시 비율 막대 */
+.pd-stack { display: flex; gap: 2px; height: 8px; border-radius: var(--r-pill); overflow: hidden; }
+.pd-stack .k, .pd-legend i.k { background: var(--accent); }
+.pd-stack .d, .pd-legend i.d { background: var(--lose); }
+.pd-stack .a, .pd-legend i.a { background: var(--ok); }
+.pd-legend { justify-content: flex-start; flex-wrap: wrap; gap: var(--s1) var(--s3); }
+.pd-legend i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: var(--s1); vertical-align: 0; }
+/* 최근 30판 칸 */
+.pd-cells { display: grid; grid-template-columns: repeat(15, minmax(0, 1fr)); gap: 2px; }
+.pd-cells i { aspect-ratio: 1; border-radius: 2px; }
+.pd-cells i.w { background: var(--win); } .pd-cells i.l { background: color-mix(in srgb, var(--lose) 55%, var(--surface-3)); }
+/* 흐름 차트 */
+.pd-trend { align-content: stretch; grid-template-rows: auto minmax(0, 1fr) auto; }
 .pd-trend.empty { align-content: center; }
 .pd-trend-h { display: flex; align-items: baseline; gap: var(--s2); }
-.pd-trend-h b { font-size: var(--fs-sm); font-weight: 800; font-variant-numeric: tabular-nums; }
-.pd-trend svg { width: 100%; height: 96px; display: block; overflow: visible; }
-.pd-trend .ln { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-.pd-trend .avg { stroke: var(--text-3); stroke-width: 1; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
-.pd-trend .half { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.pd-trend .dot { fill: var(--surface); stroke: var(--accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
-.pd-trend-f { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--text-3); }
+.pd-delta { padding: 2px var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 800; font-variant-numeric: tabular-nums; background: var(--surface-3); color: var(--text-2); }
+.pd-delta.up { color: var(--win); background: color-mix(in srgb, var(--win) 14%, transparent); }
+.pd-delta.down { color: var(--lose); background: color-mix(in srgb, var(--lose) 14%, transparent); }
+.pd-plot { position: relative; min-height: 136px; }
+.pd-plot svg { position: absolute; top: 0; bottom: 0; left: 36px; right: 0; width: calc(100% - 36px); height: 100%; display: block; overflow: visible; }
+.pd-plot .grid { stroke: var(--line); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.pd-plot .ln { fill: none; stroke: var(--accent); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.pd-plot .avg { stroke: var(--text-3); stroke-width: 1.25; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
+.pd-plot .tick { position: absolute; left: 0; width: 28px; transform: translateY(-50%); text-align: right; font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; line-height: 1; }
+.pd-plot .dot { position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%; background: var(--surface-2); border: 2.5px solid var(--accent); }
+.pd-trend-f { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s4); font-size: var(--fs-xs); color: var(--text-3); }
 .pd-trend-f b { color: var(--text); font-variant-numeric: tabular-nums; }
-.pd-trend-f .avgk::before { content: ""; display: inline-block; width: 12px; border-top: 1px dashed var(--text-3); vertical-align: middle; margin-right: var(--s1); }
+.pd-trend-f .sw { display: inline-block; width: 12px; height: 0; margin-right: var(--s1); vertical-align: middle; }
+.pd-trend-f .sw.ln { border-top: 2px solid var(--accent); } .pd-trend-f .sw.avg { border-top: 1px dashed var(--text-3); }
 @media (max-width: 1000px) {
-  .pdash { grid-template-columns: auto minmax(0, 1fr); }
-  .pd-trend { grid-column: 1 / -1; }
+  .pd-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .pd-trend { grid-column: 1 / -1; grid-row: auto; }
 }
 @media (max-width: 640px) {
   .phero.lift .phero-in, .sk-hero.lift .sk-hero-in { padding-bottom: calc(var(--s5) + 32px); }
-  .pdash { margin-top: -48px; grid-template-columns: minmax(0, 1fr); gap: var(--s5); padding: var(--s5); }
-  .pd-main { padding-right: 0; padding-bottom: var(--s5); border-right: 0; border-bottom: 1px solid var(--line); }
-  .pd-ring { width: 88px; height: 88px; }
+  .pdash { margin-top: -48px; }
+  .pd-head { padding: var(--s4); }
+  .pd-grid { padding: var(--s3); gap: var(--s2); }
+  .pd-tile { padding: var(--s3); }
+  .pd-v b { font-size: var(--fs-xl); }
 }
 
 /* 승률을 올리려면: 첫 줄은 크게(가장 효과가 큰 한 가지), 나머지는 나란히 */
