@@ -126,7 +126,7 @@ async function myRecord(env: Env, me: Member) {
   const champs = [...byC].sort((p, q) => q[1].n - p[1].n || q[1].w - p[1].w).slice(0, 3);
   const main = champs[0]?.[0] ?? null;
   // 증강: 내가 가장 많이 고른 셋 + 하트를 누른 '내 증강'
-  const picked = await env.DB.prepare('SELECT augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments WHERE member_id = ? GROUP BY augment_id ORDER BY n DESC, w DESC LIMIT 3')
+  const picked = await env.DB.prepare('SELECT augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments WHERE member_id = ? GROUP BY augment_id ORDER BY n DESC, w DESC LIMIT 1')
     .bind(me.id).all<{ id: number; n: number; w: number }>();
   const favs = await env.DB.prepare("SELECT item_id AS id FROM favorites WHERE member_id = ? AND kind = 'aug' ORDER BY at LIMIT 5").bind(me.id).all<{ id: number }>();
   const name = me.nick.split('#')[0];
@@ -134,18 +134,24 @@ async function myRecord(env: Env, me: Member) {
   const splash = main ? cdragon((me.profile_skin && SKINS[String(me.profile_skin)]?.[3]) || CHAMPIONS[main]?.splash) : '';
   const rate = w / g.length;
   const champLines = champs.map(([c, e], i) => `${['🥇', '🥈', '🥉'][i]} **${CHAMPIONS[c]?.name ?? c}** · ${e.n}판 ${pct(e.w, e.n)}`).join('\n');
-  const augLines = picked.results.map((x) => `${RARITY_DOT[AUGMENT[x.id]?.rarity] ?? '▫️'} **${AUGMENT[x.id]?.name ?? x.id}** · ${x.n}번 고름 ${pct(x.w, x.n)}`).join('\n');
+  // 최애 증강: 가장 많이 고른 하나 (아이콘을 곁들여서)
+  const best = picked.results[0];
+  const ba = best ? AUGMENT[best.id] : undefined;
+  const bestLine = best ? [`**최애 증강**`, `${RARITY_DOT[ba?.rarity ?? ''] ?? '▫️'} **${ba?.name ?? best.id}** · ${best.n}번 고름 · 승률 ${pct(best.w, best.n)}`] : [];
+  const bestAug = ba?.icon ? section(bestLine, thumb(cdragon(ba.icon))) : text(bestLine.join('\n'));
   const favLine = favs.results.map((x) => AUGMENT[x.id]?.name).filter(Boolean).join(' · ');
   return {
     components: card([
       ...(splash ? [gallery(splash)] : []),
-      face ? section([`## ${name} 님의 기록`, `-# Prism · 아수라장 · ${g[0].w ? `🔥 ${streak}연승 중` : `${streak}연패 중`}`], thumb(face)) : text(`## ${name} 님의 기록`),
+      // 큰 그림이 있으면 얼굴 썸네일은 겹치므로 빼고, 그림이 없을 때만 얼굴을 곁들인다
+      splash || !face ? text(`## ${name} 님의 기록\n-# Prism · 아수라장 · ${g[0].w ? `🔥 ${streak}연승 중` : `${streak}연패 중`}`)
+        : section([`## ${name} 님의 기록`, `-# Prism · 아수라장 · ${g[0].w ? `🔥 ${streak}연승 중` : `${streak}연패 중`}`], thumb(face)),
       line(),
       text(`### ${g.length}판  ·  승률 ${pct(w, g.length)}  ·  KDA ${((k + a) / Math.max(1, d)).toFixed(2)}\n\`${bar(rate)}\``),
       text(`**최근 10판**\n${g.slice(0, 10).map((x) => (x.w ? '🟦' : '🟥')).join('')}`),
       line(),
       text(`**많이 한 챔프**\n${champLines || '–'}`),
-      ...(augLines ? [text(`**가장 많이 고른 증강**\n${augLines}`)] : []),
+      ...(best ? [bestAug] : []),
       ...(favLine ? [text(`**❤️ 내 증강**  ${favLine}`)] : []),
       line(true),
       linkButtons([['내 페이지', `${webUrl(env)}/me`], ['도감', `${webUrl(env)}/dex`]]),
