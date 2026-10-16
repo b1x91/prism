@@ -17,6 +17,7 @@ const P: Record<string, ReactElement> = {
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   compare: <><path d="M4 7h11M4 7l3-3M4 7l3 3" /><path d="M20 17H9M20 17l-3-3M20 17l-3 3" /></>,
   lock: <><rect x="4.5" y="10.5" width="15" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /></>,
+  info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5.5M12 7.6v.4" /></>,
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
   back: <path d="M19 12H5M11 6l-6 6 6 6" />,
   shuffle: <><path d="M16 4h4v4M4 20 20 4" /><path d="M20 16v4h-4M14 14l6 6" /><path d="M4 4l5 5" /></>,
