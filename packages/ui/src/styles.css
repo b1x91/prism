@@ -2461,7 +2461,8 @@ button.ga:hover { background: var(--surface-2); }
 /* ───────── 회원 페이지 분석판 · 승률을 올리려면 (v3.56) ─────────
    분석판은 머리 아래쪽에 48px 겹쳐 올라온다(머리는 그만큼 아래를 비운다). */
 .phero.lift .phero-in, .sk-hero.lift .sk-hero-in { padding-bottom: calc(var(--s7) + 48px); }
-.pdash { position: relative; z-index: 2; margin-top: -64px; padding: 0; overflow: hidden; box-shadow: 0 24px 48px -24px rgba(7, 9, 15, .45), var(--shadow); }
+/* 그림자는 머리 위에 떠 있는 느낌만 — 아래 카드로 번지지 않게 짧고 옅게 */
+.pdash { position: relative; z-index: 2; margin-top: -64px; padding: 0; overflow: hidden; box-shadow: 0 8px 16px -12px rgba(7, 9, 15, .28), var(--shadow); }
 /* 머리 줄 */
 .pd-head { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2) var(--s3); padding: var(--s4) var(--s6); border-bottom: 1px solid var(--line); }
 .pd-title { font-size: var(--fs-md); font-weight: 800; }
@@ -2537,7 +2538,8 @@ button.ga:hover { background: var(--surface-2); }
 }
 
 /* 승률을 올리려면: 첫 줄은 크게(가장 효과가 큰 한 가지), 나머지는 나란히 */
-.imp .tip { display: grid; gap: var(--s2); }
+/* 나란한 두 칸의 높이가 달라도 줄 간격이 벌어지지 않게 위에서부터 쌓는다 (양쪽 줄 맞춤) */
+.imp .tip { display: grid; gap: var(--s2); align-content: start; }
 .imp .tip.top { padding: var(--s5); border-radius: var(--r-l); background: linear-gradient(135deg, var(--accent-soft), transparent 70%); border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line)); }
 .tip-h { display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2); }
 .tip-badge { font-size: var(--fs-xs); font-weight: 800; color: var(--accent); }
