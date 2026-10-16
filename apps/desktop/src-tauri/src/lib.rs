@@ -4,6 +4,7 @@
 mod discord;
 mod lcu;
 mod live;
+mod icons;
 mod matcher;
 mod server;
 mod update;

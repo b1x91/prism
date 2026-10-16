@@ -5,7 +5,7 @@
 import { HttpError, json, type Env, type Member } from './util.js';
 
 const KEEP = 20;
-const MAX_BYTES = 24_000;
+const MAX_BYTES = 60_000;
 
 export async function saveDiag(req: Request, env: Env, me: Member): Promise<Response> {
   const text = await req.text();

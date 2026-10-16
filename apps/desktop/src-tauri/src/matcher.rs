@@ -149,6 +149,19 @@ impl Matcher {
         (best.0 >= DESC_MIN && best.0 - second >= DESC_GAP).then_some(best.1)
     }
 
+    /// 그림이 같은 증강(예: 대마법사·유레카)을 카드에서 읽은 글자로 가른다: 두 글자 묶음이 이름·설명에 가장 많이 들어 있는 것.
+    /// 똑같으면(글자를 거의 못 읽었으면) None — 틀리게 보여 주느니 비워 둔다
+    pub fn pick_by_text(&self, text: &str, ids: &[u32]) -> Option<u32> {
+        if ids.len() == 1 {
+            return ids.first().copied();
+        }
+        let q = bigrams(text);
+        let mut sc: Vec<(usize, u32)> = ids.iter().filter_map(|id| self.descs.iter().find(|d| d.0 == *id)).map(|(id, d)| (q.iter().filter(|b| d.contains(b)).count(), *id)).collect();
+        sc.sort_by(|a, b| b.0.cmp(&a.0));
+        let (best, second) = (sc.first()?, sc.get(1).map_or(0, |s| s.0));
+        (best.0 > second && best.0 >= 2).then_some(best.1)
+    }
+
     /// 한 줄(단어 목록)에서 이름 후보 찾기
     fn line_hits(&self, words: &[Word]) -> Vec<Hit> {
         // 줄 글자와 각 글자의 위치(그 글자가 속한 단어의 위치)
@@ -428,6 +441,17 @@ mod tests {
     fn id_of(name: &str) -> u32 {
         let d: serde_json::Value = serde_json::from_str(DATA).unwrap();
         d["augments"].as_array().unwrap().iter().find(|a| a["name"] == name).unwrap()["id"].as_u64().unwrap() as u32
+    }
+
+    #[test]
+    fn 같은_그림_증강을_글자로_가른다() {
+        let m = Matcher::from_json(DATA);
+        let (a, b) = (id_of("대마법사"), id_of("유레카"));
+        let t = "대마법사 / 보조 / 스킬을 사용하면 사용한 스킬 재사용 / 대기시간의 30%만큼 다른 무작위 스킬의 / 재사용 대기시간을 반환합니다.";
+        assert_eq!(m.pick_by_text(t, &[a, b]), Some(a));
+        // 글자를 거의 못 읽었으면 고르지 않는다
+        assert_eq!(m.pick_by_text("ㅁ / 1", &[a, b]), None);
+        assert_eq!(m.pick_by_text("", &[a]), Some(a));
     }
 
     #[test]

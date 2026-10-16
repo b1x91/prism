@@ -16,6 +16,8 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Emitter, Manager};
 
 const AUGMENTS_JSON: &str = include_str!("../../../../packages/core/data/mayhem-augments.json");
+/// 증강 아이콘 특징값 (scripts/aug-icons.py) — 글자를 못 읽은 카드를 그림으로 찾는다
+const AUG_ICONS: &[u8] = include_bytes!("../../../../packages/core/data/aug-icons.bin");
 /// 카드가 안 보일 때. 화면 복사·문자 인식이 창 모드 게임과 GPU·CPU 를 나눠 쓰므로 너무 잦지 않게 (v3.61, 0.6 → 0.9초)
 const EVERY: Duration = Duration::from_millis(900);
 /// 카드가 보이는 동안: 새로고침을 바로 따라가도록 자주, 제목 줄만 좁게 읽는다
@@ -90,6 +92,12 @@ pub struct GameDiag {
     pub region: [i32; 4],
     pub monitors: i32,
     pub how: String,
+    /// 증강 고르기 횟수, 그중 세 칸을 다 못 채운 횟수, 그림으로 찾은 카드 수
+    pub offers: u32,
+    pub partial: u32,
+    pub by_icon: u32,
+    /// 세 칸을 못 채운 고르기가 끝난 순간의 인식 기록 (최근 3번, 각 20줄 — 판이 끝날 때까지 다른 기록에 밀리지 않게)
+    pub partial_trace: Vec<Vec<String>>,
 }
 
 pub struct Vision {
@@ -98,6 +106,7 @@ pub struct Vision {
     pub settings: Mutex<Settings>,
     pub report: Mutex<Report>,
     pub matcher: Matcher,
+    pub icons: crate::icons::IconBank,
     shown: AtomicBool,
     /// 로그인 + 수집 동의를 마쳤는지 (첫 화면을 끝내기 전에는 인식하지 않는다)
     pub allowed: AtomicBool,
@@ -111,7 +120,7 @@ impl Vision {
     pub fn new(dir: PathBuf) -> Arc<Self> {
         let path = dir.join("vision.json");
         let settings = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
-        Arc::new(Self { path, diag: Mutex::new(None), settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), shown: AtomicBool::new(false), allowed: AtomicBool::new(false) })
+        Arc::new(Self { path, diag: Mutex::new(None), settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), icons: crate::icons::IconBank::new(AUG_ICONS, AUGMENTS_JSON), shown: AtomicBool::new(false), allowed: AtomicBool::new(false) })
     }
 
     pub fn set(&self, s: Settings) {
@@ -498,20 +507,40 @@ mod imp {
             // 화면 비율·UI 크기·모니터와 상관없이 정확한 자리를 안다. 카드 화면이라는 낌새(이름 한 장 이상)가 있고 세 칸이 안 찼으면 매번
             if slots.len() < 3 && (!slots.is_empty() || hint) {
                 let (wx, wy, ww, wh) = region_wide(&rc);
-                let cards = grab(wx, wy, ww, wh).map(|buf| crate::matcher::find_cards(&buf, ww as usize, wh as usize)).unwrap_or_default();
-                if cards.len() >= 2 {
+                let buf = grab(wx, wy, ww, wh);
+                let cards = buf.as_deref().map(|b| crate::matcher::find_cards(b, ww as usize, wh as usize)).unwrap_or_default();
+                if let (true, Some(buf)) = (cards.len() >= 2, buf) {
                     let t0 = std::time::Instant::now();
                     let mut changed = false;
-                    for &(a, b, y0, y1) in &cards {
+                    // 글자로 못 읽은 카드: (카드 순번, 가운데 x, 읽은 글자)
+                    let mut unread: Vec<(usize, f32, String)> = Vec::new();
+                    for (k, &(a, b, y0, y1)) in cards.iter().enumerate() {
                         let cx = (wx - rc.left) as f32 + (a + b) as f32 / 2.0;
                         if slots.near(cx, (b - a) as f32 / 2.0) {
                             continue;
                         }
                         let (got, how_found, text) = read_card(eng, wx + a as i32, wy + y0 as i32, (b - a) as i32, (y1 - y0) as i32, &v.matcher, &slots.ids());
                         v.trace(format!("카드 자리 x={cx:.0} 폭={} {how_found} {:?} | {}", b - a, got, text.replace('\n', " / ").chars().take(100).collect::<String>()));
-                        if let Some(id) = got {
-                            slots.update(&[(id, cx, 0.0)], gw);
-                            changed = true;
+                        match got {
+                            Some(id) => {
+                                slots.update(&[(id, cx, 0.0)], gw);
+                                changed = true;
+                            }
+                            None => unread.push((k, cx, text)),
+                        }
+                    }
+                    // 그래도 못 읽은 카드는 아이콘 그림으로 (v3.66). 이미 읽은 칸과 같은 등급만, 그림이 같은 증강은 글자로 가른다
+                    if !unread.is_empty() {
+                        let idx: Vec<usize> = unread.iter().map(|u| u.0).collect();
+                        let found = v.icons.identify(&buf, ww as usize, wh as usize, &cards, &idx, &slots.ids());
+                        for ((_, cx, text), r) in unread.iter().zip(found) {
+                            let pick = r.as_ref().and_then(|(ids, _, _)| v.matcher.pick_by_text(text, ids)).filter(|id| !slots.contains(*id));
+                            v.trace(format!("그림 x={cx:.0} {:?} → {:?}", r.as_ref().map(|(ids, sc, gap)| (ids.clone(), (sc * 100.0).round() / 100.0, (gap * 100.0).round() / 100.0)), pick));
+                            if let Some(id) = pick {
+                                slots.update(&[(id, *cx, 0.0)], gw);
+                                changed = true;
+                                v.diag(|d| d.by_icon += 1);
+                            }
                         }
                     }
                     v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
@@ -617,7 +646,15 @@ mod imp {
                             // 제목 줄에서 못 찾으면 넓게 다시 (창 크기가 바뀌었을 수도)
                             band = None;
                         } else if shown && seen_at.map_or(true, |t| t.elapsed() > HOLD) {
-                            // 한동안 카드가 안 보임 = 다 고름
+                            // 한동안 카드가 안 보임 = 다 고름. 세 칸을 다 못 채운 고르기는 진단으로 남긴다 (끝날 때 서버로)
+                            let n = slots.len();
+                            v.diag(|d| { d.offers += 1; if n < 3 { d.partial += 1; } });
+                            if n < 3 {
+                                v.trace(format!("고르기 끝: {n}칸만 찾음 {:?}", slots.ids_sorted()));
+                                let t = v.report.lock().unwrap().trace.clone();
+                                let tail = t[t.len().saturating_sub(20)..].to_vec();
+                                v.diag(|d| if d.partial_trace.len() < 3 { d.partial_trace.push(tail) });
+                            }
                             last.clear();
                             slots.clear();
                             seen_at = None;
@@ -647,12 +684,14 @@ mod imp {
     /// 판이 끝났을 때: 작은 창이 한 번도 안 떴고 충분히 오래 본 판이면 진단을 화면으로 넘긴다 (화면이 서버로 보낸다, 토큰은 Rust 에만)
     fn end_game(app: &AppHandle, v: &Vision, d: GameDiag) {
         let looked: u32 = d.stages.iter().filter(|(k, _)| k.as_str() != "no-game" && k.as_str() != "off" && k.as_str() != "wait").map(|(_, n)| *n).sum();
-        if d.shown > 0 || looked < 40 {
+        // 작은 창이 한 번도 안 뜬 판, 또는 세 칸을 다 못 채운 고르기가 있던 판
+        let never = d.shown == 0 && looked >= 40;
+        if !never && d.partial == 0 {
             return;
         }
         let r = v.report.lock().unwrap().clone();
         let body = serde_json::json!({
-            "kind": "overlay-never-shown",
+            "kind": if never { "overlay-never-shown" } else { "partial" },
             "version": app.package_info().version.to_string(),
             "position": v.settings.lock().unwrap().position.clone(),
             "engine": r.engine,
