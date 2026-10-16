@@ -47,8 +47,21 @@ function RankingSoon({ gate }: { gate?: { have: number; need: number } }) {
   );
 }
 
+/** 무대 움직임은 1시간에 한 번만 (다른 화면에 갔다 와도 매번 나오지 않게, 기기마다) */
+const LB_KEY = 'prism-lb-played';
+function stageDue(): boolean {
+  try {
+    const last = Number(localStorage.getItem(LB_KEY) || 0);
+    if (Date.now() - last < 3600_000) return false;
+    localStorage.setItem(LB_KEY, String(Date.now()));
+  } catch { /* 저장소를 못 쓰면 매번 */ }
+  return true;
+}
+
 function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (id: string) => void }) {
-  const [by, setBy] = useState<RankBy | 'champ-art' | 'aug-art'>('games');
+  const [by, setByRaw] = useState<RankBy | 'champ-art' | 'aug-art'>('games');
+  const [play, setPlay] = useState(stageDue);
+  const setBy = (v: RankBy | 'champ-art' | 'aug-art') => { setPlay(false); setByRaw(v); };
   const art = by === 'champ-art' || by === 'aug-art';
   const { data, error } = useLoad<Ranking>(api, art ? null : by === 'month' ? '/api/ranking?period=month' : by === 'winrate' ? '/api/ranking?by=winrate' : '/api/ranking');
   const skins = useSkins();
@@ -64,8 +77,8 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
       {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
       {!art && data && !rows.length && <Empty>{by === 'winrate' ? '아직 조건을 채운 회원이 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
-      {!art && rows.length > 0 && <Leaderboard key={`lb-${by}`} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
-      {!art && rows.length > 3 && <div key={`rl-${by}`} className="card rank-list lb-in">
+      {!art && rows.length > 0 && <Leaderboard key={`lb-${by}`} play={play} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
+      {!art && rows.length > 3 && <div key={`rl-${by}`} className={`card rank-list ${play ? 'lb-in' : ''}`}>
         {rows.slice(3).map((r, i) => <RankRow key={r.id} r={r} rank={i + 4} i={i} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
       </div>}
       {!art && data?.limited && <LockedMore more={data.limited.total - rows.length}>
@@ -76,14 +89,14 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
 }
 
 /** 상위 3명 무대: 가운데 1위가 가장 높고, 조명·받침대가 순서대로 올라온다 */
-function Leaderboard({ rows, by, meId, skins, onOpen }: { rows: RankingRow[]; by: RankBy; meId?: string; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
+function Leaderboard({ rows, by, meId, skins, onOpen, play }: { rows: RankingRow[]; by: RankBy; meId?: string; play: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
   return (
-    <section className="lb" aria-label="상위 3명">
+    <section className={`lb ${play ? '' : 'still'}`} aria-label="상위 3명">
       <span className="lb-beam b1" aria-hidden="true" /><span className="lb-beam b2" aria-hidden="true" /><span className="lb-beam b3" aria-hidden="true" />
       <div className="lb-row">{[2, 1, 3].map((rank) => {
         const r = rows[rank - 1];
         return <div key={rank} className={`lb-slot p${rank}`}>
-          {r ? <Podium r={r} rank={rank} by={by} me={r.id === meId} skins={skins} onOpen={onOpen} /> : <div className="lb-card empty"><span className="lb-q">?</span><span className="lb-empty">아직 비어 있어요</span></div>}
+          {r ? <Podium r={r} rank={rank} by={by} play={play} me={r.id === meId} skins={skins} onOpen={onOpen} /> : <div className="lb-card empty"><span className="lb-q">?</span><span className="lb-empty">아직 비어 있어요</span></div>}
           <div className="lb-ped"><b>{rank}</b></div>
         </div>;
       })}</div>
@@ -91,7 +104,7 @@ function Leaderboard({ rows, by, meId, skins, onOpen }: { rows: RankingRow[]; by
   );
 }
 
-function Podium({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: number; by: RankBy; me: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
+function Podium({ r, rank, by, me, skins, onOpen, play }: { r: RankingRow; rank: number; by: RankBy; me: boolean; play: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
   return (
     <button type="button" className={`lb-card ${me ? 'me' : ''}`} onClick={() => onOpen(r.id)}>
       {/* 산 배경이 있으면 그 장면, 없으면 회원마다 정해진 기본 색 (프로필 머리와 같은 규칙) */}
@@ -99,18 +112,19 @@ function Podium({ r, rank, by, me, skins, onOpen }: { r: RankingRow; rank: numbe
       {rank === 1 && <span className="lb-crown" aria-hidden="true"><Gem size={28} src="/brand/prism-32.png" /></span>}
       <span className="lb-face"><MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={rank === 1 ? 88 : 72} /></span>
       <span className="lb-nm"><NickName nick={r.nick} /></span>
-      <span className="lb-st"><b><CountUp text={by === 'winrate' ? pct(r.w, r.n) : `${r.n}판`} delay={[0, 1150, 950, 800][rank]} /></b><small>{by === 'winrate' ? `${r.n}판` : `승률 ${pct(r.w, r.n)}`}</small></span>
+      <span className="lb-st"><b><CountUp text={by === 'winrate' ? pct(r.w, r.n) : `${r.n}판`} delay={[0, 1150, 950, 800][rank]} play={play} /></b><small>{by === 'winrate' ? `${r.n}판` : `승률 ${pct(r.w, r.n)}`}</small></span>
     </button>
   );
 }
 
 /** 숫자가 0에서 차오른다 (카드가 다 올라온 뒤, 0.9초). 글자 속 첫 숫자만 바꾼다 — '123판', '56%' */
-function CountUp({ text, delay }: { text: string; delay: number }) {
+function CountUp({ text, delay, play = true }: { text: string; delay: number; play?: boolean }) {
   const m = /\d+/.exec(text);
   const target = m ? Number(m[0]) : 0;
-  const [v, setV] = useState(() => (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches ? target : 0));
+  const still = !play || (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const [v, setV] = useState(() => (still ? target : 0));
   useEffect(() => {
-    if (!m || (typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches)) { setV(target); return; }
+    if (!m || still) { setV(target); return; }
     let raf = 0;
     const t0 = performance.now() + delay;
     const tick = (now: number) => {
@@ -120,8 +134,10 @@ function CountUp({ text, delay }: { text: string; delay: number }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [target, delay]); // eslint-disable-line react-hooks/exhaustive-deps
-  return <>{m ? text.slice(0, m.index) + v + text.slice(m.index + m[0].length) : text}</>;
+  }, [target, delay, still]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!m) return <>{text}</>;
+  // 차오르는 동안 자릿수가 늘어도 글자 폭이 흔들리지 않게 마지막 숫자 폭을 미리 잡아 둔다
+  return <>{text.slice(0, m.index)}<span className="cu" style={{ minWidth: `${m[0].length}ch` }}>{v}</span>{text.slice(m.index + m[0].length)}</>;
 }
 
 function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: number; i?: number; by: RankBy; me: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {

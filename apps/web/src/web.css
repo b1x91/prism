@@ -76,8 +76,8 @@ main { min-height: calc(100vh - 64px - 120px); }
   .hero .sub { font-size: var(--fs-lg); }
 }
 .feature { position: relative; overflow: hidden; min-height: 280px; display: flex; flex-direction: column; justify-content: flex-end; padding: var(--s6); color: #fff; border-radius: var(--r-l); background: #07090f; isolation: isolate; box-shadow: var(--shadow); }
-.feature img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; transition: transform .4s ease; }
-.feature:hover img.bg { transform: scale(1.04); }
+.feature img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; transition: transform .7s cubic-bezier(.2, .8, .2, 1); }
+.feature:hover img.bg { transform: scale(1.14); }
 .feature::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, rgba(7, 9, 15, .95) 15%, rgba(7, 9, 15, .3) 70%); }
 .feature h3 { margin: 0 0 var(--s2); font-size: var(--fs-xl); font-weight: 800; }
 .feature p { margin: 0; color: rgba(255, 255, 255, .78); }

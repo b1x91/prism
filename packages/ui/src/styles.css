@@ -1936,12 +1936,11 @@ button.ga:hover { background: var(--surface-2); }
 .lb { animation: lb-stage .5s ease both; }
 .lb::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px; z-index: 2; background: linear-gradient(90deg, transparent, rgba(255, 214, 120, .6), transparent); transform-origin: 50% 50%; animation: lb-floor .9s var(--lb-ease) .15s both; }
 .lb-beam { position: absolute; top: -8%; z-index: -1; width: 30%; height: 110%; pointer-events: none; background: linear-gradient(180deg, rgba(255, 255, 255, .14), rgba(255, 255, 255, 0) 85%); clip-path: polygon(42% 0, 58% 0, 100% 100%, 0 100%); filter: blur(2px); opacity: 0;
-  animation: lb-light .7s linear var(--d, 0s) both, lb-breathe 6s ease-in-out calc(var(--d, 0s) + .7s) infinite; }
+  animation: lb-light .9s ease-out var(--d, 0s) both; }
 .lb-beam.b1 { left: 35%; width: 30%; background: linear-gradient(180deg, rgba(255, 226, 150, .26), rgba(255, 226, 150, 0) 85%); --d: .7s; }
 .lb-beam.b2 { left: 3%; --d: .42s; }
 .lb-beam.b3 { right: 3%; --d: .25s; }
-@keyframes lb-light { 0% { opacity: 0; } 30% { opacity: .9; } 42% { opacity: .35; } 58% { opacity: 1; } 100% { opacity: .9; } }
-@keyframes lb-breathe { 0%, 100% { opacity: .9; } 50% { opacity: .68; } }
+@keyframes lb-light { from { opacity: 0; } to { opacity: .9; } }
 .lb-row { display: grid; grid-template-columns: 1fr 1.18fr 1fr; align-items: end; gap: var(--s4); max-width: 760px; margin: 0 auto; }
 .lb-slot { display: grid; min-width: 0; }
 .lb-card { position: relative; isolation: isolate; overflow: hidden; display: grid; justify-items: center; align-content: end; gap: var(--s1); min-width: 0; min-height: 232px; padding: var(--s5) var(--s3) var(--s4); border: 1px solid rgba(255, 255, 255, .1); border-bottom: 0; border-radius: var(--r-l) var(--r-l) 0 0; background: #0d1120; color: #fff; font: inherit; text-align: center; cursor: pointer;
@@ -1980,26 +1979,28 @@ button.ga:hover { background: var(--surface-2); }
 .lb-slot.p2 .lb-ped { height: 52px; background: linear-gradient(180deg, #eef2f7, #b5bfcc 55%, #7f8a9a); }
 .lb-slot.p3 .lb-face { background: conic-gradient(from var(--lb-ang), #ffd9b8, #c9824a, #ffd9b8, #8a5226, #ffd9b8); }
 .lb-slot.p3 .lb-ped { background: linear-gradient(180deg, #f2bf93, #c47c45 55%, #874d22); }
-.lb-crown { position: absolute; top: var(--s3); left: 50%; translate: -50% 0; line-height: 0; filter: drop-shadow(0 0 10px rgba(255, 220, 140, .8)); animation: lb-crown-in .7s var(--lb-ease) 1.55s both, lb-glint 5s ease-in-out 2.4s infinite; }
+.lb-crown { position: absolute; top: var(--s3); left: 50%; translate: -50% 0; line-height: 0; filter: drop-shadow(0 0 10px rgba(255, 220, 140, .8)); animation: lb-crown-in .6s var(--lb-ease) 1.45s both; }
 @keyframes lb-stage { from { opacity: 0; } to { opacity: 1; } }
 @keyframes lb-floor { from { transform: scaleX(0); opacity: 0; } to { transform: scaleX(1); opacity: 1; } }
 @keyframes lb-rise { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0 0 0 0); } }
 @keyframes lb-num { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@keyframes lb-card-in { from { opacity: 0; transform: translateY(18px); filter: blur(8px) brightness(1.6); clip-path: inset(60% 0 0 0 round 16px 16px 0 0); } 60% { opacity: 1; } to { opacity: 1; transform: none; filter: none; clip-path: inset(0 0 0 0 round 16px 16px 0 0); } }
-@keyframes lb-crown-in { from { opacity: 0; transform: translateY(-10px) scale(.5); } 70% { opacity: 1; transform: translateY(0) scale(1.06); } to { opacity: 1; transform: none; } }
-@keyframes lb-glint { 0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 220, 140, .8)); } 50% { filter: drop-shadow(0 0 18px rgba(255, 236, 180, 1)) brightness(1.15); } }
-/* 메달 고리: 처음 한 바퀴 돌며 자리 잡고, 1위만 아주 천천히 계속 돈다 (빛이 금속 위를 흐르는 느낌) */
+@keyframes lb-card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes lb-crown-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
+/* 메달 고리: 처음에 빛이 한 번 금속 위를 흐르고 멈춘다 */
 @property --lb-ang { syntax: '<angle>'; inherits: false; initial-value: 200deg; }
 .lb-slot .lb-face { animation: lb-ring 1.6s var(--lb-ease) var(--cd, .6s) backwards; }
-.lb-slot.p1 .lb-face { animation: lb-ring 1.6s var(--lb-ease) var(--cd) backwards, lb-ring-loop 14s linear 2.6s infinite; }
-@keyframes lb-ring { from { --lb-ang: -160deg; } to { --lb-ang: 200deg; } }
-@keyframes lb-ring-loop { from { --lb-ang: 200deg; } to { --lb-ang: 560deg; } }
-/* 1위 카드: 다 올라온 뒤 빛이 한 번 비스듬히 스치고, 7초마다 한 번씩 */
-.lb-slot.p1 .lb-card::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255, 244, 214, .22) 48%, rgba(255, 255, 255, .32) 50%, rgba(255, 244, 214, .22) 52%, transparent 65%); transform: translateX(-120%); animation: lb-sheen 7s ease-in-out 1.9s infinite; }
-@keyframes lb-sheen { 0% { transform: translateX(-120%); } 16%, 100% { transform: translateX(120%); } }
+@keyframes lb-ring { from { --lb-ang: 20deg; } to { --lb-ang: 200deg; } }
+/* 1위 카드: 다 올라온 뒤 빛이 한 번 비스듬히 스치고, 그 뒤로는 12초마다 한 번 */
+.lb-slot.p1 .lb-card::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: linear-gradient(105deg, transparent 35%, rgba(255, 244, 214, .22) 48%, rgba(255, 255, 255, .32) 50%, rgba(255, 244, 214, .22) 52%, transparent 65%); transform: translateX(-120%); animation: lb-sheen 12s cubic-bezier(.4, 0, .2, 1) 1.9s infinite; }
+@keyframes lb-sheen { 0% { transform: translateX(-120%); } 12%, 100% { transform: translateX(120%); } }
 /* 4위부터: 무대가 끝날 즈음 한 줄씩 */
 .rank-list.lb-in .rank-row { animation: lb-row .6s var(--lb-ease) calc(1.15s + var(--i, 0) * 45ms) both; }
-@keyframes lb-row { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes lb-row { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* 1시간 안에 다시 들어오면 무대는 처음부터 완성된 모습 (빛 스침만 남긴다) */
+.lb.still, .lb.still::after, .lb.still .lb-beam, .lb.still .lb-card, .lb.still .lb-ped, .lb.still .lb-ped b, .lb.still .lb-crown, .lb.still .lb-slot .lb-face { animation: none; }
+.lb.still .lb-beam { opacity: .9; }
+.lb.still .lb-slot.p1 .lb-card::after { animation-delay: .4s; }
+.lb-st .cu { display: inline-block; text-align: right; }
 @media (max-width: 640px) {
   .lb { padding: var(--s6) var(--s3) 0; }
   .lb-row { gap: var(--s2); }
@@ -2359,3 +2360,18 @@ button.ga:hover { background: var(--surface-2); }
 .abt-mbti { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s2); }
 .abt-mbti .chip { justify-content: center; padding: 0; font-variant-numeric: tabular-nums; letter-spacing: .02em; }
 .abt-go { width: 100%; }
+
+/* ───────── 챔프 그림 카드 호버 (v3.50, 앱·웹 전역) ─────────
+   카드가 들릴 때 담는 줄이 위를 자르지 않게 여유를 두고, 그림은 한 박자 느리게 더 크게 당겨 생동감 있게. */
+:root { --zoom-ease: cubic-bezier(.2, .8, .2, 1); }
+/* 한 줄만 보이게 자르되(둘째 줄 숨김) 위·옆은 자르지 않는다 — 들린 카드 윗부분과 그림자가 살게 */
+.msn-strip { overflow: visible; clip-path: inset(-16px -16px 0 -16px); }
+.msn-champ img { transition: transform .7s var(--zoom-ease), filter .3s; }
+.msn-champ:hover img { transform: scale(1.6); }
+.cfav-card img, .pod .bg, .lb-art, .rcard img, .feature img.bg { transition: transform .7s var(--zoom-ease); }
+.cfav-card:hover img, .pod:hover .bg, .lb-card:hover .lb-art, .feature:hover img.bg { transform: scale(1.14); }
+.rcard button:not(:disabled):hover img { transform: scale(1.14); }
+.champ-grid button img, .fpk-c img { transition: transform .35s var(--zoom-ease), box-shadow .2s; }
+.champ-grid button:hover img { transform: translateY(-2px) scale(1.08); }
+.fpk-c:hover img { transform: scale(1.1); }
+@media (prefers-reduced-motion: reduce) { .msn-champ img, .cfav-card img, .pod .bg, .lb-art, .rcard img, .feature img.bg, .champ-grid button img, .fpk-c img { transition: none; } }

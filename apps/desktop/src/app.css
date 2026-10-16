@@ -398,3 +398,6 @@ body { overflow: hidden; background: var(--bg); }
 .checknow .icon { width: 14px; height: 14px; }
 .checknow.busy .icon { animation: tst-spin .7s linear infinite; }
 @keyframes tst-spin { to { transform: rotate(360deg); } }
+/* 챔프 그림 호버 (v3.50, 전역 규칙과 같게) */
+.seat .pic { transition: transform .35s cubic-bezier(.2, .8, .2, 1); }
+.seat:hover .pic { transform: translateY(-2px) scale(1.08); }
