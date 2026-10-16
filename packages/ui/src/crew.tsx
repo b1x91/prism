@@ -360,7 +360,7 @@ function ScrimCard({ s, size, now, busy, run, api, onMember }: { s: Scrim; size:
   );
 }
 
-// ───────── 포텐 멤버: 같이 여러 판 했거나 내전·사용자 설정 판을 함께한 비회원 (회원 전용) ─────────
+// ───────── 함께한 친구들: 같이 여러 판 했거나 내전·사용자 설정 판을 함께한 비회원 (회원 전용) ─────────
 
 export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: string | null; admin?: boolean }) {
   const { data, error, reload } = useLoad<Prospects>(api, '/api/prospects');
@@ -375,7 +375,7 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
   const prospectSk = <SkeletonFrame className="plist2">{[0, 1, 2].map((i) => <div key={i} className="prow2"><Bone w={44} h={44} r="round" /><span className="sk-row-t"><Bone w="40%" h={14} /><Bone w="72%" h={10} /></span><Bone w={64} h={32} r="m" /></div>)}</SkeletonFrame>;
   return (
     <section className="card pad prospects">
-      <div className="card-head"><h2>포텐 멤버</h2><span className="sp" /><span className="meta">우리와 {data?.queueMin ?? 3}판 넘게 같이 했거나 내전을 함께한 분들</span></div>
+      <div className="card-head"><h2>함께한 친구들</h2><span className="sp" /><span className="meta">우리와 {data?.queueMin ?? 3}판 넘게 같이 했거나 내전을 함께한 분들</span></div>
       {!data ? prospectSk : !data.prospects.length ? <Empty>아직 없어요. 회원과 자주 같이 하는 분이 생기면 여기에 나타나요.</Empty> : (<Swap on={rv} skeleton={prospectSk}>
         <div className={`plist2 ${fadeCls(rv)}`}>{data.prospects.map((p) => {
           const [name, tag] = (p.riotId ?? '이름 모름').split('#');

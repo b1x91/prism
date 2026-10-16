@@ -5,7 +5,7 @@
  *   2. 10명 전원으로 팀 합계 계산 (있는 필드만).
  *   3. puuid ↔ members.riot_puuid 대조 → crew.
  *   4. matches 1건 + 회원 participants 저장.
- *      비회원은 '포텐 멤버' 후보만 남긴다 (v3.10): 회원과 같은 팀이었거나 사용자 설정 판이면 prospect_games.
+ *      비회원은 '함께한 친구들' 후보만 남긴다 (v3.10): 회원과 같은 팀이었거나 사용자 설정 판이면 prospect_games.
  *      판 상세용으로 10명 전체의 그 판 기록(롤 이름·챔프·KDA·피해·아이템·증강)은 matches.players 에 둔다 (v3.44, puuid 는 남기지 않음).
  *   5. 같은 팀 5명 수치가 모두 있을 때만 점유율 계산.
  */
@@ -108,7 +108,7 @@ export async function ingest(req: Request, env: Env, me: Member) {
   // 이번 요청에 등장한 puuid 중 동의한 회원만
   const puuids = [...new Set(games.flatMap((g) => g.participants.map((p) => p.puuid)))];
   const memberByPuuid = new Map<string, string>(); // 수집에 동의한 회원
-  const linked = new Set<string>(); // 롤 계정을 연결한 회원 전체 (동의를 철회했어도 포텐 멤버로 모으지 않는다)
+  const linked = new Set<string>(); // 롤 계정을 연결한 회원 전체 (동의를 철회했어도 함께한 친구들로 모으지 않는다)
   for (let i = 0; i < puuids.length; i += 90) {
     const chunk = puuids.slice(i, i + 90);
     const { results } = await env.DB.prepare(`SELECT id, riot_puuid, opt_in_at FROM members WHERE riot_puuid IN (${chunk.map(() => '?').join(',')})`)
@@ -232,7 +232,7 @@ export async function ingest(req: Request, env: Env, me: Member) {
         ),
       );
     }
-    // 포텐 멤버 후보: 회원이 1명 이상 있는 판에서, 회원과 같은 팀이었거나 사용자 설정(내전) 판에 함께한 비회원
+    // 함께한 친구들 후보: 회원이 1명 이상 있는 판에서, 회원과 같은 팀이었거나 사용자 설정(내전) 판에 함께한 비회원
     if (crew.length > 0) {
       const custom = g.queueId !== MAYHEM_QUEUE;
       for (const p of g.participants) {

@@ -79,7 +79,7 @@ function Row({ face = 40, round = false, nums = 2 }: { face?: number; round?: bo
   );
 }
 
-/** 목록 카드 (포텐 멤버·장인 순위 같은 줄 목록) */
+/** 목록 카드 (함께한 친구들·장인 순위 같은 줄 목록) */
 export function RowsSkeleton({ n = 5, face = 40, round = false, nums = 2, card = true }: { n?: number; face?: number; round?: boolean; nums?: number; card?: boolean }) {
   const rows = <div className="sk-rows">{Array.from({ length: n }, (_, i) => <Row key={i} face={face} round={round} nums={nums} />)}</div>;
   return <SkeletonFrame>{card ? <div className="card pad">{rows}</div> : rows}</SkeletonFrame>;

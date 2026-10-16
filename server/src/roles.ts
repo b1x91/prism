@@ -20,17 +20,17 @@ export const ROLES = [
 export const FEATURES = {
   party: 0, // 같이 할 판 열기·참여 (화면은 지금 없음)
   scrim: 3, // 내전 열기·팀 나누기 (화면은 지금 없음)
-  prospects: 0, // 포텐 멤버 보기 (준회원은 5명까지)
-  prospectsAll: 2, // 포텐 멤버 전체 (정회원 이상)
+  prospects: 0, // 함께한 친구들 보기 (준회원은 5명까지)
+  prospectsAll: 2, // 함께한 친구들 전체 (정회원 이상)
   rankingAll: 2, // 랭킹 전체 (준회원은 5위까지)
-  moderate: 5, // 남의 글·팁 지우기, 포텐 기록 지우기 (운영진)
+  moderate: 5, // 남의 글·팁 지우기, 함께한 친구 기록 지우기 (운영진)
   shop: 5, // 상점 사기·장착 (지금은 운영진만, 열 때 0 으로)
   ranking: 5, // 랭킹 보기 — 회원이 RANKING_OPEN_MEMBERS 명 모이기 전까지는 운영진만 (모이면 자동으로 모두에게)
 } as const;
 /** 롤 계정을 연결한 회원이 이만큼 모이면 랭킹이 모두에게 열린다 */
 export const RANKING_OPEN_MEMBERS = 30;
 export type Feature = keyof typeof FEATURES;
-/** 준회원이 볼 수 있는 랭킹·포텐 멤버 수 */
+/** 준회원이 볼 수 있는 랭킹·함께한 친구들 수 */
 export const LIMITED = 5;
 
 /** 단계별 혜택: 피스 모으는 배율 · 도감 경험치 배율 (높은 단계부터) */
