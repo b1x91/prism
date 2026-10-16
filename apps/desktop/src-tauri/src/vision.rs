@@ -417,6 +417,8 @@ mod imp {
         let mut warned_engine = false;
         let mut warned_capture = false;
         let mut capture_fails = 0u32;
+        // 띠 읽기에서 증강 이름이 한 장이라도 보였나 (카드 화면 낌새 → 카드 자리 찾기)
+        let mut hint = false;
         loop {
             let s = v.settings.lock().unwrap().clone();
             let allowed = v.allowed.load(Ordering::SeqCst);
@@ -492,6 +494,43 @@ mod imp {
             // 칸 위치는 게임 화면 기준 x 로 기억한다 (좁은 띠·넓게 읽기의 시작점이 달라도 같은 칸이 같은 값)
             let gw = (rc.right - rc.left) as f32;
             let off = (x - rc.left) as f32;
+            // 카드 자리를 그림에서 바로 찾아 카드마다 따로 읽는다 (v3.66, 근본 대책). 카드는 속이 검은 큰 직사각형이라
+            // 화면 비율·UI 크기·모니터와 상관없이 정확한 자리를 안다. 카드 화면이라는 낌새(이름 한 장 이상)가 있고 세 칸이 안 찼으면 매번
+            if slots.len() < 3 && (!slots.is_empty() || hint) {
+                let (wx, wy, ww, wh) = region_wide(&rc);
+                let cards = grab(wx, wy, ww, wh).map(|buf| crate::matcher::find_cards(&buf, ww as usize, wh as usize)).unwrap_or_default();
+                if cards.len() >= 2 {
+                    let t0 = std::time::Instant::now();
+                    let mut changed = false;
+                    for &(a, b, y0, y1) in &cards {
+                        let cx = (wx - rc.left) as f32 + (a + b) as f32 / 2.0;
+                        if slots.near(cx, (b - a) as f32 / 2.0) {
+                            continue;
+                        }
+                        let (got, how_found, text) = read_card(eng, wx + a as i32, wy + y0 as i32, (b - a) as i32, (y1 - y0) as i32, &v.matcher, &slots.ids());
+                        v.trace(format!("카드 자리 x={cx:.0} 폭={} {how_found} {:?} | {}", b - a, got, text.replace('\n', " / ").chars().take(100).collect::<String>()));
+                        if let Some(id) = got {
+                            slots.update(&[(id, cx, 0.0)], gw);
+                            changed = true;
+                        }
+                    }
+                    v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
+                    hint = false;
+                    if changed || !slots.is_empty() {
+                        seen_at = Some(std::time::Instant::now());
+                        let ids = slots.ids_sorted();
+                        if ids != last || !v.shown.load(Ordering::SeqCst) {
+                            last = ids.clone();
+                            v.publish(&app, ids, String::new());
+                            show_overlay(&app, &rc, &s.position, scale);
+                            v.shown.store(true, Ordering::SeqCst);
+                            v.diag(|d| d.shown += 1);
+                        }
+                    }
+                    std::thread::sleep(FAST.max(t0.elapsed()));
+                    continue;
+                }
+            }
             // 세 칸을 다 못 채웠으면 두 번에 한 번은 빈 칸 하나만 잘라 크게 읽는다 (v3.45).
             // 가로 띠 전체를 한 번에 읽으면 인식기가 한 장의 제목을 놓치는 일이 잦았다 — 그 카드만 따로, 키워서 다시 본다
             tick = tick.wrapping_add(1);
@@ -542,6 +581,7 @@ mod imp {
                 Some((lines, text)) => {
                     capture_fails = 0;
                     let hits = v.matcher.find_at(&lines, w as f32);
+                    hint = !hits.is_empty();
                     // 처음엔 2장 이상 보여야 카드 화면으로 보고, 그 뒤로는 한 장만 읽혀도 그 칸을 갱신한다
                     let seen = hits.len() >= 2 || (!slots.is_empty() && !hits.is_empty());
                     v.stage(if seen { "found" } else { "reading" }, hits.len() as u32, how);

@@ -34,6 +34,12 @@ fn discord_running() -> bool {
     lcu::discord_running()
 }
 
+/// 롤 화면 모드 (0 전체 화면 · 1 창 · 2 테두리 없음, 모르면 null)
+#[tauri::command]
+fn window_mode() -> Option<u8> {
+    lcu::window_mode()
+}
+
 #[tauri::command]
 async fn lcu_get(app: State<'_, Arc<App>>, path: String) -> Result<serde_json::Value, String> {
     app.lcu.get(&path).await
@@ -426,7 +432,7 @@ pub fn run() {
                 _ => {}
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, bring_to_front, toast_get, toast_close, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
+        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_close, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }

@@ -280,25 +280,54 @@ impl Slots {
     pub fn contains(&self, id: u32) -> bool {
         self.s.iter().any(|s| s.1 == id)
     }
+    /// 이 x(게임 화면 기준) 근처(r 안)에 이미 읽은 칸이 있나
+    pub fn near(&self, x: f32, r: f32) -> bool {
+        self.s.iter().any(|s| (s.0 - x).abs() < r)
+    }
+    /// 왼쪽부터 칸별 ID
+    pub fn ids_sorted(&self) -> Vec<u32> {
+        let mut v = self.s.clone();
+        v.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+        v.iter().map(|s| s.1).collect()
+    }
     pub fn ids(&self) -> Vec<u32> {
         self.s.iter().map(|s| s.1).collect()
     }
-    /// 아직 못 읽은 칸의 가운데 x (찾는 영역 기준). 카드 세 장은 게임 화면 가운데를 중심으로 같은 간격이고,
-    /// 찾는 영역도 화면 가운데를 중심으로 잡으므로 가운데 = width/2. 읽은 칸들로 간격을 재서 빈 칸을 짐작한다
+    /// 아직 못 읽은 칸의 가운데 x 후보 (게임 화면 기준).
+    /// 두 장을 읽었으면 화면 가운데를 가정하지 않고 두 칸 사이 간격으로 짐작한다 — 와이드 모니터(21:9 등)에서는
+    /// 카드 세 장이 화면 가운데가 아니라 한쪽으로 치우쳐 떠서, 가운데 기준 짐작이 엉뚱한 곳을 잘라 오른쪽 카드를
+    /// 끝까지 못 읽었다 (v3.65). 두 칸 간격이 한 칸 간격인지 두 칸 간격인지 모르므로 왼쪽 바깥·사이·오른쪽 바깥을 모두 후보로 두고
+    /// 돌아가며 읽는다 (이미 있는 증강은 read_card 가 후보에서 뺀다)
     pub fn missing(&self, width: f32) -> Vec<f32> {
+        if self.s.len() >= 3 || self.s.is_empty() {
+            return vec![];
+        }
+        if self.s.len() >= 2 {
+            let (a, b) = (self.s[0].0, self.s[self.s.len() - 1].0);
+            let d = b - a;
+            if d < width * 0.06 {
+                return vec![];
+            }
+            let mut out = vec![b + d, a - d, (a + b) / 2.0];
+            // 화면 안·이미 읽은 칸과 겹치지 않는 것만
+            out.retain(|c| *c > width * 0.02 && *c < width * 0.98 && self.s.iter().all(|s| (s.0 - c).abs() > d * 0.35));
+            return out;
+        }
+        // 한 장만 읽었으면 예전처럼 화면 가운데를 기준으로
         let mid = width / 2.0;
-        let side: Vec<f32> = self.s.iter().map(|s| (s.0 - mid).abs()).filter(|d| *d > width * 0.06).collect();
-        if side.is_empty() || self.s.len() >= 3 {
+        let x = self.s[0].0;
+        let p = (x - mid).abs();
+        if p < width * 0.1 || p > width * 0.45 {
             return vec![];
         }
-        let pitch = side.iter().sum::<f32>() / side.len() as f32;
-        if pitch < width * 0.1 || pitch > width * 0.45 {
-            return vec![];
-        }
-        [mid - pitch, mid, mid + pitch].into_iter().filter(|c| self.s.iter().all(|s| (s.0 - c).abs() > pitch * 0.35)).collect()
+        [mid - p, mid, mid + p].into_iter().filter(|c| (x - c).abs() > p * 0.35).collect()
     }
-    /// 카드 간격 (빈 칸을 잘라 읽을 폭)
+    /// 카드 간격 (빈 칸을 잘라 읽을 폭). 두 장 이상이면 그 간격(두 칸 간격일 수도 있어 사이 후보는 반으로 자른다)
     pub fn pitch(&self, width: f32) -> Option<f32> {
+        if self.s.len() >= 2 {
+            let d = self.s[self.s.len() - 1].0 - self.s[0].0;
+            return (d >= width * 0.06).then_some(d.min(width * 0.3));
+        }
         let mid = width / 2.0;
         let side: Vec<f32> = self.s.iter().map(|s| (s.0 - mid).abs()).filter(|d| *d > width * 0.06).collect();
         (!side.is_empty()).then(|| side.iter().sum::<f32>() / side.len() as f32)
@@ -320,6 +349,73 @@ impl Slots {
         self.s.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
         self.s.iter().map(|s| s.1).collect()
     }
+}
+
+
+/// 증강 카드 자리 찾기 (v3.66). 카드는 속이 거의 검은 큰 직사각형이 가로로 나란히 2~3장 뜬다.
+/// 열마다 '아주 어두운 점'의 비율을 재고, 어두운 열이 이어진 구간 중 폭·높이가 카드만 한 것을 고른다.
+/// 화면 비율·UI 크기·모니터에 상관없이 카드 위치를 그림에서 바로 안다 (예전엔 화면 가운데 기준으로 짐작해 와이드 모니터에서 틀렸다).
+/// 결과: 찾는 영역 안의 (x0, x1, y0, y1), 왼쪽부터
+pub fn find_cards(bgra: &[u8], w: usize, h: usize) -> Vec<(usize, usize, usize, usize)> {
+    if w < 200 || h < 100 || bgra.len() < w * h * 4 {
+        return vec![];
+    }
+    let dark = |x: usize, y: usize| {
+        let i = (y * w + x) * 4;
+        (bgra[i] as u32 + bgra[i + 1] as u32 + bgra[i + 2] as u32) < 75
+    };
+    // 2점마다 하나씩만 봐도 충분하다
+    let col: Vec<f32> = (0..w).map(|x| {
+        let mut n = 0;
+        let mut d = 0;
+        let mut y = 0;
+        while y < h { n += 1; if dark(x, y) { d += 1; } y += 2; }
+        d as f32 / n as f32
+    }).collect();
+    // 어두운 열(35% 이상) 구간, 작은 틈(폭의 1%)은 이어 붙인다
+    let gap = (w / 100).max(3);
+    let mut runs: Vec<(usize, usize)> = vec![];
+    let mut x = 0;
+    while x < w {
+        if col[x] >= 0.35 {
+            let s0 = x;
+            let mut e = x;
+            let mut miss = 0;
+            while x < w {
+                if col[x] >= 0.35 { e = x; miss = 0; } else { miss += 1; if miss > gap { break; } }
+                x += 1;
+            }
+            runs.push((s0, e));
+        }
+        x += 1;
+    }
+    // 카드만 한 폭 (영역 폭의 6~30%)
+    let mut cards: Vec<(usize, usize, usize, usize)> = runs.into_iter().filter(|(a, b)| {
+        let cw = b - a;
+        cw * 100 >= w * 6 && cw * 100 <= w * 30
+    }).filter_map(|(a, b)| {
+        // 세로 범위: 이 구간 가운데 60% 의 열에서 어두운 비율이 45% 넘는 줄
+        let (ia, ib) = (a + (b - a) / 5, b - (b - a) / 5);
+        let rows: Vec<bool> = (0..h).map(|y| {
+            let mut n = 0; let mut d = 0; let mut xx = ia;
+            while xx < ib { n += 1; if dark(xx, y) { d += 1; } xx += 2; }
+            n > 0 && d * 100 >= n * 45
+        }).collect();
+        let y0 = rows.iter().position(|r| *r)?;
+        let y1 = rows.iter().rposition(|r| *r)?;
+        // 카드만 한 높이 (영역 높이의 25% 이상, 폭보다 길다)
+        (y1 - y0 >= h / 4 && (y1 - y0) as f32 >= (b - a) as f32 * 0.9).then_some((a, b, y0, y1))
+    }).collect();
+    // 비슷한 폭끼리만 (가장 넓은 것의 65% 이상), 최대 3장
+    if let Some(maxw) = cards.iter().map(|c| c.1 - c.0).max() {
+        cards.retain(|c| (c.1 - c.0) * 100 >= maxw * 65);
+    }
+    if cards.len() > 3 {
+        cards.sort_by_key(|c| std::cmp::Reverse(c.1 - c.0));
+        cards.truncate(3);
+        cards.sort_by_key(|c| c.0);
+    }
+    if cards.len() >= 2 { cards } else { vec![] }
 }
 
 #[cfg(test)]
@@ -359,12 +455,35 @@ mod tests {
     }
 
     #[test]
+    fn 카드_자리_찾기() {
+        // 1600×500 밝은 바탕에 검은 카드 세 장 (왼쪽으로 치우침)
+        let (w, h) = (1600usize, 500usize);
+        let mut b = vec![180u8; w * h * 4];
+        for (x0, x1) in [(100usize, 330usize), (380, 610), (660, 890)] {
+            for y in 60..460 { for x in x0..x1 { let i = (y * w + x) * 4; b[i] = 8; b[i + 1] = 8; b[i + 2] = 12; } }
+            // 글자 줄 (밝은 점)
+            for y in 200..215 { for x in (x0 + 20..x1 - 20).step_by(3) { let i = (y * w + x) * 4; b[i] = 250; b[i + 1] = 250; b[i + 2] = 250; } }
+        }
+        let c = find_cards(&b, w, h);
+        assert_eq!(c.len(), 3, "{c:?}");
+        assert!(c[2].0 >= 650 && c[2].1 <= 900);
+    }
+
+    #[test]
+    fn 와이드_모니터_빈_칸() {
+        // 3440 폭 화면에 카드가 왼쪽으로 치우쳐 600·1250·1900 에 뜨고 앞의 두 장만 읽힌 경우 → 1900 이 후보에 있어야 한다
+        let mut s = Slots::default();
+        s.update(&[(1, 600.0, 0.0), (2, 1250.0, 0.0)], 3440.0);
+        let miss = s.missing(3440.0);
+        assert!(miss.iter().any(|c| (c - 1900.0).abs() < 1.0), "{miss:?}");
+    }
+
+    #[test]
     fn 빈_칸_짐작() {
         let mut s = Slots::default();
         s.update(&[(1, 300.0, 0.0), (2, 800.0, 0.0)], 1600.0);
         let miss = s.missing(1600.0);
-        assert_eq!(miss.len(), 1);
-        assert!((miss[0] - 1300.0).abs() < 1.0);
+        assert!(miss.iter().any(|c| (c - 1300.0).abs() < 1.0), "{miss:?}");
     }
 
     #[test]

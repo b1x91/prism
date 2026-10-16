@@ -21,6 +21,8 @@ const err = (e: unknown) => new ApiError(0, typeof e === 'string' ? e : e instan
 export const bridge = {
   lcuStatus: () => call<{ client: boolean; inGame: boolean }>('lcu_status'),
   discordRunning: () => call<boolean>('discord_running'),
+  /** 롤 화면 모드: 0 전체 화면 · 1 창 · 2 테두리 없음, 모르면 null */
+  windowMode: () => call<number | null>('window_mode'),
   bringToFront: () => call<null>('bring_to_front'),
   toastGet: () => call<ToastMsg | null>('toast_get'),
   toastClose: () => call<null>('toast_close'),

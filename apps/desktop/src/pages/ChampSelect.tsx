@@ -2,10 +2,11 @@
  * 챔프 선택 도우미: 우리 팀 구성(AP/AD·앞라인·CC), 부족한 점, 대기석 추천, 큰 카드(내 챔피언 또는 미리보기).
  * 롤 클라이언트에는 읽기만 한다. 고르기·교체는 사용자가 롤에서 직접 한다.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, type ChampionProfile, type Comp, type Need, type Verdict, shortNick, josa } from '@prism/core';
 import { AugRing, AugmentLink, ChampImg, Seg, TierBadge } from '@prism/ui';
 import { checkNow, type ChampSelect, type CrewSelect } from '../controller';
+import { bridge } from '../bridge';
 import { Icon } from '@prism/ui';
 import type { Personal } from '@prism/core';
 
@@ -21,6 +22,24 @@ export function CheckNow({ label = '지금 확인' }: { label?: string }) {
     </button>
   );
 }
+/** 롤이 '전체 화면'이면 게임 위 증강 창이 뜰 수 없다 → 챔프 선택에서 미리 알린다 (v3.65). 자동 인식이 켜져 있을 때만 */
+export function FullscreenNote() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    let on = true;
+    Promise.all([bridge.windowMode().catch(() => null), bridge.visionGet().catch(() => null)])
+      .then(([mode, v]) => on && setShow(mode === 0 && Boolean(v?.settings.enabled)));
+    return () => { on = false; };
+  }, []);
+  if (!show) return null;
+  return (
+    <div className="fs-note" role="note">
+      <Icon name="info" />
+      <span><b>전체 화면에서는 게임 위 증강 창이 뜨지 않아요</b><small>롤 설정 → 비디오 → 창 모드를 '테두리 없음'으로 바꾸면 증강 카드가 뜰 때 옆에 바로 보여 드려요.</small></span>
+    </div>
+  );
+}
+
 const fmt = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(1));
 const rate = (r?: { n: number; w: number }) => (r && r.n ? r.w / r.n : -1);
 
@@ -73,6 +92,7 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
   return (
     <section className="card pad cs">
       <div className="card-head"><h2>챔프 선택</h2><span className="sp" /><CheckNow /><span className="pill accent">진행 중</span></div>
+      <FullscreenNote />
       {bench.length > 0 && <div className="cs-bench">
         <div className="cs-bench-h"><b>대기석</b><span className="cs-bench-n">{bench.length}</span><span className="meta">눌러서 미리보기</span><span className="sp" />
           {bench.length > 1 && <Seg value={sort} options={[['balance', '팀 밸런스'], ['mine', '내가 잘하는'], ['crew', '모임 승률']]} onChange={setS} />}</div>

@@ -80,6 +80,17 @@ pub fn discord_running() -> bool {
     sys.processes().values().any(|p| ["Discord.exe", "DiscordPTB.exe", "DiscordCanary.exe"].iter().any(|n| is_named(p, n)))
 }
 
+/// 롤 화면 모드 (클라이언트 설치 폴더의 Config/game.cfg 의 WindowMode, 파일만 읽는다): 0 전체 화면 · 1 창 · 2 테두리 없음.
+/// 전체 화면이면 게임 위 작은 창이 뜰 수 없어 미리 알린다 (v3.65). 값의 뜻은 [검증필요]
+pub fn window_mode() -> Option<u8> {
+    let mut sys = processes();
+    sys.refresh_processes(ProcessesToUpdate::All, true);
+    let p = sys.processes().values().find(|p| is_named(p, CLIENT_PROCESS))?;
+    let dir = p.exe()?.parent()?.to_path_buf();
+    let text = std::fs::read_to_string(dir.join("Config").join("game.cfg")).ok()?;
+    text.lines().find_map(|l| l.trim().strip_prefix("WindowMode=")).and_then(|v| v.trim().parse().ok())
+}
+
 /// 게임(인게임) 프로세스 번호들 (작은 창이 게임 창을 찾을 때 쓴다)
 pub fn game_pids() -> Vec<u32> {
     let mut sys = System::new();

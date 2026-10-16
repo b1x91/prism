@@ -460,3 +460,10 @@ body { overflow: hidden; background: var(--bg); }
 .tb-ax .col i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: inherit; background: linear-gradient(180deg, #b79bff, #8aa2ff); }
 .tb-ax b { font-size: var(--fs-md); font-weight: 800; font-variant-numeric: tabular-nums; }
 .tb-ax small { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; }
+
+/* 롤 '전체 화면' 안내 (v3.65) */
+.fs-note { display: flex; align-items: flex-start; gap: var(--s3); padding: var(--s3) var(--s4); border-radius: var(--r-m); background: color-mix(in srgb, var(--warn) 12%, var(--surface)); border: 1px solid color-mix(in srgb, var(--warn) 45%, var(--line)); color: var(--text); }
+.fs-note > svg { flex: none; margin-top: 2px; color: var(--warn); }
+.fs-note span { display: grid; gap: 2px; }
+.fs-note b { font-size: var(--fs-md); font-weight: 750; }
+.fs-note small { font-size: var(--fs-sm); color: var(--text-2); }
