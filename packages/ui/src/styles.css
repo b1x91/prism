@@ -2374,4 +2374,7 @@ button.ga:hover { background: var(--surface-2); }
 .champ-grid button img, .fpk-c img { transition: transform .35s var(--zoom-ease), box-shadow .2s; }
 .champ-grid button:hover img { transform: translateY(-2px) scale(1.08); }
 .fpk-c:hover img { transform: scale(1.1); }
+/* 그림이 커졌다 작아지는 동안 카드의 둥근 모서리 자르기가 잠깐 풀려 아래·옆이 각지게 삐져나오던 것:
+   카드를 늘 따로 그려지는 층으로 두면 둥근 자르기가 확대 중에도 유지된다 */
+.msn-champ, .cfav-card, .pod, .lb-card, .rcard button, .feature { will-change: transform; backface-visibility: hidden; }
 @media (prefers-reduced-motion: reduce) { .msn-champ img, .cfav-card img, .pod .bg, .lb-art, .rcard img, .feature img.bg, .champ-grid button img, .fpk-c img { transition: none; } }
