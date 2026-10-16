@@ -143,7 +143,17 @@ fn toast_get() -> Option<toast::Toast> {
 
 #[tauri::command]
 fn toast_close(handle: tauri::AppHandle) {
+    let act = toast::action();
     toast::hide(&handle);
+    match act {
+        // '준비 완료' 알림: 누르면 바로 적용 (게임 중이면 tray_update 가 알리고 미룬다)
+        "apply" => {
+            tauri::async_runtime::spawn(tray_update(handle));
+        }
+        // '업데이트 완료' 알림: 누르면 앱 창
+        "open" => bring_to_front(handle),
+        _ => {}
+    }
 }
 
 /// 롤 단계 지켜보기 (v3.42). 화면(WebView)의 타이머는 창이 트레이에 있으면 크게 늦춰지므로 단계 확인은 Rust 가 한다.
@@ -211,7 +221,7 @@ async fn tray_update(app: tauri::AppHandle) {
             let r = update::prepare().await;
             refresh_tray();
             match r {
-                Ok(_) => toast::show(&app, &format!("v{} 준비 완료", i.latest), "트레이에서 '업데이트 적용'을 누르거나, 창을 내려 두면 알아서 적용해요.", "ok", 7000),
+                Ok(_) => toast::show_act(&app, &format!("v{} 준비 완료", i.latest), "누르면 지금 업데이트해요. 창을 내려 두면 알아서 적용해요.", "ok", 10000, "apply"),
                 Err(e) => toast::show(&app, "새 버전을 받지 못했어요", &e, "warn", 6000),
             }
         }
@@ -226,7 +236,7 @@ fn notice_updated(app: &tauri::AppHandle, dir: &std::path::Path) {
     let _ = std::fs::create_dir_all(dir);
     let _ = std::fs::write(&file, &now);
     if before.is_some_and(|b| b.trim() != now) {
-        toast::show(app, "업데이트 완료", &format!("Prism v{now}로 업데이트했어요."), "ok", 5000);
+        toast::show_act(app, "업데이트 완료", &format!("Prism v{now}로 업데이트했어요. 누르면 열려요."), "ok", 6000, "open");
     }
 }
 

@@ -1,6 +1,7 @@
 /**
  * 화면 오른쪽 아래 작은 알림 (v3.40). 트레이 '업데이트 확인'처럼 창을 열지 않고 결과를 알릴 때.
- * Rust(toast.rs)가 위치·보이기·숨기기를 맡고, 여기서는 그리기와 들어오고 나가는 움직임만. 누르면 닫힌다.
+ * Rust(toast.rs)가 위치·보이기·숨기기를 맡고, 여기서는 그리기와 들어오고 나가는 움직임만. 누르면 닫힌다
+ * (할 일이 있는 알림은 Rust 가 닫으면서 그 일을 한다 — '준비 완료' 는 업데이트 적용, '업데이트 완료' 는 앱 열기).
  */
 import { StrictMode, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';

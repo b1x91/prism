@@ -1,6 +1,6 @@
 //! 화면 오른쪽 아래 작은 알림 (v3.40). 트레이 '업데이트 확인'의 결과처럼, 창을 열지 않고 알려야 할 때.
 //! 우리 창(toast.html)으로 그린다 — 윈도우 알림 센터는 설치 방식에 따라 앱 이름이 달라져서 쓰지 않는다.
-//! 포커스를 가져가지 않고, 누르면 닫힌다. 몇 초 뒤 저절로 사라진다.
+//! 포커스를 가져가지 않고, 누르면 닫힌다 (할 일이 있는 알림은 닫으면서 그 일을 한다 — 업데이트 적용·앱 열기). 몇 초 뒤 저절로 사라진다.
 use serde::Serialize;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
@@ -12,6 +12,8 @@ pub struct Toast {
     pub body: String,
     /// 'info' | 'ok' | 'busy' | 'warn'
     pub kind: &'static str,
+    /// 눌렀을 때 할 일: '' 닫기만 · 'apply' 받아 둔 업데이트 적용 · 'open' 앱 창 열기
+    pub action: &'static str,
     pub at: u64,
 }
 
@@ -43,7 +45,12 @@ pub fn last() -> Option<Toast> {
 
 /// 알림 띄우기. ms 뒤 저절로 숨긴다 (그 사이 새 알림이 오면 새 것 기준)
 pub fn show(app: &AppHandle, title: &str, body: &str, kind: &'static str, ms: u64) {
-    let t = Toast { title: title.into(), body: body.into(), kind, at: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0) };
+    show_act(app, title, body, kind, ms, "");
+}
+
+/// 눌렀을 때 할 일이 있는 알림 (action: 'apply' | 'open')
+pub fn show_act(app: &AppHandle, title: &str, body: &str, kind: &'static str, ms: u64, action: &'static str) {
+    let t = Toast { title: title.into(), body: body.into(), kind, action, at: std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as u64).unwrap_or(0) };
     *LAST.lock().unwrap() = Some(t.clone());
     let gen = GEN.fetch_add(1, Ordering::SeqCst) + 1;
     let Some(w) = app.get_webview_window("toast") else { return };
@@ -72,6 +79,11 @@ pub fn show(app: &AppHandle, title: &str, body: &str, kind: &'static str, ms: u6
             }
         }
     });
+}
+
+/// 지금 떠 있는 알림의 할 일 (눌렀을 때 쓴다)
+pub fn action() -> &'static str {
+    LAST.lock().unwrap().as_ref().map(|t| t.action).unwrap_or("")
 }
 
 /// 화면에서 눌러 닫기: 아래로 내려가는 움직임을 보여 준 뒤 숨긴다 (그 사이 새 알림이 오면 숨기지 않는다)

@@ -57,4 +57,4 @@ export const api: Api = {
 };
 
 /** 오른쪽 아래 알림 (Rust toast.rs) */
-export type ToastMsg = { title: string; body: string; kind: 'info' | 'ok' | 'busy' | 'warn'; at: number };
+export type ToastMsg = { title: string; body: string; kind: 'info' | 'ok' | 'busy' | 'warn'; action?: '' | 'apply' | 'open'; at: number };
