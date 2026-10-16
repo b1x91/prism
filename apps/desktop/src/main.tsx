@@ -140,7 +140,7 @@ function App() {
       <aside className="side">
         <div className="side-brand">
           <span className="brand-mark"><img src="/brand/prism-256.png" alt="" /></span>
-          <span className="brand-word" data-text="Prism">Prism</span>
+          <span className="brand-word" data-text="PRISM">PRISM</span>
           <NavArrows />
         </div>
         <span className="brand-line" aria-hidden="true" />

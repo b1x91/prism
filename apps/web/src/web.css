@@ -1,7 +1,8 @@
 /* 웹 전용 틀 (상단 바·모바일 메뉴·첫 화면) */
 .top { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line); }
 .top .wrap { display: flex; align-items: center; gap: var(--s4); height: 64px; }
-.brand { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg); font-weight: 850; letter-spacing: -.02em; }
+/* 워드마크는 대문자 PRISM — 대문자 높이(약 12px)에 맞춰 보석은 22px, 글자 사이는 넓게 */
+.brand { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg); font-weight: 800; letter-spacing: .1em; line-height: 1; }
 .tabs { display: flex; gap: var(--s1); margin-left: var(--s4); }
 .tabs a { height: 36px; display: inline-flex; align-items: center; padding: 0 var(--s3); border-radius: var(--r-m); color: var(--text-2); font-weight: 650; }
 .tabs a:hover { color: var(--text); background: var(--surface-2); }
