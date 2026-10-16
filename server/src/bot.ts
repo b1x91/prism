@@ -8,6 +8,7 @@ import { AUGMENT, CHAMPIONS } from '../../packages/core/src/data.js';
 import { cdragon } from '../../packages/core/src/assets.js';
 import skinData from '../../packages/core/data/skins.json';
 import { stateOf } from './missions.js';
+import { byScore, rankScore, seasonOf } from '../../packages/core/src/ranking.js';
 import { assertRanking } from './roles.js';
 import { json, type Env, type Member } from './util.js';
 
@@ -87,8 +88,6 @@ const faceUrl = (skin: number | null, champ: number | null) => {
   const s = skin ? SKINS[String(skin)] : undefined;
   return s?.[2] ? cdragon(s[2]) : champ ? cdragon(CHAMPIONS[champ]?.tile) : '';
 };
-const RARITY_DOT: Record<string, string> = { prismatic: '🔮', gold: '🟡', silver: '⚪' };
-const bar = (r: number, n = 10) => '▰'.repeat(Math.round(r * n)) + '▱'.repeat(n - Math.round(r * n));
 
 export async function interactions(req: Request, env: Env): Promise<Response> {
   const body = await req.text();
@@ -132,13 +131,13 @@ async function myRecord(env: Env, me: Member) {
   const name = me.nick.split('#')[0];
   const face = faceUrl(me.profile_skin, main);
   const splash = main ? cdragon((me.profile_skin && SKINS[String(me.profile_skin)]?.[3]) || CHAMPIONS[main]?.splash) : '';
-  const rate = w / g.length;
-  const champLines = champs.map(([c, e], i) => `${['🥇', '🥈', '🥉'][i]} **${CHAMPIONS[c]?.name ?? c}** · ${e.n}판 ${pct(e.w, e.n)}`).join('\n');
-  // 최애 증강: 가장 많이 고른 하나 (아이콘을 곁들여서)
+  const champLines = champs.map(([c, e]) => `**${CHAMPIONS[c]?.name ?? c}**  ${e.n}판 · 승률 ${pct(e.w, e.n)}`).join('\n');
+  // 최애 증강: 가장 많이 고른 하나 (글자로만, 아이콘 없이)
   const best = picked.results[0];
   const ba = best ? AUGMENT[best.id] : undefined;
-  const bestLine = best ? [`**최애 증강**`, `${RARITY_DOT[ba?.rarity ?? ''] ?? '▫️'} **${ba?.name ?? best.id}** · ${best.n}번 고름 · 승률 ${pct(best.w, best.n)}`] : [];
-  const bestAug = ba?.icon ? section(bestLine, thumb(cdragon(ba.icon))) : text(bestLine.join('\n'));
+  const RARITY_NAME: Record<string, string> = { silver: '실버', gold: '골드', prismatic: '프리즘' };
+  const bestAug = best ? text(`**최애 증강**\n**${ba?.name ?? best.id}**  ${[RARITY_NAME[ba?.rarity ?? ''], `${best.n}번 고름`, `승률 ${pct(best.w, best.n)}`].filter(Boolean).join(' · ')}`) : null;
+  const recent = g.slice(0, 10), rw = recent.filter((x) => x.w).length;
   const favLine = favs.results.map((x) => AUGMENT[x.id]?.name).filter(Boolean).join(' · ');
   return {
     components: card([
@@ -147,12 +146,13 @@ async function myRecord(env: Env, me: Member) {
       splash || !face ? text(`## ${name} 님의 기록\n-# Prism · 아수라장 · ${g[0].w ? `🔥 ${streak}연승 중` : `${streak}연패 중`}`)
         : section([`## ${name} 님의 기록`, `-# Prism · 아수라장 · ${g[0].w ? `🔥 ${streak}연승 중` : `${streak}연패 중`}`], thumb(face)),
       line(),
-      text(`### ${g.length}판  ·  승률 ${pct(w, g.length)}  ·  KDA ${((k + a) / Math.max(1, d)).toFixed(2)}\n\`${bar(rate)}\``),
-      text(`**최근 10판**\n${g.slice(0, 10).map((x) => (x.w ? '🟦' : '🟥')).join('')}`),
+      text(`### ${g.length}판   ·   승률 ${pct(w, g.length)}   ·   KDA ${((k + a) / Math.max(1, d)).toFixed(2)}`),
+      // 최근 판은 동그라미 사이를 띄워 촘촘하지 않게 (파랑 승 · 빨강 패)
+      text(`**최근 ${recent.length}판**  ${rw}승 ${recent.length - rw}패\n${recent.map((x) => (x.w ? '🔵' : '🔴')).join('  ')}`),
       line(),
       text(`**많이 한 챔프**\n${champLines || '–'}`),
-      ...(best ? [bestAug] : []),
-      ...(favLine ? [text(`**❤️ 내 증강**  ${favLine}`)] : []),
+      ...(bestAug ? [bestAug] : []),
+      ...(favLine ? [text(`**내 증강**\n${favLine}`)] : []),
       line(true),
       linkButtons([['내 페이지', `${webUrl(env)}/me`], ['도감', `${webUrl(env)}/dex`]]),
     ]),
@@ -161,20 +161,24 @@ async function myRecord(env: Env, me: Member) {
 
 async function rankTop(env: Env, me: Member) {
   await assertRanking(env, me); // 랭킹이 아직 열리지 않았으면 그 안내가 그대로 답이 된다
+  // 이번 시즌 점수 순 (승률을 판수만큼 믿은 값, 화면 랭킹과 같은 규칙)
+  const season = seasonOf();
   const r = await env.DB.prepare(`SELECT m.nick AS nick, m.profile_skin AS skin, COUNT(*) AS n, SUM(p.win) AS w,
       (SELECT champion_id FROM participants q WHERE q.member_id = p.member_id GROUP BY champion_id ORDER BY COUNT(*) DESC LIMIT 1) AS main
-    FROM participants p JOIN members m ON m.id = p.member_id GROUP BY p.member_id ORDER BY n DESC, w DESC LIMIT 5`)
-    .all<{ nick: string; skin: number | null; n: number; w: number; main: number | null }>();
-  const rows = r.results;
-  if (!rows.length) return { content: '아직 기록된 판이 없어요.' };
+    FROM participants p JOIN members m ON m.id = p.member_id WHERE p.played_at >= ? GROUP BY p.member_id`)
+    .bind(season.start).all<{ nick: string; skin: number | null; n: number; w: number; main: number | null }>();
+  const rows = r.results.sort(byScore).slice(0, 5);
+  if (!rows.length) return { content: `${season.label}에 기록된 판이 아직 없어요.` };
   const top = rows[0];
   const medal = ['🥇', '🥈', '🥉', '`4`', '`5`'];
   const face = faceUrl(top.skin, top.main);
+  const head = ['## 🏆 Prism 랭킹', `-# ${season.label} · 점수 기준 · 1위 **${top.nick.split('#')[0]}** ${rankScore(top.w, top.n)}점`];
   return {
     components: card([
-      face ? section(['## 🏆 Prism 랭킹', `-# 판수 기준 · 1위 **${top.nick.split('#')[0]}** ${top.n}판`], thumb(face)) : text('## 🏆 Prism 랭킹'),
+      face ? section(head, thumb(face)) : text(head.join('\n')),
       line(),
-      text(rows.map((x, i) => `${medal[i]}  **${x.nick.split('#')[0]}**  ·  ${x.n}판  ·  ${pct(x.w, x.n)}`).join('\n')),
+      text(rows.map((x, i) => `${medal[i]}  **${x.nick.split('#')[0]}**  ·  **${rankScore(x.w, x.n)}점**  ·  ${x.n}판 ${pct(x.w, x.n)}`).join('\n')),
+      text('-# 점수 = 승률을 판수만큼 믿은 값 (판이 적으면 500점 쪽으로)'),
       line(true),
       linkButtons([['전체 랭킹', `${webUrl(env)}/ranking`]]),
     ], 0xf2b233),
@@ -190,7 +194,7 @@ async function myMissions(env: Env, me: Member) {
       text(`## 🎯 이번 주 미션  ${done}/${ms.length}`),
       text(`-# 월요일 0시에 새로 정해져요${st.ready ? ` · 받을 보상 **${st.ready} 피스**` : ''}`),
       line(),
-      ...ms.map((m) => text(`${m.done ? '✅' : '▫️'} **${m.title}**  ·  ${m.reward} 피스\n\`${bar(m.progress / Math.max(1, m.target))}\` ${m.progress}/${m.target}`)),
+      ...ms.map((m) => text(`${m.done ? '✅' : '▫️'} **${m.title}**\n-# ${m.progress} / ${m.target}  ·  ${m.reward} 피스`)),
       line(true),
       linkButtons([['미션 보기', `${webUrl(env)}/missions`]]),
     ], 0x3ddc97),

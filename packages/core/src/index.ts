@@ -19,3 +19,4 @@ export * from './missions';
 export * from './duo';
 export * from './liveitems';
 export * from './about';
+export * from './ranking';

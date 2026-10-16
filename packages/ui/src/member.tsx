@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, aboutWhen, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
   type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
+  rankScore, byScore,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, LockedMore, MemberFace, PresenceTag, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
@@ -23,7 +24,14 @@ const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as
 
 // ───────── 랭킹 ─────────
 
-type RankBy = 'games' | 'winrate' | 'month';
+type RankBy = 'season' | 'score' | 'games';
+const scoreTab = (by: RankBy) => by !== 'games';
+/** '2026 시즌 4 · 12월 31일까지 (D-76)' */
+function seasonMeta(sz: { label: string; end: number }) {
+  const last = new Date(sz.end - 1 + 9 * 3_600_000);
+  const left = Math.max(0, Math.ceil((sz.end - Date.now()) / 86_400_000));
+  return `${sz.label} · ${last.getUTCMonth() + 1}월 ${last.getUTCDate()}일까지 (D-${left})`;
+}
 
 /** 랭킹. 회원이 충분히 모이기 전(open=false)에는 '준비 중' 화면 (운영진은 미리 본다) */
 export function RankingView({ api, meId, onOpen, open = true, gate }: { api: Api; meId?: string; onOpen: (id: string) => void; open?: boolean; gate?: { have: number; need: number } }) {
@@ -60,33 +68,33 @@ function stageDue(): boolean {
 }
 
 function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (id: string) => void }) {
-  const [by, setByRaw] = useState<RankBy | 'champ-art' | 'aug-art'>('games');
+  const [by, setByRaw] = useState<RankBy | 'champ-art' | 'aug-art'>('season');
   const [play, setPlay] = useState(stageDue);
   const setBy = (v: RankBy | 'champ-art' | 'aug-art') => { setPlay(false); setByRaw(v); };
   const art = by === 'champ-art' || by === 'aug-art';
-  const { data, error } = useLoad<Ranking>(api, art ? null : by === 'month' ? '/api/ranking?period=month' : by === 'winrate' ? '/api/ranking?by=winrate' : '/api/ranking');
+  const { data, error } = useLoad<Ranking>(api, art ? null : by === 'season' ? '/api/ranking?period=season&by=score' : by === 'score' ? '/api/ranking?by=score' : '/api/ranking');
   const skins = useSkins();
   const rv = useReveal(!art && Boolean(data));
   const rows = useMemo(() => {
     const r = (data?.rows ?? []).slice();
-    if (by === 'winrate') return r.filter((x) => x.n >= (data?.minWinrate ?? 10)).sort((a, b) => b.w / b.n - a.w / a.n || b.n - a.n);
+    if (by === 'season' || by === 'score') return r.sort(byScore);
     return r.sort((a, b) => b.n - a.n || b.w - a.w);
   }, [data, by]);
   return (
     <div className="stack" style={{ gap: 16 }}>
-      <div className="row wrapr"><Seg value={by} options={[['games', '판수'], ['winrate', '승률'], ['month', '이번 달'], ['champ-art', '챔프 장인'], ['aug-art', '증강 장인']]} onChange={setBy} />
-        <span className="meta">{art ? '도감 마스터 여정을 모두 이룬 수 (같으면 이룬 목표 수)' : by === 'winrate' ? `${data?.minWinrate ?? 10}판 이상 기록한 회원만` : by === 'month' ? '이번 달 판수' : '지금까지 기록된 판수'}</span></div>
+      <div className="row wrapr"><Seg value={by} options={[['season', '시즌'], ['score', '전체'], ['games', '판수'], ['champ-art', '챔프 장인'], ['aug-art', '증강 장인']]} onChange={setBy} />
+        <span className="meta">{art ? '도감 마스터 여정을 모두 이룬 수 (같으면 이룬 목표 수)' : by === 'season' ? (data?.season ? seasonMeta(data.season) : '이번 시즌 점수') : by === 'score' ? '지금까지 모든 판의 점수' : '지금까지 기록된 판수'}</span></div>
       {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
       {!art && !data && !error && <RankingSkeleton />}
       {!art && data && <Swap on={rv} skeleton={<RankingSkeleton />}><div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
-      {!rows.length && <Empty>{by === 'winrate' ? '아직 조건을 채운 회원이 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
+      {!rows.length && <Empty>{by === 'season' ? '이번 시즌에 기록된 판이 아직 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
       {rows.length > 0 && <Leaderboard key={`lb-${by}`} play={play} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
       {rows.length > 3 && <div key={`rl-${by}`} className={`card rank-list ${play ? 'lb-in' : ''}`}>
         {rows.slice(3).map((r, i) => <RankRow key={r.id} r={r} rank={i + 4} i={i} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
       </div>}
       {data?.limited && <LockedMore more={data.limited.total - rows.length}>
-        {data.limited.mine && by !== 'winrate' && <div className="card rank-list"><RankRow r={data.limited.mine} rank={data.limited.mine.rank} by={by as RankBy} me skins={skins} onOpen={onOpen} /></div>}
+        {data.limited.mine && <div className="card rank-list"><RankRow r={data.limited.mine} rank={data.limited.mine.rank} by={by as RankBy} me skins={skins} onOpen={onOpen} /></div>}
       </LockedMore>}
       </div></Swap>}
     </div>
@@ -117,7 +125,7 @@ function Podium({ r, rank, by, me, skins, onOpen, play }: { r: RankingRow; rank:
       {rank === 1 && <span className="lb-crown" aria-hidden="true"><Gem size={28} src="/brand/prism-32.png" /></span>}
       <span className="lb-face"><MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={rank === 1 ? 88 : 72} /></span>
       <span className="lb-nm"><NickName nick={r.nick} /></span>
-      <span className="lb-st"><b><CountUp text={by === 'winrate' ? pct(r.w, r.n) : `${r.n}판`} delay={[0, 1150, 950, 800][rank]} play={play} /></b><small>{by === 'winrate' ? `${r.n}판` : `승률 ${pct(r.w, r.n)}`}</small></span>
+      <span className="lb-st"><b><CountUp text={scoreTab(by) ? `${rankScore(r.w, r.n)}점` : `${r.n}판`} delay={[0, 1150, 950, 800][rank]} play={play} /></b><small>{scoreTab(by) ? `${r.n}판 · ${pct(r.w, r.n)}` : `승률 ${pct(r.w, r.n)}`}</small></span>
     </button>
   );
 }
@@ -151,9 +159,9 @@ function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: n
       {r.bg && <BgScene id={r.bg} row />}
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={40} />
-      <span className="who"><b><NickName nick={r.nick} /></b>{r.mainChampion ? <span className="meta">주 챔프 {CHAMPIONS[r.mainChampion]?.name}</span> : null}</span>
-      <span className={`num ${by !== 'winrate' ? 'key' : ''}`}>{r.n}<small>판</small></span>
-      <span className={`num ${by === 'winrate' ? 'key' : ''}`}>{pct(r.w, r.n)}</span>
+      <span className="who"><b><NickName nick={r.nick} /></b><span className="meta">{[r.mainChampion ? `주 챔프 ${CHAMPIONS[r.mainChampion]?.name}` : '', scoreTab(by) ? `${r.n}판` : ''].filter(Boolean).join(' · ')}</span></span>
+      {scoreTab(by) ? <span className="num key">{rankScore(r.w, r.n)}<small>점</small></span> : <span className="num key">{r.n}<small>판</small></span>}
+      <span className="num">{pct(r.w, r.n)}</span>
     </button>
   );
 }
@@ -185,7 +193,7 @@ export function MemberView({ api, id, onChampion, actions }: { api: Api; id: str
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
         actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit(true)}><Icon name="spark" />프로필 꾸미기</button>}
           {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}
-        chips={<><span className="pill dark">판수 {data.rank}위</span><span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
+        chips={<><span className="pill dark">점수 {data.rank}위</span><span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
           {skin && <span className="pill dark">{skin.name}</span>}{m.presence && m.presence !== 'off' && <span className="pill dark"><PresenceTag p={m.presence} /></span>}
           {m.about && <><span className="pill dark">{m.about.mbti}</span><span className="pill dark">{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span className="pill dark">{aboutWhen(m.about)}</span></>}</>} />
       {edit && m.self && <ProfileStudio api={api} page={data} skins={skins} onClose={() => setEdit(false)} onSaved={() => { setEdit(false); reload(); }} />}

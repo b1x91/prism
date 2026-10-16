@@ -16,7 +16,7 @@ export function RankingPage() {
   if (!me) return <NeedLogin what="랭킹" />;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <div className="page-head"><div><h1>랭킹</h1><p>Prism에 기록된 아수라장 판수와 승률. 이름을 누르면 그 회원의 페이지로 갑니다.</p></div></div>
+      <div className="page-head"><div><h1>랭킹</h1><p>점수는 승률을 판수만큼 믿은 값이에요. 판이 적으면 500점 쪽으로 당겨져, 많이 하면서 잘 이기는 사람이 위로 갑니다.</p></div></div>
       <RankingView api={api} meId={me.id} open={me.perms?.ranking !== false} gate={me.rankingGate} onOpen={(id) => nav(`/members/${id}`)} />
     </div></section>
   );
