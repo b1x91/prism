@@ -81,7 +81,8 @@ main { min-height: calc(100vh - 64px - 120px); }
 .feature:hover img.bg { transform: scale(1.14); }
 .feature::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, rgba(7, 9, 15, .95) 15%, rgba(7, 9, 15, .3) 70%); }
 .feature h3 { margin: 0 0 var(--s2); font-size: var(--fs-xl); font-weight: 800; }
-.feature p { margin: 0; color: rgba(255, 255, 255, .78); }
+/* 설명은 늘 두 줄 자리를 잡아 세 카드의 제목·설명·버튼 줄이 맞게 (설명이 한 줄인 카드만 제목이 내려가 보이던 것) */
+.feature p { margin: 0; color: rgba(255, 255, 255, .78); line-height: 1.6; min-height: 3.2em; text-wrap: pretty; }
 .feature .go { margin-top: var(--s4); display: inline-flex; align-items: center; gap: var(--s1); font-weight: 700; font-size: var(--fs-sm); }
 .steps { counter-reset: step; }
 .steps .card { position: relative; }
