@@ -294,9 +294,10 @@ mod imp {
 
     /// 카드 한 장만 잘라 읽기: 두 배로 키워(작은 설명 글자까지) 문자 인식 → 제목(가장 위 이름) → 못 읽으면 설명 문장으로
     /// 결과: (찾은 증강, 어떻게 찾았나, 읽은 글자)
-    fn read_card(engine: &OcrEngine, x: i32, y: i32, w: i32, h: i32, m: &Matcher) -> (Option<u32>, &'static str, String) {
+    fn read_card(engine: &OcrEngine, x: i32, y: i32, w: i32, h: i32, m: &Matcher, except: &[u32]) -> (Option<u32>, &'static str, String) {
         let Some(buf) = grab(x, y, w, h) else { return (None, "capture", String::new()) };
-        let title = |lines: &[Vec<Word>], iw: i32| m.find_at(lines, iw as f32).into_iter().min_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal)).map(|h| h.0);
+        // 이미 다른 칸에 있는 증강은 빼고 고른다 — 잘라 읽은 칸에 옆 카드 글자가 걸쳐도 그쪽으로 잡지 않게
+        let title = |lines: &[Vec<Word>], iw: i32| m.find_at(lines, iw as f32).into_iter().filter(|h| !except.contains(&h.0)).min_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal)).map(|h| h.0);
         // 1) 원래 크기 (제목은 큰 글자라 이대로가 잘 읽힌다)
         let (l1, t1) = recognize(engine, &buf, w, h).unwrap_or_default();
         if let Some(id) = title(&l1, w) {
@@ -310,7 +311,7 @@ mod imp {
         }
         // 3) 설명 문장으로
         let all = format!("{t1}\n{t2}");
-        match m.match_desc(&all) {
+        match m.match_desc_except(&all, except) {
             Some(id) => (Some(id), "desc", all),
             None => (None, "none", all),
         }
@@ -429,7 +430,7 @@ mod imp {
                     let (cy, ch) = (y + by0, hh - by0);
                     if cw > 80 && ch > 60 {
                         let t0 = std::time::Instant::now();
-                        let (got, how_found, text) = read_card(eng, cx, cy, cw, ch, &v.matcher);
+                        let (got, how_found, text) = read_card(eng, cx, cy, cw, ch, &v.matcher, &slots.ids());
                         v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
                         let dup = got.is_some_and(|id| slots.contains(id));
                         v.trace(format!("빈칸 x={c:.0} 폭={cw} {how_found}{} {:?} | {}", if dup { "(이미 있음)" } else { "" }, got, text.replace('\n', " / ").chars().take(120).collect::<String>()));

@@ -133,11 +133,16 @@ impl Matcher {
     /// 카드 한 장의 글자 전체(제목을 못 읽었을 때)로 증강 찾기: 읽은 두 글자 묶음이 설명에 얼마나 들어 있나.
     /// 게임 화면의 설명은 데이터와 조금 다를 수 있으므로, 1등이 충분히 높고 2등과 차이가 클 때만 (헷갈리면 None)
     pub fn match_desc(&self, text: &str) -> Option<u32> {
+        self.match_desc_except(text, &[])
+    }
+
+    /// 설명으로 찾기 — 이미 다른 칸에 있는 증강은 후보에서 뺀다 (빈 칸을 옆 칸 증강으로 잘못 잡아 버리지 않게)
+    pub fn match_desc_except(&self, text: &str, except: &[u32]) -> Option<u32> {
         let q = bigrams(text);
         if q.len() < 8 {
             return None;
         }
-        let mut sc: Vec<(f32, u32)> = self.descs.iter().map(|(id, d)| (q.iter().filter(|b| d.contains(b)).count() as f32 / q.len() as f32, *id)).collect();
+        let mut sc: Vec<(f32, u32)> = self.descs.iter().filter(|(id, _)| !except.contains(id)).map(|(id, d)| (q.iter().filter(|b| d.contains(b)).count() as f32 / q.len() as f32, *id)).collect();
         sc.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
         let (best, second) = (sc.first()?, sc.get(1).map_or(0.0, |s| s.0));
         (best.0 >= DESC_MIN && best.0 - second >= DESC_GAP).then_some(best.1)
@@ -273,6 +278,9 @@ impl Slots {
     }
     pub fn contains(&self, id: u32) -> bool {
         self.s.iter().any(|s| s.1 == id)
+    }
+    pub fn ids(&self) -> Vec<u32> {
+        self.s.iter().map(|s| s.1).collect()
     }
     /// 아직 못 읽은 칸의 가운데 x (찾는 영역 기준). 카드 세 장은 게임 화면 가운데를 중심으로 같은 간격이고,
     /// 찾는 영역도 화면 가운데를 중심으로 잡으므로 가운데 = width/2. 읽은 칸들로 간격을 재서 빈 칸을 짐작한다
