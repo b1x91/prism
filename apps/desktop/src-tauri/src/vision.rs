@@ -447,6 +447,12 @@ mod imp {
         if let Some(id) = title(&l2, w * 2) {
             return judge(id, "title-2x", t2);
         }
+        // 2-1) 카드가 작으면(저해상도 화면) 세 배로 한 번 더 — 1280×720 에서 글자가 거의 안 읽히던 카드 (Windows 끝단 QA)
+        let (l3, t3) = if w < 240 && w * 3 <= max && h * 3 <= max { recognize(engine, &upscale(buf, w, h, 3), w * 3, h * 3).unwrap_or_default() } else { (vec![], String::new()) };
+        if let Some(id) = title(&l3, w * 3) {
+            return judge(id, "title-3x", t3);
+        }
+        let t2 = if t3.is_empty() { t2 } else { format!("{t2}\n{t3}") };
         // 3) 설명 문장으로 (정확한 자리면 이미 있는 증강도 후보에 둬서, 같은 카드면 멈춘다)
         let all = format!("{t1}\n{t2}");
         match m.match_desc_except(&all, if exact { &[] } else { except }) {
@@ -457,12 +463,16 @@ mod imp {
 
     /// 두 배 키우기 (가장 가까운 점). 인식기가 작은 글자를 더 잘 읽는다
     fn upscale2(src: &[u8], w: i32, h: i32) -> Vec<u8> {
-        let (w2, h2) = (w * 2, h * 2);
+        upscale(src, w, h, 2)
+    }
+    /// f 배 키우기 (가장 가까운 점)
+    fn upscale(src: &[u8], w: i32, h: i32, f: i32) -> Vec<u8> {
+        let (w2, h2) = (w * f, h * f);
         let mut out = vec![0u8; (w2 * h2 * 4) as usize];
         for yy in 0..h2 {
-            let row = ((yy / 2) * w) as usize;
+            let row = ((yy / f) * w) as usize;
             for xx in 0..w2 {
-                let si = (row + (xx / 2) as usize) * 4;
+                let si = (row + (xx / f) as usize) * 4;
                 let di = ((yy * w2 + xx) * 4) as usize;
                 out[di..di + 4].copy_from_slice(&src[si..si + 4]);
             }
