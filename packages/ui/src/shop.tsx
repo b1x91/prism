@@ -31,8 +31,8 @@ const titleOf = (d?: Deco) => (d?.title ? SHOP.find((x) => x.id === d.title)?.na
 export function PieceIcon({ size = 16, ink }: { size?: number; ink?: boolean }) {
   return (
     <svg className="piece-ic" width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M8 1.5 14.5 8 8 14.5 1.5 8z" fill={ink ? 'currentColor' : '#f2b233'} opacity={ink ? 0.7 : 1} />
-      <path d="M8 1.5 14.5 8H1.5z" fill={ink ? 'currentColor' : '#ffd970'} />
+      <path d="M8 1.5 14.5 8 8 14.5 1.5 8z" fill={ink ? 'currentColor' : '#f2b233'} />
+      {!ink && <path d="M8 1.5 14.5 8H1.5z" fill="#ffd970" />}
     </svg>
   );
 }
