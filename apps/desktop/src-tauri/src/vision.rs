@@ -448,7 +448,7 @@ mod imp {
             return judge(id, "title-2x", t2);
         }
         // 2-1) 카드가 작으면(저해상도 화면) 세 배로 한 번 더 — 1280×720 에서 글자가 거의 안 읽히던 카드 (Windows 끝단 QA)
-        let (l3, t3) = if w < 240 && w * 3 <= max && h * 3 <= max { recognize(engine, &upscale(buf, w, h, 3), w * 3, h * 3).unwrap_or_default() } else { (vec![], String::new()) };
+        let (l3, t3) = if w < 240 && w * 3 <= max && h * 3 <= max { recognize(engine, &upscale_smooth(buf, w, h, 3), w * 3, h * 3).unwrap_or_default() } else { (vec![], String::new()) };
         if let Some(id) = title(&l3, w * 3) {
             return judge(id, "title-3x", t3);
         }
@@ -464,6 +464,27 @@ mod imp {
     /// 두 배 키우기 (가장 가까운 점). 인식기가 작은 글자를 더 잘 읽는다
     fn upscale2(src: &[u8], w: i32, h: i32) -> Vec<u8> {
         upscale(src, w, h, 2)
+    }
+    /// f 배 부드럽게 키우기 (이웃 네 점 섞기) — 아주 작은 글자는 점을 그대로 키우면 계단처럼 깨져 인식기가 못 읽는다
+    fn upscale_smooth(src: &[u8], w: i32, h: i32, f: i32) -> Vec<u8> {
+        let (w2, h2) = (w * f, h * f);
+        let mut out = vec![0u8; (w2 * h2 * 4) as usize];
+        let px = |x: i32, y: i32, c: usize| src[((y.clamp(0, h - 1) * w + x.clamp(0, w - 1)) * 4) as usize + c] as f32;
+        for yy in 0..h2 {
+            let sy = (yy as f32 + 0.5) / f as f32 - 0.5;
+            let (y0, fy) = (sy.floor() as i32, sy - sy.floor());
+            for xx in 0..w2 {
+                let sx = (xx as f32 + 0.5) / f as f32 - 0.5;
+                let (x0, fx) = (sx.floor() as i32, sx - sx.floor());
+                let di = ((yy * w2 + xx) * 4) as usize;
+                for c in 0..3 {
+                    let v = px(x0, y0, c) * (1.0 - fx) * (1.0 - fy) + px(x0 + 1, y0, c) * fx * (1.0 - fy) + px(x0, y0 + 1, c) * (1.0 - fx) * fy + px(x0 + 1, y0 + 1, c) * fx * fy;
+                    out[di + c] = v.round() as u8;
+                }
+                out[di + 3] = 255;
+            }
+        }
+        out
     }
     /// f 배 키우기 (가장 가까운 점)
     fn upscale(src: &[u8], w: i32, h: i32, f: i32) -> Vec<u8> {
