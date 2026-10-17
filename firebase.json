@@ -6,6 +6,13 @@
       "**/.*"
     ],
     "cleanUrls": true,
+    "redirects": [
+      {
+        "source": "/download",
+        "destination": "https://prism.tiny-term-ed35.workers.dev/app/download",
+        "type": 302
+      }
+    ],
     "rewrites": [
       {
         "source": "**",
