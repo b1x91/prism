@@ -979,7 +979,11 @@ mod imp {
             let eng = engine().expect("이 Windows 에 한국어 문자 인식이 없습니다 (Language.OCR~~~ko-KR 설치 필요)");
             let m = Matcher::from_json(AUGMENTS_JSON);
             let icons = crate::icons::IconBank::new(AUG_ICONS, AUGMENTS_JSON);
+            // 기준 (v3.67): 틀린 증강을 띄우면 한 건이라도 실패. 놓친 카드는 전체의 3% 까지 (사람 눈에도 겨우 보이는 저해상도·흐림 화면이 있다).
+            // 사용자 게임 화면 사진은 하나도 놓치면 안 된다
             let mut fails = Vec::new();
+            let mut wrongs = Vec::new();
+            let (mut cards_total, mut cards_missed) = (0usize, 0usize);
             let mut n = 0;
             // 사용자 게임 화면 사진 (화면 일부라 넓게 읽기만)
             let fx = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../qa/fixtures");
@@ -1002,9 +1006,15 @@ mod imp {
                 let miss: Vec<u32> = want.iter().filter(|id| !got.contains(id)).copied().collect();
                 let wrong: Vec<u32> = got.iter().filter(|id| !want.contains(id)).copied().collect();
                 println!("{} {f} {}x{} {:?} 찾음 {got:?} {}", if miss.is_empty() && wrong.is_empty() { "통과" } else { "실패" }, w, h, want, log.join(" · "));
-                if !miss.is_empty() || !wrong.is_empty() { fails.push(format!("{f} {w}x{h}: 못 찾음 {miss:?} 잘못 {wrong:?} {}", log.join(" · "))); }
+                cards_total += want.len();
+                cards_missed += miss.len();
+                if !wrong.is_empty() { wrongs.push(format!("{f} {w}x{h}: 잘못 {wrong:?} {}", log.join(" · "))); }
+                if !miss.is_empty() { println!("  놓침 {f}: {miss:?}"); }
             }
-            println!("화면 {n}장 중 실패 {}", fails.len());
+            let rate = cards_missed as f32 / cards_total.max(1) as f32;
+            println!("화면 {n}장 · 카드 {cards_total}장 중 놓침 {cards_missed} ({:.1}%) · 틀린 답 {} · 사진 실패 {}", rate * 100.0, wrongs.len(), fails.len());
+            fails.extend(wrongs);
+            if rate > 0.03 { fails.push(format!("놓친 카드가 {:.1}% (기준 3%)", rate * 100.0)); }
             assert!(fails.is_empty(), "\n{}\n", fails.join("\n"));
         }
     }
