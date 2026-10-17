@@ -534,6 +534,12 @@ mod imp {
         let mut capture_fails = 0u32;
         // 띠 읽기에서 증강 이름이 한 장이라도 보였나 (카드 화면 낌새 → 카드 자리 찾기)
         let mut hint = false;
+        // 평소 확인 횟수 (다섯 번에 한 번은 문자 인식까지), 카드 자리를 찾았는데 아무것도 못 읽은 뒤 잠깐 쉬는 때
+        let mut idle_n: u32 = 0;
+        let mut probe_cool: Option<std::time::Instant> = None;
+        // 카드마다 따로 읽기가 연속으로 아무것도 더 못 찾은 횟수 — 끝까지 안 읽히는 카드 하나 때문에 카드가 떠 있는 내내
+        // 문자 인식을 쉬지 않고 돌리지 않게, 세 번 실패하면 세 번에 한 번만 다시 (v3.68)
+        let mut card_fails: u32 = 0;
         loop {
             let s = v.settings.lock().unwrap().clone();
             let allowed = v.allowed.load(Ordering::SeqCst);
@@ -606,12 +612,40 @@ mod imp {
                 std::thread::sleep(if v.shown.load(Ordering::SeqCst) { FAST } else { EVERY });
                 continue;
             }
+            // 평소(카드를 보고 있지 않을 때)에는 화면을 복사해 카드 자리 찾기만 한다 (v3.68, 게임 중 부담 줄이기).
+            // 문자 인식(수백 ms)은 카드처럼 생긴 칸이 보일 때만. 그래도 놓치지 않게 다섯 번에 한 번은 예전처럼 문자 인식까지.
+            // 카드 자리 찾기는 QA 의 카드 화면을 하나도 놓치지 않는다 (apps/desktop/qa)
+            if band.is_none() && slots.is_empty() && !hint {
+                idle_n = idle_n.wrapping_add(1);
+                if idle_n % 5 != 0 {
+                    let (wx, wy, ww, wh) = region_wide(&rc);
+                    let t0 = std::time::Instant::now();
+                    let seen = grab(wx, wy, ww, wh).map(|b| crate::matcher::find_cards(&b, ww as usize, wh as usize).len() >= 2);
+                    v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
+                    let cooling = probe_cool.is_some_and(|t| t.elapsed() < Duration::from_secs(4));
+                    match seen {
+                        Some(true) if !cooling => {
+                            hint = true;
+                            continue;
+                        }
+                        Some(_) => {
+                            v.stage("reading", 0, how);
+                            std::thread::sleep(EVERY.max(t0.elapsed() * 4));
+                            continue;
+                        }
+                        // 복사 실패(검은 화면)는 아래 원래 경로가 센다 (전체 화면 안내)
+                        None => {}
+                    }
+                }
+            }
             // 칸 위치는 게임 화면 기준 x 로 기억한다 (좁은 띠·넓게 읽기의 시작점이 달라도 같은 칸이 같은 값)
             let gw = (rc.right - rc.left) as f32;
             let off = (x - rc.left) as f32;
             // 카드 자리를 그림에서 바로 찾아 카드마다 따로 읽는다 (v3.66, 근본 대책). 카드는 속이 검은 큰 직사각형이라
             // 화면 비율·UI 크기·모니터와 상관없이 정확한 자리를 안다. 카드 화면이라는 낌새(이름 한 장 이상)가 있고 세 칸이 안 찼으면 매번
-            if slots.len() < 3 && (!slots.is_empty() || hint) {
+            if slots.is_empty() { card_fails = 0; }
+            let retry = card_fails < 3 || { card_fails += 1; card_fails % 3 == 0 };
+            if slots.len() < 3 && (!slots.is_empty() || hint) && retry {
                 let (wx, wy, ww, wh) = region_wide(&rc);
                 let buf = grab(wx, wy, ww, wh);
                 let cards = buf.as_deref().map(|b| crate::matcher::find_cards(b, ww as usize, wh as usize)).unwrap_or_default();
@@ -634,6 +668,9 @@ mod imp {
                     }
                     v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
                     hint = false;
+                    card_fails = if changed { 0 } else { card_fails + 1 };
+                    // 카드처럼 생긴 칸을 찾았는데 하나도 못 읽었으면 (어두운 맵의 헛것) 4초 동안은 평소 확인에서 다시 덤비지 않는다
+                    if slots.is_empty() { probe_cool = Some(std::time::Instant::now()); }
                     if changed || !slots.is_empty() {
                         seen_at = Some(std::time::Instant::now());
                         let ids = slots.ids_sorted();

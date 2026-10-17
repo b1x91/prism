@@ -63,6 +63,7 @@ jobs:
           python3 apps/desktop/qa/make_frames.py qa-frames/base &
           QA_SEED=4 python3 apps/desktop/qa/make_frames.py qa-frames/s4 &
           QA_SEED=5 python3 apps/desktop/qa/make_frames.py qa-frames/s5 &
+          QA_EMPTY=1 QA_SEED=11 python3 apps/desktop/qa/make_frames.py qa-frames/empty &
           wait
       - name: 시험
         working-directory: apps/desktop/qa
@@ -70,7 +71,7 @@ jobs:
           cargo test --release --lib
           for d in base s4 s5; do
             echo "== $d"
-            QA_FRAMES=$GITHUB_WORKSPACE/qa-frames/$d cargo test --release --test cards -- --nocapture
+            QA_FRAMES=$GITHUB_WORKSPACE/qa-frames/$d QA_EMPTY=$GITHUB_WORKSPACE/qa-frames/empty cargo test --release --test cards -- --nocapture
           done
 
   ocr:

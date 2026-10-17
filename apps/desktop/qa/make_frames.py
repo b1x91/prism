@@ -160,7 +160,8 @@ for k, ((W, H), (lname, lshift), force) in enumerate(plan):
     spare = (W - total) / 2 - W * .1
     x0 = (W - total) / 2 + lshift * max(0, spare) * rnd.uniform(.5, 1.0)
     y0 = H * rnd.uniform(.15, .2)
-    augs = triple(rnd, force=force)
+    # QA_EMPTY=1: 카드 없는 화면 (카드 낌새 보기가 헛것을 얼마나 보는지 재려고)
+    augs = [] if os.environ.get('QA_EMPTY') else triple(rnd, force=force)
     rects = []
     for i, a in enumerate(augs):
         rects.append(draw_card(img, x0 + i * (cw + gap), y0, cw, chh, a, rnd))

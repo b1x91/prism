@@ -109,3 +109,20 @@ fn 사용자_게임_화면_사진() {
     }
     assert!(fails.is_empty(), "\n{}\n", fails.join("\n"));
 }
+
+/// 카드 없는 화면에서 카드 자리 찾기가 헛것을 얼마나 보는지 (v3.68: 게임 중 평소에는 이것만 돌리고, 찾았을 때만 문자 인식).
+/// 헛것은 문자 인식을 한 번 더 돌릴 뿐이라 비율만 보고한다. 카드가 있는 화면을 놓치지 않는 것은 위 시험들이 본다
+#[test]
+fn 카드_없는_화면() {
+    let Ok(empty) = std::env::var("QA_EMPTY") else { return };
+    let d = PathBuf::from(empty);
+    let ec: Vec<Case> = serde_json::from_str(&std::fs::read_to_string(d.join("cases.json")).unwrap()).unwrap();
+    let mut fp = 0;
+    for c in &ec {
+        let (img, iw, _) = load_bgra(&d.join(&c.file));
+        let (x, y, w, h) = matcher::region_of(c.w, c.h, true);
+        let buf = prism_vision_qa::crop(&img, iw, x as usize, y as usize, w as usize, h as usize);
+        if matcher::find_cards(&buf, w as usize, h as usize).len() >= 2 { fp += 1; }
+    }
+    println!("카드 없는 화면 {}장 중 '있다' {fp}", ec.len());
+}

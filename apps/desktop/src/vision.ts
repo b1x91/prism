@@ -1,4 +1,5 @@
 /** 게임 중 자동 인식된 증강 (Rust 가 "augments" 이벤트로 보낸다). 앱 안에서만 동작 */
+import { pollWhileShown } from './poll';
 import { useEffect, useState } from 'react';
 import { bridge, type VisionState } from './bridge';
 
@@ -67,9 +68,9 @@ export function useVisionState(every = 2000): VisionState | null {
     if (!inTauri) return;
     let on = true;
     const load = () => bridge.visionGet().then((x) => on && setV(x)).catch(() => {});
-    load();
-    const t = setInterval(load, every);
-    return () => { on = false; clearInterval(t); };
+    // 창을 보고 있을 때만 (게임 중 뒤에 깔린 창은 쉰다, v3.68)
+    const stop = pollWhileShown(() => void load(), every);
+    return () => { on = false; stop(); };
   }, [every]);
   return v;
 }

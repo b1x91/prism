@@ -68,6 +68,14 @@ pub fn game_running() -> bool {
 }
 
 fn scan_game() -> bool {
+    // 게임 창이 있으면 프로세스 목록을 훑지 않는다 (게임 중 3초마다 묻는다, v3.68)
+    #[cfg(windows)]
+    {
+        use windows::Win32::UI::WindowsAndMessaging::FindWindowW;
+        if unsafe { FindWindowW(windows::core::w!("RiotWindowClass"), windows::core::PCWSTR::null()) }.is_ok_and(|h| !h.is_invalid()) {
+            return true;
+        }
+    }
     let mut sys = System::new();
     sys.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::nothing());
     sys.processes().values().any(|p| is_named(p, GAME_PROCESS))
@@ -82,11 +90,21 @@ pub fn discord_running() -> bool {
 
 /// 롤 화면 모드 (클라이언트 설치 폴더의 Config/game.cfg 의 WindowMode, 파일만 읽는다): 0 전체 화면 · 1 창 · 2 테두리 없음.
 /// 전체 화면이면 게임 위 작은 창이 뜰 수 없어 미리 알린다 (v3.65). 값의 뜻은 [검증필요]
+/// 롤 설치 폴더는 한 번 찾으면 기억한다 — 게임 중에 10초마다 모든 프로세스의 실행 경로를 훑지 않게 (v3.68)
+static CLIENT_DIR: Mutex<Option<std::path::PathBuf>> = Mutex::new(None);
+fn client_dir() -> Option<std::path::PathBuf> {
+    if let Some(d) = CLIENT_DIR.lock().unwrap().clone() {
+        return Some(d);
+    }
+    let mut sys = System::new();
+    sys.refresh_processes_specifics(ProcessesToUpdate::All, true, ProcessRefreshKind::nothing().with_exe(UpdateKind::Always));
+    let dir = sys.processes().values().find(|p| is_named(p, CLIENT_PROCESS))?.exe()?.parent()?.to_path_buf();
+    *CLIENT_DIR.lock().unwrap() = Some(dir.clone());
+    Some(dir)
+}
+
 pub fn window_mode() -> Option<u8> {
-    let mut sys = processes();
-    sys.refresh_processes(ProcessesToUpdate::All, true);
-    let p = sys.processes().values().find(|p| is_named(p, CLIENT_PROCESS))?;
-    let dir = p.exe()?.parent()?.to_path_buf();
+    let dir = client_dir()?;
     let text = std::fs::read_to_string(dir.join("Config").join("game.cfg")).ok()?;
     text.lines().find_map(|l| l.trim().strip_prefix("WindowMode=")).and_then(|v| v.trim().parse().ok())
 }
@@ -104,6 +122,7 @@ fn discover() -> Option<Creds> {
     sys.refresh_processes(ProcessesToUpdate::All, true);
     let p = sys.processes().values().find(|p| is_named(p, CLIENT_PROCESS))?;
     if let Some(dir) = p.exe().and_then(|e| e.parent()) {
+        *CLIENT_DIR.lock().unwrap() = Some(dir.to_path_buf());
         if let Some(c) = read_lockfile(dir.join("lockfile")) {
             return Some(c);
         }

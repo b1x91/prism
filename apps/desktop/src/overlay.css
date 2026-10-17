@@ -1,6 +1,6 @@
 /* 게임 위 작은 창: 바탕 투명, 패널만 어둡게 (게임 화면 위라 테마와 관계없이 어둡게) */
 html, body, #root { background: transparent !important; margin: 0; overflow: hidden; }
-.ov { margin: var(--s2); padding: var(--s3); border-radius: var(--r-l); will-change: transform; background: rgba(7, 9, 15, .86); border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 8px 32px rgba(0, 0, 0, .5); color: #eef1f8; display: grid; gap: var(--s2); backdrop-filter: blur(8px); }
+.ov { margin: var(--s2); padding: var(--s3); border-radius: var(--r-l); will-change: transform; background: rgba(7, 9, 15, .86); border: 1px solid rgba(255, 255, 255, .12); box-shadow: 0 8px 32px rgba(0, 0, 0, .5); color: #eef1f8; display: grid; gap: var(--s2); }
 /* 오른쪽: 게임 화면 오른쪽 끝에 딱 붙고 오른쪽 모서리만 각지게. 오른쪽에서 밀려 들어오고 다 고르면 밀려 나간다 */
 .ov.at-right { margin: var(--s2) 0 var(--s2) var(--s2); border-right: 0; border-radius: var(--r-l) 0 0 var(--r-l); box-shadow: -8px 8px 32px rgba(0, 0, 0, .5); animation: ov-in-right .38s cubic-bezier(.2, .8, .2, 1) both; }
 .ov.at-right.out { animation: ov-out-right .32s cubic-bezier(.5, 0, .75, 0) both; }
@@ -63,3 +63,8 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
 .ov-item .item { border-radius: 6px; }
 .ov-item b { font-size: var(--fs-sm); font-weight: 800; color: #ffd98a; }
 .ov-item small { font-size: var(--fs-xs); color: rgba(255, 255, 255, .7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* 게임 위 작은 창에서는 끝없이 반복되는 움직임을 두지 않는다 (v3.68): 떠 있는 동안 게임 화면과 함께 매 프레임 다시 그려야 해서.
+   들어오고 나가는 움직임만 둔다 */
+.ov .gem::after, .ov .gem.float { animation: none !important; }
+.ov *:not(.ov) { animation-iteration-count: 1 !important; }

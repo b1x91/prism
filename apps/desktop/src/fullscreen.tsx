@@ -6,6 +6,7 @@
 import { useEffect, useState } from 'react';
 import { Icon } from '@prism/ui';
 import { bridge } from './bridge';
+import { pollWhileShown } from './poll';
 
 export function useFullscreen(): boolean {
   const [on, setOn] = useState(false);
@@ -13,9 +14,9 @@ export function useFullscreen(): boolean {
     let live = true;
     const check = () => Promise.all([bridge.windowMode().catch(() => null), bridge.visionGet().catch(() => null)])
       .then(([mode, v]) => live && setOn(mode === 0 && Boolean(v?.settings.enabled)));
-    void check();
-    const t = setInterval(check, 10_000);
-    return () => { live = false; clearInterval(t); };
+    // 창을 보고 있을 때만 (게임 중 뒤에 깔린 창은 쉰다)
+    const stop = pollWhileShown(() => void check(), 10_000);
+    return () => { live = false; stop(); };
   }, []);
   return on;
 }

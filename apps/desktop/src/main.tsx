@@ -5,6 +5,7 @@ import '@prism/ui/styles.css';
 import './app.css';
 import { AugmentOpen, Icon, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
+import { pollWhileShown } from './poll';
 import { checkNow, getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
@@ -34,15 +35,14 @@ const STATUS: Record<State['status'], [string, string]> = {
 
 const LOL_ON = new Set<State['status']>(['idle', 'champ-select', 'in-game']);
 
-/** 디스코드가 켜져 있는지 (20초마다 OS 프로세스 목록만 본다) */
+/** 디스코드가 켜져 있는지 (창을 보고 있을 때 20초마다 OS 프로세스 목록만 본다 — 게임 중에는 쉰다) */
 function useDiscordRunning() {
   const [on, setOn] = useState(false);
   useEffect(() => {
     let live = true;
     const check = () => bridge.discordRunning().then((v) => { if (live) setOn(v); }).catch(() => {});
-    check();
-    const t = setInterval(check, 20_000);
-    return () => { live = false; clearInterval(t); };
+    const stop = pollWhileShown(check, 20_000);
+    return () => { live = false; stop(); };
   }, []);
   return on;
 }
