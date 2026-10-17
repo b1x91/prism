@@ -27,11 +27,12 @@ export function baseTint(seed: string) {
 const titleOf = (d?: Deco) => (d?.title ? SHOP.find((x) => x.id === d.title)?.name : undefined);
 
 /** 피스 아이콘: 납작한 금빛 마름모 하나 (가장 단순하게, 숫자 오른쪽에 둔다) */
-export function PieceIcon({ size = 16 }: { size?: number }) {
+/** ink: 금빛 바탕(받기 버튼) 위에서는 금빛이 묻히므로 글자색으로 그린다 */
+export function PieceIcon({ size = 16, ink }: { size?: number; ink?: boolean }) {
   return (
     <svg className="piece-ic" width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
-      <path d="M8 1.5 14.5 8 8 14.5 1.5 8z" fill="#f2b233" />
-      <path d="M8 1.5 14.5 8H1.5z" fill="#ffd970" />
+      <path d="M8 1.5 14.5 8 8 14.5 1.5 8z" fill={ink ? 'currentColor' : '#f2b233'} opacity={ink ? 0.7 : 1} />
+      <path d="M8 1.5 14.5 8H1.5z" fill={ink ? 'currentColor' : '#ffd970'} />
     </svg>
   );
 }

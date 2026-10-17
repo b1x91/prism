@@ -139,7 +139,7 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
                 </span>
                 <small>{p.played}<i>/{p.pool}</i></small>
               </span>
-              {open.length ? <button type="button" className="msn-mini" disabled={busy !== null} onClick={(e) => claim(`p-${p.role}`, { ids: open.map((x) => x.id) }, e.currentTarget)}>받기 <b>+{sum}</b><PieceIcon size={12} /></button>
+              {open.length ? <button type="button" className="msn-mini" disabled={busy !== null} onClick={(e) => claim(`p-${p.role}`, { ids: open.map((x) => x.id) }, e.currentTarget)}>받기 <b>+{sum}</b><PieceIcon size={12} ink /></button>
                 : <span className="msn-next">{next ? <>{next.at}개 <b>+{next.reward}</b><PieceIcon size={12} /></> : <><Icon name="check" />완료</>}</span>}
             </div>
           );
@@ -171,7 +171,7 @@ function ReadyBar({ amount, done, closing, busy, onClaim }: { amount: number; do
         <span className="msn-ready-ic">{done ? <Icon name="check" /> : <PieceIcon size={22} />}</span>
         <span className="msn-ready-t">{done ? <><b>{amount.toLocaleString()} {PIECE}를 받았어요</b><small>보유 {PIECE}에 더했어요</small></> : <><b>받을 보상이 있어요</b><small>깬 미션의 {PIECE}를 받아 가세요</small></>}</span>
         {!done && <button ref={ref} type="button" className="msn-claim all" disabled={busy} onClick={() => ref.current && onClaim(ref.current)}>
-          <span>{busy ? '받는 중…' : '모두 받기'}</span><b>+{amount.toLocaleString()}</b><PieceIcon size={14} />
+          <span>{busy ? '받는 중…' : '모두 받기'}</span><b>+{amount.toLocaleString()}</b><PieceIcon size={14} ink />
         </button>}
       </div>
     </div>
@@ -194,7 +194,7 @@ function MissionCard({ m, i, fresh, busy, onClaim }: { m: Mission; i: number; fr
         <small>{m.progress}/{m.target}</small>
       </div>
       {state === 'ready' && <button ref={ref} type="button" className="msn-claim" disabled={busy} onClick={() => ref.current && onClaim(ref.current)}>
-        <span>{busy ? '받는 중…' : '받기'}</span><b>+{m.reward}</b><PieceIcon size={14} />
+        <span>{busy ? '받는 중…' : '받기'}</span><b>+{m.reward}</b><PieceIcon size={14} ink />
       </button>}
       {state === 'got' && <span className="msn-got"><Icon name="check" />받았어요</span>}
       {fresh && <span className="msn-plus" aria-hidden="true">+{m.reward}</span>}
