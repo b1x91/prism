@@ -231,7 +231,8 @@ img.champ { object-view-box: inset(4.5%); }
 /* 등급을 넘는 어울림: '이 챔피언에겐 프리즘급 / 골드급' */
 .gradeup { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 800; white-space: nowrap; }
 .gradeup.prismatic { color: #fff; border: 1px solid transparent; background: linear-gradient(#1a1d2e, #1a1d2e) padding-box, var(--spectrum) border-box; }
-.gradeup.gold { color: #f6d27a; background: rgba(195, 149, 29, .18); box-shadow: inset 0 0 0 1px rgba(232, 184, 64, .6); }
+/* 라이트·다크 어디서나 읽히게 프리즘급처럼 늘 어두운 알약 (라이트에서 옅은 금빛 글자가 바탕에 묻혔다) */
+.gradeup.gold { color: #f6d27a; background: #2a2210; box-shadow: inset 0 0 0 1px rgba(232, 184, 64, .7); }
 
 /* 원형 증강 아이콘: 등급 색 고리, 위아래·좌우 같은 여백 */
 .aug-ring { flex: none; display: grid; place-items: center; border-radius: 50%; padding: 3px; box-sizing: border-box; background: var(--silver); }
@@ -1943,7 +1944,7 @@ button.ga:hover { background: var(--surface-2); }
 /* 칩 줄이 길어도 화면 폭을 넘지 않게 (그리드 칸의 최소 폭) */
 .ltools, .cfav, .adx-sec, .ltools-chips { min-width: 0; max-width: 100%; }
 .shop-tabs button.hot .icon { width: 14px; height: 14px; color: #e0a82e; }
-.shop-tabs button.hot.on .icon { color: #ffd970; }
+.shop-tabs button.hot.on .icon { color: color-mix(in srgb, #e0a82e 62%, var(--bg)); } /* 고른 탭 바탕(글자색)과 반대 밝기의 금빛 */
 
 /* ───────── 랭킹 상위 3명 무대 (v3.38, 움직임 v3.48) ───────── */
 /* 랭킹 무대. 짧은 이름이라 다른 곳에 'lb' 클래스를 쓰지 않는다 (플레이 성향·증강 습관의 이름 칸이 무대로 그려지던 일, 0.9.56) */
@@ -1981,7 +1982,7 @@ button.ga:hover { background: var(--surface-2); }
 .lb-q { font-size: var(--fs-2xl); font-weight: 900; color: rgba(255, 255, 255, .25); }
 .lb-empty { font-size: var(--fs-xs); color: rgba(255, 255, 255, .45); }
 .lb-ped { display: grid; place-items: center; height: 44px; border-radius: 0; animation: lb-rise .75s var(--lb-ease) var(--pd, .35s) backwards; box-shadow: inset 0 2px 0 rgba(255, 255, 255, .55), inset 0 -10px 18px rgba(0, 0, 0, .25); }
-.lb-ped b { font-size: var(--fs-2xl); font-weight: 900; color: rgba(20, 14, 4, .55); text-shadow: 0 1px 0 rgba(255, 255, 255, .45); font-variant-numeric: tabular-nums; animation: lb-num .6s var(--lb-ease) calc(var(--pd, .35s) + .3s) both; }
+.lb-ped b { font-size: var(--fs-2xl); font-weight: 900; color: rgba(20, 14, 4, .8); text-shadow: 0 1px 0 rgba(255, 255, 255, .45); font-variant-numeric: tabular-nums; animation: lb-num .6s var(--lb-ease) calc(var(--pd, .35s) + .3s) both; }
 /* 1위: 금 · 가장 높음 · 스펙트럼 테두리 */
 .lb-slot.p1 .lb-card { min-height: 288px; border: 2px solid transparent; border-bottom: 0; background: linear-gradient(#0d1120, #0d1120) padding-box, var(--spectrum) border-box; box-shadow: 0 -12px 48px rgba(255, 210, 110, .22); }
 .lb-slot.p1 { --pd: .62s; --cd: 1s; }
@@ -2145,7 +2146,7 @@ button.ga:hover { background: var(--surface-2); }
 .msn-card { position: relative; overflow: hidden; display: grid; grid-template-rows: auto auto 1fr auto auto; gap: var(--s2); min-height: 216px; padding: var(--s5); border-radius: var(--r-l); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); animation: msn-in .45s cubic-bezier(.2, .8, .2, 1) both; }
 .msn-card::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--rc); opacity: .9; }
 .msn-card-top { display: flex; align-items: center; gap: var(--s2); }
-.msn-tag { display: inline-flex; align-items: center; height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 800; color: var(--rc); background: color-mix(in srgb, var(--rc) 14%, transparent); }
+.msn-tag { display: inline-flex; align-items: center; height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 800; color: color-mix(in srgb, var(--rc) 68%, var(--text)); background: color-mix(in srgb, var(--rc) 14%, transparent); }
 .msn-amt { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-sm); font-weight: 800; color: var(--text-2); font-variant-numeric: tabular-nums; }
 .msn-card h3 { margin: var(--s1) 0 0; font-size: var(--fs-lg); font-weight: 800; letter-spacing: -.01em; word-break: keep-all; }
 .msn-card p { margin: 0; font-size: var(--fs-sm); color: var(--text-3); line-height: 1.5; word-break: keep-all; }
@@ -2637,3 +2638,5 @@ button.ga:hover { background: var(--surface-2); }
   .gp { grid-template-columns: 1fr; gap: var(--s4); padding: var(--s4); }
   .gp-col + .gp-col { padding-left: 0; padding-top: var(--s4); border-left: 0; border-top: 1px solid var(--line); }
 }
+/* 옅은 금빛 동그라미 위 금빛 피스: 테두리 그림자로 모양을 세운다 (라이트에서 묻혔다) */
+.msn-ready-ic .piece-ic { filter: drop-shadow(0 1px 1px rgba(120, 78, 0, .45)); }
