@@ -149,9 +149,9 @@ export default {
     }
   },
 
-  // 매일 밤 20:57 KST: 봇 공지 / 매일 03:17 KST: 만료 코드 정리 + 역할 자동 승급·강등
+  // 매일 밤 21:00 KST: 봇 공지 / 매일 03:17 KST: 만료 코드 정리 + 역할 자동 승급·강등
   async scheduled(controller: ScheduledController, env: Env) {
-    if (controller.cron === '57 11 * * *') return dailyPost(env).catch((e) => console.error('매일 공지 실패', e));
+    if (controller.cron === '0 12 * * *') return dailyPost(env).catch((e) => console.error('매일 공지 실패', e));
     await promoteSweep(env).catch((e) => console.error('역할 자동 승급 실패', e));
     const now = Date.now();
     await env.DB.batch([

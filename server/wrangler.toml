@@ -4,7 +4,7 @@ main = "src/index.ts"
 compatibility_date = "2026-09-01"
 
 [triggers]
-crons = ["17 18 * * *", "57 11 * * *"] # 매일 03:17 KST — 만료 코드 정리·역할 자동 승급 / 매일 20:57 KST — 봇의 밤 공지
+crons = ["17 18 * * *", "0 12 * * *"] # 매일 03:17 KST — 만료 코드 정리·역할 자동 승급 / 매일 21:00 KST — 봇의 밤 공지
 
 [[d1_databases]]
 binding = "DB"
