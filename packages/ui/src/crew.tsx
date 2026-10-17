@@ -6,14 +6,21 @@ import { Icon } from './icons';
 import { BoardSkeleton, ChampionCrewSkeleton, Bone, imgIn, useReveal, Swap, fadeCls, SkeletonFrame } from './skeleton';
 
 /** 서버 데이터 한 덩이 불러오기 (다시 불러오기 함수 포함) */
+/** 1시간 안에 받아 둔 것이 있으면 자리표시 없이 바로 그린다 (withCache, v3.67). reload 는 늘 새로 받는다 */
 export function useLoad<T>(api: Api, path: string | null) {
-  const [data, setData] = useState<T | null>(null);
+  const [data, setData] = useState<T | null>(() => (path ? api.peek?.<T>(path) ?? null : null));
   const [error, setError] = useState<string | null>(null);
-  const reload = useCallback(() => {
+  const fetchIt = useCallback(() => {
     if (!path) return;
     api.get<T>(path).then((d) => { setData(d); setError(null); }).catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, [api, path]);
-  useEffect(reload, [reload]);
+  const reload = useCallback(() => { if (path) api.forget?.(path); fetchIt(); }, [api, path, fetchIt]);
+  useEffect(() => {
+    if (!path) return;
+    const kept = api.peek?.<T>(path);
+    if (kept !== undefined) { setData(kept); setError(null); return; }
+    fetchIt();
+  }, [api, path, fetchIt]);
   return { data, error, reload };
 }
 

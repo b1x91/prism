@@ -1,7 +1,9 @@
 /* 데스크톱 앱 전용. 토큰 밖의 값은 쓰지 않는다 (CLAUDE.md v3.1-10) */
 html, body, #root { height: 100%; }
 /* 포커스 없는 창은 움직임 정지 (main.tsx idle, v3.61) */
-html.idle *, html.idle *::before, html.idle *::after { animation-play-state: paused !important; }
+/* 창이 포커스를 잃으면 움직임을 멈춘다 (v3.61) — 일시정지가 아니라 '끝난 모습으로 바로': 등장 애니메이션이 투명한 첫 장면에서
+   멈추면 랭킹 무대처럼 화면이 검게 빈 채 남는다 (v3.67). 도는 빛·반짝임 같은 반복은 한 번으로 끝나 멈춘다 */
+html.idle *, html.idle *::before, html.idle *::after { animation-duration: 0s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: 0s !important; }
 body { overflow: hidden; background: var(--bg); }
 .shell { --side: 208px; display: grid; grid-template-columns: var(--side) minmax(0, 1fr); height: 100%; }
 .main { overflow-y: auto; overflow-x: clip; padding: var(--s7); background: var(--glow), var(--bg); }

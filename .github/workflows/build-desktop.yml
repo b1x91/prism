@@ -4,6 +4,7 @@
 # 회원 서버 주소: Variables PRISM_SERVER_URL, 없으면 Cloudflare 계정에서 찾는다 (서버가 없으면 모임 기능 없이 가이드만 동작)
 # 설치 파일은 항상 같은 이름(Prism-Setup.exe)으로 올려서 웹의 "앱 받기" 주소가 바뀌지 않게 한다
 # 앱 버전은 apps/desktop/src-tauri/tauri.conf.json 의 version
+# 공개(릴리스·서버 알림)는 증강 인식 QA(vision-qa: 가상 화면·사진·Windows 문자 인식)가 모두 통과해야 한다 (v3.67)
 name: build-desktop
 
 on:
@@ -20,6 +21,9 @@ permissions:
   contents: write
 
 jobs:
+  qa:
+    uses: ./.github/workflows/vision-qa.yml
+
   windows:
     runs-on: windows-latest
     timeout-minutes: 40
@@ -52,9 +56,25 @@ jobs:
         with:
           name: prism-windows
           path: Prism-Setup.exe
+
+  # QA 와 빌드가 모두 통과해야 공개한다
+  publish:
+    needs: [qa, windows]
+    if: startsWith(github.ref, 'refs/tags/app-v') || inputs.release
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/download-artifact@v4
+        with:
+          name: prism-windows
       - name: 버전
         id: ver
-        shell: bash
         run: echo "tag=app-v$(node -p "require('./apps/desktop/src-tauri/tauri.conf.json').version")" >> "$GITHUB_OUTPUT"
       - if: startsWith(github.ref, 'refs/tags/app-v') || inputs.release
         uses: softprops/action-gh-release@v2

@@ -152,10 +152,14 @@ impl Matcher {
     /// 그림이 같은 증강(예: 대마법사·유레카)을 카드에서 읽은 글자로 가른다: 두 글자 묶음이 이름·설명에 가장 많이 들어 있는 것.
     /// 똑같으면(글자를 거의 못 읽었으면) None — 틀리게 보여 주느니 비워 둔다
     pub fn pick_by_text(&self, text: &str, ids: &[u32]) -> Option<u32> {
-        if ids.len() == 1 {
-            return ids.first().copied();
-        }
         let q = bigrams(text);
+        if ids.len() == 1 {
+            // 글자가 꽤 읽혔는데 그 증강의 이름·설명과 거의 안 맞으면 그림 답을 버린다 (스킬 증강 카드를 다른 증강으로 잡지 않게)
+            let id = *ids.first()?;
+            let d = &self.descs.iter().find(|d| d.0 == id)?.1;
+            let hit = q.iter().filter(|b| d.contains(b)).count();
+            return (q.len() < 8 || hit * 100 >= q.len() * 15).then_some(id);
+        }
         let mut sc: Vec<(usize, u32)> = ids.iter().filter_map(|id| self.descs.iter().find(|d| d.0 == *id)).map(|(id, d)| (q.iter().filter(|b| d.contains(b)).count(), *id)).collect();
         sc.sort_by(|a, b| b.0.cmp(&a.0));
         let (best, second) = (sc.first()?, sc.get(1).map_or(0, |s| s.0));
@@ -365,6 +369,17 @@ impl Slots {
 }
 
 
+/// 게임 화면 안에서 읽는 곳 (게임 화면 기준 x, y, 폭, 높이). 앱과 QA 시험이 같은 값을 쓴다
+/// - 좁게(wide=false): 카드 제목이 뜨는 가로 띠 (16:9 기준 화면 높이 26~60%). 빠르고 다른 글자에 덜 흔들린다
+/// - 넓게(wide=true): 카드 전체가 들어오는 곳 (카드 자리 찾기·화면 비율·UI 크기가 다른 경우)
+pub fn region_of(w: i32, h: i32, wide: bool) -> (i32, i32, i32, i32) {
+    if wide {
+        (w * 8 / 100, h * 10 / 100, w * 84 / 100, h * 62 / 100)
+    } else {
+        (w * 12 / 100, h * 26 / 100, w * 76 / 100, h * 34 / 100)
+    }
+}
+
 /// 증강 카드 자리 찾기 (v3.66). 카드는 속이 거의 검은 큰 직사각형이 가로로 나란히 2~3장 뜬다.
 /// 열마다 '아주 어두운 점'의 비율을 재고, 어두운 열이 이어진 구간 중 폭·높이가 카드만 한 것을 고른다.
 /// 화면 비율·UI 크기·모니터에 상관없이 카드 위치를 그림에서 바로 안다 (예전엔 화면 가운데 기준으로 짐작해 와이드 모니터에서 틀렸다).
@@ -373,6 +388,66 @@ pub fn find_cards(bgra: &[u8], w: usize, h: usize) -> Vec<(usize, usize, usize, 
     if w < 200 || h < 100 || bgra.len() < w * h * 4 {
         return vec![];
     }
+    let blobs = find_cards_blobs(bgra, w, h);
+    if blobs.len() >= 2 {
+        return blobs;
+    }
+    find_cards_columns(bgra, w, h)
+}
+
+/// 카드 자리 찾기 ①: 카드 속 검은 면은 밝은 테두리에 둘러싸인 '닫힌 덩어리'다. 어두운 점이 이어진 덩어리 중
+/// 카드 모양(세로로 긴 직사각형, 속이 꽉 참, 크기가 화면 높이에 맞음)인 것을 고른다. 맵이 어두워 배경까지 어두운 화면에서도
+/// 테두리가 카드를 배경과 끊어 놓으므로 찾는다 (열 단위 방식이 어두운 맵·32:9 에서 놓치던 것, QA 에서 찾음)
+fn find_cards_blobs(bgra: &[u8], w: usize, h: usize) -> Vec<(usize, usize, usize, usize)> {
+    // 계산을 줄이려고 줄여서 본다 (높이 300 안팎)
+    let f = (h / 300).max(1);
+    let (sw, sh) = (w / f, h / f);
+    let dark: Vec<bool> = (0..sw * sh).map(|k| {
+        let (x, y) = ((k % sw) * f, (k / sw) * f);
+        let i = (y * w + x) * 4;
+        (bgra[i] as u32 + bgra[i + 1] as u32 + bgra[i + 2] as u32) < 75
+    }).collect();
+    let mut seen = vec![false; sw * sh];
+    let mut out: Vec<(usize, usize, usize, usize, usize)> = Vec::new();
+    let mut stack = Vec::new();
+    for start in 0..sw * sh {
+        if !dark[start] || seen[start] {
+            continue;
+        }
+        seen[start] = true;
+        stack.push(start);
+        let (mut x0, mut x1, mut y0, mut y1, mut n) = (sw, 0, sh, 0, 0usize);
+        while let Some(k) = stack.pop() {
+            let (x, y) = (k % sw, k / sw);
+            n += 1;
+            x0 = x0.min(x); x1 = x1.max(x); y0 = y0.min(y); y1 = y1.max(y);
+            let mut push = |j: usize| if dark[j] && !seen[j] { seen[j] = true; stack.push(j); };
+            if x > 0 { push(k - 1); }
+            if x + 1 < sw { push(k + 1); }
+            if y > 0 { push(k - sw); }
+            if y + 1 < sh { push(k + sw); }
+        }
+        let (bw, bh) = (x1 - x0 + 1, y1 - y0 + 1);
+        // 카드 모양: 폭이 읽는 곳 높이의 15~80%, 세로가 폭의 1.3~2.6배, 상자 안이 70% 이상 어둡다 (글자·스킬 그림 자리는 비어도 된다)
+        let ok = bw * 100 >= sh * 15 && bw * 100 <= sh * 80 && bh * 10 >= bw * 13 && bh * 10 <= bw * 26 && n * 10 >= bw * bh * 7;
+        if ok {
+            out.push((x0 * f, (x1 + 1) * f, y0 * f, ((y1 + 1) * f).min(h - 1), n));
+        }
+    }
+    // 비슷한 크기·같은 높이에 놓인 것끼리 (가장 큰 것 기준), 최대 3장, 왼쪽부터
+    out.sort_by_key(|c| std::cmp::Reverse(c.4));
+    let Some(&(a, b, t, _, _)) = out.first() else { return vec![] };
+    let (bw, top) = ((b - a) as i64, t as i64);
+    let mut cards: Vec<(usize, usize, usize, usize)> = out.iter().filter(|c| {
+        let cw = (c.1 - c.0) as i64;
+        cw * 100 >= bw * 80 && (c.2 as i64 - top).abs() * 10 <= bw
+    }).take(3).map(|c| (c.0, c.1, c.2, c.3)).collect();
+    cards.sort_by_key(|c| c.0);
+    if cards.len() >= 2 { cards } else { vec![] }
+}
+
+/// 카드 자리 찾기 ②(예비): 열마다 아주 어두운 점의 비율로
+fn find_cards_columns(bgra: &[u8], w: usize, h: usize) -> Vec<(usize, usize, usize, usize)> {
     let dark = |x: usize, y: usize| {
         let i = (y * w + x) * 4;
         (bgra[i] as u32 + bgra[i + 1] as u32 + bgra[i + 2] as u32) < 75
@@ -385,27 +460,32 @@ pub fn find_cards(bgra: &[u8], w: usize, h: usize) -> Vec<(usize, usize, usize, 
         while y < h { n += 1; if dark(x, y) { d += 1; } y += 2; }
         d as f32 / n as f32
     }).collect();
-    // 어두운 열(35% 이상) 구간, 작은 틈(폭의 1%)은 이어 붙인다
+    // 어두운 열 구간: 기준은 가장 어두운 열의 55% (20~35%) — 카드가 읽는 곳에서 차지하는 높이가 화면마다 달라서.
+    // 스킬 증강은 카드 가운데에 밝은 스킬 그림이 들어가 그 열만 덜 어둡다 (QA 에서 한 장이 둘로 쪼개지던 것).
+    // 작은 틈(폭의 1%)은 이어 붙인다
+    let peak = col.iter().cloned().fold(0.0f32, f32::max);
+    let thr = (peak * 0.55).clamp(0.2, 0.35);
     let gap = (w / 100).max(3);
     let mut runs: Vec<(usize, usize)> = vec![];
     let mut x = 0;
     while x < w {
-        if col[x] >= 0.35 {
+        if col[x] >= thr {
             let s0 = x;
             let mut e = x;
             let mut miss = 0;
             while x < w {
-                if col[x] >= 0.35 { e = x; miss = 0; } else { miss += 1; if miss > gap { break; } }
+                if col[x] >= thr { e = x; miss = 0; } else { miss += 1; if miss > gap { break; } }
                 x += 1;
             }
             runs.push((s0, e));
         }
         x += 1;
     }
-    // 카드만 한 폭 (영역 폭의 6~30%)
+    // 카드만 한 폭: 카드 크기는 화면 높이를 따라가므로 읽는 곳 높이의 15~80% (32:9 처럼 아주 넓은 화면에서 폭 기준으로는 너무 좁다고
+    // 걸러 버리던 것, QA 에서 찾음), 그리고 폭의 30% 이하
     let mut cards: Vec<(usize, usize, usize, usize)> = runs.into_iter().filter(|(a, b)| {
         let cw = b - a;
-        cw * 100 >= w * 6 && cw * 100 <= w * 30
+        cw * 100 >= h * 15 && cw * 100 <= h * 80 && cw * 100 <= w * 30
     }).filter_map(|(a, b)| {
         // 세로 범위: 이 구간 가운데 60% 의 열에서 어두운 비율이 45% 넘는 줄
         let (ia, ib) = (a + (b - a) / 5, b - (b - a) / 5);

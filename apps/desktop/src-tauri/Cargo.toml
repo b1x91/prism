@@ -1,6 +1,6 @@
 [package]
 name = "prism-desktop"
-version = "0.9.68"
+version = "0.9.69"
 description = "Prism — 아수라장 동반 앱"
 edition = "2021"
 publish = false
@@ -25,6 +25,10 @@ tokio = { version = "1", features = ["net", "io-util", "time", "sync", "macros"]
 base64 = "0.22"
 url = "2"
 sha2 = "0.10"
+
+[dev-dependencies]
+# QA 끝단 시험이 가상 게임 화면(PNG)을 읽는다 (vision.rs qa_e2e)
+png = "0.17"
 
 [target.'cfg(windows)'.dependencies]
 # 게임 중 증강 인식: 화면 일부 캡처(GDI) + Windows 내장 문자 인식(Windows.Media.Ocr), 게임 위 작은 창

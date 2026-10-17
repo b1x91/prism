@@ -221,6 +221,12 @@ async fn watch_phase(app: tauri::AppHandle) {
             let _ = app.emit("lcu-phase", phase.clone());
             if phase == "ChampSelect" {
                 bring_to_front(app.clone());
+                // 롤이 '전체 화면'이면 챔프 선택(클라이언트가 보이는 때)에 미리 알린다 (v3.67). 게임이 시작되면 전체 화면 위에는
+                // 알림도 작은 창도 보이지 않는다. 자동 인식을 켜고 동의를 마친 사람에게만, 설정 파일을 읽기만 한다
+                let v = app.state::<Arc<App>>().vision.clone();
+                if v.settings.lock().unwrap().enabled && v.allowed.load(std::sync::atomic::Ordering::SeqCst) && lcu::window_mode() == Some(0) {
+                    toast::show(&app, "전체 화면에서는 증강 창이 뜨지 않아요", "롤 설정 → 비디오 → 창 모드를 '테두리 없음'으로 바꾸면 증강 카드가 뜰 때 옆에 바로 보여 드려요.", "warn", 9000);
+                }
             }
             last = phase.clone();
         }

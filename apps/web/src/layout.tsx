@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
-import { AugmentOpen, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
-import type { MatchDetail } from '@prism/core';
+import { AugmentOpen, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
 const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
@@ -19,6 +19,9 @@ export function Layout() {
   const nav = useNavigate();
   const pieces = usePieces(me ? api : null);
   const openAug = useCallback((id: number) => nav(`/augments/${id}`), [nav]);
+  // 당겨서 새로고침 (v3.67): 받아 둔 데이터를 지우고 내 정보와 이 화면을 새로 불러온다
+  const scroller = useCallback(() => window, []);
+  const pullRefresh = useCallback(() => { api.forget?.(); emitPullRefresh(); refresh(); }, [api, refresh]);
   return (
     <>
       <header className="top"><div className="wrap">
@@ -33,7 +36,7 @@ export function Layout() {
       </div></header>
       <MobileMenu open={menu} onClose={() => setMenu(false)} />
       {welcome && me && <WelcomeFlow api={api} nick={me.nick} needFace={!me.skin} onClose={closeWelcome} />}
-      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><div key={pathname} className="route"><Outlet /></div></MatchSource.Provider></AugmentOpen.Provider></main>
+      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <div key={`${pathname}-${k}`} className="route"><Outlet /></div>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>
         <span>Prism은 Riot Games의 공식 서비스가 아니며 Riot Games와 무관합니다. League of Legends 및 관련 이미지는 Riot Games의 자산입니다. · <NavLink to="/privacy" className="foot-link">개인정보 처리방침</NavLink></span>

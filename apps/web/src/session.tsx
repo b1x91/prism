@@ -3,7 +3,7 @@
  * 디스코드 로그인 → 서버가 1회용 code 와 함께 /auth/done 으로 돌려보냄 → 토큰으로 교환 → 이 브라우저에 저장.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ApiError, withDefaults, type Api, type Links, type Me, type Presence } from '@prism/core';
+import { ApiError, withCache, withDefaults, type Api, type Links, type Me, type Presence } from '@prism/core';
 import { connectFavs } from '@prism/ui';
 
 export const SERVER = (import.meta.env.VITE_PRISM_SERVER ?? '').replace(/\/$/, '');
@@ -46,7 +46,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [links, setLinks] = useState<Links>(FALLBACK_LINKS);
   const api = useMemo<Api>(() => {
     const out = () => setMe(null);
-    return { get: (p) => call('GET', p, undefined, out), post: (p, b) => call('POST', p, b ?? {}, out), del: (p) => call('DELETE', p, undefined, out) };
+    // 화면이 받은 것은 1시간 담아 둔다 — 메뉴를 옮길 때마다 자리표시를 띄우며 다시 받지 않게 (withCache, v3.67)
+    return withCache({ get: (p) => call('GET', p, undefined, out), post: (p, b) => call('POST', p, b ?? {}, out), del: (p) => call('DELETE', p, undefined, out) });
   }, []);
   const refresh = useCallback(() => {
     if (!getToken() || !SERVER) { setMe(null); setReady(true); return; }

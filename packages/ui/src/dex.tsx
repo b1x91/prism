@@ -12,8 +12,9 @@ import { Bone } from './skeleton';
 
 /** 서버에 기록된 내 모든 판 + (앱이면) 이 PC 롤 기록을 합친 도감 */
 export function useDex(api: Api | null, games: Game[] = []) {
-  const [rows, setRows] = useState<Dex | null>(null);
-  const [loading, setLoading] = useState(Boolean(api));
+  const kept = () => { const r = api?.peek?.<DexRows>('/api/me/dex'); return r ? dexFromRows(r) : null; };
+  const [rows, setRows] = useState<Dex | null>(kept);
+  const [loading, setLoading] = useState(() => Boolean(api) && !kept());
   useEffect(() => {
     if (!api) { setLoading(false); return; }
     let on = true;

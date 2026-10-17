@@ -12,9 +12,16 @@ use serde::Deserialize;
 
 const S: usize = 24;
 const N: usize = S * S;
-/// 받아들이는 최소 점수, 다른 그림보다 앞서야 하는 차이 (보내 주신 게임 화면 사진 두 장, 카드 6장으로 정했다: 맞은 그림 0.77~0.91, 차이 0.04~0.11)
-const MIN_SCORE: f32 = 0.70;
+/// 받아들이는 최소 점수, 다른 그림보다 앞서야 하는 차이. QA 카드 266장(가상 화면 4벌)의 점수 분포로 정했다:
+/// 0.80 / 0.03 에서 정답 채택 100%, 오답 채택 0 (사용자 사진 6장은 0.83~0.92). 0.75 는 스킬 증강(챔프 스킬 그림)을 잡은 적이 있다
+/// (apps/desktop/qa, 기준을 바꾸면 QA 를 다시 돌린다)
+const MIN_SCORE: f32 = 0.80;
 const MIN_GAP: f32 = 0.03;
+/// 밝은 부분을 자르는 높이 (99% 밝기의 이 비율). 게임은 아이콘 둘레 무늬를 연보라로 밝게 칠하고 데이터는 어두운 회색이라,
+/// 낮게 잘라 둘레·가운데 모두 '켜진 모양'으로 본다 (0.5 → 0.3: 사용자 사진 궁극의 각성 0.57 → 0.83)
+const CLIP: f32 = 0.3;
+/// 이만큼 닮은 아이콘은 같은 그림으로 묶는다
+const SAME_ICON: f32 = 0.90;
 
 #[derive(Deserialize)]
 struct RawAug {
@@ -25,6 +32,8 @@ struct RawAug {
     icon: String,
     #[serde(default)]
     disabled: bool,
+    #[serde(default)]
+    ability: bool,
 }
 #[derive(Deserialize)]
 struct RawData {
@@ -32,6 +41,8 @@ struct RawData {
 }
 
 pub struct IconBank {
+    /// 모든 증강의 등급 (그림으로 찾지 않는 스킬 증강까지 — 이미 읽은 칸의 등급을 알려고)
+    all_rarity: Vec<(u32, u8)>,
     ids: Vec<u32>,
     rarity: Vec<u8>,
     /// 같은 그림 묶음 번호 (아이콘 파일 경로가 같으면 같은 묶음)
@@ -58,6 +69,22 @@ fn normalize(v: &mut [f32; N]) -> bool {
     true
 }
 
+/// 특징값: 밝은 부분을 눌러(그림 안 밝기 99% 지점의 CLIP 배에서 자름) 가운데 밝은 무늬와 둘레의 어두운 무늬를 같은 무게로 본다.
+/// 게임 아이콘은 가운데 무늬(냄비·별·검)가 같고 둘레 무늬만 다른 것이 많아, 밝기 그대로면 서로 다른 증강을 같은 그림으로 본다 (QA 에서 찾음)
+fn feature(v: &mut [f32; N]) -> bool {
+    let mut s = *v;
+    s.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
+    let cap = s[N * 99 / 100] * CLIP;
+    for x in v.iter_mut() {
+        *x = x.min(cap);
+    }
+    normalize(v)
+}
+
+fn dot(a: &[f32; N], b: &[f32; N]) -> f32 {
+    a.iter().zip(b.iter()).map(|(x, y)| x * y).sum()
+}
+
 fn rarity_code(r: &str) -> u8 {
     match r {
         "silver" => 1,
@@ -71,16 +98,16 @@ impl IconBank {
     pub fn new(bin: &[u8], json: &str) -> Self {
         let d: RawData = serde_json::from_str(json).unwrap_or(RawData { augments: vec![] });
         let mut paths: Vec<String> = Vec::new();
-        let mut bank = Self { ids: vec![], rarity: vec![], group: vec![], sig: vec![] };
+        let mut bank = Self { all_rarity: d.augments.iter().map(|a| (a.id, rarity_code(&a.rarity))).collect(), ids: vec![], rarity: vec![], group: vec![], sig: vec![] };
         for rec in bin.chunks_exact(4 + N) {
             let id = u32::from_le_bytes([rec[0], rec[1], rec[2], rec[3]]);
-            // 스킬 증강(3연발·메아리 시전 …)은 게임에서 내 챔프 스킬 그림이 뜬다 — 공용 그림으로는 찾지 않는다
-            let Some(a) = d.augments.iter().find(|a| a.id == id && !a.disabled && !a.icon.contains("Generic")) else { continue };
+            // 스킬 증강(3연발·메아리 시전·재장전 …)은 게임에서 내 챔프 스킬 그림이 뜬다 — 데이터의 그림으로는 찾지 않는다
+            let Some(a) = d.augments.iter().find(|a| a.id == id && !a.disabled && !a.ability && !a.icon.contains("Generic")) else { continue };
             let mut v = [0f32; N];
             for (o, b) in v.iter_mut().zip(&rec[4..]) {
                 *o = *b as f32;
             }
-            if !normalize(&mut v) {
+            if !feature(&mut v) {
                 continue;
             }
             let g = paths.iter().position(|p| *p == a.icon).unwrap_or_else(|| {
@@ -92,11 +119,37 @@ impl IconBank {
             bank.group.push(g as u32);
             bank.sig.push(v);
         }
+        // 파일은 달라도 눈으로 같은 그림(게임이 같은 무늬를 여러 증강에 쓴다)은 한 묶음으로 — 고르는 건 글자로
+        let n = bank.ids.len();
+        for i in 0..n {
+            for j in i + 1..n {
+                if bank.group[i] != bank.group[j] && dot(&bank.sig[i], &bank.sig[j]) >= SAME_ICON {
+                    let (from, to) = (bank.group[j], bank.group[i]);
+                    for g in bank.group.iter_mut() {
+                        if *g == from {
+                            *g = to;
+                        }
+                    }
+                }
+            }
+        }
         bank
     }
 
+    #[allow(dead_code)]
+    /// QA: 카드 한 장에서 정답 묶음의 점수와, 정답이 아닌 묶음 중 가장 높은 점수 (기준을 분포로 정하려고)
+    pub fn qa_scores(&self, bgra: &[u8], w: usize, h: usize, card: (usize, usize, usize, usize), answer: u32) -> Option<(f32, f32)> {
+        let base: Vec<usize> = (0..self.ids.len()).collect();
+        let k = self.ids.iter().position(|i| *i == answer)?;
+        let g = self.group[k];
+        let sc = self.scores(bgra, w, h, card, &base);
+        let right = base.iter().zip(&sc).filter(|(i, _)| self.group[**i] == g).map(|(_, s)| *s).fold(-1f32, f32::max);
+        let wrong = base.iter().zip(&sc).filter(|(i, _)| self.group[**i] != g).map(|(_, s)| *s).fold(-1f32, f32::max);
+        Some((right, wrong))
+    }
+
     pub fn rarity_of(&self, id: u32) -> u8 {
-        self.ids.iter().position(|i| *i == id).map_or(0, |k| self.rarity[k])
+        self.all_rarity.iter().find(|r| r.0 == id).map_or(0, |r| r.1)
     }
 
     /// 카드 한 장의 증강마다 가장 잘 맞은 점수 (후보 = idx). card = 그림 안의 카드 자리 (x0, x1, y0, y1)
@@ -111,14 +164,15 @@ impl IconBank {
         // 밝기 누적표 (카드 둘레를 조금 넉넉히): 칸마다 평균을 네 번 읽어 구한다
         let ax = (x0 as f32 - cw * 0.2).max(0.0) as usize;
         let bx = ((x1 as f32 + cw * 0.2) as usize).min(w);
-        let (ay, by) = (y0, y1.min(h));
+        // 위로도 넉넉히: 카드 자리를 찾을 때 아이콘 둘레의 빛 때문에 검은 면의 위쪽 끝이 아이콘 아래로 잡힐 수 있다 (QA 사진)
+        let (ay, by) = ((y0 as f32 - cw * 0.5).max(0.0) as usize, y1.min(h));
         let (iw, ih) = (bx - ax, by - ay);
         let mut sum = vec![0u64; (iw + 1) * (ih + 1)];
         for yy in 0..ih {
             let mut row = 0u64;
             for xx in 0..iw {
                 let i = ((ay + yy) * w + ax + xx) * 4;
-                // BGRA → 밝기 (ITU-R 601, 아이콘 특징값과 같은 식)
+                // BGRA → 밝기 (ITU-R 601, 아이콘 특징값과 같은 식). 가장 밝은 색 성분·둘의 평균도 재 봤으나 실제 게임 화면 사진에서 이 식이 가장 잘 맞았다
                 let l = (bgra[i + 2] as u64 * 299 + bgra[i + 1] as u64 * 587 + bgra[i] as u64 * 114) / 1000;
                 row += l;
                 sum[(yy + 1) * (iw + 1) + xx + 1] = sum[yy * (iw + 1) + xx + 1] + row;
@@ -137,7 +191,7 @@ impl IconBank {
                 return -1.0;
             }
             let px = x0 as f32 + cw / 2.0 + dx * cw - s / 2.0 - ax as f32;
-            let py = top * ch;
+            let py = (y0 - ay) as f32 + top * ch;
             if px < 0.0 || py < 0.0 || px + s > iw as f32 || py + s > ih as f32 {
                 return -1.0;
             }
@@ -150,7 +204,7 @@ impl IconBank {
                     patch[j * S + i] = rect(xa, ya, xb, yb);
                 }
             }
-            if !normalize(&mut patch) {
+            if !feature(&mut patch) {
                 return -1.0;
             }
             let mut top_score = -1f32;
@@ -167,8 +221,8 @@ impl IconBank {
         let mut coarse: Vec<(f32, f32, f32, f32)> = Vec::new();
         for fi in 0..9 {
             let frac = 0.40 + 0.06 * fi as f32;
-            for ti in 0..11 {
-                let top = 0.04 * ti as f32;
+            for ti in 0..18 {
+                let top = -0.24 + 0.04 * ti as f32;
                 for di in 0..5 {
                     let dx = -0.10 + 0.05 * di as f32;
                     let sc = try_at(frac, top, dx, &mut best);
@@ -193,17 +247,17 @@ impl IconBank {
     /// known = 이미 다른 칸에서 읽은 증강 (등급을 정하고, 후보에서 뺀다).
     /// 결과: 카드마다 (같은 그림 증강들, 점수, 다른 그림과 차이) — 확신이 없으면 None
     pub fn identify(&self, bgra: &[u8], w: usize, h: usize, cards: &[(usize, usize, usize, usize)], unknown: &[usize], known: &[u32]) -> Vec<Option<(Vec<u32>, f32, f32)>> {
+        self.identify_with(bgra, w, h, cards, unknown, known, MIN_SCORE, MIN_GAP)
+    }
+
+    /// 기준을 정해서 (QA 시험이 기준 없이 점수를 보려고 0 으로 부른다)
+    #[allow(clippy::too_many_arguments)]
+    pub fn identify_with(&self, bgra: &[u8], w: usize, h: usize, cards: &[(usize, usize, usize, usize)], unknown: &[usize], known: &[u32], min_score: f32, min_gap: f32) -> Vec<Option<(Vec<u32>, f32, f32)>> {
         let base: Vec<usize> = (0..self.ids.len()).filter(|k| !known.contains(&self.ids[*k])).collect();
         let all: Vec<Vec<f32>> = unknown.iter().map(|&c| self.scores(bgra, w, h, cards[c], &base)).collect();
-        // 등급: 이미 읽은 칸이 있으면 그 등급, 없으면 카드들 1등 점수 합이 가장 큰 등급
-        let rar = known.iter().map(|id| self.rarity_of(*id)).find(|r| *r > 0).unwrap_or_else(|| {
-            (1..=3u8)
-                .max_by(|a, b| {
-                    let t = |r: u8| all.iter().map(|sc| base.iter().zip(sc).filter(|(k, _)| self.rarity[**k] == r).map(|(_, s)| *s).fold(-1f32, f32::max)).sum::<f32>();
-                    t(*a).partial_cmp(&t(*b)).unwrap_or(std::cmp::Ordering::Equal)
-                })
-                .unwrap_or(0)
-        });
+        // 등급: 이미 읽은 칸이 있으면 그 등급만. 모르면 등급을 가리지 않는다 — 같은 그림이 여러 등급에 쓰여
+        // 그림으로 등급을 짐작하면 틀린 등급으로 좁혀 버린다 (QA 에서 찾음). 같은 그림 증강은 글자로 가른다
+        let rar = known.iter().map(|id| self.rarity_of(*id)).find(|r| *r > 0).unwrap_or(0);
         all.iter()
             .map(|sc| {
                 // 그림 묶음별 최고점 (같은 등급만)
@@ -221,7 +275,7 @@ impl IconBank {
                 groups.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
                 let (g, top) = *groups.first()?;
                 let gap = top - groups.get(1).map_or(0.0, |x| x.1);
-                if top < MIN_SCORE || gap < MIN_GAP {
+                if top < min_score || gap < min_gap {
                     return None;
                 }
                 let members: Vec<u32> = base.iter().filter(|k| self.group[**k] == g && (rar == 0 || self.rarity[**k] == rar)).map(|k| self.ids[*k]).collect();
@@ -272,9 +326,9 @@ mod tests {
         put(&mut img, 1349, 640 + 40, 120);
         let cards = [(40, 240, 20, 380), (340, 540, 20, 380), (640, 840, 20, 380)];
         let r = b.identify(&img, w, h, &cards, &[0, 1, 2], &[]);
-        assert_eq!(r[0].as_ref().unwrap().0, vec![1048]);
-        assert_eq!(r[1].as_ref().unwrap().0, vec![1018]);
-        assert_eq!(r[2].as_ref().unwrap().0, vec![1349]);
+        assert!(r[0].as_ref().unwrap().0.contains(&1048));
+        assert!(r[1].as_ref().unwrap().0.contains(&1018));
+        assert!(r[2].as_ref().unwrap().0.contains(&1349));
         // 정답을 후보에서 빼면 다른 것을 고르지 않는다
         let r = b.identify(&img, w, h, &cards, &[0], &[1048]);
         assert!(r[0].is_none(), "{:?}", r);

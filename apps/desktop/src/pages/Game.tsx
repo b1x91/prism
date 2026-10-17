@@ -1,3 +1,4 @@
+import { FullscreenNote } from '../fullscreen';
 import { useState } from 'react';
 import { AUGMENT, CHAMPIONS, ago, guideOf, pct, streakOf, todayPicks, type MissionState, type Personal } from '@prism/core';
 import { AugRing, AugmentLink, Bone, GlassBtn, Icon, TierBadge } from '@prism/ui';
@@ -93,11 +94,13 @@ function NoGame({ s }: { s: State }) {
 
 export function GamePage({ s }: { s: State }) {
   const nav = useNavigate();
-  if (s.status === 'in-game') return <InGame championId={s.lastChampion} matchup={s.matchup} />;
+  // 롤이 전체 화면이면 게임 화면 맨 위에 늘 (게임 중·챔프 선택·대기 모두 — 왜 작은 창이 안 뜨는지 미리 알게)
+  if (s.status === 'in-game') return <div className="stack" style={{ gap: 16 }}><FullscreenNote /><InGame championId={s.lastChampion} matchup={s.matchup} /></div>;
   const games = s.games, P = s.personal;
   const st = streakOf(games);
   return (
     <div className="stack" style={{ gap: 16 }}>
+      <FullscreenNote />
       {s.champSelect ? <ChampSelectPanel cs={s.champSelect} crew={s.crew} personal={P} /> : <NoGame s={s} />}
       {!s.champSelect && s.status !== 'champ-select' && <TodayPick personal={P} />}
       {!s.champSelect && <h2 className="h2">내 아수라장</h2>}

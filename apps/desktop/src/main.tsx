@@ -3,9 +3,9 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { AugmentOpen, Icon, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
-import { PIECE, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
-import { getState, refreshSession, start, subscribe, type State } from './controller';
+import { AugmentOpen, Icon, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { PIECE, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
+import { checkNow, getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
 import { api, bridge } from './bridge';
@@ -65,13 +65,20 @@ function NavArrows() {
 }
 
 /** 화면이 바뀔 때 전환 (앞으로 가면 오른쪽에서, 뒤로 가면 왼쪽에서) */
-function Page({ children, main }: { children: ReactNode; main: React.RefObject<HTMLElement | null> }) {
+function Page({ children, main, k = 0 }: { children: ReactNode; main: React.RefObject<HTMLElement | null>; k?: number }) {
   const loc = useLocation();
   const idx = hidx();
   const prev = useRef(idx);
   const back = idx < prev.current;
   useEffect(() => { prev.current = idx; main.current?.scrollTo({ top: 0 }); }, [loc.pathname, idx, main]);
-  return <div key={loc.pathname} className={`page ${back ? 'back' : ''}`}>{children}</div>;
+  return <div key={`${loc.pathname}-${k}`} className={`page ${back ? 'back' : ''}`}>{children}</div>;
+}
+
+/** 당겨서 새로고침: 받아 둔 서버 데이터를 지우고 내 정보·롤 상태도 다시 읽은 뒤 화면을 새로 그린다 (v3.67) */
+async function pullRefresh() {
+  api.forget?.();
+  emitPullRefresh();
+  await Promise.all([refreshSession().catch(() => {}), checkNow().catch(() => {})]);
 }
 
 function App() {
@@ -122,6 +129,7 @@ function App() {
   const staff = s.me?.tier === 'admin' || (s.me?.role?.level ?? 0) >= 5;
   const skins = useSkins();
   const main = useRef<HTMLElement>(null);
+  const mainEl = useCallback(() => main.current, []);
   const riotName = s.summoner?.riotId.split('#')[0];
   const openAug = useCallback((id: number) => nav(`/augments/${id}`), [nav]);
   // 판 상세: 서버(함께한 회원 얼굴) + 롤 클라이언트(10명 전체, 게임 중·롤 꺼짐이면 읽지 않는다)
@@ -163,7 +171,7 @@ function App() {
       </aside>
       <main className="main" ref={main}>
         {s.me && !s.me.rolesKnown && <div className="relogin"><span>디스코드 역할(정회원·운영진 등)에 맞는 기능을 열려면 <b>한 번만 다시 로그인</b>해 주세요.</span><button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />다시 로그인</button></div>}
-        <AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><MatchNote.Provider value="롤을 켜 두면 열 명 모두 볼 수 있어요."><Page main={main}><Routes>
+        <AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><MatchNote.Provider value="롤을 켜 두면 열 명 모두 볼 수 있어요."><PullRefresh scroller={mainEl} onRefresh={pullRefresh}>{(k) => <Page main={main} k={k}><Routes>
           <Route index element={<GamePage s={s} />} />
           <Route path="champions" element={<ChampionsPage member={!!s.me} record={s.personal.champions} />} />
           <Route path="champions/:id" element={<ChampionsPage member={!!s.me} record={s.personal.champions} />} />
@@ -178,7 +186,7 @@ function App() {
           <Route path="missions" element={<MissionsPage s={s} onLogin={login} />} />
           <Route path="settings" element={<SettingsPage s={s} onLogin={login} discord={links.discord} />} />
           <Route path="*" element={<GamePage s={s} />} />
-        </Routes></Page></MatchNote.Provider></MatchSource.Provider></AugmentOpen.Provider>
+        </Routes></Page>}</PullRefresh></MatchNote.Provider></MatchSource.Provider></AugmentOpen.Provider>
       </main>
     </div>
   );

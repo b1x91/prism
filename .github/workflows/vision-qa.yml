@@ -1,0 +1,112 @@
+# 증강 카드 인식 QA (v3.67). 앱이 실제로 쓰는 코드로 여러 모니터 조건의 증강 고르기 화면을 시험한다.
+# - 리눅스: 가상 게임 화면 3벌(기준을 정할 때 쓰지 않은 화면 2벌 포함) + 사용자 게임 화면 사진으로 카드 자리 찾기·그림 대조
+# - Windows: 실제 Windows 한국어 문자 인식까지 거쳐 세 장을 모두 찾는지 (끝단)
+# 앱 배포(build-desktop)는 이 둘이 통과해야 공개된다. 인식 코드·증강 데이터를 바꾸면 따로도 돈다.
+name: vision-qa
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: [main, claude/new-session-18cxmx]
+    paths:
+      - 'apps/desktop/src-tauri/src/matcher.rs'
+      - 'apps/desktop/src-tauri/src/icons.rs'
+      - 'apps/desktop/src-tauri/src/vision.rs'
+      - 'apps/desktop/qa/**'
+      - 'packages/core/data/**'
+      - '.github/workflows/vision-qa.yml'
+
+concurrency:
+  group: vision-qa-${{ github.ref }}-${{ github.event_name }}
+  cancel-in-progress: true
+
+jobs:
+  cards:
+    name: 카드 찾기·그림 대조 (가상 화면 3벌 + 사진)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/qa
+      - run: pip install pillow numpy fonttools brotli
+      - name: 증강·챔프 아이콘 받기
+        run: node scripts/fetch-icons.mjs
+      - name: 아이콘 특징값이 아이콘과 맞는지
+        # 줄이는 계산이 Pillow 판마다 1~2 씩 다를 수 있어 바이트 비교 대신 차이로 본다
+        run: |
+          cp packages/core/data/aug-icons.bin /tmp/aug-icons.bin
+          python3 scripts/aug-icons.py
+          python3 -c "
+          import sys
+          a=open('/tmp/aug-icons.bin','rb').read(); b=open('packages/core/data/aug-icons.bin','rb').read()
+          if len(a)!=len(b): sys.exit('::error::aug-icons.bin 의 증강 수가 아이콘과 다릅니다. python3 scripts/aug-icons.py 를 돌려 올려 주세요')
+          d=max(abs(x-y) for x,y in zip(a,b))
+          print('최대 차이', d)
+          if d>8: sys.exit('::error::aug-icons.bin 이 아이콘과 다릅니다. python3 scripts/aug-icons.py 를 돌려 올려 주세요')
+          "
+      - name: 가상 게임 화면 만들기 (기준 1벌 + 처음 보는 2벌)
+        run: |
+          python3 apps/desktop/qa/make_frames.py qa-frames/base &
+          QA_SEED=4 python3 apps/desktop/qa/make_frames.py qa-frames/s4 &
+          QA_SEED=5 python3 apps/desktop/qa/make_frames.py qa-frames/s5 &
+          wait
+      - name: 시험
+        working-directory: apps/desktop/qa
+        run: |
+          cargo test --release --lib
+          for d in base s4 s5; do
+            echo "== $d"
+            QA_FRAMES=$GITHUB_WORKSPACE/qa-frames/$d cargo test --release --test cards -- --nocapture
+          done
+
+  ocr:
+    name: 끝단 (Windows 문자 인식)
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+          key: qa
+      - name: 한국어 문자 인식 설치
+        shell: pwsh
+        run: |
+          $cap = Get-WindowsCapability -Online | Where-Object { $_.Name -like 'Language.OCR~~~ko-KR*' }
+          $cap | Format-Table Name, State
+          if ($cap.State -ne 'Installed') { $cap | Add-WindowsCapability -Online | Out-Null }
+          Get-WindowsCapability -Online | Where-Object { $_.Name -like 'Language.OCR~~~ko-KR*' } | Format-Table Name, State
+      - run: npm ci
+      - run: pip install pillow numpy fonttools brotli
+      - name: 아이콘 받기 · 앱 화면 묶기 (앱 코드가 화면 묶음을 함께 컴파일한다)
+        shell: bash
+        run: |
+          node scripts/fetch-icons.mjs
+          npm run build -w @prism/desktop
+      - name: 가상 게임 화면 만들기
+        shell: bash
+        run: QA_SEED=7 python3 apps/desktop/qa/make_frames.py qa-frames
+      - name: 끝단 시험
+        shell: bash
+        working-directory: apps/desktop/src-tauri
+        env:
+          CARGO_PROFILE_DEV_OPT_LEVEL: '2'
+        run: QA_FRAMES=$GITHUB_WORKSPACE/qa-frames cargo test --lib qa_e2e -- --nocapture

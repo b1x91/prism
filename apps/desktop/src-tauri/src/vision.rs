@@ -357,16 +357,72 @@ mod imp {
     /// 결과: (찾은 증강, 어떻게 찾았나, 읽은 글자)
     fn read_card(engine: &OcrEngine, x: i32, y: i32, w: i32, h: i32, m: &Matcher, except: &[u32]) -> (Option<u32>, &'static str, String) {
         let Some(buf) = grab(x, y, w, h) else { return (None, "capture", String::new()) };
+        read_card_buf(engine, &buf, w, h, m, except)
+    }
+
+    /// 그림 일부 잘라 내기 (BGRA)
+    pub fn crop(src: &[u8], sw: usize, x: usize, y: usize, w: usize, h: usize) -> Vec<u8> {
+        let mut out = Vec::with_capacity(w * h * 4);
+        for yy in y..y + h {
+            let i = (yy * sw + x) * 4;
+            out.extend_from_slice(&src[i..i + w * 4]);
+        }
+        out
+    }
+
+    /// 카드 한 장 읽은 결과
+    pub struct CardRead {
+        pub idx: usize,
+        pub id: Option<u32>,
+        /// title · title-2x · desc · icon · none
+        pub how: &'static str,
+        pub text: String,
+        /// 그림으로 맞춰 본 결과 (같은 그림 증강들, 점수, 다른 그림과 차이)
+        pub icon: Option<(Vec<u32>, f32, f32)>,
+    }
+
+    /// 찾은 카드 자리(todo)를 하나씩 읽는다: 글자(제목 → 두 배 → 설명) → 그래도 못 읽은 카드는 아이콘 그림 (v3.66).
+    /// buf 는 넓게 읽은 곳 전체(ww×wh), known 은 이미 다른 칸에 있는 증강. 앱 실행 루프와 QA 시험이 같은 함수를 쓴다
+    pub fn read_cards(engine: &OcrEngine, m: &Matcher, icons: &crate::icons::IconBank, buf: &[u8], ww: usize, wh: usize, cards: &[(usize, usize, usize, usize)], todo: &[usize], known: &[u32]) -> Vec<CardRead> {
+        let mut have: Vec<u32> = known.to_vec();
+        let mut out: Vec<CardRead> = Vec::new();
+        for &k in todo {
+            let (a, b, y0, y1) = cards[k];
+            let (cw, ch) = (b - a, (y1 - y0).min(wh - y0));
+            let c = crop(buf, ww, a, y0, cw, ch);
+            let (id, how, text) = read_card_buf(engine, &c, cw as i32, ch as i32, m, &have);
+            if let Some(id) = id { have.push(id); }
+            out.push(CardRead { idx: k, id, how, text, icon: None });
+        }
+        let unread: Vec<usize> = out.iter().filter(|r| r.id.is_none()).map(|r| r.idx).collect();
+        if !unread.is_empty() {
+            let found = icons.identify(buf, ww, wh, cards, &unread, &have);
+            for (k, f) in unread.iter().zip(found) {
+                let r = out.iter_mut().find(|r| r.idx == *k).unwrap();
+                let pick = f.as_ref().and_then(|(ids, _, _)| m.pick_by_text(&r.text, ids)).filter(|id| !have.contains(id));
+                if let Some(id) = pick {
+                    have.push(id);
+                    r.id = Some(id);
+                    r.how = "icon";
+                }
+                r.icon = f;
+            }
+        }
+        out
+    }
+
+    /// 카드 한 장(잘라 낸 그림)을 글자로 읽기
+    fn read_card_buf(engine: &OcrEngine, buf: &[u8], w: i32, h: i32, m: &Matcher, except: &[u32]) -> (Option<u32>, &'static str, String) {
         // 이미 다른 칸에 있는 증강은 빼고 고른다 — 잘라 읽은 칸에 옆 카드 글자가 걸쳐도 그쪽으로 잡지 않게
         let title = |lines: &[Vec<Word>], iw: i32| m.find_at(lines, iw as f32).into_iter().filter(|h| !except.contains(&h.0)).min_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal)).map(|h| h.0);
         // 1) 원래 크기 (제목은 큰 글자라 이대로가 잘 읽힌다)
-        let (l1, t1) = recognize(engine, &buf, w, h).unwrap_or_default();
+        let (l1, t1) = recognize(engine, buf, w, h).unwrap_or_default();
         if let Some(id) = title(&l1, w) {
             return (Some(id), "title", t1);
         }
         // 2) 두 배로 키워서 (작은 설명 글자까지)
         let max = OcrEngine::MaxImageDimension().unwrap_or(0) as i32;
-        let (l2, t2) = if w * 2 <= max && h * 2 <= max { recognize(engine, &upscale2(&buf, w, h), w * 2, h * 2).unwrap_or_default() } else { (vec![], String::new()) };
+        let (l2, t2) = if w * 2 <= max && h * 2 <= max { recognize(engine, &upscale2(buf, w, h), w * 2, h * 2).unwrap_or_default() } else { (vec![], String::new()) };
         if let Some(id) = title(&l2, w * 2) {
             return (Some(id), "title-2x", t2);
         }
@@ -393,16 +449,14 @@ mod imp {
         out
     }
 
-    /// 찾는 곳: 게임 화면 가운데 (카드가 뜨는 자리). 실제 화면으로 맞춰 가며 조정한다
-    /// 카드 제목이 뜨는 가로 띠 (16:9 기준 화면 높이 40% 안팎). 좁게 읽어야 빠르고, 다른 글자에 덜 흔들린다
+    /// 찾는 곳 (matcher::region_of 를 화면 좌표로)
     fn region(rc: &RECT) -> (i32, i32, i32, i32) {
-        let (w, h) = (rc.right - rc.left, rc.bottom - rc.top);
-        (rc.left + w * 12 / 100, rc.top + h * 26 / 100, w * 76 / 100, h * 34 / 100)
+        let (x, y, w, h) = crate::matcher::region_of(rc.right - rc.left, rc.bottom - rc.top, false);
+        (rc.left + x, rc.top + y, w, h)
     }
-    /// 넓게: 좁은 띠에서 못 찾을 때 가끔 (화면 비율·UI 크기가 다른 경우)
     fn region_wide(rc: &RECT) -> (i32, i32, i32, i32) {
-        let (w, h) = (rc.right - rc.left, rc.bottom - rc.top);
-        (rc.left + w * 8 / 100, rc.top + h * 10 / 100, w * 84 / 100, h * 62 / 100)
+        let (x, y, w, h) = crate::matcher::region_of(rc.right - rc.left, rc.bottom - rc.top, true);
+        (rc.left + x, rc.top + y, w, h)
     }
 
     pub fn run(v: Arc<Vision>, app: AppHandle) {
@@ -512,35 +566,18 @@ mod imp {
                 if let (true, Some(buf)) = (cards.len() >= 2, buf) {
                     let t0 = std::time::Instant::now();
                     let mut changed = false;
-                    // 글자로 못 읽은 카드: (카드 순번, 가운데 x, 읽은 글자)
-                    let mut unread: Vec<(usize, f32, String)> = Vec::new();
-                    for (k, &(a, b, y0, y1)) in cards.iter().enumerate() {
-                        let cx = (wx - rc.left) as f32 + (a + b) as f32 / 2.0;
-                        if slots.near(cx, (b - a) as f32 / 2.0) {
-                            continue;
+                    let cx_of = |k: usize| (wx - rc.left) as f32 + (cards[k].0 + cards[k].1) as f32 / 2.0;
+                    let todo: Vec<usize> = (0..cards.len()).filter(|&k| !slots.near(cx_of(k), (cards[k].1 - cards[k].0) as f32 / 2.0)).collect();
+                    for r in read_cards(eng, &v.matcher, &v.icons, &buf, ww as usize, wh as usize, &cards, &todo, &slots.ids()) {
+                        let cx = cx_of(r.idx);
+                        v.trace(format!("카드 자리 x={cx:.0} 폭={} {} {:?} | {}", cards[r.idx].1 - cards[r.idx].0, r.how, r.id, r.text.replace('\n', " / ").chars().take(100).collect::<String>()));
+                        if let Some((ids, sc, gap)) = &r.icon {
+                            v.trace(format!("그림 x={cx:.0} {ids:?} 점수 {sc:.2} 차이 {gap:.2}"));
                         }
-                        let (got, how_found, text) = read_card(eng, wx + a as i32, wy + y0 as i32, (b - a) as i32, (y1 - y0) as i32, &v.matcher, &slots.ids());
-                        v.trace(format!("카드 자리 x={cx:.0} 폭={} {how_found} {:?} | {}", b - a, got, text.replace('\n', " / ").chars().take(100).collect::<String>()));
-                        match got {
-                            Some(id) => {
-                                slots.update(&[(id, cx, 0.0)], gw);
-                                changed = true;
-                            }
-                            None => unread.push((k, cx, text)),
-                        }
-                    }
-                    // 그래도 못 읽은 카드는 아이콘 그림으로 (v3.66). 이미 읽은 칸과 같은 등급만, 그림이 같은 증강은 글자로 가른다
-                    if !unread.is_empty() {
-                        let idx: Vec<usize> = unread.iter().map(|u| u.0).collect();
-                        let found = v.icons.identify(&buf, ww as usize, wh as usize, &cards, &idx, &slots.ids());
-                        for ((_, cx, text), r) in unread.iter().zip(found) {
-                            let pick = r.as_ref().and_then(|(ids, _, _)| v.matcher.pick_by_text(text, ids)).filter(|id| !slots.contains(*id));
-                            v.trace(format!("그림 x={cx:.0} {:?} → {:?}", r.as_ref().map(|(ids, sc, gap)| (ids.clone(), (sc * 100.0).round() / 100.0, (gap * 100.0).round() / 100.0)), pick));
-                            if let Some(id) = pick {
-                                slots.update(&[(id, *cx, 0.0)], gw);
-                                changed = true;
-                                v.diag(|d| d.by_icon += 1);
-                            }
+                        if r.how == "icon" { v.diag(|d| d.by_icon += 1); }
+                        if let Some(id) = r.id.filter(|id| !slots.contains(*id)) {
+                            slots.update(&[(id, cx, 0.0)], gw);
+                            changed = true;
                         }
                     }
                     v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
@@ -833,6 +870,88 @@ mod imp {
         };
         let (lines, text) = recognize(&eng, &bgra, w, h).map_err(|e| format!("문자 인식 실패: {e}"))?;
         Ok((v.matcher.find(&lines, w as f32), text))
+    }
+
+    /// QA 끝단 시험 (v3.67, Windows 전용): 가상 게임 화면(apps/desktop/qa/make_frames.py)과 사용자 게임 화면 사진을
+    /// 실제 Windows 한국어 문자 인식 → 이름 대조 → 카드 자리 찾기 → 카드별 글자 → 그림까지 앱과 같은 함수로 거쳐
+    /// 세 장을 모두 찾는지 본다. CI(build-desktop)가 배포 전에 돌리고, 하나라도 놓치면 배포를 멈춘다.
+    /// 실행: QA_FRAMES=<폴더> cargo test --lib qa_e2e -- --nocapture  (한국어 문자 인식이 설치된 Windows)
+    #[cfg(test)]
+    mod qa_e2e {
+        use super::*;
+
+        fn load(path: &std::path::Path) -> (Vec<u8>, usize, usize) {
+            let mut r = png::Decoder::new(std::fs::File::open(path).unwrap()).read_info().unwrap();
+            let mut buf = vec![0; r.output_buffer_size()];
+            let info = r.next_frame(&mut buf).unwrap();
+            let (w, h, ch) = (info.width as usize, info.height as usize, info.color_type.samples());
+            let mut out = vec![255u8; w * h * 4];
+            for k in 0..w * h {
+                out[k * 4] = buf[k * ch + 2];
+                out[k * 4 + 1] = buf[k * ch + 1];
+                out[k * 4 + 2] = buf[k * ch];
+            }
+            (out, w, h)
+        }
+
+        /// 한 화면에서 앱이 찾는 증강들: 좁은 띠 문자 인식(이름) → 넓게 카드 자리 → 카드마다 글자·그림
+        fn analyze(eng: &OcrEngine, m: &Matcher, icons: &crate::icons::IconBank, img: &[u8], w: usize, h: usize, whole: bool) -> (Vec<u32>, Vec<String>) {
+            let mut log = Vec::new();
+            let (bx, by, bw, bh) = if whole { (0, 0, w as i32, h as i32) } else { crate::matcher::region_of(w as i32, h as i32, false) };
+            let band = crop(img, w, bx as usize, by as usize, bw as usize, bh as usize);
+            let mut ids: Vec<u32> = match recognize(eng, &band, bw, bh) {
+                Ok((lines, _)) => m.find_at(&lines, bw as f32).into_iter().map(|x| x.0).collect(),
+                Err(e) => { log.push(format!("띠 인식 오류 {e}")); vec![] }
+            };
+            log.push(format!("띠 {ids:?}"));
+            let (wx, wy, ww, wh) = if whole { (0, 0, w as i32, h as i32) } else { crate::matcher::region_of(w as i32, h as i32, true) };
+            let wide = crop(img, w, wx as usize, wy as usize, ww as usize, wh as usize);
+            let cards = crate::matcher::find_cards(&wide, ww as usize, wh as usize);
+            log.push(format!("카드 {}장", cards.len()));
+            if ids.len() < 3 && cards.len() >= 2 {
+                let todo: Vec<usize> = (0..cards.len()).collect();
+                for r in read_cards(eng, m, icons, &wide, ww as usize, wh as usize, &cards, &todo, &ids) {
+                    log.push(format!("카드{} {} {:?} | {}", r.idx + 1, r.how, r.id, r.text.replace('\n', " / ").chars().take(80).collect::<String>()));
+                    if let Some(id) = r.id.filter(|id| !ids.contains(id)) { ids.push(id); }
+                }
+            }
+            (ids, log)
+        }
+
+        #[test]
+        fn 끝단_세_장_모두() {
+            let _ = unsafe { RoInitialize(RO_INIT_MULTITHREADED) };
+            let eng = engine().expect("이 Windows 에 한국어 문자 인식이 없습니다 (Language.OCR~~~ko-KR 설치 필요)");
+            let m = Matcher::from_json(AUGMENTS_JSON);
+            let icons = crate::icons::IconBank::new(AUG_ICONS, AUGMENTS_JSON);
+            let mut fails = Vec::new();
+            let mut n = 0;
+            // 사용자 게임 화면 사진 (화면 일부라 넓게 읽기만)
+            let fx = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../qa/fixtures");
+            for (f, want) in [("photo-ultrawide-1.png", [2087u32, 1018, 1048]), ("photo-ultrawide-2.png", [1349, 1004, 1048])] {
+                let (img, w, h) = load(&fx.join(f));
+                let (got, log) = analyze(&eng, &m, &icons, &img, w, h, true);
+                n += 1;
+                let miss: Vec<u32> = want.iter().filter(|id| !got.contains(id)).copied().collect();
+                println!("{} {f} {got:?} {}", if miss.is_empty() { "통과" } else { "실패" }, log.join(" · "));
+                if !miss.is_empty() { fails.push(format!("{f}: 못 찾음 {miss:?} (찾음 {got:?}) {}", log.join(" · "))); }
+            }
+            let dir = std::path::PathBuf::from(std::env::var("QA_FRAMES").expect("QA_FRAMES 가 없습니다"));
+            let cases: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(dir.join("cases.json")).unwrap()).unwrap();
+            for c in cases.as_array().unwrap() {
+                let f = c["file"].as_str().unwrap();
+                let (img, w, h) = load(&dir.join(f));
+                let (got, log) = analyze(&eng, &m, &icons, &img, w, h, false);
+                n += 1;
+                let want: Vec<u32> = c["cards"].as_array().unwrap().iter().map(|k| k["id"].as_u64().unwrap() as u32).collect();
+                let miss: Vec<u32> = want.iter().filter(|id| !got.contains(id)).copied().collect();
+                let wrong: Vec<u32> = got.iter().filter(|id| !want.contains(id)).copied().collect();
+                println!("{} {f} {}x{} {:?} 찾음 {got:?} {}", if miss.is_empty() && wrong.is_empty() { "통과" } else { "실패" }, w, h, want, log.join(" · "));
+                if !miss.is_empty() || !wrong.is_empty() { fails.push(format!("{f} {w}x{h}: 못 찾음 {miss:?} 잘못 {wrong:?} {}", log.join(" · "))); }
+            }
+            println!("화면 {n}장 중 실패 {}", fails.len());
+            assert!(fails.is_empty(), "\n{}\n", fails.join("\n"));
+        }
     }
 }
 

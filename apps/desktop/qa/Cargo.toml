@@ -1,0 +1,18 @@
+# 증강 카드 인식 QA (v3.67). 앱의 순수 로직(matcher.rs·icons.rs)을 그대로 끌어와 리눅스에서 시험한다.
+# 실행: python3 make_frames.py target/frames && QA_FRAMES=target/frames cargo test --release
+[package]
+name = "prism-vision-qa"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+png = "0.17"
+
+[profile.test]
+opt-level = 3
+
+[profile.release]
+opt-level = 3

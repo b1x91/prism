@@ -20,6 +20,7 @@ const P: Record<string, ReactElement> = {
   info: <><circle cx="12" cy="12" r="9" /><path d="M12 11v5.5M12 7.6v.4" /></>,
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
   back: <path d="M19 12H5M11 6l-6 6 6 6" />,
+  arrowDown: <path d="M12 5v14M6 13l6 6 6-6" />,
   shuffle: <><path d="M16 4h4v4M4 20 20 4" /><path d="M20 16v4h-4M14 14l6 6" /><path d="M4 4l5 5" /></>,
   game: <><rect x="2.5" y="7" width="19" height="11" rx="4" /><path d="M7 11v3M5.5 12.5h3M15.5 12h.01M18 13.5h.01" /></>,
   trophy: <><path d="M8 4h8v5a4 4 0 0 1-8 0z" /><path d="M16 6h3a3 3 0 0 1-3 4M8 6H5a3 3 0 0 0 3 4" /><path d="M12 13v4M8.5 20h7M10 17h4" /></>,
