@@ -95,6 +95,10 @@ jobs:
           code=$(curl -sS -o /tmp/cmds.json -w '%{http_code}' -X PUT "https://discord.com/api/v10/applications/$APP/guilds/$GUILD/commands" \
             -H "Authorization: Bot $DISCORD_BOT_TOKEN" -H "Content-Type: application/json" --data @server/discord-commands.json)
           if [ "$code" != "200" ]; then echo "::warning::슬래시 명령 등록 실패 ($code): $(head -c 300 /tmp/cmds.json)"; else echo "슬래시 명령 등록 완료"; fi
+          # 봇 프로필의 '내 소개' (= 디스코드 앱 설명): 앱 받기 링크·설명 (server/discord-profile.json)
+          code=$(curl -sS -o /tmp/prof.json -w '%{http_code}' -X PATCH "https://discord.com/api/v10/applications/@me" \
+            -H "Authorization: Bot $DISCORD_BOT_TOKEN" -H "Content-Type: application/json" --data @server/discord-profile.json)
+          if [ "$code" != "200" ]; then echo "::warning::봇 프로필 소개 바꾸기 실패 ($code): $(head -c 300 /tmp/prof.json)"; else echo "봇 프로필 소개 반영"; fi
       - if: steps.cfg.outputs.ok == 'true'
         name: 서버 주소 알리기
         run: |
