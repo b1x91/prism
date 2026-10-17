@@ -148,6 +148,11 @@ impl IconBank {
         Some((right, wrong))
     }
 
+    /// 그 등급의 모든 증강 (스킬 증강 포함)
+    pub fn ids_of_rarity(&self, r: u8) -> Vec<u32> {
+        self.all_rarity.iter().filter(|x| x.1 == r).map(|x| x.0).collect()
+    }
+
     pub fn rarity_of(&self, id: u32) -> u8 {
         self.all_rarity.iter().find(|r| r.0 == id).map_or(0, |r| r.1)
     }
@@ -253,7 +258,9 @@ impl IconBank {
     /// 기준을 정해서 (QA 시험이 기준 없이 점수를 보려고 0 으로 부른다)
     #[allow(clippy::too_many_arguments)]
     pub fn identify_with(&self, bgra: &[u8], w: usize, h: usize, cards: &[(usize, usize, usize, usize)], unknown: &[usize], known: &[u32], min_score: f32, min_gap: f32) -> Vec<Option<(Vec<u32>, f32, f32)>> {
-        let base: Vec<usize> = (0..self.ids.len()).filter(|k| !known.contains(&self.ids[*k])).collect();
+        // 이미 읽은 증강도 후보에 둔다: 그 카드가 사실 이미 읽은 카드라면 빼고 찾을 때 엉뚱한 2등이 답이 된다 (Windows 끝단 QA).
+        // 결과 묶음에 이미 읽은 증강이 들어 있으면 부르는 쪽이 글자로 분명할 때만 고른다
+        let base: Vec<usize> = (0..self.ids.len()).collect();
         let all: Vec<Vec<f32>> = unknown.iter().map(|&c| self.scores(bgra, w, h, cards[c], &base)).collect();
         // 등급: 이미 읽은 칸이 있으면 그 등급만. 모르면 등급을 가리지 않는다 — 같은 그림이 여러 등급에 쓰여
         // 그림으로 등급을 짐작하면 틀린 등급으로 좁혀 버린다 (QA 에서 찾음). 같은 그림 증강은 글자로 가른다
@@ -329,8 +336,8 @@ mod tests {
         assert!(r[0].as_ref().unwrap().0.contains(&1048));
         assert!(r[1].as_ref().unwrap().0.contains(&1018));
         assert!(r[2].as_ref().unwrap().0.contains(&1349));
-        // 정답을 후보에서 빼면 다른 것을 고르지 않는다
+        // 그 카드가 이미 읽은 증강이면 다른 증강을 답하지 않는다 (묶음이 이미 읽은 것뿐 → 부르는 쪽이 고르지 않는다)
         let r = b.identify(&img, w, h, &cards, &[0], &[1048]);
-        assert!(r[0].is_none(), "{:?}", r);
+        assert!(r[0].as_ref().map_or(true, |g| g.0.iter().all(|i| *i == 1048)), "{:?}", r);
     }
 }

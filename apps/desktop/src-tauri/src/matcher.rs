@@ -166,6 +166,30 @@ impl Matcher {
         (best.0 > second && best.0 >= 2).then_some(best.1)
     }
 
+    /// 글자로 분명할 때만: 읽은 두 글자 묶음의 25% 이상이 그 증강 이름·설명에 들어 있고 2등보다 많을 때
+    pub fn pick_by_text_strict(&self, text: &str, ids: &[u32]) -> Option<u32> {
+        let q = bigrams(text);
+        if q.len() < 8 {
+            return None;
+        }
+        let mut sc: Vec<(usize, u32)> = ids.iter().filter_map(|id| self.descs.iter().find(|d| d.0 == *id)).map(|(id, d)| (q.iter().filter(|b| d.contains(b)).count(), *id)).collect();
+        sc.sort_by(|a, b| b.0.cmp(&a.0));
+        let (best, second) = (sc.first()?, sc.get(1).map_or(0, |s| s.0));
+        (best.0 * 100 >= q.len() * 25 && best.0 > second).then_some(best.1)
+    }
+
+    /// 후보를 좁혀서(같은 등급, 이미 읽은 것 제외) 설명으로 찾기 — 후보가 적으니 기준을 낮춘다 (1등 0.3 이상, 2등과 0.1 차이)
+    pub fn match_desc_among(&self, text: &str, ids: &[u32]) -> Option<u32> {
+        let q = bigrams(text);
+        if q.len() < 8 {
+            return None;
+        }
+        let mut sc: Vec<(f32, u32)> = self.descs.iter().filter(|(id, _)| ids.contains(id)).map(|(id, d)| (q.iter().filter(|b| d.contains(b)).count() as f32 / q.len() as f32, *id)).collect();
+        sc.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));
+        let (best, second) = (sc.first()?, sc.get(1).map_or(0.0, |s| s.0));
+        (best.0 >= 0.3 && best.0 - second >= 0.1).then_some(best.1)
+    }
+
     /// 한 줄(단어 목록)에서 이름 후보 찾기
     fn line_hits(&self, words: &[Word]) -> Vec<Hit> {
         // 줄 글자와 각 글자의 위치(그 글자가 속한 단어의 위치)

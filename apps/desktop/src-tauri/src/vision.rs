@@ -357,7 +357,7 @@ mod imp {
     /// 결과: (찾은 증강, 어떻게 찾았나, 읽은 글자)
     fn read_card(engine: &OcrEngine, x: i32, y: i32, w: i32, h: i32, m: &Matcher, except: &[u32]) -> (Option<u32>, &'static str, String) {
         let Some(buf) = grab(x, y, w, h) else { return (None, "capture", String::new()) };
-        read_card_buf(engine, &buf, w, h, m, except)
+        read_card_buf(engine, &buf, w, h, m, except, false)
     }
 
     /// 그림 일부 잘라 내기 (BGRA)
@@ -390,16 +390,21 @@ mod imp {
             let (a, b, y0, y1) = cards[k];
             let (cw, ch) = (b - a, (y1 - y0).min(wh - y0));
             let c = crop(buf, ww, a, y0, cw, ch);
-            let (id, how, text) = read_card_buf(engine, &c, cw as i32, ch as i32, m, &have);
+            let (id, how, text) = read_card_buf(engine, &c, cw as i32, ch as i32, m, &have, true);
             if let Some(id) = id { have.push(id); }
             out.push(CardRead { idx: k, id, how, text, icon: None });
         }
-        let unread: Vec<usize> = out.iter().filter(|r| r.id.is_none()).map(|r| r.idx).collect();
+        // 제목으로 '이미 있는 카드'라고 확인된 것(dup)은 그림으로 다시 찾지 않는다
+        let unread: Vec<usize> = out.iter().filter(|r| r.id.is_none() && r.how != "dup").map(|r| r.idx).collect();
         if !unread.is_empty() {
             let found = icons.identify(buf, ww, wh, cards, &unread, &have);
             for (k, f) in unread.iter().zip(found) {
                 let r = out.iter_mut().find(|r| r.idx == *k).unwrap();
-                let pick = f.as_ref().and_then(|(ids, _, _)| m.pick_by_text(&r.text, ids)).filter(|id| !have.contains(id));
+                // 그림 묶음에 이미 있는 증강이 들어 있으면 같은 카드일 수 있다 → 나머지 중에서 글자로 분명할 때만
+                let pick = f.as_ref().and_then(|(ids, _, _)| {
+                    let rest: Vec<u32> = ids.iter().filter(|id| !have.contains(id)).copied().collect();
+                    if rest.len() < ids.len() { m.pick_by_text_strict(&r.text, &rest) } else { m.pick_by_text(&r.text, &rest) }
+                });
                 if let Some(id) = pick {
                     have.push(id);
                     r.id = Some(id);
@@ -408,28 +413,44 @@ mod imp {
                 r.icon = f;
             }
         }
+        // 마지막: 그래도 못 읽은 카드는 같은 등급(이미 읽은 칸으로 안다)의 남은 증강 중에서 설명으로 — 후보가 적어 기준을 낮춘다.
+        // 이름이 두 글자(흡수 등)라 제목으로 못 잡고, 스킬 증강이라 그림도 없는 카드 (Windows 끝단 QA)
+        if let Some(r0) = have.iter().map(|id| icons.rarity_of(*id)).find(|r| *r > 0) {
+            for r in out.iter_mut().filter(|r| r.id.is_none() && r.how != "dup") {
+                let cands: Vec<u32> = icons.ids_of_rarity(r0).into_iter().filter(|id| !have.contains(id)).collect();
+                if let Some(id) = m.match_desc_among(&r.text, &cands) {
+                    have.push(id);
+                    r.id = Some(id);
+                    r.how = "desc-rarity";
+                }
+            }
+        }
         out
     }
 
     /// 카드 한 장(잘라 낸 그림)을 글자로 읽기
-    fn read_card_buf(engine: &OcrEngine, buf: &[u8], w: i32, h: i32, m: &Matcher, except: &[u32]) -> (Option<u32>, &'static str, String) {
-        // 이미 다른 칸에 있는 증강은 빼고 고른다 — 잘라 읽은 칸에 옆 카드 글자가 걸쳐도 그쪽으로 잡지 않게
-        let title = |lines: &[Vec<Word>], iw: i32| m.find_at(lines, iw as f32).into_iter().filter(|h| !except.contains(&h.0)).min_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal)).map(|h| h.0);
+    /// exact = 카드 자리를 그림에서 정확히 찾은 경우: 제목이 이미 다른 칸에 있는 증강이면 '같은 카드'로 보고 멈춘다
+    /// (그 증강을 빼고 억지로 다른 답을 찾지 않는다 — Windows 끝단 QA 에서 제목을 맞게 읽고도 엉뚱한 증강을 띄우던 것, v3.67).
+    /// 짐작한 자리(exact=false)는 옆 카드 글자가 걸칠 수 있어 이미 있는 증강을 빼고 고른다 (v3.62)
+    fn read_card_buf(engine: &OcrEngine, buf: &[u8], w: i32, h: i32, m: &Matcher, except: &[u32], exact: bool) -> (Option<u32>, &'static str, String) {
+        // 맨 위(제목)에 있는 이름. exact 면 이미 있는 증강도 후보에 둔다
+        let title = |lines: &[Vec<Word>], iw: i32| m.find_at(lines, iw as f32).into_iter().filter(|h| exact || !except.contains(&h.0)).min_by(|a, b| a.2.partial_cmp(&b.2).unwrap_or(std::cmp::Ordering::Equal)).map(|h| h.0);
+        let judge = |id: u32, how: &'static str, t: String| if except.contains(&id) { (None, "dup", t) } else { (Some(id), how, t) };
         // 1) 원래 크기 (제목은 큰 글자라 이대로가 잘 읽힌다)
         let (l1, t1) = recognize(engine, buf, w, h).unwrap_or_default();
         if let Some(id) = title(&l1, w) {
-            return (Some(id), "title", t1);
+            return judge(id, "title", t1);
         }
         // 2) 두 배로 키워서 (작은 설명 글자까지)
         let max = OcrEngine::MaxImageDimension().unwrap_or(0) as i32;
         let (l2, t2) = if w * 2 <= max && h * 2 <= max { recognize(engine, &upscale2(buf, w, h), w * 2, h * 2).unwrap_or_default() } else { (vec![], String::new()) };
         if let Some(id) = title(&l2, w * 2) {
-            return (Some(id), "title-2x", t2);
+            return judge(id, "title-2x", t2);
         }
-        // 3) 설명 문장으로
+        // 3) 설명 문장으로 (정확한 자리면 이미 있는 증강도 후보에 둬서, 같은 카드면 멈춘다)
         let all = format!("{t1}\n{t2}");
-        match m.match_desc_except(&all, except) {
-            Some(id) => (Some(id), "desc", all),
+        match m.match_desc_except(&all, if exact { &[] } else { except }) {
+            Some(id) => judge(id, "desc", all),
             None => (None, "none", all),
         }
     }
@@ -899,17 +920,20 @@ mod imp {
             let mut log = Vec::new();
             let (bx, by, bw, bh) = if whole { (0, 0, w as i32, h as i32) } else { crate::matcher::region_of(w as i32, h as i32, false) };
             let band = crop(img, w, bx as usize, by as usize, bw as usize, bh as usize);
-            let mut ids: Vec<u32> = match recognize(eng, &band, bw, bh) {
-                Ok((lines, _)) => m.find_at(&lines, bw as f32).into_iter().map(|x| x.0).collect(),
+            // 띠에서 읽은 이름과 그 위치(화면 x)
+            let hits: Vec<(u32, f32)> = match recognize(eng, &band, bw, bh) {
+                Ok((lines, _)) => m.find_at(&lines, bw as f32).into_iter().map(|x| (x.0, bx as f32 + x.1)).collect(),
                 Err(e) => { log.push(format!("띠 인식 오류 {e}")); vec![] }
             };
+            let mut ids: Vec<u32> = hits.iter().map(|x| x.0).collect();
             log.push(format!("띠 {ids:?}"));
             let (wx, wy, ww, wh) = if whole { (0, 0, w as i32, h as i32) } else { crate::matcher::region_of(w as i32, h as i32, true) };
             let wide = crop(img, w, wx as usize, wy as usize, ww as usize, wh as usize);
             let cards = crate::matcher::find_cards(&wide, ww as usize, wh as usize);
             log.push(format!("카드 {}장", cards.len()));
             if ids.len() < 3 && cards.len() >= 2 {
-                let todo: Vec<usize> = (0..cards.len()).collect();
+                // 앱처럼: 이미 이름을 읽은 자리의 카드는 다시 읽지 않는다 (slots.near)
+                let todo: Vec<usize> = (0..cards.len()).filter(|&k| { let (a, b) = (cards[k].0 as f32, cards[k].1 as f32); let cx = wx as f32 + (a + b) / 2.0; !hits.iter().any(|h| (h.1 - cx).abs() < (b - a) / 2.0) }).collect();
                 for r in read_cards(eng, m, icons, &wide, ww as usize, wh as usize, &cards, &todo, &ids) {
                     log.push(format!("카드{} {} {:?} | {}", r.idx + 1, r.how, r.id, r.text.replace('\n', " / ").chars().take(80).collect::<String>()));
                     if let Some(id) = r.id.filter(|id| !ids.contains(id)) { ids.push(id); }

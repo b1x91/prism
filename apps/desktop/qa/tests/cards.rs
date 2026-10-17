@@ -44,9 +44,11 @@ fn check(b: &IconBank, label: &str, buf: &[u8], w: usize, h: usize, off: (i32, i
             }
         }
     }
-    let ok = |got: &Option<(Vec<u32>, f32, f32)>, id: u32, ability: bool| -> Result<(), String> {
+    let ok = |got: &Option<(Vec<u32>, f32, f32)>, id: u32, ability: bool, known: &[u32]| -> Result<(), String> {
         match (got, ability) {
             (None, true) => Ok(()),
+            // 이미 읽은 증강만 든 묶음이면 앱은 고르지 않는다 (read_cards: 남는 후보가 없다)
+            (Some((ids, _, _)), true) if ids.iter().all(|i| known.contains(i)) => Ok(()),
             (Some((ids, sc, _)), true) => Err(format!("스킬 증강인데 그림으로 {ids:?}({sc:.2})라고 답함")),
             (Some((ids, _, _)), false) if ids.contains(&id) => Ok(()),
             (Some((ids, sc, gap)), false) => Err(format!("틀림 {ids:?} 점수 {sc:.2} 차이 {gap:.2}")),
@@ -57,7 +59,7 @@ fn check(b: &IconBank, label: &str, buf: &[u8], w: usize, h: usize, off: (i32, i
     let all = b.identify(buf, w, h, &cards, &(0..cards.len()).collect::<Vec<_>>(), &[]);
     let raw = b.identify_with(buf, w, h, &cards, &(0..cards.len()).collect::<Vec<_>>(), &[], -1.0, -1.0);
     for (k, ((id, ability, _), got)) in want.iter().zip(&all).enumerate() {
-        if let Err(e) = ok(got, *id, *ability) {
+        if let Err(e) = ok(got, *id, *ability, &[]) {
             let r = raw[k].as_ref().map(|(ids, sc, gap)| format!("{ids:?} {sc:.2}/{gap:.2}")).unwrap_or_default();
             fails.push(format!("{label}: {}번째({id}) 그림만으로 — {e} (기준 없이: {r}, 카드 {:?})", k + 1, cards[k]));
         }
@@ -66,7 +68,7 @@ fn check(b: &IconBank, label: &str, buf: &[u8], w: usize, h: usize, off: (i32, i
     for k in 0..want.len() {
         let known: Vec<u32> = want.iter().enumerate().filter(|(j, _)| *j != k).map(|(_, w)| w.0).collect();
         let got = b.identify(buf, w, h, &cards, &[k], &known);
-        if let Err(e) = ok(&got[0], want[k].0, want[k].1) {
+        if let Err(e) = ok(&got[0], want[k].0, want[k].1, &known) {
             fails.push(format!("{label}: 두 장을 안 뒤 {}번째({}) — {e}", k + 1, want[k].0));
         }
     }
