@@ -38,7 +38,7 @@ export type Mastery = {
 
 const TIER_ORDER: FitTier[] = ['S', 'A', 'B', 'C', 'D'];
 const champIds = () => Object.keys(CHAMPIONS).map(Number);
-const tierFor = (champ: number, aug: number): FitTier | null => {
+export const tierFor = (champ: number, aug: number): FitTier | null => {
   const c = CHAMPIONS[champ], a = AUGMENT[aug];
   return c && a ? tierOf(fitPoints(fitOf(c, a))) : null;
 };

@@ -10,6 +10,8 @@ import skinData from '../../packages/core/data/skins.json';
 import { stateOf } from './missions.js';
 import { byScore, rankScore, seasonOf } from '../../packages/core/src/ranking.js';
 import { assertRanking } from './roles.js';
+import { RARITY_KO, tonightOf, type AugStat } from '../../packages/core/src/tonight.js';
+import { challengeRole, parseFeat, type ChallengeRole } from '../../packages/core/src/challenges.js';
 import { json, type Env, type Member } from './util.js';
 
 const API = 'https://discord.com/api/v10';
@@ -203,34 +205,101 @@ async function myMissions(env: Env, me: Member) {
 
 // ───────── 채널에 올리는 글 ─────────
 
-/** 매일 밤 공지 (크론). 하루 한 번만 */
+/** 매일 밤 공지 (크론, 21:00 KST). 하루 한 번만 (v3.69)
+ *  A·B 늘: 오늘의 테마(날마다 무작위) + 증강 3개와 잘 맞는 챔프 (core/tonight.ts)
+ *  C 기록이 있을 때만: 어제의 명장면 · 어제 고른 오늘의 증강 결과 · 지난 24시간 · 이번 주 가장 많이 함께한 */
 export async function dailyPost(env: Env, now = Date.now()) {
   if (!botReady(env)) return;
   const day = new Date(now + KST).toISOString().slice(0, 10);
   // 올리는 데 성공했을 때만 '오늘 올림'으로 표시한다 (실패하면 다음 크론이 아니라도 수동 재시도 가능)
   if (await env.DB.prepare('SELECT 1 FROM ext_cache WHERE k = ?').bind(`bot-daily-${day}`).first()) return;
+  const payload = await dailyPayload(env, now);
+  const ok = await sendToChannel(env, env.BOT_CHANNEL_ID!, payload.message);
+  if (!ok) return;
+  await once(env, `bot-daily-${day}`);
+  const hist = [{ day, theme: payload.tonight.theme, augs: payload.tonight.picks.map((p) => p.aug) }, ...payload.hist.filter((h) => h.day !== day)].slice(0, 14);
+  await env.DB.prepare('INSERT OR REPLACE INTO ext_cache (k, v, at) VALUES (?, ?, ?)').bind('bot-daily-hist', JSON.stringify(hist), now).run();
+}
+
+type DailyHist = { day: string; theme: string; augs: number[] };
+
+/** 공지 내용 만들기 (올리지 않는다 — 미리 보기에도 쓴다) */
+export async function dailyPayload(env: Env, now = Date.now()) {
+  const day = new Date(now + KST).toISOString().slice(0, 10);
   const since = now - 24 * 3600_000;
-  const t = await env.DB.prepare(`SELECT COUNT(*) AS games, SUM(CASE WHEN crew_count >= 2 THEN 1 ELSE 0 END) AS crew FROM matches WHERE played_at >= ?`).bind(since).first<{ games: number; crew: number | null }>();
-  const who = await env.DB.prepare('SELECT COUNT(DISTINCT member_id) AS n FROM participants WHERE played_at >= ?').bind(since).first<{ n: number }>();
-  // 이번 주(월요일 0시 KST부터) 가장 많이 한 세 사람
   const d = new Date(now + KST); const ws = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() - ((d.getUTCDay() + 6) % 7)) - KST;
-  const top = await env.DB.prepare(`SELECT m.nick AS nick, COUNT(*) AS n FROM participants p JOIN members m ON m.id = p.member_id WHERE p.played_at >= ?
-    GROUP BY p.member_id ORDER BY n DESC LIMIT 3`).bind(ws).all<{ nick: string; n: number }>();
-  const games = t?.games ?? 0;
-  const medal = ['🥇', '🥈', '🥉'];
-  const ok = await sendToChannel(env, env.BOT_CHANNEL_ID!, {
-    flags: V2,
-    components: card([
-      text('## 💎 오늘 밤 증바람?'),
-      text('-# 음성 채널에서 만나요 · 이번 주 미션도 잊지 마세요'),
-      line(),
-      text(games ? `**지난 24시간**  ${games}판 · 모임 판 ${t?.crew ?? 0} · ${who?.n ?? 0}명` : '**지난 24시간**  조용했어요. 오늘 밤 첫 판을 열어 주세요!'),
-      ...(top.results.length ? [text(`**이번 주 가장 많이 함께한**\n${top.results.map((x, i) => `${medal[i]} ${x.nick.split('#')[0]} ${x.n}판`).join('   ')}`)] : []),
-      line(true),
-      linkButtons([['이번 주 미션', `${webUrl(env)}/missions`], ['모임 기록', `${webUrl(env)}/crew`]]),
-    ]),
-  });
-  if (ok) await once(env, `bot-daily-${day}`);
+  const histRow = await env.DB.prepare("SELECT v FROM ext_cache WHERE k = 'bot-daily-hist'").first<{ v: string }>();
+  let hist: DailyHist[] = [];
+  try { hist = histRow ? (JSON.parse(histRow.v) as DailyHist[]).filter((h) => h.day < day) : []; } catch { hist = []; }
+  const [statR, weekR, roleR, t, who, top, feats, yPicks] = await env.DB.batch([
+    env.DB.prepare('SELECT augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments GROUP BY augment_id'),
+    env.DB.prepare(`SELECT a.augment_id AS id, COUNT(*) AS n, SUM(a.win) AS w FROM participant_augments a
+      JOIN participants p ON p.game_id = a.game_id AND p.member_id = a.member_id WHERE p.played_at >= ? GROUP BY a.augment_id`).bind(ws),
+    env.DB.prepare('SELECT champion_id AS c, COUNT(*) AS n FROM participants WHERE played_at >= ? GROUP BY champion_id').bind(now - 28 * 86400_000),
+    env.DB.prepare('SELECT COUNT(*) AS games, SUM(CASE WHEN crew_count >= 2 THEN 1 ELSE 0 END) AS crew FROM matches WHERE played_at >= ?').bind(since),
+    env.DB.prepare('SELECT COUNT(DISTINCT member_id) AS n FROM participants WHERE played_at >= ?').bind(since),
+    // 이번 주(월요일 0시 KST부터) 모임 판(회원 2명 이상)을 가장 많이 한 세 사람
+    env.DB.prepare(`SELECT m.nick AS nick, COUNT(*) AS n FROM participants p JOIN members m ON m.id = p.member_id JOIN matches g ON g.game_id = p.game_id
+      WHERE p.played_at >= ? AND g.crew_count >= 2 GROUP BY p.member_id ORDER BY n DESC LIMIT 3`).bind(ws),
+    env.DB.prepare(`SELECT m.nick AS nick, p.champion_id AS c, p.kills AS k, p.feats AS f FROM participants p JOIN members m ON m.id = p.member_id
+      WHERE p.played_at >= ? AND p.feats IS NOT NULL`).bind(since),
+    env.DB.prepare(`SELECT a.augment_id AS id, a.win AS w FROM participant_augments a JOIN participants p ON p.game_id = a.game_id AND p.member_id = a.member_id
+      WHERE p.played_at >= ?`).bind(since),
+  ]);
+  const rows = <T,>(r: D1Result) => r.results as T[];
+  const stats: Record<number, AugStat> = Object.fromEntries(rows<{ id: number; n: number; w: number }>(statR).map((x) => [x.id, { n: x.n, w: x.w }]));
+  const week: Record<number, AugStat> = Object.fromEntries(rows<{ id: number; n: number; w: number }>(weekR).map((x) => [x.id, { n: x.n, w: x.w }]));
+  const roleGames: Partial<Record<ChallengeRole, number>> = {};
+  for (const x of rows<{ c: number; n: number }>(roleR)) { const r = challengeRole(x.c); if (r) roleGames[r] = (roleGames[r] ?? 0) + x.n; }
+  const tonight = tonightOf({ day, stats, week, roleGames, recentThemes: hist.map((h) => h.theme), recentAugs: hist.flatMap((h) => h.augs) });
+
+  const web = webUrl(env);
+  const champName = (c: number) => CHAMPIONS[c]?.name ?? '';
+  const parts: unknown[] = [
+    text('## 💎 오늘 밤 증바람?'),
+    text(`### ${tonight.name}\n-# ${tonight.sub}`),
+    line(),
+  ];
+  for (const p of tonight.picks) {
+    const a = AUGMENT[p.aug];
+    const lines = [
+      `**${a.name}**  ·  ${RARITY_KO[a.rarity]}\n${a.note}`,
+      `-# 잘 맞는 챔프 (${p.tier}티어)  ${p.champs.map(champName).join(' · ')}${p.stat ? `\n-# 모임에서 ${p.stat.n}번 골라 ${p.stat.w}승` : ''}`,
+    ];
+    const face = p.champs[0] ? cdragon(CHAMPIONS[p.champs[0]]?.tile) : '';
+    parts.push(face ? section(lines, thumb(face)) : text(lines.join('\n')));
+  }
+  if (tonight.together?.length) parts.push(text(`-# 셋 다 잘 맞는 챔프  ${tonight.together.map(champName).join(' · ')}`));
+  parts.push(text('-# 🎯 오늘의 도전 — 위 증강을 그 챔프로 골라 보세요. 증강 도감의 목표가 하나 채워져요'));
+
+  // C: 기록이 있을 때만
+  const extra: string[] = [];
+  const best = rows<{ nick: string; c: number; k: number; f: string }>(feats)
+    .map((x) => ({ ...x, multi: parseFeat(x.f)?.multi ?? 0 }))
+    .filter((x) => x.multi >= 4).sort((a, b) => b.multi - a.multi || b.k - a.k).slice(0, 3);
+  if (best.length) extra.push(`**어제의 명장면**\n${best.map((x) => `${x.nick.split('#')[0]} · ${champName(x.c)} ${x.multi >= 5 ? '펜타킬' : '쿼드라킬'}`).join('\n')}`);
+  const yday = hist[0];
+  if (yday) {
+    const ys = new Set(yday.augs);
+    const got = rows<{ id: number; w: number }>(yPicks).filter((x) => ys.has(x.id));
+    if (got.length) {
+      const by = new Map<number, { n: number; w: number }>();
+      for (const x of got) { const e = by.get(x.id) ?? { n: 0, w: 0 }; e.n++; e.w += x.w; by.set(x.id, e); }
+      extra.push(`**어제의 증강, 어땠나요**\n${[...by].map(([id, x]) => `${AUGMENT[id]?.name ?? id} ${x.n}번 골라 ${x.w}승`).join(' · ')}`);
+    }
+  }
+  const tt = (t.results[0] ?? {}) as { games?: number; crew?: number | null };
+  if (tt.games) extra.push(`**지난 24시간**  ${tt.games}판 · 모임 판 ${tt.crew ?? 0} · ${(who.results[0] as { n?: number })?.n ?? 0}명`);
+  const tops = rows<{ nick: string; n: number }>(top);
+  if (tops.length) extra.push(`**이번 주 가장 많이 함께한**\n${tops.map((x, i) => `${['🥇', '🥈', '🥉'][i]} ${x.nick.split('#')[0]} ${x.n}판`).join('   ')}`);
+  if (extra.length) parts.push(line(), ...extra.map(text));
+
+  parts.push(
+    line(true),
+    linkButtons(tonight.picks.map((p) => [AUGMENT[p.aug].name, `${web}/augments/${p.aug}`] as [string, string])),
+    linkButtons([['이번 주 미션', `${web}/missions`], ['모임 기록', `${web}/crew`]]),
+  );
+  return { tonight, hist, message: { flags: V2, components: card(parts) } };
 }
 
 /** 첫 판이 기록된 회원 축하 (회원마다 한 번) */

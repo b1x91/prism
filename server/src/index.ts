@@ -5,7 +5,7 @@
  * /public/:id 는 본인이 켠 공개 링크만 (모임 정보 없이 그 사람의 강점, v3.24).
  */
 import { saveAbout } from './about.js';
-import { dailyPost, interactions } from './bot.js';
+import { dailyPayload, dailyPost, interactions } from './bot.js';
 import { promoteSweep } from './promote.js';
 import { download, latest } from './release.js';
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
@@ -66,6 +66,12 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/me/about') return saveAbout(req, env, me);
   if (m === 'POST' && pathname === '/api/me/diag') return saveDiag(req, env, me);
   if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
+  // 매일 밤 공지 미리 보기 (올리지 않는다). ?day=YYYY-MM-DD 로 다른 날
+  if (m === 'GET' && pathname === '/api/admin/daily') {
+    if (me.tier !== 'admin') throw new HttpError(403, '관리자만 볼 수 있어요');
+    const q = new URL(req.url).searchParams.get('day');
+    return json(await dailyPayload(env, q ? Date.parse(`${q}T21:00:00+09:00`) : Date.now()));
+  }
   if (m === 'POST' && pathname === '/api/me/presence') { await markDaily(env, me.id); return setPresence(env, me, await req.json<Record<string, unknown>>().catch(() => ({}))); }
   if (m === 'GET' && pathname === '/api/crew/targets') return crewTargets(env);
   if (m === 'POST' && pathname === '/api/ingest') return ingest(req, env, me);
