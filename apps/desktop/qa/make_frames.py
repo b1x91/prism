@@ -17,7 +17,7 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'qa-frames'
 os.makedirs(OUT, exist_ok=True)
 
-A = [a for a in json.load(open(os.path.join(ROOT, 'packages/core/data/mayhem-augments.json')))['augments'] if not a.get('disabled')]
+A = [a for a in json.load(open(os.path.join(ROOT, 'packages/core/data/mayhem-augments.json'), encoding='utf-8'))['augments'] if not a.get('disabled')]
 BY_RAR = {r: [a for a in A if a['rarity'] == r] for r in ('silver', 'gold', 'prismatic')}
 CHAMPS = sorted(os.listdir(os.path.join(ROOT, 'packages/assets/public/img/champ')))
 
@@ -173,5 +173,5 @@ for k, ((W, H), (lname, lshift), force) in enumerate(plan):
     out.save(os.path.join(OUT, name), optimize=False, compress_level=1)
     cases.append({'file': name, 'w': W, 'h': H, 'layout': lname, 'scale': round(scale, 2), 'bright': round(bright, 2),
                   'cards': [{'id': a['id'], 'name': a['name'], 'ability': bool(a.get('ability')), 'rect': r} for a, r in zip(augs, rects)]})
-json.dump(cases, open(os.path.join(OUT, 'cases.json'), 'w'), ensure_ascii=False, indent=1)
+json.dump(cases, open(os.path.join(OUT, 'cases.json'), 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
 print(len(cases), 'frames →', OUT)

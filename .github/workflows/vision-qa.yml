@@ -17,6 +17,10 @@ on:
       - 'packages/core/data/**'
       - '.github/workflows/vision-qa.yml'
 
+# Windows 의 Python 도 파일을 UTF-8 로 읽게
+env:
+  PYTHONUTF8: '1'
+
 concurrency:
   group: vision-qa-${{ github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
