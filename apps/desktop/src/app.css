@@ -95,8 +95,10 @@ body { overflow: hidden; background: var(--bg); }
 .tm .who { font-size: var(--fs-xs); color: var(--text-3); max-width: 56px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tm .who.prism { color: var(--accent); font-weight: 650; }
 
-.cs-layout { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: var(--s5); align-items: start; }
-.cs-layout.one { grid-template-columns: minmax(0, 1fr); }
+/* 챔프 선택 (v3.72): 위 = 큰 카드 | 우리 팀 분석 (같은 높이), 아래 = 어울리는 증강 줄 (좌우 끝까지) */
+.cs-layout { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); grid-template-areas: "hero team" "augs augs"; gap: var(--s5); align-items: stretch; }
+.cs-layout > .cs-tile { grid-area: hero; } .cs-layout > .tb { grid-area: team; align-content: start; } .cs-layout > .cs-augrow { grid-area: augs; }
+.cs-layout.one { grid-template-columns: minmax(0, 1fr); grid-template-areas: "team"; }
 .cs-layout.one .cs-tile { min-height: 360px; }
 /* 챔프가 정해지기 전 */
 .cs-wait { display: flex; align-items: center; gap: var(--s5); padding: var(--s5); border-radius: var(--r-l); background: var(--surface-2); }
@@ -110,8 +112,9 @@ body { overflow: hidden; background: var(--bg); }
 @media (max-width: 700px) { .cs-wait { flex-direction: column; align-items: flex-start; } }
 .cs-tile { position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column; min-height: 440px; border-radius: var(--r-l); border: 1px solid var(--line); color: #fff; background: #070912; }
 .cs-tile.mine { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
-.cs-tile .bg { position: absolute; top: 0; left: 0; right: 0; z-index: -2; width: 100%; height: 300px; object-fit: cover; object-position: center 18%; }
-.cs-tile::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to bottom, rgba(7, 9, 18, .15) 0, rgba(7, 9, 18, .35) 90px, rgba(7, 9, 18, .92) 230px, #070912 300px); }
+.cs-tile .bg { position: absolute; top: 0; left: 0; right: 0; z-index: -2; width: 100%; height: max(300px, calc(100% - 240px)); object-fit: cover; object-position: center 18%; }
+/* 카드가 옆 칸 높이만큼 늘어나도 그림이 같이 늘어나고, 글자 자리부터 어두워진다 */
+.cs-tile::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to bottom, rgba(7, 9, 18, .15) 0, rgba(7, 9, 18, .35) max(90px, calc(100% - 520px)), rgba(7, 9, 18, .92) max(230px, calc(100% - 380px)), #070912 max(300px, calc(100% - 240px))); }
 .cs-tile .badge { position: absolute; top: var(--s3); left: var(--s3); height: 24px; padding: 0 var(--s3); border-radius: var(--r-pill); background: var(--accent); color: var(--on-accent); font-size: var(--fs-xs); font-weight: 700; display: inline-flex; align-items: center; }
 .cs-tile .back { position: absolute; top: var(--s3); right: var(--s3); background: rgba(6, 8, 18, .7); border-color: rgba(255, 255, 255, .18); color: #fff; backdrop-filter: blur(8px); }
 .cs-tile .body { display: grid; gap: var(--s3); padding: var(--s5); }
@@ -148,8 +151,7 @@ body { overflow: hidden; background: var(--bg); }
   .side-ch span, .side-status, .side-me span:last-child { display: none; }
   .side-foot { flex-direction: column; } .side-foot .btn { padding: 0; width: 40px; font-size: 0; }
   .main { padding: var(--s5); }
-  .cs-layout { grid-template-columns: minmax(0, 1fr); }
-  .cs-layout .tb { order: -1; }
+  .cs-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "team" "hero" "augs"; }
   .cs-tile { min-height: 320px; }
   .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -469,3 +471,22 @@ body { overflow: hidden; background: var(--bg); }
 .fs-note span { display: grid; gap: 2px; }
 .fs-note b { font-size: var(--fs-md); font-weight: 750; }
 .fs-note small { font-size: var(--fs-sm); color: var(--text-2); }
+
+/* 어울리는 증강 줄 (v3.72): 큰 카드 아래가 아니라 좌우 끝까지 — 왼쪽 카드만 길어지지 않게 */
+.cs-augrow { display: grid; grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr); gap: var(--s5); padding: var(--s4) var(--s5) var(--s5); border-radius: var(--r-l); background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
+.cs-augrow.solo { grid-template-columns: minmax(0, 1fr); }
+.cs-augrow .cs-h { color: var(--text-2); }
+.cs-augrow .cs-h small { color: var(--text-3); }
+.cs-augrow .cs-augs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); align-items: stretch; }
+.cs-augrow .cs-augs > * { height: 100%; }
+.cs-augrow .cs-aug { box-sizing: border-box; height: 100%; }
+.cs-augrow .cs-aug { background: var(--surface); border-color: var(--line); color: var(--text); }
+.cs-augrow .cs-aug:hover { background: var(--surface-3); border-color: var(--line-2); }
+.cs-augrow .cs-aug.prismatic { background: linear-gradient(90deg, color-mix(in srgb, var(--spectrum-6) 14%, var(--surface)), var(--surface)); }
+.cs-augrow .cs-aug.gold { background: linear-gradient(90deg, color-mix(in srgb, var(--gold) 14%, var(--surface)), var(--surface)); }
+.cs-augrow .cs-aug .t small { color: var(--text-2); }
+.cs-augrow .cs-mine { flex-direction: column; align-items: flex-start; }
+.cs-augrow .cs-chip { background: var(--surface); color: var(--text); }
+.cs-augrow .cs-chip small { color: var(--text-3); }
+@media (max-width: 1100px) { .cs-augrow { grid-template-columns: minmax(0, 1fr); } .cs-augrow .cs-mine { flex-direction: row; flex-wrap: wrap; } }
+@media (max-width: 900px) { .cs-augrow .cs-augs { grid-template-columns: minmax(0, 1fr); } }

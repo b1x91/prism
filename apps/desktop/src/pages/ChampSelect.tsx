@@ -177,7 +177,7 @@ function TeamBoard({ slots, mates, preview, c, needs, verdict, reco, recoAfter, 
 const STYLE: [keyof ChampionProfile['style'], string][] = [['damage', '피해'], ['durability', '단단함'], ['cc', '군중 제어'], ['mobility', '기동'], ['utility', '보조']];
 const RANGE_KO = { ranged: '원거리', melee: '근접' } as const;
 
-/** 큰 카드: 내 챔피언(또는 대기석 미리보기)의 성향·내 기록·모임 기록·팀에 넣으면·어울리는 증강·내가 고른 증강 */
+/** 큰 카드: 내 챔피언(또는 대기석 미리보기)의 성향·내 기록·모임 기록·팀에 넣으면 + 아래 줄: 어울리는 증강·내가 고른 증강 (v3.72) */
 function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }: { id: number; isMine: boolean; crew: CrewSelect; personal: Personal; fitText: ReturnType<typeof teamFit>; needs: string[]; isReco: boolean; onBack?: () => void }) {
   const ch = CHAMPIONS[id];
   const g = guideOf(GAME_DATA, id);
@@ -188,6 +188,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
   const top = cc?.masters?.[0];
   if (!ch) return <div />;
   return (
+    <>
     <article className={`cs-tile ${isMine ? 'mine' : ''}`}>
       <img className="bg" alt="" src={cdragon(ch.splash)} />
       <div className="cs-top">
@@ -216,9 +217,11 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
           <span className="cs-h">팀에 넣으면</span>
           <div className="cs-fill">{fitText.warn ? <span className="pill warn">팀이 {fitText.warn}</span> : fitText.fills.length ? fitText.fills.map((x) => <span key={x} className="pill ok">{x} 보완</span>) : <span className="cs-muted">{needs.length ? `부족한 ${josa(needs.join('·'), '은/는')} 채우지 못해요` : '팀 구성 무난'}</span>}</div>
         </div>}
-
+      </div>
+    </article>
+    {(picks.length > 0 || myAugs.length > 0) && <section className={`cs-augrow ${myAugs.length ? '' : 'solo'}`}>
         {picks.length > 0 && <div className="cs-sec">
-          <span className="cs-h">어울리는 증강 <small>등급별 1순위</small></span>
+          <span className="cs-h">{ch.name}에게 어울리는 증강 <small>등급별 1순위</small></span>
           <div className="cs-augs">{picks.map(({ r, f }) => {
             const tier = tierOf(fitPoints(f));
             const e = explainFit(ch, AUGMENT[f.id]);
@@ -236,7 +239,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
           <span className="cs-h">내가 이 챔프로 고른 증강</span>
           <div className="cs-mine">{myAugs.map((a) => <AugmentLink key={a.id} id={a.id} champion={id} inline className="cs-chip"><AugRing id={a.id} size={22} /><span>{AUGMENT[a.id]?.name}</span><small>{a.n}번 · {pct(a.w, a.n)}</small></AugmentLink>)}</div>
         </div>}
-      </div>
-    </article>
+    </section>}
+    </>
   );
 }
