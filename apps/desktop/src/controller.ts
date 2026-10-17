@@ -2,7 +2,7 @@
  * 앱의 흐름: 롤 클라이언트 확인 주기, 전적 정리, 챔프 선택, 업로드, 회원 대신 수집.
  * 원칙 (CLAUDE.md v3.1-4·5): 게임 중에는 롤에 요청 0, 확인 간격은 상황별.
  */
-import { AUGMENT, isMayhemGame, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
+import { AUGMENT, isMayhemGame, liveMatchup, parseLive, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
 import { api, bridge } from './bridge';
 import { VERSION } from './version';
 
@@ -215,6 +215,29 @@ async function loadMatchup() {
   setMatchup({ allies: allies.slice(0, 4), enemies: theirs.filter((id) => id > 0).slice(0, 5), source: 'game', at: Date.now() });
 }
 
+/**
+ * 게임 중 상대 팀 (v3.70). 롤 클라이언트의 게임 정보에는 게임 시작 순간 상대 챔프가 비어 있는 일이 많아(실제 PC 확인),
+ * 로딩이 끝나면 라이브 클라이언트 데이터(게임이 내 PC 안에 여는 읽기 전용 점수판)에서 10명을 한 번 읽어 채운다.
+ * 다 채우면 멈춘다 — 게임 내내 묻지 않는다. 직접 넣은 조합은 덮어쓰지 않는다.
+ */
+let liveFilling = false;
+async function liveFill() {
+  if (liveFilling) return;
+  liveFilling = true;
+  try {
+    for (let i = 0; i < 60 && state.status === 'in-game'; i++) { // 5초 간격, 최대 5분 (로딩 화면 동안은 아직 열리지 않는다)
+      const m = state.matchup;
+      if (m?.source === 'manual' || (m?.source === 'game' && m.enemies.length >= 5)) return;
+      const lm = liveMatchup(parseLive(await bridge.liveGame().catch(() => null)));
+      if (lm && lm.enemies.length) {
+        setMatchup({ allies: lm.allies.slice(0, 4), enemies: lm.enemies.slice(0, 5), source: 'game', at: Date.now() });
+        if (lm.enemies.length >= 5) return;
+      }
+      await new Promise((r) => setTimeout(r, 5000));
+    }
+  } finally { liveFilling = false; }
+}
+
 /** 3개 비교 화면에서 직접 고친 조합 */
 export function editMatchup(m: { allies: number[]; enemies: number[] }) {
   setMatchup({ ...m, source: 'manual', at: Date.now() });
@@ -225,6 +248,7 @@ async function tick(): Promise<number> {
   if (st.inGame) {
     wasInGame = true;
     set({ status: 'in-game', message: '게임 중', champSelect: null });
+    void liveFill();
     return INTERVAL.inGame;
   }
   if (!st.client) {
