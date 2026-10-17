@@ -2615,3 +2615,25 @@ button.ga:hover { background: var(--surface-2); }
 .ptr.busy .ptr-pill svg { animation: ptrSpin .8s linear infinite; }
 @keyframes ptrSpin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .ptr.busy .ptr-pill svg { animation: none; } }
+
+/* 이번 판 분석 (v3.71) */
+.gp { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s5); padding: var(--s5); }
+.gp-col { display: flex; flex-direction: column; gap: var(--s2); min-width: 0; }
+.gp-col + .gp-col { padding-left: var(--s5); border-left: 1px solid var(--line); }
+.gp-k { font-size: var(--fs-xs); font-weight: 750; color: var(--text-3); }
+.gp-role { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -.01em; }
+.gp-t { margin: 0; font-size: var(--fs-sm); line-height: 1.5; color: var(--text-2); }
+.gp-note { margin: 0; padding: var(--s2) var(--s3); border-radius: var(--r-s); background: var(--surface-2); font-size: var(--fs-xs); line-height: 1.5; color: var(--text-2); }
+.gp-threats { display: flex; flex-direction: column; gap: var(--s1); margin-top: var(--s2); }
+.gp-threat { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-sm); }
+.gp-threat .champ { border-radius: var(--r-s); }
+.gp-threat i { font-style: normal; height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border-radius: var(--r-pill); background: color-mix(in srgb, var(--lose) 12%, transparent); color: var(--lose); font-size: var(--fs-xs); font-weight: 750; }
+.gp-tip { display: flex; flex-direction: column; gap: var(--s1); }
+.gp-tip b, .gp-item b { font-size: var(--fs-sm); font-weight: 750; }
+.gp-item { display: flex; align-items: flex-start; gap: var(--s3); }
+.gp-ics { display: flex; gap: 4px; flex: none; }
+.gp-ics img { border-radius: var(--r-s); }
+@media (max-width: 900px) {
+  .gp { grid-template-columns: 1fr; gap: var(--s4); padding: var(--s4); }
+  .gp-col + .gp-col { padding-left: 0; padding-top: var(--s4); border-left: 0; border-top: 1px solid var(--line); }
+}

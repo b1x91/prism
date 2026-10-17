@@ -22,3 +22,4 @@ export * from './about';
 export * from './ranking';
 export * from './improve';
 export * from './josa';
+export * from './gameplan';

@@ -18,3 +18,4 @@ export * from './favpick';
 export * from './about';
 export * from './skeleton';
 export * from './pullrefresh';
+export * from './plan';

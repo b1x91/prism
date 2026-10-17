@@ -7,6 +7,7 @@ import { ToolSearch } from './ltools';
 import { AugImg, Empty, GlassBtn, Hover, Seg } from './basics';
 import { Icon } from './icons';
 import { MatchupBar } from './situation';
+import { GamePlanCard } from './plan';
 
 
 const ORDER: Rarity[] = ['prismatic', 'gold', 'silver'];
@@ -105,6 +106,7 @@ export function AugmentCompare({ championId, stats, preset, matchup: given, onMa
   return (
     <div className="stack">
       <MatchupBar me={championId} matchup={matchup} onChange={setMatchup} auto={autoMatchup} />
+      <GamePlanCard me={championId} matchup={matchup} />
       <div className="cmp-slots">
         {[0, 1, 2].map((i) => {
           const id = picked[i];
