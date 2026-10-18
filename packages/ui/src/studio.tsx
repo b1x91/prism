@@ -8,11 +8,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   CHAMPIONS, CHAMPION_LIST, PIECE, RARITY_SHOP_KO, SHOP, SKIN_TIERS, SLOT_KO, baseSkin, matchName, priceWith, skinNeed,
-  type Api, type Deco, type MemberPage, type Shop, type ShopSlot, type Skin, josa } from '@prism/core';
+  type About, type Api, type Deco, type MemberPage, type Shop, type ShopSlot, type Skin, josa } from '@prism/core';
 import { ChampImg } from './basics';
 import { Icon } from './icons';
 import { BgScene } from './bgscene';
 import { PieceIcon, ProfileHero, baseTint } from './shop';
+import { AboutPick } from './about';
 
 type Tab = 'skin' | ShopSlot | 'intro';
 const TABS: [Tab, string][] = [['skin', '대표 스킨'], ['bg', SLOT_KO.bg], ['frame', SLOT_KO.frame], ['fx', SLOT_KO.fx], ['name', SLOT_KO.name], ['title', SLOT_KO.title], ['intro', '소개']];
@@ -26,14 +27,15 @@ export function NickName({ nick }: { nick: string }) {
   return <>{nick.slice(0, i)}<span className="nick-tag">#{nick.slice(i + 1)}</span></>;
 }
 
-export function ProfileStudio({ api, page, skins, onClose, onSaved }: {
-  api: Api; page: MemberPage; skins: Record<number, Skin> | null; onClose: () => void; onSaved: () => void;
+export function ProfileStudio({ api, page, skins, onClose, onSaved, start = 'skin' }: {
+  api: Api; page: MemberPage; skins: Record<number, Skin> | null; onClose: () => void; onSaved: () => void; start?: 'skin' | 'intro';
 }) {
   const m = page.member;
   const n = page.total.n;
-  const [tab, setTab] = useState<Tab>('skin');
+  const [tab, setTab] = useState<Tab>(start);
   const [shop, setShop] = useState<Shop | null>(null);
   const [intro, setIntro] = useState(m.intro);
+  const [about, setAbout] = useState<About | null>(m.about ?? null);
   const [skin, setSkin] = useState<number | null>(m.skin);
   const [deco, setDeco] = useState<Deco>(m.deco ?? {});
   const [busy, setBusy] = useState(false);
@@ -51,6 +53,7 @@ export function ProfileStudio({ api, page, skins, onClose, onSaved }: {
     setBusy(true); setMsg('');
     try {
       await api.post('/api/me/profile', { intro, skin });
+      if (about && JSON.stringify(about) !== JSON.stringify(m.about ?? null)) await api.post('/api/me/about', { about });
       const was = shop?.deco ?? m.deco ?? {};
       for (const sl of SLOTS) if ((was[sl] ?? null) !== (deco[sl] ?? null)) await api.post('/api/me/equip', { slot: sl, id: deco[sl] ?? null });
       onSaved();
@@ -75,7 +78,7 @@ export function ProfileStudio({ api, page, skins, onClose, onSaved }: {
         ))}</nav>
         <div className="pst-body">
           {tab === 'skin' && <SkinPanel page={page} skins={skins} pick={skin} onPick={setSkin} n={n} />}
-          {tab === 'intro' && <IntroPanel nick={m.nick} intro={intro} onIntro={setIntro} />}
+          {tab === 'intro' && <IntroPanel api={api} nick={m.nick} intro={intro} onIntro={setIntro} about={m.about ?? null} onAbout={setAbout} />}
           {tab !== 'skin' && tab !== 'intro' && (shop
             ? <DecoPanel slot={tab} shop={shop} deco={deco} me={{ nick: m.nick, skin, champion: main }} onPick={(id) => setDeco((d) => { const x = { ...d }; if (id) x[tab] = id; else delete x[tab]; return x; })} />
             : <div className="pst-load" role="status" aria-label="불러오는 중">{Array.from({ length: 6 }, (_, i) => <i key={i} className="sk" />)}</div>)}
@@ -91,7 +94,7 @@ export function ProfileStudio({ api, page, skins, onClose, onSaved }: {
   );
 }
 
-function IntroPanel({ nick, intro, onIntro }: { nick: string; intro: string; onIntro: (s: string) => void }) {
+function IntroPanel({ api, nick, intro, onIntro, about, onAbout }: { api: Api; nick: string; intro: string; onIntro: (s: string) => void; about: About | null; onAbout: (a: About | null) => void }) {
   return (
     <div className="pst-intro">
       <div className="pst-field">
@@ -103,6 +106,10 @@ function IntroPanel({ nick, intro, onIntro }: { nick: string; intro: string; onI
         <span className="k">한 줄 소개 <small className="meta">{intro.length}/60</small></span>
         <input className="input" maxLength={60} value={intro} onChange={(e) => onIntro(e.target.value)} placeholder="예: 탱커 좋아합니다, 밤 10시 단골" />
       </label>
+      <div className="pst-field">
+        <span className="k">나를 소개해요</span>
+        <AboutPick api={api} initial={about} onChange={onAbout} />
+      </div>
     </div>
   );
 }

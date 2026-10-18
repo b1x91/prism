@@ -2830,3 +2830,9 @@ button.ga:hover { background: var(--surface-2); }
 .am-meta { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .am-meta:empty { display: none; }
 @media (prefers-reduced-motion: reduce) { .am-card, .am-bg, .am-crest { transition: none; } .am-card:hover .am-crest-spark { animation: none; } }
+/* 내 페이지 머리의 소개 칩: 눌러서 소개를 바꾼다 (v3.86) */
+.about-edit { display: inline-flex; align-items: center; gap: var(--s2); cursor: pointer; font-family: inherit; border: 1px solid rgba(255, 255, 255, .18); transition: background .15s, border-color .15s; }
+.about-edit > span + span::before { content: ""; display: inline-block; width: 1px; height: 10px; margin-right: var(--s2); background: rgba(255, 255, 255, .3); vertical-align: middle; }
+.about-edit svg { width: 12px; height: 12px; opacity: .7; }
+.about-edit:hover { background: rgba(255, 255, 255, .2); border-color: rgba(255, 255, 255, .35); }
+.am-chips i { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

@@ -132,17 +132,18 @@ export async function setShare(req: Request, env: Env, me: Member) {
   return json({ shared: Boolean(on), code: on ? await shareCode(env, me.id) : null });
 }
 
-/** 공개 링크: 로그인 없이. 본인이 켰을 때만, 모임 정보(순위·함께한 회원·최근 판·역할) 없이 강점만 */
+/** 공개 링크 (v3.86): 로그인 없이. 링크를 한 번 만든 회원만(번호가 있을 때), 끄는 단추는 없다.
+ *  보이는 것은 꾸민 머리·판수·도감 레벨·마스터·활약뿐 — 승률·KDA·잘하는 챔프·플레이 성향 같은 분석은 회원에게만 */
 export async function publicProfile(env: Env, key: string) {
   // 짧은 번호(/p/123) 또는 예전 긴 주소(디스코드 ID)
   const byCode = /^\d{3,4}$/.test(key);
-  const m = await env.DB.prepare(`SELECT id, nick, intro, profile_skin AS skin, deco, share_on FROM members WHERE ${byCode ? 'share_code' : 'id'} = ?`)
-    .bind(byCode ? Number(key) : key).first<{ id: string; nick: string; intro: string; skin: number | null; deco: string | null; share_on: number }>();
-  if (!m || !m.share_on) throw new HttpError(404, '공개되지 않은 페이지입니다.');
+  const m = await env.DB.prepare(`SELECT id, nick, intro, profile_skin AS skin, deco, share_code FROM members WHERE ${byCode ? 'share_code' : 'id'} = ?`)
+    .bind(byCode ? Number(key) : key).first<{ id: string; nick: string; intro: string; skin: number | null; deco: string | null; share_code: number | null }>();
+  if (!m || !m.share_code) throw new HttpError(404, '공개되지 않은 페이지입니다.');
   const id = m.id;
   const [total, champs, feats] = await env.DB.batch([
-    env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w, COALESCE(SUM(kills), 0) AS k, COALESCE(SUM(deaths), 0) AS d, COALESCE(SUM(assists), 0) AS a FROM participants WHERE member_id = ?').bind(id),
-    env.DB.prepare('SELECT champion_id AS id, COUNT(*) AS n, SUM(win) AS w, SUM(kills) AS k, SUM(deaths) AS d, SUM(assists) AS a FROM participants WHERE member_id = ? GROUP BY champion_id ORDER BY n DESC').bind(id),
+    env.DB.prepare('SELECT COUNT(*) AS n FROM participants WHERE member_id = ?').bind(id),
+    env.DB.prepare('SELECT champion_id AS id FROM participants WHERE member_id = ? GROUP BY champion_id ORDER BY COUNT(*) DESC LIMIT 1').bind(id),
     env.DB.prepare('SELECT feats FROM participants WHERE member_id = ? AND feats IS NOT NULL').bind(id),
   ]);
   const f = { penta: 0, quadra: 0, dmgTop: 0, takenTop: 0 };
@@ -156,12 +157,10 @@ export async function publicProfile(env: Env, key: string) {
   const { champs: lv, augs } = await levelsOf(env, id);
   const levels = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } as Record<DexLevel, number>;
   for (const x of [...lv, ...augs]) levels[dexLevel(x.m)]++;
-  const list = champs.results as { id: number; n: number; w: number; k: number; d: number; a: number }[];
-  // 잘하는 챔피언: 3판 이상 중 승수·승률 순
-  const best = list.filter((c) => c.n >= 3).sort((a, b) => b.w - a.w || b.w / b.n - a.w / a.n).slice(0, 5).map(({ id: cid, n, w }) => ({ id: cid, n, w }));
   return json({
     id: m.id, nick: m.nick, intro: m.intro, skin: m.skin, deco: parseDeco(m.deco),
-    total: total.results[0], best, masters: lv.filter((x) => x.m.master).map((x) => x.id), levels, feats: f, champions: list,
+    total: { n: (total.results[0] as { n: number }).n }, main: (champs.results[0] as { id: number } | undefined)?.id ?? null,
+    masters: lv.filter((x) => x.m.master).map((x) => x.id), levels, feats: f,
   });
 }
 

@@ -3,14 +3,14 @@
  * 앱 첫 화면(Onboarding)의 한 단계, 그리고 아직 소개가 없는 회원에게 앱·웹에서 한 번 뜨는 창(WelcomeFlow).
  * 저장하면 서버가 처음 한 번 디스코드 '멤버 환영' 채널에 소개 카드를 올린다.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ABOUT_DAYS, ABOUT_ROLES, ABOUT_TIMES, MBTI_LIST, ROLE_KO, cleanAbout, type About, type Api, josa } from '@prism/core';
 import { FavChampPick } from './favpick';
 import { ROLE_DOT } from './champ';
 
 const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
-export function AboutPick({ api, initial, onDone, verb = '저장' }: { api: Api; initial?: About | null; onDone: (a: About) => void; verb?: string }) {
+export function AboutPick({ api, initial, onDone, verb = '저장', onChange }: { api: Api; initial?: About | null; onDone?: (a: About) => void; verb?: string; onChange?: (a: About | null) => void }) {
   const [roles, setRoles] = useState<string[]>(initial?.roles ?? []);
   const [days, setDays] = useState<string[]>(initial?.days ?? []);
   const [times, setTimes] = useState<string[]>(initial?.times ?? []);
@@ -18,11 +18,14 @@ export function AboutPick({ api, initial, onDone, verb = '저장' }: { api: Api;
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const about = cleanAbout({ roles, days, times, mbti });
+  // 프로필 꾸미기 안에 넣을 때(onChange): 따로 저장 단추 없이 바뀔 때마다 알린다
+  const key = JSON.stringify(about);
+  useEffect(() => { onChange?.(about); }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   const left = [!roles.length && '역할', !days.length && '요일', !times.length && '시간대', !mbti && 'MBTI'].filter(Boolean) as string[];
   const save = async () => {
     if (!about) return;
     setBusy(true); setErr('');
-    try { await api.post('/api/me/about', { about }); onDone(about); }
+    try { await api.post('/api/me/about', { about }); onDone?.(about); }
     catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
   };
@@ -45,7 +48,7 @@ export function AboutPick({ api, initial, onDone, verb = '저장' }: { api: Api;
         <div className="abt-mbti">{MBTI_LIST.map((m) => <button key={m} type="button" className={`chip ${mbti === m ? 'on' : ''}`} aria-pressed={mbti === m} onClick={() => setMbti(m)}>{m}</button>)}</div>
       </section>
       {err && <p className="l" style={{ margin: 0 }}>{err}</p>}
-      <button type="button" className="btn primary lg abt-go" disabled={!about || busy} onClick={save}>{busy ? '저장 중…' : about ? verb : `${josa(left.join(' · '), '을/를')} 골라 주세요`}</button>
+      {!onChange && <button type="button" className="btn primary lg abt-go" disabled={!about || busy} onClick={save}>{busy ? '저장 중…' : about ? verb : `${josa(left.join(' · '), '을/를')} 골라 주세요`}</button>}
     </div>
   );
 }

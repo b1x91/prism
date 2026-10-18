@@ -116,13 +116,12 @@ export const priceWith = (price: number, discount = 0) => Math.round(price * (1 
 /** 공개 링크로 보는 그 사람의 강점 (모임 정보 없음) */
 export type PublicProfile = {
   id: string; nick: string; intro: string; skin: number | null; deco: Deco;
-  total: { n: number; w: number; k: number; d: number; a: number };
-  best: { id: number; n: number; w: number }[];
+  total: { n: number };
+  /** 가장 많이 한 챔프 (대표 스킨이 없을 때 머리 그림) */
+  main: number | null;
   masters: number[];
   levels: Record<DexLevel, number>;
   feats: { penta: number; quadra: number; dmgTop: number; takenTop: number };
-  /** 챔피언별 판·승·KDA (역할·성향 계산용) */
-  champions: { id: number; n: number; w: number; k: number; d: number; a: number }[];
 };
 
 /** 공개 웹 주소 (공유 링크는 웹으로: 앱이 없어도 열린다) */

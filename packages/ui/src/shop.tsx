@@ -103,30 +103,19 @@ export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, ac
   );
 }
 
-/** 공유 버튼: 누르면 공개를 켜고 짧은 링크(/p/123)를 복사한다 */
-export function ShareButton({ api, id, shared, onChange }: { api: Api; id: string; shared: boolean; onChange?: (on: boolean) => void }) {
+/** 공유 버튼 (v3.86): 누르면 짧은 링크(/p/123)를 복사한다. 끄는 단추는 없다 — 링크로 보이는 것은 꾸민 머리·판수·도감·활약뿐 */
+export function ShareButton({ api, id }: { api: Api; id: string; shared?: boolean; onChange?: (on: boolean) => void }) {
   const [done, setDone] = useState(false);
-  const [open, setOpen] = useState(false);
   const [err, setErr] = useState('');
   const copy = async () => {
     setErr('');
     try {
       const r = await api.post<{ shared: boolean; code: number | null }>('/api/me/share', { on: true });
-      if (!shared) onChange?.(true);
       await navigator.clipboard.writeText(shareUrl(r.code ?? id));
       setDone(true); setTimeout(() => setDone(false), 2000);
     } catch (e) { setErr(e instanceof Error ? e.message : '복사하지 못했어요'); }
   };
-  return (
-    <span className="share">
-      <button type="button" className="btn sm" onClick={copy} title={err || undefined}><Icon name={done ? 'check' : 'link'} />{done ? '링크 복사됨' : err ? '다시 눌러 주세요' : '공유 링크'}</button>
-      {shared && <button type="button" className="btn sm ghost" onClick={() => setOpen(!open)} aria-expanded={open}>공개 중</button>}
-      {open && shared && <span className="share-pop">
-        <span className="meta">로그인하지 않은 사람도 이 링크로 내 강점(판수·승률·잘하는 챔프·마스터·활약)을 볼 수 있어요. 모임 정보는 보이지 않아요.</span>
-        <button type="button" className="btn sm" onClick={async () => { await api.post('/api/me/share', { on: false }).catch(() => {}); onChange?.(false); setOpen(false); }}>공개 끄기</button>
-      </span>}
-    </span>
-  );
+  return <button type="button" className="btn sm" onClick={copy} title={err || undefined}><Icon name={done ? 'check' : 'link'} />{done ? '링크 복사됨' : err ? '다시 눌러 주세요' : '공유 링크'}</button>;
 }
 
 // ───────── 상점 ─────────
@@ -230,29 +219,14 @@ function ShopCard({ x, me, data, busy, onBuy, onEquip }: { x: ShopItem; me: Me; 
 
 export function PublicProfileView({ data, join }: { data: PublicProfile; join?: ReactNode }) {
   const skins = useSkins();
-  const main = data.champions[0]?.id ?? null;
+  const main = data.main;
   const art = data.skin && skins?.[data.skin] ? skins[data.skin].splash : main ? cdragon(CHAMPIONS[main]?.splash) : '';
-  const t = data.total;
-  const kda = t.n ? ((t.k + t.a) / Math.max(1, t.d)).toFixed(2) : '–';
-  const S = styleOf(data.champions);
   const feats: [string, number][] = ([['펜타킬', data.feats.penta], ['쿼드라킬', data.feats.quadra], ['피해량 1위', data.feats.dmgTop], ['받은 피해 1위', data.feats.takenTop]] as [string, number][]).filter(([, n]) => n > 0);
   return (
     <div className="stack" style={{ gap: 16 }}>
       <ProfileHero nick={data.nick} intro={data.intro} art={art} skin={data.skin} champion={main} deco={data.deco}
-        chips={<><span className="pill dark">아수라장 {t.n}판</span><span className="pill dark">승률 {pct(t.w, t.n)}</span><span className="pill dark">KDA {kda}</span>{data.masters.length > 0 && <span className="pill dark">마스터 {data.masters.length}</span>}</>}
+        chips={<><span className="pill dark">아수라장 {data.total.n}판</span>{data.masters.length > 0 && <span className="pill dark">마스터 {data.masters.length}</span>}</>}
         actions={join} />
-      <div className="grid2">
-        <section className="card pad">
-          <div className="card-head"><h2>잘하는 챔프</h2><span className="sp" /><span className="meta">3판 이상 · 승수 순</span></div>
-          {data.best.length ? <div className="list">{data.best.map((c) => (
-            <div key={c.id} className="item"><ChampImg id={c.id} size={36} /><span className="title">{CHAMPIONS[c.id]?.name}{data.masters.includes(c.id) && <span className="pill">마스터</span>}</span><span><b>{c.w}승</b> <span className="meta">{c.n}판 · {pct(c.w, c.n)}</span></span></div>
-          ))}</div> : <p className="meta">아직 3판 넘게 한 챔프가 없어요.</p>}
-        </section>
-        <section className="card pad">
-          <div className="card-head"><h2>플레이 성향</h2></div>
-          <div className="pub-roles">{S.roles.slice(0, 4).map((r) => <span key={r.key} className="pub-role"><b>{ROLE_KO[r.key] ?? r.key}</b><span className="bar"><span style={{ width: `${Math.round(r.share * 100)}%` }} /></span><small>{Math.round(r.share * 100)}%</small></span>)}</div>
-        </section>
-      </div>
       <div className="grid2">
         <section className="card pad">
           <div className="card-head"><h2>도감</h2><span className="sp" /><span className="meta">챔프·증강</span></div>
@@ -261,7 +235,7 @@ export function PublicProfileView({ data, join }: { data: PublicProfile; join?: 
         </section>
         <section className="card pad">
           <div className="card-head"><h2>활약</h2></div>
-          {feats.length ? <div className="pub-feats">{feats.map(([k, n]) => <span key={k} className="pub-feat"><b>{n}</b><small>{k}</small></span>)}</div> : <p className="meta">기록된 활약이 아직 없어요.</p>}
+          {feats.length ? <div className="pub-feats">{feats.map(([k, n]) => <span key={k} className="pub-feat"><b>{n}</b><small>{k}</small></span>)}</div> : <Empty>기록된 활약이 아직 없어요.</Empty>}
         </section>
       </div>
     </div>

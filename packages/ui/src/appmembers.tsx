@@ -11,7 +11,7 @@ import { Bone, Swap, fadeCls, imgIn, useReveal } from './skeleton';
 
 const DAY = 86_400_000;
 const SHOW = 12; // 처음 보여 줄 수 (더 보기로 펼침)
-const TOP = 3;   // 기록을 가장 많이 모아 준 세 분은 오른쪽 위에 결정(휘장)
+const TOP = 3;   // 앱을 가장 꾸준히 켜 둔 세 분은 오른쪽 위에 결정 휘장 (순서는 서버가 정한다, 숫자는 보이지 않는다)
 
 /** 결정 휘장: 1위 프리즘 · 2위 골드 · 3위 실버 — 증강 등급과 같은 이름이라 롤 하는 사람에게 바로 읽힌다 */
 const CREST = [
@@ -79,9 +79,9 @@ export function AppMembers({ api, onMember }: { api: Api; onMember?: (id: string
               <FacePresence p={m.presence}><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={52} skins={skins} /></FacePresence>
               <span className="am-t">
                 <span className="am-name"><b>{shortNick(m.nick)}</b></span>
-                <span className="am-chips">{m.about?.mbti && <i>{m.about.mbti}</i>}{(m.about?.roles ?? []).slice(0, 2).map((r) => <i key={r}>{ROLE_KO[r as keyof typeof ROLE_KO] ?? r}</i>)}</span>
-                <span className="am-praise">{m.collected > 0 ? <>기록 <b>{m.collected.toLocaleString()}판</b>을 모아 줬어요</> : m.crew > 0 ? <>멤버들과 <b>{m.crew.toLocaleString()}판</b> 함께했어요</> : <>함께한 지 <b>{days}일</b></>}</span>
-                <span className="am-meta">{m.collected > 0 || m.crew > 0 ? `함께한 지 ${days}일` : ''}{m.about ? `${m.collected > 0 || m.crew > 0 ? ' · ' : ''}${aboutWhen(m.about)}` : ''}</span>
+                <span className="am-chips">{m.about?.mbti && <i>{m.about.mbti}</i>}{m.about?.roles.length ? <i>{m.about.roles.map((r) => ROLE_KO[r as keyof typeof ROLE_KO] ?? r).join('·')}</i> : null}</span>
+                <span className="am-praise">{m.crew > 0 ? <>멤버들과 <b>{m.crew.toLocaleString()}판</b> 함께했어요</> : <>함께한 지 <b>{days}일</b></>}</span>
+                <span className="am-meta">{[m.crew > 0 ? `함께한 지 ${days}일` : '', m.about ? aboutWhen(m.about) : ''].filter(Boolean).join(' · ')}</span>
               </span>
             </button>
           );

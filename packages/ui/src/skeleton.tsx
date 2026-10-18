@@ -108,8 +108,7 @@ export function MemberSkeleton({ public: pub = false, self }: { public?: boolean
           </div>
         </div>
       </header>
-      {pub ? <div className="grid4">{[0, 1, 2, 3].map((i) => <section key={i} className="card stat sk-stat"><Bone w={56} h={10} /><Bone w={88} h={28} /></section>)}</div>
-        : <section className="card pdash">
+      {!pub && <section className="card pdash">
           <div className="pd-head"><Bone w={72} h={16} /><Bone w={140} h={10} /><span className="sp" /><Bone w={112} h={24} r="pill" /><Bone w={112} h={24} r="pill" /></div>
           <div className="pd-grid">
             {[0, 1, 2, 3].map((i) => <div key={i} className="pd-tile"><Bone w={48} h={10} /><Bone w={112} h={36} /><Bone w="100%" h={i === 3 ? 36 : 8} r={i === 3 ? 's' : 'pill'} /><Bone w="60%" h={12} /></div>)}
@@ -128,9 +127,12 @@ export function MemberSkeleton({ public: pub = false, self }: { public?: boolean
       </section>}
       {!pub && self === false && <section className="card sk-duo"><Bone w="100%" h={440} r="none" dark /><div className="sk-lines" style={{ gap: 12, padding: "var(--s5) var(--s6)" }}><div className="grid4">{[0, 1, 2, 3].map((i) => <div key={i} className="sk-lines" style={{ gap: 8 }}><Bone w={64} h={10} /><Bone w={96} h={28} /></div>)}</div></div></section>}
       {!pub && <section className="card pad"><Head w={88} /><div className="rstrip">{Array.from({ length: 10 }, (_, i) => <Bone key={i} r="m" className="sk-tile" />)}</div></section>}
-      <div className="grid2">
-        {[0, 1].map((k) => <section key={k} className="card pad"><Head w={k ? 104 : 72} /><div className="sk-rows">{Array.from({ length: 5 }, (_, i) => <Row key={i} face={32} nums={1} />)}</div></section>)}
-      </div>
+      {pub
+        // 공유 페이지: 도감(레벨 다섯 칸) · 활약(숫자 칸)
+        ? <div className="grid2">{[5, 4].map((k) => <section key={k} className="card pad"><Head w={56} /><div className={k === 5 ? 'pub-levels' : 'pub-feats'}>{Array.from({ length: k }, (_, i) => <Bone key={i} w="100%" h={64} r="m" />)}</div></section>)}</div>
+        : <div className="grid2">
+          {[0, 1].map((k) => <section key={k} className="card pad"><Head w={k ? 104 : 72} /><div className="sk-rows">{Array.from({ length: 5 }, (_, i) => <Row key={i} face={32} nums={1} />)}</div></section>)}
+        </div>}
     </SkeletonFrame>
   );
 }

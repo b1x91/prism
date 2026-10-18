@@ -181,7 +181,7 @@ function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: n
 export function MemberView({ api, id, self, onChampion, actions }: { api: Api; id: string; self?: boolean; onChampion?: (championId: number) => void; actions?: ReactNode }) {
   const { data, error, reload } = useLoad<MemberPage>(api, `/api/members/${encodeURIComponent(id)}`);
   const skins = useSkins();
-  const [edit, setEdit] = useState(false);
+  const [edit, setEdit] = useState<false | 'skin' | 'intro'>(false);
   const [shareOn, setShared] = useState<boolean | null>(null);
   const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
@@ -201,12 +201,14 @@ export function MemberView({ api, id, self, onChampion, actions }: { api: Api; i
     <div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
       <ProfileHero lift={total.n > 0} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
-        actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit(true)}><Icon name="spark" />프로필 꾸미기</button>}
+        actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit('skin')}><Icon name="spark" />프로필 꾸미기</button>}
           {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}
         chips={<><span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
           {skin && <span className="pill dark">{skin.name}</span>}{m.presence && m.presence !== 'off' && <span className="pill dark"><PresenceTag p={m.presence} /></span>}
-          {m.about && <><span className="pill dark">{m.about.mbti}</span><span className="pill dark">{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span className="pill dark">{aboutWhen(m.about)}</span></>}</>} />
-      {edit && m.self && <ProfileStudio api={api} page={data} skins={skins} onClose={() => setEdit(false)} onSaved={() => { setEdit(false); reload(); }} />}
+          {m.about && (m.self
+            ? <button type="button" className="pill dark about-edit" title="소개 바꾸기" onClick={() => setEdit('intro')}><span>{m.about.mbti}</span><span>{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span>{aboutWhen(m.about)}</span><Icon name="edit" /></button>
+            : <><span className="pill dark">{m.about.mbti}</span><span className="pill dark">{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span className="pill dark">{aboutWhen(m.about)}</span></>)}</>} />
+      {edit && m.self && <ProfileStudio api={api} page={data} skins={skins} start={edit} onClose={() => setEdit(false)} onSaved={() => { setEdit(false); reload(); }} />}
       {m.self && !m.riotId && <section className="card pad"><b>아직 롤 계정이 연결되지 않았어요</b><div className="muted">PC의 Prism 앱에서 로그인한 뒤 맨 위의 <b>"동의하고 연결"</b>을 누르면, 그때부터 판이 여기에 쌓입니다. 앱에 이미 보이는 최근 판도 함께 올라와요.</div></section>}
       {total.n > 0 ? <StatBoard data={data} games={games} kda={kda} streak={st} /> : <div className="grid4">
         <section className="card stat"><span className="k">기록된 판</span><span className="v">0<small>판</small></span></section>
