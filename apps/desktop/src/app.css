@@ -181,7 +181,7 @@ body { overflow: hidden; background: var(--bg); }
 .check { display: flex; align-items: center; gap: var(--s2); font-weight: 650; cursor: pointer; }
 .check input { width: 16px; height: 16px; accent-color: var(--accent); }
 .onb-foot { text-align: center; }
-.linkbtn { border: 0; background: none; padding: 0; color: var(--text-2); font: inherit; text-decoration: underline; cursor: pointer; }
+.onb-link { border: 0; background: none; padding: 0; color: var(--text-2); font: inherit; text-decoration: underline; cursor: pointer; }
 
 /* ───────── 첫 실행 화면 (Splash). 브랜드 순간이라 테마와 관계없이 어둡게, 스펙트럼은 로고 모티프로만 ───────── */
 .splash { position: fixed; inset: 0; z-index: 2000; overflow: hidden; background: radial-gradient(60% 60% at 50% 50%, #12162a 0%, #070910 60%, #040509 100%); color: #fff; transition: opacity .5s ease, transform .5s ease; }
@@ -296,12 +296,6 @@ body { overflow: hidden; background: var(--bg); }
 @media (prefers-reduced-motion: reduce) { .side-me-card.prism { animation: none; } .side-me-card.prism::after { display: none; } }
 
 /* 팀 밸런스 평가 */
-.verdict { display: inline-flex; align-items: center; gap: 6px; padding: 2px var(--s3); border-radius: var(--r-pill); font-size: var(--fs-sm); font-weight: 750; }
-.verdict.good { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
-.verdict.fair { background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); }
-.verdict.poor { background: color-mix(in srgb, var(--lose) 14%, transparent); color: var(--lose); }
-.verdict.gold { color: var(--text); background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(90deg, var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-7)) border-box; border: 1.5px solid transparent; }
-.verdict.gold i { width: 10px; height: 10px; transform: rotate(45deg); border-radius: 2px; background: linear-gradient(135deg, var(--spectrum-2), var(--spectrum-6)); }
 
 /* 게임·챔프 선택 중: '게임' 메뉴가 숨 쉬듯 빛나고 오른쪽에 점 */
 .side-nav a.live { position: relative; color: var(--text); animation: nav-live 1.8s ease-in-out infinite; }

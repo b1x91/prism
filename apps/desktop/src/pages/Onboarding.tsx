@@ -60,7 +60,7 @@ export function Onboarding({ s, onLogin }: { s: State; onLogin: () => Promise<vo
 
         {s.sessionError && <p className="l">{s.sessionError} <button type="button" className="btn ghost sm" onClick={() => run(refreshSession)}>다시 시도</button></p>}
         {err && <p className="l">{err}</p>}
-        <div className="onb-foot meta">v{VERSION}{logged && <> · <button type="button" className="linkbtn" onClick={() => run(async () => { await bridge.logout(); await refreshSession(); })}>다른 계정으로</button></>}</div>
+        <div className="onb-foot meta">v{VERSION}{logged && <> · <button type="button" className="onb-link" onClick={() => run(async () => { await bridge.logout(); await refreshSession(); })}>다른 계정으로</button></>}</div>
       </div>
     </div>
   );

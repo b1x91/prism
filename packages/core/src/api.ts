@@ -23,7 +23,7 @@ export interface Api {
  */
 export const CACHE_TTL = 3600_000;
 const LIVE_EXACT = new Set(['/api/me', '/api/me/games', '/api/crew/targets', '/links']);
-const LIVE_PREFIX = ['/api/discord', '/api/me/presence', '/api/admin', '/app/'];
+const LIVE_PREFIX = ['/api/discord', '/api/crew/pulse', '/api/me/presence', '/api/admin', '/app/'];
 const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag'];
 export function withCache(api: Api, ttl = CACHE_TTL): Api {
   const memo = new Map<string, { at: number; data: unknown }>();
@@ -105,3 +105,15 @@ export type Artisan = { id: string; nick: string; master: boolean; done: number;
 export type Artisans = { artisans: Artisan[] };
 export type ArtisanRank = { id: string; nick: string; masters: number; masterIds: number[]; caught: number; goals: number; best: { id: number; done: number; w: number } | null } & FaceInfo;
 export type ArtisanRanking = { champions: ArtisanRank[]; augments: ArtisanRank[]; limited?: { champions: number; augments: number } };
+
+/** 멤버 근황 (v3.74): 지금 접속한 멤버 + 최근 3일 근황 */
+export type PulseNow = { id: string; nick: string; skin: number | null; main: number | null; presence: import('./presence').Presence; phase: '' | 'lobby' | 'select' | 'game'; champ: number; since: number };
+export type PulseItem =
+  | { kind: 'session'; at: number; id: string; nick: string; skin: number | null; main: number | null; n: number; w: number; champ: number; day: 'today' | 'yesterday' | 'before' }
+  | { kind: 'multi'; at: number; id: string; nick: string; skin: number | null; main: number | null; multi: number; champ: number; win: boolean }
+  | { kind: 'streak'; at: number; id: string; nick: string; skin: number | null; main: number | null; streak: number }
+  | { kind: 'together'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[]; n: number; w: number }
+  | { kind: 'first'; at: number; id: string; nick: string; skin: number | null; main: number | null; champ: number }
+  | { kind: 'firsts'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[] }
+  | { kind: 'joined'; at: number; id: string; nick: string; skin: number | null; main: number | null };
+export type Pulse = { now: PulseNow[]; feed: PulseItem[]; at: number };

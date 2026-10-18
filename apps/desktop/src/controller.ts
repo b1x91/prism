@@ -308,12 +308,15 @@ async function pingPresence() {
   if (!state.me) return;
   const lol = LOL_ON.has(state.status);
   const open = await windowOpen();
-  const key = `${lol}-${open}`;
+  // 멤버 근황 '지금' (v3.74): 롤 단계와 그때의 챔프
+  const phase = state.status === 'in-game' ? 'game' : state.status === 'champ-select' ? 'select' : lol ? 'lobby' : '';
+  const champ = phase === 'select' ? state.champSelect?.mine ?? 0 : phase === 'game' ? state.lastChampion ?? 0 : 0;
+  const key = `${lol}-${open}-${phase}-${champ}`;
   const now = Date.now();
   if (key === presenceKey && now - presenceAt < 60_000) return;
   presenceKey = key;
   presenceAt = now;
-  await api.post('/api/me/presence', { via: 'app', lol, open }).catch(() => { presenceKey = ''; });
+  await api.post('/api/me/presence', { via: 'app', lol, open, phase, champ }).catch(() => { presenceKey = ''; });
 }
 
 let started = false;

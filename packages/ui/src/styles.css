@@ -2640,3 +2640,37 @@ button.ga:hover { background: var(--surface-2); }
 }
 /* 옅은 금빛 동그라미 위 금빛 피스: 테두리 그림자로 모양을 세운다 (라이트에서 묻혔다) */
 .msn-ready-ic .piece-ic { filter: drop-shadow(0 1px 1px rgba(120, 78, 0, .45)); }
+
+/* 멤버 근황 (v3.74) */
+.crew-pulse { display: grid; gap: var(--s4); }
+.crew-pulse .card-head { margin-bottom: 0; }
+.pl-live { color: var(--ok); font-weight: 800; }
+.pl-now { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--s2); }
+.pl-chip { display: flex; align-items: center; gap: var(--s3); min-width: 0; padding: var(--s2) var(--s3); border: 1px solid var(--line); border-radius: var(--r-m); background: var(--surface-2); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, background .15s; }
+.pl-chip:hover { border-color: var(--line-2); background: var(--surface-3); }
+.pl-chip.game { border-color: color-mix(in srgb, var(--ok) 45%, var(--line)); background: color-mix(in srgb, var(--ok) 8%, var(--surface-2)); }
+.pl-chip.select { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.pl-chip-t { display: grid; gap: var(--s1); min-width: 0; flex: 1; }
+.pl-chip-t b { font-size: var(--fs-sm); font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-chip-t > span { font-size: var(--fs-xs); color: var(--text-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-chip.game .pl-chip-t > span { color: var(--ok); font-weight: 700; }
+.pl-chip-t small { font-size: var(--fs-xs); color: var(--text-3); font-weight: 600; }
+.pl-chip .champ { border-radius: var(--r-s); flex: none; }
+.pl-feed { display: grid; border-top: 1px solid var(--line); }
+.pl-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto auto; align-items: center; gap: var(--s3); padding: var(--s3) 0; border-bottom: 1px solid var(--line); }
+.pl-item:last-child { border-bottom: 0; }
+.pl-face, .pl-faces button { padding: 0; border: 0; background: none; cursor: pointer; line-height: 0; border-radius: 50%; }
+.pl-group { position: relative; }
+.pl-plus { position: absolute; right: -4px; bottom: -4px; min-width: 20px; height: 16px; padding: 0 var(--s1); border-radius: var(--r-pill); background: var(--text); color: var(--surface); box-shadow: 0 0 0 2px var(--surface); font-size: var(--fs-xs); font-weight: 800; line-height: 16px; text-align: center; font-variant-numeric: tabular-nums; }
+.pl-t { font-size: var(--fs-sm); color: var(--text-2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-t b { color: var(--text); font-weight: 750; }
+.pl-sub { margin-left: var(--s2); color: var(--text-3); font-size: var(--fs-xs); }
+.pl-item.hot .pl-t { color: var(--text); font-weight: 650; }
+.pl-c { width: 28px; height: 28px; line-height: 0; }
+.pl-more { justify-self: center; margin-top: var(--s2); height: 32px; padding: 0 var(--s4); border: 1px solid var(--line); border-radius: var(--r-pill); background: var(--surface); color: var(--text-2); font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; }
+.pl-more:hover { color: var(--text); border-color: var(--line-2); }
+.pl-item .champ { border-radius: var(--r-s); }
+.pl-at { min-width: 48px; text-align: right; font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pl-empty { margin: 0; }
+@media (max-width: 700px) { .pl-now { grid-template-columns: repeat(2, minmax(0, 1fr)); } .pl-sub { display: none; } .pl-t { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } }
+@media (max-width: 340px) { .pl-now { grid-template-columns: minmax(0, 1fr); } }

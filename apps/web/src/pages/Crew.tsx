@@ -1,4 +1,5 @@
-import { BoardView, ChannelButtons, Gem, Icon, DiscordNowCard, Lines, PageSkeleton, ProspectBoard } from '@prism/ui';
+import { BoardView, ChannelButtons, CrewPulse, Gem, Icon, DiscordNowCard, Lines, PageSkeleton, ProspectBoard } from '@prism/ui';
+import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session';
 import { shortNick } from '@prism/core';
 
@@ -39,12 +40,14 @@ function Intro() {
 
 export function Crew() {
   const { me, ready, api, links } = useSession();
+  const navigate = useNavigate();
   if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="crew" /></div></section>;
   if (!me) return <Intro />;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
       <div className="page-head crew-head"><div><h1>Prism</h1><p>{shortNick(me.nick)}님, 오늘 밤도 한 판.</p></div><ChannelButtons links={links} /></div>
       <DiscordNowCard api={api} admin={me.tier === 'admin'} />
+      <CrewPulse api={api} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />
       {<ProspectBoard api={api} invite={links.discord} admin={Boolean(me.perms?.moderate)} />}
       <BoardView api={api} />
     </div></section>

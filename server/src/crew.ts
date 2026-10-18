@@ -47,13 +47,18 @@ export async function getMe(env: Env, me: Member) {
 }
 
 /** 접속 알림 (앱·웹이 60초마다). 앱은 롤 켜짐·창 떠 있음도 함께 */
-export async function setPresence(env: Env, me: Member, body: { via?: unknown; lol?: unknown; open?: unknown }) {
+export async function setPresence(env: Env, me: Member, body: { via?: unknown; lol?: unknown; open?: unknown; phase?: unknown; champ?: unknown }) {
   const now = Date.now();
   if (body.via === 'app') {
-    await env.DB.prepare('UPDATE members SET app_seen_at = ?, app_lol = ?, app_open = ? WHERE id = ?').bind(now, body.lol ? 1 : 0, body.open ? 1 : 0, me.id).run();
+    // 롤 단계·챔프 (멤버 근황 '지금', v3.74). 단계가 바뀔 때만 시작 시각을 새로
+    const phase = body.lol && ['lobby', 'select', 'game'].includes(String(body.phase)) ? String(body.phase) : '';
+    const champ = Number.isInteger(body.champ) && (body.champ as number) > 0 ? (body.champ as number) : 0;
+    await env.DB.prepare(`UPDATE members SET app_seen_at = ?1, app_lol = ?2, app_open = ?3, app_champ = ?5,
+        app_phase_at = CASE WHEN app_phase = ?4 THEN app_phase_at ELSE ?1 END, app_phase = ?4 WHERE id = ?6`)
+      .bind(now, body.lol ? 1 : 0, body.open ? 1 : 0, phase, champ, me.id).run();
     Object.assign(me, { app_seen_at: now, app_lol: body.lol ? 1 : 0, app_open: body.open ? 1 : 0 });
   } else if (body.via === 'app-quit') {
-    await env.DB.prepare('UPDATE members SET app_seen_at = 0, app_lol = 0, app_open = 0 WHERE id = ?').bind(me.id).run();
+    await env.DB.prepare("UPDATE members SET app_seen_at = 0, app_lol = 0, app_open = 0, app_phase = '' WHERE id = ?").bind(me.id).run();
     Object.assign(me, { app_seen_at: 0, app_lol: 0, app_open: 0 });
   } else {
     await env.DB.prepare('UPDATE members SET web_seen_at = ? WHERE id = ?').bind(now, me.id).run();

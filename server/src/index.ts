@@ -6,6 +6,7 @@
  */
 import { saveAbout } from './about.js';
 import { dailyPayload, dailyPost, interactions } from './bot.js';
+import { pulse } from './pulse.js';
 import { promoteSweep } from './promote.js';
 import { download, latest } from './release.js';
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
@@ -77,6 +78,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/ingest') return ingest(req, env, me);
   if (m === 'POST' && pathname === '/api/champselect') return champSelect(req, env, me);
   if (m === 'GET' && pathname === '/api/board') return board(env, me);
+  if (m === 'GET' && pathname === '/api/crew/pulse') return pulse(env);
   if (m === 'POST' && pathname === '/api/tips') return addTip(req, env, me);
   if (m === 'GET' && pathname === '/api/notes') return listNotes(env, me);
   if (m === 'GET' && pathname === '/api/ranking/artisans') { await assertRanking(env, me); return artisanRanking(env, me); }
