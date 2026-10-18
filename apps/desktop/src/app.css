@@ -164,7 +164,7 @@ body { overflow: hidden; background: var(--bg); }
 @media (max-width: 900px) { .consent-band { flex-direction: column; align-items: stretch; } }
 
 /* 첫 화면 (동의 전에는 이것만) */
-.onb { min-height: 100%; display: grid; place-items: center; padding: var(--s7); background: var(--glow), var(--bg); overflow-y: auto; }
+.onb { height: 100%; display: grid; justify-items: center; align-items: safe center; padding: var(--s7); background: var(--glow), var(--bg); overflow-y: auto; overscroll-behavior: contain; }
 .onb-card { width: min(560px, 100%); display: grid; gap: var(--s4); padding: var(--s7); border-radius: var(--r-l); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
 .onb-card.center { place-items: center; min-height: 200px; }
 .onb-head { display: flex; align-items: center; gap: var(--s4); }
