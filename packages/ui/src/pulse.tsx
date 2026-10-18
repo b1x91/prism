@@ -1,7 +1,7 @@
 /**
  * 멤버 근황 (v3.74·v3.75·v3.76): 멤버 화면 '지금 디스코드' 아래. 매일 들어와 보고 싶은 칸.
  *  - 맨 위 '오늘' 띠: 오늘 플레이한 멤버 · 오늘 판 수와 멤버 승률 · 오늘의 하이라이트
- *  - 왼쪽 '지금 접속' 칸: 대표 스킨 그림이 은은히 깔린 줄. 게임 중(챔프·몇 분째) · 챔프 고르는 중 · 온라인 · 앱/웹(점 색만)
+ *  - 왼쪽 '지금 접속' 명단 (v3.87): 상자 없이 세로 구분선으로 나눈 줄 목록. 게임 중(챔프·몇 분째) · 챔프 고르는 중 · 온라인 · 앱/웹(점 색만)
  *  - 오른쪽 '최근 근황' 타임라인(3일, 날짜별): 하루 판 묶음(승패 칸) · 펜타/쿼드라킬·연승(그림 카드) · 함께한 판 · 첫 기록 · 새 회원
  * 30초마다 새로 본다(화면이 보일 때만). 서버 /api/crew/pulse (담아 두지 않는 주소).
  */
@@ -73,7 +73,7 @@ function PulseSkeleton() {
       <div className="pl-today">{[0, 1, 2].map((i) => <div key={i} className="pl-tile"><Bone w={80} h={12} /><Bone w={64} h={28} /><Bone w={120} h={12} /></div>)}</div>
       <div className="pl-body">
         <div className="pl-side"><div className="pl-label"><Bone w={64} h={12} /></div>
-          <div className="pl-now">{[0, 1, 2].map((i) => <div key={i} className="pl-who"><Bone w={40} h={40} r="pill" /><span className="pl-who-t" style={{ gap: 8 }}><Bone w={72} h={12} /><Bone w={104} h={10} /></span></div>)}</div>
+          <div className="pl-now">{[0, 1, 2].map((i) => <div key={i} className="pl-who"><Bone w={36} h={36} r="pill" /><span className="pl-who-t" style={{ gap: 8 }}><Bone w={72} h={12} /><Bone w={104} h={10} /></span></div>)}</div>
         </div>
         <div className="pl-main"><div className="pl-label"><Bone w={48} h={12} /></div>
           <div className="pl-tl">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="pl-item"><Bone w={32} h={32} r="pill" /><span className="pl-t"><Bone w="46%" h={14} /><Bone w="30%" h={12} /></span><span className="pl-c" /><Bone w={40} h={12} /></div>)}</div>
@@ -210,13 +210,11 @@ export function CrewPulse({ api, onMember }: { api: Api; onMember?: (id: string)
             <div className="pl-label"><i className={`pl-ldot ${data.now.length ? 'on' : ''}`} />지금 접속 <b>{data.now.length}</b></div>
             {data.now.length ? <div className="pl-now">{data.now.map((x) => {
               const st = nowText(x);
-              const bg = art(x.skin, x.main);
               return (
                 <button key={x.id} type="button" className={`pl-who ${x.phase}`} onClick={() => onMember?.(x.id)}>
-                  {bg && <img className="pl-who-bg fi" {...imgIn} src={bg} alt="" loading="lazy" />}
-                  <FacePresence p={x.presence}><MemberFace nick={x.nick} skin={x.skin} champion={x.main} size={40} /></FacePresence>
+                  <FacePresence p={x.presence}><MemberFace nick={x.nick} skin={x.skin} champion={x.main} size={36} /></FacePresence>
                   <span className="pl-who-t"><b>{shortNick(x.nick)}</b>{st && <span>{st}</span>}</span>
-                  {(x.phase === 'game' || x.phase === 'select') && x.champ > 0 && <ChampImg id={x.champ} size={32} />}
+                  {(x.phase === 'game' || x.phase === 'select') && x.champ > 0 && <ChampImg id={x.champ} size={28} />}
                 </button>
               );
             })}</div> : <p className="meta pl-empty">지금 접속한 멤버가 없어요</p>}

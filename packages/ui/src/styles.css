@@ -2688,27 +2688,27 @@ button.ga:hover { background: var(--surface-2); }
 .pl-hl.on .pl-hl-t b { color: #fff; }
 .pl-hl-t.none { color: var(--text-3); font-size: var(--fs-lg); }
 /* 두 칸 */
-.pl-body { display: grid; grid-template-columns: minmax(240px, 320px) minmax(0, 1fr); gap: var(--s5); align-items: start; }
-.pl-side { display: grid; gap: var(--s3); padding: var(--s4); border-radius: var(--r-l); background: var(--surface-2); border: 1px solid var(--line); }
-.pl-main { display: grid; gap: var(--s3); min-width: 0; padding-top: var(--s4); }
-.pl-label { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); font-weight: 750; color: var(--text-3); letter-spacing: .02em; }
+.pl-body { display: grid; grid-template-columns: minmax(208px, 264px) minmax(0, 1fr); gap: var(--s6); align-items: start; }
+/* 지금 접속 명단 (v3.87): 위 '오늘' 카드들과 겹쳐 보이지 않게 상자 없이, 오른쪽 세로선으로만 나눈다 */
+.pl-side { display: grid; gap: var(--s3); align-self: stretch; align-content: start; padding-right: var(--s5); border-right: 1px solid var(--line); }
+.pl-main { display: grid; gap: var(--s3); min-width: 0; }
+.pl-label { display: flex; align-items: center; gap: var(--s2); height: 24px; font-size: var(--fs-xs); font-weight: 750; color: var(--text-3); letter-spacing: .02em; }
 .pl-label b { color: var(--text-2); font-weight: 800; }
 /* 지금 접속 */
-.pl-now { display: grid; gap: var(--s2); }
-.pl-who { position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: center; gap: var(--s3); min-width: 0; min-height: 56px; padding: var(--s2) var(--s3); border: 1px solid var(--line); border-radius: var(--r-m); background: var(--surface); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, transform .2s var(--zoom-ease, ease); }
-.pl-who:hover { border-color: var(--line-2); }
-.pl-who-bg { position: absolute; inset: 0 0 0 auto; z-index: -2; width: 70%; height: 100%; object-fit: cover; object-position: center 20%; opacity: .42; mix-blend-mode: multiply; -webkit-mask-image: linear-gradient(90deg, transparent, #000 90%); mask-image: linear-gradient(90deg, transparent, #000 90%); transition: transform .5s var(--zoom-ease, ease); }
-.pl-who:hover .pl-who-bg { transform: scale(1.06); }
-.pl-who::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--surface) 30%, color-mix(in srgb, var(--surface) 55%, transparent) 75%, transparent); }
-.pl-who.game { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); box-shadow: inset 3px 0 0 var(--ok); }
-.pl-who.select { border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); box-shadow: inset 3px 0 0 var(--accent); }
+.pl-now { display: grid; gap: var(--s1); margin: 0 calc(var(--s2) * -1); }
+.pl-who { position: relative; display: flex; align-items: center; gap: var(--s3); min-width: 0; min-height: 52px; padding: var(--s2); border: 0; border-radius: var(--r-m); background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; transition: background .15s; }
+.pl-who:hover { background: var(--surface-2); }
+.pl-who.game { background: color-mix(in srgb, var(--ok) 9%, transparent); }
+.pl-who.game:hover { background: color-mix(in srgb, var(--ok) 14%, transparent); }
+.pl-who.select { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.pl-who.select:hover { background: color-mix(in srgb, var(--accent) 13%, transparent); }
 .pl-who-t { display: grid; gap: 2px; min-width: 0; flex: 1; }
 .pl-who-t b { font-size: var(--fs-md); font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.pl-who-t > span { font-size: var(--fs-xs); color: var(--text-2); font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-who-t > span { font-size: var(--fs-xs); color: var(--text-3); font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pl-who.game .pl-who-t > span { color: var(--ok); font-weight: 750; }
 .pl-who.select .pl-who-t > span { color: var(--accent); font-weight: 750; }
 .pl-who-t small { font-size: var(--fs-xs); font-weight: 600; opacity: .8; }
-.pl-who .champ { flex: none; border-radius: var(--r-s); box-shadow: 0 0 0 2px var(--surface); }
+.pl-who .champ { flex: none; border-radius: var(--r-s); }
 /* 최근 근황 — 날짜 + 타임라인 */
 .pl-day { display: grid; gap: var(--s1); }
 .pl-day + .pl-day { margin-top: var(--s3); }
@@ -2774,8 +2774,8 @@ button.ga:hover { background: var(--surface-2); }
 .pl-empty { margin: 0; }
 @container (max-width: 760px) {
   .pl-body { grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
-  .pl-main { padding-top: 0; }
-  .pl-now { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  .pl-side { padding: 0 0 var(--s4); border-right: 0; border-bottom: 1px solid var(--line); }
+  .pl-now { grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); }
   .pl-today { grid-template-columns: 1fr 1fr; }
   .pl-hl { grid-column: 1 / -1; }
 }
@@ -2789,7 +2789,7 @@ button.ga:hover { background: var(--surface-2); }
   .pl-team-h { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "faces at" "text text"; row-gap: var(--s2); }
   .pl-team-h > .pl-stack { grid-area: faces; } .pl-team-h > .pl-team-t { grid-area: text; } .pl-team-h > .pl-at { grid-area: at; }
 }
-@media (prefers-reduced-motion: reduce) { .pl-live i, .pl-ldot.on { animation: none; } .pl-who-bg, .pl-card-bg { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .pl-live i, .pl-ldot.on { animation: none; } .pl-who, .pl-card-bg { transition: none; } }
 
 /* 큰 그림 갈아 끼우기 (SplashSwap, v3.80): 새 그림이 예전 그림 위에서 서서히 — transform 대신 opacity·scale 만 (호버 확대와 겹치지 않게) */
 .ss-in { animation: ssIn .42s cubic-bezier(.2, .8, .2, 1) both; will-change: opacity; }
