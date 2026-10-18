@@ -5,6 +5,7 @@
 # 설치 파일은 항상 같은 이름(Prism-Setup.exe)으로 올려서 웹의 "앱 받기" 주소가 바뀌지 않게 한다
 # 앱 버전은 apps/desktop/src-tauri/tauri.conf.json 의 version
 # 공개(릴리스·서버 알림)는 증강 인식 QA(vision-qa: 가상 화면·사진·Windows 문자 인식)가 모두 통과해야 한다 (v3.67)
+# 단 Windows 끝단 시험은 지난 공개판 이후 인식 코드·데이터가 바뀌었을 때만 (v3.79)
 name: build-desktop
 
 on:
@@ -21,8 +22,29 @@ permissions:
   contents: write
 
 jobs:
+  # 지난 공개판(app-v*) 이후 인식 코드·증강 데이터가 바뀌었는지 — 안 바뀌었으면 Windows 끝단 시험(문자 인식 설치만 15~20분)을 건너뛴다
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      e2e: ${{ steps.c.outputs.e2e }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: c
+        shell: bash
+        run: |
+          last=$(git tag -l 'app-v*' --sort=-v:refname | head -1)
+          if [ -z "$last" ]; then echo "e2e=yes" >> "$GITHUB_OUTPUT"; exit 0; fi
+          changed=$(git diff --name-only "$last" HEAD -- apps/desktop/src-tauri/src/matcher.rs apps/desktop/src-tauri/src/icons.rs apps/desktop/src-tauri/src/vision.rs apps/desktop/qa packages/core/data .github/workflows/vision-qa.yml)
+          echo "지난 공개판: $last"; echo "바뀐 인식 관련 파일: ${changed:-없음}"
+          if [ -n "$changed" ]; then echo "e2e=yes" >> "$GITHUB_OUTPUT"; else echo "e2e=no" >> "$GITHUB_OUTPUT"; fi
+
   qa:
+    needs: changes
     uses: ./.github/workflows/vision-qa.yml
+    with:
+      e2e: ${{ needs.changes.outputs.e2e }}
 
   windows:
     runs-on: windows-latest

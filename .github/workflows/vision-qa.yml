@@ -6,6 +6,11 @@ name: vision-qa
 
 on:
   workflow_call:
+    inputs:
+      e2e:
+        description: Windows 끝단 시험을 돌릴지 ('no' 면 건너뜀 — 앱 배포 때 인식 코드·데이터가 지난 공개판과 같으면)
+        type: string
+        default: 'yes'
   workflow_dispatch:
   push:
     branches: [main, claude/new-session-18cxmx]
@@ -76,6 +81,8 @@ jobs:
 
   ocr:
     name: 끝단 (Windows 문자 인식)
+    # 앱 배포에서 인식 코드·데이터가 지난 공개판과 같으면 건너뛴다 (이미 통과한 코드 그대로라서). 직접 실행·push 때는 늘 돈다
+    if: ${{ inputs.e2e != 'no' }}
     runs-on: windows-latest
     timeout-minutes: 45
     steps:
@@ -95,10 +102,15 @@ jobs:
       - name: 한국어 문자 인식 설치
         shell: pwsh
         run: |
-          $cap = Get-WindowsCapability -Online | Where-Object { $_.Name -like 'Language.OCR~~~ko-KR*' }
-          $cap | Format-Table Name, State
-          if ($cap.State -ne 'Installed') { $cap | Add-WindowsCapability -Online | Out-Null }
-          Get-WindowsCapability -Online | Where-Object { $_.Name -like 'Language.OCR~~~ko-KR*' } | Format-Table Name, State
+          # 러너에 따라 설치가 '이미 있음' 오류로 끝나거나 오래 걸린다 → 실패해도 상태를 다시 보고, 설치돼 있으면 계속, 아니면 한 번 더
+          $name = 'Language.OCR~~~ko-KR*'
+          $state = { (Get-WindowsCapability -Online | Where-Object { $_.Name -like $name }).State }
+          for ($i = 1; $i -le 2 -and (& $state) -ne 'Installed'; $i++) {
+            try { Get-WindowsCapability -Online | Where-Object { $_.Name -like $name } | Add-WindowsCapability -Online -ErrorAction Stop | Out-Null }
+            catch { Write-Host "설치 시도 $i 실패: $($_.Exception.Message)" }
+          }
+          $s = & $state; Write-Host "한국어 문자 인식: $s"
+          if ($s -ne 'Installed') { exit 1 }
       - run: npm ci
       - run: pip install pillow numpy fonttools brotli
       - name: 아이콘 받기 · 앱 화면 묶기 (앱 코드가 화면 묶음을 함께 컴파일한다)
