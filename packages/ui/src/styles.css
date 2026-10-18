@@ -2796,7 +2796,7 @@ button.ga:hover { background: var(--surface-2); }
 @keyframes ssIn { from { opacity: 0; scale: 1.035; } to { opacity: 1; scale: 1; } }
 @media (prefers-reduced-motion: reduce) { .ss-in { animation: none; } }
 
-/* 앱을 쓰는 멤버들 (v3.84): 고마운 분들을 크게 — 대표 스킨이 은은히 깔린 카드, 기록을 가장 많이 모아 준 셋은 금빛 */
+/* Prism을 밝히는 사람들 (v3.84·v3.85): 고마운 분들을 크게 — 대표 스킨이 은은히 깔린 카드, 기록을 가장 많이 모아 준 셋은 오른쪽 위에 결정 휘장 */
 .appm { display: grid; gap: var(--s4); }
 .appm .card-head { margin-bottom: 0; }
 .am-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s3); }
@@ -2807,11 +2807,21 @@ button.ga:hover { background: var(--surface-2); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .am-bg { opacity: .5; mix-blend-mode: normal; } }
 :root[data-theme="dark"] .am-bg { opacity: .5; mix-blend-mode: normal; }
 .am-card::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--surface-2) 44%, color-mix(in srgb, var(--surface-2) 55%, transparent) 70%, transparent 92%); }
-.am-card.top { border-color: color-mix(in srgb, var(--gold) 55%, var(--line)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 25%, transparent); }
+.am-card.t0 { border-color: color-mix(in srgb, #7a63e8 40%, var(--line)); }
+.am-card.t1 { border-color: color-mix(in srgb, var(--gold) 50%, var(--line)); }
+.am-card.t2 { border-color: color-mix(in srgb, var(--silver) 60%, var(--line)); }
+.am-crest { position: absolute; top: var(--s1); right: var(--s3); z-index: 1; display: grid; place-items: center; width: 32px; height: 36px; transition: transform .3s var(--zoom-ease, ease); }
+.am-crest svg { display: block; overflow: visible; }
+.am-crest.c-prism svg { filter: drop-shadow(0 0 6px rgba(150, 110, 255, .55)) drop-shadow(0 2px 3px rgba(0, 0, 0, .35)); }
+.am-crest.c-gold svg { filter: drop-shadow(0 0 5px rgba(232, 180, 50, .5)) drop-shadow(0 2px 3px rgba(0, 0, 0, .3)); }
+.am-crest.c-silver svg { filter: drop-shadow(0 0 4px rgba(200, 210, 225, .5)) drop-shadow(0 2px 3px rgba(0, 0, 0, .3)); }
+.am-crest-spark { opacity: .9; transform-origin: 20px 6.5px; }
+.am-card:hover .am-crest { transform: translateY(-2px) scale(1.08); }
+.am-card:hover .am-crest-spark { animation: am-spark .7s var(--zoom-ease, ease) 1; }
+@keyframes am-spark { 0% { transform: scale(.4) rotate(0); opacity: .4; } 60% { transform: scale(1.5) rotate(45deg); opacity: 1; } 100% { transform: scale(1) rotate(90deg); opacity: .9; } }
 .am-t { display: grid; gap: var(--s1); min-width: 0; }
 .am-name { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
 .am-name b { font-size: var(--fs-md); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.am-badge { flex: none; height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); background: color-mix(in srgb, var(--gold) 18%, transparent); color: color-mix(in srgb, var(--gold) 70%, var(--text)); font-style: normal; font-size: var(--fs-xs); font-weight: 800; line-height: 20px; }
 .am-chips { display: flex; flex-wrap: wrap; gap: var(--s1); min-height: 0; }
 .am-chips:empty { display: none; }
 .am-chips i { height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--line); font-style: normal; font-size: var(--fs-xs); font-weight: 700; line-height: 18px; color: var(--text-2); }
@@ -2819,4 +2829,4 @@ button.ga:hover { background: var(--surface-2); }
 .am-praise b { color: var(--text); font-weight: 800; }
 .am-meta { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .am-meta:empty { display: none; }
-@media (prefers-reduced-motion: reduce) { .am-card, .am-bg { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .am-card, .am-bg, .am-crest { transition: none; } .am-card:hover .am-crest-spark { animation: none; } }
