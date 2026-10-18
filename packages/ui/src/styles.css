@@ -135,6 +135,9 @@ img { display: block; }
 .icon { width: 18px; height: 18px; flex: none; }
 .empty { display: grid; justify-items: center; gap: var(--s3); padding: var(--s7) var(--s4); text-align: center; color: var(--text-2); }
 .empty .gem { --size: 40px; }
+/* 옆 카드에 맞춰 늘어난 카드의 빈 안내는 남은 높이의 가운데에 (v3.84) */
+.card:has(> .empty) { display: flex; flex-direction: column; }
+.card > .empty { flex: 1; align-content: center; }
 .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); }
 .grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); }
 .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s4); }
@@ -527,6 +530,7 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .rcard img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .rcard button::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(6, 8, 18, .85), transparent 45%); }
 .rcard .res { position: absolute; left: 6px; top: 6px; z-index: 1; height: 20px; padding: 0 6px; border-radius: var(--r-s); font-size: var(--fs-xs); font-weight: 800; display: grid; place-items: center; color: #fff; background: var(--win); }
+.kda, .md-kda, .gkda { white-space: nowrap; } /* 12/4/15 가 줄바꿈으로 갈라지지 않게 */
 .rcard .kda { position: absolute; left: 0; right: 0; bottom: 6px; z-index: 1; text-align: center; font-size: var(--fs-xs); font-weight: 750; color: #fff; font-variant-numeric: tabular-nums; }
 .rcard.is-l .res { background: rgba(20, 24, 40, .75); }
 .rcard.is-l img { filter: grayscale(.6) brightness(.7); }
@@ -668,7 +672,9 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 /* ───────── 포텐 멤버 ───────── */
 .prospects { display: grid; gap: var(--s3); }
 .prospects .card-head { margin-bottom: 0; }
-.plist2 { display: grid; gap: var(--s2); }
+.plist2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s2); }
+.prospects { container-type: inline-size; }
+@container (max-width: 640px) { .plist2 { grid-template-columns: minmax(0, 1fr); } }
 .prow2 { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: var(--s3); align-items: center; padding: var(--s3); border-radius: var(--r-m); background: var(--surface-2); }
 .prow2 .face { width: 44px; height: 44px; border-radius: 50%; object-fit: cover; }
 .prow2 .face.ph { display: block; background: var(--surface-3); }
@@ -2691,7 +2697,7 @@ button.ga:hover { background: var(--surface-2); }
 .pl-now { display: grid; gap: var(--s2); }
 .pl-who { position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: center; gap: var(--s3); min-width: 0; min-height: 56px; padding: var(--s2) var(--s3); border: 1px solid var(--line); border-radius: var(--r-m); background: var(--surface); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, transform .2s var(--zoom-ease, ease); }
 .pl-who:hover { border-color: var(--line-2); }
-.pl-who-bg { position: absolute; inset: 0 0 0 auto; z-index: -2; width: 70%; height: 100%; object-fit: cover; object-position: center 20%; opacity: .5; -webkit-mask-image: linear-gradient(90deg, transparent, #000 90%); mask-image: linear-gradient(90deg, transparent, #000 90%); transition: transform .5s var(--zoom-ease, ease); }
+.pl-who-bg { position: absolute; inset: 0 0 0 auto; z-index: -2; width: 70%; height: 100%; object-fit: cover; object-position: center 20%; opacity: .42; mix-blend-mode: multiply; -webkit-mask-image: linear-gradient(90deg, transparent, #000 90%); mask-image: linear-gradient(90deg, transparent, #000 90%); transition: transform .5s var(--zoom-ease, ease); }
 .pl-who:hover .pl-who-bg { transform: scale(1.06); }
 .pl-who::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--surface) 30%, color-mix(in srgb, var(--surface) 55%, transparent) 75%, transparent); }
 .pl-who.game { border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); box-shadow: inset 3px 0 0 var(--ok); }
@@ -2728,6 +2734,29 @@ button.ga:hover { background: var(--surface-2); }
 .pl-c { width: 32px; height: 32px; line-height: 0; }
 .pl-item .champ { border-radius: var(--r-s); }
 .pl-at { text-align: right; font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+/* 함께한 판 칭찬 카드 (v3.83) */
+.pl-team { position: relative; z-index: 1; display: grid; gap: var(--s3); margin: var(--s2) 0; padding: var(--s4); border-radius: var(--r-l); background: linear-gradient(135deg, var(--accent-soft), transparent 65%), var(--surface); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line)); } /* 바탕이 비치지 않게(타임라인 선이 카드 위로 보이지 않게) */
+.pl-team-h { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: var(--s3); }
+.pl-stack.lg { margin-top: 0; }
+.pl-stack.lg button { box-shadow: 0 0 0 2px var(--surface-2); }
+.pl-team-t { display: grid; gap: var(--s1); min-width: 0; }
+.pl-team-t > b { font-size: var(--fs-md); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pl-team-t > span { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); color: var(--text-2); font-weight: 650; }
+.pl-team-run { justify-self: start; display: inline-flex; align-items: center; gap: var(--s1); height: 24px; padding: 0 var(--s3); border-radius: var(--r-pill); background: color-mix(in srgb, var(--gold) 16%, transparent); color: color-mix(in srgb, var(--gold) 70%, var(--text)); font-size: var(--fs-xs); font-weight: 800; }
+.pl-team-run > span { opacity: .6; }
+.pl-team-multi { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.pl-mk { display: inline-flex; align-items: center; gap: var(--s2); height: 32px; padding: 0 var(--s3) 0 var(--s1); border-radius: var(--r-pill); background: linear-gradient(90deg, #1d1630, #2a1c12); color: #fff; font-size: var(--fs-sm); box-shadow: inset 0 0 0 1px rgba(255, 210, 122, .35); }
+.pl-mk .champ { border-radius: 50%; }
+.pl-mk em { font-style: normal; font-weight: 900; color: #ffd27a; }
+.pl-mk.penta { box-shadow: inset 0 0 0 1px rgba(255, 210, 122, .8), 0 0 12px rgba(255, 196, 64, .35); }
+.pl-praise { display: grid; gap: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--line); }
+.pl-praise-h { font-size: var(--fs-xs); font-weight: 800; color: var(--text-3); }
+.pl-pr { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: var(--s2); align-items: start; }
+.pl-pr > i { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: color-mix(in srgb, var(--ok) 16%, transparent); color: var(--ok); }
+.pl-pr > i .icon { width: 12px; height: 12px; }
+.pl-pr > span { display: grid; gap: 2px; min-width: 0; }
+.pl-pr b { font-size: var(--fs-sm); font-weight: 750; }
+.pl-pr small { font-size: var(--fs-xs); color: var(--text-3); }
 /* 하이라이트 줄: 그림 카드 */
 .pl-feat .pl-card { grid-column: 2 / 4; position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: center; justify-content: space-between; gap: var(--s3); min-height: 64px; padding: var(--s3) var(--s4); border-radius: var(--r-m); background: #0b0d16; color: #fff; }
 .pl-card-bg { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: 75% 22%; transition: transform .6s var(--zoom-ease, ease); }
@@ -2755,6 +2784,10 @@ button.ga:hover { background: var(--surface-2); }
   .pl-c { width: 28px; height: 28px; } .pl-c .champ { width: 28px !important; height: 28px !important; }
   .pl-tile { min-height: 0; padding: var(--s3); } .pl-tile > b { font-size: var(--fs-xl); }
   .pl-cells, .pl-tile .pl-wbar { display: none; }
+  /* 함께한 판 카드: 얼굴 줄(+ 시간) / 이름·전적 줄로 나눈다 */
+  .pl-team { padding: var(--s3); }
+  .pl-team-h { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "faces at" "text text"; row-gap: var(--s2); }
+  .pl-team-h > .pl-stack { grid-area: faces; } .pl-team-h > .pl-team-t { grid-area: text; } .pl-team-h > .pl-at { grid-area: at; }
 }
 @media (prefers-reduced-motion: reduce) { .pl-live i, .pl-ldot.on { animation: none; } .pl-who-bg, .pl-card-bg { transition: none; } }
 
@@ -2762,3 +2795,28 @@ button.ga:hover { background: var(--surface-2); }
 .ss-in { animation: ssIn .42s cubic-bezier(.2, .8, .2, 1) both; will-change: opacity; }
 @keyframes ssIn { from { opacity: 0; scale: 1.035; } to { opacity: 1; scale: 1; } }
 @media (prefers-reduced-motion: reduce) { .ss-in { animation: none; } }
+
+/* 앱을 쓰는 멤버들 (v3.84): 고마운 분들을 크게 — 대표 스킨이 은은히 깔린 카드, 기록을 가장 많이 모아 준 셋은 금빛 */
+.appm { display: grid; gap: var(--s4); }
+.appm .card-head { margin-bottom: 0; }
+.am-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s3); }
+.am-card { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: var(--s3); align-items: center; min-height: 96px; padding: var(--s3) var(--s4); border: 1px solid var(--line); border-radius: var(--r-l); background: var(--surface-2); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, transform .2s var(--zoom-ease, ease); }
+.am-card:hover { border-color: var(--line-2); transform: translateY(-2px); }
+.am-bg { position: absolute; inset: 0 0 0 auto; z-index: -2; width: 72%; height: 100%; object-fit: cover; object-position: center 20%; opacity: .6; mix-blend-mode: multiply; -webkit-mask-image: linear-gradient(90deg, transparent, #000 85%); mask-image: linear-gradient(90deg, transparent, #000 85%); transition: transform .5s var(--zoom-ease, ease); }
+.am-card:hover .am-bg { transform: scale(1.06); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .am-bg { opacity: .5; mix-blend-mode: normal; } }
+:root[data-theme="dark"] .am-bg { opacity: .5; mix-blend-mode: normal; }
+.am-card::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, var(--surface-2) 44%, color-mix(in srgb, var(--surface-2) 55%, transparent) 70%, transparent 92%); }
+.am-card.top { border-color: color-mix(in srgb, var(--gold) 55%, var(--line)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gold) 25%, transparent); }
+.am-t { display: grid; gap: var(--s1); min-width: 0; }
+.am-name { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
+.am-name b { font-size: var(--fs-md); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.am-badge { flex: none; height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); background: color-mix(in srgb, var(--gold) 18%, transparent); color: color-mix(in srgb, var(--gold) 70%, var(--text)); font-style: normal; font-size: var(--fs-xs); font-weight: 800; line-height: 20px; }
+.am-chips { display: flex; flex-wrap: wrap; gap: var(--s1); min-height: 0; }
+.am-chips:empty { display: none; }
+.am-chips i { height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--line); font-style: normal; font-size: var(--fs-xs); font-weight: 700; line-height: 18px; color: var(--text-2); }
+.am-praise { font-size: var(--fs-sm); color: var(--text-2); }
+.am-praise b { color: var(--text); font-weight: 800; }
+.am-meta { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.am-meta:empty { display: none; }
+@media (prefers-reduced-motion: reduce) { .am-card, .am-bg { transition: none; } }

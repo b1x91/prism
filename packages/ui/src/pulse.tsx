@@ -8,6 +8,8 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { CHAMPIONS, ago, cdragon, josa, shortDate, shortNick, type Api, type Pulse, type PulseFace, type PulseItem, type PulseNow } from '@prism/core';
 import { ChampImg, FacePresence, MemberFace, useSkins } from './basics';
+import { Icon } from './icons';
+import { PieceIcon } from './shop';
 import { useLoad } from './crew';
 import { Bone, Swap, fadeCls, imgIn, useReveal } from './skeleton';
 
@@ -51,11 +53,14 @@ function Faces({ list, max = 5, onMember }: { list: PulseFace[]; max?: number; o
   );
 }
 
-/** 오늘의 하이라이트: 펜타 > 쿼드라 > 가장 긴 연승 */
-function highlight(feed: PulseItem[]): { item: PulseItem; champ: number; skin: number | null; title: ReactNode; sub: string } | null {
+/** 오늘의 하이라이트: 펜타 > 쿼드라 > 가장 긴 연승. 함께한 판 카드 안의 펜타·쿼드라도 후보 — 그때는 카드는 두고 그 칩만 숨긴다 */
+type MultiRef = { id: string; nick: string; multi: number; champ: number; win: boolean };
+function highlight(feed: PulseItem[]): { item: PulseItem | null; multi?: MultiRef; champ: number; skin: number | null; title: ReactNode; sub: string } | null {
   const today = feed.filter((x) => dayLabel(x.at) === '오늘');
-  const multi = today.filter((x): x is Extract<PulseItem, { kind: 'multi' }> => x.kind === 'multi').sort((a, b) => b.multi - a.multi)[0];
-  if (multi) return { item: multi, champ: multi.champ, skin: null, title: <><b>{shortNick(multi.nick)}</b> {multi.multi >= 5 ? '펜타킬' : '쿼드라킬'}</>, sub: `${champName(multi.champ)} · ${multi.win ? '승리한 판' : '아쉽게 진 판'}` };
+  const solo = today.filter((x): x is Extract<PulseItem, { kind: 'multi' }> => x.kind === 'multi').map((x) => ({ item: x as PulseItem | null, m: x as MultiRef }));
+  const inGroup = today.flatMap((x) => (x.kind === 'together' ? (x.multis ?? []).map((m) => ({ item: null as PulseItem | null, m })) : []));
+  const best = [...solo, ...inGroup].sort((a, b) => b.m.multi - a.m.multi)[0];
+  if (best) return { item: best.item, multi: best.item ? undefined : best.m, champ: best.m.champ, skin: null, title: <><b>{shortNick(best.m.nick)}</b> {best.m.multi >= 5 ? '펜타킬' : '쿼드라킬'}</>, sub: `${champName(best.m.champ)} · ${best.m.win ? '승리한 판' : '아쉽게 진 판'}` };
   const st = today.filter((x): x is Extract<PulseItem, { kind: 'streak' }> => x.kind === 'streak').sort((a, b) => b.streak - a.streak)[0];
   if (st) return { item: st, champ: st.main ?? 0, skin: st.skin, title: <><b>{shortNick(st.nick)}</b> {st.streak}연승 중</>, sub: '지금 이어지는 중' };
   return null;
@@ -64,7 +69,7 @@ function highlight(feed: PulseItem[]): { item: PulseItem; champ: number; skin: n
 function PulseSkeleton() {
   return (
     <section className="card pad crew-pulse">
-      <div className="card-head"><h2>멤버 근황</h2></div>
+      <div className="card-head"><h2>아카이브</h2></div>
       <div className="pl-today">{[0, 1, 2].map((i) => <div key={i} className="pl-tile"><Bone w={80} h={12} /><Bone w={64} h={28} /><Bone w={120} h={12} /></div>)}</div>
       <div className="pl-body">
         <div className="pl-side"><div className="pl-label"><Bone w={64} h={12} /></div>
@@ -94,7 +99,7 @@ export function CrewPulse({ api, onMember }: { api: Api; onMember?: (id: string)
   const hl = highlight(data.feed);
   const art = (skin: number | null, main: number | null) => (skin && skins?.[skin]?.splash) || (main ? cdragon(CHAMPIONS[main]?.splash) : '');
   // 하이라이트 칸에 올린 근황은 타임라인에서 빼 같은 것을 두 번 보이지 않는다
-  const rest = hl ? data.feed.filter((x) => x !== hl.item) : data.feed;
+  const rest = hl?.item ? data.feed.filter((x) => x !== hl.item) : data.feed;
   const feed = more ? rest : rest.slice(0, SHOW);
   // 날짜별로 묶는다 (근황은 이미 최근순)
   const days: { label: string; items: PulseItem[]; today: boolean }[] = [];
@@ -116,6 +121,27 @@ export function CrewPulse({ api, onMember }: { api: Api; onMember?: (id: string)
         {group && group.length > 1 && <span className="pl-plus">+{group.length - 1}</span>}
       </button>
     );
+    // 함께한 판: 멤버들을 한 장에 — 함께 N판 · 연판 보너스 · 펜타/쿼드라 축하 · 함께라서 잘한 점 (v3.83)
+    if (it.kind === 'together' && (it.praise || it.multis || it.run)) {
+      const ms = (it.multis ?? []).filter((m) => !(hl?.multi && hl.multi.id === m.id && hl.multi.champ === m.champ && hl.multi.multi === m.multi));
+      const praise = it.praise ?? [];
+      return (
+        <div key={key} className="pl-team">
+          <div className="pl-team-h">
+            <span className="pl-stack lg">{it.members.slice(0, 5).map((m) => <button key={m.id} type="button" title={shortNick(m.nick)} onClick={() => onMember?.(m.id)}><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={36} /></button>)}{it.members.length > 5 && <span className="pl-stack-n">+{it.members.length - 5}</span>}</span>
+            <span className="pl-team-t"><b>{names(it.members)}</b><span><WinCells n={it.n} w={it.w} />함께 {it.n}판 {it.w}승</span></span>
+            {at}
+          </div>
+          {(it.run ?? 0) >= 2 && <div className="pl-team-run">함께 {it.run}연판<span>·</span>한 명당 +{(it.bonus ?? 0).toLocaleString()}<PieceIcon size={12} /></div>}
+          {ms.length > 0 && <div className="pl-team-multi">{ms.map((m, k) => (
+            <span key={k} className={`pl-mk ${m.multi >= 5 ? 'penta' : ''}`}><ChampImg id={m.champ} size={24} /><b>{shortNick(m.nick)}</b><em>{m.multi >= 5 ? '펜타킬!' : '쿼드라킬!'}</em></span>
+          ))}</div>}
+          {praise.length > 0 && <div className="pl-praise"><small className="pl-praise-h">함께라서 잘한 점</small>{praise.map((p) => (
+            <div key={p.key} className="pl-pr"><i aria-hidden="true"><Icon name="check" /></i><span><b>{p.title}</b><small>{p.text}</small></span></div>
+          ))}</div>}
+        </div>
+      );
+    }
     // 펜타·쿼드라킬·연승은 그림 카드
     if (it.kind === 'multi' || it.kind === 'streak') {
       const src = it.kind === 'multi' ? cdragon(CHAMPIONS[it.champ]?.splash) : art(it.skin, it.main);
@@ -155,7 +181,7 @@ export function CrewPulse({ api, onMember }: { api: Api; onMember?: (id: string)
     <Swap on={rv} skeleton={<PulseSkeleton />}>
       <section className={`card pad crew-pulse ${fadeCls(rv)}`}>
         <div className="card-head">
-          <h2>멤버 근황</h2><span className="sp" />
+          <h2>아카이브</h2><span className="sp" />
           {playing > 0 && <span className="pl-live"><i />{playing}명 게임 중</span>}
         </div>
 

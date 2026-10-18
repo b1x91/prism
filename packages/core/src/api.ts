@@ -23,7 +23,7 @@ export interface Api {
  */
 export const CACHE_TTL = 3600_000;
 const LIVE_EXACT = new Set(['/api/me', '/api/me/games', '/api/crew/targets', '/links']);
-const LIVE_PREFIX = ['/api/discord', '/api/crew/pulse', '/api/me/presence', '/api/admin', '/app/'];
+const LIVE_PREFIX = ['/api/discord', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
 const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag'];
 export function withCache(api: Api, ttl = CACHE_TTL): Api {
   const memo = new Map<string, { at: number; data: unknown }>();
@@ -112,10 +112,12 @@ export type PulseItem =
   | { kind: 'session'; at: number; id: string; nick: string; skin: number | null; main: number | null; n: number; w: number; champ: number; day: 'today' | 'yesterday' | 'before' }
   | { kind: 'multi'; at: number; id: string; nick: string; skin: number | null; main: number | null; multi: number; champ: number; win: boolean }
   | { kind: 'streak'; at: number; id: string; nick: string; skin: number | null; main: number | null; streak: number }
-  | { kind: 'together'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[]; n: number; w: number }
+  | { kind: 'together'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[]; n: number; w: number; run?: number; bonus?: number; multis?: { id: string; nick: string; multi: number; champ: number; win: boolean }[]; praise?: import('./praise').Praise[] }
   | { kind: 'first'; at: number; id: string; nick: string; skin: number | null; main: number | null; champ: number }
   | { kind: 'firsts'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[] }
   | { kind: 'joined'; at: number; id: string; nick: string; skin: number | null; main: number | null };
+/** 앱을 쓰는 멤버 (v3.84): collected = 이 멤버의 앱이 모은 판, games = 본인 판, crew = 멤버 2명 이상 판 */
+export type AppMember = { id: string; nick: string; skin: number | null; main: number | null; about: import('./about').About | null; joined: number; collected: number; games: number; crew: number; presence: import('./presence').Presence };
 export type PulseFace = { id: string; nick: string; skin: number | null; main: number | null };
 /** 오늘(KST) 요약. games = 서로 다른 판 수, n·w = 멤버별 판·승 합 (예전 서버는 없음) */
 export type PulseToday = { players: PulseFace[]; games: number; n: number; w: number };

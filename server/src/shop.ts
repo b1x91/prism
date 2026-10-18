@@ -6,7 +6,7 @@
 import { augMastery, champMastery, dexLevel, type DexLevel } from '../../packages/core/src/mastery.js';
 import { dexFromRows } from '../../packages/core/src/history.js';
 import { parseFeat } from '../../packages/core/src/challenges.js';
-import { EARN, SHOP_ITEM, earnedTotal, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
+import { EARN, SHOP_ITEM, earnedTotal, runBonusOf, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
 import { dexRows } from './crew.js';
 import { missionPiecesOf } from './missions.js';
 import { HttpError, json, type Env, type Member } from './util.js';
@@ -34,7 +34,7 @@ async function levelsOf(env: Env, id: string) {
 
 async function earned(env: Env, id: string): Promise<Earned> {
   const now = Date.now();
-  const [g, t, d] = await env.DB.batch([
+  const [g, t, d, cr] = await env.DB.batch([
     env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w, COALESCE(SUM(CASE WHEN crew_count >= 2 THEN 1 ELSE 0 END), 0) AS c FROM participants WHERE member_id = ?').bind(id),
     // 함께 해요: 참여한 판·내전의 시간(30분 전 ~ 3시간 뒤)에 실제로 기록된 판이 있으면
     env.DB.prepare(
@@ -45,11 +45,13 @@ async function earned(env: Env, id: string): Promise<Earned> {
        ) t WHERE EXISTS (SELECT 1 FROM participants q WHERE q.member_id = ?1 AND q.played_at BETWEEN t.at - 1800000 AND t.at + 10800000)`,
     ).bind(id, now),
     env.DB.prepare('SELECT COUNT(*) AS n FROM piece_daily WHERE member_id = ?').bind(id),
+    // 함께 연판: 멤버 2명 이상 판의 시각 (v3.83)
+    env.DB.prepare('SELECT played_at AS t FROM participants WHERE member_id = ? AND crew_count >= 2 ORDER BY played_at').bind(id),
   ]);
   const gr = g.results[0] as { n: number; w: number; c: number };
   const [{ champs, augs }, missions] = await Promise.all([levelsOf(env, id), missionPiecesOf(env, id)]);
   const levels = [...champs, ...augs].reduce((s, x) => s + levelTotal(dexLevel(x.m)), 0);
-  return { games: gr.n, wins: gr.w, crew: gr.c, levels, together: (t.results[0] as { n: number }).n, daily: (d.results[0] as { n: number }).n, missions };
+  return { games: gr.n, wins: gr.w, crew: gr.c, levels, together: (t.results[0] as { n: number }).n, daily: (d.results[0] as { n: number }).n, missions, run: runBonusOf((cr.results as { t: number }[]).map((r) => r.t)) };
 }
 
 /** 단계별 피스 배율·특별회원 할인 (v3.32) */

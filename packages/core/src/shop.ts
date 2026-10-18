@@ -5,6 +5,7 @@
  * 숫자는 여기 한 곳에서 바꾼다. 번 피스는 기록에서 늘 다시 계산하므로 기준을 바꾸면 지난 기록에도 적용된다.
  */
 import type { DexLevel } from './mastery';
+import { RUN_GAP } from './praise';
 
 export const PIECE = '피스';
 
@@ -16,6 +17,21 @@ export const EARN = {
   together: 20,
   daily: 10,
 } as const;
+
+/**
+ * 함께 연판 (v3.83): 멤버 2명 이상인 판을 이어서(다음 판이 50분 안에 시작) 할수록 판마다 더 준다.
+ * 이어진 k번째 판 = step × (k − 1) — 2번째 +2 · 3번째 +4 · … · 10번째 +18, 10연판부터는 매 판 +18 그대로. 10연판 한 번이면 +90.
+ */
+export const RUN_BONUS = { step: 2, max: 10 } as const;
+export function runBonusOf(times: number[]) {
+  const t = [...times].sort((a, b) => a - b);
+  let sum = 0, k = 0;
+  for (let i = 0; i < t.length; i++) {
+    k = i > 0 && t[i] - t[i - 1] <= RUN_GAP ? k + 1 : 1;
+    sum += RUN_BONUS.step * (Math.min(k, RUN_BONUS.max) - 1);
+  }
+  return sum;
+}
 
 /** 도감 레벨에 오를 때마다 (챔피언·증강 각각). 누적: 실버 5 · 골드 15 · 플래티넘 35 · 다이아몬드 65 · 마스터 165 */
 export const LEVEL_REWARD: Record<DexLevel, number> = { 0: 0, 1: 5, 2: 10, 3: 20, 4: 30, 5: 100 };
@@ -90,8 +106,8 @@ export function parseDeco(s: string | null | undefined): Deco {
 
 /** 번 피스 내역 */
 /** missions: 미션으로 번 피스 (core/missions.ts) */
-export type Earned = { games: number; wins: number; crew: number; levels: number; together: number; daily: number; missions?: number };
-export const earnedTotal = (e: Earned) => e.games * EARN.game + e.wins * EARN.win + e.crew * EARN.crew + e.levels + e.together * EARN.together + e.daily * EARN.daily + (e.missions ?? 0);
+export type Earned = { games: number; wins: number; crew: number; levels: number; together: number; daily: number; missions?: number; run?: number };
+export const earnedTotal = (e: Earned) => e.games * EARN.game + e.wins * EARN.win + e.crew * EARN.crew + e.levels + e.together * EARN.together + e.daily * EARN.daily + (e.missions ?? 0) + (e.run ?? 0);
 
 export type Shop = { balance: number; earned: Earned; spent: number; owned: string[]; deco: Deco; shared: boolean; rates?: import('./api').Rates };
 /** 특별회원 할인 가격 (서버와 같은 계산) */

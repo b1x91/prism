@@ -39,7 +39,7 @@ export function Layout() {
       <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <div key={`${pathname}-${k}`} className="route"><Outlet /></div>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>
-        <span>Prism은 Riot Games의 공식 서비스가 아니며 Riot Games와 무관합니다. League of Legends 및 관련 이미지는 Riot Games의 자산입니다. · <NavLink to="/privacy" className="foot-link">개인정보 처리방침</NavLink></span>
+        <NavLink to="/privacy" className="foot-link">개인정보 처리방침</NavLink>
       </div></footer>
     </>
   );
