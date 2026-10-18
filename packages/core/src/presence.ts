@@ -7,12 +7,13 @@ export type Presence = 'off' | 'web' | 'app' | 'game' | 'both';
 
 export const PRESENCE_TTL = 150_000; // 앱·웹은 60초마다 알린다. 2분 반 소식이 없으면 나간 것으로
 
+/** 점의 설명(마우스를 올리면). 화면 글자로는 롤이 켜진 경우만 '온라인'을 쓰고 앱·웹은 점 색으로만 (v3.75) */
 export const PRESENCE_LABEL: Record<Presence, string> = {
   off: '접속 안 함',
   web: '웹 접속',
   app: '앱 접속',
-  game: '게임 접속',
-  both: '앱 + 게임 접속',
+  game: '온라인',
+  both: '온라인 · 앱 사용 중',
 };
 
 export type PresenceRaw = { webAt: number; appAt: number; lol: boolean; open: boolean };

@@ -4,7 +4,7 @@ import { AugmentOpen, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, 
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
-const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '모임', 'users']];
+const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '멤버', 'users']];
 
 export function Layout() {
   const { me, login, links, api, refresh } = useSession();
