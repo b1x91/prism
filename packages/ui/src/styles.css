@@ -2280,7 +2280,7 @@ button.ga:hover { background: var(--surface-2); }
 /* ───────── 최애 챔프 고르기 (v3.41) ───────── */
 .fpk { display: grid; gap: var(--s3); min-width: 0; }
 .fpk-stage { position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: flex-end; gap: var(--s3); height: 132px; padding: var(--s4); border-radius: var(--r-l); background: linear-gradient(135deg, #1b2140, #07090f); color: #fff; }
-.fpk-art { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; animation: fpk-in .45s cubic-bezier(.2, .8, .2, 1) both; }
+.fpk-art { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
 .fpk-stage.on::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, rgba(7, 9, 15, .9), rgba(7, 9, 15, .1) 70%); }
 .fpk-face { line-height: 0; border-radius: var(--r-m); box-shadow: 0 0 0 2px #fff, 0 6px 18px rgba(0, 0, 0, .5); overflow: hidden; }
 .fpk-txt { display: grid; gap: 2px; min-width: 0; }
@@ -2748,3 +2748,8 @@ button.ga:hover { background: var(--surface-2); }
   .pl-cells, .pl-tile .pl-wbar { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .pl-live i, .pl-ldot.on { animation: none; } .pl-who-bg, .pl-card-bg { transition: none; } }
+
+/* 큰 그림 갈아 끼우기 (SplashSwap, v3.80): 새 그림이 예전 그림 위에서 서서히 — transform 대신 opacity·scale 만 (호버 확대와 겹치지 않게) */
+.ss-in { animation: ssIn .42s cubic-bezier(.2, .8, .2, 1) both; will-change: opacity; }
+@keyframes ssIn { from { opacity: 0; scale: 1.035; } to { opacity: 1; scale: 1; } }
+@media (prefers-reduced-motion: reduce) { .ss-in { animation: none; } }

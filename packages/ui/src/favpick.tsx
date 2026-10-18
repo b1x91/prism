@@ -2,6 +2,7 @@
  * 최애 챔프 고르기 (v3.41). 새 회원이 처음 들어올 때 한 번: 고른 챔프의 기본 스킨이 프로필 사진이 되고 '내 챔프'에도 담긴다.
  * 앱은 첫 화면(Onboarding)의 한 단계로, 웹은 처음 로그인했을 때 한 번 뜨는 창(WelcomePick)으로 같은 화면을 쓴다.
  */
+import { SplashSwap } from './splash';
 import { useMemo, useState } from 'react';
 import { CHAMPIONS, CHAMPION_LIST, ROLE_KO, baseSkin, cdragon, matchName, type Api } from '@prism/core';
 import { ChampImg } from './basics';
@@ -31,7 +32,7 @@ export function FavChampPick({ api, onDone, verb = '시작' }: { api: Api; onDon
     <div className="fpk">
       <div className={`fpk-stage ${c ? 'on' : ''}`}>
         {c ? <>
-          <img key={pick} className="fpk-art" src={cdragon(c.splash)} alt="" />
+          <SplashSwap className="fpk-art" src={cdragon(c.splash)} />
           <span className="fpk-face"><ChampImg id={pick!} size={56} /></span>
           <span className="fpk-txt"><b>{c.name}</b><small>{ROLE_KO[c.roles[0]]} · 이 챔프가 내 프로필 사진이 돼요</small></span>
         </> : <span className="fpk-empty"><Icon name="star" />가장 좋아하는 챔프를 골라 주세요</span>}

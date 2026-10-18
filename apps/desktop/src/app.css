@@ -484,3 +484,8 @@ body { overflow: hidden; background: var(--bg); }
 .cs-augrow .cs-chip small { color: var(--text-3); }
 @media (max-width: 1100px) { .cs-augrow { grid-template-columns: minmax(0, 1fr); } .cs-augrow .cs-mine { flex-direction: row; flex-wrap: wrap; } }
 @media (max-width: 900px) { .cs-augrow .cs-augs { grid-template-columns: minmax(0, 1fr); } }
+
+/* 챔프를 바꾸면 큰 카드 글자는 짧게 떠오르고(움직임은 4px), 그림은 SplashSwap 이 겹쳐 바꾼다 (v3.80) */
+.cs-swap { animation: csSwap .26s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes csSwap { from { opacity: 0; translate: 0 4px; } to { opacity: 1; translate: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .cs-swap { animation: none; } }

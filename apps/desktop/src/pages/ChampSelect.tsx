@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from 'react';
 import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, type ChampionProfile, type Comp, type Need, type Verdict, shortNick, josa } from '@prism/core';
-import { AugRing, AugmentLink, ChampImg, Seg, TierBadge } from '@prism/ui';
+import { AugRing, AugmentLink, ChampImg, Seg, SplashSwap, TierBadge, preloadSplash } from '@prism/ui';
 import { checkNow, type ChampSelect, type CrewSelect } from '../controller';
 import { bridge } from '../bridge';
 import { Icon } from '@prism/ui';
@@ -56,6 +56,9 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
   const shown = preview && cs.bench.includes(preview) ? preview : cs.mine ?? bench[0];
   const mates = Object.fromEntries((crew?.teammates ?? []).map((m) => [m.puuid, m]));
   const setS = (s: Sort) => { setSort(s); try { localStorage.setItem('prism-bench-sort', s); } catch { /* 없음 */ } };
+  // 내 챔프·대기석·팀 챔프 그림을 미리 받아 둔다 — 바꿀 때 기다림 없이 바로 겹쳐 바뀌게 (v3.80)
+  const preKey = [cs.mine, ...cs.bench, ...cs.team.map((t) => t.championId)].filter(Boolean).join(',');
+  useEffect(() => { preloadSplash(preKey.split(',').map(Number)); }, [preKey]);
   // 아직 아무 챔프도 정해지지 않은 첫 몇 초: 빈 숫자 대신 기다리는 화면
   if (!shown && !base.length && !bench.length) return (
     <section className="card pad cs">
@@ -190,14 +193,14 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
   return (
     <>
     <article className={`cs-tile ${isMine ? 'mine' : ''}`}>
-      <img className="bg" alt="" src={cdragon(ch.splash)} />
+      <SplashSwap className="bg" src={cdragon(ch.splash)} />
       <div className="cs-top">
         <span className={`cs-tag ${isMine ? 'mine' : ''}`}>{isMine ? '내 챔프' : '대기석 미리보기'}</span>
         {isReco && <span className="cs-tag reco">팀 추천</span>}
         <span className="sp" />
         {onBack && <button type="button" className="btn sm back" onClick={onBack}>내 챔프 보기</button>}
       </div>
-      <div className="body">
+      <div className="body cs-swap" key={id}>
         <div className="cs-name">
           <h3>{ch.name}</h3>
           <div className="cs-chips">{[ROLE_KO[ch.roles[0]], ch.roles[1] && ROLE_KO[ch.roles[1]], ch.damage === 'MIX' ? 'AP·AD' : ch.damage, RANGE_KO[ch.range]].filter(Boolean).map((t) => <span key={t as string}>{t}</span>)}</div>

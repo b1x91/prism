@@ -1,3 +1,4 @@
+import { SplashSwap } from './splash';
 import { useMemo, useState, type ReactNode } from 'react';
 import { CHAMPIONS, CHAMPION_LIST, ROLE_KO, cdragon, matchName } from '@prism/core';
 import { ChampImg } from './basics';
@@ -98,7 +99,7 @@ export function ChampBanner({ id, eyebrow, actions, foot, children }: { id: numb
   const tags = [ROLE_KO[c.roles[0]], c.roles[1] && ROLE_KO[c.roles[1]], c.damage === 'MIX' ? 'AP·AD' : c.damage, c.range === 'ranged' ? '원거리' : '근접'].filter(Boolean) as string[];
   return (
     <div className="banner">
-      <img className="bg fi" {...imgIn} alt="" src={cdragon(c.splash)} />
+      <SplashSwap className="bg" src={cdragon(c.splash)} />
       {/* 오른쪽 위 구석: 좋아요 + 페이지 버튼 */}
       <div className="actions"><FavStar kind="champ" id={id} />{actions}</div>
       <div>
