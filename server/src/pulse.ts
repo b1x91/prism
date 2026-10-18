@@ -1,5 +1,5 @@
 /**
- * 멤버 근황 (CLAUDE.md v3.74): 모임 화면 '지금 디스코드' 아래.
+ * 멤버 근황 (CLAUDE.md v3.74·v3.76): 모임 화면 '지금 디스코드' 아래.
  *  - 지금: 접속한 멤버 (게임 중 → 챔프 고르는 중 → 롤 켜 둠 → 앱 → 웹 순), 앱이 알린 롤 단계·챔프·시작 시각
  *  - 최근 근황(3일): 하루 판 묶음 · 펜타/쿼드라킬 · 연승 · 회원 셋 이상 함께한 판 · 첫 기록 · 새 회원
  * 회원 전용. 기록에서 늘 다시 만든다(따로 저장하지 않음).
@@ -101,6 +101,17 @@ export async function pulse(env: Env): Promise<Response> {
   // 새 회원
   for (const r of joined.results as any[]) feed.push({ kind: 'joined', at: r.t, ...face(r) });
 
+  // 오늘(KST) 요약: 플레이한 멤버 · 서로 다른 판 수 · 멤버 판 승패
+  const todayRows = rows.filter((r) => dayOf(r.t) === today);
+  const players = new Map<string, Face & { n: number }>();
+  for (const r of todayRows) { const e = players.get(r.id) ?? { ...face(r), n: 0 }; e.n++; players.set(r.id, e); }
+  const todaySum = {
+    players: [...players.values()].sort((a, b) => b.n - a.n).map(({ n: _n, ...f }) => f),
+    games: new Set(todayRows.map((r) => r.g)).size,
+    n: todayRows.length,
+    w: todayRows.reduce((a, r) => a + (r.w ? 1 : 0), 0),
+  };
+
   feed.sort((a, b) => b.at - a.at);
-  return json({ now: nowList, feed: feed.slice(0, 30), at: now } satisfies Pulse);
+  return json({ now: nowList, feed: feed.slice(0, 30), today: todaySum, at: now } satisfies Pulse);
 }

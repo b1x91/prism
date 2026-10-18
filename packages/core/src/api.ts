@@ -116,4 +116,7 @@ export type PulseItem =
   | { kind: 'first'; at: number; id: string; nick: string; skin: number | null; main: number | null; champ: number }
   | { kind: 'firsts'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[] }
   | { kind: 'joined'; at: number; id: string; nick: string; skin: number | null; main: number | null };
-export type Pulse = { now: PulseNow[]; feed: PulseItem[]; at: number };
+export type PulseFace = { id: string; nick: string; skin: number | null; main: number | null };
+/** 오늘(KST) 요약. games = 서로 다른 판 수, n·w = 멤버별 판·승 합 (예전 서버는 없음) */
+export type PulseToday = { players: PulseFace[]; games: number; n: number; w: number };
+export type Pulse = { now: PulseNow[]; feed: PulseItem[]; today?: PulseToday; at: number };
