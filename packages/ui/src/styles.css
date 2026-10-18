@@ -2810,7 +2810,7 @@ button.ga:hover { background: var(--surface-2); }
 .am-card.t0 { border-color: color-mix(in srgb, #7a63e8 40%, var(--line)); }
 .am-card.t1 { border-color: color-mix(in srgb, var(--gold) 50%, var(--line)); }
 .am-card.t2 { border-color: color-mix(in srgb, var(--silver) 60%, var(--line)); }
-.am-crest { position: absolute; top: var(--s1); right: var(--s3); z-index: 1; display: grid; place-items: center; width: 32px; height: 36px; transition: transform .3s var(--zoom-ease, ease); }
+.am-crest { position: absolute; top: var(--s3); right: var(--s3); z-index: 1; display: block; width: 22px; height: 25px; line-height: 0; transition: transform .3s var(--zoom-ease, ease); }
 .am-crest svg { display: block; overflow: visible; }
 .am-crest.c-prism svg { filter: drop-shadow(0 0 6px rgba(150, 110, 255, .55)) drop-shadow(0 2px 3px rgba(0, 0, 0, .35)); }
 .am-crest.c-gold svg { filter: drop-shadow(0 0 5px rgba(232, 180, 50, .5)) drop-shadow(0 2px 3px rgba(0, 0, 0, .3)); }

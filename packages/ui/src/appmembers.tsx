@@ -28,8 +28,8 @@ function Crest({ rank }: { rank: number }) {
   const I = [[14, 8], [20.5, 12], [20.5, 20], [14, 24], [7.5, 20], [7.5, 12]];
   const face = (i: number) => [O[i], O[(i + 1) % 6], I[(i + 1) % 6], I[i]].map((p) => p.join(',')).join(' ');
   return (
-    <span className={`am-crest c-${c.key}`} title={`${c.name} · 기록을 가장 많이 모아 준 ${rank + 1}위`} aria-label={`${c.name} ${rank + 1}위`}>
-      <svg viewBox="0 0 28 32" width="30" height="34" aria-hidden>
+    <span className={`am-crest c-${c.key}`} title={c.name} aria-label={`${c.name} ${rank + 1}위`}>
+      <svg viewBox="0 0 28 32" width="22" height="25" aria-hidden>
         <defs><linearGradient id={id} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={c.t[0]} /><stop offset="1" stopColor={c.t[1]} /></linearGradient></defs>
         {[0, 1, 2, 3, 4, 5].map((i) => <polygon key={i} points={face(i)} fill={c.f[i]} />)}
         <polygon points={I.map((p) => p.join(',')).join(' ')} fill={`url(#${id})`} />
@@ -67,7 +67,7 @@ export function AppMembers({ api, onMember }: { api: Api; onMember?: (id: string
   return (
     <Swap on={rv} skeleton={<AppMembersSkeleton />}>
       <section className={`card pad appm ${fadeCls(rv)}`}>
-        <div className="card-head"><h2>Prism을 밝히는 사람들</h2><span className="sp" /><span className="meta">이분들의 앱 덕분에 모두의 기록이 쌓여요 · {ms.length}명</span></div>
+        <div className="card-head"><h2>Prism을 밝히는 사람들</h2></div>
         <div className="am-grid">{shown.map((m, i) => {
           const top = i < TOP && m.collected > 0;
           const days = Math.max(1, Math.round((Date.now() - m.joined) / DAY));
