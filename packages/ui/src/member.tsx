@@ -8,7 +8,7 @@ import {
   type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
   rankScore, byScore, improveOf, type WinTip,
 } from '@prism/core';
-import { AugImg, ChampImg, Empty, Gem, LockedMore, MemberFace, PresenceTag, RoleBadge, Seg, useSkins } from './basics';
+import { AugImg, ChampImg, Empty, Gem, LockedMore, MemberFace, PresenceTag, faceSrc, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
 import { ArtisanRankingView } from './artisan';
 import { Icon } from './icons';
@@ -16,6 +16,7 @@ import { useLoad } from './crew';
 import { RecentGames } from './game';
 import { ProfileHero, ShareButton, baseTint } from './shop';
 import { BgScene } from './bgscene';
+import { preloadImages } from './splash';
 import { NickName, ProfileStudio } from './studio';
 import { MemberSkeleton, RankingSkeleton, useReveal, Swap, fadeCls } from './skeleton';
 
@@ -74,20 +75,29 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
   const art = by === 'champ-art' || by === 'aug-art';
   const { data, error } = useLoad<Ranking>(api, art ? null : by === 'season' ? '/api/ranking?period=season&by=score' : by === 'score' ? '/api/ranking?by=score' : '/api/ranking');
   const skins = useSkins();
-  const rv = useReveal(!art && Boolean(data));
   const rows = useMemo(() => {
     const r = (data?.rows ?? []).slice();
     if (by === 'season' || by === 'score') return r.sort(byScore);
     return r.sort((a, b) => b.n - a.n || b.w - a.w);
   }, [data, by]);
+  // 얼굴 그림을 먼저 받아 둔 뒤 무대를 보인다 — 빈 동그라미가 먼저 보였다가 얼굴이 튀어나오지 않게 (최대 1.5초, v3.82)
+  const [readyFor, setReadyFor] = useState<unknown>(null);
+  useEffect(() => {
+    if (!data || !skins) return;
+    let on = true;
+    preloadImages(rows.slice(0, 12).map((r) => faceSrc(r.skin, r.mainChampion, skins))).then(() => { if (on) setReadyFor(data); });
+    return () => { on = false; };
+  }, [data, skins, rows]);
+  const shown = !art && Boolean(data) && readyFor === data;
+  const rv = useReveal(shown);
   return (
     <div className="stack" style={{ gap: 16 }}>
       <div className="row wrapr"><Seg value={by} options={[['season', '시즌'], ['score', '전체'], ['games', '판수'], ['champ-art', '챔프 장인'], ['aug-art', '증강 장인']]} onChange={setBy} />
         <span className="meta">{art ? '도감 마스터 여정을 모두 이룬 수 (같으면 이룬 목표 수)' : by === 'season' ? (data?.season ? seasonMeta(data.season) : '이번 시즌 점수') : by === 'score' ? '지금까지 모든 판의 점수' : '지금까지 기록된 판수'}</span></div>
       {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
-      {!art && !data && !error && <RankingSkeleton />}
-      {!art && data && <Swap on={rv} skeleton={<RankingSkeleton />}><div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
+      {!art && !shown && !error && <RankingSkeleton />}
+      {shown && data && <Swap on={rv} skeleton={<RankingSkeleton />}><div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
       {!rows.length && <Empty>{by === 'season' ? '이번 시즌에 기록된 판이 아직 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
       {rows.length > 0 && <Leaderboard key={`lb-${by}`} play={play} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
       {rows.length > 3 && <div key={`rl-${by}`} className={`card rank-list ${play ? 'lb-in' : ''}`}>

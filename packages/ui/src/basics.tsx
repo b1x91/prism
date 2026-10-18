@@ -211,10 +211,13 @@ export function useSkins() {
  * 회원 얼굴 (모든 회원 표시는 이것 하나로): 대표 스킨 타일 → 주 챔피언 → 이니셜.
  * skins 를 넘기지 않으면 알아서 불러온다.
  */
+/** 회원 얼굴 그림 주소 (대표 스킨 → 주 챔프, 없으면 '') */
+export const faceSrc = (skin: number | null | undefined, champion: number | null | undefined, sk: Record<number, Skin> | null | undefined) =>
+  skin && sk?.[skin]?.tile ? sk[skin].tile : champion ? cdragon(CHAMPIONS[champion]?.tile) : '';
+
 export function MemberFace({ nick, skin, champion, size = 40, skins }: { nick: string; skin?: number | null; champion?: number | null; size?: number; skins?: Record<number, Skin> | null }) {
   const loaded = useSkins();
-  const sk = skins ?? loaded;
-  const src = skin && sk?.[skin]?.tile ? sk[skin].tile : champion ? cdragon(CHAMPIONS[champion]?.tile) : '';
+  const src = faceSrc(skin, champion, skins ?? loaded);
   return src ? <img className="face fi" {...imgIn} src={src} width={size} height={size} alt="" loading="lazy" style={{ width: size, height: size }} /> : <Initial nick={nick} size={size} />;
 }
 

@@ -21,6 +21,12 @@ function ready(src: string): Promise<void> {
   return (img.decode ? img.decode() : new Promise<void>((r) => { img.onload = () => r(); img.onerror = () => r(); })).then(done, done);
 }
 
+/** 그림 여러 장을 받아 풀어 둔다 (다 되거나 limit ms 가 지나면 끝) — 화면을 보여 주기 전에 그림이 뒤늦게 튀어나오지 않게 */
+export function preloadImages(srcs: string[], limit = 1500): Promise<void> {
+  const all = Promise.all([...new Set(srcs.filter(Boolean))].map(ready)).then(() => undefined);
+  return Promise.race([all, new Promise<void>((r) => setTimeout(r, limit))]);
+}
+
 /** 챔프 그림을 미리 받아 둔다 (챔프 선택의 대기석·팀 챔프 등) */
 export function preloadSplash(ids: (number | null | undefined)[]) {
   for (const id of ids) { const s = id ? cdragon(CHAMPIONS[id]?.splash) : ''; if (s) void ready(s); }
