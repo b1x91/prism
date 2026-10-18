@@ -117,7 +117,15 @@ export function MemberSkeleton({ public: pub = false, self }: { public?: boolean
           </div>
         </section>}
       {/* 내 페이지 = 승률을 올리려면, 남의 페이지 = 나와의 시너지 (모르면 둘 다 그리지 않는다) */}
-      {!pub && self === true && <section className="card pad"><Head w={120} /><Bone w="100%" h={156} r="l" /><div className="grid2">{[0, 1].map((i) => <Bone key={i} w="100%" h={96} r="m" />)}</div></section>}
+      {!pub && self === true && <section className="card pad imp">
+        <Head w={120} />
+        {/* 실제 '승률을 올리려면'과 같은 틀: 가장 큰 한 가지(테두리 칸) + 나머지 두 칸(위 줄 구분) */}
+        <div className="tip top"><div className="tip-h"><Bone w={132} h={12} /></div><Bone w="62%" h={20} /><Bone w="88%" h={12} />
+          <div className="tip-cmp">{[0, 1].map((i) => <div key={i} className="tcm"><Bone w={72} h={12} /><Bone w="100%" h={8} r="pill" /><Bone w={32} h={12} /><Bone w={36} h={12} /></div>)}</div>
+          <Bone w="54%" h={12} />
+        </div>
+        <div className="imp-rest">{[0, 1].map((i) => <div key={i} className="tip"><Bone w="58%" h={14} /><Bone w="92%" h={12} /><Bone w="70%" h={12} /></div>)}</div>
+      </section>}
       {!pub && self === false && <section className="card sk-duo"><Bone w="100%" h={440} r="none" dark /><div className="sk-lines" style={{ gap: 12, padding: "var(--s5) var(--s6)" }}><div className="grid4">{[0, 1, 2, 3].map((i) => <div key={i} className="sk-lines" style={{ gap: 8 }}><Bone w={64} h={10} /><Bone w={96} h={28} /></div>)}</div></div></section>}
       {!pub && <section className="card pad"><Head w={88} /><div className="rstrip">{Array.from({ length: 10 }, (_, i) => <Bone key={i} r="m" className="sk-tile" />)}</div></section>}
       <div className="grid2">

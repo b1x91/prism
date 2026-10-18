@@ -68,7 +68,7 @@ function PulseSkeleton() {
       <div className="pl-today">{[0, 1, 2].map((i) => <div key={i} className="pl-tile"><Bone w={80} h={12} /><Bone w={64} h={28} /><Bone w={120} h={12} /></div>)}</div>
       <div className="pl-body">
         <div className="pl-side"><div className="pl-label"><Bone w={64} h={12} /></div>
-          <div className="pl-now">{[0, 1, 2].map((i) => <div key={i} className="pl-who"><Bone w={40} h={40} r="pill" /><span className="pl-who-t"><Bone w={72} h={14} /><Bone w={104} h={12} /></span></div>)}</div>
+          <div className="pl-now">{[0, 1, 2].map((i) => <div key={i} className="pl-who"><Bone w={40} h={40} r="pill" /><span className="pl-who-t" style={{ gap: 8 }}><Bone w={72} h={12} /><Bone w={104} h={10} /></span></div>)}</div>
         </div>
         <div className="pl-main"><div className="pl-label"><Bone w={48} h={12} /></div>
           <div className="pl-tl">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="pl-item"><Bone w={32} h={32} r="pill" /><span className="pl-t"><Bone w="46%" h={14} /><Bone w="30%" h={12} /></span><span className="pl-c" /><Bone w={40} h={12} /></div>)}</div>

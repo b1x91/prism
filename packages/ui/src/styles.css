@@ -1183,8 +1183,9 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .md-skel .md-lessons, .md-skel .md-team { display: grid; gap: var(--s3); }
 .sk.ln { height: 12px; width: 100%; } .sk.ln.t { height: 16px; width: 160px; } .sk.ln.s { width: 60%; } .sk.ln.w { width: 100%; }
 .sk.sq { width: 36px; height: 36px; border-radius: var(--r-s); } .sk.dot { width: 16px; height: 16px; border-radius: 50%; flex: none; }
-.sk-l { display: flex; align-items: center; gap: var(--s3); }
-.md-row.sk-row { grid-template-columns: 36px minmax(0, 1.4fr) 88px minmax(80px, 1fr) 160px; grid-template-areas: none; min-height: 48px; }
+.sk-l { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
+.sk-l > .sk.ln { flex: 1 1 auto; width: auto; min-width: 0; } /* 점 옆 줄: 100% 폭이면 점만큼 칸을 넘친다 */
+.md-row.sk-row { display: grid; grid-template-columns: 36px minmax(0, 1.4fr) 88px minmax(80px, 1fr) 160px; grid-template-areas: none; min-height: 48px; }
 @media (max-width: 640px) { .md-row.sk-row { grid-template-columns: 36px minmax(0, 1fr) 64px; } .md-row.sk-row .sk.ln.w, .md-row.sk-row .sk.ln:nth-child(4) { display: none; } }
 
 /* 같이 할 판 · 내전 한 곳에서: 종류 고르기 + 카드의 종류 표시 */
@@ -2435,7 +2436,7 @@ button.ga:hover { background: var(--surface-2); }
 .sk-lb .lb-slot.p1 .sk-lbcard { border-color: rgba(255, 255, 255, .12); background: #0d1120; box-shadow: none; }
 .sk-ped { background: rgba(255, 255, 255, .06) !important; box-shadow: none !important; }
 .sk-msn { gap: var(--s3); }
-.sk-msn-champ { width: 100%; height: 168px; }
+.sk-msn-champ { width: 100%; height: 100%; } /* 줄 높이(168, 좁으면 136)를 따른다 — 고정 높이면 좁은 화면에서 아래가 잘리고 넘친다 */
 .sk-shopcard { box-shadow: none; }
 .sk-duo { overflow: hidden; }
 .sk-scprev { display: grid; place-content: center; justify-items: center; gap: var(--s3); background: var(--surface-2); }
