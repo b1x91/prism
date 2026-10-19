@@ -10,6 +10,8 @@ import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
 import skinData from '../../packages/core/data/skins.json';
 import { presenceOf } from '../../packages/core/src/presence.js';
 import { aboutOf } from './about.js';
+import { ITEM } from '../../packages/core/src/data.js';
+import { isFinished, type CrewItems } from '../../packages/core/src/build.js';
 
 /** 스킨 등급 (없는 스킨이면 null) */
 const skinTier = (id: number): number | null => (skinData.skins as unknown as Record<string, [string, number, string, string]>)[id]?.[1] ?? null;
@@ -155,7 +157,46 @@ export async function crewTargets(env: Env) {
 
 // ───────── 챔피언 단위 ─────────
 
-async function championInfo(env: Env, me: Member, championId: number, tipLimit: number) {
+/** 신발 (완성 신발 6종) */
+const BOOTS = new Set([3006, 3009, 3020, 3047, 3111, 3158]);
+
+/**
+ * 아이템 추천의 사실 쪽 (v3.88): 기록된 판(10명 전체, matches.players)에서 이 챔프가 끝에 갖고 있던 완성 아이템·신발.
+ * 판수가 적으면 화면이 역할 기본 빌드를 쓴다 (buildFor). 외부 통계는 쓰지 않는다.
+ */
+async function crewItems(env: Env, championIds: number[]): Promise<Map<number, CrewItems>> {
+  const ids = [...new Set(championIds)].filter((x) => Number.isInteger(x) && x > 0).slice(0, 16);
+  const out = new Map<number, CrewItems>();
+  if (!ids.length) return out;
+  const rows = await env.DB.prepare(
+    `SELECT json_extract(j.value, '$.championId') AS c, json_extract(j.value, '$.items') AS items, json_extract(j.value, '$.win') AS win
+     FROM matches m, json_each(m.players) j
+     WHERE m.players IS NOT NULL AND json_extract(j.value, '$.championId') IN (${ids.map(() => '?').join(',')})
+     ORDER BY m.played_at DESC LIMIT 3000`,
+  ).bind(...ids).all<{ c: number; items: string | null; win: number | boolean }>().catch(() => ({ results: [] as { c: number; items: string | null; win: number | boolean }[] }));
+  const acc = new Map<number, { games: number; items: Map<number, { n: number; w: number }>; boots: Map<number, { n: number; w: number }> }>();
+  for (const r of rows.results) {
+    let list: number[] = [];
+    try { list = JSON.parse(r.items ?? '[]'); } catch { /* 빈 기록 */ }
+    if (!Array.isArray(list) || !list.length) continue;
+    const a = acc.get(Number(r.c)) ?? { games: 0, items: new Map(), boots: new Map() };
+    acc.set(Number(r.c), a);
+    if (a.games >= 400) continue; // 챔프마다 최근 400판까지
+    a.games++;
+    const win = r.win === true || r.win === 1 ? 1 : 0;
+    for (const id of new Set(list.map(Number))) {
+      const box = BOOTS.has(id) ? a.boots : isFinished(id) && ITEM[id] ? a.items : null;
+      if (!box) continue;
+      const x = box.get(id) ?? { n: 0, w: 0 };
+      x.n++; x.w += win; box.set(id, x);
+    }
+  }
+  const top = (m: Map<number, { n: number; w: number }>, k: number) => [...m].map(([id, v]) => ({ id, ...v })).sort((a, b) => b.n - a.n || b.w - a.w).slice(0, k);
+  for (const id of ids) { const a = acc.get(id); out.set(id, { games: a?.games ?? 0, items: a ? top(a.items, 8) : [], boots: a ? top(a.boots, 2) : [] }); }
+  return out;
+}
+
+async function championInfo(env: Env, me: Member, championId: number, tipLimit: number, items?: CrewItems) {
   const [crew, mine, augs, masters, tips] = await env.DB.batch([
     env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w FROM participants WHERE champion_id = ?').bind(championId),
     env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w FROM participants WHERE champion_id = ? AND member_id = ?').bind(championId, me.id),
@@ -178,6 +219,7 @@ async function championInfo(env: Env, me: Member, championId: number, tipLimit: 
   return {
     crew: crew.results[0] as NW,
     me: mine.results[0] as NW,
+    items: items ?? (await crewItems(env, [championId])).get(championId),
     topAugments: augs.results,
     masters: masters.results,
     tips: tips.results,
@@ -191,7 +233,8 @@ export async function champSelect(req: Request, env: Env, me: Member) {
   const mates = (Array.isArray(teammatePuuids) ? teammatePuuids : []).filter((x): x is string => typeof x === 'string').slice(0, 4);
 
   const champions: Record<number, unknown> = {};
-  for (const id of new Set(champs)) champions[id] = await championInfo(env, me, id, 3);
+  const items = await crewItems(env, champs);
+  for (const id of new Set(champs)) champions[id] = await championInfo(env, me, id, 3, items.get(id));
 
   const teammates = [];
   for (const puuid of mates) {

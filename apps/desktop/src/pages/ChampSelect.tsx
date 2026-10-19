@@ -3,8 +3,8 @@
  * 롤 클라이언트에는 읽기만 한다. 고르기·교체는 사용자가 롤에서 직접 한다.
  */
 import { useEffect, useState } from 'react';
-import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, type ChampionProfile, type Comp, type Need, type Verdict, shortNick, josa } from '@prism/core';
-import { AugRing, AugmentLink, ChampImg, Seg, SplashSwap, TierBadge, preloadSplash } from '@prism/ui';
+import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, buildFor, type ChampionProfile, type Comp, type Need, type Verdict, shortNick, josa } from '@prism/core';
+import { AugRing, AugmentLink, ChampImg, ItemBuild, Seg, SplashSwap, TierBadge, preloadSplash } from '@prism/ui';
 import { checkNow, type ChampSelect, type CrewSelect } from '../controller';
 import { bridge } from '../bridge';
 import { Icon } from '@prism/ui';
@@ -243,6 +243,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
           <div className="cs-mine">{myAugs.map((a) => <AugmentLink key={a.id} id={a.id} champion={id} inline className="cs-chip"><AugRing id={a.id} size={22} /><span>{AUGMENT[a.id]?.name}</span><small>{a.n}번 · {pct(a.w, a.n)}</small></AugmentLink>)}</div>
         </div>}
     </section>}
+    <section className="cs-itemrow"><ItemBuild build={buildFor(id, cc?.items)} title={`${ch.name} 추천 아이템`} /></section>
     </>
   );
 }

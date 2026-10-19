@@ -19,7 +19,7 @@ const IDLE_PHASES = ['None', 'Lobby', 'EndOfGame', 'WaitingForStats', 'PreEndOfG
 export type Slot = { championId: number; puuid: string };
 export type ChampSelect = { mine: number | null; bench: number[]; team: Slot[] };
 export type CrewSelect = {
-  champions: Record<number, { crew: { n: number; w: number }; topAugments: { id: number; n: number; w: number }[]; masters: { nick: string; n: number; w: number }[] }>;
+  champions: Record<number, { crew: { n: number; w: number }; items?: import('@prism/core').CrewItems; topAugments: { id: number; n: number; w: number }[]; masters: { nick: string; n: number; w: number }[] }>;
   teammates: { puuid: string; nick: string; together: { n: number; w: number } }[];
 } | null;
 

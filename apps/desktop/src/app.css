@@ -96,8 +96,8 @@ body { overflow: hidden; background: var(--bg); }
 .tm .who.prism { color: var(--accent); font-weight: 650; }
 
 /* 챔프 선택 (v3.72): 위 = 큰 카드 | 우리 팀 분석 (같은 높이), 아래 = 어울리는 증강 줄 (좌우 끝까지) */
-.cs-layout { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); grid-template-areas: "hero team" "augs augs"; gap: var(--s5); align-items: stretch; }
-.cs-layout > .cs-tile { grid-area: hero; } .cs-layout > .tb { grid-area: team; align-content: start; } .cs-layout > .cs-augrow { grid-area: augs; }
+.cs-layout { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); grid-template-areas: "hero team" "augs augs" "items items"; gap: var(--s5); align-items: stretch; }
+.cs-layout > .cs-tile { grid-area: hero; } .cs-layout > .tb { grid-area: team; align-content: start; } .cs-layout > .cs-augrow { grid-area: augs; } .cs-layout > .cs-itemrow { grid-area: items; }
 .cs-layout.one { grid-template-columns: minmax(0, 1fr); grid-template-areas: "team"; }
 .cs-layout.one .cs-tile { min-height: 360px; }
 /* 챔프가 정해지기 전 */
@@ -151,7 +151,7 @@ body { overflow: hidden; background: var(--bg); }
   .side-ch span, .side-status, .side-me span:last-child { display: none; }
   .side-foot { flex-direction: column; } .side-foot .btn { padding: 0; width: 40px; font-size: 0; }
   .main { padding: var(--s5); }
-  .cs-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "team" "hero" "augs"; }
+  .cs-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "team" "hero" "augs" "items"; }
   .cs-tile { min-height: 320px; }
   .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -469,6 +469,8 @@ body { overflow: hidden; background: var(--bg); }
 /* 어울리는 증강 줄 (v3.72): 큰 카드 아래가 아니라 좌우 끝까지 — 왼쪽 카드만 길어지지 않게 */
 .cs-augrow { display: grid; grid-template-columns: minmax(0, 3fr) minmax(220px, 1fr); gap: var(--s5); padding: var(--s4) var(--s5) var(--s5); border-radius: var(--r-l); background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
 .cs-augrow.solo { grid-template-columns: minmax(0, 1fr); }
+/* 추천 아이템 줄 (v3.88) — 어울리는 증강 줄과 같은 판 */
+.cs-itemrow { padding: var(--s4) var(--s5) var(--s5); border-radius: var(--r-l); background: var(--surface-2); border: 1px solid var(--line); min-width: 0; }
 .cs-augrow .cs-h { color: var(--text-2); }
 .cs-augrow .cs-h small { color: var(--text-3); }
 .cs-augrow .cs-augs { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s2); align-items: stretch; }

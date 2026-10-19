@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { CHAMPIONS, DATA_VERSION, type AugmentStats } from '@prism/core';
-import { Artisans, AugmentCompare, AugmentGuide, ChampBanner, ChampGrid, ChampionCrew, Gem, GlassBtn, Icon, Seg, useLoad } from '@prism/ui';
+import { Artisans, AugmentCompare, AugmentGuide, ChampBanner, ChampGrid, ChampItems, ChampionCrew, Gem, GlassBtn, Icon, Seg, useLoad } from '@prism/ui';
 import { useSession } from '../session';
 
 export function GuidePicker({ to }: { to: (id: number) => string }) {
@@ -27,7 +27,7 @@ function MemberLock() {
   );
 }
 
-type Tab = 'guide' | 'compare' | 'crew';
+type Tab = 'guide' | 'items' | 'compare' | 'crew';
 export function Guide() {
   const { id } = useParams();
   const championId = Number(id);
@@ -42,11 +42,12 @@ export function Guide() {
       <ChampBanner id={championId} eyebrow="아수라장 증강 가이드" actions={<GlassBtn icon="back" label="챔프 목록으로" href="/champions" as={(p) => <Link {...p} />} />} />
       {me && <Artisans api={api} kind="champion" id={championId} onMember={(m) => nav(`/members/${m}`)} />}
       <div className="row wrapr">
-        <Seg value={tab} options={[['guide', '어울리는 증강'], ['compare', '증강 3개 비교'], ['crew', '모임 기록']]} onChange={setTab} />
+        <Seg value={tab} options={[['guide', '어울리는 증강'], ['items', '아이템'], ['compare', '3개 비교'], ['crew', '모임 기록']]} onChange={setTab} />
         <span className="sp" /><span className="meta">게임 데이터 {DATA_VERSION} 기준</span>
       </div>
       {tab === 'guide' && <><AugmentGuide championId={championId} stats={stats} />{!me && <MemberLock />}
         <p className="meta">"잘 맞음"은 챔프 역할·피해 유형·스킬과 증강 효과를 맞춰 본 어울림입니다. 증강 자체의 세기와는 다를 수 있어요.</p></>}
+      {tab === 'items' && <ChampItems api={me ? api : null} championId={championId} />}
       {tab === 'compare' && <AugmentCompare championId={championId} stats={stats} />}
       {tab === 'crew' && (me ? <ChampionCrew api={api} championId={championId} /> : <MemberLock />)}
     </div></section>
