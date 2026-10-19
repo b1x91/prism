@@ -12,6 +12,11 @@ import { presenceOf } from '../../packages/core/src/presence.js';
 import { aboutOf } from './about.js';
 import { ITEM } from '../../packages/core/src/data.js';
 import { isFinished, type CrewItems } from '../../packages/core/src/build.js';
+import { bondOf } from '../../packages/core/src/duo.js';
+import type { DuoGame } from '../../packages/core/src/profile.js';
+import { stakesOf } from '../../packages/core/src/weekly.js';
+import { shortNick } from '../../packages/core/src/text.js';
+import { weeklyOf } from './weekly.js';
 
 /** 스킨 등급 (없는 스킨이면 null) */
 const skinTier = (id: number): number | null => (skinData.skins as unknown as Record<string, [string, number, string, string]>)[id]?.[1] ?? null;
@@ -239,17 +244,31 @@ export async function champSelect(req: Request, env: Env, me: Member) {
   const teammates = [];
   for (const puuid of mates) {
     // 수집에 동의한 회원만 Prism 회원으로 표시한다
-    const m = await env.DB.prepare('SELECT id, nick FROM members WHERE riot_puuid = ? AND opt_in_at IS NOT NULL').bind(puuid).first<{ id: string; nick: string }>();
+    const m = await env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')} FROM members m WHERE m.riot_puuid = ? AND m.opt_in_at IS NOT NULL`).bind(puuid).first<{ id: string; nick: string; skin: number | null; main: number | null }>();
     if (!m || m.id === me.id) continue;
-    const together = await env.DB.prepare(
-      `SELECT COUNT(*) AS n, COALESCE(SUM(a.win), 0) AS w FROM participants a JOIN participants b
-       ON a.game_id = b.game_id AND a.team_id = b.team_id WHERE a.member_id = ? AND b.member_id = ?`,
-    )
-      .bind(me.id, m.id)
-      .first<NW>();
-    teammates.push({ puuid, nick: m.nick, together });
+    // 함께한 판(같은 팀) · 그 회원의 최근 판 (지금 이어지는 연승)
+    const [tg, rec] = await env.DB.batch([
+      env.DB.prepare(
+        `SELECT a.played_at AS t, a.win AS w FROM participants a JOIN participants b
+         ON a.game_id = b.game_id AND a.team_id = b.team_id WHERE a.member_id = ? AND b.member_id = ?`,
+      ).bind(me.id, m.id),
+      env.DB.prepare('SELECT win AS w FROM participants WHERE member_id = ? ORDER BY played_at DESC LIMIT 30').bind(m.id),
+    ]);
+    const T = tg.results as { t: number; w: number }[];
+    const R = rec.results as { w: number }[];
+    const streak = R.findIndex((x) => !x.w);
+    const bond = bondOf(T.map((x) => ({ t: x.t, w: x.w ? 1 : 0 }) as DuoGame));
+    teammates.push({
+      puuid, id: m.id, nick: m.nick, skin: m.skin, main: m.main,
+      together: { n: T.length, w: T.filter((x) => x.w).length },
+      bond: { grade: bond.grade, name: bond.name },
+      streak: streak < 0 ? R.length : streak,
+    });
   }
-  return json({ champions, teammates });
+  // 이번 판에 걸린 것 (이번 주 도전, v3.90)
+  const weekly = await weeklyOf(env, me);
+  const stakes = stakesOf(weekly, teammates.map((t) => ({ id: t.id, nick: shortNick(t.nick) })));
+  return json({ champions, teammates, stakes });
 }
 
 /**

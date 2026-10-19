@@ -16,6 +16,7 @@ export * from './presence';
 export * from './challenges';
 export * from './shop';
 export * from './missions';
+export * from './weekly';
 export * from './duo';
 export * from './liveitems';
 export * from './about';

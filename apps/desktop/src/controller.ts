@@ -20,7 +20,9 @@ export type Slot = { championId: number; puuid: string };
 export type ChampSelect = { mine: number | null; bench: number[]; team: Slot[] };
 export type CrewSelect = {
   champions: Record<number, { crew: { n: number; w: number }; items?: import('@prism/core').CrewItems; topAugments: { id: number; n: number; w: number }[]; masters: { nick: string; n: number; w: number }[] }>;
-  teammates: { puuid: string; nick: string; together: { n: number; w: number } }[];
+  teammates: { puuid: string; id?: string; nick: string; skin?: number | null; main?: number | null; together: { n: number; w: number }; bond?: { grade: number; name: string }; streak?: number }[];
+  /** 이번 판에 걸린 것 (이번 주 도전, v3.90) */
+  stakes?: import('@prism/core').Stake[];
 } | null;
 
 /** 이번 판 조합 (우리 팀은 나를 뺀 4명). 게임 위 작은 창과 localStorage 로 나눈다 */
@@ -179,18 +181,19 @@ async function loadChampSelect() {
   // 우리 팀 조합 (상대는 게임이 시작될 때). 새 챔프 선택이 시작되면 지난 판 상대는 지운다
   const fresh = !state.champSelect || !state.matchup;
   const allies = team.map((t) => t.championId).filter((id) => id > 0);
-  // 0.6초마다 읽으므로, 바뀐 게 없으면 화면을 다시 그리지 않는다
-  if (!fresh && JSON.stringify(cs) === JSON.stringify(state.champSelect) && JSON.stringify(allies) === JSON.stringify(state.matchup!.allies)) return;
-  set({ champSelect: cs, lastChampion: cs.mine ?? state.lastChampion });
-  setMatchup({ allies, enemies: fresh ? [] : state.matchup!.enemies, source: fresh ? 'champ-select' : state.matchup!.source, at: Date.now() });
-  // 챔피언·팀원 구성이 바뀌었을 때만 서버에 묻는다 (모임 기록·같은 팀 회원 케미)
+  // 챔피언·팀원 구성이 바뀌었을 때만 서버에 묻는다 (모임 기록·같은 팀 회원 케미·이번 판에 걸린 것).
+  // 화면이 그대로여도 확인한다 — 챔프 선택 중에 앱이 켜져 로그인이 늦게 끝나면 다시 물어야 한다
   const ids = [cs.mine, ...cs.bench].filter((x): x is number => Boolean(x));
   const puuids = team.map((t) => t.puuid).filter(Boolean);
   const key = JSON.stringify([ids.slice().sort(), puuids.slice().sort()]);
   if (state.me && key !== crewKey) {
     crewKey = key;
-    api.post<CrewSelect>('/api/champselect', { championIds: ids, teammatePuuids: puuids }).then((crew) => set({ crew })).catch(() => {});
+    api.post<CrewSelect>('/api/champselect', { championIds: ids, teammatePuuids: puuids }).then((crew) => set({ crew })).catch(() => { setTimeout(() => { if (crewKey === key) crewKey = ''; }, 10_000); }); // 실패하면 10초 뒤 다시
   }
+  // 0.6초마다 읽으므로, 바뀐 게 없으면 화면을 다시 그리지 않는다
+  if (!fresh && JSON.stringify(cs) === JSON.stringify(state.champSelect) && JSON.stringify(allies) === JSON.stringify(state.matchup!.allies)) return;
+  set({ champSelect: cs, lastChampion: cs.mine ?? state.lastChampion });
+  setMatchup({ allies, enemies: fresh ? [] : state.matchup!.enemies, source: fresh ? 'champ-select' : state.matchup!.source, at: Date.now() });
 }
 
 function setMatchup(m: MatchupState) {

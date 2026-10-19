@@ -31,7 +31,7 @@ const games = Array.from({ length: 34 }, (_, i) => {
 });
 const CS = {
   localPlayerCellId: 0,
-  myTeam: [{ cellId: 0, championId: 222, puuid: ME.puuid }, { cellId: 1, championId: 54, puuid: 'puuid-m2' }, { cellId: 2, championId: 103, puuid: 'p3' }, { cellId: 3, championId: 0, puuid: 'p4' }, { cellId: 4, championId: 22, puuid: 'p5' }],
+  myTeam: [{ cellId: 0, championId: 222, puuid: ME.puuid }, { cellId: 1, championId: 54, puuid: 'OTHER1' }, { cellId: 2, championId: 103, puuid: 'pot-friend' }, { cellId: 3, championId: 0, puuid: 'p4' }, { cellId: 4, championId: 22, puuid: 'p5' }],
   benchChampions: [12, 99, 89, 412, 67, 25, 41, 86, 63, 157].map((championId) => ({ championId })),
 };
 

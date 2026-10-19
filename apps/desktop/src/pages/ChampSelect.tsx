@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from 'react';
 import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, buildFor, type ChampionProfile, type Comp, type Need, type Verdict, shortNick, josa } from '@prism/core';
-import { AugRing, AugmentLink, ChampImg, ItemBuild, Seg, SplashSwap, TierBadge, preloadSplash } from '@prism/ui';
+import { AugRing, AugmentLink, ChampImg, ItemBuild, MemberFace, PieceIcon, Seg, SplashSwap, TierBadge, preloadSplash } from '@prism/ui';
 import { checkNow, type ChampSelect, type CrewSelect } from '../controller';
 import { bridge } from '../bridge';
 import { Icon } from '@prism/ui';
@@ -96,6 +96,7 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
         </div>
       </div>}
       <div className={`cs-layout ${shown ? '' : 'one'}`}>
+        <Briefing crew={crew} />
         {shown && <Featured id={shown} isMine={shown === cs.mine} crew={crew} personal={personal} fitText={fit(shown)} needs={needs} isReco={reco === shown} onBack={preview ? () => setPreview(null) : undefined} />}
         <TeamBoard slots={slots} mates={mates} preview={Boolean(preview)} c={teamComp} needs={teamNeeds} verdict={team.length ? verdictOf(teamComp, teamNeeds) : null} reco={reco} recoAfter={recoAfter} recoFills={reco ? fit(reco).fills : []} onPreview={setPreview} />
       </div>
@@ -104,6 +105,43 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
 }
 
 type Mate = NonNullable<CrewSelect>['teammates'][number];
+
+/** 이번 판 (v3.90): 같은 팀 멤버와 우리 사이 기록 · 이 판을 이기면 무엇이 되는지 (이번 주 도전). 받기는 미션 화면에서 */
+function Briefing({ crew }: { crew: CrewSelect }) {
+  const mates = crew?.teammates ?? [];
+  const stakes = crew?.stakes ?? [];
+  if (!mates.length && !stakes.length) return null;
+  return (
+    <section className={`csb ${mates.length ? '' : 'solo'}`}>
+      {mates.length > 0 && <div className="csb-mates">
+        <span className="csb-h">같은 팀 멤버</span>
+        {mates.map((m) => (
+          <div key={m.puuid} className="csb-mate">
+            <MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={40} />
+            <span className="csb-mate-t">
+              <b>{shortNick(m.nick)}</b>
+              <span className="csb-tags">
+                <span>{m.together.n ? `함께 ${m.together.n}판 ${m.together.w}승` : '처음 함께해요'}</span>
+                {(m.bond?.grade ?? 1) >= 2 && <span className="bond">{m.bond!.name}</span>}
+                {(m.streak ?? 0) >= 3 && <span className="hot">{m.streak}연승 중</span>}
+              </span>
+            </span>
+          </div>
+        ))}
+      </div>}
+      {stakes.length > 0 && <div className="csb-stakes">
+        <span className="csb-h">이번 판에 걸린 것</span>
+        <div className="csb-list">{stakes.map((s) => (
+          <div key={s.key + s.title} className={`csb-st ${s.key} ${s.reward ? 'hot' : ''}`}>
+            <span className="big num">{s.big}</span>
+            <span className="t"><b>{s.title}</b><small>{s.sub}</small></span>
+            {s.reward > 0 && <span className="msn-amt">+{s.reward}<PieceIcon size={12} /></span>}
+          </div>
+        ))}</div>
+      </div>}
+    </section>
+  );
+}
 
 /** 우리 팀 분석 (나까지 5명): 평가 · 다섯 칸 · 피해 구성/앞라인/군중 제어 막대 · 바꾸면 좋은 챔프 · 이번 판 작전 */
 function TeamBoard({ slots, mates, preview, c, needs, verdict, reco, recoAfter, recoFills, onPreview }: {

@@ -96,9 +96,9 @@ body { overflow: hidden; background: var(--bg); }
 .tm .who.prism { color: var(--accent); font-weight: 650; }
 
 /* 챔프 선택 (v3.72): 위 = 큰 카드 | 우리 팀 분석 (같은 높이), 아래 = 어울리는 증강 줄 (좌우 끝까지) */
-.cs-layout { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); grid-template-areas: "hero team" "augs augs" "items items"; gap: var(--s5); align-items: stretch; }
-.cs-layout > .cs-tile { grid-area: hero; } .cs-layout > .tb { grid-area: team; align-content: start; } .cs-layout > .cs-augrow { grid-area: augs; } .cs-layout > .cs-itemrow { grid-area: items; }
-.cs-layout.one { grid-template-columns: minmax(0, 1fr); grid-template-areas: "team"; }
+.cs-layout { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); grid-template-areas: "brief brief" "hero team" "augs augs" "items items"; gap: var(--s5); align-items: stretch; }
+.cs-layout > .cs-tile { grid-area: hero; } .cs-layout > .tb { grid-area: team; align-content: start; } .cs-layout > .cs-augrow { grid-area: augs; } .cs-layout > .cs-itemrow { grid-area: items; } .cs-layout > .csb { grid-area: brief; }
+.cs-layout.one { grid-template-columns: minmax(0, 1fr); grid-template-areas: "brief" "team"; }
 .cs-layout.one .cs-tile { min-height: 360px; }
 /* 챔프가 정해지기 전 */
 .cs-wait { display: flex; align-items: center; gap: var(--s5); padding: var(--s5); border-radius: var(--r-l); background: var(--surface-2); }
@@ -151,7 +151,7 @@ body { overflow: hidden; background: var(--bg); }
   .side-ch span, .side-status, .side-me span:last-child { display: none; }
   .side-foot { flex-direction: column; } .side-foot .btn { padding: 0; width: 40px; font-size: 0; }
   .main { padding: var(--s5); }
-  .cs-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "team" "hero" "augs" "items"; }
+  .cs-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "brief" "team" "hero" "augs" "items"; }
   .cs-tile { min-height: 320px; }
   .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -491,3 +491,30 @@ body { overflow: hidden; background: var(--bg); }
 .cs-swap { animation: csSwap .26s cubic-bezier(.2, .8, .2, 1) both; }
 @keyframes csSwap { from { opacity: 0; translate: 0 4px; } to { opacity: 1; translate: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .cs-swap { animation: none; } }
+
+/* 챔프 선택 '이번 판' (v3.90): 같은 팀 멤버 | 이번 판에 걸린 것 */
+.csb { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: var(--s5); padding: var(--s4) var(--s5); border-radius: var(--r-l); background: var(--surface-2); }
+.csb.solo { grid-template-columns: minmax(0, 1fr); }
+.csb-h { display: block; margin-bottom: var(--s2); font-size: var(--fs-xs); font-weight: 800; color: var(--text-3); letter-spacing: .02em; }
+.csb-mates { display: grid; align-content: start; gap: var(--s2); min-width: 0; }
+.csb-mates .csb-h { margin-bottom: 0; }
+.csb-mate { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: var(--s3); }
+.csb-mate-t { display: grid; gap: 4px; min-width: 0; }
+.csb-mate-t b { font-size: var(--fs-sm); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.csb-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.csb-tags span { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 750; color: var(--text-2); background: var(--surface); white-space: nowrap; }
+.csb-tags .bond { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.csb-tags .hot { color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--surface)); }
+.csb-stakes { min-width: 0; }
+.csb-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--s2); }
+.csb-st { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: var(--s3); min-height: 56px; padding: var(--s2) var(--s3); border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--line); }
+.csb-st .big { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; font-size: var(--fs-lg); font-weight: 900; color: var(--text-2); background: var(--surface-2); }
+.csb-st.crew .big { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.csb-st.pair .big { font-size: var(--fs-sm); color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--surface)); }
+.csb-st .t { display: grid; gap: 2px; min-width: 0; }
+.csb-st .t b { font-size: var(--fs-sm); font-weight: 800; }
+.csb-st .t small { font-size: var(--fs-xs); color: var(--text-3); }
+.csb-st.hot { border-color: color-mix(in srgb, #e0a82e 55%, var(--line)); }
+.csb-st.hot .big { color: #3a2604; background: linear-gradient(180deg, #ffe08a, #f2b233); }
+.csb-st .msn-amt { margin: 0; }
+@media (max-width: 900px) { .csb { grid-template-columns: minmax(0, 1fr); } }

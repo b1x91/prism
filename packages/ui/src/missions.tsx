@@ -4,8 +4,8 @@
  * 깬 미션은 '받기'를 눌러야 피스가 들어온다 — 버튼에서 금빛 조각이 터져 보유 피스로 날아가고, 숫자가 차오른다.
  */
 import { useRef, useState } from 'react';
-import { CHAMPIONS, MISSION_ROLE_KO, PIECE, cdragon, type Api, type Mission, type MissionState, josa } from '@prism/core';
-import { Empty } from './basics';
+import { CHAMPIONS, MISSION_ROLE_KO, PIECE, cdragon, shortNick, type Api, type Mission, type MissionState, type WTrack, type WeeklyState, josa } from '@prism/core';
+import { Empty, MemberFace } from './basics';
 import { useLoad } from './crew';
 import { Icon } from './icons';
 import { PieceIcon, addPieces } from './shop';
@@ -20,6 +20,7 @@ const ROLE_C: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter:
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 type ClaimRes = { gained: number; ids: string[]; state: MissionState };
+type WClaimRes = { gained: number; ids: string[]; state: WeeklyState };
 
 /** 받기: 버튼에서 금빛 조각이 터져 곡선을 그리며 보유 피스(사이드바·상단)로 날아간다 (v3.82).
  * 터짐·닿음 효과와 '+N' 은 화면 맨 위 층(body)에 그린다 — 보유 피스 칸은 넘치는 부분을 잘라 내므로 그 안에서 키우면 잘린다.
@@ -97,28 +98,40 @@ function flyPieces(from: DOMRect, count: number) {
 
 export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: number) => void }) {
   const { data: loaded, error } = useLoad<MissionState>(api, '/api/me/missions');
+  const { data: wLoaded } = useLoad<WeeklyState>(api, '/api/me/weekly');
   const [over, setOver] = useState<MissionState | null>(null);
+  const [wOver, setWOver] = useState<WeeklyState | null>(null);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
   // '모두 받기' 뒤: 줄이 '받았어요'로 바뀌어 잠깐 남았다가 부드럽게 접힌다 (카드가 튀지 않게)
   const [got, setGot] = useState<{ n: number; closing: boolean } | null>(null);
   const data = over ?? loaded;
+  const weekly = wOver ?? wLoaded;
   const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <MissionsSkeleton />;
 
-  const claim = async (key: string, body: { ids?: string[]; all?: boolean }, el: HTMLElement | null) => {
+  // 받기: 미션·도전을 따로 또는 '모두 받기'로 함께. 받은 만큼 조각이 날아가고 잔액이 차오른다
+  const claim = async (key: string, body: { ids?: string[]; all?: boolean }, el: HTMLElement | null, kind: 'mission' | 'weekly' | 'both' = 'mission') => {
     if (busy) return;
     setBusy(key); setMsg('');
     try {
-      const r = await api.post<ClaimRes>('/api/me/missions/claim', body);
-      const wait = el ? flyPieces(el.getBoundingClientRect(), r.gained) : 0;
-      setFresh(new Set(r.ids));
-      setOver(r.state);
-      if (body.all) { setGot({ n: r.gained, closing: false }); setTimeout(() => setGot({ n: r.gained, closing: true }), 1800); setTimeout(() => setGot(null), 2300); }
+      let gained = 0;
+      const ids: string[] = [];
+      if (kind !== 'weekly' && (kind === 'mission' || (data?.ready ?? 0) > 0)) {
+        const r = await api.post<ClaimRes>('/api/me/missions/claim', body);
+        gained += r.gained; ids.push(...r.ids); setOver(r.state);
+      }
+      if (kind !== 'mission' && (kind === 'weekly' || (weekly?.ready ?? 0) > 0)) {
+        const r = await api.post<WClaimRes>('/api/me/weekly/claim', body);
+        gained += r.gained; ids.push(...r.ids); setWOver(r.state);
+      }
+      const wait = el ? flyPieces(el.getBoundingClientRect(), gained) : 0;
+      setFresh(new Set(ids));
+      if (body.all) { setGot({ n: gained, closing: false }); setTimeout(() => setGot({ n: gained, closing: true }), 1800); setTimeout(() => setGot(null), 2300); }
       // 조각이 닿을 즈음 잔액이 차오른다
-      setTimeout(() => addPieces(r.gained, 800), Math.max(0, wait - 700));
+      setTimeout(() => addPieces(gained, 800), Math.max(0, wait - 700));
     } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(null); }
   };
@@ -127,20 +140,22 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
   const done = w.missions.filter((m) => m.done).length;
   const r1 = w.missions[0].role;
   const suggest = shuffle(data.suggest, Math.floor(w.start / DAY));
-  const ready = data.ready ?? 0;
+  const ready = (data.ready ?? 0) + (weekly?.ready ?? 0);
   return (<Swap on={rv} skeleton={<MissionsSkeleton />}>
     <div className={`msn ${fadeCls(rv)}`}>
       <header className="msn-head">
         <div className="msn-title">
           <span className="msn-kicker">{md(w.start)} – {md(w.end - 1)} · {left(w.end)}</span>
-          <h1>이번 주 미션</h1>
+          <h1>미션</h1>
         </div>
-        <WeekDial done={done} total={w.missions.length} />
       </header>
 
-      {(ready > 0 || got) && <ReadyBar amount={got ? got.n : ready} done={Boolean(got)} closing={got?.closing ?? false} busy={busy === 'all'} onClaim={(el) => claim('all', { all: true }, el)} />}
+      {(ready > 0 || got) && <ReadyBar amount={got ? got.n : ready} done={Boolean(got)} closing={got?.closing ?? false} busy={busy === 'all'} onClaim={(el) => claim('all', { all: true }, el, 'both')} />}
       {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
 
+      {weekly && <WeeklyBoard w={weekly} busy={busy} fresh={fresh} onClaim={(k, ids, el) => claim(k, { ids }, el, 'weekly')} />}
+
+      <div className="msn-sec-row"><h2>이번 주 미션</h2><span className="sp" /><span className="meta num">{done}/{w.missions.length} 완료</span></div>
       <div className="msn-cards">{w.missions.map((m, i) => (
         <MissionCard key={m.id} m={m} i={i} fresh={fresh.has(m.id)} busy={busy === m.id} onClaim={(el) => claim(m.id, { ids: [m.id] }, el)} />
       ))}</div>
@@ -190,19 +205,6 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
   </Swap>);
 }
 
-/** 이번 주 깬 수: 점 세 개가 이어진 고리 */
-function WeekDial({ done, total }: { done: number; total: number }) {
-  const R = 26, C = 2 * Math.PI * R;
-  return (
-    <div className="msn-dial" role="img" aria-label={`이번 주 ${done}/${total}`}>
-      <svg viewBox="0 0 64 64" width="64" height="64">
-        <circle cx="32" cy="32" r={R} className="bg" />
-        <circle cx="32" cy="32" r={R} className="fg" strokeDasharray={`${(done / total) * C} ${C}`} />
-      </svg>
-      <span><b>{done}</b>/{total}</span>
-    </div>
-  );
-}
 
 function ReadyBar({ amount, done, closing, busy, onClaim }: { amount: number; done: boolean; closing: boolean; busy: boolean; onClaim: (el: HTMLElement) => void }) {
   const ref = useRef<HTMLButtonElement>(null);
@@ -210,7 +212,7 @@ function ReadyBar({ amount, done, closing, busy, onClaim }: { amount: number; do
     <div className={`msn-ready-wrap ${closing ? 'closing' : ''}`}>
       <div className={`msn-ready ${done ? 'done' : ''}`}>
         <span className="msn-ready-ic">{done ? <Icon name="check" /> : <PieceIcon size={22} />}</span>
-        <span className="msn-ready-t">{done ? <><b>{amount.toLocaleString()} {PIECE}를 받았어요</b><small>보유 {PIECE}에 더했어요</small></> : <><b>받을 보상이 있어요</b><small>깬 미션의 {PIECE}를 받아 가세요</small></>}</span>
+        <span className="msn-ready-t">{done ? <><b>{amount.toLocaleString()} {PIECE}를 받았어요</b><small>보유 {PIECE}에 더했어요</small></> : <><b>받을 보상이 있어요</b><small>이룬 도전·미션의 {PIECE}를 받아 가세요</small></>}</span>
         {!done && <button ref={ref} type="button" className="msn-claim all" disabled={busy} onClick={() => ref.current && onClaim(ref.current)}>
           <span>{busy ? '받는 중…' : '모두 받기'}</span><b>+{amount.toLocaleString()}</b><PieceIcon size={14} ink />
         </button>}
@@ -240,5 +242,129 @@ function MissionCard({ m, i, fresh, busy, onClaim }: { m: Mission; i: number; fr
       {state === 'got' && <span className="msn-got"><Icon name="check" />받았어요</span>}
       {fresh && <span className="msn-plus" aria-hidden="true">+{m.reward}</span>}
     </article>
+  );
+}
+
+// ───────── 이번 주 도전 (v3.90) ─────────
+
+type WClaim = (key: string, ids: string[], el: HTMLElement | null) => void;
+const readyOf = (t: WTrack) => t.steps.filter((s) => s.done && !s.claimed);
+const sumOf = (xs: { reward: number }[]) => xs.reduce((s, x) => s + x.reward, 0);
+
+/** 받기 알약 (도전 칸 머리 오른쪽) */
+function WGet({ k, ids, amount, busy, onClaim }: { k: string; ids: string[]; amount: number; busy: string | null; onClaim: WClaim }) {
+  const ref = useRef<HTMLButtonElement>(null);
+  return <button ref={ref} type="button" className="msn-mini" disabled={busy !== null} onClick={() => onClaim(k, ids, ref.current)}>{busy === k ? '받는 중…' : '받기'} <b>+{amount.toLocaleString()}</b><PieceIcon size={12} ink /></button>;
+}
+
+/** 연승 칸: 지금 이어지는 수 + 단계 사슬 (받음 · 받을 수 있음 · 아직) */
+function StreakTrack({ k, title, sub, t, busy, onClaim }: { k: string; title: string; sub: string; t: WTrack; busy: string | null; onClaim: WClaim }) {
+  const open = readyOf(t);
+  const top = t.steps[t.steps.length - 1].at;
+  // 막대는 이번 주 최고 연승까지 (단계 표시와 맞게). 큰 숫자는 지금 이어지는 연승
+  const fill = Math.min(1, t.best / top);
+  return (
+    <div className={`cw-box cw-streak ${k}`}>
+      <div className="cw-bh">
+        <span className="cw-t"><b>{title}</b><small>{sub}</small></span>
+        {open.length > 0 && <WGet k={k} ids={open.map((s) => s.id)} amount={sumOf(open)} busy={busy} onClaim={onClaim} />}
+      </div>
+      <div className="cw-now">
+        <span className="cw-big num">{t.now}</span>
+        <span className="cw-now-t"><b>{t.now > 0 ? '연승 중' : '다음 판부터'}</b><small>이번 주 최고 {t.best}연승</small></span>
+      </div>
+      <div className="cw-chain" style={{ '--fill': fill } as React.CSSProperties}>
+        <span className="cw-rail"><span /></span>
+        {t.steps.map((s) => (
+          <span key={s.id} className={`cw-node ${s.claimed ? 'got' : s.done ? 'ready' : ''}`} style={{ left: `${(s.at / top) * 100}%` }}>
+            <i>{s.claimed ? <Icon name="check" /> : s.at}</i>
+            <small className="num">+{s.reward}</small>
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** 막대 칸: 함께 쌓는 승리 · 모두의 목표 */
+function BarTrack({ k, title, sub, t, unit, foot, busy, onClaim }: { k: string; title: string; sub: string; t: WTrack; unit: string; foot?: React.ReactNode; busy: string | null; onClaim: WClaim }) {
+  const open = readyOf(t);
+  const top = t.steps[t.steps.length - 1].at;
+  const next = t.steps.find((s) => !s.done);
+  return (
+    <div className={`cw-box cw-bar ${k}`}>
+      <div className="cw-bh">
+        <span className="cw-t"><b>{title}</b><small>{sub}</small></span>
+        {open.length > 0 && <WGet k={k} ids={open.map((s) => s.id)} amount={sumOf(open)} busy={busy} onClaim={onClaim} />}
+      </div>
+      <div className="cw-count"><b className="num">{t.now.toLocaleString()}</b><span>{next ? <>/ {next.at}{unit}</> : unit}</span>{next && <em className="num">다음 +{next.reward}<PieceIcon size={12} /></em>}</div>
+      <div className="cw-meter">
+        <span className="cw-meter-f" style={{ width: `${Math.min(100, (t.now / top) * 100)}%` }} />
+        {t.steps.map((s) => <i key={s.id} className={s.claimed ? 'got' : s.done ? 'ready' : ''} style={{ left: `${(s.at / top) * 100}%` }} title={`${s.at}${unit} +${s.reward}`} />)}
+      </div>
+      {foot && <p className="cw-foot">{foot}</p>}
+    </div>
+  );
+}
+
+export function WeeklyBoard({ w, busy, fresh, onClaim }: { w: WeeklyState; busy: string | null; fresh: Set<string>; onClaim: WClaim }) {
+  const pairsOpen = w.pairs.filter((p) => !p.claimed);
+  const bondsOpen = w.bonds.filter((b) => !b.claimed);
+  const goalFoot = w.goal.mine > 0
+    ? <>{w.goal.helpers}명이 보탰어요 · 나는 {w.goal.mine}승</>
+    : <>{w.goal.helpers > 0 ? `${w.goal.helpers}명이 보탰어요 · ` : ''}멤버와 함께 1승을 보태면 같이 받아요</>;
+  const PAIR_MAX = 3;
+  return (
+    <section className="cw">
+      <div className="cw-head"><h2>이번 주 도전</h2></div>
+      <div className="cw-grid two">
+        <StreakTrack k="streak" title="연승" sub="기록된 판에서 연달아" t={w.streak} busy={busy} onClaim={onClaim} />
+        <StreakTrack k="crew" title="프리즘 연승" sub="멤버와 같은 팀인 판만" t={w.crewStreak} busy={busy} onClaim={onClaim} />
+      </div>
+      <div className="cw-grid two">
+        <BarTrack k="wins" title="함께 쌓는 승리" sub="멤버와 같은 팀으로 이긴 판" t={w.wins} unit="승" busy={busy} onClaim={onClaim} />
+        <BarTrack k="goal" title="모두의 목표" sub="모임 전체가 함께 이긴 판" t={w.goal} unit="승" foot={goalFoot} busy={busy} onClaim={onClaim} />
+      </div>
+      <div className="cw-grid two">
+        <div className="cw-box cw-pairs">
+          <div className="cw-bh">
+            <span className="cw-t"><b>새로운 짝</b><small>처음으로 함께 이긴 멤버 · 주에 {PAIR_MAX}명까지</small></span>
+            {pairsOpen.length > 0 && <WGet k="pair" ids={pairsOpen.map((p) => p.id)} amount={sumOf(pairsOpen)} busy={busy} onClaim={onClaim} />}
+          </div>
+          <div className="cw-slots">
+            {Array.from({ length: PAIR_MAX }, (_, i) => {
+              const p = w.pairs[i];
+              if (!p) return <span key={i} className="cw-slot empty"><i>?</i><small>+{Math.round(25 * w.rate)}</small></span>;
+              return (
+                <span key={p.id} className={`cw-slot ${p.claimed ? 'got' : 'ready'} ${fresh.has(p.id) ? 'fresh' : ''}`}>
+                  <MemberFace nick={p.face?.nick ?? '?'} skin={p.face?.skin} champion={p.face?.main} size={44} />
+                  <small>{shortNick(p.face?.nick ?? '')}</small>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+        <div className="cw-box cw-bonds">
+          <div className="cw-bh">
+            <span className="cw-t"><b>듀오 등급</b><small>함께할수록 오르는 관계 등급</small></span>
+            {bondsOpen.length > 0 && <WGet k="bond" ids={bondsOpen.map((b) => b.id)} amount={sumOf(bondsOpen)} busy={busy} onClaim={onClaim} />}
+          </div>
+          {bondsOpen.slice(0, 3).map((b) => (
+            <div key={b.id} className="cw-bond ready">
+              <MemberFace nick={b.face?.nick ?? '?'} skin={b.face?.skin} champion={b.face?.main} size={32} />
+              <span className="cw-bond-t"><b>{shortNick(b.face?.nick ?? '')}</b><small>Lv{b.grade} {b.name} 달성</small></span>
+            </div>
+          ))}
+          {w.bondNext.filter((b) => !bondsOpen.some((o) => o.member === b.member)).slice(0, Math.max(0, 3 - bondsOpen.length)).map((b) => (
+            <div key={b.member} className="cw-bond">
+              <MemberFace nick={b.face?.nick ?? '?'} skin={b.face?.skin} champion={b.face?.main} size={32} />
+              <span className="cw-bond-t"><b>{shortNick(b.face?.nick ?? '')}</b><small>{b.next}까지 {b.toNext}점</small><span className="msn-bar"><span style={{ width: `${Math.round(b.pct * 100)}%`, background: 'var(--accent)' }} /></span></span>
+              <span className="msn-amt">+{b.reward}<PieceIcon size={12} /></span>
+            </div>
+          ))}
+          {!bondsOpen.length && !w.bondNext.length && <p className="cw-foot">멤버와 같은 팀으로 함께하면 등급이 오르기 시작해요.</p>}
+        </div>
+      </div>
+    </section>
   );
 }
