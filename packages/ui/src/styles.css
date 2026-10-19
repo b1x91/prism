@@ -2929,3 +2929,16 @@ button.ga:hover { background: var(--surface-2); }
 @container (max-width: 720px) { .cw-grid.two { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 720px) { .cw-grid.two { grid-template-columns: minmax(0, 1fr); } .cw-box { padding: var(--s4); } }
 @media (prefers-reduced-motion: reduce) { .cw-rail span, .cw-meter-f { transition: none; } .cw-slot.fresh { animation: none; } }
+
+/* 오늘 밤 증강 (v3.91) */
+.cw-augs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); }
+.cw-augs .hov-aug { min-width: 0; display: block; }
+.cw-aug { display: flex; align-items: center; gap: var(--s3); width: 100%; min-width: 0; padding: var(--s2) var(--s3); border: 1px solid var(--line); border-radius: var(--r-m); background: var(--surface-2); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.cw-aug:hover { border-color: var(--line-2); }
+.cw-aug > span:last-child { display: grid; gap: 2px; min-width: 0; }
+.cw-aug b { font-size: var(--fs-sm); font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cw-aug small { font-size: var(--fs-xs); color: var(--text-3); }
+.cw-got { color: #fff; background: #15803d; height: 28px; padding: 0 var(--s3); border-radius: var(--r-pill); }
+.cw-got .icon { width: 14px; height: 14px; }
+.cw-tonight.fresh { animation: msn-stamp .55s cubic-bezier(.34, 1.6, .64, 1) both; }
+@media (max-width: 720px) { .cw-augs { grid-template-columns: minmax(0, 1fr); } }

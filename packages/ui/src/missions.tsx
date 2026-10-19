@@ -4,7 +4,8 @@
  * 깬 미션은 '받기'를 눌러야 피스가 들어온다 — 버튼에서 금빛 조각이 터져 보유 피스로 날아가고, 숫자가 차오른다.
  */
 import { useRef, useState } from 'react';
-import { CHAMPIONS, MISSION_ROLE_KO, PIECE, cdragon, shortNick, type Api, type Mission, type MissionState, type WTrack, type WeeklyState, josa } from '@prism/core';
+import { AUGMENT, CHAMPIONS, RARITY_KO, MISSION_ROLE_KO, PIECE, cdragon, shortNick, type Api, type Mission, type MissionState, type WTonight, type WTrack, type WeeklyState, josa } from '@prism/core';
+import { AugRing, AugmentLink } from './augment';
 import { Empty, MemberFace } from './basics';
 import { useLoad } from './crew';
 import { Icon } from './icons';
@@ -307,6 +308,27 @@ function BarTrack({ k, title, sub, t, unit, foot, busy, onClaim }: { k: string; 
   );
 }
 
+/** 오늘 밤 증강: 봇이 21시에 올린 증강 3개, 그중 하나를 골라 이기면 (다음 공지 전까지 한 번) */
+function TonightBox({ t, busy, fresh, onClaim }: { t: WTonight; busy: string | null; fresh: boolean; onClaim: WClaim }) {
+  const today = new Date(Date.now() + 9 * 3_600_000).toISOString().slice(0, 10);
+  const untilDay = new Date(t.until + 9 * 3_600_000).toISOString().slice(0, 10);
+  const state = t.claimed ? 'got' : t.done ? 'ready' : 'go';
+  return (
+    <div className={`cw-box cw-tonight s-${state} ${fresh ? 'fresh' : ''}`}>
+      <div className="cw-bh">
+        <span className="cw-t"><b>오늘 밤 증강</b><small>셋 중 하나를 골라 이기면 · {untilDay === today ? '오늘' : '내일'} 21시까지</small></span>
+        {state === 'ready' && <WGet k="tonight" ids={[t.id]} amount={t.reward} busy={busy} onClaim={onClaim} />}
+        {state === 'got' && <span className="msn-amt cw-got"><Icon name="check" />받았어요</span>}
+        {state === 'go' && <span className="msn-amt">+{t.reward}<PieceIcon size={12} /></span>}
+      </div>
+      <div className="cw-augs">{t.augs.map((id) => (
+        <AugmentLink key={id} id={id} className="cw-aug"><AugRing id={id} size={40} /><span><b>{AUGMENT[id]?.name ?? '증강'}</b><small>{AUGMENT[id] ? RARITY_KO[AUGMENT[id].rarity] : ''}</small></span></AugmentLink>
+      ))}</div>
+      {state === 'go' && t.picked > 0 && <p className="cw-foot">골라 본 판이 {t.picked}판 있어요. 이기면 받을 수 있어요.</p>}
+    </div>
+  );
+}
+
 export function WeeklyBoard({ w, busy, fresh, onClaim }: { w: WeeklyState; busy: string | null; fresh: Set<string>; onClaim: WClaim }) {
   const pairsOpen = w.pairs.filter((p) => !p.claimed);
   const bondsOpen = w.bonds.filter((b) => !b.claimed);
@@ -317,6 +339,7 @@ export function WeeklyBoard({ w, busy, fresh, onClaim }: { w: WeeklyState; busy:
   return (
     <section className="cw">
       <div className="cw-head"><h2>이번 주 도전</h2></div>
+      {w.tonight && <TonightBox t={w.tonight} busy={busy} fresh={fresh.has(w.tonight.id)} onClaim={onClaim} />}
       <div className="cw-grid two">
         <StreakTrack k="streak" title="연승" sub="기록된 판에서 연달아" t={w.streak} busy={busy} onClaim={onClaim} />
         <StreakTrack k="crew" title="프리즘 연승" sub="멤버와 같은 팀인 판만" t={w.crewStreak} busy={busy} onClaim={onClaim} />

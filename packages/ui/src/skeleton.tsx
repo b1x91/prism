@@ -166,6 +166,7 @@ export function MissionsSkeleton() {
       <header className="msn-head"><div className="sk-lines" style={{ gap: 8 }}><Bone w={140} h={10} /><Bone w={88} h={28} /></div></header>
       <section className="cw">
         <div className="cw-head"><Bone w={96} h={18} /></div>
+        <div className="cw-box"><div className="sk-lines" style={{ gap: 6 }}><Bone w={88} h={14} /><Bone w={180} h={10} /></div><div className="cw-augs">{[0, 1, 2].map((i) => <Bone key={i} w="100%" h={58} r="m" />)}</div></div>
         {[0, 1, 2].map((r) => (
           <div key={r} className="cw-grid two">{[0, 1].map((c) => (
             <div key={c} className="cw-box"><div className="sk-lines" style={{ gap: 6 }}><Bone w={88} h={14} /><Bone w={140} h={10} /></div><Bone w={64} h={28} /><Bone w="100%" h={8} r="pill" /></div>

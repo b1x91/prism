@@ -518,3 +518,6 @@ body { overflow: hidden; background: var(--bg); }
 .csb-st.hot .big { color: #3a2604; background: linear-gradient(180deg, #ffe08a, #f2b233); }
 .csb-st .msn-amt { margin: 0; }
 @media (max-width: 900px) { .csb { grid-template-columns: minmax(0, 1fr); } }
+.csb-augs { display: flex; align-items: center; gap: 4px; }
+.csb-augs small { margin-left: var(--s1); white-space: nowrap; }
+.csb-st.tonight .big { font-size: var(--fs-sm); color: #b7790b; background: color-mix(in srgb, #f2b233 14%, var(--surface)); }

@@ -11,8 +11,15 @@ import type { DuoGame } from './profile';
 import { weekStart } from './missions';
 import { josa } from './josa';
 
-/** 판 하나: 시각 · 승(1/0) · 같은 팀이었던 멤버들 */
-export type WGame = { t: number; w: number; mates: string[] };
+/** 판 하나: 시각 · 승(1/0) · 같은 팀이었던 멤버들 · 내가 고른 증강 */
+export type WGame = { t: number; w: number; mates: string[]; augs?: number[] };
+/** 봇이 올린 '오늘 밤 증강' (KST 날짜 · 증강 3개). 그날 21시부터 다음 날 21시 공지 전까지 */
+export type TonightDay = { day: string; augs: number[] };
+export const tonightWindow = (day: string) => {
+  const [y, m, d] = day.split('-').map(Number);
+  const start = Date.UTC(y, m - 1, d, 12); // 21:00 KST
+  return { start, end: start + 86_400_000 };
+};
 
 export const WEEKLY = {
   /** 연승 [연승 수, 피스] */
@@ -27,6 +34,8 @@ export const WEEKLY = {
   pair: { reward: 25, max: 3 },
   /** 듀오 등급이 오를 때 (짝마다 등급별 한 번) */
   bond: { 2: 30, 3: 60, 4: 120, 5: 250 } as Record<number, number>,
+  /** 오늘 밤 증강: 봇이 올린 증강 3개 중 하나를 골라 이기기 (하루 한 번) */
+  tonight: 30,
 } as const;
 
 const WEEK = 7 * 86_400_000;
@@ -52,7 +61,7 @@ export type WeeklyCore = {
 };
 
 /** 이룬 도전 전부 (모든 주): 번호 → 기본 보상. goalWins: 주 시작 → 그 주 모임 전체 함께 이긴 판 */
-export function weeklyDone(all: WGame[], goalWins: Map<number, number>, now = Date.now()): Map<string, number> {
+export function weeklyDone(all: WGame[], goalWins: Map<number, number>, now = Date.now(), tonight: TonightDay[] = []): Map<string, number> {
   const out = new Map<string, number>();
   const gs = [...all].sort((a, b) => a.t - b.t);
   // 연승 · 프리즘 연승: 그 단계에 닿은 판의 주
@@ -92,8 +101,17 @@ export function weeklyDone(all: WGame[], goalWins: Map<number, number>, now = Da
     const base = bondOf(T.filter((g) => g.t < WEEKLY_SINCE), WEEKLY_SINCE).grade;
     for (let gr = base + 1; gr <= b.grade; gr++) if (WEEKLY.bond[gr]) out.set(`cw:bond:${m}:${gr}`, WEEKLY.bond[gr]);
   }
+  // 오늘 밤 증강 (그날 공지 뒤 ~ 다음 공지 전, 그 증강을 골라 이긴 판)
+  for (const h of tonight) if (tonightWon(gs, h)) out.set(`cw:tonight:${h.day}`, WEEKLY.tonight);
   return out;
 }
+
+function tonightPicks(gs: WGame[], h: TonightDay) {
+  const { start, end } = tonightWindow(h.day);
+  const from = Math.max(start, WEEKLY_SINCE);
+  return gs.filter((g) => g.t >= from && g.t < end && (g.augs ?? []).some((a) => h.augs.includes(a)));
+}
+const tonightWon = (gs: WGame[], h: TonightDay) => tonightPicks(gs, h).some((g) => g.w);
 
 function togetherBy(gs: WGame[]): Map<string, DuoGame[]> {
   const by = new Map<string, DuoGame[]>();
@@ -101,13 +119,16 @@ function togetherBy(gs: WGame[]): Map<string, DuoGame[]> {
   return by;
 }
 
-export const weeklyClaimable = (all: WGame[], goalWins: Map<number, number>, claims: Map<string, number>, now = Date.now()) =>
-  new Map([...weeklyDone(all, goalWins, now)].filter(([id]) => !claims.has(id)));
+export const weeklyClaimable = (all: WGame[], goalWins: Map<number, number>, claims: Map<string, number>, now = Date.now(), tonight: TonightDay[] = []) =>
+  new Map([...weeklyDone(all, goalWins, now, tonight)].filter(([id]) => !claims.has(id)));
+
+/** 지금 열려 있는 '오늘 밤 증강' 칸 */
+export type WTonight = { id: string; day: string; augs: number[]; until: number; reward: number; picked: number; done: boolean; claimed: boolean };
 
 /** 이번 주 도전 화면 */
-export function weeklyState(all: WGame[], goalWins: Map<number, number>, claims: Map<string, number>, now = Date.now()): WeeklyCore & { ready: number; past: { id: string; reward: number }[] } {
+export function weeklyState(all: WGame[], goalWins: Map<number, number>, claims: Map<string, number>, now = Date.now(), tonightHist: TonightDay[] = []): WeeklyCore & { ready: number; past: { id: string; reward: number }[]; tonight: WTonight | null } {
   const ws = weekStart(now);
-  const done = weeklyDone(all, goalWins, now);
+  const done = weeklyDone(all, goalWins, now, tonightHist);
   const open = new Map([...done].filter(([id]) => !claims.has(id)));
   const mark = (id: string) => ({ done: done.has(id), claimed: done.has(id) && !open.has(id) });
   const gs = [...all].sort((a, b) => a.t - b.t);
@@ -142,7 +163,14 @@ export function weeklyState(all: WGame[], goalWins: Map<number, number>, claims:
   }
   bondNext.sort((a, b) => b.pct - a.pct);
 
-  const past = [...open].filter(([id]) => !id.startsWith(`cw:${ws}:`) && !id.startsWith('cw:bond:')).map(([id, reward]) => ({ id, reward }));
+  // 지금 열려 있는 오늘 밤 증강 (공지 뒤 ~ 다음 공지 전)
+  const cur = tonightHist.find((h) => { const w = tonightWindow(h.day); return now >= w.start && now < w.end && w.end > WEEKLY_SINCE; });
+  let tonight: WTonight | null = null;
+  if (cur) {
+    const id = `cw:tonight:${cur.day}`;
+    tonight = { id, day: cur.day, augs: cur.augs, until: tonightWindow(cur.day).end, reward: WEEKLY.tonight, picked: tonightPicks(gs, cur).length, ...mark(id) };
+  }
+  const past = [...open].filter(([id]) => !id.startsWith(`cw:${ws}:`) && !id.startsWith('cw:bond:') && id !== tonight?.id).map(([id, reward]) => ({ id, reward }));
   return {
     week: { start: ws, end: ws + WEEK },
     streak: { key: 'streak', now: s, best: sBest, steps: steps('streak', WEEKLY.streak) },
@@ -151,7 +179,7 @@ export function weeklyState(all: WGame[], goalWins: Map<number, number>, claims:
     goal: { key: 'goal', now: goalWins.get(ws) ?? 0, best: goalWins.get(ws) ?? 0, mine: cw, steps: steps('goal', WEEKLY.goal) },
     pairs, wonEver: [...wonEver],
     bonds, bondNext: bondNext.slice(0, 3),
-    past, ready: [...open.values()].reduce((a, b) => a + b, 0),
+    past, ready: [...open.values()].reduce((a, b) => a + b, 0), tonight,
   };
 }
 
@@ -163,16 +191,17 @@ export type WeeklyState = Omit<WeeklyCore, 'pairs' | 'bonds' | 'bondNext' | 'goa
   bonds: (WBond & { face: WFace })[];
   bondNext: (WBondNext & { face: WFace })[];
   past: { id: string; reward: number }[];
+  tonight: WTonight | null;
   ready: number; rate: number;
 };
 
 // ───────── 챔프 선택 '이번 판에 걸린 것' (v3.90) ─────────
 
-export type Stake = { key: 'streak' | 'crew' | 'wins' | 'goal' | 'pair'; big: string; title: string; sub: string; reward: number };
+export type Stake = { key: 'streak' | 'crew' | 'wins' | 'goal' | 'pair' | 'tonight'; big: string; title: string; sub: string; reward: number; augs?: number[] };
 
 
 /** 이번 판을 이기면 무엇이 되는지. w 의 보상은 배율을 곱한 값. mates = 같은 팀 멤버 (짧은 이름) */
-export function stakesOf(w: Pick<WeeklyState, 'streak' | 'crewStreak' | 'wins' | 'goal' | 'pairs' | 'wonEver' | 'rate'>, mates: { id: string; nick: string }[]): Stake[] {
+export function stakesOf(w: Pick<WeeklyState, 'streak' | 'crewStreak' | 'wins' | 'goal' | 'pairs' | 'wonEver' | 'rate'> & { tonight?: WTonight | null }, mates: { id: string; nick: string }[]): Stake[] {
   const out: Stake[] = [];
   const stepAt = (t: WTrack, next: number) => t.steps.find((s) => !s.done && s.at >= next);
   const subOf = (t: WTrack, next: number, unit: string) => {
@@ -196,5 +225,8 @@ export function stakesOf(w: Pick<WeeklyState, 'streak' | 'crewStreak' | 'wins' |
     for (const m of mates.filter((x) => !won.has(x.id)).slice(0, Math.max(0, left)))
       out.push({ key: 'pair', big: '첫', title: `${josa(m.nick, '과/와')} 첫 함께 승리`, sub: '새로운 짝', reward: Math.round(WEEKLY.pair.reward * w.rate) });
   }
+  // 오늘 밤 증강: 아직 못 이뤘으면 (보상은 그 증강을 골라야 하므로 금빛으로 띄우지 않는다)
+  if (w.tonight && !w.tonight.done)
+    out.push({ key: 'tonight', big: '밤', title: '오늘 밤 증강 중 하나를 골라 이기기', sub: `+${w.tonight.reward} 피스`, reward: 0, augs: w.tonight.augs });
   return out;
 }

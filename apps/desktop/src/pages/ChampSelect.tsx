@@ -134,7 +134,7 @@ function Briefing({ crew }: { crew: CrewSelect }) {
         <div className="csb-list">{stakes.map((s) => (
           <div key={s.key + s.title} className={`csb-st ${s.key} ${s.reward ? 'hot' : ''}`}>
             <span className="big num">{s.big}</span>
-            <span className="t"><b>{s.title}</b><small>{s.sub}</small></span>
+            <span className="t"><b>{s.title}</b>{s.augs ? <span className="csb-augs">{s.augs.map((a) => <AugmentLink key={a} id={a} inline><AugRing id={a} size={24} /></AugmentLink>)}<small>{s.sub}</small></span> : <small>{s.sub}</small>}</span>
             {s.reward > 0 && <span className="msn-amt">+{s.reward}<PieceIcon size={12} /></span>}
           </div>
         ))}</div>
