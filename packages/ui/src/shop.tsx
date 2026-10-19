@@ -206,9 +206,9 @@ function ShopCard({ x, me, data, busy, onBuy, onEquip }: { x: ShopItem; me: Me; 
         <span className="sc-desc">{x.desc}</span>
         <div className="sc-act">
           {own
-            ? <button type="button" className={`btn sm ${on ? '' : 'primary'}`} disabled={busy} onClick={() => onEquip(!on)}>{on ? '해제' : '장착'}</button>
+            ? <button type="button" className={`btn sm ${on ? '' : 'equip'}`} disabled={busy} onClick={() => onEquip(!on)}>{on ? '해제' : '장착'}</button>
             : <><span className={`sc-price ${lack > 0 ? 'lack' : ''}`}><b>{price.toLocaleString()}</b><PieceIcon size={16} />{disc > 0 && <s>{x.price.toLocaleString()}</s>}</span>
-              <button type="button" className="btn sm primary" disabled={busy || lack > 0} onClick={onBuy}>{lack > 0 ? `${lack.toLocaleString()} 부족` : '구매'}</button></>}
+              <button type="button" className={`btn sm ${lack > 0 ? 'lack' : 'primary'}`} disabled={busy || lack > 0} onClick={onBuy}>{lack > 0 ? `${lack.toLocaleString()} 부족` : '구매'}</button></>}
         </div>
       </div>
     </article>
