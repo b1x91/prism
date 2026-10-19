@@ -12,7 +12,7 @@ function Slot({ id, n, w, rank }: { id: number; n?: number; w?: number; rank?: n
   return (
     <span className="ib-slot">
       <span className="ib-ic">{rank && <i className="ib-rank">{rank}</i>}<ItemIcon id={id} size={40} /></span>
-      <b>{ITEM[id]?.name ?? ''}</b>
+      <b title={ITEM[id]?.name}>{ITEM[id]?.name ?? ''}</b>
       {n ? <small className="num">{n}판 · {pct(w ?? 0, n)}</small> : null}
     </span>
   );
