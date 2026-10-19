@@ -8,6 +8,7 @@ import { AugImg, Empty, GlassBtn, Hover, Seg } from './basics';
 import { Icon } from './icons';
 import { MatchupBar } from './situation';
 import { GamePlanCard } from './plan';
+import { Bone } from './skeleton';
 
 
 const ORDER: Rarity[] = ['prismatic', 'gold', 'silver'];
@@ -18,10 +19,10 @@ function StatLine({ id, champ, all }: { id: number; champ: StatMap; all: StatMap
   const c = champ[id], o = all[id];
   if (c?.n) return <span className="stat2">이 챔프 <b>{pct(c.w, c.n)}</b> {c.n}판</span>;
   if (o?.n) return <span className="stat2">모임 <b>{pct(o.w, o.n)}</b> {o.n}판</span>;
-  return null;
+  return <span className="stat2" aria-hidden="true">&nbsp;</span>;
 }
 
-function GuideRow({ f, compact, champ, all, stats, c, cid }: { f: Fit; compact?: boolean; champ: StatMap; all: StatMap; stats: boolean; c: ChampionProfile; cid: number }) {
+function GuideRow({ f, compact, champ, all, stats, c, cid }: { f: Fit; compact?: boolean; champ: StatMap; all: StatMap; stats: boolean | 'loading'; c: ChampionProfile; cid: number }) {
   const a = AUGMENT[f.id];
   if (!a) return null;
   const tier = tierOf(fitPoints(f));
@@ -34,13 +35,14 @@ function GuideRow({ f, compact, champ, all, stats, c, cid }: { f: Fit; compact?:
         <span className="nm"><FavMark kind="aug" id={a.id} inline /><span className="t">{a.name}</span><GradeUp rarity={a.rarity} tier={tier} /></span>
         <span className="ga-why">{e.why}</span>
       </span>
-      <span className="ga-side"><TierBadge tier={tier} />{stats && <StatLine id={a.id} champ={champ} all={all} />}</span>
+      <span className="ga-side"><TierBadge tier={tier} />{stats === 'loading' ? <span className="stat2" aria-hidden="true"><Bone w={64} h={10} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></span> : stats && <StatLine id={a.id} champ={champ} all={all} />}</span>
     </AugmentLink>
   );
 }
 
 /** 챔피언 하나의 등급별 증강 궁합 (어울림 티어 S~D 순). stats 가 있으면 Prism 실전 승률을 붙인다 (회원 전용) */
-export function AugmentGuide({ championId, stats, compact }: { championId: number; stats?: AugmentStats | null; compact?: boolean }) {
+/** loading: 회원 승률을 받는 중 — 승률 줄 자리를 잡아 둔다 (줄 높이가 나중에 바뀌지 않게) */
+export function AugmentGuide({ championId, stats, compact, loading }: { championId: number; stats?: AugmentStats | null; compact?: boolean; loading?: boolean }) {
   const g = useMemo(() => guideOf(GAME_DATA, championId), [championId]);
   const [all, setAll] = useState(false);
   const [more, setMore] = useState<Record<Rarity, boolean>>({ prismatic: false, gold: false, silver: false });
@@ -59,7 +61,7 @@ export function AugmentGuide({ championId, stats, compact }: { championId: numbe
           return (
             <div key={r} className="card gcol">
               <h3 className={`gcol-h ${r}`}><i className={`rbar ${r}`} />{RARITY_KO[r]}<span className="meta">잘 맞는 증강 {g[r].filter(good).length}개</span></h3>
-              {list.slice(0, limit).map((f) => <GuideRow key={f.id} f={f} compact={compact} champ={champ} all={overall} stats={Boolean(stats)} c={c} cid={championId} />)}
+              {list.slice(0, limit).map((f) => <GuideRow key={f.id} f={f} compact={compact} champ={champ} all={overall} stats={stats ? true : loading ? 'loading' : false} c={c} cid={championId} />)}
               {!list.length && <p className="meta">잘 맞는 증강이 없어요</p>}
               {!compact && list.length > limit && <button type="button" className="gcol-more" onClick={() => setMore({ ...more, [r]: true })}>{list.length - limit}개 더 보기<Icon name="arrow" /></button>}
             </div>

@@ -99,7 +99,7 @@ function flyPieces(from: DOMRect, count: number) {
 
 export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: number) => void }) {
   const { data: loaded, error } = useLoad<MissionState>(api, '/api/me/missions');
-  const { data: wLoaded } = useLoad<WeeklyState>(api, '/api/me/weekly');
+  const { data: wLoaded, error: wError } = useLoad<WeeklyState>(api, '/api/me/weekly');
   const [over, setOver] = useState<MissionState | null>(null);
   const [wOver, setWOver] = useState<WeeklyState | null>(null);
   const [fresh, setFresh] = useState<Set<string>>(new Set());
@@ -109,9 +109,11 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
   const [got, setGot] = useState<{ n: number; closing: boolean } | null>(null);
   const data = over ?? loaded;
   const weekly = wOver ?? wLoaded;
-  const rv = useReveal(Boolean(data));
+  // 미션과 도전을 함께 기다린다 — 하나가 먼저 보였다가 다른 하나가 위에 끼어들며 화면이 밀리지 않게 (v3.93)
+  const ok = Boolean(data && (weekly || wError));
+  const rv = useReveal(ok);
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <MissionsSkeleton />;
+  if (!data || !ok) return <MissionsSkeleton />;
 
   // 받기: 미션·도전을 따로 또는 '모두 받기'로 함께. 받은 만큼 조각이 날아가고 잔액이 차오른다
   const claim = async (key: string, body: { ids?: string[]; all?: boolean }, el: HTMLElement | null, kind: 'mission' | 'weekly' | 'both' = 'mission') => {

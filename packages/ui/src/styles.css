@@ -1268,10 +1268,13 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 @media (hover: none) { .pnote-row .ibtn { opacity: 1; } }
 
 /* 지금 디스코드: 받기 전 자리표시 */
-.dn-collect { display: inline-flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); font-weight: 650; color: var(--text-3); }
+.dn-collect { display: inline-flex; align-items: center; gap: var(--s2); height: 40px; font-size: var(--fs-xs); font-weight: 650; color: var(--text-3); }
 .dn-spin { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line-2); border-top-color: var(--accent); animation: dn-spin .8s linear infinite; }
 @keyframes dn-spin { to { transform: rotate(360deg); } }
-.sk-chan { min-height: 176px; gap: var(--s3); }
+/* 실제 채널(이름 줄 · 사람 한 줄 · 단추)과 같은 틀 — 받은 뒤 칸 높이가 바뀌지 않게 (v3.93) */
+.sk-chan .vh .sk.t { width: 96px; } .sk-chan .vh .sk.s { width: 40px; margin-left: auto; }
+.sk-chan .vm .sk.s { width: 64px; }
+.sk.sq28 { width: 28px; height: 28px; border-radius: 50%; }
 .sk.sq32 { width: 32px; height: 32px; border-radius: var(--r-s); }
 @media (prefers-reduced-motion: reduce) { .dn-spin { animation-duration: 2.4s; } }
 
@@ -2286,7 +2289,7 @@ button.ga:hover { background: var(--surface-2); }
 .art2-n { text-align: right; font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
 .art2-n b { font-size: var(--fs-sm); color: var(--text); }
 .art2-none { margin: 0; padding: var(--s4); border-radius: var(--r-m); background: var(--surface-2); color: var(--text-3); font-size: var(--fs-sm); word-break: keep-all; }
-@media (max-width: 720px) { .art2 { grid-template-columns: 1fr; } .art2-hall { padding: var(--s4); } .art2-road { padding: var(--s4); } }
+@media (max-width: 720px) { .art2-sk2 { display: none; } .art2 { grid-template-columns: 1fr; } .art2-hall { padding: var(--s4); } .art2-road { padding: var(--s4); } }
 @media (prefers-reduced-motion: reduce) { .art2-plaque.on .art2-ring { animation: none; } }
 
 /* 어두운 배너 구석의 좋아요: 옆 버튼과 같은 높이의 반투명 알약 (하트 + 좋아한 수). 터지는 움직임은 그대로 */

@@ -10,7 +10,8 @@ export function ChampionsPage({ member, record }: { member: boolean; record?: Re
   const champ = Number(id) || null;
   const [tab, setTab] = useState<'guide' | 'items' | 'compare' | 'crew'>('guide');
   const [q, setQ] = useState('');
-  const stats = useLoad<AugmentStats>(api, member && champ ? `/api/augments?champion=${champ}` : null).data;
+  const sl = useLoad<AugmentStats>(api, member && champ ? `/api/augments?champion=${champ}` : null);
+  const stats = sl.data;
   if (!champ) return (
     <div className="stack" style={{ gap: 16 }}>
       <h1 className="h1">챔프</h1>
@@ -22,7 +23,7 @@ export function ChampionsPage({ member, record }: { member: boolean; record?: Re
       <ChampBanner id={champ} eyebrow="아수라장 증강" actions={<GlassBtn icon="back" label="챔프 목록으로" onClick={() => nav('/champions')} />} />
       {member && <Artisans api={api} kind="champion" id={champ} onMember={(m) => nav(`/members/${m}`)} />}
       <div className="row"><Seg value={tab} options={member ? [['guide', '어울리는 증강'], ['items', '아이템'], ['compare', '3개 비교'], ['crew', '모임 기록']] : [['guide', '어울리는 증강'], ['items', '아이템'], ['compare', '3개 비교']]} onChange={setTab} /></div>
-      {tab === 'guide' && <AugmentGuide championId={champ} stats={stats} />}
+      {tab === 'guide' && <AugmentGuide championId={champ} stats={stats} loading={member && !stats && !sl.error} />}
       {tab === 'items' && <ChampItems api={member ? api : null} championId={champ} />}
       {tab === 'compare' && <AugmentCompare championId={champ} stats={stats} />}
       {tab === 'crew' && member && <ChampionCrew api={api} championId={champ} />}

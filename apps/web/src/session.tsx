@@ -36,7 +36,8 @@ async function call<T>(method: string, path: string, body?: unknown, onUnauthori
   return data as T;
 }
 
-type Session = { api: Api; me: Me | null; ready: boolean; links: Links; login: () => void; logout: () => Promise<void>; finishLogin: (code: string) => Promise<void>; refresh: () => void };
+/** member: 회원이면 true, 아니면 false, 로그인 확인 전(토큰은 있음)이면 null — 확인 전에 비회원 화면을 잠깐 보였다가 바꾸지 않게 (v3.93) */
+type Session = { api: Api; me: Me | null; ready: boolean; member: boolean | null; links: Links; login: () => void; logout: () => Promise<void>; finishLogin: (code: string) => Promise<void>; refresh: () => void };
 const Ctx = createContext<Session | null>(null);
 export const useSession = () => useContext(Ctx)!;
 
@@ -73,7 +74,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return () => { clearInterval(t); document.removeEventListener('visibilitychange', ping); };
   }, [loggedIn, api]);
   const value: Session = {
-    api, me, ready, links, refresh,
+    api, me, ready, links, refresh, member: me ? true : ready ? false : null,
     login: () => {
       if (!SERVER) return;
       const back = `${location.origin}/auth/done`;

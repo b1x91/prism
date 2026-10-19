@@ -18,7 +18,8 @@
 .top-wide { display: contents; }
 .menu-btn { display: none !important; }
 .mmenu { display: none; }
-main { min-height: calc(100vh - 64px - 120px); }
+/* 아래 바닥글은 처음에 늘 화면 밖 — 짧은 자리표시 동안 보였다가 내용이 오며 밀려나지 않게 (v3.93) */
+main { min-height: calc(100vh - 64px); }
 .foot { padding: var(--s7) 0 var(--s8); border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-xs); margin-top: var(--s8); }
 .foot .wrap { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s6); justify-content: space-between; }
 @media (max-width: 860px) {

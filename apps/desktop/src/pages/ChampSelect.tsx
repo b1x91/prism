@@ -4,8 +4,8 @@
  */
 import { useEffect, useState } from 'react';
 import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, buildFor, type Build, type ChampionProfile, type Comp, type Need, type Verdict, shortNick, josa } from '@prism/core';
-import { AugRing, AugmentLink, ChampImg, ItemBuild, MemberFace, PieceIcon, Seg, SplashSwap, TierBadge, preloadSplash } from '@prism/ui';
-import { checkNow, type ChampSelect, type CrewSelect } from '../controller';
+import { AugRing, AugmentLink, Bone, ChampImg, ItemBuild, ItemBuildSkeleton, MemberFace, PieceIcon, Seg, SplashSwap, TierBadge, preloadSplash } from '@prism/ui';
+import { checkNow, isKnownMember, type ChampSelect, type CrewSelect } from '../controller';
 import { bridge } from '../bridge';
 import { Icon } from '@prism/ui';
 import type { Personal } from '@prism/core';
@@ -26,7 +26,7 @@ export function CheckNow({ label = '지금 확인' }: { label?: string }) {
 const fmt = (x: number) => (Number.isInteger(x) ? String(x) : x.toFixed(1));
 const rate = (r?: { n: number; w: number }) => (r && r.n ? r.w / r.n : -1);
 
-export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew: CrewSelect; personal: Personal }) {
+export function ChampSelectPanel({ cs, crew, pending = false, personal }: { cs: ChampSelect; crew: CrewSelect; pending?: boolean; personal: Personal }) {
   const [sort, setSort] = useState<Sort>(() => { try { return (localStorage.getItem('prism-bench-sort') as Sort) || 'balance'; } catch { return 'balance'; } });
   const [preview, setPreview] = useState<number | null>(null);
   const base = cs.team.map((s) => CHAMPIONS[s.championId]).filter(Boolean) as ChampionProfile[];
@@ -96,8 +96,8 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
         </div>
       </div>}
       <div className={`cs-layout ${shown ? '' : 'one'}`}>
-        <Briefing crew={crew} />
-        {shown && <Featured id={shown} isMine={shown === cs.mine} crew={crew} personal={personal} fitText={fit(shown)} needs={needs} isReco={reco === shown} onBack={preview ? () => setPreview(null) : undefined} />}
+        <Briefing crew={crew} pending={pending} team={cs.team} />
+        {shown && <Featured id={shown} isMine={shown === cs.mine} crew={crew} pending={pending} personal={personal} fitText={fit(shown)} needs={needs} isReco={reco === shown} onBack={preview ? () => setPreview(null) : undefined} />}
         <TeamBoard slots={slots} mates={mates} preview={Boolean(preview)} c={teamComp} needs={teamNeeds} verdict={team.length ? verdictOf(teamComp, teamNeeds) : null} reco={reco} recoAfter={recoAfter} recoFills={reco ? fit(reco).fills : []} onPreview={setPreview} />
       </div>
     </section>
@@ -129,7 +129,24 @@ function ItemSetButton({ champion, name, build }: { champion: number; name: stri
 }
 
 /** 이번 판 (v3.90): 같은 팀 멤버와 우리 사이 기록 · 이 판을 이기면 무엇이 되는지 (이번 주 도전). 받기는 미션 화면에서 */
-function Briefing({ crew }: { crew: CrewSelect }) {
+function Briefing({ crew, pending, team }: { crew: CrewSelect; pending: boolean; team: { puuid: string }[] }) {
+  // 받는 동안 같은 자리를 잡아 둔다 — 나중에 위에 끼어들며 큰 카드·분석을 밀어내지 않게 (v3.93).
+  // 같은 팀 멤버는 전에 본 회원 계정으로 미리 센다
+  if (pending) {
+    const n = team.filter((t) => t.puuid && isKnownMember(t.puuid)).length;
+    return (
+    <section className={`csb ${n ? '' : 'solo'}`} aria-busy="true">
+      {n > 0 && <div className="csb-mates">
+        <span className="csb-h">같은 팀 멤버</span>
+        {Array.from({ length: n }, (_, i) => <div key={i} className="csb-mate"><Bone w={40} h={40} r="round" /><span className="csb-mate-t"><b><Bone w={80} h={14} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></b><Bone w={120} h={20} r="pill" /></span></div>)}
+      </div>}
+      <div className="csb-stakes">
+        <span className="csb-h">이번 판에 걸린 것</span>
+        <div className="csb-list">{[0, 1, 2].map((i) => <div key={i} className="csb-st"><Bone w={40} h={40} r="round" /><span className="t"><Bone w="70%" h={14} /><Bone w="45%" h={12} /></span><span /></div>)}</div>
+      </div>
+    </section>
+  );
+  }
   const mates = crew?.teammates ?? [];
   const stakes = crew?.stakes ?? [];
   if (!mates.length && !stakes.length) return null;
@@ -241,7 +258,7 @@ const STYLE: [keyof ChampionProfile['style'], string][] = [['damage', '피해'],
 const RANGE_KO = { ranged: '원거리', melee: '근접' } as const;
 
 /** 큰 카드: 내 챔피언(또는 대기석 미리보기)의 성향·내 기록·모임 기록·팀에 넣으면 + 아래 줄: 어울리는 증강·내가 고른 증강 (v3.72) */
-function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }: { id: number; isMine: boolean; crew: CrewSelect; personal: Personal; fitText: ReturnType<typeof teamFit>; needs: string[]; isReco: boolean; onBack?: () => void }) {
+function Featured({ id, isMine, crew, pending, personal, fitText, needs, isReco, onBack }: { id: number; isMine: boolean; crew: CrewSelect; pending: boolean; personal: Personal; fitText: ReturnType<typeof teamFit>; needs: string[]; isReco: boolean; onBack?: () => void }) {
   const ch = CHAMPIONS[id];
   const g = guideOf(GAME_DATA, id);
   // 등급마다 가장 잘 맞는 증강 하나씩 (프리즘 · 골드 · 실버)
@@ -273,8 +290,9 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
 
         <div className="cs-rec">
           <div><small>내 기록</small><b>{me?.n ? pct(me.w, me.n) : '–'}</b><span>{me?.n ? `${me.n}판 ${me.w}승` : '처음이에요'}</span>{me?.n ? <i className="wbar"><i style={{ width: `${(me.w / me.n) * 100}%` }} /></i> : null}</div>
+          {pending ? <><div><small>모임</small><Bone w={56} h={24} dark /><Bone w={40} h={12} dark /></div><div><small>모임 최다</small><Bone w={64} h={24} dark /><Bone w={56} h={12} dark /></div></> : <>
           <div><small>모임</small><b>{cc?.crew?.n ? pct(cc.crew.w, cc.crew.n) : '–'}</b><span>{cc?.crew?.n ? `${cc.crew.n}판` : crew ? '기록 없음' : '회원 전용'}</span>{cc?.crew?.n ? <i className="wbar"><i style={{ width: `${(cc.crew.w / cc.crew.n) * 100}%` }} /></i> : null}</div>
-          <div><small>모임 최다</small>{top ? <><b className="who">{shortNick(top.nick)}</b><span>{top.n}판 · {pct(top.w, top.n)}</span></> : <><b>–</b><span>아직 없어요</span></>}</div>
+          <div><small>모임 최다</small>{top ? <><b className="who">{shortNick(top.nick)}</b><span>{top.n}판 · {pct(top.w, top.n)}</span></> : <><b>–</b><span>아직 없어요</span></>}</div></>}
         </div>
 
         {!isMine && <div className="cs-sec">
@@ -304,7 +322,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
           <div className="cs-mine">{myAugs.map((a) => <AugmentLink key={a.id} id={a.id} champion={id} inline className="cs-chip"><AugRing id={a.id} size={22} /><span>{AUGMENT[a.id]?.name}</span><small>{a.n}번 · {pct(a.w, a.n)}</small></AugmentLink>)}</div>
         </div>}
     </section>}
-    <section className="cs-itemrow"><ItemBuild build={build} title={`${ch.name} 추천 아이템`} action={build && <ItemSetButton champion={id} name={ch.name} build={build} />} /></section>
+    <section className="cs-itemrow">{pending ? <ItemBuildSkeleton title={`${ch.name} 추천 아이템`} /> : <ItemBuild build={build} title={`${ch.name} 추천 아이템`} action={build && <ItemSetButton champion={id} name={ch.name} build={build} />} />}</section>
     </>
   );
 }

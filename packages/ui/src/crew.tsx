@@ -7,18 +7,25 @@ import { BoardSkeleton, ChampionCrewSkeleton, Bone, imgIn, useReveal, Swap, fade
 
 /** 서버 데이터 한 덩이 불러오기 (다시 불러오기 함수 포함) */
 /** 1시간 안에 받아 둔 것이 있으면 자리표시 없이 바로 그린다 (withCache, v3.67). reload 는 늘 새로 받는다 */
+// 담아 두지 않는 주소(지금 디스코드·아카이브처럼 늘 새로 보는 것)도 이번 실행에서 마지막으로 받은 것은 기억해 둔다 —
+// 화면에 다시 들어올 때 자리표시 → 실제 내용으로 높이가 바뀌며 아래가 밀리지 않게, 먼저 그리고 뒤에서 새로 받는다 (v3.93)
+const lastSeen = new WeakMap<Api, Map<string, unknown>>();
+const seenOf = (api: Api) => { let m = lastSeen.get(api); if (!m) lastSeen.set(api, (m = new Map())); return m; };
+
 export function useLoad<T>(api: Api, path: string | null) {
-  const [data, setData] = useState<T | null>(() => (path ? api.peek?.<T>(path) ?? null : null));
+  const [data, setData] = useState<T | null>(() => (path ? api.peek?.<T>(path) ?? (seenOf(api).get(path) as T | undefined) ?? null : null));
   const [error, setError] = useState<string | null>(null);
   const fetchIt = useCallback(() => {
     if (!path) return;
-    api.get<T>(path).then((d) => { setData(d); setError(null); }).catch((e) => setError(e instanceof Error ? e.message : String(e)));
+    api.get<T>(path).then((d) => { seenOf(api).set(path, d); setData(d); setError(null); }).catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, [api, path]);
   const reload = useCallback(() => { if (path) api.forget?.(path); fetchIt(); }, [api, path, fetchIt]);
   useEffect(() => {
     if (!path) return;
     const kept = api.peek?.<T>(path);
     if (kept !== undefined) { setData(kept); setError(null); return; }
+    const seen = seenOf(api).get(path) as T | undefined;
+    if (seen !== undefined) setData(seen);
     fetchIt();
   }, [api, path, fetchIt]);
   return { data, error, reload };
@@ -469,7 +476,7 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
   if (!data) return (
     <section className="card pad dnow loading" aria-busy="true">
       <div className="card-head"><h2>지금 디스코드</h2><span className="sp" /><span className="dn-collect"><i className="dn-spin" aria-hidden="true" />정보를 수집하고 있습니다</span></div>
-      <div className="vchans">{[0, 1, 2].map((i) => <div key={i} className="vchan sk-chan"><i className="sk ln t" /><i className="sk ln s" /><span className="vact"><i className="sk sq32" /><i className="sk sq32" /></span></div>)}</div>
+      <div className="vchans">{[0, 1, 2].map((i) => <div key={i} className="vchan sk-chan"><div className="vh"><i className="sk ln t" /><i className="sk ln s" /></div><div className="vmembers"><span className="vm"><i className="sk sq28" /><i className="sk ln s" /></span></div><span className="vact"><i className="sk sq32" /><i className="sk sq32" /></span></div>)}</div>
     </section>
   );
   const copy = async (id: string, link: string) => {

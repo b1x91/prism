@@ -86,7 +86,9 @@ function NoGame({ s }: { s: State }) {
           <b>{todo.title}</b>
           <span className="ng-mprog"><span className="bar"><span style={{ width: `${(todo.progress / todo.target) * 100}%` }} /></span><span className="meta">{todo.progress}/{todo.target}</span><span className="rew">{todo.reward}<PieceIcon size={12} /></span></span>
           <span className="go">미션 보기 →</span>
-        </> : <>{ms.length ? <b>이번 주 미션을 다 깼어요!</b> : <Bone w="60%" h={16} />}<span className="go">미션 보기 →</span></>}
+        </> : ms.length ? <><b>이번 주 미션을 다 깼어요!</b><span className="go">미션 보기 →</span></>
+          // 받는 동안: 미션 제목(두 줄)·진행 막대와 같은 틀로 자리를 잡는다 — 나중에 칸이 커지며 아래를 밀지 않게 (v3.93)
+          : <><span className="ng-skb" aria-hidden="true"><Bone w="85%" h={20} /><Bone w="55%" h={20} /></span><span className="ng-mprog"><Bone w="100%" h={6} r="pill" /><span className="meta">&nbsp;</span></span><span className="go">미션 보기 →</span></>}
       </button>}
     </section>
   );
@@ -101,7 +103,7 @@ export function GamePage({ s }: { s: State }) {
   return (
     <div className="stack" style={{ gap: 16 }}>
       <FullscreenNote />
-      {s.champSelect ? <ChampSelectPanel cs={s.champSelect} crew={s.crew} personal={P} /> : <NoGame s={s} />}
+      {s.champSelect ? <ChampSelectPanel cs={s.champSelect} crew={s.crew} pending={Boolean(s.me) && !s.crew} personal={P} /> : <NoGame s={s} />}
       {!s.champSelect && s.status !== 'champ-select' && <TodayPick personal={P} />}
       {!s.champSelect && <h2 className="h2">내 아수라장</h2>}
       {games.length > 0 && <div className="grid4">

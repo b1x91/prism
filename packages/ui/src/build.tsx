@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { ITEM, buildFor, type Api, type Build, type ChampionInfo } from '@prism/core';
 import { useLoad } from './crew';
 import { ItemIcon } from './game';
+import { Bone } from './skeleton';
 
 const pct = (w: number, n: number) => `${Math.round((w / Math.max(1, n)) * 100)}%`;
 
@@ -38,13 +39,29 @@ export function ItemBuild({ build, title = '추천 아이템', action }: { build
   );
 }
 
+/** 모임 기록을 받는 동안: 같은 틀의 자리표시 (역할 기본 빌드가 먼저 보였다가 모임 빌드로 바뀌며 흔들리지 않게, v3.93) */
+export function ItemBuildSkeleton({ title = '추천 아이템' }: { title?: string }) {
+  const slot = (k: number) => <span key={k} className="ib-slot"><Bone w={40} h={40} r="m" /><Bone w={64} h={12} /><Bone w={52} h={12} /></span>;
+  return (
+    <div className="ib" aria-busy="true">
+      <div className="ib-h"><span className="ib-t">{title}</span><Bone w={150} h={12} /></div>
+      <div className="ib-clip"><div className="ib-row">
+        <div className="ib-g boots"><small>신발</small><div className="ib-items">{slot(0)}</div></div>
+        <div className="ib-g core"><small>먼저</small><div className="ib-items">{[1, 2, 3].map(slot)}</div></div>
+        <div className="ib-g later"><small>그다음</small><div className="ib-items">{[4, 5, 6].map(slot)}</div></div>
+      </div></div>
+      <p className="ib-foot">상대에 따라 바꿀 아이템(치유 감소·관통·방어)은 게임이 시작되면 이번 판 분석에서 알려 드려요.</p>
+    </div>
+  );
+}
+
 /** 챔프 상세 '추천 아이템' 칸: 회원이면 모임 기록으로, 아니면 역할 기본 빌드 (회원 기록은 공개층에 내지 않는다) */
 export function ChampItems({ api, championId }: { api: Api | null; championId: number }) {
-  const { data } = useLoad<ChampionInfo>(api as Api, api ? `/api/champions/${championId}` : null);
+  const { data, error } = useLoad<ChampionInfo>(api as Api, api ? `/api/champions/${championId}` : null);
   const build = buildFor(championId, data?.items ?? null);
   return (
     <section className="card pad">
-      <ItemBuild build={build} />
+      {api && !data && !error ? <ItemBuildSkeleton /> : <ItemBuild build={build} />}
       {!api && <p className="ib-foot">Prism 회원이 되면 모임이 실제로 산 아이템으로 바뀌어요.</p>}
     </section>
   );

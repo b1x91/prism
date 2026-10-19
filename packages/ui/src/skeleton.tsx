@@ -169,7 +169,10 @@ export function MissionsSkeleton() {
         <div className="cw-box"><div className="sk-lines" style={{ gap: 6 }}><Bone w={88} h={14} /><Bone w={180} h={10} /></div><div className="cw-augs">{[0, 1, 2].map((i) => <Bone key={i} w="100%" h={58} r="m" />)}</div></div>
         {[0, 1, 2].map((r) => (
           <div key={r} className="cw-grid two">{[0, 1].map((c) => (
-            <div key={c} className="cw-box"><div className="sk-lines" style={{ gap: 6 }}><Bone w={88} h={14} /><Bone w={140} h={10} /></div><Bone w={64} h={28} /><Bone w="100%" h={8} r="pill" /></div>
+            <div key={c} className="cw-box"><div className="sk-lines" style={{ gap: 6 }}><Bone w={88} h={14} /><Bone w={140} h={10} /></div>
+              {/* 숫자 · 단계 줄(동그라미) · 보상 글자 — 실제 도전 칸과 같은 높이 */}
+              <div className="row" style={{ gap: 12 }}><Bone w={24} h={32} /><div className="sk-lines" style={{ gap: 6 }}><Bone w={56} h={12} /><Bone w={100} h={10} /></div></div>
+              <Bone w="100%" h={24} r="pill" /><Bone w="100%" h={12} /></div>
           ))}</div>
         ))}
       </section>

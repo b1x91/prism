@@ -358,6 +358,8 @@ body { overflow: hidden; background: var(--bg); }
 .side-me-card .st.pc { gap: 4px; color: var(--text-2); font-variant-numeric: tabular-nums; }
 .side-me-card .st.pc b { font-size: var(--fs-sm); font-weight: 850; color: var(--text); }
 .ng-party b { line-height: 1.3; }
+.ng-skb { display: grid; gap: 6px; padding: 3px 0; } /* 미션 제목 두 줄(20px × 1.3 × 2 = 52)과 같은 높이 */
+@media (max-width: 900px) { .ng-skb > .sk:last-child { display: none; } } /* 좁으면 칸이 넓어져 제목이 한 줄 */
 .ng-mprog { display: flex; align-items: center; gap: var(--s2); }
 .ng-mprog .bar { flex: 1; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
 .ng-mprog .bar > span { display: block; height: 100%; border-radius: inherit; background: var(--accent); }

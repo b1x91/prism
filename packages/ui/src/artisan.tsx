@@ -11,6 +11,9 @@ import { useLoad } from './crew';
 import { PrismMark } from './dex';
 import { Bone, SkeletonFrame, useReveal, Swap, fadeCls } from './skeleton';
 
+// 글 한 줄 자리에 놓는 뼈대 (줄 높이가 실제 글과 같게)
+const IL = { display: 'inline-block', verticalAlign: 'middle' } as const;
+
 /** 챔피언·증강 상세의 장인 칸 (v3.38): 왼쪽 장인 명패(없으면 빈 자리), 오른쪽 장인의 길 순위. 늘 보인다 */
 export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champion' | 'augment'; id: number; onMember?: (id: string) => void }) {
   const { data } = useLoad<ArtisansData>(api, `/api/artisans/${kind}/${id}`);
@@ -22,7 +25,7 @@ export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champio
     <section className="card art2" aria-label="장인">
       <div className="art2-hall">
         <span className="art2-k"><PrismMark size={14} />장인</span>
-        {!data ? <div className="art2-plaque"><Bone w={64} h={64} r="round" dark /><Bone w={120} h={14} dark /><Bone w={180} h={10} dark /><Bone w={140} h={10} dark /></div> : masters.length ? <div className="art2-masters">{masters.slice(0, 3).map((a) => (
+        {!data ? <div className="art2-plaque" aria-busy="true"><span className="art2-ring"><Bone w={56} h={56} r="round" dark /></span><b className="art2-nm"><Bone w={120} h={14} dark style={IL} /></b><small><Bone w={200} h={10} dark style={IL} /><span className="art2-sk2"><br /><Bone w={140} h={10} dark style={IL} /></span></small></div> : masters.length ? <div className="art2-masters">{masters.slice(0, 3).map((a) => (
           <button key={a.id} type="button" className="art2-plaque on" onClick={() => onMember?.(a.id)}>
             <span className="art2-ring"><MemberFace nick={a.nick} skin={a.skin} champion={a.main} size={56} skins={skins} /></span>
             <b className="art2-nm"><NickName nick={a.nick} /></b>
@@ -37,7 +40,7 @@ export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champio
       </div>
       <div className="art2-road">
         <div className="art2-road-h"><b>장인의 길</b><span className="meta">이룬 목표 순</span></div>
-        {!data ? <div className="art2-rows">{[0, 1].map((i) => <div key={i} className="art2-row" style={{ cursor: "default" }}><Bone w={12} h={12} /><Bone w={28} h={28} r="round" /><Bone w="60%" h={12} /><Bone w="100%" h={6} r="pill" /><Bone w={28} h={12} /></div>)}</div>
+        {!data ? <div className="art2-rows">{[0].map((i) => <div key={i} className="art2-row" style={{ cursor: "default" }}><Bone w={12} h={12} /><Bone w={28} h={28} r="round" /><Bone w="60%" h={12} /><Bone w="100%" h={6} r="pill" /><Bone w={28} h={12} /></div>)}</div>
           : road.length ? <ol className="art2-rows">{road.map((a, i) => (
             <li key={a.id}><button type="button" className="art2-row" onClick={() => onMember?.(a.id)}>
               <span className="rk">{i + 1}</span>

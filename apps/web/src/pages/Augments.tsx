@@ -7,12 +7,12 @@ import { useSession } from '../session';
 export function Augments() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { api, me } = useSession();
+  const { api, member } = useSession();
   useEffect(() => { scrollTo(0, 0); }, [id]);
   if (id) return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
       <AugmentDetail id={Number(id)} onChampion={(c) => nav(`/champions/${c}`)} onAugment={(a) => nav(`/augments/${a}`)} onBack={() => nav('/augments')}
-        after={me && <Artisans api={api} kind="augment" id={Number(id)} onMember={(m) => nav(`/members/${m}`)} />} />
+        after={member !== false && <Artisans api={api} kind="augment" id={Number(id)} onMember={(m) => nav(`/members/${m}`)} />} />
     </div></section>
   );
   return (

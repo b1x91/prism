@@ -150,7 +150,7 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { d
             <span><PrismMark />마스터 <b>{masters}</b></span>
             <span className="of">/ {ids.length}</span>
           </div>
-          <span className="meta">{loading ? <Bone w={160} h={12} /> : next ? `다음 배지 '${next[1]}'까지 ${next[0] - rate}%` : '도감을 완성했어요!'}</span>
+          <span className="meta">{loading ? <Bone w={160} h={12} style={{ display: 'inline-block', verticalAlign: 'middle' }} /> : next ? `다음 배지 '${next[1]}'까지 ${next[0] - rate}%` : '도감을 완성했어요!'}</span>
         </div>
         <div className="dex-badges">{BADGES.map(([p, l]) => <span key={p} className={`dex-badge ${rate >= p ? 'on' : ''}`} title={`마스터 여정 ${p}%`}><i />{l}<small>{p}%</small></span>)}</div>
       </header>

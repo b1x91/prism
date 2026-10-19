@@ -51,6 +51,14 @@ export type State = {
 
 const stored = <T,>(k: string, d: T): T => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
 const store = (k: string, v: unknown) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* 저장소 없음 */ } };
+// 회원인 롤 계정(puuid)을 기억해 둔다 — 챔프 선택에서 모임 기록을 받기 전에 '같은 팀 멤버' 자리를 미리 잡으려고 (v3.93)
+const knownMembers = new Set<string>(stored<string[]>('prism-member-puuids', []));
+function rememberMembers(list: string[]) {
+  let changed = false;
+  for (const x of list) if (x && !knownMembers.has(x)) { knownMembers.add(x); changed = true; }
+  if (changed) store('prism-member-puuids', [...knownMembers].slice(-300));
+}
+export const isKnownMember = (puuid: string) => knownMembers.has(puuid);
 
 let state: State = {
   status: 'starting', message: '', phase: '', summoner: null, games: [], personal: personalStats([]), champSelect: null, crew: null,
@@ -147,6 +155,7 @@ async function syncCrew() {
   let games = 0;
   try {
     const { targets } = await api.get<{ targets: { puuid: string; lastPlayedAt: number | null }[] }>('/api/crew/targets');
+    rememberMembers(targets.map((t) => t.puuid));
     for (const t of targets) {
       if (t.puuid === state.summoner.puuid) continue;
       const st = await bridge.lcuStatus();
@@ -183,12 +192,14 @@ async function loadChampSelect() {
   const allies = team.map((t) => t.championId).filter((id) => id > 0);
   // 챔피언·팀원 구성이 바뀌었을 때만 서버에 묻는다 (모임 기록·같은 팀 회원 케미·이번 판에 걸린 것).
   // 화면이 그대로여도 확인한다 — 챔프 선택 중에 앱이 켜져 로그인이 늦게 끝나면 다시 물어야 한다
+  // 새 챔프 선택: 지난 판의 같은 팀 멤버·걸린 것을 비우고 다시 묻는다 (지난 내용이 먼저 보였다가 바뀌지 않게)
+  if (!state.champSelect) { crewKey = ''; if (state.crew) set({ crew: null }); }
   const ids = [cs.mine, ...cs.bench].filter((x): x is number => Boolean(x));
   const puuids = team.map((t) => t.puuid).filter(Boolean);
   const key = JSON.stringify([ids.slice().sort(), puuids.slice().sort()]);
   if (state.me && key !== crewKey) {
     crewKey = key;
-    api.post<CrewSelect>('/api/champselect', { championIds: ids, teammatePuuids: puuids }).then((crew) => set({ crew })).catch(() => { setTimeout(() => { if (crewKey === key) crewKey = ''; }, 10_000); }); // 실패하면 10초 뒤 다시
+    api.post<CrewSelect>('/api/champselect', { championIds: ids, teammatePuuids: puuids }).then((crew) => { rememberMembers((crew?.teammates ?? []).map((m) => m.puuid)); set({ crew }); }).catch(() => { setTimeout(() => { if (crewKey === key) crewKey = ''; }, 10_000); }); // 실패하면 10초 뒤 다시
   }
   // 0.6초마다 읽으므로, 바뀐 게 없으면 화면을 다시 그리지 않는다
   if (!fresh && JSON.stringify(cs) === JSON.stringify(state.champSelect) && JSON.stringify(allies) === JSON.stringify(state.matchup!.allies)) return;
