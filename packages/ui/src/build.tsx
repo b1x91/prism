@@ -2,6 +2,7 @@
  * 추천 아이템 (CLAUDE.md v3.88): 신발 · 먼저 갈 세 개 · 그다음 후보.
  * 모임 기록이 충분하면 그 챔프로 실제로 산 순서(판수·승률), 아니면 역할 기본 빌드.
  */
+import type { ReactNode } from 'react';
 import { ITEM, buildFor, type Api, type Build, type ChampionInfo } from '@prism/core';
 import { useLoad } from './crew';
 import { ItemIcon } from './game';
@@ -18,19 +19,20 @@ function Slot({ id, n, w, rank }: { id: number; n?: number; w?: number; rank?: n
   );
 }
 
-export function ItemBuild({ build, title = '추천 아이템' }: { build: Build | null; title?: string }) {
+export function ItemBuild({ build, title = '추천 아이템', action }: { build: Build | null; title?: string; action?: ReactNode }) {
   if (!build || !build.core.length) return null;
   return (
     <div className="ib">
       <div className="ib-h">
         <span className="ib-t">{title}</span>
         <span className="ib-src">{build.source === 'crew' ? `Prism 기록 ${build.games}판 · 자주 산 순서` : `${build.label} 기본 빌드`}</span>
+        {action && <span className="ib-act">{action}</span>}
       </div>
-      <div className="ib-row">
+      <div className="ib-clip"><div className="ib-row">
         {build.boots > 0 && <div className="ib-g boots"><small>신발</small><div className="ib-items"><Slot id={build.boots} /></div></div>}
         <div className="ib-g core"><small>먼저</small><div className="ib-items">{build.core.map((x, i) => <Slot key={x.id} {...x} rank={i + 1} />)}</div></div>
         {build.later.length > 0 && <div className="ib-g later"><small>그다음</small><div className="ib-items">{build.later.slice(0, 3).map((x) => <Slot key={x.id} {...x} />)}</div></div>}
-      </div>
+      </div></div>
       <p className="ib-foot">상대에 따라 바꿀 아이템(치유 감소·관통·방어)은 게임이 시작되면 이번 판 분석에서 알려 드려요.</p>
     </div>
   );

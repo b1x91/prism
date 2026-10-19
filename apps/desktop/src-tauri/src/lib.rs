@@ -46,6 +46,19 @@ async fn lcu_get(app: State<'_, Arc<App>>, path: String) -> Result<serde_json::V
     app.lcu.get(&path).await
 }
 
+#[derive(serde::Deserialize)]
+struct SetBlock {
+    name: String,
+    items: Vec<u32>,
+}
+
+/// 추천 아이템을 롤 아이템 세트로 넣는다 (챔프 선택에서 사용자가 누를 때만, v3.92)
+#[tauri::command]
+async fn lcu_item_set(app: State<'_, Arc<App>>, champion: u32, title: String, blocks: Vec<SetBlock>) -> Result<(), String> {
+    let b: Vec<(String, Vec<u32>)> = blocks.into_iter().map(|x| (x.name, x.items)).collect();
+    app.lcu.put_item_set(champion, &title, &b).await
+}
+
 /// 게임 중 라이브 클라이언트 데이터 (게임 위 작은 창이 아이템 추천에 쓴다). 수집 동의 전이거나 게임이 없으면 부르지 않는다
 #[tauri::command]
 async fn live_game(app: State<'_, Arc<App>>) -> Result<serde_json::Value, String> {
@@ -439,7 +452,7 @@ pub fn run() {
                 _ => {}
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_close, lcu_get, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
+        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_close, lcu_get, lcu_item_set, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }

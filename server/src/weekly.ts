@@ -43,7 +43,9 @@ async function claimsOf(env: Env, id: string): Promise<Map<string, number>> {
 async function inputs(env: Env, id: string) {
   const games = await myGames(env, id);
   const first = games.length ? Math.min(...games.map((g) => g.t)) : Date.now();
-  const [goal, claims, tonight] = await Promise.all([goalWins(env, weekStart(first)), claimsOf(env, id), tonightHist(env)]);
+  // 모두의 목표는 모임 전체 지난 4주 평균으로 정하므로, 늦게 들어온 회원도 같은 목표를 보도록 최소 5주 전부터 센다
+  const since = Math.min(weekStart(first), weekStart(Date.now()) - 5 * 7 * 86_400_000);
+  const [goal, claims, tonight] = await Promise.all([goalWins(env, since), claimsOf(env, id), tonightHist(env)]);
   return { games, goal, claims, tonight };
 }
 

@@ -3,7 +3,7 @@
  * 롤 클라이언트에는 읽기만 한다. 고르기·교체는 사용자가 롤에서 직접 한다.
  */
 import { useEffect, useState } from 'react';
-import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, buildFor, type ChampionProfile, type Comp, type Need, type Verdict, shortNick, josa } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, buildFor, type Build, type ChampionProfile, type Comp, type Need, type Verdict, shortNick, josa } from '@prism/core';
 import { AugRing, AugmentLink, ChampImg, ItemBuild, MemberFace, PieceIcon, Seg, SplashSwap, TierBadge, preloadSplash } from '@prism/ui';
 import { checkNow, type ChampSelect, type CrewSelect } from '../controller';
 import { bridge } from '../bridge';
@@ -105,6 +105,28 @@ export function ChampSelectPanel({ cs, crew, personal }: { cs: ChampSelect; crew
 }
 
 type Mate = NonNullable<CrewSelect>['teammates'][number];
+
+/** 추천 아이템을 롤 아이템 세트로 넣기 (v3.92). 누를 때만, 내 세트 목록의 'Prism' 세트 하나를 넣거나 바꾼다 */
+function ItemSetButton({ champion, name, build }: { champion: number; name: string; build: Build }) {
+  const [st, setSt] = useState<'idle' | 'busy' | 'done' | 'err'>('idle');
+  const [msg, setMsg] = useState('');
+  useEffect(() => { setSt('idle'); setMsg(''); }, [champion]);
+  const put = async () => {
+    setSt('busy'); setMsg('');
+    const blocks = [
+      build.boots ? { name: '신발', items: [build.boots] } : null,
+      { name: '먼저', items: build.core.map((x) => x.id) },
+      build.later.length ? { name: '그다음', items: build.later.slice(0, 3).map((x) => x.id) } : null,
+    ].filter((b): b is { name: string; items: number[] } => Boolean(b && b.items.length));
+    try { await bridge.lcuItemSet(champion, `Prism · ${name}`, blocks); setSt('done'); }
+    catch (e) { setSt('err'); setMsg(e instanceof Error ? e.message : String(e)); }
+  };
+  if (st === 'done') return <small className="ok"><Icon name="check" />롤 아이템 세트에 넣었어요</small>;
+  return <>
+    {st === 'err' && <small className="err">{msg || '넣지 못했어요'}</small>}
+    <button type="button" className="btn sm" disabled={st === 'busy'} onClick={put}>{st === 'busy' ? '넣는 중…' : '롤에 아이템 세트로 넣기'}</button>
+  </>;
+}
 
 /** 이번 판 (v3.90): 같은 팀 멤버와 우리 사이 기록 · 이 판을 이기면 무엇이 되는지 (이번 주 도전). 받기는 미션 화면에서 */
 function Briefing({ crew }: { crew: CrewSelect }) {
@@ -228,6 +250,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
   const myAugs = (personal.augmentsByChampion[id] ?? []).slice(0, 3);
   const top = cc?.masters?.[0];
   if (!ch) return <div />;
+  const build = buildFor(id, cc?.items);
   return (
     <>
     <article className={`cs-tile ${isMine ? 'mine' : ''}`}>
@@ -281,7 +304,7 @@ function Featured({ id, isMine, crew, personal, fitText, needs, isReco, onBack }
           <div className="cs-mine">{myAugs.map((a) => <AugmentLink key={a.id} id={a.id} champion={id} inline className="cs-chip"><AugRing id={a.id} size={22} /><span>{AUGMENT[a.id]?.name}</span><small>{a.n}번 · {pct(a.w, a.n)}</small></AugmentLink>)}</div>
         </div>}
     </section>}
-    <section className="cs-itemrow"><ItemBuild build={buildFor(id, cc?.items)} title={`${ch.name} 추천 아이템`} /></section>
+    <section className="cs-itemrow"><ItemBuild build={build} title={`${ch.name} 추천 아이템`} action={build && <ItemSetButton champion={id} name={ch.name} build={build} />} /></section>
     </>
   );
 }

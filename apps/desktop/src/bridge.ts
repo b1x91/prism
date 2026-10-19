@@ -27,6 +27,8 @@ export const bridge = {
   toastGet: () => call<ToastMsg | null>('toast_get'),
   toastClose: () => call<null>('toast_close'),
   lcuGet: <T = any>(path: string) => call<T>('lcu_get', { path }).catch((e) => { throw err(e); }),
+  /** 추천 아이템을 롤 아이템 세트로 (내 세트 목록에 'Prism' 세트 하나, v3.92) */
+  lcuItemSet: (champion: number, title: string, blocks: { name: string; items: number[] }[]) => call<null>('lcu_item_set', { champion, title, blocks }).catch((e) => { throw err(e); }),
   session: () => call<{ configured: boolean; loggedIn: boolean }>('session'),
   login: () => call<void>('login').catch((e) => { throw err(e); }),
   logout: () => call<void>('logout'),

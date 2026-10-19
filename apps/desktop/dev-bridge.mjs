@@ -75,6 +75,7 @@ const CMD = {
   bring_to_front: () => null,
   toast_get: () => null,
   lcu_get: ({ path }) => lcu(path),
+  lcu_item_set: ({ champion, blocks }) => { if (!champion || !blocks?.length) throw '잘못된 아이템 세트입니다.'; return null; },
   session: () => ({ configured: true, loggedIn: Boolean(token) }),
   login,
   logout: () => { token = null; return null; },

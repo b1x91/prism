@@ -1,8 +1,10 @@
-//! 롤 클라이언트(LCU) 읽기 전용 접근.
+//! 롤 클라이언트(LCU) 접근.
 //!
-//! 지키는 것 (CLAUDE.md v3.1-4):
-//! - GET 만 보낸다. 쓰기·조작 요청 경로는 이 파일에 없다.
-//! - 허용한 경로 앞부분(ALLOWED)만 읽는다.
+//! 지키는 것 (CLAUDE.md v3.1-4 · v3.92):
+//! - 화면이 부르는 것은 GET 뿐이고, 허용한 경로 앞부분(ALLOWED)만 읽는다.
+//! - 쓰기는 딱 하나 (사용자 결정 2026-10-19): 내 아이템 세트 목록에 'Prism' 세트를 넣거나 바꾸는 것
+//!   (`put_item_set`, 챔프 선택에서 사용자가 누를 때만). 경로·내용은 Rust 가 만들고 화면은 챔프·아이템 번호만 넘긴다.
+//!   다른 세트는 그대로 둔다. 초대·수락·픽·설정 같은 클라이언트 조작은 하지 않는다.
 //! - 게임이 실행 중이면 롤에 아무 요청도 하지 않는다 (OS 프로세스 목록으로만 판단).
 //! - 게임 프로세스·메모리·인게임 API 는 건드리지 않는다.
 
@@ -172,20 +174,61 @@ impl Lcu {
         if !ALLOWED.iter().any(|a| path.starts_with(a)) || path.contains("..") {
             return Err(format!("허용되지 않은 경로: {path}"));
         }
+        self.send(reqwest::Method::GET, path, None).await
+    }
+
+    /// 'Prism' 아이템 세트를 넣는다 (같은 챔프의 예전 Prism 세트는 바꾼다). blocks: (이름, 아이템 번호들)
+    pub async fn put_item_set(&self, champion: u32, title: &str, blocks: &[(String, Vec<u32>)]) -> Result<(), String> {
+        if champion == 0 || champion > 10_000 || blocks.is_empty() || blocks.len() > 6 {
+            return Err("잘못된 아이템 세트입니다.".into());
+        }
+        let clip = |s: &str, n: usize| s.chars().filter(|c| !c.is_control()).take(n).collect::<String>();
+        let mut bl = Vec::new();
+        for (name, items) in blocks {
+            if items.is_empty() || items.len() > 10 || items.iter().any(|&i| i == 0 || i > 999_999) {
+                return Err("잘못된 아이템 번호입니다.".into());
+            }
+            bl.push(serde_json::json!({
+                "type": clip(name.as_str(), 24),
+                "items": items.iter().map(|i| serde_json::json!({ "id": i.to_string(), "count": 1 })).collect::<Vec<_>>(),
+                "hideIfSummonerSpell": "", "showIfSummonerSpell": "",
+            }));
+        }
+        let me = self.send(reqwest::Method::GET, "/lol-summoner/v1/current-summoner", None).await?;
+        let sid = me.get("summonerId").and_then(|v| v.as_u64()).ok_or("소환사 정보를 읽지 못했습니다.")?;
+        let path = format!("/lol-item-sets/v1/item-sets/{sid}/sets");
+        let mut cur = self.send(reqwest::Method::GET, &path, None).await?;
+        let uid = format!("prism-{champion}");
+        let set = serde_json::json!({
+            "uid": uid, "title": clip(title, 40), "type": "custom", "map": "any", "mode": "any",
+            "associatedChampions": [champion], "associatedMaps": [12],
+            "blocks": bl, "preferredItemSlots": [], "sortrank": 0, "startedFrom": "blank",
+        });
+        let sets = cur.get_mut("itemSets").and_then(|v| v.as_array_mut()).ok_or("아이템 세트 목록을 읽지 못했습니다.")?;
+        sets.retain(|x| x.get("uid").and_then(|u| u.as_str()) != Some(uid.as_str()));
+        sets.insert(0, set);
+        self.send(reqwest::Method::PUT, &path, Some(cur)).await.map(|_| ())
+    }
+
+    async fn send(&self, method: reqwest::Method, path: &str, body: Option<serde_json::Value>) -> Result<serde_json::Value, String> {
         if game_running() {
             return Err("게임 중에는 롤 클라이언트에 요청하지 않습니다.".into());
         }
         let c = self.ensure().ok_or("롤 클라이언트가 꺼져 있습니다.")?;
         let auth = base64::engine::general_purpose::STANDARD.encode(format!("riot:{}", c.token));
-        let res = self
+        let mut rq = self
             .http
-            .get(format!("https://127.0.0.1:{}{}", c.port, path))
+            .request(method, format!("https://127.0.0.1:{}{}", c.port, path))
             .header("Authorization", format!("Basic {auth}"))
-            .header("Accept", "application/json")
-            .send()
-            .await;
-        match res {
-            Ok(r) if r.status().is_success() => r.json().await.map_err(|e| e.to_string()),
+            .header("Accept", "application/json");
+        if let Some(b) = body {
+            rq = rq.json(&b);
+        }
+        match rq.send().await {
+            Ok(r) if r.status().is_success() => {
+                let t = r.text().await.map_err(|e| e.to_string())?;
+                if t.trim().is_empty() { Ok(serde_json::Value::Null) } else { serde_json::from_str(&t).map_err(|e| e.to_string()) }
+            }
             Ok(r) => Err(format!("클라이언트 응답 {}", r.status().as_u16())),
             Err(e) => {
                 // 클라이언트를 다시 켰을 수 있다 → 다음에 다시 찾는다

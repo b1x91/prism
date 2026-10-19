@@ -28,8 +28,10 @@ export const WEEKLY = {
   crewStreak: [[2, 20], [4, 50], [6, 100], [8, 180]] as [number, number][],
   /** 이번 주 멤버와 같은 팀으로 이긴 판 */
   wins: [[5, 30], [15, 60], [30, 120]] as [number, number][],
-  /** 모두의 목표: 이번 주 모임 전체가 함께 이긴 판 (내가 1승 이상 보탰을 때) */
-  goal: [[60, 40], [100, 60]] as [number, number][],
+  /** 모두의 목표: 이번 주 모임 전체가 함께 이긴 판 (내가 1승 이상 보탰을 때) — 보상만. 목표 판수는 goalTargets 가 주마다 정한다 */
+  goal: [[0, 40], [0, 60]] as [number, number][],
+  /** 목표 판수: 지난 4주 '함께 이긴 판' 평균 × 배수 (5 단위로 올림), 최소값. 기록이 없으면 처음 값 (가볍게 시작) */
+  goalAuto: { weeks: 4, mult: [0.8, 1.3], min: [10, 20], start: [10, 25] },
   /** 새로운 짝: 같은 팀으로 이겨 본 적 없는 멤버와 첫 승, 한 명마다 · 주에 최대 */
   pair: { reward: 25, max: 3 },
   /** 듀오 등급이 오를 때 (짝마다 등급별 한 번) */
@@ -39,6 +41,17 @@ export const WEEKLY = {
 } as const;
 
 const WEEK = 7 * 86_400_000;
+
+/** 그 주 '모두의 목표' 단계 [목표 판수, 보상] — 지난 4주 모임이 함께 이긴 판 평균에 맞춘다 (모임이 크든 작든 '조금 더 하면 닿는' 목표) */
+export function goalTargets(ws: number, goalWins: Map<number, number>): [number, number][] {
+  const A = WEEKLY.goalAuto;
+  const prev = Array.from({ length: A.weeks }, (_, i) => goalWins.get(ws - (i + 1) * WEEK) ?? 0);
+  const avg = prev.reduce((a, b) => a + b, 0) / A.weeks;
+  const up5 = (x: number) => Math.ceil(x / 5) * 5;
+  const at = avg > 0 ? A.mult.map((m, i) => Math.max(A.min[i], up5(avg * m))) : [...A.start];
+  if (at[1] <= at[0]) at[1] = at[0] + 10;
+  return WEEKLY.goal.map(([, r], i) => [at[i], r]);
+}
 /** 도전을 세기 시작한 주 (2026-10-19 월요일 0시 KST). 그 전 기록으로는 보상하지 않는다 — 한꺼번에 쏟아지지 않게.
  *  듀오 등급은 이때 이미 닿아 있던 등급 다음부터. 연승·짝은 그 전 판도 이어서 센다. */
 export const WEEKLY_SINCE = Date.UTC(2026, 9, 18, 15, 0);
@@ -84,7 +97,7 @@ export function weeklyDone(all: WGame[], goalWins: Map<number, number>, now = Da
     if (ws < WEEKLY_SINCE) { for (const g of list) if (g.w) for (const m of g.mates) wonBefore.add(m); continue; }
     for (const [at, r] of WEEKLY.wins) if (cw >= at) out.set(`cw:${ws}:wins:${at}`, r);
     const total = goalWins.get(ws) ?? 0;
-    if (cw > 0) for (const [at, r] of WEEKLY.goal) if (total >= at) out.set(`cw:${ws}:goal:${at}`, r);
+    if (cw > 0) goalTargets(ws, goalWins).forEach(([at, r], i) => { if (total >= at) out.set(`cw:${ws}:goal:${i + 1}`, r); });
     let n = 0;
     for (const g of list) {
       if (!g.w) continue;
@@ -141,7 +154,7 @@ export function weeklyState(all: WGame[], goalWins: Map<number, number>, claims:
     if (g.mates.length) cs = g.w ? cs + 1 : 0;
     if (g.t >= ws) { sBest = Math.max(sBest, s); if (g.mates.length) cBest = Math.max(cBest, cs); }
   }
-  const steps = (kind: string, table: [number, number][]) => table.map(([at, reward]) => { const id = `cw:${ws}:${kind}:${at}`; return { id, at, reward, ...mark(id) }; });
+  const steps = (kind: string, table: [number, number][], byIndex = false) => table.map(([at, reward], i) => { const id = `cw:${ws}:${kind}:${byIndex ? i + 1 : at}`; return { id, at, reward, ...mark(id) }; });
   const cw = mine.filter((g) => g.w && g.mates.length).length;
 
   const pairs: WPair[] = [...done.keys()].filter((id) => id.startsWith(`cw:${ws}:pair:`)).map((id) => {
@@ -176,7 +189,7 @@ export function weeklyState(all: WGame[], goalWins: Map<number, number>, claims:
     streak: { key: 'streak', now: s, best: sBest, steps: steps('streak', WEEKLY.streak) },
     crewStreak: { key: 'crewStreak', now: cs, best: cBest, steps: steps('crew', WEEKLY.crewStreak) },
     wins: { key: 'wins', now: cw, best: cw, steps: steps('wins', WEEKLY.wins) },
-    goal: { key: 'goal', now: goalWins.get(ws) ?? 0, best: goalWins.get(ws) ?? 0, mine: cw, steps: steps('goal', WEEKLY.goal) },
+    goal: { key: 'goal', now: goalWins.get(ws) ?? 0, best: goalWins.get(ws) ?? 0, mine: cw, steps: steps('goal', goalTargets(ws, goalWins), true) },
     pairs, wonEver: [...wonEver],
     bonds, bondNext: bondNext.slice(0, 3),
     past, ready: [...open.values()].reduce((a, b) => a + b, 0), tonight,
