@@ -12,14 +12,16 @@
  *
  * 결과: packages/core/data/mayhem-augments.json, packages/core/data/mayhem-champions.json
  */
+import { createXXHash3 } from 'hash-wasm';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AUGMENT_TAGS } from './augment-tags.js';
 
-const RAW = 'https://raw.communitydragon.org/latest';
+// CDRAGON=pbe 로 다음 패치(PBE)를 미리 받을 수 있다. OUT 을 주면 그 폴더에 쓴다 (비교용)
+const RAW = `https://raw.communitydragon.org/${process.env.CDRAGON ?? 'latest'}`;
 const PLUGIN = `${RAW}/plugins/rcp-be-lol-game-data/global/ko_kr/v1`;
-const OUT = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'packages', 'core', 'data');
+const OUT = process.env.OUT ?? join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'packages', 'core', 'data');
 
 async function get<T>(url: string): Promise<T> {
   for (let i = 0; ; i++) {
@@ -35,6 +37,16 @@ async function get<T>(url: string): Promise<T> {
 }
 
 // ───────── 증강 ─────────
+
+/** 게임 문구표의 키 = 소문자 키의 xxh3-64 하위 38비트 ('{%010x}'). 16.21 PBE 문구표에서 확인 (2026-10-20) */
+async function stringKeyHasher(): Promise<(key: string) => string> {
+  const h = await createXXHash3();
+  const mask = (1n << 38n) - 1n;
+  return (key) => {
+    h.init(); h.update(key.toLowerCase());
+    return `{${(BigInt(`0x${h.digest('hex')}`) & mask).toString(16).padStart(10, '0')}}`;
+  };
+}
 
 type Bin = Record<string, any>;
 const RARITY: Record<string, string> = { kSilver: 'silver', kGold: 'gold', kPrismatic: 'prismatic' };
@@ -105,7 +117,10 @@ async function buildAugments() {
     get<any[]>(`${PLUGIN}/augment-lists.json`),
     get<{ version: string }>(`${RAW}/content-metadata.json`),
   ]);
-  const st = Object.fromEntries(Object.entries(table.entries).map(([k, v]) => [k.toLowerCase(), v]));
+  // 새 문구는 이름 대신 '{해시}' 키로만 들어 있다 (CommunityDragon 이 아직 이름을 모르는 키) — 이름으로 못 찾으면 해시로 찾는다
+  const plain: Record<string, string> = Object.fromEntries(Object.entries(table.entries).map(([k, v]) => [k.toLowerCase(), v]));
+  const hashKey = await stringKeyHasher();
+  const st = new Proxy(plain, { get: (t, k) => (typeof k === 'string' ? t[k] ?? t[hashKey(k)] : undefined) });
   const byId = new Map(cherry.map((c) => [c.id, c]));
   const inMode = new Set((lists.find((l) => l.modeName === 'KIWI')?.augmentList ?? []).map((p: string) => p.split('/').pop()));
 
