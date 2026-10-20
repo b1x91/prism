@@ -23,3 +23,4 @@ export * from './pulse';
 export * from './splash';
 export * from './appmembers';
 export * from './build';
+export * from './goods';

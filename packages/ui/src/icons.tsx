@@ -34,6 +34,10 @@ const P: Record<string, ReactElement> = {
   chevD: <path d="M6 9l6 6 6-6" />,
   star: <path d="M12 3.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" />,
   target: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r=".8" fill="currentColor" /></>,
+  gift: <><rect x="3.5" y="8.5" width="17" height="4" rx="1" /><path d="M5 12.5V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-7.5M12 8.5V21" /><path d="M12 8.5C10.5 5 7 4.5 7 6.6c0 1.6 2.4 1.9 5 1.9M12 8.5c1.5-3.5 5-4 5-1.9 0 1.6-2.4 1.9-5 1.9" /></>,
+  box: <><path d="M3.5 8 12 4l8.5 4v8L12 20l-8.5-4z" /><path d="M3.5 8 12 12l8.5-4M12 12v8" /></>,
+  frame: <><rect x="3.5" y="4.5" width="17" height="15" rx="2" /><rect x="7" y="8" width="10" height="8" rx="1" /></>,
+  chart: <><path d="M4 20V4M4 20h16" /><path d="M8 16v-4M12 16V8M16 16v-6" /></>,
   login: <><path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3" /><path d="M10 17l5-5-5-5M15 12H4" /></>,
 };
 const FILLED: Record<string, ReactElement> = {

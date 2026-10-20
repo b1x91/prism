@@ -6,17 +6,19 @@
  */
 import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
-  CHAMPIONS, DEX_LEVEL_KO, PIECE, priceWith, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
-  type Api, type Deco, type DexLevel, type Presence, type PublicProfile, type Shop, type ShopItem, type ShopSlot, josa } from '@prism/core';
+  CHAMPIONS, DEX_LEVEL_KO, PIECE, forSale, priceWith, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
+  type Api, type Deco, type DexLevel, type InsightKind, type Presence, type PublicProfile, type Shop, type ShopItem, type ShopSlot, josa } from '@prism/core';
 import { ChampImg, Empty, Gem, MemberFace, PresenceDot, Toggle, useSkins } from './basics';
 import { useLoad } from './crew';
 import { BgScene } from './bgscene';
 import { NickName } from './studio';
 import { Icon } from './icons';
 import { BuyDialog } from './buy';
+import { BoxBanner, BoxDialog, GiftDialog, GiftNotice, GoodsGrid } from './goods';
 import { ShopSkeleton, useReveal, Swap, fadeCls } from './skeleton';
 
-const SLOTS: ShopSlot[] = ['bg', 'frame', 'fx', 'name', 'title'];
+/** 상점 칸 (칭호는 팔지 않고 얻는다, v3.99) */
+const SLOTS: ShopSlot[] = ['bg', 'frame', 'fx', 'name'];
 /** 산 배경이 없을 때 깔리는 기본 색 (회원마다 정해진 색 — 이름으로 고른다, 바뀌지 않는다). 상점의 '배경'으로 바꿀 수 있다 */
 const BASE_TINTS = ['#3b5bdb', '#7048e8', '#0c8599', '#2b8a3e', '#c2255c', '#e8590c', '#5f3dc4', '#1971c2'];
 export function baseTint(seed: string) {
@@ -125,9 +127,10 @@ export function ShareButton({ api, id }: { api: Api; id: string; shared?: boolea
 type Me = { nick: string; skin?: number | null; champion?: number | null };
 const RARITY_ORDER = ['legendary', 'epic', 'rare', 'common'] as const;
 
-export function ShopView({ api, me, open = true }: { api: Api; me: Me; open?: boolean }) {
+/** onGo: 이용권이 쓰이는 화면으로 (도감·미션·내 페이지 — 인사이트는 내 페이지의 '인사이트' 칸) */
+export function ShopView({ api, me, open = true, onGo }: { api: Api; me: Me; open?: boolean; onGo?: (to: 'dex' | 'missions' | 'me', insight?: InsightKind) => void }) {
   if (!open) return <ShopSoon api={api} me={me} />;
-  return <ShopOpen api={api} me={me} />;
+  return <ShopOpen api={api} me={me} onGo={onGo} />;
 }
 
 /** 상점 준비 중 (운영진 외): 흐린 진열장 몇 개 + 모으고 있는 피스 */
@@ -150,13 +153,20 @@ function ShopSoon({ me }: { api: Api; me: Me }) {
 /** '인기' 탭에 보이는 상품 수 */
 const HOT_MAX = 12;
 
-function ShopOpen({ api, me }: { api: Api; me: Me }) {
-  const { data, error, reload } = useLoad<Shop>(api, '/api/shop');
+function ShopOpen({ api, me, onGo }: { api: Api; me: Me; onGo?: (to: 'dex' | 'missions' | 'me', insight?: InsightKind) => void }) {
+  const { data: loaded, error, reload } = useLoad<Shop>(api, '/api/shop');
+  // 사고 난 뒤 서버가 돌려준 새 상태를 바로 쓴다 (다시 받는 동안 옛 잔액이 보이지 않게)
+  const [fresh, setFresh] = useState<Shop | null>(null);
+  const data = fresh ?? loaded;
+  useEffect(() => { setFresh(null); }, [loaded]);
+  const [boxOpen, setBoxOpen] = useState(false);
+  const [giving, setGiving] = useState<ShopItem | null>(null);
+  const update = (s: Shop) => { setFresh(s); setPieces(s.balance); };
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
   // '인기'가 첫 탭. 지금은 판매 기록이 적어 무작위로 섞은 12개 (들어올 때마다 한 번, HOT_MAX)
-  const [slot, setSlot] = useState<ShopSlot | 'hot'>('hot');
-  const [hot] = useState(() => SHOP.map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x));
+  const [slot, setSlot] = useState<ShopSlot | 'hot' | 'use'>('hot');
+  const [hot] = useState(() => SHOP.filter(forSale).map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x));
   const [owned, setOwned] = useState(false);
   const [buying, setBuying] = useState<ShopItem | null>(null);
   const run = async (k: string, f: () => Promise<unknown>) => { setBusy(k); setMsg(''); try { await f(); reload(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); } };
@@ -164,7 +174,7 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
   const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <ShopSkeleton />;
-  const list = slot === 'hot' ? hot.filter((x) => !owned || data.owned.includes(x.id)).slice(0, HOT_MAX)
+  const list = slot === 'use' ? [] : slot === 'hot' ? hot.filter((x) => !owned || data.owned.includes(x.id)).slice(0, HOT_MAX)
     : SHOP.filter((x) => x.slot === slot && (!owned || data.owned.includes(x.id)))
       .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || b.price - a.price);
   const count = (sl: ShopSlot) => [SHOP.filter((x) => x.slot === sl && data.owned.includes(x.id)).length, SHOP.filter((x) => x.slot === sl).length];
@@ -175,26 +185,33 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
         {(data.rates?.discount ?? 0) > 0 && <span className="shop-sale">특별회원 {Math.round((data.rates!.discount) * 100)}% 할인</span>}
       </header>
       {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
+      <GiftNotice data={data} />
+      <BoxBanner data={data} onOpen={() => setBoxOpen(true)} />
       <div className="shop-bar">
         <nav className="shop-tabs" aria-label="종류">
           <button type="button" className={`hot ${slot === 'hot' ? 'on' : ''}`} onClick={() => setSlot('hot')}><Icon name="spark" />인기</button>
           {SLOTS.map((sl) => {
           const [o, t] = count(sl);
           return <button key={sl} type="button" className={slot === sl ? 'on' : ''} onClick={() => setSlot(sl)}>{SLOT_KO[sl]}<small>{o}/{t}</small></button>;
-        })}</nav>
+        })}
+          <button type="button" className={slot === 'use' ? 'on' : ''} onClick={() => setSlot('use')}>이용권</button>
+        </nav>
         <span className="sp" />
-        <label className="shop-own"><span>보유하고 있는 아이템 보기</span><Toggle on={owned} label="보유하고 있는 아이템 보기" onChange={setOwned} /></label>
+        {slot !== 'use' && <label className="shop-own"><span>보유하고 있는 아이템 보기</span><Toggle on={owned} label="보유하고 있는 아이템 보기" onChange={setOwned} /></label>}
       </div>
-      {list.length ? <div className="shop-grid">{list.map((x) => <ShopCard key={x.id} x={x} me={me} data={data} busy={busy === x.id}
-        onBuy={() => setBuying(x)}
+      {slot === 'use' ? <GoodsGrid api={api} data={data} onChange={update} onOpenInsight={(k) => onGo?.('me', k)} onGo={(to) => onGo?.(to)} />
+        : list.length ? <div className="shop-grid">{list.map((x) => <ShopCard key={x.id} x={x} me={me} data={data} busy={busy === x.id}
+        onBuy={() => setBuying(x)} onGift={data.uses?.app ? () => setGiving(x) : undefined}
         onEquip={(on) => run(x.id, () => api.post('/api/me/equip', { slot: x.slot, id: on ? x.id : null }))} />)}</div>
         : <Empty>아직 보유한 {slot === 'hot' ? '아이템이' : josa(SLOT_KO[slot], '이/가')} 없어요.</Empty>}
+      {boxOpen && <BoxDialog api={api} data={data} me={me} onClose={() => setBoxOpen(false)} onDone={update} />}
+      {giving && <GiftDialog api={api} item={giving} data={data} onClose={() => setGiving(null)} onDone={update} />}
       {buying && <BuyDialog api={api} item={buying} data={data} me={me} onClose={() => setBuying(null)} onDone={(s) => { setBuying(null); setPieces(s.balance); reload(); }} />}
     </div>
   </Swap>);
 }
 
-function ShopCard({ x, me, data, busy, onBuy, onEquip }: { x: ShopItem; me: Me; data: Shop; busy: boolean; onBuy: () => void; onEquip: (on: boolean) => void }) {
+function ShopCard({ x, me, data, busy, onBuy, onEquip, onGift }: { x: ShopItem; me: Me; data: Shop; busy: boolean; onBuy: () => void; onEquip: (on: boolean) => void; onGift?: () => void }) {
   const disc = data.rates?.discount ?? 0, price = priceWith(x.price, disc);
   const own = data.owned.includes(x.id), on = data.deco[x.slot] === x.id, lack = price - data.balance;
   // 진열: 그 상품 하나만 무대 위에 (다른 꾸밈은 빼서 상품마다 다르게 보이게)
@@ -210,6 +227,7 @@ function ShopCard({ x, me, data, busy, onBuy, onEquip }: { x: ShopItem; me: Me; 
         <b className="sc-nm">{x.name}</b>
         <span className="sc-desc">{x.desc}</span>
         <div className="sc-act">
+          {onGift && <button type="button" className="sc-gift" title="앱을 쓰는 멤버에게 선물하기" aria-label={`${x.name} 선물하기`} onClick={onGift}><Icon name="gift" /></button>}
           {own
             ? <button type="button" className={`btn sm ${on ? '' : 'equip'}`} disabled={busy} onClick={() => onEquip(!on)}>{on ? '해제' : '장착'}</button>
             : <><span className={`sc-price ${lack > 0 ? 'lack' : ''}`}><b>{price.toLocaleString()}</b><PieceIcon size={16} />{disc > 0 && <s>{x.price.toLocaleString()}</s>}</span>

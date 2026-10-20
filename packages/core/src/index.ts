@@ -26,3 +26,6 @@ export * from './josa';
 export * from './gameplan';
 export * from './praise';
 export * from './build';
+export * from './goods';
+export * from './insights';
+export * from './highlight';

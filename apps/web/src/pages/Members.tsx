@@ -32,19 +32,23 @@ export function MemberPage() {
   const target = id ?? me.id;
   return (
     <section className="section tight"><div className="wrap">
-      <MemberView key={target} api={api} id={target} self={target === me.id} onChampion={(c) => nav(`/champions/${c}`)}
+      <MemberView key={target} api={api} id={target} self={target === me.id} onChampion={(c) => nav(`/champions/${c}`)} insight={insightParam()} onShop={() => nav('/shop')}
         actions={target === me.id ? <button type="button" className="btn sm" onClick={logout}>로그아웃</button> : undefined} />
     </div></section>
   );
 }
 
+/** 상점 '리포트 보기' → 내 페이지의 그 인사이트 (?insight=aug) */
+const insightParam = () => { const k = new URLSearchParams(location.search).get('insight'); return k === 'aug' || k === 'partner' || k === 'golden' ? k : null; };
+
 export function ShopPage() {
   const { me, ready, api } = useSession();
+  const nav = useNavigate();
   if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="shop" /></div></section>;
   if (!me) return <NeedLogin what="상점" />;
   return (
     <section className="section tight"><div className="wrap">
-      <ShopView api={api} open={Boolean(me.perms?.shop)} me={{ nick: me.nick, skin: me.skin }} />
+      <ShopView api={api} open={Boolean(me.perms?.shop)} me={{ nick: me.nick, skin: me.skin }} onGo={(to, k) => nav(to === 'me' ? `/me${k ? `?insight=${k}` : ''}` : `/${to}`)} />
     </div></section>
   );
 }

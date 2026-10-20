@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   CHAMPIONS, CHAMPION_LIST, PIECE, RARITY_SHOP_KO, SHOP, SKIN_TIERS, SLOT_KO, baseSkin, matchName, priceWith, skinNeed,
-  type About, type Api, type Deco, type MemberPage, type Shop, type ShopSlot, type Skin, josa } from '@prism/core';
+  TITLE_RULE, type About, type Api, type Deco, type MemberPage, type Shop, type ShopSlot, type Skin, josa } from '@prism/core';
 import { ChampImg } from './basics';
 import { Icon } from './icons';
 import { BgScene } from './bgscene';
@@ -155,13 +155,20 @@ function SkinPanel({ page, skins, pick, onPick, n }: { page: MemberPage; skins: 
 }
 
 function DecoPanel({ slot, shop, deco, me, onPick }: { slot: ShopSlot; shop: Shop; deco: Deco; me: { nick: string; skin: number | null; champion: number | null }; onPick: (id: string | null) => void }) {
-  const items = SHOP.filter((x) => x.slot === slot).sort((a, b) => Number(shop.owned.includes(b.id)) - Number(shop.owned.includes(a.id)) || RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.price - b.price);
+  // 칭호는 상점에서 팔지 않고 얻는다 (v3.99): 산 적 있거나 조건을 채운 것
+  const hasIt = (id: string) => shop.owned.includes(id) || (slot === 'title' && Boolean(shop.uses?.titles.includes(id)));
+  const items = SHOP.filter((x) => x.slot === slot).sort((a, b) => Number(hasIt(b.id)) - Number(hasIt(a.id)) || RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.price - b.price);
   const cur = deco[slot] ?? null;
   const disc = shop.rates?.discount ?? 0;
-  const owned = items.filter((x) => shop.owned.includes(x.id)).length;
+  const owned = items.filter((x) => hasIt(x.id)).length;
+  const lockOf = (x: (typeof items)[number]) => {
+    if (slot !== 'title') return { tip: `${x.name} · 상점에서 ${priceWith(x.price, disc).toLocaleString()} ${PIECE}`, tag: <>{priceWith(x.price, disc).toLocaleString()}<PieceIcon size={12} /></> };
+    const r = TITLE_RULE[x.id], pr = shop.uses?.titleProgress[x.id];
+    return { tip: r ? `${x.name} · ${r.how}` : x.name, tag: pr ? <>{pr[0].toLocaleString()}/{pr[1].toLocaleString()}</> : null };
+  };
   return (
     <div className="pst-deco">
-      {!owned && <p className="meta pst-hint">아직 가진 {josa(SLOT_KO[slot], '이/가')} 없어요. 상점에서 {PIECE}로 모을 수 있어요.</p>}
+      {!owned && <p className="meta pst-hint">{slot === 'title' ? '칭호는 미션·도감·활약으로 얻어요. 잠긴 칭호에 마우스를 올리면 조건이 보여요.' : <>아직 가진 {josa(SLOT_KO[slot], '이/가')} 없어요. 상점에서 {PIECE}로 모을 수 있어요.</>}</p>}
       <div className="pst-grid deco">
         <button type="button" className={`pst-tile none ${!cur ? 'on' : ''}`} onClick={() => onPick(null)}>
           {slot === 'bg'
@@ -169,12 +176,12 @@ function DecoPanel({ slot, shop, deco, me, onPick }: { slot: ShopSlot; shop: Sho
             : <><span className="pst-art"><span className="pst-none"><Icon name="x" /></span></span><span className="pst-nm">없음</span><span className="pst-sub">기본 모습</span></>}
         </button>
         {items.map((x) => {
-          const has = shop.owned.includes(x.id);
+          const has = hasIt(x.id), lk = lockOf(x);
           return (
-            <button key={x.id} type="button" className={`pst-tile r-${x.rarity} ${cur === x.id ? 'on' : ''} ${has ? '' : 'locked'}`} disabled={!has} onClick={() => onPick(x.id)} title={has ? x.desc : `${x.name} · 상점에서 ${priceWith(x.price, disc).toLocaleString()} ${PIECE}`}>
+            <button key={x.id} type="button" className={`pst-tile r-${x.rarity} ${cur === x.id ? 'on' : ''} ${has ? '' : 'locked'}`} disabled={!has} onClick={() => onPick(x.id)} title={has ? x.desc : lk.tip}>
               <span className="pst-art">
                 {slot === 'bg' ? <BgScene id={x.id} /> : <ProfileHero stage nick={me.nick} skin={me.skin} champion={me.champion} deco={{ [slot]: x.id }} />}
-                {!has && <span className="pst-lock"><Icon name="lock" />{priceWith(x.price, disc).toLocaleString()}<PieceIcon size={12} /></span>}
+                {!has && <span className="pst-lock"><Icon name="lock" />{lk.tag}</span>}
               </span>
               <span className="pst-nm">{x.name}</span>
               <span className={`pst-sub r-${x.rarity}`}>{RARITY_SHOP_KO[x.rarity]}</span>

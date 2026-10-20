@@ -21,7 +21,8 @@ import { discordNow } from './discord-now.js';
 import { listScrims, openScrim, scrimAction } from './scrims.js';
 import { cancelParty, joinParty, leaveParty, listParties, openParty } from './parties.js';
 import { buy, equip, getShop, markDaily, publicProfile, setShare } from './shop.js';
-import { claimMissions, favCount, getFavs, getMissions, setFav } from './missions.js';
+import { claimMissions, favCount, getFavs, getMissions, rerollMission, setFav } from './missions.js';
+import { buyUse, gift, giftTargets, insight, myHighlights, openBox, pinHighlight, saveHighlights } from './goods.js';
 import { claimWeekly, getWeekly } from './weekly.js';
 import { assertRanking } from './roles.js';
 import { listDiag, saveDiag } from './diag.js';
@@ -56,6 +57,16 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'GET' && pathname === '/api/shop') return getShop(env, me);
   if (m === 'POST' && pathname === '/api/shop/buy') return buy(req, env, me);
   if (m === 'POST' && pathname === '/api/me/equip') return equip(req, env, me);
+  // 꾸밈 밖 상품 (v3.99)
+  if (m === 'POST' && pathname === '/api/shop/use') return buyUse(req, env, me);
+  if (m === 'POST' && pathname === '/api/shop/box') return openBox(env, me);
+  if (m === 'GET' && pathname === '/api/shop/gift') return giftTargets(env, me);
+  if (m === 'POST' && pathname === '/api/shop/gift') return gift(req, env, me);
+  if (m === 'GET' && pathname.startsWith('/api/me/insight/')) return insight(env, me, pathname.slice('/api/me/insight/'.length));
+  if (m === 'POST' && pathname === '/api/me/missions/reroll') return rerollMission(req, env, me);
+  if (m === 'GET' && pathname === '/api/me/highlights') return myHighlights(env, me);
+  if (m === 'POST' && pathname === '/api/me/highlights') return saveHighlights(req, env, me);
+  if (m === 'POST' && pathname === '/api/me/pin') return pinHighlight(req, env, me);
   if (m === 'POST' && pathname === '/api/me/share') return setShare(req, env, me);
   if (m === 'GET' && pathname === '/api/me/dex') return myDex(env, me);
   if (m === 'GET' && pathname === '/api/me/missions') return getMissions(env, me);

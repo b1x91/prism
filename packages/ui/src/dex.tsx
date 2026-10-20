@@ -4,11 +4,12 @@
  * 못 만난 것은 번호와 흐린 그림(???). 누르면 도감 설명과 다음 목표.
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP, josa } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, type Shop, championsFor, explainFit, rankFits, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP, josa } from '@prism/core';
 import { ChampImg, Gem, Select, Seg } from './basics';
-import { AugRing, AugmentLink } from './augment';
+import { AugRing, AugmentLink, TierBadge } from './augment';
 import { Icon } from './icons';
 import { Bone, imgIn } from './skeleton';
+import { LensGate } from './goods';
 
 /** 서버에 기록된 내 모든 판 + (앱이면) 이 PC 롤 기록을 합친 도감 */
 export function useDex(api: Api | null, games: Game[] = []) {
@@ -45,7 +46,12 @@ const match = (name: string, q: string) => { const t = q.replace(/\s/g, ''); con
 const stageOf = (m: Mastery) => DEX_LEVEL_KO[dexLevel(m)];
 const stageKey = (m: Mastery) => (m.master ? 'master' : m.caught ? 'caught' : m.seen ? 'seen' : 'unk');
 
-export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { dex: Dex; onChampion?: (id: number) => void; onAugment?: (id: number) => void; loading?: boolean; xpRate?: number }) {
+export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1, api }: { dex: Dex; onChampion?: (id: number) => void; onAugment?: (id: number) => void; loading?: boolean; xpRate?: number;
+  /** 있으면 아직 안 해 본 칸의 조건·팁을 도감 돋보기(피스)로 연다 (v3.99) */
+  api?: Api }) {
+  const [shop, setShop] = useState<Shop | null>(null);
+  useEffect(() => { if (api) api.get<Shop>('/api/shop').then(setShop).catch(() => {}); }, [api]);
+  const lens: Lens | undefined = api ? { api, shop, set: setShop } : undefined;
   const [kind, setKind] = useState<Kind>('champions');
   const [show, setShow] = useState<Show>('all');
   const [sort, setSort] = useState<Sort>('no');
@@ -199,8 +205,8 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1 }: { d
           <button type="button" className="dex-close icon-btn" aria-label="닫기" onClick={() => setSheet(false)}><Icon name="x" /></button>
           {loading ? <div className="dex-entry-sk"><Bone w={112} h={112} r="round" /><Bone w={56} h={10} /><Bone w={120} h={28} /><Bone w={160} h={24} r="pill" /><Bone w="100%" h={56} r="m" /><Bone w="100%" h={240} r="m" /><Bone w="100%" h={120} r="m" /></div>
             : kind === 'champions'
-            ? <ChampEntry id={current} no={no.get(current) ?? 0} e={got[current]} m={m(current)} dex={dex} onChampion={onChampion} />
-            : <AugEntry id={current} no={no.get(current) ?? 0} e={got[current]} m={m(current)} dex={dex} onAugment={onAugment} onChampion={onChampion} />}
+            ? <ChampEntry id={current} no={no.get(current) ?? 0} e={got[current]} m={m(current)} dex={dex} onChampion={onChampion} lens={lens} />
+            : <AugEntry id={current} no={no.get(current) ?? 0} e={got[current]} m={m(current)} dex={dex} onAugment={onAugment} onChampion={onChampion} lens={lens} />}
         </aside>
       </div>
     </div>
@@ -305,7 +311,15 @@ function StageTag({ m }: { m: Mastery }) {
   return <span className={`stage-tag ${stageKey(m)} lv${dexLevel(m)}`}>{m.master ? <PrismMark size={14} /> : m.caught ? <Crystal size={12} /> : null}{m.seen && <small>Lv.{dexLevel(m)}</small>}{stageOf(m)}</span>;
 }
 
-function ChampEntry({ id, no, e, m, dex, onChampion }: { id: number; no: number; e?: DexEntry; m: Mastery; dex: Dex; onChampion?: (id: number) => void }) {
+type Lens = { api: Api; shop: Shop | null; set: (s: Shop) => void };
+/** 아직 안 해 본 칸: 돋보기로 열어야 조건·팁이 보인다 (api 를 안 넘긴 화면은 예전처럼 늘 보인다) */
+function Lensed({ lens, m, refKey, children }: { lens?: Lens; m: Mastery; refKey: string; children: ReactNode }) {
+  if (!lens || m.seen) return <>{children}</>;
+  if (!lens.shop) return <div className="lens-gate sk" aria-hidden="true" />;
+  return <LensGate api={lens.api} data={lens.shop} refKey={refKey} onChange={lens.set}>{children}</LensGate>;
+}
+
+function ChampEntry({ id, no, e, m, dex, onChampion, lens }: { id: number; no: number; e?: DexEntry; m: Mastery; dex: Dex; onChampion?: (id: number) => void; lens?: Lens }) {
   const c = CHAMPIONS[id];
   if (!c) return null;
   const types = [ROLE_KO[c.roles[0]], c.roles[1] && ROLE_KO[c.roles[1]]].filter(Boolean) as string[];
@@ -323,10 +337,13 @@ function ChampEntry({ id, no, e, m, dex, onChampion }: { id: number; no: number;
           <div><span className="no">{NO(no)}</span><h2>{c.name}</h2><div className="dxe-types"><StageTag m={m} />{types.map((t) => <span key={t} className="pill">{t}</span>)}</div></div>
         </div>}
       <p className="dxe-text">{e ? `${flavor} ${day(e.first)}에 처음 만나 지금까지 ${e.n}판, ${e.w}번 이겼다.` : `아직 만나지 못한 챔프예요. ${flavor} 주사위나 대기석에서 보이면 잡아 보세요.`}</p>
+      <Lensed lens={lens} m={m} refKey={`c:${id}`}>
       <Journey m={m} specialList={
         <div className="dxe-sub"><span className="k">이 챔프에게 S티어인 증강 <small>{m.special.tried.length}/{m.special.ids.length}</small></span>
           <div className="sgrid">{sList.map((a) => <AugmentLink key={a} id={a} champion={id} inline className={`sitem ${tried.has(a) ? 'on' : ''}`}><AugRing id={a} size={32} /></AugmentLink>)}
             {m.special.ids.length > sList.length && <span className="smore">+{m.special.ids.length - sList.length}</span>}</div></div>} />
+      {lens && !m.seen && <ChampTips id={id} />}
+      </Lensed>
       {e && <Stats e={e} />}
       {augs.length > 0 && <div className="dxe-sub"><span className="k">이 챔프로 자주 고른 증강</span>
         <div className="dxe-augs">{augs.map((p) => <AugmentLink key={p.aug} id={p.aug} champion={id} className="dxe-aug"><AugRing id={p.aug} size={32} /><span className="nm">{AUGMENT[p.aug]?.name ?? `#${p.aug}`}</span><span className="meta">{p.n}판 {p.w}승</span></AugmentLink>)}</div></div>}
@@ -334,7 +351,7 @@ function ChampEntry({ id, no, e, m, dex, onChampion }: { id: number; no: number;
   );
 }
 
-function AugEntry({ id, no, e, m, dex, onAugment, onChampion }: { id: number; no: number; e?: DexEntry; m: Mastery; dex: Dex; onAugment?: (id: number) => void; onChampion?: (id: number) => void }) {
+function AugEntry({ id, no, e, m, dex, onAugment, onChampion, lens }: { id: number; no: number; e?: DexEntry; m: Mastery; dex: Dex; onAugment?: (id: number) => void; onChampion?: (id: number) => void; lens?: Lens }) {
   const a = AUGMENT[id];
   if (!a) return null;
   const champs = dex.pairs.filter((p) => p.aug === id).sort((x, y) => y.n - x.n).slice(0, 8);
@@ -349,14 +366,42 @@ function AugEntry({ id, no, e, m, dex, onAugment, onChampion }: { id: number; no
           <div><span className="no">{NO(no)}</span><h2>{a.name}</h2><div className="dxe-types"><StageTag m={m} /><span className={`pill rar-${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.note && <span className="pill">{a.note}</span>}</div></div>
         </div>}
       <p className="dxe-text">{a.desc}</p>
+      <Lensed lens={lens} m={m} refKey={`a:${id}`}>
       <Journey m={m} specialList={
         <div className="dxe-sub"><span className="k">이 증강이 {m.special.tier}티어로 맞는 챔프 <small>{m.special.tried.length}/{m.special.ids.length}</small></span>
           <div className="sgrid">{best.map((c) => <button key={c} type="button" className={`sitem champ ${tried.has(c) ? 'on' : ''}`} onClick={() => onChampion?.(c)} title={CHAMPIONS[c]?.name}><ChampImg id={c} size={32} /></button>)}
             {m.special.ids.length > best.length && <span className="smore">+{m.special.ids.length - best.length}</span>}</div></div>} />
+      {lens && !m.seen && <AugTips id={id} />}
+      </Lensed>
       {e && <Stats e={e} />}
       {champs.length > 0 && <div className="dxe-sub"><span className="k">이 증강을 고른 챔프</span>
         <div className="dxe-champs">{champs.map((p) => <button key={p.champ} type="button" className="dxe-champ" onClick={() => onChampion?.(p.champ)} title={`${CHAMPIONS[p.champ]?.name} ${p.n}판 ${p.w}승`}><ChampImg id={p.champ} size={36} /><span>{p.n}</span></button>)}</div></div>}
       {onAugment && <button type="button" className="btn sm primary" onClick={() => onAugment(id)}>증강 자세히 보기</button>}
+    </div>
+  );
+}
+
+/** 돋보기 팁: 이 챔프에게 가장 잘 맞는 증강 셋과 그 이유 */
+function ChampTips({ id }: { id: number }) {
+  const c = CHAMPIONS[id];
+  const top = useMemo(() => (c ? rankFits(c, ACTIVE_AUGMENTS).slice(0, 3) : []), [c]);
+  if (!c || !top.length) return null;
+  return (
+    <div className="dxe-sub lens-tips"><span className="k"><Icon name="search" />돋보기 팁 · 처음 만나면 노려 볼 증강</span>
+      {top.map((f) => <AugmentLink key={f.id} id={f.id} champion={id} className="lt-row"><AugRing id={f.id} size={32} /><span className="lt-t"><b>{AUGMENT[f.id]?.name}</b><small>{explainFit(c, AUGMENT[f.id]).why}</small></span><TierBadge tier={f.tier} /></AugmentLink>)}
+    </div>
+  );
+}
+/** 돋보기 팁: 이 증강이 가장 잘 맞는 챔프와 언제 좋은지 */
+function AugTips({ id }: { id: number }) {
+  const a = AUGMENT[id];
+  const top = useMemo(() => (a ? championsFor(a, CHAMPIONS, 6).list : []), [a]);
+  if (!a || !top.length) return null;
+  const ex = explainFit(CHAMPIONS[top[0].id], a);
+  return (
+    <div className="dxe-sub lens-tips"><span className="k"><Icon name="search" />돋보기 팁 · 이 챔프들로 노려 보세요</span>
+      <div className="lt-champs">{top.map((f) => <span key={f.id} className="lt-champ" title={CHAMPIONS[f.id]?.name}><ChampImg id={f.id} size={36} /><small>{CHAMPIONS[f.id]?.name}</small></span>)}</div>
+      <p className="meta" style={{ margin: 0 }}>{ex.when ?? ex.why}</p>
     </div>
   );
 }

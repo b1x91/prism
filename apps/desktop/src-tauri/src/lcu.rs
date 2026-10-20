@@ -23,6 +23,8 @@ const ALLOWED: &[&str] = &[
     "/lol-summoner/v1/current-summoner",
     "/lol-match-history/v1/products/lol/",
     "/lol-match-history/v1/games/",
+    // 명장면: 내 쿼드라·펜타킬 판의 처치 순서 (읽기만, v3.99)
+    "/lol-match-history/v1/game-timelines/",
     "/lol-champ-select/v1/session",
     "/lol-gameflow/v1/gameflow-phase",
     // 게임 시작 직전 양 팀 챔피언 (증강 우선순위의 조합 판단용). 게임이 뜨면 아래 차단 규칙으로 읽지 않는다

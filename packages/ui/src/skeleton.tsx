@@ -136,6 +136,8 @@ export function MemberSkeleton({ public: pub = false, self, id }: { public?: boo
             <div className="pd-tile pd-trend"><Bone w={140} h={12} /><Bone w="100%" h={120} r="m" /><Bone w="80%" h={10} /></div>
           </div>
         </section>}
+      {/* 내 페이지: 명장면 액자 칸 (v3.99, 실제 hl-empty 와 같은 틀) */}
+      {!pub && self === true && <section className="card pad hl-empty"><Bone w={48} h={48} r="m" /><div className="sk-lines" style={{ gap: 8 }}><Bone w={96} h={14} /><Bone w="60%" h={12} /></div><Bone w={104} h={40} r="m" /></section>}
       {/* 내 페이지 = 승률을 올리려면, 남의 페이지 = 나와의 시너지 (모르면 둘 다 그리지 않는다) */}
       {!pub && self === true && <section className="card pad imp">
         <Head w={120} />
@@ -217,8 +219,14 @@ export function ShopSkeleton() {
   return (
     <SkeletonFrame className="shop">
       <header className="shop-head"><Bone w={72} h={32} /></header>
+      {/* 프리즘 상자 진열 (v3.99) — 실제와 같은 어두운 띠 */}
+      <section className="box-banner sk-bb">
+        <div className="bb-art"><Bone w={104} h={96} r="m" /></div>
+        <div className="bb-txt"><Bone w={88} h={12} /><Bone w={140} h={28} /><Bone w={220} h={14} /><div className="bb-odds">{[64, 64, 64, 56].map((w, i) => <Bone key={i} w={w} h={24} r="pill" />)}</div></div>
+        <div className="bb-act"><Bone w={64} h={20} /><Bone w={88} h={40} r="m" /><Bone w={72} h={12} /></div>
+      </section>
       <div className="shop-bar">
-        <div className="shop-tabs">{[76, 88, 120, 110, 110, 96].map((w, i) => <Bone key={i} w={w} h={40} r="pill" />)}</div>
+        <div className="shop-tabs">{[76, 88, 120, 110, 110, 72].map((w, i) => <Bone key={i} w={w} h={40} r="pill" />)}</div>
         <span className="sp" /><Bone w={132} h={14} /><Bone w={44} h={24} r="pill" />
       </div>
       <div className="shop-grid">{Array.from({ length: 8 }, (_, i) => (

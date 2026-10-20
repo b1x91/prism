@@ -2,7 +2,7 @@
  * 앱의 흐름: 롤 클라이언트 확인 주기, 전적 정리, 챔프 선택, 업로드, 회원 대신 수집.
  * 원칙 (CLAUDE.md v3.1-4·5): 게임 중에는 롤에 요청 0, 확인 간격은 상황별.
  */
-import { AUGMENT, isMayhemGame, liveMatchup, parseLive, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
+import { AUGMENT, isMayhemGame, myKillsOf, liveMatchup, parseLive, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
 import { api, bridge } from './bridge';
 import { VERSION } from './version';
 
@@ -146,6 +146,36 @@ async function uploadOwn() {
   if (!canUpload()) return;
   try { await sendGames(state.games.map((g) => g.gameId)); set({ upload: { ...state.upload, lastAt: Date.now(), error: null } }); }
   catch (e) { set({ upload: { ...state.upload, error: e instanceof Error ? e.message : String(e) } }); }
+  void sendHighlights();
+}
+
+/** 명장면 (v3.99): 내 판 중 쿼드라·펜타킬 판의 처치 순서를 판 흐름에서 읽어 보낸다. 판마다 한 번만 본다, 한가할 때만 */
+const HL_CHECKED = 'prism-hl-checked';
+let hlRunning = false;
+async function sendHighlights() {
+  if (hlRunning || !canUpload() || !state.summoner) return;
+  hlRunning = true;
+  try {
+    const checked = new Set<number>(stored(HL_CHECKED, []));
+    const out: { gameId: number; kills: unknown[] }[] = [];
+    for (const g of state.games.slice(0, 60)) {
+      if (checked.has(g.gameId)) continue;
+      const st = await bridge.lcuStatus();
+      if (st.inGame) break;
+      const d = await bridge.lcuGet(`/lol-match-history/v1/games/${g.gameId}`).catch(() => null);
+      const me = d && (d.participantIdentities ?? []).find((x: any) => x?.player?.puuid === state.summoner!.puuid)?.participantId;
+      const p = me && (d.participants ?? []).find((x: any) => x.participantId === me);
+      if ((Number(p?.stats?.largestMultiKill) || 0) >= 4) {
+        const tl = await bridge.lcuGet(`/lol-match-history/v1/game-timelines/${g.gameId}`).catch(() => null);
+        const kills = tl ? myKillsOf(tl, d, state.summoner.puuid) : null;
+        if (kills) out.push({ gameId: g.gameId, kills });
+      }
+      checked.add(g.gameId);
+    }
+    if (out.length) await api.post('/api/me/highlights', { games: out });
+    store(HL_CHECKED, [...checked].slice(-500));
+  } catch { /* 다음에 다시 */ }
+  finally { hlRunning = false; }
 }
 
 /** 한가할 때(대기·로비) 동의한 다른 회원의 최근 20판을 대신 올린다. 바빠지면 즉시 멈춘다 */

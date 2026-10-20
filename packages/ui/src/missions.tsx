@@ -3,7 +3,7 @@
  * 이번 주 미션 3개 · 처음 해 볼 챔프 한 줄 · 역할(분포 + 개척).
  * 깬 미션은 '받기'를 눌러야 피스가 들어온다 — 버튼에서 금빛 조각이 터져 보유 피스로 날아가고, 숫자가 차오른다.
  */
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AUGMENT, CHAMPIONS, RARITY_KO, MISSION_ROLE_KO, PIECE, cdragon, shortNick, type Api, type Mission, type MissionState, type WTonight, type WTrack, type WeeklyState, josa } from '@prism/core';
 import { AugRing, AugmentLink } from './augment';
 import { Empty, MemberFace } from './basics';
@@ -139,6 +139,13 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
     finally { setBusy(null); }
   };
 
+  const reroll = async (key: Mission['key']) => {
+    if (busy) return;
+    setBusy(`r:${key}`); setMsg('');
+    try { const st = await api.post<MissionState>('/api/me/missions/reroll', { key }); setOver(st); if (st.reroll) addPieces(-st.reroll.price, 400); }
+    catch (e) { setMsg(e instanceof Error ? e.message : String(e)); }
+    finally { setBusy(null); }
+  };
   const w = data.week;
   const done = w.missions.filter((m) => m.done).length;
   const r1 = w.missions[0].role;
@@ -158,9 +165,10 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
 
       {weekly && <WeeklyBoard w={weekly} busy={busy} fresh={fresh} onClaim={(k, ids, el) => claim(k, { ids }, el, 'weekly')} />}
 
-      <div className="msn-sec-row"><h2>이번 주 미션</h2><span className="sp" /><span className="meta num">{done}/{w.missions.length} 완료</span></div>
+      <div className="msn-sec-row"><h2>이번 주 미션</h2><span className="sp" />{data.reroll && <span className="meta num">다시 뽑기 {data.reroll.left}번 남음</span>}<span className="meta num">{done}/{w.missions.length} 완료</span></div>
       <div className="msn-cards">{w.missions.map((m, i) => (
-        <MissionCard key={m.id} m={m} i={i} fresh={fresh.has(m.id)} busy={busy === m.id} onClaim={(el) => claim(m.id, { ids: [m.id] }, el)} />
+        <MissionCard key={m.id} m={m} i={i} fresh={fresh.has(m.id)} busy={busy === m.id} onClaim={(el) => claim(m.id, { ids: [m.id] }, el)}
+          reroll={data.reroll && data.reroll.left > 0 ? { price: data.reroll.price, busy: busy === `r:${m.key}`, onGo: () => reroll(m.key) } : null} />
       ))}</div>
       {w.bonus > 1 && w.top && <p className="msn-bonus"><b>보상 ×{w.bonus}</b> 지난주까지 {josa(MISSION_ROLE_KO[w.top.role], '을/를')} {Math.round(w.top.share * 100)}% 했어요. 다른 역할로 넓힐수록 보상이 커요.</p>}
 
@@ -224,13 +232,20 @@ function ReadyBar({ amount, done, closing, busy, onClaim }: { amount: number; do
   );
 }
 
-function MissionCard({ m, i, fresh, busy, onClaim }: { m: Mission; i: number; fresh: boolean; busy: boolean; onClaim: (el: HTMLElement) => void }) {
+function MissionCard({ m, i, fresh, busy, onClaim, reroll }: {
+  m: Mission; i: number; fresh: boolean; busy: boolean; onClaim: (el: HTMLElement) => void;
+  /** 다시 뽑기 (v3.99): 못 이룬 미션만. 두 번 눌러야 피스를 쓴다 */
+  reroll?: { price: number; busy: boolean; onGo: () => void } | null;
+}) {
   const ref = useRef<HTMLButtonElement>(null);
+  const [armed, setArmed] = useState(false);
+  useEffect(() => { if (!armed) return; const t = setTimeout(() => setArmed(false), 3000); return () => clearTimeout(t); }, [armed]);
   const state = m.claimed ? 'got' : m.done ? 'ready' : 'go';
   return (
-    <article className={`msn-card s-${state} ${fresh ? 'fresh' : ''}`} style={{ '--rc': m.role ? ROLE_C[m.role] : 'var(--accent)', animationDelay: `${i * 70}ms` } as React.CSSProperties}>
+    <article className={`msn-card s-${state} ${fresh ? 'fresh' : ''} ${m.rerolled ? 'rerolled' : ''}`} style={{ '--rc': m.role ? ROLE_C[m.role] : 'var(--accent)', animationDelay: `${i * 70}ms` } as React.CSSProperties}>
       <div className="msn-card-top">
         <span className="msn-tag">{m.role ? MISSION_ROLE_KO[m.role] : '골고루'}</span>
+        {m.rerolled ? <span className="msn-new-tag">다시 뽑음</span> : null}
         <span className="msn-amt">+{m.reward}<PieceIcon size={12} /></span>
       </div>
       <h3>{m.title}</h3>
@@ -243,6 +258,10 @@ function MissionCard({ m, i, fresh, busy, onClaim }: { m: Mission; i: number; fr
         <span>{busy ? '받는 중…' : '받기'}</span><b>+{m.reward}</b><PieceIcon size={14} ink />
       </button>}
       {state === 'got' && <span className="msn-got"><Icon name="check" />받았어요</span>}
+      {state === 'go' && reroll && <button type="button" className={`msn-reroll ${armed ? 'armed' : ''}`} disabled={reroll.busy} onClick={() => { if (armed) { setArmed(false); reroll.onGo(); } else setArmed(true); }}
+        title="이번 주 미션 하나를 다른 미션으로 바꿔요 (뽑은 뒤의 판만 세요)">
+        <Icon name="shuffle" /><span>{reroll.busy ? '뽑는 중…' : armed ? '한 번 더 누르면 뽑아요' : '다시 뽑기'}</span><b>{reroll.price}</b><PieceIcon size={12} />
+      </button>}
       {fresh && <span className="msn-plus" aria-hidden="true">+{m.reward}</span>}
     </article>
   );

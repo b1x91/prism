@@ -77,7 +77,7 @@ export const SHOP: ShopItem[] = [
   it('name-ember', 'name', 'epic', 650, '불꽃 이름', '붉게 달아오른 이름'),
   it('name-frost', 'name', 'epic', 650, '서리 이름', '얼음처럼 푸른 이름'),
   it('name-galaxy', 'name', 'legendary', 1000, '은하 이름', '푸른 은하가 이름 위로 흐른다'),
-  // 칭호: 이름 위 한 줄
+  // 칭호: 이름 위 한 줄. 상점에서 팔지 않고 미션·도감·활약으로 얻는다 (v3.99, 조건은 goods.ts TITLE_RULES). 값은 예전에 산 기록용
   it('title-night', 'title', 'common', 150, '밤의 단골', '오늘 밤도 한 판'),
   it('title-poro', 'title', 'common', 150, '포로 친구', '다리 위의 작은 친구들과 함께'),
   it('title-start', 'title', 'common', 200, '전설의 시작', '모든 장인은 첫 판부터'),
@@ -85,11 +85,15 @@ export const SHOP: ShopItem[] = [
   it('title-teamfight', 'title', 'rare', 350, '한타의 중심', '싸움은 늘 내 곁에서'),
   it('title-dice', 'title', 'rare', 350, '주사위의 신', '무작위도 내 편'),
   it('title-last', 'title', 'rare', 400, '끝까지 버티는 자', '마지막까지 서 있는 사람'),
+  it('title-allround', 'title', 'epic', 500, '다재다능', '어느 역할이든 맡겨 줘'),
   it('title-alchemist', 'title', 'epic', 500, '증강 연금술사', '어떤 증강도 금으로'),
+  it('title-artisan', 'title', 'epic', 600, '장인의 길', '한 챔프를 끝까지'),
   it('title-penta', 'title', 'epic', 600, '펜타킬 사냥꾼', '다섯은 기본'),
   it('title-ruler', 'title', 'legendary', 800, '칼바람의 지배자', '이 다리의 주인'),
   it('title-prism', 'title', 'legendary', 1000, '프리즘 수집가', '빛을 모으는 사람'),
 ];
+/** 상점에서 파는 것 (칭호는 얻는 것, v3.99) */
+export const forSale = (x: ShopItem) => x.slot !== 'title';
 export const SHOP_ITEM: Record<string, ShopItem> = Object.fromEntries(SHOP.map((x) => [x.id, x]));
 
 /** 장착한 꾸밈 (칸마다 하나) */
@@ -109,7 +113,27 @@ export function parseDeco(s: string | null | undefined): Deco {
 export type Earned = { games: number; wins: number; crew: number; levels: number; together: number; daily: number; missions?: number; run?: number };
 export const earnedTotal = (e: Earned) => e.games * EARN.game + e.wins * EARN.win + e.crew * EARN.crew + e.levels + e.together * EARN.together + e.daily * EARN.daily + (e.missions ?? 0) + (e.run ?? 0);
 
-export type Shop = { balance: number; earned: Earned; spent: number; owned: string[]; deco: Deco; shared: boolean; rates?: import('./api').Rates };
+export type Shop = {
+  balance: number; earned: Earned; spent: number; owned: string[]; deco: Deco; shared: boolean; rates?: import('./api').Rates;
+  /** 꾸밈 밖 상품 (v3.99) — 예전 서버는 보내지 않는다 */
+  uses?: ShopUses;
+};
+export type ShopUses = {
+  /** 인사이트권: 종류 → 끝나는 시각 (없거나 지났으면 닫힘) */
+  insight: Partial<Record<import('./goods').InsightKind, number>>;
+  /** 연 도감 돋보기: 'c:챔프' · 'a:증강' */
+  lens: string[];
+  /** 명장면 액자를 가졌나 · 걸어 둔 판 */
+  frame: boolean; pinned: number | null;
+  /** 이번 주 남은 미션 다시 뽑기 */
+  rerollsLeft: number;
+  /** 얻은 칭호 (조건을 채운 것) + 칭호마다 진행 [지금, 목표] */
+  titles: string[]; titleProgress: Record<string, [number, number]>;
+  /** 나는 앱을 쓰는 멤버인가 (선물은 앱 사용자끼리) */
+  app: boolean;
+  /** 최근 받은 선물 */
+  gifts: { item: string; from: string; fromNick: string; note: string | null; at: number }[];
+};
 /** 특별회원 할인 가격 (서버와 같은 계산) */
 export const priceWith = (price: number, discount = 0) => Math.round(price * (1 - discount));
 

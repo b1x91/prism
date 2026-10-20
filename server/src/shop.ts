@@ -6,7 +6,8 @@
 import { augMastery, champMastery, dexLevel, type DexLevel } from '../../packages/core/src/mastery.js';
 import { dexFromRows } from '../../packages/core/src/history.js';
 import { parseFeat } from '../../packages/core/src/challenges.js';
-import { EARN, SHOP_ITEM, earnedTotal, runBonusOf, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
+import { usesOf } from './goods.js';
+import { EARN, SHOP_ITEM, forSale, earnedTotal, runBonusOf, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
 import { dexRows } from './crew.js';
 import { missionPiecesOf } from './missions.js';
 import { HttpError, json, type Env, type Member } from './util.js';
@@ -24,7 +25,7 @@ export async function markDaily(env: Env, id: string) {
 }
 
 /** 도감 레벨: 챔피언·증강마다 지금 레벨 */
-async function levelsOf(env: Env, id: string) {
+export async function levelsOf(env: Env, id: string) {
   const dex = dexFromRows(await dexRows(env, id));
   const ch = dex.challenges ?? null;
   const champs = Object.entries(dex.champions).map(([k, e]) => ({ id: Number(k), m: champMastery(Number(k), e, dex.pairs, ch) }));
@@ -32,7 +33,7 @@ async function levelsOf(env: Env, id: string) {
   return { champs, augs };
 }
 
-async function earned(env: Env, id: string): Promise<Earned> {
+export async function earned(env: Env, id: string, lv?: Awaited<ReturnType<typeof levelsOf>>): Promise<Earned> {
   const now = Date.now();
   const [g, t, d, cr] = await env.DB.batch([
     env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w, COALESCE(SUM(CASE WHEN crew_count >= 2 THEN 1 ELSE 0 END), 0) AS c FROM participants WHERE member_id = ?').bind(id),
@@ -49,24 +50,28 @@ async function earned(env: Env, id: string): Promise<Earned> {
     env.DB.prepare('SELECT played_at AS t FROM participants WHERE member_id = ? AND crew_count >= 2 ORDER BY played_at').bind(id),
   ]);
   const gr = g.results[0] as { n: number; w: number; c: number };
-  const [{ champs, augs }, missions] = await Promise.all([levelsOf(env, id), missionPiecesOf(env, id)]);
+  const [{ champs, augs }, missions] = await Promise.all([lv ?? levelsOf(env, id), missionPiecesOf(env, id)]);
   const levels = [...champs, ...augs].reduce((s, x) => s + levelTotal(dexLevel(x.m)), 0);
   return { games: gr.n, wins: gr.w, crew: gr.c, levels, together: (t.results[0] as { n: number }).n, daily: (d.results[0] as { n: number }).n, missions, run: runBonusOf((cr.results as { t: number }[]).map((r) => r.t)) };
 }
 
 /** 단계별 피스 배율·특별회원 할인 (v3.32) */
-const priceFor = (price: number, discount: number) => Math.round(price * (1 - discount));
+export const priceFor = (price: number, discount: number) => Math.round(price * (1 - discount));
 
-async function state(env: Env, id: string, m: Pick<Member, 'tier' | 'discord_roles'>) {
-  const [e, own, row] = await Promise.all([
-    earned(env, id),
+/** 잔액·가진 것·꾸밈 밖 상품 (v3.99). 잔액 = 번 피스 × 배율 − 산 꾸밈 − 이용권·선물·랜덤박스에 쓴 피스 */
+export async function state(env: Env, id: string, m: Pick<Member, 'tier' | 'discord_roles'>) {
+  const lv = await levelsOf(env, id);
+  const [e, own, row, spend, uses] = await Promise.all([
+    earned(env, id, lv),
     env.DB.prepare('SELECT item_id AS id, price FROM shop_owned WHERE member_id = ?').bind(id).all<{ id: string; price: number }>(),
     env.DB.prepare('SELECT deco, share_on FROM members WHERE id = ?').bind(id).first<{ deco: string | null; share_on: number }>(),
+    env.DB.prepare('SELECT COALESCE(SUM(price), 0) AS s FROM piece_spend WHERE member_id = ?').bind(id).first<{ s: number }>().catch(() => ({ s: 0 })),
+    usesOf(env, id, lv),
   ]);
-  const spent = own.results.reduce((s, x) => s + x.price, 0);
+  const spent = own.results.reduce((s, x) => s + x.price, 0) + (spend?.s ?? 0);
   const rates = ratesOf(m);
   const total = Math.round(earnedTotal(e) * rates.piece);
-  return { balance: total - spent, earned: e, spent, owned: own.results.map((x) => x.id), deco: parseDeco(row?.deco), shared: Boolean(row?.share_on), rates };
+  return { balance: total - spent, earned: e, spent, owned: own.results.map((x) => x.id), deco: parseDeco(row?.deco), shared: Boolean(row?.share_on), rates, uses };
 }
 
 export async function getShop(env: Env, me: Member) {
@@ -80,6 +85,7 @@ export async function buy(req: Request, env: Env, me: Member) {
   const { id, equip: wear } = (await req.json().catch(() => ({}))) as { id?: string; equip?: boolean };
   const item = id ? SHOP_ITEM[id] : undefined;
   if (!item) throw new HttpError(400, '없는 상품입니다.');
+  if (!forSale(item)) throw new HttpError(400, '칭호는 미션·도감·활약으로 얻어요.');
   const s = await state(env, me.id, me);
   if (s.owned.includes(item.id)) throw new HttpError(409, '이미 가지고 있어요.');
   const price = priceFor(item.price, s.rates.discount);
@@ -100,7 +106,7 @@ export async function equip(req: Request, env: Env, me: Member) {
   if (!slot || !['bg', 'frame', 'fx', 'name', 'title'].includes(slot)) throw new HttpError(400, '잘못된 칸입니다.');
   const deco: Deco = { ...s.deco };
   if (id) {
-    if (SHOP_ITEM[id]?.slot !== slot || !s.owned.includes(id)) throw new HttpError(400, '가지고 있지 않은 꾸밈입니다.');
+    if (SHOP_ITEM[id]?.slot !== slot || !(s.owned.includes(id) || s.uses.titles.includes(id))) throw new HttpError(400, '가지고 있지 않은 꾸밈입니다.');
     deco[slot] = id;
   } else delete deco[slot];
   await env.DB.prepare('UPDATE members SET deco = ? WHERE id = ?').bind(JSON.stringify(deco), me.id).run();

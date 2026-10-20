@@ -5,7 +5,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, aboutWhen, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
-  type Api, type Game, type MemberPage, type Ranking, type RankingRow, type Skin,
+  type Api, type Game, type InsightKind, type MemberPage, type Ranking, type Shop, type RankingRow, type Skin,
   rankScore, byScore, improveOf, type WinTip,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, LockedMore, MemberFace, PresenceTag, faceSrc, RoleBadge, Seg, useSkins } from './basics';
@@ -16,6 +16,7 @@ import { useLoad } from './crew';
 import { RecentGames } from './game';
 import { ProfileHero, ShareButton, baseTint } from './shop';
 import { BgScene } from './bgscene';
+import { HighlightCard, InsightPanel, MyHighlight } from './goods';
 import { preloadImages } from './splash';
 import { NickName, ProfileStudio } from './studio';
 import { MemberSkeleton, RankingSkeleton, imgIn, rememberHeroLook, useReveal, Swap, fadeCls } from './skeleton';
@@ -178,14 +179,30 @@ function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: n
 
 // ───────── 회원 페이지 ─────────
 
-export function MemberView({ api, id, self, onChampion, actions }: { api: Api; id: string; self?: boolean; onChampion?: (championId: number) => void; actions?: ReactNode }) {
+export function MemberView({ api, id, self, onChampion, actions, insight, onShop }: {
+  api: Api; id: string; self?: boolean; onChampion?: (championId: number) => void; actions?: ReactNode;
+  /** 상점에서 '리포트 보기'로 왔으면 그 인사이트를 열고 그 자리로 */
+  insight?: InsightKind | null;
+  onShop?: () => void;
+}) {
   const { data, error, reload } = useLoad<MemberPage>(api, `/api/members/${encodeURIComponent(id)}`);
+  // 내 페이지: 인사이트·명장면 액자 (상점 상태)
+  const shopLoad = useLoad<Shop>(api, self ? '/api/shop' : null);
+  const [shopNow, setShopNow] = useState<Shop | null>(null);
+  const shop = shopNow ?? shopLoad.data;
+  useEffect(() => {
+    if (!insight || !data || !shop) return;
+    const t = setTimeout(() => document.getElementById('insight')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+    return () => clearTimeout(t);
+  }, [insight, Boolean(data), Boolean(shop)]);
   const skins = useSkins();
   const [edit, setEdit] = useState<false | 'skin' | 'intro'>(false);
   const [shareOn, setShared] = useState<boolean | null>(null);
-  const rv = useReveal(Boolean(data));
+  // 내 페이지는 상점 상태(명장면 액자·인사이트)까지 함께 기다린다 — 늦게 온 칸이 끼어들며 밀리지 않게 (v3.93)
+  const ready = Boolean(data) && (!self || Boolean(shop) || Boolean(shopLoad.error));
+  const rv = useReveal(ready);
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <MemberSkeleton self={self} id={id} />;
+  if (!data || !ready) return <MemberSkeleton self={self} id={id} />;
   const { member: m, total } = data;
   const deco = m.deco ?? {};
   rememberHeroLook(id, deco.bg ? { bg: deco.bg } : { tint: baseTint(m.nick) });
@@ -214,7 +231,9 @@ export function MemberView({ api, id, self, onChampion, actions }: { api: Api; i
       {total.n > 0 ? <StatBoard data={data} games={games} kda={kda} streak={st} /> : <div className="grid4">
         <section className="card stat"><span className="k">기록된 판</span><span className="v">0<small>판</small></span></section>
       </div>}
+      {m.self && shop?.uses ? <MyHighlight api={api} pinned={data.pinned} frame={shop.uses.frame} onShop={onShop} /> : data.pinned ? <HighlightCard h={data.pinned} /> : null}
       {m.self && total.n > 0 && <ImproveCard data={data} onChampion={onChampion} />}
+      {m.self && total.n > 0 && shop?.uses && <InsightPanel api={api} data={shop} focus={insight} onShop={onShop} onChange={setShopNow} />}
       {!m.self && <SynergyCard data={data} />}
       <RecentGames games={games} limit={8} onChampion={onChampion} />
       {total.n > 0 && <div className="grid2">

@@ -3,6 +3,7 @@
  * 판수·승률·Prism 점수(승률을 판수만큼 믿은 값)로 순위를 낸다. 딜량 순위·롤 티어·MMR 표시는 하지 않는다 (CLAUDE.md 15절).
  */
 import { parseDeco } from '../../packages/core/src/shop.js';
+import { pinnedOf } from './goods.js';
 import { cleanAbout } from '../../packages/core/src/about.js';
 import { HttpError, json, type Env, type Member } from './util.js';
 import { can, LIMITED, topRole } from './roles.js';
@@ -91,7 +92,10 @@ export async function memberPage(env: Env, me: Member, id: string) {
   }
   const [total, champions, augments, recent, rank, picks, together, against, viewerChampions, viewerTotal, viewerMe] = await env.DB.batch(queries);
   const nw = (rows: { w: number }[]) => ({ n: rows.length, w: rows.reduce((x, r) => x + (r.w ? 1 : 0), 0) });
+  // 걸어 둔 명장면 (명장면 액자, v3.99)
+  const pinned = await pinnedOf(env, id).catch(() => null);
   return json({
+    pinned,
     member: { id: m.id, nick: m.nick, intro: m.intro, tier: m.tier, joinedAt: m.joinedAt, skin: m.skin, riotId: self ? m.riotId : null, self, role: topRole(m), presence: presenceOf({ webAt: m.web_seen_at, appAt: m.app_seen_at, lol: Boolean(m.app_lol), open: Boolean(m.app_open) }), deco: parseDeco(m.deco), shared: Boolean(m.share_on), about: (() => { try { return m.about ? cleanAbout(JSON.parse(m.about)) : null; } catch { return null; } })() },
     total: total.results[0],
     rank: (() => { const all = (rank.results as { id: string; n: number; w: number }[]).sort(byScore); const i = all.findIndex((x) => x.id === id); return i < 0 ? all.length + 1 : i + 1; })(),

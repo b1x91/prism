@@ -25,15 +25,19 @@ export function MemberPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   const nav = useNavigate();
   if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="회원 페이지" />;
   const target = id ?? s.me.id;
-  return <MemberView key={target} api={api} id={target} self={target === s.me.id} onChampion={(c) => nav(`/champions/${c}`)} />;
+  return <MemberView key={target} api={api} id={target} self={target === s.me.id} onChampion={(c) => nav(`/champions/${c}`)} insight={insightParam()} onShop={() => nav('/shop')} />;
 }
 
+/** 상점 '리포트 보기' → 내 페이지의 그 인사이트 (?insight=aug) */
+const insightParam = () => { const k = new URLSearchParams(location.search).get('insight'); return k === 'aug' || k === 'partner' || k === 'golden' ? k : null; };
+
 export function ShopPage({ s, onLogin }: { s: State; onLogin: () => void }) {
+  const nav = useNavigate();
   if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="상점" />;
   const me = s.me;
   // 대표 스킨이 없으면 가장 많이 한 챔피언으로 미리 보기
   const top = Object.entries(s.personal.champions).sort((a, b) => b[1].n - a[1].n)[0]?.[0];
-  return <ShopView api={api} open={Boolean(me.perms?.shop)} me={{ nick: me.nick, skin: me.skin, champion: top ? Number(top) : null }} />;
+  return <ShopView api={api} open={Boolean(me.perms?.shop)} me={{ nick: me.nick, skin: me.skin, champion: top ? Number(top) : null }} onGo={(to, k) => nav(to === 'me' ? `/me${k ? `?insight=${k}` : ''}` : `/${to}`)} />;
 }
 
 export function MissionsPage({ s, onLogin }: { s: State; onLogin: () => void }) {
