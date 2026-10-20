@@ -175,7 +175,12 @@ export function RankingSkeleton() {
           </div>
         ))}</div>
       </section>
-      <div className="card rank-list sk-rows">{Array.from({ length: 6 }, (_, i) => <Row key={i} face={40} nums={2} />)}</div>
+      {/* 4위부터: 실제 순위 줄(rank-row)과 같은 틀 — 순위 · 얼굴 · 이름/주 챔프 · 점수 · 승률 */}
+      <div className="card rank-list">{Array.from({ length: 6 }, (_, i) => (
+        <div key={i} className="rank-row" style={{ cursor: 'default' }}><span className="rk"><Bone w={12} h={14} /></span><Bone w={40} h={40} r="m" />
+          <span className="who" style={{ display: 'grid', gap: 8 }}><Bone w={88} h={14} /><Bone w={120} h={10} /></span>
+          <span className="num key"><Bone w={52} h={16} /></span><span className="num"><Bone w={40} h={14} /></span></div>
+      ))}</div>
     </SkeletonFrame>
   );
 }

@@ -13,21 +13,26 @@ const lastSeen = new WeakMap<Api, Map<string, unknown>>();
 const seenOf = (api: Api) => { let m = lastSeen.get(api); if (!m) lastSeen.set(api, (m = new Map())); return m; };
 
 export function useLoad<T>(api: Api, path: string | null) {
-  const [data, setData] = useState<T | null>(() => (path ? api.peek?.<T>(path) ?? (seenOf(api).get(path) as T | undefined) ?? null : null));
+  // 데이터는 받은 주소와 함께 둔다 — 주소가 바뀌면(랭킹 탭 · 다른 챔프) 이전 주소의 데이터를 새 화면 이름 아래에 보이지 않게 (v3.95)
+  const initial = (p: string | null) => (p ? api.peek?.<T>(p) ?? (seenOf(api).get(p) as T | undefined) ?? null : null);
+  const [got, setGot] = useState<{ path: string | null; data: T | null }>(() => ({ path, data: initial(path) }));
   const [error, setError] = useState<string | null>(null);
   const fetchIt = useCallback(() => {
     if (!path) return;
-    api.get<T>(path).then((d) => { seenOf(api).set(path, d); setData(d); setError(null); }).catch((e) => setError(e instanceof Error ? e.message : String(e)));
+    api.get<T>(path).then((d) => { seenOf(api).set(path, d); setGot({ path, data: d }); setError(null); }).catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, [api, path]);
   const reload = useCallback(() => { if (path) api.forget?.(path); fetchIt(); }, [api, path, fetchIt]);
   useEffect(() => {
     if (!path) return;
+    setError(null);
     const kept = api.peek?.<T>(path);
-    if (kept !== undefined) { setData(kept); setError(null); return; }
+    if (kept !== undefined) { setGot({ path, data: kept }); return; }
     const seen = seenOf(api).get(path) as T | undefined;
-    if (seen !== undefined) setData(seen);
+    setGot({ path, data: seen ?? null });
     fetchIt();
   }, [api, path, fetchIt]);
+  // 주소가 막 바뀐 렌더: 담아 둔 것이 있으면 그것, 없으면 아직 없음
+  const data = got.path === path ? got.data : initial(path);
   return { data, error, reload };
 }
 

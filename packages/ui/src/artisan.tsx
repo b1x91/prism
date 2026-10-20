@@ -90,10 +90,10 @@ function ArtRow({ r, rank, kind, me, skins, onOpen }: { r: ArtisanRank; rank: nu
 
 function ArtRankSkeleton() {
   return (
-    <SkeletonFrame className="card rank-list art-rank">{Array.from({ length: 6 }, (_, i) => (
-      <div key={i} className="rank-row" style={{ cursor: 'default' }}><Bone w={16} h={14} /><Bone w={40} h={40} r="round" />
-        <span className="who"><Bone w={96} h={14} /><span className="art-icons">{[0, 1, 2].map((k) => <Bone key={k} w={24} h={24} r="round" />)}</span></span>
-        <Bone w={48} h={16} /><Bone w={40} h={16} /></div>
+    <SkeletonFrame className="card rank-list art-rank">{Array.from({ length: 5 }, (_, i) => (
+      <div key={i} className="rank-row" style={{ cursor: 'default' }}><span className="rk"><Bone w={12} h={14} /></span><Bone w={40} h={40} r="m" />
+        <span className="who" style={{ display: 'grid', gap: 8 }}><Bone w={72} h={14} /><Bone w={i ? 132 : 24} h={i ? 10 : 24} r={i ? 's' : 'round'} /></span>
+        <span className="num key"><Bone w={44} h={16} /></span><span className="num"><Bone w={44} h={16} /></span></div>
     ))}</SkeletonFrame>
   );
 }

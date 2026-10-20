@@ -1,21 +1,25 @@
 /**
  * 챔피언·증강 아이콘을 CommunityDragon 에서 받아 packages/assets/public/img 에 둔다 (웹·앱이 함께 묶어 넣는다).
  * 이미 있는 파일은 다시 받지 않는다. 저장소에는 올리지 않는다 (빌드 때 받는다).
+ * 챔프 아이콘은 Riot 원본 둘레에 검은 테두리(4~6px)가 그려져 있어, 둥근 칸에 넣으면 가장자리에 검은 선이 보인다 →
+ * 둘레 CHAMP_TRIM px 를 잘라 champ2/ 에 둔다 (폴더 이름을 바꿔 예전 그림이 브라우저 캐시에서 나오지 않게).
  *   npm run icons
  */
 import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'packages', 'assets', 'public', 'img');
 const DATA = join(ROOT, 'packages', 'core', 'data');
 const CDRAGON = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/';
+const CHAMP_TRIM = 6;
 
 const augs = JSON.parse(await readFile(join(DATA, 'mayhem-augments.json'), 'utf8')).augments;
 const champs = JSON.parse(await readFile(join(DATA, 'mayhem-champions.json'), 'utf8')).champions;
 const jobs = [
-  ...Object.keys(champs).map((id) => ({ url: `${CDRAGON}v1/champion-icons/${id}.png`, out: `champ/${id}.png` })),
+  ...Object.keys(champs).map((id) => ({ url: `${CDRAGON}v1/champion-icons/${id}.png`, out: `champ2/${id}.png`, trim: CHAMP_TRIM })),
   ...augs.filter((a) => a.icon).map((a) => ({ url: CDRAGON + a.icon.replace('/lol-game-data/assets/', '').toLowerCase(), out: `aug/${a.id}.png` })),
 ];
 const exists = (p) => access(p).then(() => true, () => false);
@@ -29,7 +33,13 @@ async function one(j) {
       const r = await fetch(j.url, { signal: AbortSignal.timeout(30_000) });
       if (!r.ok) throw new Error(String(r.status));
       await mkdir(dirname(file), { recursive: true });
-      await writeFile(file, Buffer.from(await r.arrayBuffer()));
+      let buf = Buffer.from(await r.arrayBuffer());
+      if (j.trim) {
+        const img = sharp(buf);
+        const { width, height } = await img.metadata();
+        buf = await img.extract({ left: j.trim, top: j.trim, width: width - 2 * j.trim, height: height - 2 * j.trim }).png().toBuffer();
+      }
+      await writeFile(file, buf);
       fetched++;
       return;
     } catch (e) {

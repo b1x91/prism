@@ -19,7 +19,7 @@ os.makedirs(OUT, exist_ok=True)
 
 A = [a for a in json.load(open(os.path.join(ROOT, 'packages/core/data/mayhem-augments.json'), encoding='utf-8'))['augments'] if not a.get('disabled')]
 BY_RAR = {r: [a for a in A if a['rarity'] == r] for r in ('silver', 'gold', 'prismatic')}
-CHAMPS = sorted(os.listdir(os.path.join(ROOT, 'packages/assets/public/img/champ')))
+CHAMPS = sorted(os.listdir(os.path.join(ROOT, 'packages/assets/public/img/champ2')))
 
 # 서체: Pretendard (저장소의 woff2 → ttf 로 한 번 풀어 둔다)
 FONT_TTF = os.path.join(OUT, '_font.ttf')
@@ -104,7 +104,7 @@ def draw_card(img, x, y, cw, chh, aug, rnd):
     # 아이콘 (스킬 증강은 게임처럼 다른 그림)
     size = int(iw * rnd.uniform(.5, .58))
     if aug.get('ability'):
-        icon = Image.open(os.path.join(ROOT, 'packages/assets/public/img/champ', rnd.choice(CHAMPS))).convert('RGBA')
+        icon = Image.open(os.path.join(ROOT, 'packages/assets/public/img/champ2', rnd.choice(CHAMPS))).convert('RGBA')
     else:
         icon = tint_icon(Image.open(os.path.join(ROOT, 'packages/assets/public/img/aug', f"{aug['id']}.png")), aug['rarity'], rnd)
     icon = icon.resize((size, size), Image.BICUBIC)
