@@ -4,7 +4,9 @@
  * 데이터가 오면 같은 자리에서 자리표시가 사라지며 실제 화면이 서서히 나타난다 (`Swap`, 사이에 빈 화면·깜빡임 없이).
  */
 import { useEffect, useLayoutEffect, useState, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react';
+import { BOX_ODDS, RARITY_SHOP_KO, SLOT_KO, type ShopRarity, type ShopSlot } from '@prism/core';
 import { BgScene } from './bgscene';
+import { Icon } from './icons';
 
 /* 회원 페이지 머리 배경 기억: 한 번 본 회원은 다음에 불러오는 동안에도 같은 배경(산 장면 또는 기본 색)을 깐다 —
    자리표시의 검은 띠가 실제 배경으로 확 바뀌지 않게 (v3.94) */
@@ -216,24 +218,38 @@ export function MissionsSkeleton() {
 
 /** 상점: 제목 + 종류 탭·보유 스위치 + 진열장 카드 (무대 200 + 이름·설명·가격/버튼 줄). 실제 카드와 같은 클래스로 */
 export function ShopSkeleton() {
+  // 데이터와 상관없는 것(제목 · 상자 그림과 소개 · 탭 이름 · 보유 스위치 글자)은 실제 그대로 그리고, 받아야 아는 것만 뼈대로 (v3.62)
+  const slots: ShopSlot[] = ['bg', 'frame', 'fx', 'name'];
   return (
     <SkeletonFrame className="shop">
-      <header className="shop-head"><Bone w={72} h={32} /></header>
-      {/* 프리즘 상자 진열 (v3.99) — 실제와 같은 어두운 띠 */}
+      <header className="shop-head"><h1>상점</h1></header>
       <section className="box-banner sk-bb">
-        <div className="bb-art"><Bone w={104} h={96} r="m" /></div>
-        <div className="bb-txt"><Bone w={88} h={12} /><Bone w={140} h={28} /><Bone w={220} h={14} /><div className="bb-odds">{[64, 64, 64, 56].map((w, i) => <Bone key={i} w={w} h={24} r="pill" />)}</div></div>
-        <div className="bb-act"><Bone w={64} h={20} /><Bone w={88} h={40} r="m" /><Bone w={72} h={12} /></div>
+        <div className="bb-art"><span className="pbox icon"><span className="pb-glow" /><img className="pb-img" src="/box/chest-icon-v1.webp" alt="" draggable={false} /></span></div>
+        <div className="bb-txt">
+          <span className="bb-k">RANDOM BOX</span>
+          <h2>프리즘 상자</h2>
+          <p>아직 없는 꾸밈 하나가 나와요. 겹치지 않아요.</p>
+          <div className="bb-odds">{(['common', 'rare', 'epic', 'legendary'] as ShopRarity[]).map((r) => <span key={r} className={`r-${r}`}><i />{RARITY_SHOP_KO[r]} {Math.round(BOX_ODDS[r] * 100)}%</span>)}</div>
+        </div>
+        <div className="bb-act"><Bone w={56} h={20} /><Bone w={92} h={40} r="m" /><Bone w={72} h={12} /></div>
       </section>
       <div className="shop-bar">
-        <div className="shop-tabs">{[76, 88, 120, 110, 110, 72].map((w, i) => <Bone key={i} w={w} h={40} r="pill" />)}</div>
-        <span className="sp" /><Bone w={132} h={14} /><Bone w={44} h={24} r="pill" />
+        <nav className="shop-tabs" aria-hidden="true">
+          <button type="button" tabIndex={-1} className="hot on"><Icon name="spark" />인기</button>
+          {slots.map((sl) => <button key={sl} type="button" tabIndex={-1}>{SLOT_KO[sl]}<Bone w={22} h={10} /></button>)}
+          <button type="button" tabIndex={-1}>이용권</button>
+        </nav>
+        <span className="sp" />
+        <span className="shop-own"><span>보유하고 있는 아이템 보기</span><Bone w={44} h={24} r="pill" /></span>
       </div>
       <div className="shop-grid">{Array.from({ length: 8 }, (_, i) => (
         <div key={i} className="shop-card sk-shopcard">
-          <div className="sc-prev sk-scprev"><Bone w={80} h={80} r="l" /><Bone w={96} h={20} /></div>
-          <div className="sc-body"><Bone w="55%" h={20} /><Bone w="75%" h={14} style={{ marginTop: 4 }} />
-            <div className="sc-act"><Bone w={64} h={20} /><Bone w={72} h={32} r="m" /></div></div>
+          <div className="sc-prev sk-scprev">
+            <Bone w={52} h={24} r="pill" dark className="sk-scrar" />
+            <Bone w={64} h={64} r="l" dark /><Bone w={88} h={16} dark />
+          </div>
+          <div className="sc-body"><Bone w="45%" h={20} /><Bone w="72%" h={14} style={{ marginTop: 4 }} />
+            <div className="sc-act"><Bone w={72} h={20} /><Bone w={72} h={32} r="m" /></div></div>
         </div>
       ))}</div>
     </SkeletonFrame>

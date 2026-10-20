@@ -2472,7 +2472,9 @@ button.ga:hover { background: var(--surface-2); }
 .sk-msn-champ { width: 100%; height: 100%; } /* 줄 높이(168, 좁으면 136)를 따른다 — 고정 높이면 좁은 화면에서 아래가 잘리고 넘친다 */
 .sk-shopcard { box-shadow: none; }
 .sk-duo { overflow: hidden; }
-.sk-scprev { display: grid; place-content: center; justify-items: center; gap: var(--s3); background: var(--surface-2); }
+.sk-scprev { display: grid; place-content: center; justify-items: center; gap: var(--s3); } /* 실제와 같은 어두운 무대 (.sc-prev 바탕 그대로) */
+.sk-scprev .sk-scrar { position: absolute; top: var(--s3); left: var(--s3); }
+.shop-tabs button[tabindex="-1"] { pointer-events: none; }
 .sk-scprev::after { display: none; }
 @media (max-width: 640px) { .sk-hero-in { flex-direction: column; align-items: flex-start; padding: var(--s7) var(--s4) var(--s5); } .sk-row.sk-role { grid-template-columns: 72px minmax(0, 1fr); } .sk-row.sk-role .sk:last-child { display: none; } }
 
