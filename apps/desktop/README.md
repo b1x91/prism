@@ -1,4 +1,4 @@
-# Prism 앱 (Windows, v0.9.94)
+# Prism 앱 (Windows, v0.9.95)
 
 롤 클라이언트 옆에 켜두는 도우미. 혼자 써도 쓸모 있고, Prism 회원이면 모임 기능이 열린다.
 웹(przm.web.app)과 같은 화면 코드(`packages/ui`, `packages/core`)를 앱 안에 묶어 넣는다. 원격 웹을 띄우지 않는다.

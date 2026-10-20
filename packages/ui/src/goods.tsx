@@ -201,7 +201,7 @@ export function BoxBanner({ data, onOpen }: { data: Shop; onOpen: () => void }) 
   const price = priceWith(USE_PRICE.box, data.rates?.discount ?? 0), left = boxPool(data.owned).length, lack = price > data.balance;
   return (
     <section className="box-banner">
-      <div className="bb-art" aria-hidden="true"><PrismBox /></div>
+      <div className="bb-art" aria-hidden="true"><PrismBox icon /></div>
       <div className="bb-txt">
         <span className="bb-k">RANDOM BOX</span>
         <h2>프리즘 상자</h2>
@@ -217,21 +217,22 @@ export function BoxBanner({ data, onOpen }: { data: Shop; onOpen: () => void }) 
   );
 }
 
-/** 상자 그림 (CSS 로 면을 나눈 결정 상자) */
-function PrismBox() {
+/** 상자 그림: 닫힌 상자 · 열린 상자 두 장(같은 틀)을 겹쳐 두고, 열리는 순간 섬광 아래에서 바꾼다 */
+const CHEST = '/box/chest-v1.webp', CHEST_OPEN = '/box/chest-open-v1.webp', CHEST_ICON = '/box/chest-icon-v1.webp';
+function PrismBox({ icon, open }: { icon?: boolean; open?: boolean }) {
   return (
-    <span className="pbox">
+    <span className={`pbox${icon ? ' icon' : ''}${open ? ' open' : ''}`}>
       <span className="pb-glow" />
-      <span className="pb-lid"><i /><i /></span>
-      <span className="pb-body"><i /><i /><i /></span>
-      <img className="pb-gem" src="/brand/prism-64.png" alt="" />
-      <span className="pb-seam" />
+      <img className="pb-img" src={icon ? CHEST_ICON : CHEST} alt="" draggable={false} />
+      {!icon && <img className="pb-img pb-open" src={CHEST_OPEN} alt="" draggable={false} />}
+      <span className="pb-sheen" />
+      <span className="pb-leak" />
     </span>
   );
 }
 
 type BoxPhase = 'idle' | 'charge' | 'tease' | 'burst' | 'reveal' | 'error';
-/** 여는 창: 흔들림(서버가 고르는 동안, 최소 1.4초) → 등급 빛 예고(영웅·전설은 한 번 더 바뀐다) → 터짐 → 상품 공개 */
+/** 여는 창: 모으기(서버가 고르는 동안, 최소 1.6초, 흔들림이 점점 세짐) → 등급 예고(등급마다 한 번 뛰고 빛 고리) → 섬광 속에서 뚜껑이 열리고 결정 조각이 터짐 → 상자에서 상품이 떠오름 */
 export function BoxDialog({ api, data, me, onClose, onDone }: { api: Api; data: Shop; me: Me; onClose: () => void; onDone: (s: Shop) => void }) {
   const [phase, setPhase] = useState<BoxPhase>('idle');
   const [cur, setCur] = useState<Shop>(data);
@@ -242,6 +243,8 @@ export function BoxDialog({ api, data, me, onClose, onDone }: { api: Api; data: 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const later = (ms: number, f: () => void) => { timers.current.push(setTimeout(f, ms)); };
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  // 열린 상자 그림을 미리 받아 둔다 — 터지는 순간 바꿔 끼울 때 비지 않게
+  useEffect(() => { const i = new Image(); i.src = CHEST_OPEN; i.decode?.().catch(() => {}); }, []);
   useEffect(() => { const esc = (e: KeyboardEvent) => { if (e.key === 'Escape' && (phase === 'idle' || phase === 'reveal' || phase === 'error')) onClose(); }; addEventListener('keydown', esc); return () => removeEventListener('keydown', esc); }, [onClose, phase]);
   const price = priceWith(USE_PRICE.box, cur.rates?.discount ?? 0), left = boxPool(cur.owned).length, lack = price > cur.balance;
   const open = () => {
@@ -250,17 +253,17 @@ export function BoxDialog({ api, data, me, onClose, onDone }: { api: Api; data: 
     api.post<{ item: string; state: Shop }>('/api/shop/box', {}).then((r) => {
       const it = SHOP_ITEM[r.item];
       const rm = reduced();
-      const wait = rm ? 0 : Math.max(0, 1400 - (performance.now() - t0));
+      const wait = rm ? 0 : Math.max(0, 1600 - (performance.now() - t0));
       later(wait, () => {
         setItem(it); setCur(r.state); onDone(r.state);
         if (rm) { setTease(it.rarity); setPhase('reveal'); return; }
         // 등급 예고: 일반부터 차례로 올라가 그 상품의 등급에서 멈춘다 (희귀 이상은 단계마다 0.35초)
         const ladder = (['common', 'rare', 'epic', 'legendary'] as ShopRarity[]).slice(0, ['common', 'rare', 'epic', 'legendary'].indexOf(it.rarity) + 1);
         setPhase('tease');
-        ladder.forEach((r, i) => later(i * 420, () => setTease(r)));
-        const t = ladder.length * 420 + 260;
+        ladder.forEach((r, i) => later(i * 480, () => setTease(r)));
+        const t = ladder.length * 480 + 220;
         later(t, () => setPhase('burst'));
-        later(t + 650, () => setPhase('reveal'));
+        later(t + 900, () => setPhase('reveal'));
       });
     }).catch((e) => { setErr(msgOf(e)); setPhase('error'); });
   };
@@ -275,10 +278,15 @@ export function BoxDialog({ api, data, me, onClose, onDone }: { api: Api; data: 
       <button type="button" className="md-scrim" aria-label="닫기" onClick={phase === 'idle' || phase === 'reveal' || phase === 'error' ? onClose : undefined} />
       <div className={`box-dlg ph-${phase} t-${tease}`}>
         <div className="bx-stage" aria-hidden={phase === 'reveal'}>
+          <span className="bx-dim" />
           <span className="bx-rays" />
-          <span className="bx-flash" />
+          <span className="bx-beam" />
           <span className="bx-sparks">{Array.from({ length: 14 }, (_, i) => <i key={i} style={{ ['--i' as string]: i }} />)}</span>
-          {phase !== 'reveal' && <span className="bx-box"><PrismBox /></span>}
+          {phase === 'tease' && <span key={tease} className="bx-ring" />}
+          <span className="bx-box"><PrismBox open={phase === 'burst' || phase === 'reveal'} /></span>
+          <span className="bx-shards">{Array.from({ length: 16 }, (_, i) => <i key={i} style={{ ['--i' as string]: i }} />)}</span>
+          {phase === 'reveal' && item && (item.rarity === 'epic' || item.rarity === 'legendary') && <span className="bx-confetti">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ ['--i' as string]: i }} />)}</span>}
+          <span className="bx-flash" />
           {phase === 'reveal' && item && (
             <div className={`bx-item r-${item.rarity}`}>
               <div className="bx-prev"><ProfileHero stage nick={me.nick} skin={me.skin ?? null} champion={me.champion ?? null} deco={{ [item.slot]: item.id }} /></div>
