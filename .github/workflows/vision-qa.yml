@@ -49,7 +49,10 @@ jobs:
           workspaces: apps/desktop/qa
       - run: pip install pillow numpy fonttools brotli
       - name: 증강·챔프 아이콘 받기
-        run: node scripts/fetch-icons.mjs
+        # 챔프 아이콘 테두리를 자르는 데 sharp 가 필요하다 (v3.95)
+        run: |
+          npm ci
+          node scripts/fetch-icons.mjs
       - name: 아이콘 특징값이 아이콘과 맞는지
         # 줄이는 계산이 Pillow 판마다 1~2 씩 다를 수 있어 바이트 비교 대신 차이로 본다
         run: |
