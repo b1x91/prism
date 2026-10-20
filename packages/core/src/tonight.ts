@@ -5,7 +5,7 @@
  *  - 최근 14일에 나온 증강은 다시 고르지 않는다 (주간 결산은 예외).
  * 숫자는 TONIGHT 한 곳.
  */
-import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS } from './data';
+import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, inGame } from './data';
 import { bestChampions, sTierAugments, tierFor } from './mastery';
 import { relatedAugments, type FitTier, type Rarity } from './synergy';
 import { challengeRole, CHALLENGE_ROLE_KO, type ChallengeRole } from './challenges';
@@ -111,7 +111,7 @@ export const THEMES = {
       const ns = Object.values(s.stats).map((x) => x.n).sort((a, b) => a - b);
       const median = ns[Math.floor(ns.length / 2)] ?? 0;
       const c = Object.entries(s.stats).map(([id, x]) => [Number(id), x] as const)
-        .filter(([id, x]) => AUGMENT[id] && !AUGMENT[id].disabled && !recent.has(id) && x.n >= TONIGHT.hiddenMin && x.n <= Math.max(median, TONIGHT.hiddenMin + 2) && x.w / x.n >= TONIGHT.hiddenRate)
+        .filter(([id, x]) => AUGMENT[id] && inGame(AUGMENT[id]) && !recent.has(id) && x.n >= TONIGHT.hiddenMin && x.n <= Math.max(median, TONIGHT.hiddenMin + 2) && x.w / x.n >= TONIGHT.hiddenRate)
         .sort((a, b) => wr(b[1]) - wr(a[1])).slice(0, 8);
       if (c.length < 3) return null;
       // 숨은 보석은 판이 적어도 모임 기록을 붙인다 (그게 고른 이유라서)
@@ -171,7 +171,7 @@ export const THEMES = {
     name: '이번 주 모임 픽',
     subs: ['이번 주 우리가 고른 증강'],
     make: (r, s) => {
-      const w = Object.entries(s.week).map(([id, x]) => [Number(id), x] as const).filter(([id]) => AUGMENT[id] && !AUGMENT[id].disabled);
+      const w = Object.entries(s.week).map(([id, x]) => [Number(id), x] as const).filter(([id]) => AUGMENT[id] && inGame(AUGMENT[id]));
       if (w.reduce((a, [, x]) => a + x.n, 0) < TONIGHT.weeklyMin) return null;
       const most = [...w].sort((a, b) => b[1].n - a[1].n)[0];
       const won = [...w].filter(([id]) => id !== most[0]).sort((a, b) => b[1].w - a[1].w || b[1].n - a[1].n)[0];

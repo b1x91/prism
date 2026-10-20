@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, augIcon, augShift, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, fitOf, gradeUp, fitPoints, rankByPriority, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type Matchup, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, LISTED_AUGMENTS, NEXT_PATCH, isLeaving, isNewAugment, isUpcoming, augIcon, augShift, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, fitOf, gradeUp, fitPoints, rankByPriority, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type Matchup, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
 import { ChampImg } from './basics';
 import { FavMark, FavStar, useFavs } from './favs';
 import { HeartIcon } from './likeheart';
@@ -156,14 +156,26 @@ export function AugmentCompare({ championId, stats, preset, matchup: given, onMa
   );
 }
 
+const patchDay = () => (NEXT_PATCH?.at ? (() => { const d = new Date(NEXT_PATCH.at + 9 * 3600_000); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`; })() : '다음 패치');
+/** 패치 표시: 곧 나옴 · 새로 나옴 · 곧 빠짐 (v3.101) */
+export function PatchTag({ a, long }: { a: (typeof AUGMENTS)[number]; long?: boolean }) {
+  if (isUpcoming(a)) return <span className={`ptag-new${long ? '' : ' soon'}`} title={`${patchDay()} 패치부터 나와요`}>{long ? `${patchDay()} 패치부터` : `${patchDay()} 추가`}</span>;
+  if (isNewAugment(a)) return <span className="ptag-new" title={`${a.added} 패치에 새로 나왔어요`}>NEW</span>;
+  if (isLeaving(a)) return <span className="ptag-out" title={`${patchDay()} 패치에서 빠져요`}>{long ? `${patchDay()} 패치에서 빠져요` : `${patchDay()} 빠짐`}</span>;
+  return null;
+}
+
 export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
   const [q, setQ] = useState('');
   // 등급 칩: 아무것도 고르지 않으면 전체, 고른 것을 다시 누르면 풀린다 (v3.27-3)
   const [r, setR] = useState<Rarity | null>(null);
   const [fav, setFav] = useState(false);
+  // '새로운 증강' (v3.101): 가장 최근 패치에 나온(곧 나올) 증강만
+  const [fresh, setFresh] = useState(false);
   const favs = useFavs();
-  const hit = (a: (typeof ACTIVE_AUGMENTS)[number]) => (!fav || favs.augs.includes(a.id)) && (!q || matchAug(a.name, q) || a.desc.includes(q) || a.note.includes(q));
-  const base = ACTIVE_AUGMENTS.filter(hit);
+  const newCount = LISTED_AUGMENTS.filter(isNewAugment).length;
+  const hit = (a: (typeof ACTIVE_AUGMENTS)[number]) => (!fav || favs.augs.includes(a.id)) && (!fresh || isNewAugment(a)) && (!q || matchAug(a.name, q) || a.desc.includes(q) || a.note.includes(q));
+  const base = LISTED_AUGMENTS.filter(hit);
   const list = base.filter((a) => !r || a.rarity === r).sort((a, b) => ORDER.indexOf(a.rarity) - ORDER.indexOf(b.rarity) || a.name.localeCompare(b.name, 'ko'));
   return (
     <div className="stack" style={{ gap: 24 }}>
@@ -171,6 +183,7 @@ export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
         <ToolSearch value={q} onChange={setQ} label="증강 검색" placeholder="이름·효과 (예: 치명타, 보호막)" />
         <div className="ltools-chips">
           {ORDER.map((x) => <button key={x} type="button" aria-pressed={r === x} className={`chip r-${x} ${r === x ? 'on' : ''}`} onClick={() => setR(r === x ? null : x)}><i className={`rdot ${x}`} />{RARITY_KO[x]}<small>{base.filter((a) => a.rarity === x).length}</small></button>)}
+          {newCount > 0 && <button type="button" aria-pressed={fresh} className={`chip chip-new ${fresh ? 'on' : ''}`} onClick={() => setFresh(!fresh)}><i className="new-dot" />새로운 증강<small>{newCount}</small></button>}
           {favs.connected && <button type="button" aria-pressed={fav} className={`chip ${fav ? 'on' : ''}`} onClick={() => setFav(!fav)}><HeartIcon size={13} />내 증강<small>{favs.augs.length}</small></button>}
         </div>
         <span className="ltools-cnt"><b>{list.length}</b>개</span>
@@ -181,9 +194,9 @@ export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
           <div className="adx">
             {list.filter((a) => a.rarity === x).map((a) => (
               <Hover key={a.id} className="adx-hov" tip={() => <AugmentTip id={a.id} link={Boolean(onOpen)} />}>
-                <button type="button" className={`adx-t ${a.rarity}`} onClick={() => onOpen?.(a.id)}>
+                <button type="button" className={`adx-t ${a.rarity}${isLeaving(a) ? ' leaving' : ''}`} onClick={() => onOpen?.(a.id)}>
                   <AugRing id={a.id} size={44} />
-                  <span className="adx-txt"><span className="nm"><FavMark kind="aug" id={a.id} inline /><b>{a.name}</b></span><span className="note">{a.note}</span></span>
+                  <span className="adx-txt"><span className="nm"><FavMark kind="aug" id={a.id} inline /><b>{a.name}</b><PatchTag a={a} /></span><span className="note">{a.note}</span></span>
                 </button>
               </Hover>
             ))}
@@ -207,7 +220,7 @@ export function AugmentDetail({ id, onChampion, onAugment, onBack, after }: { id
         <div className="adet-stage">
           <AugRing id={a.id} size={96} />
           <div className="adet-txt">
-            <div className="row wrapr" style={{ gap: 8 }}><span className={`rpill ${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.disabled && <span className="pill">현재 꺼짐</span>}</div>
+            <div className="row wrapr" style={{ gap: 8 }}><span className={`rpill ${a.rarity}`}>{RARITY_KO[a.rarity]}</span><PatchTag a={a} long />{a.disabled && <span className="pill">현재 꺼짐</span>}</div>
             <h1>{a.name}</h1>
             {a.note && <p className="note">{a.note}</p>}
           </div>

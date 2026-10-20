@@ -13,14 +13,17 @@
  * 결과: packages/core/data/mayhem-augments.json, packages/core/data/mayhem-champions.json
  */
 import { createXXHash3 } from 'hash-wasm';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AUGMENT_TAGS } from './augment-tags.js';
 
-// CDRAGON=pbe 로 다음 패치(PBE)를 미리 받을 수 있다. OUT 을 주면 그 폴더에 쓴다 (비교용)
-const RAW = `https://raw.communitydragon.org/${process.env.CDRAGON ?? 'latest'}`;
-const PLUGIN = `${RAW}/plugins/rcp-be-lol-game-data/global/ko_kr/v1`;
+// CDRAGON=pbe 로 다음 패치(PBE)만 따로 받을 수 있다. OUT 을 주면 그 폴더에 쓴다 (비교용)
+// NEXT=pbe (+ NEXT_AT=ISO 시각) 이면 라이브 데이터에 다음 패치의 새 증강(added)·빠지는 증강(removed)을 표시해 합친다 (v3.101)
+const CDN = (branch: string) => `https://raw.communitydragon.org/${branch}`;
+const RAW = CDN(process.env.CDRAGON ?? 'latest');
+const plugin = (raw: string) => `${raw}/plugins/rcp-be-lol-game-data/global/ko_kr/v1`;
+const PLUGIN = plugin(RAW);
 const OUT = process.env.OUT ?? join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'packages', 'core', 'data');
 
 async function get<T>(url: string): Promise<T> {
@@ -109,13 +112,13 @@ function pickText(st: Record<string, string>, a: any): string {
   return !tip || /^\s*\{\{[^}]*@f\d+@\s*\}\}/.test(tip) ? desc || tip : tip;
 }
 
-async function buildAugments() {
+async function buildAugments(raw = RAW) {
   const [kiwi, cherry, table, lists, meta] = await Promise.all([
-    get<Bin>(`${RAW}/game/maps/modespecificdata/kiwi.bin.json`),
-    get<any[]>(`${PLUGIN}/cherry-augments.json`),
-    get<{ entries: Record<string, string> }>(`${RAW}/game/ko_kr/data/menu/en_us/lol.stringtable.json`),
-    get<any[]>(`${PLUGIN}/augment-lists.json`),
-    get<{ version: string }>(`${RAW}/content-metadata.json`),
+    get<Bin>(`${raw}/game/maps/modespecificdata/kiwi.bin.json`),
+    get<any[]>(`${plugin(raw)}/cherry-augments.json`),
+    get<{ entries: Record<string, string> }>(`${raw}/game/ko_kr/data/menu/en_us/lol.stringtable.json`),
+    get<any[]>(`${plugin(raw)}/augment-lists.json`),
+    get<{ version: string }>(`${raw}/content-metadata.json`),
   ]);
   // 새 문구는 이름 대신 '{해시}' 키로만 들어 있다 (CommunityDragon 이 아직 이름을 모르는 키) — 이름으로 못 찾으면 해시로 찾는다
   const plain: Record<string, string> = Object.fromEntries(Object.entries(table.entries).map(([k, v]) => [k.toLowerCase(), v]));
@@ -150,7 +153,8 @@ async function buildAugments() {
       note: fit?.note ?? '',
       ability: !!a.IsAbilityAugment, // 선택한 스킬 하나를 강화하는 증강
       quest: !!a.QuestData,
-      disabled: a.Enabled === false,
+      // 한국어 이름이 없는 항목(게임 안 자리표시, 예: GoH_PentakillAug_Generic)은 목록·인식에서 뺀다
+      disabled: a.Enabled === false || st[String(a.NameTra).toLowerCase()] == null,
     });
   }
   augments.sort((x, y) => x.id - y.id);
@@ -220,10 +224,48 @@ async function buildChampions() {
   return champions;
 }
 
-const [aug, champions] = await Promise.all([buildAugments(), buildChampions()]);
+// ───────── 패치 사이 합치기 (v3.101) ─────────
+type Aug = Awaited<ReturnType<typeof buildAugments>>['augments'][number] & { added?: string; removed?: string; seen?: string };
+const verNum = (v: string) => v.split('.').slice(0, 2).map(Number);
+const newer = (a: string, b: string) => { const [x, y] = [verNum(a), verNum(b)]; return x[0] !== y[0] ? x[0] > y[0] : x[1] > y[1]; };
+const short = (v: string) => v.split('.').slice(0, 2).join('.');
+
+/**
+ * 이전 데이터(prev) · 라이브(live) · 다음 패치(next, 선택)를 합친다.
+ *  - added: 처음 보인 패치 (새로운 증강 거르기). 라이브에 있고 이전 데이터에 없으면 라이브 패치, 다음 패치에만 있으면 다음 패치
+ *  - removed: 빠진(빠질) 패치. 지난 판 기록의 이름·아이콘을 위해 데이터에는 남긴다
+ *  - seen: 마지막으로 보인 패치 (빠진 증강 아이콘을 그 패치 폴더에서 받는다)
+ */
+function merge(prev: { version: string; augments: Aug[] } | null, live: { version: string; augments: Aug[] }, next: { version: string; augments: Aug[] } | null): Aug[] {
+  const L = short(live.version), N = next ? short(next.version) : null;
+  const byPrev = new Map((prev?.augments ?? []).map((a) => [a.id, a]));
+  const inLive = new Set(live.augments.map((a) => a.id)), inNext = new Set((next?.augments ?? []).map((a) => a.id));
+  const out: Aug[] = live.augments.map((a) => {
+    const p = byPrev.get(a.id);
+    const added = p?.added ?? (prev && !p ? L : undefined);
+    const removed = next && !inNext.has(a.id) ? N! : undefined;
+    return { ...a, ...(added ? { added } : {}), ...(removed ? { removed } : {}), seen: L };
+  });
+  for (const a of next?.augments ?? []) if (!inLive.has(a.id)) out.push({ ...a, added: N!, seen: N! });
+  const prevV = prev ? short(prev.version) : L;
+  for (const p of prev?.augments ?? []) {
+    if (inLive.has(p.id) || inNext.has(p.id)) continue;
+    if (p.added && newer(p.added, L) && !next) continue; // 나온다던 증강이 다음 패치에서 빠짐 → 버린다
+    out.push({ ...p, removed: p.removed ?? L, seen: p.seen ?? prevV });
+  }
+  return out.sort((x, y) => x.id - y.id);
+}
+
+const NEXT = process.env.NEXT;
+const prevFile = join(OUT, 'mayhem-augments.json');
+const prev = await readFile(prevFile, 'utf8').then((t) => JSON.parse(t) as { version: string; augments: Aug[] }).catch(() => null);
+const [live, next, champions] = await Promise.all([buildAugments(), NEXT ? buildAugments(CDN(NEXT)) : Promise.resolve(null), buildChampions()]);
+const augments = merge(prev, live, next && newer(next.version, live.version) ? next : null);
+const nextInfo = next && newer(next.version, live.version) ? { version: short(next.version), at: process.env.NEXT_AT ? Date.parse(process.env.NEXT_AT) : null } : null;
 await mkdir(OUT, { recursive: true });
 const stamp = new Date().toISOString();
-await writeFile(join(OUT, 'mayhem-augments.json'), JSON.stringify({ version: aug.version, generatedAt: stamp, augments: aug.augments }, null, 1));
-await writeFile(join(OUT, 'mayhem-champions.json'), JSON.stringify({ version: aug.version, generatedAt: stamp, champions }, null, 1));
-console.log(`게임 버전 ${aug.version} · 증강 ${aug.augments.length}개 · 챔피언 ${Object.keys(champions).length}명`);
-if (aug.untagged.length) console.log(`궁합 태그가 없는 증강 ${aug.untagged.length}개 (augment-tags.ts 에 추가 필요): ${aug.untagged.join(', ')}`);
+await writeFile(join(OUT, 'mayhem-augments.json'), JSON.stringify({ version: live.version, generatedAt: stamp, ...(nextInfo ? { next: nextInfo } : {}), augments }, null, 1));
+await writeFile(join(OUT, 'mayhem-champions.json'), JSON.stringify({ version: live.version, generatedAt: stamp, champions }, null, 1));
+console.log(`게임 버전 ${live.version}${nextInfo ? ` (+ 다음 패치 ${nextInfo.version})` : ''} · 증강 ${augments.length}개 (새 ${augments.filter((a) => a.added).length} · 빠짐 ${augments.filter((a) => a.removed).length}) · 챔피언 ${Object.keys(champions).length}명`);
+const untagged = [...new Set([...live.untagged, ...(next?.untagged ?? [])])];
+if (untagged.length) console.log(`궁합 태그가 없는 증강 ${untagged.length}개 (augment-tags.ts 에 추가 필요): ${untagged.join(', ')}`);

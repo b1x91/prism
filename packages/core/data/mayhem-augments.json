@@ -1,6 +1,10 @@
 {
  "version": "16.20.8248524",
- "generatedAt": "2026-10-11T15:12:21.316Z",
+ "generatedAt": "2026-10-20T15:04:51.167Z",
+ "next": {
+  "version": "16.21",
+  "at": 1792548000000
+ },
  "augments": [
   {
    "id": 1001,
@@ -14,10 +18,11 @@
     "tank",
     "melee"
    ],
-   "note": "주고받을수록 능력치·저항. 근접 전사",
+   "note": "주고받을수록 중첩되어 능력치·저항·강인함이 오른다. 근접 전사·탱커용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1002,
@@ -29,10 +34,11 @@
    "tags": [
     "any"
    ],
-   "note": "아이템 가속 100. 사용 효과 아이템을 쓰는 챔피언",
+   "note": "아이템 가속 100, 아이템 대기시간이 절반. 사용 효과 아이템을 쓰는 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1004,
@@ -45,10 +51,11 @@
     "ability",
     "haste"
    ],
-   "note": "궁극기 봉인 대신 스킬 피해·가속. 궁극기 의존도 낮은 챔피언",
+   "note": "궁극기를 막는 대신 스킬 피해 35%와 스킬 가속 70. 궁극기 의존이 낮은 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1005,
@@ -61,10 +68,11 @@
     "req:ally",
     "mobile"
    ],
-   "note": "다친 아군에게 빠르게, 회복·보호막 강화. 서포터",
+   "note": "다친 아군에게 갈 때 빨라지고 회복·보호막이 커진다. 아군을 돕는 서포터용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1006,
@@ -77,10 +85,11 @@
     "melee",
     "burst"
    ],
-   "note": "대상 지정 불가 돌진 연타. 근접 딜러",
+   "note": "적에게 8번 돌진해 베는 동안 대상 지정 불가가 된다. 파고드는 근접 딜러용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1007,
@@ -92,10 +101,11 @@
    "tags": [
     "ad"
    ],
-   "note": "공격력 20% 증가. AD 챔피언 전반",
+   "note": "공격력이 20% 오른다. 공격력으로 싸우는 AD 챔프 전반에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1011,
@@ -109,10 +119,11 @@
     "tank",
     "melee"
    ],
-   "note": "궁극기 후 2초 무적. 궁극기로 진입하는 근접",
+   "note": "궁극기를 쓰면 2초 동안 무적이 된다. 궁극기로 진입하는 근접 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1013,
@@ -124,10 +135,11 @@
    "tags": [
     "tank"
    ],
-   "note": "체력 1500, 피해 10% 감소. 탱커 전용",
+   "note": "체력 1500을 얻고 주는 피해는 10% 줄어든다. 딜보다 버티는 탱커용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1015,
@@ -140,10 +152,11 @@
     "sustain",
     "req:heal"
    ],
-   "note": "회복량 70%를 피해로. 자기 회복이 많은 챔피언",
+   "note": "회복한 체력의 70%만큼 가까운 적에게 마법 피해. 자기 회복이 많은 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1018,
@@ -156,10 +169,11 @@
     "req:cc",
     "tank"
    ],
-   "note": "CC를 걸면 보호막. CC 많은 앞라인",
+   "note": "적을 이동 불가로 만들면 보호막을 얻는다. 군중 제어가 많은 앞라인용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1019,
@@ -172,10 +186,11 @@
     "req:dash",
     "mobile"
    ],
-   "note": "돌진 스킬 가속 175. 돌진 스킬이 핵심인 챔피언",
+   "note": "돌진·도약·점멸 스킬의 스킬 가속 175. 돌진 스킬이 핵심인 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1020,
@@ -188,10 +203,11 @@
     "bruiser",
     "sustain"
    ],
-   "note": "체력 50%에서 30% 회복",
+   "note": "체력 50% 아래로 떨어지면 3초간 최대 체력 30% 회복. 오래 싸우는 전사용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1022,
@@ -203,10 +219,11 @@
    "tags": [
     "attack"
    ],
-   "note": "공격 속도 60%. 평타 챔피언",
+   "note": "공격 속도가 60% 오른다. 평타를 많이 치는 원딜·전사·근접 딜러에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1025,
@@ -219,10 +236,11 @@
     "tank",
     "melee"
    ],
-   "note": "사망 시 폭발. 먼저 들어가는 근접",
+   "note": "죽으면 폭발해 주변 적에게 최대 체력 20% 고정 피해. 먼저 들어가는 앞라인용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1026,
@@ -234,10 +252,11 @@
    "tags": [
     "mobile"
    ],
-   "note": "이동 속도 차이만큼 추가 피해. 빠른 챔피언",
+   "note": "대상보다 빠를수록 주는 피해가 커진다. 이동 속도가 높은 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1027,
@@ -249,10 +268,11 @@
    "tags": [
     "req:dash"
    ],
-   "note": "돌진 흔적 폭발. 돌진 많은 챔피언",
+   "note": "돌진·점멸 자리에 1초 뒤 터지는 흔적을 남긴다. 돌진이 잦은 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1028,
@@ -264,10 +284,11 @@
    "tags": [
     "any"
    ],
-   "note": "피해마다 적 저항 감소. 지속 딜러",
+   "note": "피해를 줄 때마다 적의 방어력·마법 저항력을 깎는다. 오래 때리는 딜러용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1029,
@@ -280,10 +301,11 @@
     "ability",
     "attack"
    ],
-   "note": "스킬이 적중 시 효과 적용. 적중 시 아이템을 쓰는 스킬 챔피언",
+   "note": "스킬에도 적중 시 효과가 붙는다. 적중 시 아이템을 쓰는 스킬 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1030,
@@ -297,10 +319,11 @@
     "ability",
     "ap"
    ],
-   "note": "주문력에 비례한 스킬 가속. AP 스킬 챔피언",
+   "note": "주문력에 비례해 스킬 가속이 오른다. 스킬로 싸우는 AP 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1034,
@@ -312,10 +335,11 @@
    "tags": [
     "any"
    ],
-   "note": "30초마다 주문 방어막",
+   "note": "30초마다 적의 다음 스킬을 막는 주문 방어막. 스킬에 잘 맞는 챔프 누구나",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1036,
@@ -327,10 +351,11 @@
    "tags": [
     "attack"
    ],
-   "note": "평타가 무한 중첩 화상. 공격 속도 챔피언",
+   "note": "평타가 끝없이 쌓이는 최대 체력 비례 화상을 건다. 공격 속도가 높은 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1037,
@@ -342,10 +367,11 @@
    "tags": [
     "req:heal"
    ],
-   "note": "회복·보호막 20%. 회복·보호막 스킬 챔피언",
+   "note": "체력 회복과 보호막 효과가 20% 커진다. 회복·보호막 스킬이 있는 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1038,
@@ -357,10 +383,11 @@
    "tags": [
     "burst"
    ],
-   "note": "선제공격·어둠의 수확. 순간 딜러",
+   "note": "선제공격과 어둠의 수확 룬을 얻는다. 한 번에 몰아치는 순간 딜러용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1041,
@@ -373,10 +400,11 @@
     "tank",
     "bruiser"
    ],
-   "note": "체력 35%와 적응형 능력치. 근접 앞라인",
+   "note": "커지면서 체력 35%와 적응형 능력치 15%를 얻는다. 근접 앞라인·전사용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1044,
@@ -388,10 +416,11 @@
    "tags": [
     "any"
    ],
-   "note": "둔화 강화. 둔화 스킬이 있는 챔피언",
+   "note": "둔화가 이동 속도를 75 더 깎는다. 둔화 스킬이 있는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1045,
@@ -404,10 +433,11 @@
     "ability",
     "ap"
    ],
-   "note": "스킬이 화상, 화상마다 기본 스킬 쿨 감소. AP 스킬 챔피언",
+   "note": "스킬이 쌓이는 화상을 걸고 화상마다 기본 스킬 쿨이 준다. AP 스킬 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1046,
@@ -419,10 +449,11 @@
    "tags": [
     "any"
    ],
-   "note": "스킬·평타에 추가 피해",
+   "note": "스킬·평타로 때릴 때 추가 피해가 붙는 지옥불 영혼. 딜을 넣는 챔프 누구나",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1047,
@@ -435,10 +466,11 @@
     "crit",
     "attack"
    ],
-   "note": "치명타 확률 50%. 치명타 원딜의 핵심",
+   "note": "치명타 확률이 50% 오른다. 치명타 아이템을 올리는 원딜·평타 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1048,
@@ -451,10 +483,11 @@
     "ability",
     "burst"
    ],
-   "note": "스킬에 치명타. 스킬 딜러",
+   "note": "스킬에 치명타가 터질 수 있고 치명타 확률이 오른다. 스킬로 몰아치는 딜러용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1051,
@@ -466,10 +499,11 @@
    "tags": [
     "attack"
    ],
-   "note": "4타마다 투사체. 평타 챔피언",
+   "note": "네 번째 평타마다 투사체 4개가 마법 피해를 준다. 평타로 싸우는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1053,
@@ -482,10 +516,11 @@
     "any",
     "gamble"
    ],
-   "note": "부활마다 큰 몸(능력치) 또는 작은 몸(가속·속도) 무작위",
+   "note": "부활마다 커져 능력치·체력 또는 작아져 가속·속도, 무작위. 운을 즐기는 누구나",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1054,
@@ -498,10 +533,11 @@
     "attack",
     "ability"
    ],
-   "note": "평타는 주문력, 스킬은 공격력을 준다. 평타와 스킬을 섞어 쓰는 챔피언",
+   "note": "평타는 주문력, 스킬 피해는 공격력을 쌓는다. 평타와 스킬을 섞는 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1056,
@@ -514,10 +550,11 @@
     "tank",
     "bruiser"
    ],
-   "note": "체력 증가. 앞라인",
+   "note": "최대 체력이 오른다. 앞에서 오래 버텨야 하는 탱커·근접 전사에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1057,
@@ -530,10 +567,11 @@
     "tank",
     "any"
    ],
-   "note": "전투 이탈 시 보호막",
+   "note": "전투에서 벗어나면 보호막을 얻는 대지의 영혼. 치고 빠지는 앞라인에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1058,
@@ -546,10 +584,11 @@
     "attack",
     "haste"
    ],
-   "note": "적중 시 스킬 재사용 대기시간 감소. 평타로 스킬 굴리는 챔피언",
+   "note": "적중 시 효과마다 스킬 재사용 대기시간 1.25초 감소. 평타로 스킬을 돌리는 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1060,
@@ -561,10 +600,11 @@
    "tags": [
     "sustain"
    ],
-   "note": "피해를 주면 체력·마나 재생",
+   "note": "피해를 준 뒤 체력·마나 재생이 크게 오른다. 싸우며 버티는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1061,
@@ -576,10 +616,11 @@
    "tags": [
     "any"
    ],
-   "note": "부메랑 자동 사용",
+   "note": "7초마다 근처 적에게 부메랑을 자동으로 던진다. 추가 딜이 필요한 챔프 누구나",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1062,
@@ -591,10 +632,11 @@
    "tags": [
     "any"
    ],
-   "note": "드래곤 영혼 3개 무작위",
+   "note": "무작위 드래곤 영혼 3개를 얻는다. 어떤 영혼이 나와도 쓰는 챔프 누구나",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1063,
@@ -607,10 +649,11 @@
     "req:dash",
     "bruiser"
    ],
-   "note": "돌진 후 저항. 돌진 많은 전사",
+   "note": "돌진·점멸 뒤 방어력·마법 저항력이 쌓인다. 돌진으로 파고드는 전사용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1064,
@@ -626,7 +669,8 @@
    "note": "체력 재생 대폭",
    "ability": false,
    "quest": false,
-   "disabled": true
+   "disabled": true,
+   "seen": "16.20"
   },
   {
    "id": 1066,
@@ -642,7 +686,8 @@
    "note": "30초마다 강력한 베기",
    "ability": false,
    "quest": false,
-   "disabled": true
+   "disabled": true,
+   "seen": "16.20"
   },
   {
    "id": 1067,
@@ -655,10 +700,11 @@
     "sustain",
     "ability"
    ],
-   "note": "선택한 스킬 사용 시 회복",
+   "note": "선택한 스킬을 쓰면 체력을 회복하고 쿨이 길수록 더 회복. 버티는 스킬 챔프용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1068,
@@ -671,10 +717,11 @@
     "haste",
     "ability"
    ],
-   "note": "스킬 가속 60. 스킬 챔피언 전반",
+   "note": "스킬 가속이 60 오른다. 스킬을 자주 써서 싸우는 챔프 전반에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1071,
@@ -687,10 +734,11 @@
     "ranged",
     "attack"
    ],
-   "note": "공격 사거리. 원거리 평타 챔피언",
+   "note": "공격 사거리가 늘어난다. 멀리서 안전하게 평타를 치는 원거리 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1072,
@@ -702,10 +750,11 @@
    "tags": [
     "ability"
    ],
-   "note": "스킬이 표식, 아군 공격 시 추가 피해. 스킬 포킹",
+   "note": "스킬이 표식을 남겨 아군의 다음 공격에 추가 마법 피해. 스킬로 견제하는 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1073,
@@ -718,10 +767,11 @@
     "req:dash",
     "mobile"
    ],
-   "note": "돌진·은신 후 이동 속도 300",
+   "note": "돌진·점멸·은신 뒤 2초간 이동 속도 300. 돌진이나 은신이 있는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1074,
@@ -734,10 +784,11 @@
     "attack",
     "tank"
    ],
-   "note": "평타 맞은 적의 피해 감소. 평타 앞라인·원딜",
+   "note": "평타 맞은 적이 3초간 주는 피해가 15% 준다. 평타를 치는 앞라인·원딜용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1076,
@@ -749,10 +800,11 @@
    "tags": [
     "req:ally"
    ],
-   "note": "아군 강화·회복·보호막 시 주변 적 피해. 서포터",
+   "note": "아군을 회복·보호막·강화하면 주변 적에게 피해와 둔화. 아군을 돕는 서포터용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1077,
@@ -766,10 +818,11 @@
     "attack",
     "sustain"
    ],
-   "note": "치명타 확률과 치명타 흡혈. 치명타 원딜",
+   "note": "치명타 확률 25%와 치명타 적중 시 생명력 흡수 12%. 치명타 원딜에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1079,
@@ -782,10 +835,11 @@
     "attack",
     "bruiser"
    ],
-   "note": "치명적 속도·정복자. 평타 전사·원딜",
+   "note": "치명적 속도와 정복자 룬을 얻는다. 오래 평타를 치는 전사·원딜에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1080,
@@ -798,10 +852,11 @@
     "crit",
     "tank"
    ],
-   "note": "치명타 확률만큼 받는 피해 감소. 치명타 쓰는 앞라인",
+   "note": "치명타 확률 25%와 확률적으로 받는 피해 20% 감소. 치명타를 쓰는 앞라인용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1081,
@@ -814,10 +869,11 @@
     "attack",
     "mobile"
    ],
-   "note": "평타마다 이동 속도·공격 속도. 평타 챔피언",
+   "note": "평타마다 이동 속도·공격 속도가 쌓인다. 평타로 싸우며 움직이는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1084,
@@ -829,10 +885,11 @@
    "tags": [
     "any"
    ],
-   "note": "관통력 18%. 딜러 누구나",
+   "note": "방어구 관통력과 마법 관통력 18%를 얻는다. 피해를 넣는 딜러 누구나",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1087,
@@ -845,10 +902,11 @@
     "attack",
     "ranged"
    ],
-   "note": "평타가 추가 대상에게. 원거리 평타 챔피언",
+   "note": "평타가 추가 대상에게 30% 피해와 적중 시 효과. 원거리 평타 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1088,
@@ -860,10 +918,11 @@
    "tags": [
     "ult"
    ],
-   "note": "궁극기 두 번. 궁극기가 강한 챔피언",
+   "note": "궁극기를 쓴 뒤 한 번 더 쓸 수 있다. 궁극기 한 방이 큰 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1092,
@@ -876,10 +935,11 @@
     "crit",
     "attack"
    ],
-   "note": "아이템·지속 피해에도 치명타. 치명타 챔피언",
+   "note": "아이템·지속 피해에도 치명타가 터지고 확률 25%. 치명타를 쓰는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1095,
@@ -891,10 +951,11 @@
    "tags": [
     "req:ally"
    ],
-   "note": "회복·보호막 대상 저항 증가. 서포터",
+   "note": "회복·보호막을 준 아군의 방어력·마법 저항력이 오른다. 서포터용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1097,
@@ -906,10 +967,11 @@
    "tags": [
     "ap"
    ],
-   "note": "주문력 증가. AP 챔피언 전반",
+   "note": "주문력이 오른다. 주문력 계수로 피해를 넣는 AP 챔프 전반에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1098,
@@ -922,10 +984,11 @@
     "any",
     "mobile"
    ],
-   "note": "이동 속도. 무난",
+   "note": "이동 속도가 오른다. 합류와 거리 조절이 필요한 챔프라면 누구나",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1103,
@@ -938,10 +1001,11 @@
     "haste",
     "ability"
    ],
-   "note": "Q 스킬 가속 100. Q가 핵심인 챔피언",
+   "note": "선택한 스킬의 스킬 가속이 100 오른다. 스킬 하나가 핵심인 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1104,
@@ -953,10 +1017,11 @@
    "tags": [
     "req:summon"
    ],
-   "note": "소환물 강화. 소환물 챔피언 전용",
+   "note": "소환물의 크기·체력·피해량이 40% 오른다. 소환물을 쓰는 챔프 전용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1105,
@@ -968,10 +1033,11 @@
    "tags": [
     "any"
    ],
-   "note": "맞지 않을 때 이동 속도 100%. 합류·이탈용",
+   "note": "맞지 않는 동안 이동 속도 100% 증가. 합류·이탈이 잦은 챔프 누구나",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1112,
@@ -984,10 +1050,11 @@
     "ult",
     "melee"
    ],
-   "note": "궁극기 후 CC 면역. 궁극기로 진입하는 근접",
+   "note": "궁극기를 쓰면 3초간 군중 제어 면역. 궁극기로 진입하는 근접 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1113,
@@ -1000,10 +1067,11 @@
     "ability",
     "ranged"
    ],
-   "note": "600 넘는 거리로 맞히면 쿨 80% 반환. 장거리 포킹 챔피언",
+   "note": "600 넘는 거리에서 맞히면 쿨 80% 반환. 장거리 견제 스킬 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1115,
@@ -1016,10 +1084,11 @@
     "ranged",
     "attack"
    ],
-   "note": "공격 사거리 대폭. 원딜 최상급",
+   "note": "공격 사거리가 크게 늘어난다. 멀리서 안전하게 평타를 치는 원딜에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1116,
@@ -1032,10 +1101,11 @@
     "any",
     "mobile"
    ],
-   "note": "점멸 3회",
+   "note": "점멸을 3번까지 쓸 수 있고 120초 뒤 모두 충전. 위치 잡기가 중요한 챔프 누구나",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1118,
@@ -1047,10 +1117,11 @@
    "tags": [
     "req:ally"
    ],
-   "note": "회복·보호막에 치명타. 서포터",
+   "note": "회복·보호막에 치명타가 붙어 40% 증폭. 아군을 돌보는 서포터에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1129,
@@ -1063,10 +1134,11 @@
     "attack",
     "ap"
    ],
-   "note": "주문력 비례 평타 추가 피해. AP 평타 챔피언(케일·카사딘 등)",
+   "note": "평타마다 추가 물리 피해가 붙는다. 평타를 자주 섞는 AP 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1133,
@@ -1078,10 +1150,11 @@
    "tags": [
     "ability"
    ],
-   "note": "스킬 적중마다 최대 체력 비례 고정 피해 미사일",
+   "note": "스킬 적중마다 최대 체력 1% 고정 피해 미사일 3발. 스킬 딜러에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1134,
@@ -1095,10 +1168,11 @@
     "attack",
     "bruiser"
    ],
-   "note": "원거리 챔피언이 근접이 되어 큰 능력치. 원거리 평타 챔피언 전용",
+   "note": "근접이 되어 공격력·체력·흡혈이 오른다. 평타 치는 원거리 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1136,
@@ -1110,10 +1184,11 @@
    "tags": [
     "req:cc"
    ],
-   "note": "CC마다 적응형 능력치 중첩",
+   "note": "적을 묶을 때마다 적응형 능력치 10 중첩. 군중 제어가 많은 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1138,
@@ -1125,10 +1200,11 @@
    "tags": [
     "sustain"
    ],
-   "note": "모든 피해 흡혈 15%",
+   "note": "모든 피해 흡혈 15%를 얻는다. 오래 싸우며 버티는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1141,
@@ -1140,10 +1216,11 @@
    "tags": [
     "req:ally"
    ],
-   "note": "아군 회복·보호막 30%. 인챈터 서포터",
+   "note": "아군에게 주는 회복·보호막이 30% 오른다. 회복·보호막 서포터에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1149,
@@ -1156,10 +1233,11 @@
     "req:cc",
     "tank"
    ],
-   "note": "여진·빙결 강화. CC 탱커",
+   "note": "여진·빙결 강화 룬을 얻는다. 적을 묶으며 버티는 앞라인 탱커에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1150,
@@ -1172,10 +1250,11 @@
     "haste",
     "ability"
    ],
-   "note": "W 스킬 가속 100. W가 핵심인 챔피언",
+   "note": "고른 스킬 하나에 스킬 가속 100. 그 스킬이 핵심인 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1151,
@@ -1188,10 +1267,11 @@
     "haste",
     "ability"
    ],
-   "note": "E 스킬 가속 100. E가 핵심인 챔피언",
+   "note": "선택한 스킬의 스킬 가속 100. 한 스킬을 자주 돌리는 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1152,
@@ -1203,10 +1283,11 @@
    "tags": [
     "tank"
    ],
-   "note": "강철심장 퀘스트. 탱커",
+   "note": "강철심장 300중첩을 채우면 중첩이 3배. 강철심장을 가는 탱커에게",
    "ability": false,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1154,
@@ -1218,10 +1299,11 @@
    "tags": [
     "any"
    ],
-   "note": "처치 관여 18회 퀘스트, 보상 황금 뒤집개",
+   "note": "처치 관여를 여러 번 채우면 황금 뒤집개. 싸움에 자주 끼는 챔프에게",
    "ability": false,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1156,
@@ -1233,10 +1315,11 @@
    "tags": [
     "ap"
    ],
-   "note": "라바돈·존야 퀘스트. AP 챔피언",
+   "note": "라바돈·존야를 갖추면 우글렛의 마녀 모자. 주문력을 쌓는 AP 챔프에게",
    "ability": false,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1170,
@@ -1249,10 +1332,11 @@
     "ranged",
     "attack"
    ],
-   "note": "공격 사거리. 원거리 평타 챔피언",
+   "note": "공격 사거리가 늘어난다. 멀리서 평타를 치는 원거리 평타 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1180,
@@ -1264,10 +1348,11 @@
    "tags": [
     "ap"
    ],
-   "note": "주문력 300% 보호막",
+   "note": "보호막을 얻고 70초 뒤 다시 채운다. 폭딜을 버텨야 하는 AP 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1181,
@@ -1280,10 +1365,11 @@
     "attack",
     "tank"
    ],
-   "note": "체력 비례 평타 추가 피해. 체력 높은 평타 챔피언",
+   "note": "평타에 추가 물리 피해가 붙는다. 체력이 많은 근접 평타 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1187,
@@ -1295,10 +1381,11 @@
    "tags": [
     "any"
    ],
-   "note": "점멸 폭발",
+   "note": "점멸할 때 폭발해 피해를 주고 둔화. 점멸로 파고드는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1194,
@@ -1310,10 +1397,11 @@
    "tags": [
     "ult"
    ],
-   "note": "궁극기로 적을 변이. 궁극기가 넓게 맞는 챔피언",
+   "note": "궁극기에 맞은 적을 2초 동안 변이. 궁극기가 넓게 맞는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1195,
@@ -1327,10 +1415,11 @@
     "burst",
     "mobile"
    ],
-   "note": "작아지고 큰 적에게 추가 피해. 탱커 잡는 딜러",
+   "note": "작아져 이동 속도 20%, 큰 적에게 추가 피해. 탱커를 잡는 근접 딜러용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1204,
@@ -1342,10 +1431,11 @@
    "tags": [
     "req:stack"
    ],
-   "note": "영구 중첩 2배. 나서스·베이가·초가스·스몰더 같은 중첩 챔피언 전용",
+   "note": "영구 중첩을 얻을 때마다 2배로. 나서스·베이가 같은 중첩 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1205,
@@ -1358,10 +1448,11 @@
     "ap",
     "ability"
    ],
-   "note": "추가 공격력을 주문력으로 바꾼다. 순수 AP 챔피언용",
+   "note": "추가 공격력을 주문력으로 바꾸고 주문력 증가. 순수 AP 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1206,
@@ -1374,10 +1465,11 @@
     "ad",
     "attack"
    ],
-   "note": "주문력을 공격력으로 바꾼다. 순수 AD 챔피언용",
+   "note": "주문력을 공격력으로 바꾸고 공격력 증가. 평타로 싸우는 순수 AD 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1211,
@@ -1390,10 +1482,11 @@
     "ult",
     "burst"
    ],
-   "note": "궁극기 후 피해를 비축했다 폭발. 궁극기로 진입하는 딜러",
+   "note": "궁극기 후 피해 40%를 모아 5초 뒤 폭발. 궁극기로 들어가는 딜러용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1214,
@@ -1405,10 +1498,11 @@
    "tags": [
     "req:spin"
    ],
-   "note": "회전 스킬 강화. 가렌·카타리나 같은 회전 챔피언",
+   "note": "회전 스킬 가속 30과 피해 증가. 가렌·카타리나 같은 회전 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1220,
@@ -1421,10 +1515,12 @@
     "attack",
     "ad"
    ],
-   "note": "공격 시 투사체 5개. AD 평타 챔피언",
+   "note": "챔프를 공격하면 탄환 5발을 흩뿌린다. 평타로 싸우는 AD 원딜용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 1225,
@@ -1436,10 +1532,11 @@
    "tags": [
     "attack"
    ],
-   "note": "평타가 투사체를 한 번 더. 적중 시 효과 챔피언",
+   "note": "평타마다 40% 위력 투사체를 한 발 더. 적중 시 효과 평타 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1237,
@@ -1451,10 +1548,11 @@
    "tags": [
     "gamble"
    ],
-   "note": "무작위 골드 증강",
+   "note": "무작위 골드 증강 하나를 얻는다. 운에 맡겨 보고 싶을 때 고르는 카드",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1238,
@@ -1466,10 +1564,11 @@
    "tags": [
     "gamble"
    ],
-   "note": "무작위 프리즘 증강",
+   "note": "무작위 프리즘 증강 하나를 얻는다. 더 높은 등급을 노려 보고 싶을 때",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1243,
@@ -1481,10 +1580,11 @@
    "tags": [
     "gamble"
    ],
-   "note": "무작위 증강 2개",
+   "note": "무작위 증강 2개를 한꺼번에 얻는다. 결과를 운에 맡기고 싶을 때",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1301,
@@ -1496,10 +1596,11 @@
    "tags": [
     "any"
    ],
-   "note": "주기적으로 자신과 주변 아군 무적",
+   "note": "35초마다 자신과 주변 아군 2.5초 무적. 뭉쳐서 한타하는 팀에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1305,
@@ -1512,10 +1613,11 @@
     "any",
     "melee"
    ],
-   "note": "이동 속도·둔화 저항. 붙어야 하는 근접",
+   "note": "이동 속도 50과 둔화 저항 50%. 붙어야 싸울 수 있는 근접 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1308,
@@ -1527,10 +1629,11 @@
    "tags": [
     "any"
    ],
-   "note": "이동 속도와 자동 불꽃",
+   "note": "이동 속도 25%와 7초마다 적을 쫓는 불꽃 3개. 누구에게나 무난",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1310,
@@ -1543,10 +1646,11 @@
     "burst",
     "melee"
    ],
-   "note": "뒤 공격 추가 피해와 투명 순간이동. 근접 암살자",
+   "note": "뒤 공격 추가 피해와 순간이동·투명. 뒤를 노리는 근접 암살자용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1311,
@@ -1559,10 +1663,11 @@
     "ability",
     "ap"
    ],
-   "note": "마나 2배 소모 대신 스킬 효과 증가. 마나 여유 있는 챔피언",
+   "note": "마나를 2배 쓰고 스킬 피해·회복·보호막 증가. 마나가 넉넉한 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1314,
@@ -1574,10 +1679,11 @@
    "tags": [
     "req:shield"
    ],
-   "note": "보호막을 얻으면 적응형 능력치. 보호막 스킬 챔피언",
+   "note": "보호막을 얻으면 3초 동안 적응형 능력치. 보호막 스킬이 있는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1315,
@@ -1589,10 +1695,11 @@
    "tags": [
     "req:dash"
    ],
-   "note": "돌진 후 보호막",
+   "note": "돌진·점멸 뒤 2초 동안 보호막을 얻는다. 돌진으로 파고드는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1318,
@@ -1604,10 +1711,11 @@
    "tags": [
     "ap"
    ],
-   "note": "존야 강화. 존야를 사는 AP 챔피언",
+   "note": "존야 재사용 45초, 경직 중에도 이동. 존야를 사는 AP 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1319,
@@ -1619,10 +1727,11 @@
    "tags": [
     "tank"
    ],
-   "note": "불사르기 아이템 강화와 골드. 탱커",
+   "note": "불사르기 아이템이 골드를 주고 250골드. 불사르기를 가는 탱커에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1320,
@@ -1635,10 +1744,11 @@
     "crit",
     "ad"
    ],
-   "note": "징수의 총 강화. 치명타 AD",
+   "note": "징수의 총 처형 기준이 오르고 250골드. 징수의 총을 사는 AD 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1322,
@@ -1651,10 +1761,11 @@
     "burst",
     "attack"
    ],
-   "note": "처치 관여 시 이동·공격 속도",
+   "note": "처치 관여 시 4초 동안 이동 속도 100%. 싸움에 계속 뛰어드는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1323,
@@ -1666,10 +1777,11 @@
    "tags": [
     "req:cc"
    ],
-   "note": "CC를 걸면 혜성. CC 챔피언",
+   "note": "적을 묶으면 대상 위로 혜성이 떨어진다. 군중 제어가 많은 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1324,
@@ -1682,10 +1794,11 @@
     "tank",
     "req:ally"
    ],
-   "note": "저항력 비례 회복·보호막 강화. 탱 서포터",
+   "note": "추가 방어력·마법 저항력만큼 회복·보호막 증가. 탱커형 서포터에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1325,
@@ -1697,10 +1810,11 @@
    "tags": [
     "burst"
    ],
-   "note": "체력 70% 상한 대신 25% 추가 고정 피해. 뒤에서 딜하는 챔피언",
+   "note": "최대 체력 30% 감소 대신 추가 고정 피해. 뒤에서 딜하는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1326,
@@ -1713,10 +1827,11 @@
     "burst",
     "mobile"
    ],
-   "note": "처치 후 투명. 암살자",
+   "note": "처치하면 1.5초 투명과 이동 속도 40%. 들어갔다 빠지는 암살자에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1327,
@@ -1732,7 +1847,8 @@
    "note": "CC마다 저항 중첩",
    "ability": false,
    "quest": false,
-   "disabled": true
+   "disabled": true,
+   "seen": "16.20"
   },
   {
    "id": 1328,
@@ -1745,10 +1861,11 @@
     "crit",
     "attack"
    ],
-   "note": "치명타마다 공격 속도 중첩. 치명타 원딜",
+   "note": "치명타 확률 25%, 치명타마다 공격 속도 중첩. 치명타 원딜에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1329,
@@ -1761,10 +1878,11 @@
     "any",
     "melee"
    ],
-   "note": "거대 눈덩이 에어본. 진입형",
+   "note": "거대 눈덩이가 적을 띄우고 둔화. 눈덩이로 먼저 파고드는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1331,
@@ -1776,10 +1894,11 @@
    "tags": [
     "req:ally"
    ],
-   "note": "회복·보호막 15%와 아군에게 순간이동. 서포터",
+   "note": "회복·보호막 15%와 아군 순간이동 주문. 아군을 지키는 서포터에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1332,
@@ -1793,10 +1912,11 @@
     "sustain",
     "bruiser"
    ],
-   "note": "잃은 체력 비례 주문력·흡혈. AP 전사(블라디미르·모데카이저 등)",
+   "note": "잃은 체력만큼 주문력·흡혈 증가. 체력을 깎으며 싸우는 AP 전사용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1333,
@@ -1808,10 +1928,11 @@
    "tags": [
     "any"
    ],
-   "note": "체력 35%에서 큰 보호막과 이동 속도",
+   "note": "체력 35%에서 큰 보호막과 이동 속도 150%. 폭딜에 잘 잡히는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1334,
@@ -1826,7 +1947,8 @@
    "note": "눈덩이 둔화 영역",
    "ability": false,
    "quest": false,
-   "disabled": true
+   "disabled": true,
+   "seen": "16.20"
   },
   {
    "id": 1335,
@@ -1838,10 +1960,11 @@
    "tags": [
     "any"
    ],
-   "note": "챔피언 타격 시 골드",
+   "note": "챔프를 때리면 추가 피해와 골드, 이동 속도. 누구에게나 무난한 선택",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1336,
@@ -1854,10 +1977,11 @@
     "crit",
     "attack"
    ],
-   "note": "무한의 대검 강화와 500골드. 치명타 원딜",
+   "note": "500골드, 무한의 대검에 무작위 추가 치명타 피해. 치명타 원딜에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1337,
@@ -1869,10 +1993,11 @@
    "tags": [
     "any"
    ],
-   "note": "적 이동 수단(대포) 사용 시 아이템 강화와 프리즘 증강",
+   "note": "적 대포를 타면 아이템 강화와 프리즘 증강. 전설 아이템을 갖춘 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1343,
@@ -1885,10 +2010,11 @@
     "attack",
     "mobile"
    ],
-   "note": "신발 퀘스트. 평타 챔피언",
+   "note": "신발마다 퀘스트를 깨면 큰 보상. 오래 싸우며 평타를 많이 치는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1344,
@@ -1902,10 +2028,11 @@
     "bruiser",
     "sustain"
    ],
-   "note": "궁극기 후 보호막·흡혈·속도. 궁극기로 싸움 거는 전사",
+   "note": "궁극기 후 체력 50% 보호막과 흡혈 20%. 궁극기로 싸움을 거는 전사에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1345,
@@ -1917,10 +2044,12 @@
    "tags": [
     "burst"
    ],
-   "note": "처치 관여 시 폭발·둔화",
+   "note": "처치 관여 시 현재 체력 15% 폭발과 둔화. 싸움에 자주 끼는 딜러에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 1346,
@@ -1935,7 +2064,8 @@
    "note": "아군 회복 불가 대신 흡혈 25%",
    "ability": false,
    "quest": false,
-   "disabled": true
+   "disabled": true,
+   "seen": "16.20"
   },
   {
    "id": 1347,
@@ -1947,10 +2077,11 @@
    "tags": [
     "any"
    ],
-   "note": "방어막+유체화 소환사 주문",
+   "note": "방어막과 유체화를 함께 쓰는 소환사 주문. 버티며 빠져야 하는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1348,
@@ -1962,10 +2093,11 @@
    "tags": [
     "any"
    ],
-   "note": "점멸 하나 더",
+   "note": "점멸 하나를 더 얻고 소환사 주문 가속 70. 누구에게나 무난한 생존기",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1349,
@@ -1978,10 +2110,11 @@
     "ult",
     "ability"
    ],
-   "note": "궁극기 사용 시 기본 스킬 초기화. 궁극기 후 스킬 몰아치는 챔피언",
+   "note": "궁극기 사용 시 기본 스킬 초기화. 궁극기 뒤 스킬을 몰아치는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1353,
@@ -1993,10 +2126,11 @@
    "tags": [
     "tank"
    ],
-   "note": "처치 관여마다 체력 5%. 탱커",
+   "note": "처치 관여마다 최대 체력 5% 증가. 한타마다 커지는 앞라인 탱커에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1356,
@@ -2009,10 +2143,12 @@
     "crit",
     "attack"
    ],
-   "note": "치명타마다 미사일. 치명타 챔피언",
+   "note": "치명타 확률 25%, 치명타마다 마법 미사일. 치명타를 쓰는 원딜에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 1358,
@@ -2024,10 +2160,11 @@
    "tags": [
     "any"
    ],
-   "note": "눈덩이가 벽에 튕기며 강해진다",
+   "note": "눈덩이가 벽에 튕기며 커지고 강해진다. 눈덩이로 싸움을 여는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1361,
@@ -2039,10 +2176,11 @@
    "tags": [
     "tank"
    ],
-   "note": "태양불꽃·공허한 광휘 퀘스트. 탱커",
+   "note": "태양불꽃·공허한 광휘를 합쳐 공허의 불길로. 불사르기 탱커에게",
    "ability": false,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1373,
@@ -2055,10 +2193,11 @@
     "haste",
     "mobile"
    ],
-   "note": "처치 관여마다 스킬 가속·이동 속도",
+   "note": "처치 관여마다 스킬 가속 8·이동 속도 1%. 싸움에 자주 끼는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1375,
@@ -2071,10 +2210,11 @@
     "req:cc",
     "tank"
    ],
-   "note": "CC마다 최대 체력 영구 증가",
+   "note": "적을 묶을 때마다 최대 체력 20 영구 증가. 군중 제어가 많은 탱커에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1379,
@@ -2087,10 +2227,11 @@
     "attack",
     "req:ally"
    ],
-   "note": "꽃피는 새벽의 검 강화와 공격 속도. 평타 서포터",
+   "note": "공격 속도 100%와 꽃피는 새벽의 검 회복 강화. 평타로 아군을 돕는 서포터용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1384,
@@ -2102,10 +2243,11 @@
    "tags": [
     "any"
    ],
-   "note": "즉시 1750골드. 아이템 하나를 빨리 완성",
+   "note": "즉시 1750골드를 받는다. 아이템 하나를 빨리 완성하고 싶은 모든 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1386,
@@ -2118,10 +2260,11 @@
     "any",
     "mobile"
    ],
-   "note": "소환사 주문이 갈고리 이동기로",
+   "note": "소환사 주문이 갈고리로 이동하는 영웅의 비상으로. 기동성이 필요한 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1388,
@@ -2134,10 +2277,11 @@
     "haste",
     "ability"
    ],
-   "note": "스킬 가속이 처치 관여마다 늘어난다. 한타 오래 사는 스킬 챔피언",
+   "note": "스킬 가속 60에 처치 관여마다 3씩 더 붙는다. 한타에 오래 남는 스킬 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1389,
@@ -2149,10 +2293,11 @@
    "tags": [
     "any"
    ],
-   "note": "적응형 능력치 25%와 미니언 강화",
+   "note": "적응형 능력치 25%와 주변 아군 미니언 강화. 어떤 챔프든 무난한 선택",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1390,
@@ -2165,10 +2310,11 @@
     "ap",
     "ability"
    ],
-   "note": "스킬 적중마다 주문력 영구 증가. 스킬 자주 맞히는 AP",
+   "note": "스킬 피해마다 주문력이 영구히 1씩 오른다. 스킬 위주 마법사에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1392,
@@ -2181,10 +2327,11 @@
     "melee",
     "tank"
    ],
-   "note": "눈덩이 돌진 시 무적. 진입형",
+   "note": "눈덩이 스킬 가속 100, 돌진하면 1.5초 무적. 먼저 뛰어드는 근접 앞라인용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1401,
@@ -2197,10 +2344,11 @@
     "tank",
     "melee"
    ],
-   "note": "커지며 에어본·체력. 진입 탱커",
+   "note": "커지며 주변 적을 1초 띄우고 최대 체력을 얻는 주문. 진입하는 근접 탱커용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1402,
@@ -2212,10 +2360,11 @@
    "tags": [
     "any"
    ],
-   "note": "능력치 모루 4개와 증강 새로고침",
+   "note": "능력치 모루 4개와 다음 증강 새로고침 추가. 어떤 챔프든 무난한 성장",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1403,
@@ -2227,10 +2376,11 @@
    "tags": [
     "any"
    ],
-   "note": "능력치 모루 3개",
+   "note": "능력치 모루 3개, 골드·프리즘 모루 확률이 높다. 어떤 챔프든 무난한 선택",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1404,
@@ -2242,10 +2392,11 @@
    "tags": [
     "any"
    ],
-   "note": "능력치 모루 2개",
+   "note": "능력치 모루 2개를 받는다. 특별한 조건 없이 누구나 쓰기 좋은 능력치 보강",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1413,
@@ -2258,10 +2409,11 @@
     "ult",
     "tank"
    ],
-   "note": "궁극기 후 피해 감소와 도발. 진입 탱커",
+   "note": "궁극기 뒤 피해 감소와 2초 도발, 궁극기 가속 30. 궁으로 진입하는 탱커용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1415,
@@ -2274,10 +2426,11 @@
     "ability",
     "crit"
    ],
-   "note": "스킬 적중 시 미사일, 치명타 확률. 스킬 딜러",
+   "note": "스킬 피해마다 마법 피해 투사체, 치명타 확률 25%. 스킬을 자주 쓰는 딜러에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1416,
@@ -2289,10 +2442,11 @@
    "tags": [
     "any"
    ],
-   "note": "주기적 연쇄 번개",
+   "note": "주기적으로 공격 시 연쇄 번개로 피해와 둔화. 여럿을 자주 때리는 모든 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1420,
@@ -2304,10 +2458,11 @@
    "tags": [
     "req:ally"
    ],
-   "note": "아군 회복·보호막·이동 속도 오라 자동 사용. 서포터",
+   "note": "10초마다 아군 회복·보호막과 이동 속도 오라를 번갈아. 아군 곁에 붙는 서포터용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1421,
@@ -2320,10 +2475,11 @@
     "melee",
     "tank"
    ],
-   "note": "자동 라칸 궁극기(매혹 질주). 진입형",
+   "note": "35초마다 라칸 궁극기를 얻어 닿는 적을 매혹한다. 적진에 파고드는 근접 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 1996,
@@ -2336,10 +2492,11 @@
     "attack",
     "ability"
    ],
-   "note": "주문 검 계열 강화. 스킬 후 평타 챔피언",
+   "note": "주문 검 효과에 대상 체력 비례 피해·회복과 250골드. 스킬 뒤 평타 치는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2004,
@@ -2351,10 +2508,11 @@
    "tags": [
     "req:ally"
    ],
-   "note": "회복·보호막 받은 아군이 때리면 중첩. 서포터",
+   "note": "회복·보호막 받은 아군이 때리면 쌓여 충격파와 처형. 아군을 돕는 서포터용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2005,
@@ -2367,10 +2525,11 @@
     "ability",
     "attack"
    ],
-   "note": "스킬·평타를 번갈아 쓰면 스타일 등급. 콤보 챔피언",
+   "note": "평타·스킬을 번갈아 맞혀 S등급이면 주변에 난사한다. 콤보를 섞는 물리 딜러에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2006,
@@ -2382,10 +2541,12 @@
    "tags": [
     "burst"
    ],
-   "note": "체력 낮은 적 처형과 밀쳐내기",
+   "note": "체력 낮은 적을 처형하고 밀어내 폭발시킨다. 마무리를 자주 맡는 딜러에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2007,
@@ -2400,7 +2561,8 @@
    "note": "체력을 흡수하는 작은 악마",
    "ability": false,
    "quest": false,
-   "disabled": true
+   "disabled": true,
+   "seen": "16.20"
   },
   {
    "id": 2009,
@@ -2413,10 +2575,11 @@
     "attack",
     "crit"
    ],
-   "note": "치명타·공격 속도. 원딜과 치명타 전사",
+   "note": "치명타 확률과 공격 속도를 함께 얻는다. 평타로 싸우는 원딜·치명타 전사용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2010,
@@ -2429,10 +2592,11 @@
     "crit",
     "attack"
    ],
-   "note": "치명타 때 적중 시 효과 두 번. 치명타+적중 시 효과 원딜",
+   "note": "치명타가 터지면 적중 시 효과를 한 번 더 적용한다. 치명타와 적중 효과 원딜용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2016,
@@ -2445,10 +2609,11 @@
     "attack",
     "crit"
    ],
-   "note": "적중 시 마법 피해. 공격 속도 높은 챔피언",
+   "note": "평타 적중 시 치명타가 붙는 마법 피해를 더한다. 공격 속도가 높은 평타 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2018,
@@ -2462,10 +2627,11 @@
     "haste",
     "ap"
    ],
-   "note": "공격 속도를 스킬 가속으로. 평타 안 치는 마법사",
+   "note": "공격 속도를 모두 스킬 가속으로 바꾼다. 평타를 거의 치지 않는 마법사에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2024,
@@ -2478,10 +2644,12 @@
     "ability",
     "haste"
    ],
-   "note": "치명타 확률을 스킬 가속으로. 스킬 챔피언",
+   "note": "스킬 가속을 추가로 얻는다. 재사용 대기시간이 중요한 스킬 위주 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2026,
@@ -2494,10 +2662,11 @@
     "mobile",
     "burst"
    ],
-   "note": "체력 낮은 적에게 접근 시 이동 속도",
+   "note": "체력 40% 아래 적에게 다가갈 때 이동 속도 60%. 도망가는 적을 쫓는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2031,
@@ -2510,10 +2679,12 @@
     "tank",
     "melee"
    ],
-   "note": "사망 시 티버 소환. 먼저 들어가는 근접",
+   "note": "죽으면 티버가 나와 주변 적을 기절시키고 추격한다. 먼저 들어가는 근접 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2032,
@@ -2526,10 +2697,11 @@
     "tank",
     "melee"
    ],
-   "note": "사망 시 상어. 먼저 들어가는 근접",
+   "note": "죽으면 주변을 둔화시키다 상어가 적을 띄우고 문다. 먼저 들어가는 근접 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2034,
@@ -2541,10 +2713,11 @@
    "tags": [
     "any"
    ],
-   "note": "눈덩이에 상어 폭풍",
+   "note": "눈덩이 주위를 상어가 돌며 피해·둔화, 맞힌 적에 폭풍. 눈덩이를 잘 맞히는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2042,
@@ -2556,10 +2729,12 @@
    "tags": [
     "burst"
    ],
-   "note": "수풀에서 나오며 피해 20%. 매복형",
+   "note": "수풀에 들어가면 2초 동안 피해량 20% 증가. 수풀에서 기습하는 폭딜 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2043,
@@ -2571,10 +2746,11 @@
    "tags": [
     "sustain"
    ],
-   "note": "수풀에서 회복",
+   "note": "수풀에 들어가면 잃은 체력 비례로 회복한다. 수풀을 오가며 버티는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2046,
@@ -2586,10 +2762,12 @@
    "tags": [
     "any"
    ],
-   "note": "포로 퀘스트, 포로 돌격 소환사 주문",
+   "note": "포로에게 간식을 주면 포로 돌격 소환사 주문이 열린다. 여유 있게 모으는 챔프에게",
    "ability": false,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2054,
@@ -2601,10 +2779,11 @@
    "tags": [
     "ability"
    ],
-   "note": "선택한 스킬을 3연발",
+   "note": "선택한 스킬이 앞쪽 적 2명을 더 대상으로 삼는다. 단일 대상 스킬이 핵심인 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2055,
@@ -2616,10 +2795,11 @@
    "tags": [
     "ability"
    ],
-   "note": "선택한 스킬 퀘스트, 보상 투사체 추가. 투사체 스킬",
+   "note": "선택한 스킬을 맞힐수록 투사체가 늘어난다. 투사체 스킬 챔프에게",
    "ability": true,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2062,
@@ -2632,10 +2812,11 @@
     "ability",
     "burst"
    ],
-   "note": "선택한 스킬 분신이 한 번 더 시전",
+   "note": "선택한 스킬을 분신이 0.25초 뒤 한 번 더 쓴다. 강한 스킬 하나가 있는 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2063,
@@ -2647,10 +2828,12 @@
    "tags": [
     "any"
    ],
-   "note": "적을 다른 차원으로 끌고 가는 소환사 주문",
+   "note": "범위 안 모두를 8초 동안 다른 세계로 데려가는 주문. 한타를 갈라 싸우고 싶을 때",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2064,
@@ -2663,10 +2846,11 @@
     "ability",
     "mobile"
    ],
-   "note": "선택한 스킬에 짧은 돌진 추가",
+   "note": "선택한 스킬을 쓸 때 커서 방향으로 돌진한다. 자주 쓰는 스킬이 있는 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2065,
@@ -2679,10 +2863,11 @@
     "ability",
     "melee"
    ],
-   "note": "선택한 스킬에 주변 공포. 근접 진입 스킬",
+   "note": "선택한 스킬을 쓸 때마다 주변 적에게 1.75초 공포. 적 사이에 들어가는 근접용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2072,
@@ -2694,10 +2879,11 @@
    "tags": [
     "ability"
    ],
-   "note": "선택한 투사체 스킬이 갈라진다",
+   "note": "선택한 투사체 스킬이 맞거나 끝에 닿으면 둘로 갈린다. 투사체 스킬 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2073,
@@ -2710,10 +2896,11 @@
     "sustain",
     "ability"
    ],
-   "note": "선택한 스킬 피해의 30% 회복",
+   "note": "선택한 스킬 피해의 30%만큼 체력을 회복한다. 스킬로 싸우며 버티는 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2076,
@@ -2726,10 +2913,11 @@
     "tank",
     "ability"
    ],
-   "note": "선택한 스킬 적중 시 저항. 앞라인",
+   "note": "선택한 스킬을 맞히면 방어력·마법 저항력을 얻는다. 스킬로 버티는 앞라인용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2077,
@@ -2742,10 +2930,11 @@
     "req:cc",
     "sustain"
    ],
-   "note": "선택한 CC 스킬에 피해·회복",
+   "note": "선택한 스킬로 적을 묶으면 추가 마법 피해와 회복. 이동 불가 스킬 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2078,
@@ -2757,10 +2946,11 @@
    "tags": [
     "req:knockback"
    ],
-   "note": "밀어낸 적이 부딪히면 에어본. 밀어내기 챔피언",
+   "note": "밀어낸 적이 챔프·지형에 부딪히면 띄우고 피해. 밀어내기 스킬이 있는 챔프용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2080,
@@ -2773,10 +2963,11 @@
     "any",
     "melee"
    ],
-   "note": "눈덩이 재사용 시 에어본·밀쳐내기",
+   "note": "눈덩이 가속 100, 다시 쓰면 띄우고 밀어낸다. 눈덩이로 진입하는 근접용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2082,
@@ -2788,10 +2979,12 @@
    "tags": [
     "req:ally"
    ],
-   "note": "아군 회복 강화. 서포터",
+   "note": "주변 회복량의 15%를 나도 회복, 적 회복은 두 배로 받는다. 회복 서포터에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2083,
@@ -2803,10 +2996,11 @@
    "tags": [
     "burst"
    ],
-   "note": "순간 피해로 관통력 수집",
+   "note": "짧은 순간 큰 피해로 이빨을 모아 관통력을 얻는다. 몰아치는 폭딜 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2087,
@@ -2819,10 +3013,11 @@
     "ability",
     "haste"
    ],
-   "note": "스킬을 쓸 때마다 다른 스킬 쿨 반환. 스킬 연타 챔피언",
+   "note": "스킬을 쓰면 그 대기시간의 30%만큼 다른 스킬이 돌아온다. 스킬 연타 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2088,
@@ -2835,10 +3030,11 @@
     "any",
     "melee"
    ],
-   "note": "눈덩이 가속·피해 100%. 진입하는 챔피언",
+   "note": "눈덩이 스킬 가속 100, 피해량 100% 증가. 눈덩이로 진입하는 근접 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2089,
@@ -2850,10 +3046,12 @@
    "tags": [
     "any"
    ],
-   "note": "처치 관여 시 아군이 주울 동전",
+   "note": "처치 관여 때 적이 아군도 줍는 15골드 동전을 떨군다. 팀 전체 골드를 늘린다",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2091,
@@ -2867,10 +3065,11 @@
     "sustain",
     "melee"
    ],
-   "note": "자동 도끼 회전과 회복. 근접 전사",
+   "note": "전투 중 8초마다 도끼를 휘둘러 피해와 회복. 적 사이에서 버티는 근접 전사용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2095,
@@ -2882,10 +3081,12 @@
    "tags": [
     "gamble"
    ],
-   "note": "적 처치 시 확률로 능력치 모루",
+   "note": "주변 적이 죽을 때 확률로 능력치 모루를 떨군다. 운에 맡기는 성장형 선택",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2096,
@@ -2897,10 +3098,11 @@
    "tags": [
     "attack"
    ],
-   "note": "선택한 버프 스킬 동안 사거리·공격 속도. 평타 버프 스킬 챔피언",
+   "note": "선택한 스킬 지속 동안 공격 사거리·공격 속도 증가. 평타 강화 스킬 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2097,
@@ -2915,7 +3117,8 @@
    "note": "선택한 돌진 스킬에 공허 지대",
    "ability": true,
    "quest": false,
-   "disabled": true
+   "disabled": true,
+   "seen": "16.20"
   },
   {
    "id": 2098,
@@ -2928,10 +3131,11 @@
     "bruiser",
     "sustain"
    ],
-   "note": "급소 타격 고정 피해와 회복. 오래 싸우는 전사",
+   "note": "급소를 때리면 최대 체력 비례 고정 피해와 회복. 오래 싸우는 전사에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2099,
@@ -2944,10 +3148,11 @@
     "burst",
     "mobile"
    ],
-   "note": "처치 후 정수로 순간이동·초기화. 연쇄 처치형",
+   "note": "처치 관여 뒤 정수로 순간이동하며 기본 스킬 초기화. 연달아 처치하는 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2100,
@@ -2959,10 +3164,11 @@
    "tags": [
     "haste"
    ],
-   "note": "선택한 스킬 퀘스트, 보상 스킬 가속",
+   "note": "선택한 스킬을 맞힐수록 그 스킬 가속이 오른다. 핵심 스킬이 하나인 챔프에게",
    "ability": true,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2102,
@@ -2975,10 +3181,11 @@
     "tank",
     "melee"
    ],
-   "note": "주변 화상, 체력 비례. 근접 탱커",
+   "note": "최대 체력 비례로 주변 적에게 화상, 맞힐수록 커진다. 버티는 근접 탱커에게",
    "ability": false,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2103,
@@ -2991,10 +3198,11 @@
     "ability",
     "ranged"
    ],
-   "note": "장거리 저격 퀘스트. 장거리 스킬 챔피언",
+   "note": "스킬로 멀리서 저격하면 그 적에게 유성이 떨어진다. 사거리 긴 스킬 챔프에게",
    "ability": false,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2104,
@@ -3006,10 +3214,11 @@
    "tags": [
     "req:ally"
    ],
-   "note": "회복·보호막 중첩으로 영혼 폭탄. 서포터",
+   "note": "회복·보호막으로 쌓아 약한 아군에게 회복·보호막 폭탄. 아군을 돕는 서포터용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2107,
@@ -3022,10 +3231,11 @@
     "bruiser",
     "melee"
    ],
-   "note": "중첩 후 사망 시 부활. 맨 앞 근접",
+   "note": "적을 때려 10중첩이면 죽어도 부활하고 강해진다. 맨 앞에서 싸우는 근접 전사용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2108,
@@ -3037,10 +3247,11 @@
    "tags": [
     "req:ally"
    ],
-   "note": "아군 회복 퀘스트. 회복 서포터",
+   "note": "아군을 회복시키면 이후 회복에 지속 회복이 붙는다. 회복 스킬이 있는 서포터용",
    "ability": false,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2109,
@@ -3052,10 +3263,11 @@
    "tags": [
     "ability"
    ],
-   "note": "선택한 스킬 재사용 시 폭발하며 복귀",
+   "note": "선택한 스킬을 다시 쓰면 폭발하며 원래 자리로 돌아온다. 치고 빠지는 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2111,
@@ -3068,10 +3280,11 @@
     "req:empower",
     "attack"
    ],
-   "note": "강화 평타 스킬이 주변까지 피해. 강화 평타 챔피언",
+   "note": "선택한 스킬로 강화한 평타가 주변에도 30% 피해. 기본 공격 강화 스킬 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2115,
@@ -3084,10 +3297,11 @@
     "attack",
     "melee"
    ],
-   "note": "주기적으로 적을 연결해 끌어당김",
+   "note": "주기적으로 주변 적을 연결, 다음 평타에 끌어당겨 기절. 평타 치는 근접용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2116,
@@ -3099,10 +3313,11 @@
    "tags": [
     "ability"
    ],
-   "note": "선택한 스킬 퀘스트, 보상 피해 증가",
+   "note": "선택한 스킬을 맞힐수록 그 스킬 피해가 영구히 오른다. 핵심 스킬 챔프에게",
    "ability": true,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2118,
@@ -3115,10 +3330,12 @@
     "ult",
     "haste"
    ],
-   "note": "스킬 가속이 궁극기에만, 대신 1.5배. 궁극기가 핵심인 챔피언",
+   "note": "스킬 가속 100, 궁극기에만 1.5배로 적용. 궁극기가 핵심인 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2119,
@@ -3130,10 +3347,11 @@
    "tags": [
     "any"
    ],
-   "note": "대포 발사기 강화. 대포로 진입하는 챔피언",
+   "note": "대포 발사기의 사거리·속도·피해 강화. 대포 타고 바로 진입하는 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2123,
@@ -3146,10 +3364,11 @@
     "ability",
     "haste"
    ],
-   "note": "선택한 스킬이 다른 스킬을 쓸 때마다 초기화. 짧은 콤보 챔피언",
+   "note": "다른 스킬을 쓰면 선택한 스킬 쿨이 초기화. 스킬을 번갈아 쓰는 콤보 챔프용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2125,
@@ -3161,10 +3380,11 @@
    "tags": [
     "mobile"
    ],
-   "note": "선택한 스킬 지속시간 동안 이동 속도",
+   "note": "선택한 스킬 지속시간 동안 이동 속도 증가. 지속형 스킬로 움직이는 챔프용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2126,
@@ -3176,10 +3396,11 @@
    "tags": [
     "attack"
    ],
-   "note": "선택한 스킬 동안 적중 시 효과 쿨 감소",
+   "note": "선택한 스킬 동안 평타가 적중 시 효과 쿨을 줄인다. 평타 위주 챔프에게",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2127,
@@ -3191,10 +3412,11 @@
    "tags": [
     "any"
    ],
-   "note": "아이템·증강 피해 증가. 피해 아이템·증강을 많이 쓸수록",
+   "note": "아이템·증강으로 입히는 피해가 오른다. 피해 아이템·증강이 많은 챔프에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2128,
@@ -3206,10 +3428,12 @@
    "tags": [
     "req:burn"
    ],
-   "note": "화상·지속 피해가 골드. 지속 피해 챔피언",
+   "note": "화상·지속 피해가 피해량의 0.75%를 골드로. 지속 피해를 거는 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "removed": "16.21",
+   "seen": "16.20"
   },
   {
    "id": 2129,
@@ -3222,10 +3446,11 @@
     "req:terrain",
     "ult"
    ],
-   "note": "생성한 지형이 피해. 지형 챔피언 전용",
+   "note": "선택한 스킬의 지형이 주변 적에게 피해, 궁극기 강화. 지형 만드는 챔프용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2131,
@@ -3237,10 +3462,11 @@
    "tags": [
     "req:channel"
    ],
-   "note": "정신 집중 중 보호막. 정신 집중 챔피언 전용",
+   "note": "정신 집중하는 동안 매초 보호막을 얻는다. 정신 집중 스킬이 있는 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2132,
@@ -3253,10 +3479,11 @@
     "sustain",
     "ap"
    ],
-   "note": "모든 피해 흡혈. AP 지속 딜러",
+   "note": "모든 피해 흡혈을 얻는다. 스킬로 오래 싸우는 AP 지속 딜러에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2133,
@@ -3269,10 +3496,11 @@
     "req:ally",
     "attack"
    ],
-   "note": "아군 회복·보호막 후 강화 평타. 평타 서포터",
+   "note": "아군 회복·보호막 뒤 다음 평타 사거리·공속 강화. 평타 쓰는 서포터용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2134,
@@ -3285,10 +3513,11 @@
     "ult",
     "ability"
    ],
-   "note": "궁극기 사용 시 가속·속도 영역",
+   "note": "궁극기 때 스킬 가속 50·이동 속도 40% 영역 생성. 궁극기 자주 쓰는 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2135,
@@ -3300,10 +3529,11 @@
    "tags": [
     "attack"
    ],
-   "note": "선택한 버프 스킬 동안 평타가 대못",
+   "note": "선택한 버프 스킬 동안 평타에 대못, 터지면 피해·처형. 평타 버프 챔프용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2136,
@@ -3311,14 +3541,15 @@
    "name": "믿음직한 무기",
    "rarity": "silver",
    "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Silver.png",
-   "desc": "선택한 스킬로 적 챔피언을 타격하면 우정의 결속이 형성되어 6초 동안 피해량이 증가합니다. 이 효과는 중첩될 수 있습니다.\n\"따, 딱히 널 좋아하거나 그런 건 아니거든!!\" -",
+   "desc": "선택한 스킬로 적 챔피언을 타격하면 우정의 결속이 형성되어 6초 동안 피해량이 증가합니다. 이 효과는 중첩될 수 있습니다.\n\"따, 딱히 널 좋아하거나 그런 건 아니거든!!\" - 선택한 스킬",
    "tags": [
     "ability"
    ],
-   "note": "선택한 스킬 적중 시 피해 증가 중첩",
+   "note": "선택한 스킬을 맞힐 때마다 6초간 피해 증가 중첩. 자주 맞히는 스킬 챔프용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2137,
@@ -3331,10 +3562,11 @@
     "req:ally",
     "mobile"
    ],
-   "note": "아군 근처를 지나면 보호막·이동 속도",
+   "note": "아군 곁을 지나면 보호막·이동 속도를 얻는다. 아군 사이를 누비는 챔프용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2138,
@@ -3347,10 +3579,11 @@
     "tank",
     "ability"
    ],
-   "note": "선택한 스킬 적중 시 저항 중첩. 앞라인",
+   "note": "선택한 스킬 적중 시 상대 피해 유형별 저항 중첩. 맞히며 버티는 앞라인용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2139,
@@ -3363,10 +3596,11 @@
     "tank",
     "melee"
    ],
-   "note": "맞을수록 바늘 폭발. 맞아주는 앞라인",
+   "note": "맞을수록 바늘이 쌓여 터지며 피해·둔화. 앞에서 맞아 주는 근접 앞라인용",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2140,
@@ -3380,10 +3614,11 @@
     "bruiser",
     "sustain"
    ],
-   "note": "굶주린 히드라 강화. AD 전사",
+   "note": "굶주린 히드라가 스킬에도 쪼개기, 흡수 증가와 500골드. AD 전사에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2141,
@@ -3396,10 +3631,11 @@
     "ad",
     "bruiser"
    ],
-   "note": "히드라 3종을 모으는 퀘스트. AD 전사",
+   "note": "히드라 세 종을 모으면 궁극의 히드라 보상. 히드라를 쓰는 AD 전사에게",
    "ability": false,
    "quest": true,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2143,
@@ -3413,10 +3649,11 @@
     "bruiser",
     "sustain"
    ],
-   "note": "갈라진 하늘 강화. AD 전사",
+   "note": "갈라진 하늘 쿨 감소·잃은 체력 회복, 골드 획득. 주고받는 AD 전사에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2144,
@@ -3428,10 +3665,11 @@
    "tags": [
     "req:shield"
    ],
-   "note": "선택한 보호막 스킬 강화",
+   "note": "선택한 보호막이 대상 잃은 체력에 따라 최대 60% 강화. 보호막 챔프용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2148,
@@ -3443,10 +3681,11 @@
    "tags": [
     "attack"
    ],
-   "note": "선택한 스킬의 적중 시 효과 두 번",
+   "note": "선택한 스킬의 적중 시 효과가 한 번 더 적용. 적중 시 효과를 쌓는 챔프용",
    "ability": true,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   },
   {
    "id": 2157,
@@ -3459,10 +3698,732 @@
     "ad",
     "bruiser"
    ],
-   "note": "죽음의 무도 강화. AD 전사",
+   "note": "죽음의 무도 피해 지연 강화, 처치 관여 시 회복과 골드. AD 전사에게",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
+  },
+  {
+   "id": 3004,
+   "key": "GetJinxed",
+   "name": "떴다, 징크스",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Overextender_small.png",
+   "desc": "소환사 주문이 떴다, 징크스!로 변경됩니다.\n떴다, 징크스!: 적 챔피언, 구조물 또는 지형에 부딪히면 폭발하는 로켓에 올라탑니다. 로켓은 이동한 거리에 따라 대상 및 주변 적에게 잃은 체력의 일정량에 해당하는 물리 피해~잃은 체력의 일정량에 해당하는 물리 피해를 입힙니다.\n폭발 반경은 로켓의 이동 거리에 따라 증가합니다.\n로켓에 탑승한 동안에는 무적 및 대상 지정 불가 상태가 됩니다.\n\"진정해. 그래 봤자 죽기밖에 더 하겠어일정량\" - 난폭한 말괄량이 징크스",
+   "tags": [
+    "any",
+    "burst"
+   ],
+   "note": "소환사 주문이 무적 로켓 돌진, 잃은 체력 비례 폭발. 마무리 노리는 챔프용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3016,
+   "key": "ThirdTimesTheHarm",
+   "name": "해악의 숫자 3",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SilverBeats_small.png",
+   "desc": "적 챔피언에게 4초 이내에 연속해서 3회 기본 공격할 때마다 중첩을 얻고 일정량의 최대 체력 비례 고정 피해+일정량의 고정 피해를 입힙니다. (중첩당 일정량의 피해)",
+   "tags": [
+    "attack"
+   ],
+   "note": "4초 안에 평타 3회마다 최대 체력 비례 고정 피해. 평타 위주 원딜·전사용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3018,
+   "key": "BigShot",
+   "name": "묵직한 한 방",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BigShot_small.png",
+   "desc": "치명타 피해량을 일정량, 추가 공격력을 일정량 얻습니다.\n공격 속도의 일정량에 해당하는 수치가 치명타 피해량으로 전환됩니다.\n(일정량의 공격 속도가 일정량의 치명타 피해량으로 전환)\n현재 추가 치명타 피해량: 일정량%",
+   "tags": [
+    "crit",
+    "ad",
+    "burst"
+   ],
+   "note": "치명타 피해·추가 공격력, 공격 속도를 치명타 피해로. 치명타 원딜에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3025,
+   "key": "Sound_Barrier",
+   "name": "음속 장벽",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/SwiftandSafe_small.png",
+   "desc": "아군에게 보호막을 씌우면 1.5초에 걸쳐 점차 원래대로 돌아오는 일정량의 이동 속도 및 유체화 효과를 얻습니다.\n대상별 재사용 대기시간: 1.5초",
+   "tags": [
+    "req:shield",
+    "req:ally",
+    "mobile"
+   ],
+   "note": "아군에 보호막을 씌우면 이동 속도·유체화. 보호막을 주는 서포터에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3036,
+   "key": "DoubleTime",
+   "name": "더블 타임",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ARAM_PhenomenalEvil_large.png",
+   "desc": "4초 이내에 적 챔피언에게 서로 다른 스킬 2개를 사용해 피해를 입히면 일정량의 마법 피해를 입히고 일정량의 최대 마나를 얻습니다.\n대상마다 4초의 재사용 대기시간이 적용됩니다.",
+   "tags": [
+    "ability",
+    "ap"
+   ],
+   "note": "4초 안에 다른 스킬 둘을 맞히면 추가 피해·최대 마나. 스킬 콤보 챔프용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3039,
+   "key": "Salvation",
+   "name": "구원",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Salvation_small.png",
+   "desc": "체력이 일정량% 아래로 떨어질 만큼 피해를 입으면 충격파를 방출해 주변 적에게 일정량의 마법 피해를 입히고 뒤로 밀어내며, 적중한 모든 아군 챔피언의 체력을 일정량 회복시킵니다.",
+   "tags": [
+    "tank",
+    "any"
+   ],
+   "note": "체력이 낮아지면 충격파로 피해·밀어내기, 아군 회복. 앞에서 버티는 챔프용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3048,
+   "key": "BouncingBees",
+   "name": "튕기는 꿀벌",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/KingMe_large.png",
+   "desc": "스킬 사용 후 다음 기본 공격이 가장 가까운 적에게 튕깁니다.\n퀘스트: 기본 공격을 적 챔피언에게 튕기세요.\n보상: 퀘스트 레벨당 공격력이 +30 증가하고 추가로 튕깁니다.",
+   "tags": [
+    "attack",
+    "ad"
+   ],
+   "note": "스킬 뒤 평타가 가까운 적에게 튕기고 퀘스트로 강화. 스킬 섞는 평타 챔프용",
+   "ability": false,
+   "quest": true,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3049,
+   "key": "ArmoredImpact",
+   "name": "장갑 충격",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ArmoredImpact_small.png",
+   "desc": "스킬 사용 후 다음 기본 공격 시 주변 적에게 일정량의 추가 물리 피해를 입힙니다.",
+   "tags": [
+    "attack",
+    "bruiser",
+    "melee"
+   ],
+   "note": "스킬 뒤 다음 평타가 주변 적에게 추가 물리 피해. 근접에서 싸우는 전사용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3051,
+   "key": "BlueBarrier",
+   "name": "푸른 방어막",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/BlueNote_small.png",
+   "desc": "사용한 마나의 일정량만큼 1.5초 동안 보호막을 얻습니다.\n최대 일정량의 보호막을 얻습니다.",
+   "tags": [
+    "ability",
+    "ap"
+   ],
+   "note": "쓴 마나 일부만큼 1.5초 보호막을 얻는다. 마나를 많이 쓰는 마법사에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3052,
+   "key": "HandsOffTheTalent",
+   "name": "아티스트 보호",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bonk_large.png",
+   "desc": "최대 공격 사거리의 일정량 초과 거리에서 기본 공격 적중 시 효과 추가로 일정량의 물리 피해를 입힙니다.",
+   "tags": [
+    "attack",
+    "ranged",
+    "ad"
+   ],
+   "note": "최대 사거리 끝에서 평타 적중 시 추가 물리 피해. 멀리서 치는 원딜에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3053,
+   "key": "MoshMonster",
+   "name": "모시핏 괴물",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Prismatic.png",
+   "desc": "선택한 스킬 사용 시 선택한 스킬 지속시간 동안 일정량의 추가 체력을 얻고 주변 적을 일정량만큼 둔화시킵니다.\n처치 관여 시 얻는 체력이 영구히 증가하며, 둔화 구역 범위가 늘어납니다.\n선택한 스킬 사용 중 달성한 처치 관여는 세 배로 계산됩니다.",
+   "tags": [
+    "tank",
+    "melee"
+   ],
+   "note": "선택한 스킬 동안 추가 체력·주변 둔화, 처치 관여로 성장. 근접 앞라인용",
+   "ability": true,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3055,
+   "key": "UltimateRecursion",
+   "name": "궁극의 반복",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Zealot_large.png",
+   "desc": "궁극기 가속이 증가합니다.",
+   "tags": [
+    "ult",
+    "haste"
+   ],
+   "note": "궁극기 가속이 오른다. 궁극기를 자주 돌려야 강해지는 챔프에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3058,
+   "key": "TickleMonster",
+   "name": "간지럼 괴물",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/TickleMonster_small.png",
+   "desc": "공격력이 공격 속도로 전환됩니다.\n(일정량의 공격력이 일정량의 공격 속도로 전환)\n기본 공격 적중 시 일정량의 추가 마법 피해를 입힙니다.\n추가 공격 속도: 일정량%",
+   "tags": [
+    "attack"
+   ],
+   "note": "공격력을 공격 속도로 바꾸고 평타에 마법 피해. 평타로 싸우는 챔프용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3059,
+   "key": "NoManaNoProblem",
+   "name": "마나 없음, 상관없음",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/NoManaNoProblem_small.png",
+   "desc": "아이템으로 얻는 마나가 주문력으로 전환됩니다.\n(일정량의 마나가 일정량의 주문력으로 전환)\n총주문력이 15% 증가합니다.",
+   "tags": [
+    "ap",
+    "ability"
+   ],
+   "note": "아이템 마나를 주문력으로 바꾸고 총주문력 15% 증가. AP 마법사에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3063,
+   "key": "GiftoftheDrowned",
+   "name": "가라앉은 자의 축복",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GiftOfTheDrowned_small.png",
+   "desc": "추가 체력이 물리 관통력으로 전환됩니다.\n(일정량의 체력이 일정량의 물리 관통력으로 전환)\n물리 관통력을 일정량 얻습니다.",
+   "tags": [
+    "ad",
+    "bruiser"
+   ],
+   "note": "추가 체력을 물리 관통력으로 바꾸고 관통력을 얻는다. 체력 쌓는 AD 챔프용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3071,
+   "key": "BrassBlast",
+   "name": "트럼펫 폭발",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Camo_large.png",
+   "desc": "소환사 주문이 트럼펫 폭발로 변경됩니다.\n충전 시작: 최대 1.5초 동안 거대한 트럼펫에 힘을 모읍니다.\n발사: 트럼펫을 불어 적을 뒤로 밀어내고 충전 시간에 비례해 일정량~일정량의 마법 피해를 입힙니다.\n최소 충전 시간: 0.25초",
+   "tags": [
+    "any"
+   ],
+   "note": "소환사 주문이 충전해 쏘는 밀어내기·마법 피해로. 적을 떼어 내야 할 때",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3075,
+   "key": "Recoil",
+   "name": "고반동",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬 피해량이 증가하고 사용 시 플레이어를 뒤로 밀어냅니다.",
+   "tags": [
+    "ability",
+    "ranged"
+   ],
+   "note": "선택한 스킬 피해 증가, 쓰면 뒤로 밀려난다. 거리를 벌리며 싸우는 챔프용",
+   "ability": true,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3078,
+   "key": "TheBoomAndTheBass",
+   "name": "붐 앤 베이스",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/TheBoomAndTheBass_small.png",
+   "desc": "스킬을 사용한 후 6초 내에 가하는 기본 공격이 빨라지고 적중 시 일정량의 마법 피해를 입히며 2초에 걸쳐 원래대로 돌아오는 일정량의 이동 속도를 얻습니다.",
+   "tags": [
+    "attack",
+    "ability"
+   ],
+   "note": "스킬 뒤 6초간 평타가 빨라지고 마법 피해·이동 속도. 스킬·평타 섞는 챔프용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3079,
+   "key": "Totentanz",
+   "name": "죽음의 춤",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Totentanz_small.png",
+   "desc": "소환사 주문이 죽음과 함께하는 춤으로 변경됩니다.\n죽음과 함께하는 춤: 5초 동안 불사 상태가 되고 전방으로 순간적으로 이동합니다.\n지속시간이 끝나기 전에 처치 관여를 달성하면 일정량의 체력을 회복하고 원래 위치로 돌아가며, 이 소환사 주문의 재사용 대기시간이 일정 시간 감소합니다. 그러지 못할 경우 사망합니다.\n\"어차피 죽을 목숨, 내가 끝내주지.\" - 죽음을 노래하는 자 카서스",
+   "tags": [
+    "melee",
+    "burst",
+    "mobile"
+   ],
+   "note": "소환사 주문이 5초 불사 돌진, 처치 관여 못 하면 사망. 파고드는 근접용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3081,
+   "key": "WeaponOfDestiny",
+   "name": "운명의 무기",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ProtagonistsSignatureWeapon_small.png",
+   "desc": "첫 번째 전설급 아이템이 운명의 무기가 됩니다. 피해를 입힌 챔피언이 3초 안에 죽으면 운명의 무기 능력치가 증가합니다.\n운명의 무기는 판매할 수 없습니다.",
+   "tags": [
+    "any"
+   ],
+   "note": "첫 전설 아이템이 처치 관여로 능력치가 크는 무기로. 마무리를 잘하는 챔프용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3085,
+   "key": "FlowOfSpirit",
+   "name": "영혼의 흐름",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬 사용 시 4초 동안 공격 속도를 일정량 얻습니다.",
+   "tags": [
+    "attack"
+   ],
+   "note": "선택한 스킬을 쓰면 4초간 공격 속도 증가. 스킬 뒤 평타를 섞는 챔프에게",
+   "ability": true,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3086,
+   "key": "BEES",
+   "name": "벌이다!!!",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Bees_small.png",
+   "desc": "일정 시간마다 적 챔피언에게 적중하는 다음 스킬이 대상에게 벌집을 던집니다. 충돌 시 벌집이 폭발하며 주변 모든 적 챔피언에게 벌이 달려들어 2초 동안 일정량만큼 둔화시키고 일정량의 마법 피해를 입힙니다.\n벌은 적중 시 효과를 일정량의 효율로 적용합니다.\n지금까지 알려진 양력의 원리에 따르면, 벌은 절대로 날 수 없어야...",
+   "tags": [
+    "ability",
+    "ap"
+   ],
+   "note": "일정 시간마다 스킬 적중 시 벌집이 터져 둔화·마법 피해. 스킬 맞히는 챔프용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3088,
+   "key": "CrimsonCobalt",
+   "name": "핏빛 코발트",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬 피해를 입은 적 챔피언에게 4초 동안 표식이 남습니다. 표식이 있는 적 기본 공격 시 표식을 소모해 일정량의 마법 피해를 입히고 선택한 스킬 재사용 대기시간이 일정량 감소합니다.",
+   "tags": [
+    "attack",
+    "ability",
+    "haste"
+   ],
+   "note": "선택한 스킬 표식을 평타로 터뜨려 피해·쿨 감소. 스킬 뒤 평타 치는 챔프용",
+   "ability": true,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3094,
+   "key": "LichBrain",
+   "name": "리치 두뇌",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/LichBrain_small.png",
+   "desc": "주문력을 일정량 얻습니다.",
+   "tags": [
+    "ap"
+   ],
+   "note": "주문력을 얻는다. 무난하게 스킬 피해를 올리고 싶은 AP 챔프에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3116,
+   "key": "TakeemDownDownDown",
+   "name": "전부 다 무너뜨려",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/TakeEmDownDownDown_small.png",
+   "desc": "기본 공격 및 스킬이 적 챔피언에게 5초 동안 중첩을 1회 적용하고 중첩당 일정량의 마법 피해를 입힙니다.\n중첩이 5회 적용된 적에게 피해를 입히면 중첩을 소모해 일정량의 잃은 체력 비례 마법 피해를 입히고 입힌 피해량의 일정량만큼 체력을 회복합니다.",
+   "tags": [
+    "sustain",
+    "ap"
+   ],
+   "note": "5회 중첩 시 잃은 체력 비례 피해와 회복. 평타·스킬을 자주 맞히는 챔프용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3118,
+   "key": "ArcaneAxiom",
+   "name": "비전 원칙",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/ArcaneAxiom_small.png",
+   "desc": "자신이 피해를 입힌 챔피언이 3초 안에 죽으면 궁극기 전체 재사용 대기시간의 일정량만큼 돌려받습니다.",
+   "tags": [
+    "ult",
+    "burst"
+   ],
+   "note": "피해 준 적이 3초 안에 죽으면 궁극기 쿨 반환. 궁극기로 마무리하는 챔프용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3121,
+   "key": "Fruitify",
+   "name": "과일화",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/FruitSeason_small.png",
+   "desc": "처치 관여 시 처치한 챔피언이 폭발해 일정량개의 과일이 됩니다.\n과일은 최대 체력의 일정량만큼 체력을 회복시키고 최대 마나의 일정량만큼 마나를 회복시킵니다.\n과일은 또한 기력, 분노, 용의 분노, 용기를 일정량 부여합니다.",
+   "tags": [
+    "any",
+    "sustain"
+   ],
+   "note": "처치 관여 시 회복·마나 과일이 떨어진다. 한타를 이어 가는 팀 전원에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3123,
+   "key": "JeweledBracelet",
+   "name": "보석 팔찌",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/GenericAbilityAugmentIcon_Gold.png",
+   "desc": "선택한 스킬에 치명타가 적용되어 일정량% 증가한 피해를 입힐 수 있습니다.\n치명타 확률을 일정량 얻습니다.",
+   "tags": [
+    "crit",
+    "ability",
+    "ad"
+   ],
+   "note": "선택한 스킬에 치명타 적용, 치명타 확률 증가. 치명타 쓰는 스킬 챔프용",
+   "ability": true,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3129,
+   "key": "SapMagic",
+   "name": "마법 흡수",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/MercysStrike_small.png",
+   "desc": "일정 시간마다 다음 기본 공격 적중 시 효과 일정량의 추가 물리 피해를 입히고 일정량의 체력을 회복합니다.\n스킬을 사용하면 이 효과의 재사용 대기시간이 일정 시간 감소합니다.",
+   "tags": [
+    "attack",
+    "sustain",
+    "bruiser"
+   ],
+   "note": "주기적으로 평타 추가 피해·회복, 스킬로 쿨 감소. 평타 섞는 전사에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3131,
+   "key": "StillHere",
+   "name": "죽지 않아",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/StillHere_small.png",
+   "desc": "잃은 체력 1%당 공격 속도를 2%, 생명력 흡수를 0.35% 얻습니다.",
+   "tags": [
+    "attack",
+    "bruiser",
+    "sustain"
+   ],
+   "note": "잃은 체력 1%당 공속 2%·흡혈 0.35%. 체력이 빠질수록 버티는 평타 전사용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3132,
+   "key": "HeavyIsTheCrown",
+   "name": "왕관의 무게",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/HeavyIsTheCrown_small.png",
+   "desc": "공격력을 10, 주문력을 25 얻고 추가 공격력, 추가 주문력, 총공격 속도가 10% 증가합니다. 전투 중 전체 이동 속도가 5% 감소합니다.\n처치 관여 시 부담 중첩을 얻어 추가 공격력, 추가 주문력, 총공격 속도가 5% 증가하고 중첩당 이동 속도가 2.5% 감소합니다. (최소 50%)\n사망 시 중첩의 50%를 잃습니다.\n능력치 증가 퍼센트: 일정량%\n현재 이동 속도 감소: 일정량%\n원하셨던 그대로...입니다",
+   "tags": [
+    "any"
+   ],
+   "note": "공격력·주문력·공속 증가, 처치 관여로 더 오르나 느려진다. 딜러에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3134,
+   "key": "LonelyWarrior",
+   "name": "고독한 전사",
+   "rarity": "silver",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Adamant_small.png",
+   "desc": "600 사거리 내 적 챔피언 한 명당 공격 속도를 일정량, 방어력을 10, 마법 저항력을 10 얻습니다.",
+   "tags": [
+    "melee",
+    "bruiser",
+    "tank"
+   ],
+   "note": "주변 적 한 명당 공격 속도·방어력·마법 저항력. 적 사이로 파고드는 근접용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3149,
+   "key": "GroupHug",
+   "name": "단체 포옹",
+   "rarity": "prismatic",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EmpyreamPromise_small.png",
+   "desc": "선택한 스킬로 아군 챔피언의 체력을 회복시키거나 보호막을 씌우면 추가로 주변 다른 아군 챔피언 2명에게 동일한 스킬을 사용합니다.\n체력 회복 및 보호막 효과가 일정량 효율로 적용됩니다.\n역시 우정의 힘은 위대해!",
+   "tags": [
+    "req:ally",
+    "ability"
+   ],
+   "note": "선택한 회복·보호막 스킬이 주변 아군 2명에게도. 아군을 돕는 서포터용",
+   "ability": true,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3150,
+   "key": "Upgrade_Stormsurge",
+   "name": "폭풍 쇄도 업그레이드",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/UpgradeHubris_small.png",
+   "desc": "이제 폭풍 쇄도의 질풍이 항상 폭발하여 주변 범위 내 모든 적에게 일정량의 최대 체력 비례 마법 피해를 입힙니다.\n최초 폭발에 휩쓸린 적 챔피언은 질풍 표식이 남습니다.\n골드를 획득합니다.",
+   "tags": [
+    "ap",
+    "burst"
+   ],
+   "note": "폭풍 쇄도가 늘 터져 최대 체력 비례 마법 피해, 골드 획득. AP 폭딜러용",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3163,
+   "key": "EnchantingButterflies",
+   "name": "황홀한 나비",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/EnchantedButtery_small.png",
+   "desc": "아군 챔피언의 체력을 회복시키거나 보호막을 씌우면 주변에 나비가 모입니다.\n나비 일정량마리를 모은 후, 적 챔피언에게 피해를 입히면 모든 나비가 날아가 각각 일정량의 마법 피해를 입히며, 연달아 적중하면 일정량의 피해를 입힙니다.",
+   "tags": [
+    "req:ally",
+    "ap"
+   ],
+   "note": "아군 회복·보호막으로 나비를 모아 적에게 피해. 회복 주는 서포터에게",
+   "ability": false,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3170,
+   "key": "GoH_PentakillAug_Q",
+   "name": "헤비",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Pentakill_small.png",
+   "desc": "강화 선택한 스킬은 스킬 가속이 20, 피해량이 10%, 체력 회복량 및 보호막 흡수량이 10% 증가합니다.",
+   "tags": [
+    "ability",
+    "haste"
+   ],
+   "note": "선택한 스킬 가속 20, 피해·회복·보호막 10% 증가. 주력 스킬이 뚜렷한 챔프용",
+   "ability": true,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3171,
+   "key": "GoH_PentakillAug_W",
+   "name": "파워",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Pentakill_small.png",
+   "desc": "강화 선택한 스킬은 스킬 가속이 20, 피해량이 10%, 체력 회복량 및 보호막 흡수량이 10% 증가합니다.",
+   "tags": [
+    "ability",
+    "haste"
+   ],
+   "note": "선택한 스킬 가속 20, 피해·회복·보호막 10% 증가. 한 스킬이 핵심인 챔프에게",
+   "ability": true,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3172,
+   "key": "GoH_PentakillAug_E",
+   "name": "스래시",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Pentakill_small.png",
+   "desc": "강화 선택한 스킬은 스킬 가속이 20, 피해량이 10%, 체력 회복량 및 보호막 흡수량이 10% 증가합니다.",
+   "tags": [
+    "ability",
+    "haste"
+   ],
+   "note": "선택한 스킬 가속 20, 피해·회복·보호막 10% 증가. 자주 쓰는 스킬 강화용",
+   "ability": true,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3173,
+   "key": "GoH_PentakillAug_R",
+   "name": "둠",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Pentakill_small.png",
+   "desc": "강화 선택한 스킬은 스킬 가속이 20, 피해량이 10%, 체력 회복량 및 보호막 흡수량이 10% 증가합니다.",
+   "tags": [
+    "ability",
+    "haste",
+    "ult"
+   ],
+   "note": "선택한 스킬 가속 20, 피해·회복·보호막 10% 증가. 궁극기를 키우고 싶을 때",
+   "ability": true,
+   "quest": false,
+   "disabled": false,
+   "added": "16.21",
+   "seen": "16.21"
+  },
+  {
+   "id": 3176,
+   "key": "GoH_PentakillAug_Generic",
+   "name": "GoH_PentakillAug_Generic",
+   "rarity": "gold",
+   "icon": "/lol-game-data/assets/ASSETS/UX/Kiwi/Augments/Icons/Pentakill_small.png",
+   "desc": "강화",
+   "tags": [],
+   "note": "",
+   "ability": false,
+   "quest": false,
+   "disabled": true,
+   "added": "16.21",
+   "seen": "16.21"
   },
   {
    "id": 12317,
@@ -3474,10 +4435,11 @@
    "tags": [
     "gamble"
    ],
-   "note": "모든 증강을 무작위 프리즘으로",
+   "note": "모든 증강을 무작위 프리즘 증강으로 바꾼다. 결과를 운에 맡기고 싶을 때",
    "ability": false,
    "quest": false,
-   "disabled": false
+   "disabled": false,
+   "seen": "16.20"
   }
  ]
 }

@@ -18,6 +18,12 @@ export type MayhemAugment = {
   ability: boolean;
   quest: boolean;
   disabled: boolean;
+  /** 처음 나온 패치 ('16.21') — '새로운 증강' (v3.101) */
+  added?: string;
+  /** 빠진(빠질) 패치. 지난 판 기록을 위해 데이터에는 남는다 */
+  removed?: string;
+  /** 마지막으로 보인 패치 (빠진 증강 아이콘을 받는 곳) */
+  seen?: string;
 };
 export type ChampionProfile = {
   name: string;

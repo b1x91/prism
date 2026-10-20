@@ -13,14 +13,19 @@ import sharp from 'sharp';
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'packages', 'assets', 'public', 'img');
 const DATA = join(ROOT, 'packages', 'core', 'data');
-const CDRAGON = 'https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/';
+const CDN = (branch) => `https://raw.communitydragon.org/${branch}/plugins/rcp-be-lol-game-data/global/default/`;
+const CDRAGON = CDN('latest');
 const CHAMP_TRIM = 6;
 
 const augs = JSON.parse(await readFile(join(DATA, 'mayhem-augments.json'), 'utf8')).augments;
 const champs = JSON.parse(await readFile(join(DATA, 'mayhem-champions.json'), 'utf8')).champions;
 const jobs = [
   ...Object.keys(champs).map((id) => ({ url: `${CDRAGON}v1/champion-icons/${id}.png`, out: `champ2/${id}.png`, trim: CHAMP_TRIM })),
-  ...augs.filter((a) => a.icon).map((a) => ({ url: CDRAGON + a.icon.replace('/lol-game-data/assets/', '').toLowerCase(), out: `aug/${a.id}.png` })),
+  // 다음 패치에만 있는 증강은 PBE, 빠진 증강은 마지막으로 보인 패치 폴더에서 (v3.101)
+  ...augs.filter((a) => a.icon).map((a) => {
+    const path = a.icon.replace('/lol-game-data/assets/', '').toLowerCase();
+    return { urls: [CDRAGON, ...(a.seen ? [CDN(a.seen)] : []), CDN('pbe')].map((base) => base + path), out: `aug/${a.id}.png` };
+  }),
 ];
 const exists = (p) => access(p).then(() => true, () => false);
 let fetched = 0;
@@ -30,8 +35,12 @@ async function one(j) {
   if (await exists(file)) return;
   for (let i = 0; ; i++) {
     try {
-      const r = await fetch(j.url, { signal: AbortSignal.timeout(30_000) });
-      if (!r.ok) throw new Error(String(r.status));
+      let r = null;
+      for (const url of j.urls ?? [j.url]) {
+        r = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+        if (r.ok) break;
+      }
+      if (!r?.ok) throw new Error(String(r?.status));
       await mkdir(dirname(file), { recursive: true });
       let buf = Buffer.from(await r.arrayBuffer());
       if (j.trim) {

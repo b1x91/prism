@@ -5,7 +5,7 @@
  *  - 증강의 상황 효과는 증강 설명을 읽고 사람이 분류한 표 (SITU). 새 증강은 여기 한 줄.
  * 승률은 쓰지 않는다 (게임 위 작은 창에도 그대로 쓰기 때문, v3.5).
  */
-import { AUGMENT, CHAMPIONS } from './data';
+import { AUGMENT, CHAMPIONS, inGame } from './data';
 import { fitOf, fitPoints, tierOf, TIE_GAP, type ChampionProfile, type FitTier, type MayhemAugment } from './synergy';
 
 export type Matchup = { allies: number[]; enemies: number[] };
@@ -48,6 +48,8 @@ const SITU: Record<number, Partial<Record<SituKey, number>>> = {
   1007: { needDamage: 0.8 }, 1097: { needDamage: 0.8 }, 2111: { needDamage: 0.5 }, 1389: { needDamage: 0.5 },
   // 상대 회복이 많을 때 불리
   2082: { vsHeal: -1 },
+  // 16.21 새 증강 (v3.101)
+  3004: { vsSquishy: 0.6 }, 3016: { vsTank: 0.9 }, 3018: { vsSquishy: 0.6, needDamage: 0.5 }, 3025: { needPeel: 0.3 }, 3039: { vsBurst: 0.5, needPeel: 0.5, vsMelee: 0.4 }, 3051: { vsBurst: 0.3 }, 3052: { vsMelee: 0.4 }, 3053: { needFront: 0.7, needCC: 0.4 }, 3059: { needDamage: 0.4 }, 3063: { vsTank: 0.6 }, 3071: { needPeel: 0.6, vsMelee: 0.6 }, 3075: { vsMelee: 0.4 }, 3086: { needCC: 0.4 }, 3094: { needDamage: 0.3 }, 3116: { vsTank: 0.4 }, 3118: { vsSquishy: 0.4 }, 3131: { vsBurst: 0.3 }, 3132: { needDamage: 0.5 }, 3134: { needFront: 0.5 }, 3149: { needPeel: 0.7 }, 3150: { vsTank: 0.4 },
 };
 
 /** 상황 가산 한 단위의 크기: 강한 상황 하나면 A 티어가 S 티어를 넘고, 여러 상황이 겹치면 B 티어도 올라올 수 있게 */
@@ -162,4 +164,4 @@ export const matchupSummary = (me: ChampionProfile | undefined, m: Matchup | nul
 /** 증강의 상황 효과 이름들 (판 복기·도감 설명용) */
 export const situTagsOf = (id: number): SituKey[] => Object.entries(SITU[id] ?? {}).filter(([, v]) => (v ?? 0) > 0).map(([k]) => k as SituKey);
 export const SITU_LABEL = DOES;
-export const augmentsFor = (key: SituKey) => Object.entries(SITU).filter(([, t]) => (t[key] ?? 0) >= 0.6).map(([id]) => Number(id)).filter((id) => AUGMENT[id] && !AUGMENT[id].disabled);
+export const augmentsFor = (key: SituKey) => Object.entries(SITU).filter(([, t]) => (t[key] ?? 0) >= 0.6).map(([id]) => Number(id)).filter((id) => AUGMENT[id] && inGame(AUGMENT[id]));

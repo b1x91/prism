@@ -894,6 +894,7 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .dxe-hero .no { font-size: var(--fs-xs); font-weight: 800; color: var(--text-3); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
 .dxe-hero h2 { margin: 2px 0 var(--s2); font-size: var(--fs-xl); }
 .dxe-types { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.dxe-note { margin: var(--s2) auto 0; max-width: 32ch; font-size: var(--fs-sm); color: var(--text-2); text-align: center; text-wrap: balance; }
 .pill.rar-gold { background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--gold); }
 .pill.rar-prismatic { background: color-mix(in srgb, var(--spectrum-6) 16%, transparent); color: var(--spectrum-6); }
 .dxe-text { margin: 0; padding: var(--s3); border-radius: var(--r-m); background: var(--surface-2); font-size: var(--fs-sm); color: var(--text-2); line-height: 1.55; word-break: keep-all; }
@@ -1898,7 +1899,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .adx-head { display: flex; align-items: center; gap: var(--s2); }
 .adx-head h3 { margin: 0; font-size: var(--fs-lg); font-weight: 800; }
 .adx-head .rdot { width: 10px; height: 10px; }
-.adx { display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); gap: var(--s3); }
+.adx { display: grid; grid-template-columns: repeat(auto-fill, minmax(272px, 1fr)); gap: var(--s3); }
 /* 줄마다 높이가 달라 틈이 들쭉날쭉하던 것: 타일은 늘 같은 높이 (설명 두 줄 자리) */
 .adx-hov { display: grid; }
 .adx-t { width: 100%; height: 100%; display: flex; align-items: center; gap: var(--s3); padding: var(--s3); border-radius: var(--r-m); border: 1px solid var(--line); background: var(--surface); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s ease, transform .15s ease, box-shadow .15s ease; }
@@ -3347,3 +3348,12 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .inq-reply { display: grid; gap: var(--s1); padding: var(--s3); border-radius: var(--r-m); background: color-mix(in srgb, #15803d 10%, var(--surface-2)); }
 .inq-reply b { font-size: var(--fs-xs); color: #15803d; }
 .inq-reply p { margin: 0; font-size: var(--fs-sm); white-space: pre-wrap; }
+
+/* 패치 표시 (v3.101): 새로운 증강 · 곧 빠지는 증강 */
+.chip-new .new-dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 3px color-mix(in srgb, #22c55e 22%, transparent); }
+.ptag-new, .ptag-out { flex: none; display: inline-flex; align-items: center; height: 18px; padding: 0 6px; margin-left: 6px; border-radius: var(--r-pill); font-size: 11px; font-weight: 850; letter-spacing: .02em; white-space: nowrap; vertical-align: 1px; }
+.ptag-new { background: #15803d; color: #fff; }
+.ptag-new.soon { background: color-mix(in srgb, #15803d 14%, transparent); color: #15803d; box-shadow: inset 0 0 0 1px color-mix(in srgb, #15803d 45%, transparent); }
+.ptag-out { background: color-mix(in srgb, var(--text-3) 16%, transparent); color: var(--text-2); }
+.adx-t.leaving { opacity: .62; }
+.adx-t.leaving:hover { opacity: 1; }

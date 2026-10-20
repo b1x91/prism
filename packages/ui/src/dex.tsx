@@ -363,7 +363,7 @@ function AugEntry({ id, no, e, m, dex, onAugment, onChampion, lens }: { id: numb
         ? <MasterStage kind="augments" id={id} no={no} name={a.name} e={e} m={m} pic={<AugRing id={id} size={104} />} sub={`${RARITY_KO[a.rarity]} 증강`} />
         : <div className="dxe-hero">
           <span className="dxe-pic aug"><AugRing id={id} size={104} />{!m.seen && <i className="q" aria-hidden="true">?</i>}<Ring m={m} /></span>
-          <div><span className="no">{NO(no)}</span><h2>{a.name}</h2><div className="dxe-types"><StageTag m={m} /><span className={`pill rar-${a.rarity}`}>{RARITY_KO[a.rarity]}</span>{a.note && <span className="pill">{a.note}</span>}</div></div>
+          <div><span className="no">{NO(no)}</span><h2>{a.name}</h2><div className="dxe-types"><StageTag m={m} /><span className={`pill rar-${a.rarity}`}>{RARITY_KO[a.rarity]}</span></div>{a.note && <p className="dxe-note">{a.note}</p>}</div>
         </div>}
       <p className="dxe-text">{a.desc}</p>
       <Lensed lens={lens} m={m} refKey={`a:${id}`}>
