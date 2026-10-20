@@ -12,6 +12,7 @@ import { byScore, rankScore, seasonOf } from '../../packages/core/src/ranking.js
 import { assertRanking } from './roles.js';
 import { RARITY_KO, tonightOf, type AugStat } from '../../packages/core/src/tonight.js';
 import { challengeRole, parseFeat, type ChallengeRole } from '../../packages/core/src/challenges.js';
+import { inquiryModal, onInquiryButton, onInquirySubmit } from './inquiry.js';
 import { json, type Env, type Member } from './util.js';
 
 const API = 'https://discord.com/api/v10';
@@ -19,7 +20,7 @@ const COLOR = 0x7c9cff;
 const KST = 9 * 3600_000;
 
 export const botReady = (env: Env) => Boolean(env.DISCORD_BOT_TOKEN && env.BOT_CHANNEL_ID);
-const webUrl = (env: Env) => (env.WEB_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean)[0] ?? 'https://przm.web.app';
+export const webUrl = (env: Env) => (env.WEB_ORIGINS ?? '').split(',').map((s) => s.trim()).filter(Boolean)[0] ?? 'https://przm.web.app';
 
 /** 디스코드 API 호출: 429 면 알려 준 만큼 기다렸다 다시 (최대 3번), 8초 넘으면 끊는다 */
 async function discord(env: Env, path: string, init: RequestInit = {}): Promise<Response> {
@@ -48,6 +49,42 @@ export async function sendToChannel(env: Env, channelId: string, payload: unknow
   }
 }
 
+/** 한 사람에게 DM. 파일을 붙이면 multipart 로. 성공하면 보낸 메시지의 채널·ID, 실패(DM 막힘 등)면 null */
+export async function sendDM(env: Env, userId: string, payload: unknown, file?: { name: string; data: string }): Promise<{ channel: string; id: string } | null> {
+  if (!env.DISCORD_BOT_TOKEN) return null;
+  try {
+    const ch = await discord(env, '/users/@me/channels', { method: 'POST', body: JSON.stringify({ recipient_id: userId }) });
+    if (!ch.ok) { console.error('DM 채널 열기 실패', ch.status, await ch.text().catch(() => '')); return null; }
+    const channel = ((await ch.json()) as { id: string }).id;
+    let r: Response;
+    if (file) {
+      const fd = new FormData();
+      fd.append('payload_json', JSON.stringify(payload));
+      fd.append('files[0]', new Blob([file.data], { type: 'application/json' }), file.name);
+      r = await fetch(`${API}/channels/${channel}/messages`, { method: 'POST', headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }, body: fd, signal: AbortSignal.timeout(8000) });
+    } else r = await discord(env, `/channels/${channel}/messages`, { method: 'POST', body: JSON.stringify(payload) });
+    if (!r.ok) { console.error('DM 보내기 실패', r.status, await r.text().catch(() => '')); return null; }
+    return { channel, id: ((await r.json()) as { id: string }).id };
+  } catch (e) {
+    console.error('DM 보내기 실패', e);
+    return null;
+  }
+}
+
+/** 보낸 메시지 고치기 ("채널ID/메시지ID") */
+export async function editMessage(env: Env, ref: string, payload: unknown): Promise<boolean> {
+  const [channel, id] = ref.split('/');
+  if (!env.DISCORD_BOT_TOKEN || !channel || !id) return false;
+  try {
+    const r = await discord(env, `/channels/${channel}/messages/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+    if (!r.ok) console.error('디스코드 글 고치기 실패', r.status, await r.text().catch(() => ''));
+    return r.ok;
+  } catch (e) {
+    console.error('디스코드 글 고치기 실패', e);
+    return false;
+  }
+}
+
 /** 같은 일을 두 번 하지 않게 표시 (ext_cache). 처음이면 true */
 async function once(env: Env, key: string): Promise<boolean> {
   const r = await env.DB.prepare('INSERT OR IGNORE INTO ext_cache (k, v, at) VALUES (?, ?, ?)').bind(key, '1', Date.now()).run();
@@ -70,38 +107,45 @@ async function verified(env: Env, req: Request, body: string): Promise<boolean> 
   }
 }
 
-type Interaction = { type: number; data?: { name?: string }; member?: { user?: { id: string } }; user?: { id: string } };
-const EPHEMERAL = 64;
-const V2 = 1 << 15; // 디스코드 새 메시지 구성 (컨테이너·섹션·썸네일·구분선)
-const reply = (data: Record<string, unknown>) =>
+export type Interaction = {
+  type: number; member?: { user?: { id: string } }; user?: { id: string };
+  data?: { name?: string; custom_id?: string; options?: { name: string; value: string }[]; components?: { components?: { custom_id: string; value: string }[] }[] };
+};
+export const EPHEMERAL = 64;
+export const V2 = 1 << 15; // 디스코드 새 메시지 구성 (컨테이너·섹션·썸네일·구분선)
+export const reply = (data: Record<string, unknown>) =>
   json({ type: 4, data: { flags: EPHEMERAL | (data.components ? V2 : 0), allowed_mentions: { parse: [] }, ...data } });
 
 // ───────── 새 메시지 구성 조각 (Components V2) ─────────
-const text = (content: string) => ({ type: 10, content });
-const line = (big = false) => ({ type: 14, divider: true, spacing: big ? 2 : 1 });
-const thumb = (url: string) => ({ type: 11, media: { url } });
-const section = (texts: string[], accessory: unknown) => ({ type: 9, components: texts.map(text), accessory });
+export const text = (content: string) => ({ type: 10, content });
+export const line = (big = false) => ({ type: 14, divider: true, spacing: big ? 2 : 1 });
+export const thumb = (url: string) => ({ type: 11, media: { url } });
+export const section = (texts: string[], accessory: unknown) => ({ type: 9, components: texts.map(text), accessory });
 const gallery = (url: string) => ({ type: 12, items: [{ media: { url } }] });
-const linkButtons = (btns: [string, string][]) => ({ type: 1, components: btns.map(([label, url]) => ({ type: 2, style: 5, label, url })) });
-const card = (children: unknown[], accent = COLOR) => [{ type: 17, accent_color: accent, components: children }];
+export const linkButtons = (btns: [string, string][]) => ({ type: 1, components: btns.map(([label, url]) => ({ type: 2, style: 5, label, url })) });
+export const card = (children: unknown[], accent = COLOR) => [{ type: 17, accent_color: accent, components: children }];
 const SKINS = skinData.skins as unknown as Record<string, [string, number, string, string]>;
 /** 회원 얼굴: 대표 스킨 → 주 챔프 */
-const faceUrl = (skin: number | null, champ: number | null) => {
+export const faceUrl = (skin: number | null, champ: number | null) => {
   const s = skin ? SKINS[String(skin)] : undefined;
   return s?.[2] ? cdragon(s[2]) : champ ? cdragon(CHAMPIONS[champ]?.tile) : '';
 };
 
-export async function interactions(req: Request, env: Env): Promise<Response> {
+export async function interactions(req: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
   const body = await req.text();
   if (!(await verified(env, req, body))) return new Response('서명이 맞지 않습니다.', { status: 401 });
   const it = JSON.parse(body) as Interaction;
   if (it.type === 1) return json({ type: 1 }); // PING
-  if (it.type !== 2) return reply({ content: '지원하지 않는 요청이에요.' });
+  if (it.type !== 2 && it.type !== 3 && it.type !== 5) return reply({ content: '지원하지 않는 요청이에요.' });
   const uid = it.member?.user?.id ?? it.user?.id;
   const me = uid ? await env.DB.prepare('SELECT * FROM members WHERE id = ?').bind(uid).first<Member>() : null;
   if (!me) return reply({ content: `아직 Prism 에 로그인한 적이 없어요. ${webUrl(env)} 에서 디스코드로 로그인해 주세요.` });
   try {
+    // 문의하기 (v3.100): 버튼(3) · 입력 창 제출(5) · /문의
+    if (it.type === 3) return await onInquiryButton(env, it, me);
+    if (it.type === 5) return await onInquirySubmit(env, it, me, ctx);
     switch (it.data?.name) {
+      case '문의': return inquiryModal(it.data.options?.find((o) => o.name === '종류')?.value);
       case '내기록': return reply(await myRecord(env, me));
       case '랭킹': return reply(await rankTop(env, me));
       case '미션': return reply(await myMissions(env, me));

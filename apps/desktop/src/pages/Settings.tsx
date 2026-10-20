@@ -1,17 +1,18 @@
 import { useEffect, useState } from 'react';
 import { FullscreenNote, useFullscreen } from '../fullscreen';
-import { Icon, MemberFace, RoleBadge, Seg, Toggle, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
-import { bridge, type VisionState } from '../bridge';
-import { diagnostics, refreshSession, type State } from '../controller';
+import { Icon, InquiryDialog, MemberFace, RoleBadge, Seg, Toggle, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
+import { api, bridge, type VisionState } from '../bridge';
+import { inquiryExtra, refreshSession, type State } from '../controller';
 import { applyUpdate, checkUpdate, useUpdate } from '../update';
 
 import { VERSION } from '../version';
 
-export function SettingsPage({ s, onLogin, discord }: { s: State; onLogin: () => void; discord?: string | null }) {
+export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   const [auto, setAuto] = useState<boolean | null>(null);
   const up = useUpdate();
   const [msg, setMsg] = useState('');
   const [theme, setTheme] = useState<ThemeMode>(getThemeMode);
+  const [asking, setAsking] = useState(false);
   const skins = useSkins();
   useEffect(() => { bridge.autostart().then(setAuto).catch(() => setAuto(null)); }, []);
   const run = async (f: () => Promise<unknown>) => { setMsg(''); try { await f(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } };
@@ -31,7 +32,8 @@ export function SettingsPage({ s, onLogin, discord }: { s: State; onLogin: () =>
           </div>
         )}
       </section>
-      {msg && <section className="card pad"><span className={msg.startsWith('복사했습니다') ? 'muted' : 'l'}>{msg}</span></section>}
+      {msg && <section className="card pad"><span className="l">{msg}</span></section>}
+      {asking && <InquiryDialog api={api} extra={() => inquiryExtra(VERSION)} onClose={() => setAsking(false)} />}
       <section className="card pad">
         <div className="card-head"><h2>앱</h2></div>
         <div className="kv">
@@ -49,12 +51,9 @@ export function SettingsPage({ s, onLogin, discord }: { s: State; onLogin: () =>
           <div><span className="k">화면 테마</span><span><Seg value={theme} options={[['system', '시스템 설정'], ['light', '라이트'], ['dark', '다크']]} onChange={(m) => { setThemeMode(m); setTheme(m); }} /></span></div>
           <div><span className="k">윈도우 시작 시 실행</span><span>{auto === null ? '–' : <Toggle on={auto} label="윈도우 시작 시 실행" onChange={(v) => run(async () => setAuto(await bridge.autostart(v)))} />}</span></div>
           <div><span className="k">문의하기</span><span className="row wrapr" style={{ gap: 8 }}>
-            <button type="button" className="btn sm" onClick={() => run(async () => {
-              // 확인용 정보(다른 플레이어 이름은 지움)를 복사해 두고 디스코드를 연다
-              await navigator.clipboard.writeText(await diagnostics(VERSION)).catch(() => {});
-              if (discord) await bridge.openUrl(discord);
-              setMsg('복사했습니다. 디스코드에 문의 내용과 함께 붙여넣어 주세요.');
-            })}><Icon name="discord" />디스코드로 문의</button>
+            {s.me
+              ? <button type="button" className="btn sm" onClick={() => setAsking(true)}><Icon name="mail" />문의하기</button>
+              : <span className="meta">로그인하면 보낼 수 있어요</span>}
           </span></div>
           <div><span className="k">개인정보 처리방침</span><span className="row wrapr" style={{ gap: 8 }}><button type="button" className="btn sm" onClick={() => void bridge.openUrl('https://przm.web.app/privacy')}>보기</button></span></div>
         </div>

@@ -85,7 +85,6 @@ function App() {
   const s = useSyncExternalStore(subscribe, getState);
   const up = useUpdate();
   const nav = useNavigate();
-  const links = withDefaults(useLoad<Links>(api, s.session.configured ? '/links' : null).data);
   const login = async () => { try { await bridge.login(); } finally { await refreshSession(); } };
   // 챔프 선택·게임이 시작되면 게임 화면으로 (Alt+Tab 했을 때 바로 보이게)
   // 상태가 '바뀌는 순간'에만 한 번 이동한다. 그 뒤로는 다른 메뉴를 자유롭게 연다
@@ -184,7 +183,7 @@ function App() {
           <Route path="crew" element={<CrewPage s={s} onLogin={login} />} />
           <Route path="shop" element={<ShopPage s={s} onLogin={login} />} />
           <Route path="missions" element={<MissionsPage s={s} onLogin={login} />} />
-          <Route path="settings" element={<SettingsPage s={s} onLogin={login} discord={links.discord} />} />
+          <Route path="settings" element={<SettingsPage s={s} onLogin={login} />} />
           <Route path="*" element={<GamePage s={s} />} />
         </Routes></Page>}</PullRefresh></MatchNote.Provider></MatchSource.Provider></AugmentOpen.Provider>
       </main>

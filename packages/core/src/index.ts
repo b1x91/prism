@@ -29,3 +29,4 @@ export * from './build';
 export * from './goods';
 export * from './insights';
 export * from './highlight';
+export * from './inquiry';

@@ -2,7 +2,7 @@
  * 앱의 흐름: 롤 클라이언트 확인 주기, 전적 정리, 챔프 선택, 업로드, 회원 대신 수집.
  * 원칙 (CLAUDE.md v3.1-4·5): 게임 중에는 롤에 요청 0, 확인 간격은 상황별.
  */
-import { AUGMENT, isMayhemGame, myKillsOf, liveMatchup, parseLive, mayhemGames, personalStats, toIngestGame, type Game, type Me, type Personal } from '@prism/core';
+import { AUGMENT, isMayhemGame, myKillsOf, liveMatchup, parseLive, mayhemGames, personalStats, toIngestGame, type Game, type InquiryContext, type Me, type Personal } from '@prism/core';
 import { api, bridge } from './bridge';
 import { VERSION } from './version';
 
@@ -429,6 +429,14 @@ function anonymize(data: unknown): unknown {
  * 실제 클라이언트 응답 모양 확인용 (증강 필드·팀원 puuid 등 미검증 항목). 다른 플레이어 정보는 지운다.
  * 게임 중에는 만들지 않는다.
  */
+/** 문의하기에 함께 보낼 앱 상태 (v3.100). 짧은 상태는 늘, 자세한 진단은 롤이 켜져 있고 게임 중이 아닐 때만 */
+export async function inquiryExtra(version: string): Promise<{ context: InquiryContext; diag: string | null }> {
+  const lol: InquiryContext['lol'] = state.status === 'no-client' || state.status === 'starting' ? 'off' : state.status === 'champ-select' ? 'select' : state.status === 'in-game' ? 'game' : 'on';
+  const vision = await bridge.visionGet().then((v) => v.settings.enabled).catch(() => undefined);
+  const diag = await diagnostics(version).catch(() => null);
+  return { context: { app: version, lol, vision, path: location.hash.replace(/^#/, '') || '/' }, diag };
+}
+
 export async function diagnostics(version: string): Promise<string> {
   const st = await bridge.lcuStatus();
   if (st.inGame) throw new Error('게임이 끝난 뒤에 다시 눌러주세요.');

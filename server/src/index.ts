@@ -26,9 +26,10 @@ import { buyUse, gift, giftTargets, insight, myHighlights, openBox, pinHighlight
 import { claimWeekly, getWeekly } from './weekly.js';
 import { assertRanking } from './roles.js';
 import { listDiag, saveDiag } from './diag.js';
+import { myInquiries, postInquiry } from './inquiry.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 
-async function route(req: Request, env: Env): Promise<Response> {
+async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
   const { pathname } = new URL(req.url);
   const m = req.method;
 
@@ -39,7 +40,7 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/app/token') return exchangeCode(req, env);
   if (m === 'POST' && pathname === '/api/logout') return logout(req, env);
   if (m === 'GET' && pathname === '/links') return json(links(env));
-  if (m === 'POST' && pathname === '/discord/interactions') return interactions(req, env);
+  if (m === 'POST' && pathname === '/discord/interactions') return interactions(req, env, ctx);
   // 앱 설치 파일·업데이트 정보 (로그인 없이)
   if (m === 'GET' && pathname === '/app/latest') return latest(req, env);
   if (m === 'GET' && pathname === '/app/download') return download(req, env);
@@ -81,6 +82,8 @@ async function route(req: Request, env: Env): Promise<Response> {
   if (m === 'POST' && pathname === '/api/me/profile') return setProfile(req, env, me);
   if (m === 'POST' && pathname === '/api/me/about') return saveAbout(req, env, me);
   if (m === 'POST' && pathname === '/api/me/diag') return saveDiag(req, env, me);
+  if (m === 'GET' && pathname === '/api/me/inquiry') return myInquiries(env, me);
+  if (m === 'POST' && pathname === '/api/me/inquiry') return postInquiry(req, env, me, ctx);
   if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
   // 매일 밤 공지 미리 보기 (올리지 않는다). ?day=YYYY-MM-DD 로 다른 날
   if (m === 'GET' && pathname === '/api/admin/daily') {
@@ -149,7 +152,7 @@ function withCors(req: Request, env: Env, res: Response): Response {
 }
 
 export default {
-  async fetch(req: Request, env: Env): Promise<Response> {
+  async fetch(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     if (req.method === 'OPTIONS') {
       const origin = req.headers.get('Origin');
       if (!origin || !webOrigins(env).includes(origin)) return new Response(null, { status: 403 });
@@ -165,7 +168,7 @@ export default {
       });
     }
     try {
-      return withCors(req, env, await route(req, env));
+      return withCors(req, env, await route(req, env, ctx));
     } catch (e) {
       if (e instanceof HttpError) return withCors(req, env, json({ error: e.message }, e.status));
       console.error(e);

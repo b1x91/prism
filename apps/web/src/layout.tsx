@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
-import { AugmentOpen, Bone, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AugmentOpen, Bone, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -15,6 +15,7 @@ export function Layout() {
   const { pathname } = useLocation();
   const matchSource = useCallback((id: number) => (me ? api.get<MatchDetail>(`/api/games/${id}`).catch(() => null) : Promise.resolve(null)), [api, me]);
   const [menu, setMenu] = useState(false);
+  const [asking, setAsking] = useState(false);
   useEffect(() => { scrollTo(0, 0); setMenu(false); }, [pathname]);
   const nav = useNavigate();
   const pieces = usePieces(me ? api : null);
@@ -51,8 +52,12 @@ export function Layout() {
       <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <div key={`${pathname}-${k}`} className="route"><Outlet /></div>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>
-        <NavLink to="/privacy" className="foot-link">개인정보 처리방침</NavLink>
+        <span className="row" style={{ gap: 16 }}>
+          {me && <button type="button" className="foot-link" onClick={() => setAsking(true)}>문의하기</button>}
+          <NavLink to="/privacy" className="foot-link">개인정보 처리방침</NavLink>
+        </span>
       </div></footer>
+      {asking && me && <InquiryDialog api={api} onClose={() => setAsking(false)} />}
     </>
   );
 }
