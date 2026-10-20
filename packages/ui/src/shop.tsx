@@ -7,8 +7,8 @@
 import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   CHAMPIONS, DEX_LEVEL_KO, PIECE, priceWith, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
-  type Api, type Deco, type DexLevel, type PublicProfile, type Shop, type ShopItem, type ShopSlot, josa } from '@prism/core';
-import { ChampImg, Empty, Gem, MemberFace, Toggle, useSkins } from './basics';
+  type Api, type Deco, type DexLevel, type Presence, type PublicProfile, type Shop, type ShopItem, type ShopSlot, josa } from '@prism/core';
+import { ChampImg, Empty, Gem, MemberFace, PresenceDot, Toggle, useSkins } from './basics';
 import { useLoad } from './crew';
 import { BgScene } from './bgscene';
 import { NickName } from './studio';
@@ -67,13 +67,15 @@ export function Piece({ n, size = 16 }: { n: number; size?: number }) {
 }
 
 /** 머리 (좌우 끝까지). 꾸밈: 테두리(frame) · 효과(fx) · 이름(name) · 칭호(title) */
-export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, actions, chips, children, mini, stage, lift }: {
+export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, actions, chips, children, mini, stage, lift, presence }: {
   nick: string; intro?: string; art?: string; skin?: number | null; champion?: number | null; deco?: Deco;
   corner?: ReactNode; actions?: ReactNode; chips?: ReactNode; children?: ReactNode; mini?: boolean;
   /** 상점 진열: 배경 그림 없이 가운데에 상품 하나만 */
   stage?: boolean;
   /** 아래 첫 칸이 머리 아래쪽에 겹쳐 올라온다 (회원 페이지 분석판) */
   lift?: boolean;
+  /** 접속 상태: 얼굴 오른쪽 아래 점 (앱 파랑 · 웹 회색 · 롤 켜짐 주황/초록, 이름은 마우스를 올리면) */
+  presence?: Presence | null;
 }) {
   const skins = useSkins();
   const title = titleOf(deco);
@@ -89,7 +91,7 @@ export function ProfileHero({ nick, intro, art, skin, champion, deco, corner, ac
         {corner && <div className="phero-corner">{corner}</div>}
         {actions && <div className="phero-actions">{actions}</div>}
         <div className="phero-main">
-          <span className="phero-face"><MemberFace nick={nick} skin={skin} champion={champion} skins={skins} size={stage ? 72 : mini ? 48 : 112} /></span>
+          <span className="phero-face"><MemberFace nick={nick} skin={skin} champion={champion} skins={skins} size={stage ? 72 : mini ? 48 : 112} /><PresenceDot p={presence} /></span>
           <div className="phero-txt">
             {title && <span className={`phero-title r-${SHOP_ITEM[deco!.title!]?.rarity ?? 'common'}`}>{title}</span>}
             <h1 className={`phero-name ${deco?.name ?? ''}`}><NickName nick={nick} /></h1>

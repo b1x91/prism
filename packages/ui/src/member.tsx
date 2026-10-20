@@ -18,7 +18,7 @@ import { ProfileHero, ShareButton, baseTint } from './shop';
 import { BgScene } from './bgscene';
 import { preloadImages } from './splash';
 import { NickName, ProfileStudio } from './studio';
-import { MemberSkeleton, RankingSkeleton, useReveal, Swap, fadeCls } from './skeleton';
+import { MemberSkeleton, RankingSkeleton, rememberHeroLook, useReveal, Swap, fadeCls } from './skeleton';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
@@ -185,9 +185,10 @@ export function MemberView({ api, id, self, onChampion, actions }: { api: Api; i
   const [shareOn, setShared] = useState<boolean | null>(null);
   const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
-  if (!data) return <MemberSkeleton self={self} />;
+  if (!data) return <MemberSkeleton self={self} id={id} />;
   const { member: m, total } = data;
   const deco = m.deco ?? {};
+  rememberHeroLook(id, deco.bg ? { bg: deco.bg } : { tint: baseTint(m.nick) });
   const shared = shareOn ?? Boolean(m.shared);
   const main = data.champions[0]?.id ?? null;
   const skin = m.skin && skins?.[m.skin] ? skins[m.skin] : null;
@@ -197,14 +198,14 @@ export function MemberView({ api, id, self, onChampion, actions }: { api: Api; i
   const S = styleOf(data.champions);
   const picksN = data.augments.reduce((n, a) => n + a.n, 0);
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
-  return (<Swap on={rv} skeleton={<MemberSkeleton self={self} />}>
+  return (<Swap on={rv} skeleton={<MemberSkeleton self={self} id={id} />}>
     <div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
-      <ProfileHero lift={total.n > 0} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
+      <ProfileHero lift={total.n > 0} presence={m.presence} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
         actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit('skin')}><Icon name="spark" />프로필 꾸미기</button>}
           {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}
         chips={<><span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
-          {skin && <span className="pill dark">{skin.name}</span>}{m.presence && m.presence !== 'off' && <span className="pill dark"><PresenceTag p={m.presence} /></span>}
+          {skin && <span className="pill dark">{skin.name}</span>}{(m.presence === 'game' || m.presence === 'both') && <span className="pill dark"><PresenceTag p={m.presence} /></span>}
           {m.about && (m.self
             ? <button type="button" className="pill dark about-edit" title="소개 바꾸기" onClick={() => setEdit('intro')}><span>{m.about.mbti}</span><span>{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span>{aboutWhen(m.about)}</span><Icon name="edit" /></button>
             : <><span className="pill dark">{m.about.mbti}</span><span className="pill dark">{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span className="pill dark">{aboutWhen(m.about)}</span></>)}</>} />

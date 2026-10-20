@@ -4,6 +4,24 @@
  * 데이터가 오면 같은 자리에서 자리표시가 사라지며 실제 화면이 서서히 나타난다 (`Swap`, 사이에 빈 화면·깜빡임 없이).
  */
 import { useEffect, useLayoutEffect, useState, type CSSProperties, type ReactNode, type SyntheticEvent } from 'react';
+import { BgScene } from './bgscene';
+
+/* 회원 페이지 머리 배경 기억: 한 번 본 회원은 다음에 불러오는 동안에도 같은 배경(산 장면 또는 기본 색)을 깐다 —
+   자리표시의 검은 띠가 실제 배경으로 확 바뀌지 않게 (v3.94) */
+type HeroLook = { tint?: string; bg?: string };
+const LOOK_KEY = 'prism-hero-look';
+const readLooks = (): Record<string, HeroLook> => { try { return JSON.parse(localStorage.getItem(LOOK_KEY) || '{}'); } catch { return {}; } };
+export function rememberHeroLook(id: string, look: HeroLook) {
+  try {
+    const all = readLooks();
+    if (all[id]?.tint === look.tint && all[id]?.bg === look.bg) return;
+    delete all[id]; all[id] = look;
+    const keys = Object.keys(all);
+    for (const k of keys.slice(0, Math.max(0, keys.length - 80))) delete all[k];
+    localStorage.setItem(LOOK_KEY, JSON.stringify(all));
+  } catch { /* 저장 막힘 */ }
+}
+export const heroLookOf = (id?: string): HeroLook | undefined => (id ? readLooks()[id] : undefined);
 
 /* 지금 떠 있는 자리표시들 (언제부터 실제로 보이는지). 넘겨받기·겹쳐 사라지기 판단에 쓴다 */
 let seq = 0, goneAt = -1e9;
@@ -91,19 +109,22 @@ function Head({ w = 120 }: { w?: number }) {
 }
 
 /** 회원 페이지: 좌우 끝까지 닿는 머리 + 숫자 넷 + 최근 판 + 두 칸 */
-export function MemberSkeleton({ public: pub = false, self }: { public?: boolean; self?: boolean }) {
+export function MemberSkeleton({ public: pub = false, self, id }: { public?: boolean; self?: boolean; id?: string }) {
+  const look = heroLookOf(id);
   return (
     <SkeletonFrame className="stack sk-member">
-      {/* 머리: 실제 ProfileHero 와 같은 틀 (모서리 역할 · 오른쪽 위 버튼 · 얼굴 + 이름) */}
-      <header className={`phero sk-hero ${pub ? '' : 'lift'}`}>
+      {/* 머리: 실제 ProfileHero 와 같은 틀 (모서리 역할 · 오른쪽 위 버튼 · 얼굴 + 이름).
+          배경은 전에 본 그 회원의 배경, 처음이면 차분한 기본 색 — 그 위로 빛이 지나간다 */}
+      <header className={`phero sk-hero ${pub ? '' : 'lift'} ${look?.bg ? 'has-bg' : ''}`}>
+        {look?.bg ? <BgScene id={look.bg} /> : <span className="phero-tint" style={{ ['--tint' as string]: look?.tint ?? '#4c5bd4' }} aria-hidden="true" />}
         <div className="phero-in">
           {!pub && <div className="phero-corner"><Bone w={56} h={24} r="pill" dark /></div>}
-          {self && <div className="phero-actions">{[104, 92, 64, 72].map((w, i) => <Bone key={i} w={w} h={32} r="m" dark />)}</div>}
+          {self && <div className="phero-actions">{[120, 104, 76].map((w, i) => <Bone key={i} w={w} h={32} r="m" dark />)}</div>}
           <div className="phero-main">
             <span className="phero-face"><Bone w={112} h={112} r="l" dark className="sk-face" /></span>
             <div className="phero-txt sk-lines" style={{ gap: 12 }}>
               <Bone w={220} h={44} dark />
-              <div className="phero-chips">{[80, 64, 72].map((w, i) => <Bone key={i} w={w} h={24} r="pill" dark />)}</div>
+              <div className="phero-chips">{[88, 72, 156].map((w, i) => <Bone key={i} w={w} h={24} r="pill" dark />)}</div>
             </div>
           </div>
         </div>

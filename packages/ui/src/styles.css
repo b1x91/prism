@@ -1116,6 +1116,10 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .pdot.game { background: var(--warn); }
 .pdot.both { background: var(--ok); }
 .fp { position: relative; display: inline-flex; flex: none; }
+/* 회원 페이지 머리: 얼굴 오른쪽 아래 접속 점 (따로 칩에 홀로 두면 무슨 뜻인지 알기 어렵다, v3.94) */
+.phero-face > .pdot { position: absolute; right: 2px; bottom: 2px; width: 20px; height: 20px; box-shadow: 0 0 0 4px #0b0e1a; }
+@media (max-width: 760px) { .phero-face > .pdot { width: 16px; height: 16px; box-shadow: 0 0 0 3px #0b0e1a; } }
+.phero.mini .phero-face > .pdot { width: 12px; height: 12px; right: 0; bottom: 0; box-shadow: 0 0 0 2px #0b0e1a; }
 .fp .pdot { position: absolute; right: -3px; bottom: -3px; width: 12px; height: 12px; box-shadow: 0 0 0 2px var(--surface); }
 .prtag { display: inline-flex; align-items: center; gap: 6px; font: inherit; color: inherit; vertical-align: baseline; }
 .prtag .pdot { position: static; flex: none; }
@@ -1293,7 +1297,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .phero-actions .btn:hover { background: rgba(255, 255, 255, .22); }
 .phero-actions .btn.primary { background: var(--accent); border-color: var(--accent); }
 .phero-main { display: flex; align-items: flex-end; gap: var(--s6); }
-.phero-face { flex: none; display: grid; place-items: center; padding: 4px; border-radius: 28px; background: rgba(255, 255, 255, .14); box-shadow: 0 12px 40px rgba(0, 0, 0, .5); }
+.phero-face { position: relative; flex: none; display: grid; place-items: center; padding: 4px; border-radius: 28px; background: rgba(255, 255, 255, .14); box-shadow: 0 12px 40px rgba(0, 0, 0, .5); }
 .phero-face .face, .phero-face .initial { width: 112px !important; height: 112px !important; border-radius: 24px; object-fit: cover; }
 .phero-txt { min-width: 0; display: grid; gap: var(--s2); }
 .phero-title { justify-self: start; padding: 2px var(--s3); border-radius: var(--r-pill); background: rgba(255, 255, 255, .14); border: 1px solid rgba(255, 255, 255, .22); font-size: var(--fs-sm); font-weight: 750; letter-spacing: .02em; }
@@ -2450,7 +2454,13 @@ button.ga:hover { background: var(--surface-2); }
 .sk-dexgrid .sk-tile { aspect-ratio: 1; }
 .sk-chips { display: flex; flex-wrap: wrap; gap: var(--s2); margin-top: var(--s2); }
 /* 회원 머리 자리표시: 실제 머리와 같은 크기의 어두운 무대 */
-.sk-hero { background: linear-gradient(180deg, #11152a, #090b14); }
+.sk-hero { background: #07090f; }
+/* 머리 배경 위로도 같은 빛 한 줄기가 지나간다 (뼈대와 같은 화면 기준 빛, 배경은 그 회원의 것) */
+.sk-hero::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, .05) 47%, rgba(170, 186, 255, .07) 52%, transparent 62%);
+  background-size: 200vw 100%; background-repeat: no-repeat; background-attachment: fixed; animation: sk-sweep 1.9s cubic-bezier(.45, 0, .25, 1) infinite; }
+.sk-hero .phero-face { background: rgba(255, 255, 255, .1); }
+@media (prefers-reduced-motion: reduce) { .sk-hero::after { animation: none; opacity: 0; } }
 .sk-hero-in { display: flex; align-items: flex-end; gap: var(--s5); width: 100%; max-width: 1200px; margin: 0 auto; padding: var(--s8) var(--s6) var(--s6); }
 .sk-hero-t { display: grid; gap: var(--s3); flex: 1; min-width: 0; }
 /* 랭킹 무대 자리표시 */
