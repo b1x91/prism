@@ -215,9 +215,6 @@ fn toast_close(handle: tauri::AppHandle) {
 /// 롤 단계 지켜보기 (v3.42). 화면(WebView)의 타이머는 창이 트레이에 있으면 크게 늦춰지므로 단계 확인은 Rust 가 한다.
 /// 큐(매칭·수락 대기) 중에는 0.4초, 평소 1.5초. 단계가 바뀌면 화면에 'lcu-phase' 를 보내고,
 /// 챔프 선택에 들어가는 순간 창을 맨 앞으로 올린다. 게임 중에는 롤에 요청하지 않는다 (lcu.get 이 막는다).
-/// 지금 롤 단계 (watch_phase 가 적는다) — 켤 때 자동 업데이트가 챔프 선택·게임을 피하려고 본다
-static PHASE: std::sync::Mutex<String> = std::sync::Mutex::new(String::new());
-
 async fn watch_phase(app: tauri::AppHandle) {
     use tauri::Emitter;
     let mut last = String::new();
@@ -234,7 +231,6 @@ async fn watch_phase(app: tauri::AppHandle) {
             }
         };
         if phase != last {
-            *PHASE.lock().unwrap() = phase.clone();
             let _ = app.emit("lcu-phase", phase.clone());
             if phase == "ChampSelect" {
                 bring_to_front(app.clone());
@@ -291,48 +287,6 @@ async fn tray_update(app: tauri::AppHandle) {
                 Err(e) => toast::show(&app, "새 버전을 받지 못했어요", &e, "warn", 6000),
             }
         }
-    }
-}
-
-/// 켤 때 자동 업데이트 (v3.97): 켜자마자 새 버전을 확인하고, 있으면 받아서 바로 창 없이 적용한다 (몇 초 뒤 새 버전으로 다시 켜짐).
-/// 켠 뒤 10분 안에 다 받았고 롤 게임·챔프 선택 중이 아닐 때만 — 그 밖에는 평소처럼 쉴 때·끌 때·다음에 켤 때 적용된다.
-/// 같은 버전은 한 번만 시도한다 (`apply_on_start` 의 시도 표시, 설치가 실패해도 켤 때마다 되풀이하지 않게).
-async fn startup_update(app: tauri::AppHandle) {
-    const WINDOW: std::time::Duration = std::time::Duration::from_secs(600);
-    let started = std::time::Instant::now();
-    if update::managed() {
-        return;
-    }
-    // 롤 단계를 한 번 읽을 틈을 둔다
-    tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-    let Ok(info) = update::check().await else { return };
-    if !info.available {
-        return;
-    }
-    if update::prepare().await.is_err() {
-        return;
-    }
-    refresh_tray();
-    let busy = || {
-        let p = PHASE.lock().unwrap().clone();
-        !lcu::game_pids().is_empty() || matches!(p.as_str(), "ChampSelect" | "GameStart" | "InProgress" | "Reconnect")
-    };
-    if started.elapsed() > WINDOW || busy() {
-        return;
-    }
-    let v = update::ready_version().unwrap_or_default();
-    let shown = app.get_webview_window("main").and_then(|w| w.is_visible().ok()).unwrap_or(false);
-    if shown {
-        toast::show(&app, &format!("v{v}로 업데이트하는 중"), "몇 초 뒤 Prism이 다시 켜져요.", "busy", 6000);
-        tokio::time::sleep(std::time::Duration::from_millis(1600)).await;
-        if busy() {
-            toast::hide(&app);
-            return;
-        }
-    }
-    // 창이 내려가 있었으면(윈도우 시작 시 실행 등) 다시 켤 때도 트레이로만
-    if update::apply_on_start(!shown) {
-        app.exit(0);
     }
 }
 
@@ -425,7 +379,6 @@ pub fn run() {
             notice_updated(app.handle(), &dir_for_notice);
             vision.start(app.handle().clone());
             tauri::async_runtime::spawn(watch_phase(app.handle().clone()));
-            tauri::async_runtime::spawn(startup_update(app.handle().clone()));
             // 창 제목에 버전: "Prism - 0.7.0". 크기·위치는 지난번 그대로 (없으면 세로로 넉넉한 기본 크기)
             if let Some(w) = app.get_webview_window("main") {
                 let _ = w.set_title(&format!("Prism - {}", app.package_info().version));
@@ -455,7 +408,7 @@ pub fn run() {
                         tauri::async_runtime::spawn(tray_update(app.clone()));
                     }
                     "quit" => {
-                        // 받아 둔 새 버전이 있으면 끝낼 때 조용히 적용 (다시 켜지 않는다)
+                        // 받아 둔 새 버전이 있으면 끝낼 때 조용히 적용 (다시 켜지 않는다) — 다음에 켜면 바로 새 버전 (v3.98)
                         if update::has_ready() {
                             let _ = update::apply(false, false);
                         }

@@ -147,11 +147,14 @@ function ShopSoon({ me }: { api: Api; me: Me }) {
   );
 }
 
+/** '인기' 탭에 보이는 상품 수 */
+const HOT_MAX = 12;
+
 function ShopOpen({ api, me }: { api: Api; me: Me }) {
   const { data, error, reload } = useLoad<Shop>(api, '/api/shop');
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
-  // '인기'가 첫 탭. 지금은 판매 기록이 적어 무작위로 섞는다 (들어올 때마다 한 번)
+  // '인기'가 첫 탭. 지금은 판매 기록이 적어 무작위로 섞은 12개 (들어올 때마다 한 번, HOT_MAX)
   const [slot, setSlot] = useState<ShopSlot | 'hot'>('hot');
   const [hot] = useState(() => SHOP.map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x));
   const [owned, setOwned] = useState(false);
@@ -161,7 +164,7 @@ function ShopOpen({ api, me }: { api: Api; me: Me }) {
   const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <ShopSkeleton />;
-  const list = slot === 'hot' ? hot.filter((x) => !owned || data.owned.includes(x.id))
+  const list = slot === 'hot' ? hot.filter((x) => !owned || data.owned.includes(x.id)).slice(0, HOT_MAX)
     : SHOP.filter((x) => x.slot === slot && (!owned || data.owned.includes(x.id)))
       .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || b.price - a.price);
   const count = (sl: ShopSlot) => [SHOP.filter((x) => x.slot === sl && data.owned.includes(x.id)).length, SHOP.filter((x) => x.slot === sl).length];
