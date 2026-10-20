@@ -19,13 +19,16 @@ const IMG_SCENES: Record<string, { src: string; pos: string; row: string }> = {
   'bg-crystal': { src: '/bg/crystal-v1.webp', pos: '62% 55%', row: '60% 72%' },
 };
 
+/** 다 받아지면 자리표시 빛을 끈다 (skeleton.tsx 의 imgIn 과 같음, 서로 불러오지 않게 따로 둔다) */
+const ld = (e: { currentTarget: HTMLImageElement }) => e.currentTarget.classList.add('ld');
+
 /** row: 랭킹 줄처럼 아주 납작한 칸 */
 export function BgScene({ id, row }: { id: string; row?: boolean }) {
   const k = useId().replace(/[^a-zA-Z0-9]/g, '');
   const img = IMG_SCENES[id];
   if (img) return (
     <span className={`bgx ${id} img`} aria-hidden="true">
-      <img src={img.src} alt="" loading="lazy" decoding="async" style={{ objectPosition: row ? img.row : img.pos }} />
+      <img className="fi" onLoad={ld} onError={ld} src={img.src} alt="" loading="lazy" decoding="async" style={{ objectPosition: row ? img.row : img.pos }} />
       <span className="bgx-motes">{Array.from({ length: 10 }, (_, i) => <i key={i} />)}</span>
       <span className="bgx-sheen" />
     </span>

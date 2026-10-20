@@ -33,7 +33,7 @@ function ItemTip({ id }: { id: number }) {
 
 export function ItemIcon({ id, size = 28 }: { id: number; size?: number }) {
   if (!id || !ITEM[id]) return <span className="item-empty" style={{ width: size, height: size }} />;
-  return <Hover tip={() => <ItemTip id={id} />} className="item-ic"><img src={cdragon(ITEM[id].icon)} width={size} height={size} alt={ITEM[id].name} loading="lazy" /></Hover>;
+  return <Hover tip={() => <ItemTip id={id} />} className="item-ic"><img className="fi" {...imgIn} src={cdragon(ITEM[id].icon)} width={size} height={size} alt={ITEM[id].name} loading="lazy" /></Hover>;
 }
 
 export type CardGame = {
@@ -53,7 +53,7 @@ export function GameCard({ g, onOpen }: { g: CardGame; onOpen?: (g: CardGame) =>
     <article className={`gcard ${g.win ? 'win' : 'lose'} ${onOpen ? 'can-open' : ''}`} onClick={onOpen ? () => onOpen(g) : undefined}
       role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined} aria-label={onOpen ? `${CHAMPIONS[g.championId]?.name ?? ''} ${g.win ? '승리' : '패배'} 판 자세히` : undefined}
       onKeyDown={onOpen ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen(g); } } : undefined}>
-      {c?.tile && <img className="gbg" src={cdragon(c.tile)} alt="" loading="lazy" />}
+      {c?.tile && <img className="gbg fi" {...imgIn} src={cdragon(c.tile)} alt="" loading="lazy" />}
       <div className="gchamp">
         <ChampImg id={g.championId} size={56} />
         <span className="gname"><b>{c?.name ?? `#${g.championId}`}</b><span className="gsub"><span className={`gres ${g.win ? 'w' : 'l'}`}>{g.win ? '승리' : '패배'}</span>{g.custom && <span className="gtag">사용자 설정</span>}</span></span>
@@ -97,7 +97,7 @@ function GameTip({ g }: { g: CardGame }) {
       <div className="gtip-head"><b>{c?.name}</b><span className={`gres ${g.win ? 'w' : 'l'}`}>{g.win ? '승리' : '패배'}</span>{g.custom && <span className="gtag">사용자 설정</span>}</div>
       <div className="gtip-line"><b>{g.kills} / <span className="l">{g.deaths}</span> / {g.assists}</b><span className="meta">{Math.round(g.duration / 60)}분 · {ago(g.playedAt)}</span></div>
       {g.augments.length > 0 && <div className="gtip-augs">{g.augments.slice(0, 6).map((a, i) => <span key={`${a}-${i}`} className="gaug"><AugRing id={a} size={22} /><span>{AUGMENT[a]?.name ?? `#${a}`}</span></span>)}</div>}
-      {items.length > 0 && <div className="gtip-items">{items.slice(0, 6).map((x, i) => <img key={i} src={cdragon(ITEM[x].icon)} alt={ITEM[x].name} />)}</div>}
+      {items.length > 0 && <div className="gtip-items">{items.slice(0, 6).map((x, i) => <img key={i} className="fi" {...imgIn} src={cdragon(ITEM[x].icon)} alt={ITEM[x].name} />)}</div>}
     </div>
   );
 }
@@ -180,7 +180,7 @@ export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: 
       <button type="button" className="md-scrim" aria-label="닫기" onClick={onClose} />
       <div className={`md ${g.win ? 'win' : 'lose'}`}>
         <div className="md-head">
-          {c?.splash && <img className="md-bg" src={cdragon(c.splash)} alt="" />}
+          {c?.splash && <img className="md-bg fi" {...imgIn} src={cdragon(c.splash)} alt="" />}
           <div className="md-title">
             <span className={`md-res ${g.win ? 'w' : 'l'}`}>{g.win ? '승리' : '패배'}</span>
             <span className="md-sub">{g.custom ? '사용자 설정' : '아수라장'} · {Math.round(g.duration / 60)}분 · {when(g.playedAt)}</span>

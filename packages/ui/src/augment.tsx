@@ -8,7 +8,7 @@ import { AugImg, Empty, GlassBtn, Hover, Seg } from './basics';
 import { Icon } from './icons';
 import { MatchupBar } from './situation';
 import { GamePlanCard } from './plan';
-import { Bone } from './skeleton';
+import { Bone, imgIn } from './skeleton';
 
 
 const ORDER: Rarity[] = ['prismatic', 'gold', 'silver'];
@@ -265,7 +265,7 @@ export function GradeUp({ rarity, tier }: { rarity: Rarity; tier: FitTier }) {
 export function AugRing({ id, size = 40 }: { id: number; size?: number }) {
   // 고리 안 어두운 원은 그대로 두고, 그 안의 무늬만 가운데로 옮긴다 (아이콘 그림마다 무늬 위치가 다르다)
   const [dx, dy] = augShift(id);
-  return <span className={`aug-ring ${AUGMENT[id]?.rarity ?? ''}`} style={{ width: size, height: size }}><span className="aug-disc"><img className="aug" src={augIcon(id)} width={size - 6} height={size - 6} alt={AUGMENT[id]?.name ?? ''} loading="lazy" style={dx || dy ? { transform: `translate(${dx}%, ${dy}%)` } : undefined} /></span></span>;
+  return <span className={`aug-ring ${AUGMENT[id]?.rarity ?? ''}`} style={{ width: size, height: size }}><span className="aug-disc"><img className="aug fi" {...imgIn} src={augIcon(id)} width={size - 6} height={size - 6} alt={AUGMENT[id]?.name ?? ''} loading="lazy" style={dx || dy ? { transform: `translate(${dx}%, ${dy}%)` } : undefined} /></span></span>;
 }
 
 /** 왜 맞는지 + 언제 더 좋은지 (C·D 티어에는 '언제'를 붙이지 않는다) */

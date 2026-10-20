@@ -8,7 +8,7 @@ import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMa
 import { ChampImg, Gem, Select, Seg } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
-import { Bone } from './skeleton';
+import { Bone, imgIn } from './skeleton';
 
 /** 서버에 기록된 내 모든 판 + (앱이면) 이 PC 롤 기록을 합친 도감 */
 export function useDex(api: Api | null, games: Game[] = []) {
@@ -273,7 +273,7 @@ function MasterStage({ kind, id, no, name, sub, e, m, art, pic }: { kind: Kind; 
   const sparks = useMemo(() => Array.from({ length: 14 }, (_, i) => ({ x: (i * 37 + 11) % 100, y: (i * 53 + 7) % 100, d: (i % 7) * 0.45, s: 4 + (i % 3) * 2 })), []);
   return (
     <div className={`mstage ${play ? 'intro' : ''}`} key={`${key}-${play}`}>
-      {art && <img className="ms-art" src={art} alt="" />}
+      {art && <img className="ms-art fi" {...imgIn} src={art} alt="" />}
       <span className="ms-rays" aria-hidden="true" />
       <span className="ms-halo" aria-hidden="true" />
       {sparks.map((p, i) => <i key={i} className="ms-spark" aria-hidden="true" style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.s, height: p.s, animationDelay: `${p.d}s` }} />)}

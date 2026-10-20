@@ -14,6 +14,7 @@ import { Icon } from './icons';
 import { BgScene } from './bgscene';
 import { PieceIcon, ProfileHero, baseTint } from './shop';
 import { AboutPick } from './about';
+import { imgIn } from './skeleton';
 
 type Tab = 'skin' | ShopSlot | 'intro';
 const TABS: [Tab, string][] = [['skin', '대표 스킨'], ['bg', SLOT_KO.bg], ['frame', SLOT_KO.frame], ['fx', SLOT_KO.fx], ['name', SLOT_KO.name], ['title', SLOT_KO.title], ['intro', '소개']];
@@ -140,7 +141,7 @@ function SkinPanel({ page, skins, pick, onPick, n }: { page: MemberPage; skins: 
             const need = skinNeed(s.tier), locked = n < need;
             return (
               <button key={s.id} type="button" className={`pst-tile ${pick === s.id ? 'on' : ''} ${locked ? 'locked' : ''}`} disabled={locked} onClick={() => onPick(s.id)} title={locked ? `${SKIN_TIERS[s.tier].name} · ${need}판부터` : s.name}>
-                <span className="pst-art"><img src={s.tile} alt="" loading="lazy" />{locked && <span className="pst-lock"><Icon name="lock" />{need}판</span>}</span>
+                <span className="pst-art"><img className="fi" {...imgIn} src={s.tile} alt="" loading="lazy" />{locked && <span className="pst-lock"><Icon name="lock" />{need}판</span>}</span>
                 <span className="pst-nm">{s.id === baseSkin(champ) ? '기본' : s.name}</span>
                 <span className="pst-sub">{SKIN_TIERS[s.tier].name}</span>
               </button>

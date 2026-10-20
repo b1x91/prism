@@ -2485,15 +2485,18 @@ button.ga:hover { background: var(--surface-2); }
 @keyframes swap-in { from { opacity: 0; } to { opacity: 1; } }
 .skf.now { animation: none; }
 
-/* 그림은 다 받아진 뒤 서서히 (툭 튀어나오지 않게) */
-/* :where 로 가장 약하게 — 그림마다 따로 정한 투명도(흐린 배경·안 만난 도감 칸)가 늘 이긴다 */
-:where(img.fi) { opacity: 0; transition: opacity .45s ease; }
-:where(img.fi.ld) { opacity: 1; }
+/* 그림을 받는 동안: 그 칸에 자리표시 빛을 깐다 (v3.96). 예전엔 받을 때까지 투명하게 숨겨 그 자리가 흰 빈칸으로 보였다.
+   받아지면 그림이 그 위를 덮는다. 어두운 칸(프로필 머리·랭킹 무대·배너 등) 안에서는 어두운 자리표시 */
+img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-image: linear-gradient(105deg, transparent 38%, var(--sk-hi) 47%, var(--sk-tint) 52%, transparent 62%);
+  background-size: 200vw 100%; background-repeat: no-repeat; background-attachment: fixed; animation: sk-sweep 1.9s cubic-bezier(.45, 0, .25, 1) infinite; }
+:where(img.fi.ld) { animation: img-in .3s ease; }
+@keyframes img-in { from { opacity: .4; } } /* 끝값은 그림마다 정한 투명도 그대로 */
+:is(.phero, .lb, .banner, .duo-stage, .sc-prev, .pl-hl, .cs-tile, .msn-strip, .art2-hall, .dxe-stage) { --sk: rgba(255, 255, 255, .08); --sk-hi: rgba(255, 255, 255, .12); --sk-tint: rgba(170, 186, 255, .12); }
 
 @media (prefers-reduced-motion: reduce) {
   .sk { animation: none; } .skf { animation: none; }
   .fade-in, .swap-sk { animation: none; } .swap-sk { display: none; }
-  :where(img.fi) { transition: none; }
+  img.fi:not(.ld), :where(img.fi.ld) { animation: none; }
 }
 
 /* ───────── 배너 위 버튼 통일 (v3.52): 하트 알약과 같은 높이 32 · 둥근 끝 · 유리 바탕 ───────── */

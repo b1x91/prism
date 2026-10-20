@@ -18,7 +18,7 @@ import { ProfileHero, ShareButton, baseTint } from './shop';
 import { BgScene } from './bgscene';
 import { preloadImages } from './splash';
 import { NickName, ProfileStudio } from './studio';
-import { MemberSkeleton, RankingSkeleton, rememberHeroLook, useReveal, Swap, fadeCls } from './skeleton';
+import { MemberSkeleton, RankingSkeleton, imgIn, rememberHeroLook, useReveal, Swap, fadeCls } from './skeleton';
 
 const ROLE_COLOR: Record<string, string> = { marksman: 'var(--spectrum-1)', fighter: 'var(--spectrum-2)', tank: 'var(--spectrum-4)', support: 'var(--spectrum-5)', mage: 'var(--spectrum-6)', assassin: 'var(--spectrum-7)' };
 const TIER_KO = { admin: '관리자', member: '회원', guest: '새 회원' } as const;
@@ -450,8 +450,8 @@ function SynergyCard({ data }: { data: MemberPage }) {
   return (
     <section className={`card duo v-${d.verdict.key}`}>
       <header className="duo-stage">
-        {myArt && <img className="duo-bg l" src={myArt} alt="" />}
-        {theirArt && <img className="duo-bg r" src={theirArt} alt="" />}
+        {myArt && <img className="duo-bg l fi" {...imgIn} src={myArt} alt="" />}
+        {theirArt && <img className="duo-bg r fi" {...imgIn} src={theirArt} alt="" />}
         <span className="duo-k">나와의 시너지</span>
         <div className="duo-pair">
           <div className="duo-who">
