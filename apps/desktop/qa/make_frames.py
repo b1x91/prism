@@ -17,7 +17,10 @@ ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'
 OUT = sys.argv[1] if len(sys.argv) > 1 else 'qa-frames'
 os.makedirs(OUT, exist_ok=True)
 
-A = [a for a in json.load(open(os.path.join(ROOT, 'packages/core/data/mayhem-augments.json'), encoding='utf-8'))['augments'] if not a.get('disabled')]
+_D = json.load(open(os.path.join(ROOT, 'packages/core/data/mayhem-augments.json'), encoding='utf-8'))
+_NEXT = (_D.get('next') or {}).get('version')
+# 게임에 뜰 수 있는 증강만: 꺼진 것·이미 빠진 것은 빼고, 다음 패치에 빠질 것은 둔다 (앱 matcher·icons 와 같은 규칙)
+A = [a for a in _D['augments'] if not a.get('disabled') and (not a.get('removed') or a.get('removed') == _NEXT)]
 BY_RAR = {r: [a for a in A if a['rarity'] == r] for r in ('silver', 'gold', 'prismatic')}
 CHAMPS = sorted(os.listdir(os.path.join(ROOT, 'packages/assets/public/img/champ2')))
 

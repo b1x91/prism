@@ -34,10 +34,25 @@ struct RawAug {
     disabled: bool,
     #[serde(default)]
     ability: bool,
+    /// 빠진(빠질) 패치 (v3.101). 다음 패치 대비 데이터가 아니면 게임에 없는 증강이다
+    #[serde(default)]
+    removed: Option<String>,
 }
 #[derive(Deserialize)]
 struct RawData {
     augments: Vec<RawAug>,
+    #[serde(default)]
+    next: Option<RawNext>,
+}
+#[derive(Deserialize)]
+struct RawNext {
+    version: String,
+}
+impl RawData {
+    /// 지금 게임에서 뜰 수 있는 증강인가: 꺼진 것·이미 빠진 것은 뺀다 (다음 패치에 빠질 것은 패치 전까지 뜨므로 둔다)
+    fn shown(&self, a: &RawAug) -> bool {
+        !a.disabled && a.removed.as_deref().map_or(true, |r| self.next.as_ref().is_some_and(|n| n.version == r))
+    }
 }
 
 pub struct IconBank {
@@ -96,13 +111,13 @@ fn rarity_code(r: &str) -> u8 {
 
 impl IconBank {
     pub fn new(bin: &[u8], json: &str) -> Self {
-        let d: RawData = serde_json::from_str(json).unwrap_or(RawData { augments: vec![] });
+        let d: RawData = serde_json::from_str(json).unwrap_or(RawData { augments: vec![], next: None });
         let mut paths: Vec<String> = Vec::new();
         let mut bank = Self { all_rarity: d.augments.iter().map(|a| (a.id, rarity_code(&a.rarity))).collect(), ids: vec![], rarity: vec![], group: vec![], sig: vec![] };
         for rec in bin.chunks_exact(4 + N) {
             let id = u32::from_le_bytes([rec[0], rec[1], rec[2], rec[3]]);
             // 스킬 증강(3연발·메아리 시전·재장전 …)은 게임에서 내 챔프 스킬 그림이 뜬다 — 데이터의 그림으로는 찾지 않는다
-            let Some(a) = d.augments.iter().find(|a| a.id == id && !a.disabled && !a.ability && !a.icon.contains("Generic")) else { continue };
+            let Some(a) = d.augments.iter().find(|a| a.id == id && d.shown(a) && !a.ability && !a.icon.contains("Generic")) else { continue };
             let mut v = [0f32; N];
             for (o, b) in v.iter_mut().zip(&rec[4..]) {
                 *o = *b as f32;

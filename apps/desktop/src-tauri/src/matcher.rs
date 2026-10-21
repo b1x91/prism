@@ -30,10 +30,25 @@ struct RawAug {
     note: String,
     #[serde(default)]
     disabled: bool,
+    /// 빠진(빠질) 패치 (v3.101). 다음 패치 대비 데이터가 아니면 게임에 없는 증강이다
+    #[serde(default)]
+    removed: Option<String>,
 }
 #[derive(Deserialize)]
 struct RawData {
     augments: Vec<RawAug>,
+    #[serde(default)]
+    next: Option<RawNext>,
+}
+#[derive(Deserialize)]
+struct RawNext {
+    version: String,
+}
+impl RawData {
+    /// 지금 게임에서 뜰 수 있는 증강인가: 꺼진 것·이미 빠진 것은 뺀다 (다음 패치에 빠질 것은 패치 전까지 뜨므로 둔다)
+    fn shown(&self, a: &RawAug) -> bool {
+        !a.disabled && a.removed.as_deref().map_or(true, |r| self.next.as_ref().is_some_and(|n| n.version == r))
+    }
 }
 
 /// 설명으로 찾을 때: 읽은 묶음의 이만큼이 설명에 들어 있어야 하고, 2등보다 이만큼 앞서야 한다
@@ -120,8 +135,9 @@ struct Hit {
 impl Matcher {
     /// 앱에 묶인 증강 데이터(packages/core/data/mayhem-augments.json)에서 이름표를 만든다
     pub fn from_json(json: &str) -> Self {
-        let d: RawData = serde_json::from_str(json).unwrap_or(RawData { augments: vec![] });
-        let live: Vec<RawAug> = d.augments.into_iter().filter(|a| !a.disabled).collect();
+        let d: RawData = serde_json::from_str(json).unwrap_or(RawData { augments: vec![], next: None });
+        let keep: Vec<bool> = d.augments.iter().map(|a| d.shown(a)).collect();
+        let live: Vec<RawAug> = d.augments.into_iter().zip(keep).filter(|(_, k)| *k).map(|(a, _)| a).collect();
         let descs = live.iter().map(|a| (a.id, bigrams(&format!("{} {} {}", a.name, a.desc, a.note)))).collect();
         let mut names: Vec<(u32, Vec<char>)> = live.iter().map(|a| (a.id, norm(&a.name))).filter(|(_, n)| !n.is_empty()).collect();
         let known: Vec<u32> = names.iter().map(|n| n.0).collect();
