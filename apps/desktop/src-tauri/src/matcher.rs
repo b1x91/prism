@@ -207,6 +207,26 @@ impl Matcher {
     }
 
     /// 한 줄(단어 목록)에서 이름 후보 찾기
+    /// 두 줄로 꺾인 긴 제목 ("능력치 더하기 능력치 더하기 / 능력치!"). 바로 아래 줄과 이어 붙여, 줄 경계를 넘는 이름만 더한다.
+    /// 둘째 줄만으로 짧은 다른 증강("능력치!")이 잡혀도, 이어 붙인 쪽이 위(첫 줄 y)라 제목으로 뽑힌다
+    fn wrapped_hits(&self, lines: &[Vec<Word>], width: f32) -> Vec<Hit> {
+        let span = |l: &Vec<Word>| (l.iter().map(|w| w.x).fold(f32::MAX, f32::min), l.iter().map(|w| w.x + w.w).fold(f32::MIN, f32::max));
+        let mut out = Vec::new();
+        for (i, a) in lines.iter().enumerate() {
+            let (Some(fa), (a0, a1)) = (a.first(), span(a)) else { continue };
+            // 바로 아래에서 가로로 겹치는 가장 가까운 줄
+            let below = lines.iter().enumerate().filter(|(j, b)| {
+                let (b0, b1) = span(b);
+                *j != i && b.first().is_some_and(|fb| fb.y > fa.y && fb.y - fa.y <= width * 0.04) && b0 < a1 && b1 > a0
+            }).min_by(|x, y| x.1[0].y.partial_cmp(&y.1[0].y).unwrap_or(std::cmp::Ordering::Equal));
+            let Some((_, b)) = below else { continue };
+            let na: usize = a.iter().map(|w| norm(&w.text).len()).sum();
+            let joined: Vec<Word> = a.iter().chain(b.iter()).map(|w| Word { text: w.text.clone(), x: w.x, y: w.y, w: w.w }).collect();
+            out.extend(self.line_hits(&joined).into_iter().filter(|h| h.start < na && h.start + h.len > na));
+        }
+        out
+    }
+
     fn line_hits(&self, words: &[Word]) -> Vec<Hit> {
         // 줄 글자와 각 글자의 위치(그 글자가 속한 단어의 위치)
         let mut chars = Vec::new();
@@ -291,6 +311,7 @@ impl Matcher {
     /// find 와 같고, 각 제목의 위치(가운데 x, y)도 함께 (다음 확인 때 제목 줄만 읽기 위해)
     pub fn find_at(&self, lines: &[Vec<Word>], width: f32) -> Vec<(u32, f32, f32)> {
         let mut all: Vec<Hit> = lines.iter().flat_map(|l| self.line_hits(l)).collect();
+        all.extend(self.wrapped_hits(lines, width));
         all.sort_by(|a, b| a.x.partial_cmp(&b.x).unwrap_or(std::cmp::Ordering::Equal));
         // x 로 묶기 (같은 카드 안의 설명 글자는 제목과 x 가 가깝다)
         let gap = (width * 0.12).max(40.0);
@@ -586,6 +607,17 @@ mod tests {
         let found = m.find(&lines, 1600.0);
         assert_eq!(found[0], id_of("거인 학살자"));
         assert_eq!(*found.last().unwrap(), id_of("최상급 조준경 부착"));
+    }
+
+    #[test]
+    fn 두_줄로_꺾인_긴_제목() {
+        let m = Matcher::from_json(DATA);
+        let lines = vec![
+            vec![w("능력치", 100.0, 50.0), w("더하기", 160.0, 50.0), w("능력치", 220.0, 50.0), w("더하기", 280.0, 50.0)],
+            vec![w("능력치!", 170.0, 80.0)],
+            vec![w("능력치", 100.0, 130.0), w("모루", 160.0, 130.0), w("4개를", 220.0, 130.0)],
+        ];
+        assert_eq!(m.find(&lines, 2560.0), vec![id_of("능력치 더하기 능력치 더하기 능력치!")]);
     }
 
     #[test]
