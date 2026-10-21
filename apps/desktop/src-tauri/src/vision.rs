@@ -1032,11 +1032,15 @@ mod imp {
                 println!("{} {f} {got:?} {}", if miss.is_empty() { "통과" } else { "실패" }, log.join(" · "));
                 if !miss.is_empty() { fails.push(format!("{f}: 못 찾음 {miss:?} (찾음 {got:?}) {}", log.join(" · "))); }
             }
-            let dir = std::path::PathBuf::from(std::env::var("QA_FRAMES").expect("QA_FRAMES 가 없습니다"));
+            // QA_FRAMES 는 폴더 여러 개(';' 로 구분)도 받는다 — 화면 수가 많을수록 놓친 비율이 뽑기 운에 덜 흔들린다
+            let dirs: Vec<std::path::PathBuf> = std::env::split_paths(&std::env::var_os("QA_FRAMES").expect("QA_FRAMES 가 없습니다")).collect();
+            for dir in &dirs {
             let cases: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(dir.join("cases.json")).unwrap()).unwrap();
             for c in cases.as_array().unwrap() {
-                let f = c["file"].as_str().unwrap();
-                let (img, w, h) = load(&dir.join(f));
+                let f0 = c["file"].as_str().unwrap();
+                let f = format!("{}/{f0}", dir.file_name().and_then(|x| x.to_str()).unwrap_or(""));
+                let f = f.as_str();
+                let (img, w, h) = load(&dir.join(f0));
                 let (got, log) = analyze(&eng, &m, &icons, &img, w, h, false);
                 n += 1;
                 let want: Vec<u32> = c["cards"].as_array().unwrap().iter().map(|k| k["id"].as_u64().unwrap() as u32).collect();
@@ -1047,6 +1051,7 @@ mod imp {
                 cards_missed += miss.len();
                 if !wrong.is_empty() { wrongs.push(format!("{f} {w}x{h}: 잘못 {wrong:?} {}", log.join(" · "))); }
                 if !miss.is_empty() { println!("  놓침 {f}: {miss:?}"); }
+            }
             }
             let rate = cards_missed as f32 / cards_total.max(1) as f32;
             println!("화면 {n}장 · 카드 {cards_total}장 중 놓침 {cards_missed} ({:.1}%) · 틀린 답 {} · 사진 실패 {}", rate * 100.0, wrongs.len(), fails.len());

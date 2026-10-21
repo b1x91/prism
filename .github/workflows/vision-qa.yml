@@ -123,10 +123,15 @@ jobs:
           npm run build -w @prism/desktop
       - name: 가상 게임 화면 만들기
         shell: bash
-        run: QA_SEED=7 python3 apps/desktop/qa/make_frames.py qa-frames
+        # 세 벌(약 80장) — 한 벌(26장)이면 증강 목록이 바뀔 때마다 뽑기 운으로 놓친 비율이 1~2%p 흔들린다 (v3.101-7)
+        run: |
+          QA_SEED=7 python3 apps/desktop/qa/make_frames.py qa-frames/s7 &
+          QA_SEED=8 python3 apps/desktop/qa/make_frames.py qa-frames/s8 &
+          QA_SEED=9 python3 apps/desktop/qa/make_frames.py qa-frames/s9 &
+          wait
       - name: 끝단 시험
         shell: bash
         working-directory: apps/desktop/src-tauri
         env:
           CARGO_PROFILE_DEV_OPT_LEVEL: '2'
-        run: QA_FRAMES=$GITHUB_WORKSPACE/qa-frames cargo test --lib qa_e2e -- --nocapture
+        run: QA_FRAMES="$GITHUB_WORKSPACE/qa-frames/s7;$GITHUB_WORKSPACE/qa-frames/s8;$GITHUB_WORKSPACE/qa-frames/s9" cargo test --lib qa_e2e -- --nocapture
