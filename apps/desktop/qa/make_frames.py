@@ -115,8 +115,20 @@ def draw_card(img, x, y, cw, chh, aug, rnd):
     # 제목 · 분류 칩 · 설명
     ty = iy0 + (iy1 - iy0) * .44
     ft = font(cw * .085, True)
-    tw = d.textlength(aug['name'], font=ft)
-    d.text((ix0 + (iw - tw) / 2, ty), aug['name'], fill=(245, 245, 250), font=ft)
+    # 긴 제목은 게임처럼 카드 안에서 단어 단위로 꺾는다 (예전엔 한 줄로 테두리 밖까지 넘쳐 실제 화면과 달랐다)
+    tlines, cur = [], ''
+    for wd in aug['name'].split(' '):
+        t = (cur + ' ' + wd).strip()
+        if cur and d.textlength(t, font=ft) > iw * .92:
+            tlines.append(cur)
+            cur = wd
+        else:
+            cur = t
+    tlines.append(cur)
+    for i, tl in enumerate(tlines):
+        tw = d.textlength(tl, font=ft)
+        d.text((ix0 + (iw - tw) / 2, ty + i * cw * .1), tl, fill=(245, 245, 250), font=ft)
+    ty += (len(tlines) - 1) * cw * .1
     fc = font(cw * .045)
     chip = rnd.choice(['보조', '피해량', '저항', '일반', '유틸'])
     cwid = d.textlength(chip, font=fc) + cw * .04
