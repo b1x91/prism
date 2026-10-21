@@ -9,7 +9,7 @@
     "server:migrate:local": "wrangler d1 migrations apply prism --local --config server/wrangler.toml",
     "server:migrate": "wrangler d1 migrations apply prism --remote --config server/wrangler.toml",
     "server:deploy": "wrangler deploy --config server/wrangler.toml",
-    "data:mayhem": "tsx scripts/mayhem/build.ts && npm run data:skins && npm run data:items",
+    "data:mayhem": "tsx scripts/mayhem/build.ts && npm run data:skins && npm run data:items && npm run data:skills",
     "data:items": "tsx scripts/items.ts",
     "data:skins": "tsx scripts/skins.ts",
     "site:build": "npm run web:build",
@@ -18,7 +18,8 @@
     "web:build": "npm run icons && npm run build -w @prism/web",
     "desktop:dev": "npm run dev -w @prism/desktop",
     "desktop:bridge": "node apps/desktop/dev-bridge.mjs",
-    "desktop:build": "npm run icons && npm run tauri -w @prism/desktop -- build"
+    "desktop:build": "npm run icons && npm run tauri -w @prism/desktop -- build",
+    "data:skills": "tsx scripts/skills.ts"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20261010.1",

@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { AugmentOpen, Icon, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { AugmentOpen, Icon, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { pollWhileShown } from './poll';
 import { checkNow, getState, refreshSession, start, subscribe, type State } from './controller';
@@ -70,7 +70,11 @@ function Page({ children, main, k = 0 }: { children: ReactNode; main: React.RefO
   const idx = hidx();
   const prev = useRef(idx);
   const back = idx < prev.current;
-  useEffect(() => { prev.current = idx; main.current?.scrollTo({ top: 0 }); }, [loc.pathname, idx, main]);
+  useEffect(() => { prev.current = idx; }, [loc.pathname, idx]);
+  // 새로 들어가면 맨 위, 뒤로·앞으로 돌아오면 보던 위치 (v3.102)
+  const type = useNavigationType();
+  const sc = useCallback(() => main.current, [main]);
+  useScrollKeeper(loc.pathname, type === 'POP', sc);
   return <div key={`${loc.pathname}-${k}`} className={`page ${back ? 'back' : ''}`}>{children}</div>;
 }
 

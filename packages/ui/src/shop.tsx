@@ -4,6 +4,7 @@
  *  - ShopView: 피스 잔액·버는 법·상품 (사면 바로 장착, 가진 것은 장착/해제)
  *  - PublicProfileView: 로그인 없이 보는 그 사람의 강점 (모임 정보 없음)
  */
+import { useKept } from './kept';
 import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
   CHAMPIONS, DEX_LEVEL_KO, PIECE, forSale, priceWith, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
@@ -165,9 +166,9 @@ function ShopOpen({ api, me, onGo }: { api: Api; me: Me; onGo?: (to: 'dex' | 'mi
   const [busy, setBusy] = useState<string | null>(null);
   const [msg, setMsg] = useState('');
   // '인기'가 첫 탭. 지금은 판매 기록이 적어 무작위로 섞은 12개 (들어올 때마다 한 번, HOT_MAX)
-  const [slot, setSlot] = useState<ShopSlot | 'hot' | 'use'>('hot');
+  const [slot, setSlot] = useKept<ShopSlot | 'hot' | 'use'>('shop.slot', 'hot');
   const [hot] = useState(() => SHOP.filter(forSale).map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x));
-  const [owned, setOwned] = useState(false);
+  const [owned, setOwned] = useKept('shop.owned', false);
   const [buying, setBuying] = useState<ShopItem | null>(null);
   const run = async (k: string, f: () => Promise<unknown>) => { setBusy(k); setMsg(''); try { await f(); reload(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); } };
   useEffect(() => { if (data) setPieces(data.balance); }, [data]);

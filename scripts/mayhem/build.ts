@@ -17,6 +17,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { AUGMENT_TAGS } from './augment-tags.js';
+import { calcText, fnv, spellCalcs } from './calc.js';
 
 // CDRAGON=pbe 로 다음 패치(PBE)만 따로 받을 수 있다. OUT 을 주면 그 폴더에 쓴다 (비교용)
 // NEXT=pbe (+ NEXT_AT=ISO 시각) 이면 라이브 데이터에 다음 패치의 새 증강(added)·빠지는 증강(removed)을 표시해 합친다 (v3.101)
@@ -66,7 +67,7 @@ function fmtValue(values: number[], mul: number): string {
  * - {{키}} 는 문구표에서 다시 찾는다 (최대 3단계)
  * - @이름*배수@ 는 증강 주문의 수치로 바꾼다. 게임 중에만 계산되는 값(현재 피해량 등)은 풀 수 없으므로 그 줄을 지우거나 "일정량"으로 둔다
  */
-function cleanText(raw: string, st: Record<string, string>, values: Record<string, number[]>): string {
+function cleanText(raw: string, st: Record<string, string>, values: Record<string, number[]>, calcs: Record<string, any> = {}): string {
   let s = raw.replace(/\{\{\s*SpellName\s*\}\}/gi, '선택한 스킬').replace(/\{\{\s*Item_Keyword_OnHit\s*\}\}/gi, '적중 시 효과');
   for (let depth = 0; depth < 3; depth++) {
     s = s.replace(/\{\{\s*([A-Za-z0-9_]+)(@[^@]*@)?\s*\}\}/g, (_, key: string, lv?: string) => {
@@ -76,8 +77,10 @@ function cleanText(raw: string, st: Record<string, string>, values: Record<strin
   }
   s = s.replace(/@SpellName@/gi, '선택한 스킬').replace(/@f\d+(\.\d+)?@/g, '?');
   s = s.replace(/@([A-Za-z0-9_.]+)(?:\*(-?[0-9.]+))?@/g, (_, name: string, mul?: string) => {
-    const v = values[name.toLowerCase()];
-    return v ? fmtValue(v, mul ? Number(mul) : 1) : '?';
+    const v = values[name.toLowerCase()] ?? values[fnv(name)];
+    if (v) return fmtValue(v, mul ? Number(mul) : 1);
+    // 계산식 수치 (레벨에 따라 25~75, 추가 공격력의 40% …). 배수가 붙은 자리는 풀지 않는다
+    return (!mul && calcText(name, values, calcs)) || '?';
   });
   s = s.replace(/%i:[A-Za-z]+%/g, '').replace(/%%/g, '%');
   s = s.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '');
@@ -148,7 +151,7 @@ async function buildAugments(raw = RAW) {
       name: st[String(a.NameTra).toLowerCase()] ?? a.AugmentNameId,
       rarity: RARITY[c?.rarity] ?? 'silver',
       icon: c?.augmentSmallIconPath ?? null,
-      desc: cleanText(pickText(st, a), st, values),
+      desc: cleanText(pickText(st, a), st, values, spellCalcs(kiwi, [a.RootSpell, ...(a.AdditionalSpells ?? [])])),
       tags: fit?.tags ?? [],
       note: fit?.note ?? '',
       ability: !!a.IsAbilityAugment, // 선택한 스킬 하나를 강화하는 증강

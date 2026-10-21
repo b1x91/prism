@@ -1,4 +1,5 @@
 import { SplashSwap } from './splash';
+import { useKept } from './kept';
 import { useMemo, useState, type ReactNode } from 'react';
 import { CHAMPIONS, CHAMPION_LIST, ROLE_KO, cdragon, matchName } from '@prism/core';
 import { ChampImg } from './basics';
@@ -44,9 +45,10 @@ export const ROLE_DOT: Record<string, string> = { marksman: 'var(--spectrum-1)',
 
 /** 챔피언 목록: 붙는 도구 줄(검색·역할·내 챔프) + 내 챔프 줄 + 전체 격자. record 가 있으면 내 판수·승률 (앱) */
 export function ChampGrid({ onPick, query = '', onQuery, record }: { onPick: (id: number) => void; query?: string; onQuery?: (q: string) => void; record?: Record<number, { n: number; w: number }> }) {
-  const [role, setRole] = useState<string>('all');
-  const [mine, setMine] = useState(false);
-  const [fav, setFav] = useState(false);
+  // 거르기는 챔프 상세에 다녀와도 그대로 (v3.102)
+  const [role, setRole] = useKept<string>('champ.role', 'all');
+  const [mine, setMine] = useKept('champ.mine', false);
+  const [fav, setFav] = useKept('champ.fav', false);
   const favs = useFavs();
   const list = CHAMPION_LIST.filter((c) => matchName(c.name, query) && (role === 'all' || c.roles.includes(role)) && (!mine || record?.[c.id]) && (!fav || favs.champs.includes(c.id)));
   // 아무것도 거르지 않았을 때만 위에 '내 챔프' 줄

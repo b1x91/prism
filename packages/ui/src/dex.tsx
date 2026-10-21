@@ -3,6 +3,7 @@
  * 해 봤다고 채워지지 않는다: 실버(1판) → 골드(3승) → 플래티넘 → 다이아몬드 → 마스터 (S티어 증강 경험·5/10/30/50승·역할 챌린지).
  * 못 만난 것은 번호와 흐린 그림(???). 누르면 도감 설명과 다음 목표.
  */
+import { useKept } from './kept';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, type Shop, championsFor, explainFit, rankFits, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP, josa } from '@prism/core';
 import { ChampImg, Gem, Select, Seg } from './basics';
@@ -52,12 +53,13 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1, api }
   const [shop, setShop] = useState<Shop | null>(null);
   useEffect(() => { if (api) api.get<Shop>('/api/shop').then(setShop).catch(() => {}); }, [api]);
   const lens: Lens | undefined = api ? { api, shop, set: setShop } : undefined;
-  const [kind, setKind] = useState<Kind>('champions');
-  const [show, setShow] = useState<Show>('all');
-  const [sort, setSort] = useState<Sort>('no');
-  const [group, setGroup] = useState<string>('all');
-  const [q, setQ] = useState('');
-  const [sel, setSel] = useState<Record<Kind, number | null>>({ champions: null, augments: null });
+  // 보기·정렬·거르기·고른 칸은 다른 화면에 다녀와도 그대로 (v3.102)
+  const [kind, setKind] = useKept<Kind>('dex.kind', 'champions');
+  const [show, setShow] = useKept<Show>('dex.show', 'all');
+  const [sort, setSort] = useKept<Sort>('dex.sort', 'no');
+  const [group, setGroup] = useKept<string>('dex.group', 'all');
+  const [q, setQ] = useKept('dex.q', '');
+  const [sel, setSel] = useKept<Record<Kind, number | null>>('dex.sel', { champions: null, augments: null });
   const [sheet, setSheet] = useState(false); // 좁은 화면: 고르면 아래에서 설명이 올라온다
   const entry = useRef<HTMLElement>(null);
   // 옆 설명 칸: 칸 안에 따로 스크롤을 두지 않는다. 페이지와 함께 내려가다가 칸의 끝이 화면 아래에 닿으면 멈춘다

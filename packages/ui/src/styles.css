@@ -1252,6 +1252,14 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .dlt.l4 { --tc: #5b7cff; }
 .dlt.l5 .gem { background: conic-gradient(var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-7), var(--spectrum-1)); box-shadow: 0 0 8px rgba(140, 150, 255, .6); }
 .dlt.l5 { --tc: var(--spectrum-6); }
+/* 좁은 폭(휴대폰): 다섯 칸에 '다이아몬드'가 '다…'로 잘리던 것 — 보석·숫자·이름을 세로로 쌓아 이름을 다 보인다 */
+.dlt-tiers { container-type: inline-size; }
+@container (max-width: 420px) {
+  .dlt { grid-template-columns: 1fr; grid-template-rows: auto auto auto; justify-items: center; row-gap: 4px; padding: var(--s2) 2px; text-align: center; }
+  .dlt .gem { grid-row: auto; width: 10px; height: 10px; }
+  .dlt b, .dlt span { grid-column: 1; }
+  .dlt span { font-size: 11px; overflow: visible; letter-spacing: -0.02em; }
+}
 .dlt.l5.on { box-shadow: var(--shadow), inset 0 -2px 0 transparent; background: linear-gradient(var(--surface), var(--surface)) padding-box, var(--spectrum) border-box; border-bottom: 2px solid transparent; }
 @media (max-width: 860px) {
   .dex-levels { grid-template-columns: 1fr 1fr; }
@@ -1920,9 +1928,11 @@ button.ga { width: 100%; display: grid; grid-template-columns: 40px minmax(0, 1f
 button.ga:hover { background: var(--surface-2); }
 .ga .ga-main { min-width: 0; display: grid; gap: 2px; }
 .ga .nm { display: flex; align-items: center; gap: var(--s2); flex-wrap: nowrap; min-width: 0; font-weight: 750; font-size: var(--fs-md); }
-.ga .nm .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 이름은 자르지 않는다 (길면 두 줄). '프리즘급' 표시는 이유 줄 맨 앞 — 이름 자리를 빼앗아 '무…'처럼 잘리던 것 */
+.ga .nm .t { min-width: 0; }
 .ga .gradeup { height: 18px; font-size: 11px; padding: 0 6px; flex: none; }
-.ga .ga-why { font-size: var(--fs-xs); color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ga .ga-why { font-size: var(--fs-xs); line-height: 18px; color: var(--text-3); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.ga .ga-why .gradeup { display: inline-flex; vertical-align: top; margin-right: 6px; }
 .ga .ga-side { display: grid; justify-items: end; gap: 2px; }
 .ga .ga-side .tier { width: 28px; height: 28px; border-radius: var(--r-s); }
 .ga .ga-side .tier b { font-size: var(--fs-md); }
@@ -3357,3 +3367,18 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .ptag-out { background: color-mix(in srgb, var(--text-3) 16%, transparent); color: var(--text-2); }
 .adx-t.leaving { opacity: .62; }
 .adx-t.leaving:hover { opacity: 1; }
+
+/* 챔프 스킬 (v3.102, ChampSkills) — 그림 · 이름 · 재사용/소모/사거리 칩 · 설명 */
+.csk { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s2); }
+.csk-row { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: var(--s3); align-items: start; padding: var(--s3) 0; border-top: 1px solid var(--line); }
+.csk-row:first-child { border-top: 0; padding-top: 0; }
+.csk-ic { position: relative; width: 48px; height: 48px; border-radius: var(--r-m); overflow: hidden; background: var(--surface-2); }
+.csk-ic img { display: block; width: 48px; height: 48px; }
+.csk-key { position: absolute; right: 0; bottom: 0; min-width: 18px; height: 18px; padding: 0 4px; border-top-left-radius: var(--r-s); background: rgba(10, 12, 24, .82); color: #fff; font-size: 12px; font-weight: 800; line-height: 18px; text-align: center; }
+.csk-txt { min-width: 0; display: grid; gap: var(--s1); }
+.csk-h { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s1) var(--s2); }
+.csk-h b { font-size: var(--fs-md); font-weight: 750; }
+.csk-meta { display: inline-flex; flex-wrap: wrap; gap: var(--s1); }
+.csk-meta span { padding: 0 var(--s2); height: 20px; display: inline-flex; align-items: center; border-radius: var(--r-pill); background: var(--surface-2); color: var(--text-2); font-size: var(--fs-xs); font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.csk-txt p { margin: 0; color: var(--text-2); font-size: var(--fs-sm); line-height: 1.6; white-space: pre-line; }
+.csk-foot { margin: var(--s3) 0 0; color: var(--text-3); font-size: var(--fs-xs); }

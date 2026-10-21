@@ -1,5 +1,7 @@
 export * from './icons';
 export * from './basics';
+export * from './kept';
+export * from './skills';
 export * from './champ';
 export * from './augment';
 export * from './crew';

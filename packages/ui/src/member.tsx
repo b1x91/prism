@@ -3,6 +3,7 @@
  * 이동은 onOpen(회원 ID) 으로 화면 쪽에 맡긴다 (웹은 /members/:id, 앱은 #/members/:id).
  */
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useKept } from './kept';
 import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, aboutWhen, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
   type Api, type Game, type InsightKind, type MemberPage, type Ranking, type Shop, type RankingRow, type Skin,
@@ -70,7 +71,7 @@ function stageDue(): boolean {
 }
 
 function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (id: string) => void }) {
-  const [by, setByRaw] = useState<RankBy | 'champ-art' | 'aug-art'>('season');
+  const [by, setByRaw] = useKept<RankBy | 'champ-art' | 'aug-art'>('rank.by', 'season');
   const [play, setPlay] = useState(stageDue);
   const setBy = (v: RankBy | 'champ-art' | 'aug-art') => { setPlay(false); setByRaw(v); };
   const art = by === 'champ-art' || by === 'aug-art';

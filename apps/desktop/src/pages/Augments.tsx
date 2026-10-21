@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import { ACTIVE_AUGMENTS, DATA_VERSION } from '@prism/core';
-import { Artisans, AugmentDetail, AugmentDex } from '@prism/ui';
+import { Artisans, AugmentDetail, AugmentDex, goBack } from '@prism/ui';
 import { api } from '../bridge';
 
 export function AugmentsPage({ member }: { member?: boolean }) {
@@ -8,7 +8,7 @@ export function AugmentsPage({ member }: { member?: boolean }) {
   const nav = useNavigate();
   if (id) return (
     <div className="stack" style={{ gap: 16 }}>
-      <AugmentDetail id={Number(id)} onChampion={(c) => nav(`/champions/${c}`)} onAugment={(a) => nav(`/augments/${a}`)} onBack={() => nav('/augments')}
+      <AugmentDetail id={Number(id)} onChampion={(c) => nav(`/champions/${c}`)} onAugment={(a) => nav(`/augments/${a}`)} onBack={() => goBack(nav, '/augments')}
         after={member && <Artisans api={api} kind="augment" id={Number(id)} onMember={(m) => nav(`/members/${m}`)} />} />
     </div>
   );

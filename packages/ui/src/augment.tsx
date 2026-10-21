@@ -1,3 +1,4 @@
+import { useKept } from './kept';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ACTIVE_AUGMENTS, AUGMENT, AUGMENTS, LISTED_AUGMENTS, NEXT_PATCH, isLeaving, isNewAugment, isUpcoming, augIcon, augShift, CHAMPIONS, GAME_DATA, LEVEL_KO, RARITY_KO, augmentTraits, championsFor, guideOf, initials, pct, explainFit, fitOf, gradeUp, fitPoints, rankByPriority, rankFits, relatedAugments, tierOf, topTie, type AugmentStats, type FitTier, type Matchup, type ChampionProfile, type Fit, type Rarity } from '@prism/core';
 import { ChampImg } from './basics';
@@ -32,8 +33,8 @@ function GuideRow({ f, compact, champ, all, stats, c, cid }: { f: Fit; compact?:
     <AugmentLink id={a.id} champion={cid} className={`ga t-${tier} ${compact ? 'cmp' : ''}`}>
       <AugRing id={a.id} size={40} />
       <span className="ga-main">
-        <span className="nm"><FavMark kind="aug" id={a.id} inline /><span className="t">{a.name}</span><GradeUp rarity={a.rarity} tier={tier} /></span>
-        <span className="ga-why">{e.why}</span>
+        <span className="nm"><FavMark kind="aug" id={a.id} inline /><span className="t">{a.name}</span></span>
+        <span className="ga-why"><GradeUp rarity={a.rarity} tier={tier} short />{e.why}</span>
       </span>
       <span className="ga-side"><TierBadge tier={tier} />{stats === 'loading' ? <span className="stat2" aria-hidden="true"><Bone w={64} h={10} style={{ display: 'inline-block', verticalAlign: 'middle' }} /></span> : stats && <StatLine id={a.id} champ={champ} all={all} />}</span>
     </AugmentLink>
@@ -166,12 +167,13 @@ export function PatchTag({ a, long }: { a: (typeof AUGMENTS)[number]; long?: boo
 }
 
 export function AugmentDex({ onOpen }: { onOpen?: (id: number) => void }) {
-  const [q, setQ] = useState('');
+  // 검색·칩은 상세에 다녀와도 그대로 (v3.102)
+  const [q, setQ] = useKept('aug.q', '');
   // 등급 칩: 아무것도 고르지 않으면 전체, 고른 것을 다시 누르면 풀린다 (v3.27-3)
-  const [r, setR] = useState<Rarity | null>(null);
-  const [fav, setFav] = useState(false);
+  const [r, setR] = useKept<Rarity | null>('aug.r', null);
+  const [fav, setFav] = useKept('aug.fav', false);
   // '새로운 증강' (v3.101): 가장 최근 패치에 나온(곧 나올) 증강만
-  const [fresh, setFresh] = useState(false);
+  const [fresh, setFresh] = useKept('aug.fresh', false);
   const favs = useFavs();
   const newCount = LISTED_AUGMENTS.filter(isNewAugment).length;
   const hit = (a: (typeof ACTIVE_AUGMENTS)[number]) => (!fav || favs.augs.includes(a.id)) && (!fresh || isNewAugment(a)) && (!q || matchAug(a.name, q) || a.desc.includes(q) || a.note.includes(q));
@@ -268,10 +270,12 @@ export function TierBadge({ tier }: { tier: FitTier }) {
 }
 
 /** S 티어가 제 등급을 넘을 때: 실버 → 골드급, 골드 → 프리즘급 */
-export function GradeUp({ rarity, tier }: { rarity: Rarity; tier: FitTier }) {
+/** short: 좁은 줄에서는 '프리즘급'만 (이름 자리를 빼앗지 않게, 뜻은 마우스를 올리면) */
+export function GradeUp({ rarity, tier, short }: { rarity: Rarity; tier: FitTier; short?: boolean }) {
   const up = gradeUp(rarity, tier);
   if (!up) return null;
-  return <span className={`gradeup ${up}`}>이 챔프에겐 {up === 'prismatic' ? '프리즘급' : '골드급'}</span>;
+  const g = up === 'prismatic' ? '프리즘급' : '골드급';
+  return <span className={`gradeup ${up}${short ? ' short' : ''}`} title={`이 챔프에겐 ${g}`}>{short ? g : `이 챔프에겐 ${g}`}</span>;
 }
 
 /** 원형 증강 아이콘 (등급 테두리) */

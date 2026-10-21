@@ -1,6 +1,6 @@
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
-import { AugmentOpen, Bone, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AugmentOpen, Bone, useScrollKeeper, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -16,7 +16,11 @@ export function Layout() {
   const matchSource = useCallback((id: number) => (me ? api.get<MatchDetail>(`/api/games/${id}`).catch(() => null) : Promise.resolve(null)), [api, me]);
   const [menu, setMenu] = useState(false);
   const [asking, setAsking] = useState(false);
-  useEffect(() => { scrollTo(0, 0); setMenu(false); }, [pathname]);
+  // 새로 들어가면 맨 위, 뒤로·앞으로 돌아오면 보던 위치 (v3.102)
+  const navType = useNavigationType();
+  const winScroller = useCallback(() => window, []);
+  useScrollKeeper(pathname, navType === 'POP', winScroller);
+  useEffect(() => { setMenu(false); }, [pathname]);
   const nav = useNavigate();
   const pieces = usePieces(me ? api : null);
   // 상단 내 얼굴·이름·피스: 지난 접속 때 것을 기억해 두었다가 로그인 확인 전에 바로 그린다
