@@ -125,6 +125,7 @@ jobs:
           if (-not $exe) { throw '실행 파일을 찾지 못했습니다' }
           Copy-Item $exe.FullName "$stage/Prism.exe"
           foreach ($n in 'StoreLogo', 'Square44x44Logo', 'Square71x71Logo', 'Square150x150Logo', 'Square310x310Logo') { Copy-Item "apps/desktop/src-tauri/icons/$n.png" "$stage/Assets/$n.png" }
+          Copy-Item apps/desktop/msix/Assets/*.png "$stage/Assets/"
           (Get-Content -Raw -Encoding utf8 apps/desktop/msix/AppxManifest.xml).Replace('__VERSION__', $ver) | Set-Content -Encoding utf8 "$stage/AppxManifest.xml"
           $mk = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Recurse -Filter makeappx.exe | Where-Object { $_.FullName -match '\\x64\\' } | Sort-Object FullName -Descending | Select-Object -First 1
           if (-not $mk) { throw 'makeappx 를 찾지 못했습니다' }

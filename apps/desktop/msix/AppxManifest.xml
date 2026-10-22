@@ -26,7 +26,7 @@
     <Application Id="Prism" Executable="Prism.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements DisplayName="PRISM 증바람" Description="아수라장 동반 앱 — 챔프 선택 도우미, 증강 가이드, 내 기록"
         BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
-        <uap:DefaultTile Square71x71Logo="Assets\Square71x71Logo.png" Square310x310Logo="Assets\Square310x310Logo.png" ShortName="PRISM" />
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" Square71x71Logo="Assets\Square71x71Logo.png" Square310x310Logo="Assets\Square310x310Logo.png" ShortName="PRISM" />
       </uap:VisualElements>
       <Extensions>
         <!-- 윈도우 시작 시 실행 (설정에서 켜면 store.rs 가 RequestEnable) -->
