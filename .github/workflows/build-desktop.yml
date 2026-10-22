@@ -6,6 +6,7 @@
 # 앱 버전은 apps/desktop/src-tauri/tauri.conf.json 의 version
 # 공개(릴리스·서버 알림)는 증강 인식 QA(vision-qa: 가상 화면·사진·Windows 문자 인식)가 모두 통과해야 한다 (v3.67)
 # 단 Windows 끝단 시험은 지난 공개판 이후 인식 코드·데이터가 바뀌었을 때만 (v3.79)
+# "Microsoft Store 판" 을 켜면 PRISM_CHANNEL=store 로 따로 빌드해 MSIX(서명 없음 — 스토어가 서명)를 결과물로 남긴다 (v3.103)
 name: build-desktop
 
 on:
@@ -17,6 +18,10 @@ on:
         description: 릴리스로 공개 (웹의 "앱 받기"가 이 파일을 받는다)
         type: boolean
         default: true
+      store:
+        description: Microsoft Store 판(MSIX)도 만들기 — 결과물(prism-msix)을 Partner Center 에 직접 올린다
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -78,6 +83,57 @@ jobs:
         with:
           name: prism-windows
           path: Prism-Setup.exe
+
+  # Microsoft Store 판 (MSIX). 앱 안 업데이트는 스토어가, 윈도우 시작 시 실행은 매니페스트의 시작 작업 (store.rs)
+  store:
+    needs: qa
+    if: inputs.store
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: apps/desktop/src-tauri
+          key: store
+      - run: npm ci
+      - name: 회원 서버 주소
+        id: server
+        shell: bash
+        run: echo "url=$(node scripts/ci/server-url.mjs)" >> "$GITHUB_OUTPUT"
+        env:
+          PRISM_SERVER_URL: ${{ vars.PRISM_SERVER_URL }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: npm run icons
+      - run: npm run tauri -w @prism/desktop -- build --no-bundle
+        env:
+          PRISM_SERVER: ${{ steps.server.outputs.url }}
+          PRISM_CHANNEL: store
+      - name: MSIX 묶기
+        shell: pwsh
+        run: |
+          $ver = (Get-Content -Raw apps/desktop/src-tauri/tauri.conf.json | ConvertFrom-Json).version + '.0'
+          $stage = 'msix-stage'
+          New-Item -ItemType Directory -Force "$stage/Assets" | Out-Null
+          $exe = Get-ChildItem apps/desktop/src-tauri/target/release -Filter *.exe | Where-Object { $_.Name -in 'Prism.exe', 'prism-desktop.exe' } | Select-Object -First 1
+          if (-not $exe) { throw '실행 파일을 찾지 못했습니다' }
+          Copy-Item $exe.FullName "$stage/Prism.exe"
+          foreach ($n in 'StoreLogo', 'Square44x44Logo', 'Square71x71Logo', 'Square150x150Logo', 'Square310x310Logo') { Copy-Item "apps/desktop/src-tauri/icons/$n.png" "$stage/Assets/$n.png" }
+          (Get-Content -Raw -Encoding utf8 apps/desktop/msix/AppxManifest.xml).Replace('__VERSION__', $ver) | Set-Content -Encoding utf8 "$stage/AppxManifest.xml"
+          $mk = Get-ChildItem 'C:\Program Files (x86)\Windows Kits\10\bin' -Recurse -Filter makeappx.exe | Where-Object { $_.FullName -match '\\x64\\' } | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $mk) { throw 'makeappx 를 찾지 못했습니다' }
+          & $mk.FullName pack /d $stage /p "Prism-$ver.msix" /o
+          if ($LASTEXITCODE -ne 0) { throw "makeappx 실패 ($LASTEXITCODE)" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: prism-msix
+          path: Prism-*.msix
 
   # QA 와 빌드가 모두 통과해야 공개한다
   publish:

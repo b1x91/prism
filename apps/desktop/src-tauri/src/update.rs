@@ -5,7 +5,7 @@
 //! **설치 프로그램을 창 없이**(`/S /UPDATE`) 돌린다. 다시 켜야 하면 `/R`(필요하면 `/ARGS --background` 로 트레이만).
 //! 그래서 설치 창이 뜨지 않고, 몇 초 뒤 새 버전이 그대로 다시 켜진다.
 //!
-//! Microsoft Store 판(빌드 때 `PRISM_CHANNEL=store`)은 스토어가 업데이트를 맡으므로 여기서는 아무것도 하지 않는다.
+//! Microsoft Store 판(빌드 때 `PRISM_CHANNEL=store`)은 스토어가 업데이트를 맡는다 — 확인·스토어 창은 store.rs.
 //! 받는 곳은 Prism 서버의 /app/download/ (서버 주소가 없는 개발 빌드만 이 저장소의 Release) 로만 한정한다.
 
 use serde::Serialize;
@@ -84,8 +84,10 @@ fn is_ready(latest: &str) -> bool {
 
 pub async fn check() -> Result<Info, String> {
     if managed() {
+        // 스토어에 올라온 새 버전 (확인은 스토어가, 받기·설치는 화면의 '업데이트' → 스토어 창)
+        let latest = tauri::async_runtime::spawn_blocking(crate::store::latest).await.map_err(|e| e.to_string())??;
         return Ok(Info {
-            current: CURRENT.into(), latest: CURRENT.into(), available: false, notes: String::new(),
+            current: CURRENT.into(), available: latest.is_some(), latest: latest.unwrap_or_else(|| CURRENT.into()), notes: String::new(),
             ready: false, managed: true, url: String::new(), size: 0, sha256: String::new(),
         });
     }

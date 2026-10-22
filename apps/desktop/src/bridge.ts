@@ -37,6 +37,8 @@ export const bridge = {
   updateCheck: () => call<UpdateInfo>('update_check').catch((e) => { throw err(e); }),
   updateInstall: () => call<void>('update_install').catch((e) => { throw err(e); }),
   updatePrepare: () => call<UpdateInfo>('update_prepare').catch((e) => { throw err(e); }),
+  /** 스토어 판: 스토어의 받기·설치 창 (못 띄우면 스토어의 Prism 페이지). 설치가 시작되면 true */
+  storeUpdate: () => call<boolean>('store_update').catch((e) => { throw err(e); }),
   updateApply: (background = false) => call<void>('update_apply', { background }).catch((e) => { throw err(e); }),
   /** 게임 중 라이브 클라이언트 데이터 (게임이 없거나 동의 전이면 실패) */
   liveGame: () => call<unknown>('live_game'),

@@ -10,7 +10,7 @@ import { checkNow, getState, refreshSession, start, subscribe, type State } from
 import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
 import { api, bridge } from './bridge';
-import { applyUpdate, checkUpdate, startUpdates, useUpdate } from './update';
+import { applyUpdate, storeUpdate, checkUpdate, startUpdates, useUpdate } from './update';
 import { VERSION } from './version';
 import { GamePage } from './pages/Game';
 import { AugmentsPage } from './pages/Augments';
@@ -173,6 +173,14 @@ function App() {
         </div>}
       </aside>
       <main className="main" ref={main}>
+        {/* 스토어 판: 새 버전이 있으면 늘 위쪽에 (닫기 없음). 게임·챔프 선택 중에는 단추 대신 안내 (v3.103) */}
+        {up.info?.managed && up.info.available && <div className="store-up" role="status">
+          <span className="dot" aria-hidden="true" />
+          <span className="t"><b>새 버전이 나왔어요 (v{up.info.latest})</b> · 업데이트해야 새 기능과 고친 점이 들어와요.</span>
+          {playing
+            ? <span className="meta">게임이 끝나면 업데이트해 주세요</span>
+            : <button type="button" className="btn sm primary" disabled={up.applying} onClick={() => void storeUpdate()}>{up.applying ? 'Microsoft Store 여는 중…' : '업데이트'}</button>}
+        </div>}
         {s.me && !s.me.rolesKnown && <div className="relogin"><span>디스코드 역할(정회원·운영진 등)에 맞는 기능을 열려면 <b>한 번만 다시 로그인</b>해 주세요.</span><button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />다시 로그인</button></div>}
         <AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><MatchNote.Provider value="롤을 켜 두면 열 명 모두 볼 수 있어요."><PullRefresh scroller={mainEl} onRefresh={pullRefresh}>{(k) => <Page main={main} k={k}><Routes>
           <Route index element={<GamePage s={s} />} />

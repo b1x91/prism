@@ -283,6 +283,13 @@ body { overflow: hidden; background: var(--bg); }
 .ta-row .tier b { font-size: var(--fs-lg); }
 .relogin { display: flex; align-items: center; gap: var(--s3); max-width: var(--wide); margin: 0 auto var(--s4); padding: var(--s3) var(--s4); border-radius: var(--r-m); background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line)); font-size: var(--fs-sm); }
 .relogin span { flex: 1; }
+/* 스토어 판 업데이트 줄: 스크롤해도 위에 붙는다, 닫기 없음 (v3.103) */
+.store-up { position: sticky; top: calc(-1 * var(--s7)); z-index: 30; display: flex; align-items: center; gap: var(--s3); max-width: var(--wide); margin: calc(-1 * var(--s7)) auto var(--s4); padding: var(--s3) var(--s4); border-radius: 0 0 var(--r-m) var(--r-m); background: #3451d1; color: #fff; font-size: var(--fs-sm); box-shadow: 0 4px 12px rgb(0 0 0 / .16); }
+.store-up .t { flex: 1; min-width: 0; }
+.store-up .dot { width: 8px; height: 8px; border-radius: 50%; background: #fff; flex: none; animation: blink 1.6s ease-in-out infinite; }
+.store-up .meta { color: rgb(255 255 255 / .85); white-space: nowrap; }
+.store-up .btn { background: #fff; color: #3451d1; border-color: #fff; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .store-up .dot { animation: none; } }
 
 /* 증강 자동 인식 상태 한 줄 */
 .vs { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-xs); font-weight: 650; color: var(--text-2); }

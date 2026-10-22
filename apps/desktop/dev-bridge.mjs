@@ -82,7 +82,8 @@ const CMD = {
   open_url: () => null,
   autostart: ({ enable }) => { if (enable !== undefined) auto = enable; return auto; },
   // MOCK_UPDATE=1 이면 새 버전이 있는 것처럼
-  update_check: () => ({ current: '0.5.2', latest: process.env.MOCK_UPDATE ? '0.5.3' : '0.5.2', available: Boolean(process.env.MOCK_UPDATE), notes: '' }),
+  update_check: () => ({ current: '0.5.2', latest: process.env.MOCK_UPDATE ? '0.5.3' : '0.5.2', available: Boolean(process.env.MOCK_UPDATE), notes: '', managed: Boolean(process.env.MOCK_STORE) }),
+  store_update: () => false,
   update_install: () => { throw '개발 모드에서는 설치하지 않습니다.'; },
   // 게임 중 라이브 클라이언트 데이터 흉내 (그라가스 · 상대 소라카·브랜드·말파이트가 크는 중)
   live_game: () => ({ me: 'Haze#KR18', mode: 'KIWI', time: 610, players: [

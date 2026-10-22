@@ -5,7 +5,7 @@
  *     조용한 설치(/S)가 앱을 닫고 설치한 뒤 다시 켠다. 트레이에 있었으면 트레이로 다시 켜진다.
  *  3) 그 밖에는 앱을 끌 때(트레이 '종료')나 다음에 켤 때 적용된다 (Rust).
  *  4) 켜 둔 동안 받아 두고, 끌 때 적용한다 — 다음에 켜면 한 번에 새 버전 (v3.98). 켜자마자 다시 켜지는 일은 없다.
- * Microsoft Store 판(managed)은 스토어가 업데이트하므로 아무것도 하지 않는다.
+ * Microsoft Store 판(managed)은 스토어에 새 버전이 있는지만 같은 때에 확인하고, 화면 위쪽 줄의 '업데이트'로 스토어 창을 띄운다 (v3.103).
  */
 import { useSyncExternalStore } from 'react';
 import { bridge, type UpdateInfo } from './bridge';
@@ -47,6 +47,14 @@ async function prepare() {
 }
 
 /** 받아 둔 새 버전을 적용 (앱이 몇 초 꺼졌다 다시 켜진다) */
+/** 스토어 판: 스토어 창으로 받기·설치. 설치가 시작되면 Windows 가 앱을 닫고 새 버전으로 바꾼다 */
+export async function storeUpdate() {
+  if (u.applying) return;
+  set({ applying: true, error: null });
+  try { if (!(await bridge.storeUpdate())) set({ applying: false }); }
+  catch (e) { set({ applying: false, error: msg(e) }); }
+}
+
 export async function applyUpdate(background = false) {
   if (u.applying || !u.info?.ready) return;
   set({ applying: true, error: null });

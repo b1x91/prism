@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Microsoft Store 판(MSIX) 매니페스트 (CLAUDE.md v3.103). build-desktop.yml 의 'store' 잡이 __VERSION__ 을 채워 makeappx 로 묶는다.
+  Identity·Publisher 는 Partner Center 의 'PRISM 증바람'(Store ID 9N36B7J6KM8R) 값 그대로 — 바꾸면 스토어가 받지 않는다.
+  서명은 스토어가 한다 (서명하지 않고 올린다).
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap desktop rescap">
+  <Identity Name="blaxk.PRISM" Publisher="CN=5AF57F99-CDCC-4C1D-B51E-9DD5FA2131D8" Version="__VERSION__" ProcessorArchitecture="x64" />
+  <Properties>
+    <DisplayName>PRISM 증바람</DisplayName>
+    <PublisherDisplayName>blaxk</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="ko-KR" />
+  </Resources>
+  <Applications>
+    <Application Id="Prism" Executable="Prism.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements DisplayName="PRISM 증바람" Description="아수라장 동반 앱 — 챔프 선택 도우미, 증강 가이드, 내 기록"
+        BackgroundColor="transparent" Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Square71x71Logo="Assets\Square71x71Logo.png" Square310x310Logo="Assets\Square310x310Logo.png" ShortName="PRISM" />
+      </uap:VisualElements>
+      <Extensions>
+        <!-- 윈도우 시작 시 실행 (설정에서 켜면 store.rs 가 RequestEnable) -->
+        <desktop:Extension Category="windows.startupTask" Executable="Prism.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="PrismStartup" Enabled="false" DisplayName="PRISM 증바람" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

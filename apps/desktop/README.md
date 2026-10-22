@@ -1,4 +1,4 @@
-# Prism 앱 (Windows, v0.9.100)
+# Prism 앱 (Windows, v1.0.0)
 
 롤 클라이언트 옆에 켜두는 도우미. 혼자 써도 쓸모 있고, Prism 회원이면 모임 기능이 열린다.
 웹(przm.web.app)과 같은 화면 코드(`packages/ui`, `packages/core`)를 앱 안에 묶어 넣는다. 원격 웹을 띄우지 않는다.
@@ -78,6 +78,12 @@ GitHub Actions `build-desktop` (Windows). 회원 서버 주소는 Variables `PRI
 - 새 버전을 낼 때는 `tauri.conf.json` 의 `version` 을 올린 뒤 실행한다 (같은 버전이면 기존 Release 의 파일이 바뀐다)
 - 버전은 `src-tauri/tauri.conf.json` 의 `version`
 - 코드 서명 인증서가 없어서 처음 실행할 때 SmartScreen 경고가 뜬다 ("추가 정보 → 실행"). 회원 안내에 적어둔다
+
+## Microsoft Store 판 (MSIX, v3.103)
+- Actions → build-desktop → Run workflow 에서 **"Microsoft Store 판"** 을 켜면 `PRISM_CHANNEL=store` 로 따로 빌드해 `prism-msix` 결과물(`Prism-<버전>.0.msix`, 서명 없음)을 남긴다. Partner Center → 'PRISM 증바람' → 제출 → 패키지에 그대로 올린다 (스토어가 서명한다)
+- 매니페스트 `msix/AppxManifest.xml` — Identity `blaxk.PRISM` · Publisher `CN=5AF57F99-…` 는 Partner Center 값 그대로. 제출 때 `runFullTrust`(제한된 기능) 사용 이유를 적어야 한다: 롤 클라이언트 읽기·화면 문자 인식·트레이 상주를 하는 데스크톱 앱
+- 스토어 판에서 달라지는 것 (`src-tauri/src/store.rs`): 앱 안 업데이트 대신 스토어에 새 버전이 있는지 확인 → 화면 위쪽에 닫을 수 없는 업데이트 줄, '업데이트'를 누르면 스토어 받기·설치 창(못 띄우면 스토어의 Prism 페이지). 게임·챔프 선택 중에는 단추 대신 안내. 윈도우 시작 시 실행은 매니페스트의 시작 작업 `PrismStartup`
+- 설치판(.exe)은 그대로. 스토어 확인은 스토어에서 설치한 앱에서만 동작한다 — 첫 제출이 통과한 뒤 실제 PC 에서 확인
 
 ## 개발 (화면만, 브라우저에서)
 롤 클라이언트·Rust 없이 모의 데이터로 화면을 본다. 창 3개.

@@ -745,6 +745,14 @@
 5. **아이템 설명** (`scripts/items.ts`): 설명이 문구 키로만 있는 아이템(GeneratedTip_…)은 게임 문구표에서 찾고, {{ }} 끼워 넣는 문구를 풀고, 효과 이름 표시가 다른 태그(jadeUnique 등)·이름 없는 효과 글도 읽는다. 효과가 빈 완성 아이템 65 → 10 (남은 것은 무한의 대검처럼 실제로 고유 효과가 없는 아이템). 예전 신화급 문구는 뺀다.
 6. **챔프 상세 '스킬' 탭** (`ChampSkills`, `packages/ui/src/skills.tsx`, 앱·웹): 기본 지속 효과 + Q·W·E·R — 그림·이름·재사용 대기시간·소모·사거리(스킬 단계마다, 궁극기 3단계)·설명(게임 클라이언트 챔프 화면의 요약문). 데이터는 챔프마다 작은 파일 `packages/assets/public/skills/{id}.json`(`npm run data:skills`, data:mayhem 이 함께)을 필요할 때만 받는다. 탭 순서: 어울리는 증강 · 스킬 · 아이템 · 3개 비교 · 모임 기록.
 
+## v3.103 변경 (2026-10-22, 사용자 결정) — Microsoft Store 판 (MSIX)
+
+1. **스토어 판은 MSIX 로 올리고 서명은 스토어가 한다** (코드 서명 인증서 없이). Partner Center 앱 'PRISM 증바람' (Store ID `9N36B7J6KM8R`, Identity `blaxk.PRISM`, Publisher `CN=5AF57F99-CDCC-4C1D-B51E-9DD5FA2131D8`, 표시 게시자 `blaxk`). 매니페스트 `apps/desktop/msix/AppxManifest.xml`, build-desktop 수동 실행의 'Microsoft Store 판'이 `PRISM_CHANNEL=store` 로 빌드해 makeappx 로 묶은 `prism-msix` 결과물을 남긴다. 버전은 `tauri.conf.json` + `.0`. **1.0.0 부터 스토어** (v3.21).
+2. **스토어 판 업데이트는 스토어가 받고, 앱은 알리기만** (`apps/desktop/src-tauri/src/store.rs`, v3.33·v3.98 의 조용한 업데이트는 설치판에만). 확인 시점은 설치판과 같다(켤 때 · 30분마다 · 창을 다시 띄울 때 · 트레이). 새 버전이 있으면 **화면 위쪽에 닫을 수 없는 업데이트 줄**(`.store-up`, 스크롤해도 붙어 있음) — '업데이트'를 누르면 스토어 받기·설치 창(`StoreContext`), 못 띄우면 스토어의 Prism 페이지. 게임·챔프 선택 중에는 단추 대신 '게임이 끝나면 업데이트해 주세요'. 사용을 막지는 않는다.
+3. **윈도우 시작 시 실행은 매니페스트의 시작 작업 `PrismStartup`** (MSIX 는 레지스트리 Run 키를 못 쓴다). 시작 작업으로 켜지면 창 없이 트레이로만 (설치판 `--background` 와 같게, `launched_background`). 사용자가 Windows 설정에서 끈 것은 앱이 다시 켤 수 없어 안내만.
+4. **설치판(.exe)은 그대로** — 서버 `/app/download`, 웹 '앱 받기'도 그대로. 웹 '앱 받기'를 스토어로 바꿀지는 첫 심사 통과 뒤 정한다.
+5. **[검증필요]** 스토어에서 설치한 판에서: 업데이트 확인·스토어 창, 시작 작업, 디스코드 로그인(루프백), 롤 클라이언트 읽기, 문자 인식, 게임 위 작은 창, 설정 저장 위치.
+
 ---
 
 ## 0. 작업 방식

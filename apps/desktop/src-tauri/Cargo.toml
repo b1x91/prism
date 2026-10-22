@@ -1,6 +1,6 @@
 [package]
 name = "prism-desktop"
-version = "0.9.100"
+version = "1.0.0"
 description = "Prism — 아수라장 동반 앱"
 edition = "2021"
 publish = false
@@ -36,6 +36,8 @@ windows = { version = "0.61", features = [
   "Foundation", "Foundation_Collections", "Globalization", "Graphics_Imaging", "Media_Ocr", "Storage_Streams",
   "Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging", "Win32_UI_HiDpi", "Win32_System_WinRT",
   "Win32_System_DataExchange", "Win32_System_Memory", "Win32_System_Ole",
+  # Microsoft Store 판: 스토어 업데이트·시작 작업 (store.rs)
+  "Services_Store", "ApplicationModel", "ApplicationModel_Activation", "Win32_UI_Shell",
 ] }
 
 [profile.release]

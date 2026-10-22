@@ -11,6 +11,7 @@ mod update;
 mod vision;
 mod winstate;
 mod toast;
+mod store;
 
 use std::sync::Arc;
 use tauri::menu::{Menu, MenuItem};
@@ -142,6 +143,10 @@ fn kakao_popup(handle: &tauri::AppHandle, url: &str) -> Result<(), String> {
 
 #[tauri::command]
 fn autostart(handle: tauri::AppHandle, enable: Option<bool>) -> Result<bool, String> {
+    // 스토어 판(MSIX)은 레지스트리 대신 매니페스트의 시작 작업
+    if update::managed() {
+        return store::startup(enable);
+    }
     let a = handle.autolaunch();
     match enable {
         Some(true) => a.enable().map_err(|e| e.to_string())?,
@@ -255,7 +260,18 @@ async fn watch_phase(app: tauri::AppHandle) {
 /// 트레이 '업데이트 확인/적용': 창을 열지 않고 결과를 오른쪽 아래 알림으로
 async fn tray_update(app: tauri::AppHandle) {
     if update::managed() {
-        toast::show(&app, "Microsoft Store가 업데이트해요", "스토어에서 새 버전을 받아 주세요.", "info", 4000);
+        toast::show(&app, "업데이트 확인 중", "", "busy", 3000);
+        match tauri::async_runtime::spawn_blocking(store::latest).await.map_err(|e| e.to_string()).and_then(|r| r) {
+            Ok(None) => toast::show(&app, "최신 버전이에요", &format!("Prism v{}", update::CURRENT), "ok", 3500),
+            Ok(Some(v)) => {
+                // 받기·설치는 스토어 창으로 — 창을 열고 위쪽 업데이트 줄에서
+                show(&app);
+                toast::show(&app, &format!("새 버전 v{v}"), "Prism 위쪽 줄에서 업데이트해 주세요.", "info", 5000);
+            }
+            Err(_) => {
+                let _ = app.opener().open_url(store::PDP_URL, None::<&str>);
+            }
+        }
         return;
     }
     if update::has_ready() {
@@ -300,6 +316,28 @@ fn notice_updated(app: &tauri::AppHandle, dir: &std::path::Path) {
     if before.is_some_and(|b| b.trim() != now) {
         toast::show_act(app, "업데이트 완료", &format!("Prism v{now}로 업데이트했어요."), "ok", 6000, "open");
     }
+}
+
+/// 스토어 판: 스토어의 받기·설치 창을 띄운다 (설치가 시작되면 Windows 가 앱을 닫는다). 못 띄우면 스토어의 Prism 페이지
+#[tauri::command]
+async fn store_update(handle: tauri::AppHandle) -> Result<bool, String> {
+    if !update::managed() {
+        return Err("스토어 판이 아닙니다.".into());
+    }
+    let hwnd = handle.get_webview_window("main").and_then(|w| w.hwnd().ok()).map(|h| h.0 as isize).unwrap_or(0);
+    let r = tauri::async_runtime::spawn_blocking(move || store::install(hwnd)).await.map_err(|e| e.to_string())?;
+    match r {
+        Ok(started) => Ok(started),
+        Err(_) => {
+            handle.opener().open_url(store::PDP_URL, None::<&str>).map_err(|e| e.to_string())?;
+            Ok(false)
+        }
+    }
+}
+
+/// 윈도우 시작 시 실행으로 켜졌는가 (설치판 `--background`, 스토어 판은 시작 작업)
+fn launched_background() -> bool {
+    std::env::args().any(|a| a == "--background") || (update::managed() && store::started_by_task())
 }
 
 /// 받아 둔 새 버전을 창 없이 설치하고 앱을 끝낸다. 설치가 끝나면 다시 켜진다 (background 면 트레이로만)
@@ -371,7 +409,7 @@ pub fn run() {
             // 게임 중 증강 인식 + 게임 위 작은 창 (v3.5)
             // 지난번에 받아 둔 새 버전이 있으면 켜자마자 창 없이 적용하고 새 버전으로 다시 켠다
             update::restore();
-            if update::apply_on_start(std::env::args().any(|a| a == "--background")) {
+            if update::apply_on_start(launched_background()) {
                 std::process::exit(0);
             }
             vision::create_overlay(app)?;
@@ -424,7 +462,7 @@ pub fn run() {
                 .build(app)?;
 
             // 윈도우 시작 시 자동 실행으로 켜졌으면 창 없이 트레이로만 (창은 크기를 맞춘 뒤에 보인다 — 깜빡임 없게)
-            if !std::env::args().any(|a| a == "--background") {
+            if !launched_background() {
                 if let Some(w) = app.get_webview_window("main") {
                     let _ = w.show();
                 }
@@ -452,7 +490,7 @@ pub fn run() {
                 _ => {}
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_close, lcu_get, lcu_item_set, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
+        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_close, lcu_get, lcu_item_set, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, store_update, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }
