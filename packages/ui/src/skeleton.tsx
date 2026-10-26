@@ -111,7 +111,7 @@ function Head({ w = 120 }: { w?: number }) {
 }
 
 /** 회원 페이지: 좌우 끝까지 닿는 머리 + 숫자 넷 + 최근 판 + 두 칸 */
-export function MemberSkeleton({ public: pub = false, self, id }: { public?: boolean; self?: boolean; id?: string }) {
+export function MemberSkeleton({ public: pub = false, self, id, studioBtn = true }: { public?: boolean; self?: boolean; id?: string; studioBtn?: boolean }) {
   const look = heroLookOf(id);
   return (
     <SkeletonFrame className="stack sk-member">
@@ -121,7 +121,8 @@ export function MemberSkeleton({ public: pub = false, self, id }: { public?: boo
         {look?.bg ? <BgScene id={look.bg} /> : <span className="phero-tint" style={{ ['--tint' as string]: look?.tint ?? '#4c5bd4' }} aria-hidden="true" />}
         <div className="phero-in">
           {!pub && <div className="phero-corner"><Bone w={56} h={24} r="pill" dark /></div>}
-          {self && <div className="phero-actions">{[120, 104, 76].map((w, i) => <Bone key={i} w={w} h={32} r="m" dark />)}</div>}
+          {/* 실제 머리 단추와 같은 수: 내 페이지 = (프로필 꾸미기 ·) 공유 링크. 웹은 꾸미기가 상단 프로필 메뉴에 있어 공유 링크만 (v3.105) */}
+          {self && <div className="phero-actions">{(studioBtn ? [112, 100] : [100]).map((w, i) => <Bone key={i} w={w} h={32} r="m" dark />)}</div>}
           <div className="phero-main">
             <span className="phero-face"><Bone w={112} h={112} r="l" dark className="sk-face" /></span>
             <div className="phero-txt sk-lines" style={{ gap: 12 }}>

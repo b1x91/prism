@@ -33,7 +33,7 @@ export function MemberPage() {
   const { me, ready, api } = useSession();
   const nav = useNavigate();
   const studio = new URLSearchParams(useLocation().search).get('studio') === '1';
-  if (!ready) return <section className="section tight"><div className="wrap"><MemberSkeleton self={!id} /></div></section>;
+  if (!ready) return <section className="section tight"><div className="wrap"><MemberSkeleton self={!id} studioBtn={false} /></div></section>;
   if (!me) return <NeedLogin what={id ? '회원 페이지' : '내 페이지'} />;
   const target = id ?? me.id;
   return (

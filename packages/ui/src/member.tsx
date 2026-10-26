@@ -273,7 +273,7 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
   const ready = Boolean(data) && (!self || Boolean(shop) || Boolean(shopLoad.error));
   const rv = useReveal(ready);
   if (error) return <Empty>{error}</Empty>;
-  if (!data || !ready) return <MemberSkeleton self={self} id={id} />;
+  if (!data || !ready) return <MemberSkeleton self={self} id={id} studioBtn={studioBtn} />;
   const { member: m, total } = data;
   const deco = m.deco ?? {};
   rememberHeroLook(id, deco.bg ? { bg: deco.bg } : { tint: baseTint(m.nick) });
@@ -286,7 +286,7 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
   const S = styleOf(data.champions);
   const picksN = data.augments.reduce((n, a) => n + a.n, 0);
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
-  return (<Swap on={rv} skeleton={<MemberSkeleton self={self} id={id} />}>
+  return (<Swap on={rv} skeleton={<MemberSkeleton self={self} id={id} studioBtn={studioBtn} />}>
     <div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
       <ProfileHero lift={total.n > 0} presence={m.presence} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
