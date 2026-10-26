@@ -7,6 +7,7 @@
 # 공개(릴리스·서버 알림)는 증강 인식 QA(vision-qa: 가상 화면·사진·Windows 문자 인식)가 모두 통과해야 한다 (v3.67)
 # 단 Windows 끝단 시험은 지난 공개판 이후 인식 코드·데이터가 바뀌었을 때만 (v3.79)
 # "Microsoft Store 판" 을 켜면 PRISM_CHANNEL=store 로 따로 빌드해 MSIX(서명 없음 — 스토어가 서명)를 결과물로 남긴다 (v3.103)
+# Secrets MSSTORE_TENANT_ID·MSSTORE_CLIENT_ID·MSSTORE_CLIENT_SECRET·MSSTORE_SELLER_ID 가 있으면 Partner Center 에 새 제출까지 자동 (v3.106)
 name: build-desktop
 
 on:
@@ -135,6 +136,34 @@ jobs:
         with:
           name: prism-msix
           path: Prism-*.msix
+      # Partner Center 에 새 제출로 올린다 (Secrets MSSTORE_* 가 있을 때만, v3.106). 심사 중인 제출이 있으면 실패한다
+      - name: 스토어 자동 제출 준비
+        id: msstore
+        shell: bash
+        env:
+          T: ${{ secrets.MSSTORE_TENANT_ID }}
+          C: ${{ secrets.MSSTORE_CLIENT_ID }}
+          S: ${{ secrets.MSSTORE_CLIENT_SECRET }}
+          L: ${{ secrets.MSSTORE_SELLER_ID }}
+        run: |
+          if [ -n "$T" ] && [ -n "$C" ] && [ -n "$S" ] && [ -n "$L" ]; then echo "on=yes" >> "$GITHUB_OUTPUT"
+          else echo "::notice::MSSTORE_* Secrets 가 없어 스토어 자동 제출을 건너뜁니다 (MSIX 는 결과물로 남음)"; echo "on=no" >> "$GITHUB_OUTPUT"; fi
+      - if: steps.msstore.outputs.on == 'yes'
+        uses: microsoft/setup-msstore-cli@v1
+      - if: steps.msstore.outputs.on == 'yes'
+        name: 스토어 자동 제출
+        shell: pwsh
+        env:
+          T: ${{ secrets.MSSTORE_TENANT_ID }}
+          C: ${{ secrets.MSSTORE_CLIENT_ID }}
+          S: ${{ secrets.MSSTORE_CLIENT_SECRET }}
+          L: ${{ secrets.MSSTORE_SELLER_ID }}
+        run: |
+          msstore reconfigure --tenantId $env:T --sellerId $env:L --clientId $env:C --clientSecret $env:S
+          if ($LASTEXITCODE -ne 0) { throw "msstore 로그인 실패 ($LASTEXITCODE)" }
+          $pkg = (Get-ChildItem Prism-*.msix | Select-Object -First 1).FullName
+          msstore publish $pkg -id 9N36B7J6KM8R
+          if ($LASTEXITCODE -ne 0) { throw "스토어 제출 실패 ($LASTEXITCODE) — 심사 중인 제출이 있으면 끝난 뒤 다시" }
 
   # QA 와 빌드가 모두 통과해야 공개한다
   publish:

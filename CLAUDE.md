@@ -763,6 +763,13 @@
 1. **웹 상단 내 프로필을 누르면 작은 메뉴** (`MeMenu`, `apps/web/src/layout.tsx`): 내 페이지 · 프로필 꾸미기 · 로그아웃. 바깥·Esc·이동하면 닫힌다. 내 페이지 머리에서 '로그아웃'·'프로필 꾸미기' 단추를 뺐다 (머리에는 '공유 링크'만, 소개 칩 연필은 그대로 — 자리표시 `MemberSkeleton studioBtn` 도 같은 수). '프로필 꾸미기'는 `/me?studio=1` → 꾸미기 창(`MemberView studio`). 휴대폰 메뉴에도 내 카드 아래 '프로필 꾸미기'·'로그아웃'. 앱은 그대로(머리의 꾸미기 단추, 로그아웃은 설정).
 2. **웹 배포는 Firebase CLI 15.34.0 고정** (`deploy-site.yml` `firebaseToolsVersion`). 15.34.1 부터 배포 전에 `serviceusage.services.get` 권한을 확인해 서비스 계정이 403 — 서비스 계정에 'Service Usage Consumer' 역할을 주면 latest 로 되돌려도 된다.
 
+## v3.106 변경 (2026-10-26, 사용자 결정) — 스토어 제출 자동화
+
+1. **스토어 판 업데이트는 자동 제출** (`build-desktop.yml` `store` 잡, Microsoft Store Developer CLI `msstore`). build-desktop 을 'Microsoft Store 판'을 켜고 돌리면 MSIX 를 만들어 Partner Center 에 새 제출(`msstore publish … -id 9N36B7J6KM8R`)까지 한다 — 지난 제출의 설명·스크린샷·등급은 그대로, 패키지만 바뀐다. Secrets `MSSTORE_TENANT_ID`·`MSSTORE_CLIENT_ID`·`MSSTORE_CLIENT_SECRET`·`MSSTORE_SELLER_ID`(Partner Center → 계정 설정 → 사용자 → Azure AD 애플리케이션, 관리자 역할) 가 없으면 결과물만 남긴다.
+2. **스토어 판은 모아서 주 1회 정도** — 설치판(.exe)은 지금처럼 자주. 스토어는 심사(몇 시간~3일) 중에 새 제출을 받지 않으므로 심사 중이면 자동 제출이 실패한다.
+3. 스토어 제출 내용(설명·연령 등급·제출 옵션·캡션)은 `apps/desktop/msix/store-listing.md`. 첫 제출은 손으로 했다.
+4. **[검증필요]** 첫 자동 제출이 실제로 Partner Center 에 새 제출로 들어가는지.
+
 ---
 
 ## 0. 작업 방식
