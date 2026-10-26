@@ -218,6 +218,15 @@ export function CrewPulse({ api, onMember }: { api: Api; onMember?: (id: string)
                 </button>
               );
             })}</div> : <p className="meta pl-empty">지금 접속한 멤버가 없어요</p>}
+            {(data.recent?.length ?? 0) > 0 && <>
+              <div className="pl-label pl-label-sub">최근 접속</div>
+              <div className="pl-now">{data.recent!.map((x) => (
+                <button key={x.id} type="button" className="pl-who off" onClick={() => onMember?.(x.id)}>
+                  <MemberFace nick={x.nick} skin={x.skin} champion={x.main} size={36} />
+                  <span className="pl-who-t"><b>{shortNick(x.nick)}</b><span>{ago(x.at)}</span></span>
+                </button>
+              ))}</div>
+            </>}
           </div>
 
           {/* 최근 근황 */}

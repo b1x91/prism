@@ -7,7 +7,7 @@ import { useKept } from './kept';
 import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, aboutWhen, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
   type Api, type Game, type InsightKind, type MemberPage, type Ranking, type Shop, type RankingRow, type Skin,
-  rankScore, byScore, improveOf, type WinTip,
+  rankScore, byScore, seasonOf, improveOf, type WinTip,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, Gem, LockedMore, MemberFace, PresenceTag, faceSrc, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
@@ -56,6 +56,69 @@ function RankingSoon({ gate }: { gate?: { have: number; need: number } }) {
         <div className="rk-soon-gauge"><span className="rk-soon-bar"><span style={{ width: `${Math.min(100, (have / need) * 100)}%` }} /></span><b>{have}<small>/{need}명</small></b></div>
       </div>
     </section>
+  );
+}
+
+/**
+ * 로그인하지 않은 사람에게 보이는 랭킹 미리 보기.
+ * 공개 사이트에는 회원 데이터를 넣지 않는다 (v3.2-5) — 무대는 흐린 자리표시(챔프 얼굴·??? 이름)만,
+ * 그 밖은 회원 데이터와 상관없는 것(이번 시즌·점수 계산법·탭 구성)을 실제 그대로 보여 준다.
+ */
+const TEASE_FACES = ['징크스', '아리', '가렌'].map((n) => CHAMPION_LIST.find((c) => c.name === n)?.id ?? null); // 2위·1위·3위 자리의 흐린 얼굴 (게임 데이터)
+const TEASE_EXAMPLES: { n: number; w: number }[] = [{ n: 5, w: 5 }, { n: 60, w: 40 }, { n: 200, w: 120 }];
+const TEASE_TABS: [string, string][] = [
+  ['시즌', '분기마다 처음부터. 이번 석 달의 점수 순위'],
+  ['전체', 'Prism에 기록된 모든 판의 점수 순위'],
+  ['판수', '가장 많이 함께한 사람'],
+  ['챔프 장인', '도감에서 챔프 마스터를 가장 많이 이룬 사람'],
+  ['증강 장인', '도감에서 증강 마스터를 가장 많이 이룬 사람'],
+];
+
+export function RankingTeaser({ onLogin }: { onLogin: () => void }) {
+  const sz = seasonOf();
+  const ex = TEASE_EXAMPLES.map((e) => ({ ...e, score: rankScore(e.w, e.n) }));
+  const best = Math.max(...ex.map((e) => e.score));
+  return (
+    <div className="stack" style={{ gap: 16 }}>
+      <section className="rk-tz">
+        <div className="lb still rk-tz-stage" aria-hidden="true">
+          <span className="lb-beam b1" /><span className="lb-beam b2" /><span className="lb-beam b3" />
+          <div className="lb-row">{[2, 1, 3].map((rank, i) => (
+            <div key={rank} className={`lb-slot p${rank}`}>
+              <div className="lb-card rk-tz-card">
+                <span className="phero-tint" style={{ ['--tint' as string]: baseTint(String(rank)) }} />
+                {rank === 1 && <span className="lb-crown"><Gem size={28} src="/brand/prism-32.png" /></span>}
+                <span className="lb-face"><MemberFace nick="?" champion={TEASE_FACES[i]} size={rank === 1 ? 88 : 72} /></span>
+                <span className="lb-nm">???</span>
+                <span className="lb-st"><b>???점</b><small>?판 · ?%</small></span>
+              </div>
+              <div className="lb-ped"><b>{rank}</b></div>
+            </div>
+          ))}</div>
+        </div>
+        <div className="rk-tz-over">
+          <span className="ss-k">PRISM LEADERBOARD</span>
+          <h2>{sz.label}, 1위는 누구일까요?</h2>
+          <p>{seasonMeta(sz).slice(sz.label.length + 3)} · 순위와 점수, 장인은 Prism 회원에게 열려요.</p>
+          <button type="button" className="btn primary" onClick={onLogin}><Icon name="discord" />디스코드로 로그인</button>
+        </div>
+      </section>
+      <div className="grid2 rk-tz-info">
+        <section className="card pad stack" style={{ gap: 12 }}>
+          <h3>점수는 이렇게 매겨요</h3>
+          <p className="muted">모두에게 10승 10패를 미리 얹어 계산해요. 몇 판 안 한 높은 승률보다, 많이 하면서 꾸준히 이긴 사람이 위로 갑니다.</p>
+          <div className="rk-tz-ex">{ex.map((e) => (
+            <div key={e.n} className={`rk-tz-exr ${e.score === best ? 'top' : ''}`}>
+              <span>{e.n}판 {e.w}승</span><span className="muted">승률 {pct(e.w, e.n)}</span><b>{e.score}<small>점</small></b>
+            </div>
+          ))}</div>
+        </section>
+        <section className="card pad stack" style={{ gap: 12 }}>
+          <h3>랭킹에서 볼 수 있는 것</h3>
+          <ul className="rk-tz-tabs">{TEASE_TABS.map(([k, v]) => <li key={k}><b>{k}</b><span className="muted">{v}</span></li>)}</ul>
+        </section>
+      </div>
+    </div>
   );
 }
 

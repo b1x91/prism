@@ -8,12 +8,13 @@ import { presenceOf, PRESENCE_TTL } from '../../packages/core/src/presence.js';
 import { parseFeat } from '../../packages/core/src/challenges.js';
 import { groupPraiseOf, longestRun, type PraiseGame } from '../../packages/core/src/praise.js';
 import { runBonusOf } from '../../packages/core/src/shop.js';
-import type { Pulse, PulseItem, PulseNow } from '../../packages/core/src/api.js';
+import type { Pulse, PulseItem, PulseNow, PulseSeen } from '../../packages/core/src/api.js';
 import { FACE, json, type Env } from './util.js';
 
 const KST = 9 * 3600_000;
 const DAY = 86400_000;
 const SPAN = 3 * DAY;
+const RECENT_MAX = 8;
 const dayOf = (t: number) => Math.floor((t + KST) / DAY);
 
 type Face = { id: string; nick: string; skin: number | null; main: number | null };
@@ -21,7 +22,7 @@ type Face = { id: string; nick: string; skin: number | null; main: number | null
 export async function pulse(env: Env): Promise<Response> {
   const now = Date.now();
   const since = now - SPAN;
-  const [online, games, crew, joined] = await env.DB.batch([
+  const [online, games, crew, joined, seen] = await env.DB.batch([
     env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')}, m.web_seen_at AS webAt, m.app_seen_at AS appAt, m.app_lol AS lol, m.app_open AS open,
         m.app_phase AS phase, m.app_champ AS champ, m.app_phase_at AS phaseAt
       FROM members m WHERE m.app_seen_at > ?1 OR m.web_seen_at > ?1`).bind(now - PRESENCE_TTL),
@@ -31,6 +32,9 @@ export async function pulse(env: Env): Promise<Response> {
       FROM participants p JOIN members m ON m.id = p.member_id WHERE p.played_at >= ? ORDER BY p.played_at DESC LIMIT 800`).bind(since),
     env.DB.prepare(`SELECT g.game_id AS g, g.played_at AS t, g.team_totals AS tt FROM matches g WHERE g.played_at >= ? AND g.crew_count >= 2 ORDER BY g.played_at DESC LIMIT 160`).bind(since),
     env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')}, m.joined_at AS t FROM members m WHERE m.joined_at >= ? ORDER BY m.joined_at DESC LIMIT 10`).bind(now - 7 * DAY),
+    // 최근 접속 (지금은 나가 있는 멤버, 14일) — 지금 접속이 적어도 명단이 비어 보이지 않게
+    env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')}, MAX(COALESCE(m.app_seen_at, 0), COALESCE(m.web_seen_at, 0)) AS at
+      FROM members m WHERE MAX(COALESCE(m.app_seen_at, 0), COALESCE(m.web_seen_at, 0)) BETWEEN ?1 AND ?2 ORDER BY at DESC LIMIT 16`).bind(now - 14 * DAY, now),
   ]);
 
   // ── 지금
@@ -42,6 +46,10 @@ export async function pulse(env: Env): Promise<Response> {
     return { id: r.id, nick: r.nick, skin: r.skin, main: r.main, presence, phase, champ: phase === 'select' || phase === 'game' ? r.champ : 0, since: phase ? r.phaseAt : 0 };
   }).filter((x) => x.presence !== 'off')
     .sort((a, b) => order[a.phase] - order[b.phase] || (a.presence === 'web' ? 1 : 0) - (b.presence === 'web' ? 1 : 0) || a.nick.localeCompare(b.nick, 'ko'));
+
+  const onlineIds = new Set(nowList.map((x) => x.id));
+  const recent: PulseSeen[] = (seen.results as any[]).filter((r) => !onlineIds.has(r.id)).slice(0, RECENT_MAX)
+    .map((r) => ({ id: r.id, nick: r.nick, skin: r.skin, main: r.main, at: r.at }));
 
   // ── 최근 근황
   const rows = games.results as any[];
@@ -135,5 +143,5 @@ export async function pulse(env: Env): Promise<Response> {
   };
 
   feed.sort((a, b) => b.at - a.at);
-  return json({ now: nowList, feed: feed.slice(0, 30), today: todaySum, at: now } satisfies Pulse);
+  return json({ now: nowList, recent, feed: feed.slice(0, 30), today: todaySum, at: now } satisfies Pulse);
 }

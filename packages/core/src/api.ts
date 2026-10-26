@@ -121,4 +121,6 @@ export type AppMember = { id: string; nick: string; skin: number | null; main: n
 export type PulseFace = { id: string; nick: string; skin: number | null; main: number | null };
 /** 오늘(KST) 요약. games = 서로 다른 판 수, n·w = 멤버별 판·승 합 (예전 서버는 없음) */
 export type PulseToday = { players: PulseFace[]; games: number; n: number; w: number };
-export type Pulse = { now: PulseNow[]; feed: PulseItem[]; today?: PulseToday; at: number };
+/** 최근 접속 (지금은 나가 있는 멤버, 14일, 마지막 접속 순). 예전 서버는 없음 */
+export type PulseSeen = PulseFace & { at: number };
+export type Pulse = { now: PulseNow[]; recent?: PulseSeen[]; feed: PulseItem[]; today?: PulseToday; at: number };

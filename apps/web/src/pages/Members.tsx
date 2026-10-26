@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Empty, Gem, Icon, MemberSkeleton, MemberView, MissionsView, PageSkeleton, PublicProfileView, RankingView, ShopView } from '@prism/ui';
+import { Empty, Gem, Icon, MemberSkeleton, MemberView, MissionsView, PageSkeleton, PublicProfileView, RankingTeaser, RankingView, ShopView } from '@prism/ui';
 import type { PublicProfile } from '@prism/core';
 import { josa } from '@prism/core';
 import { SERVER, useSession } from '../session';
@@ -11,10 +11,15 @@ function NeedLogin({ what }: { what: string }) {
 }
 
 export function RankingPage() {
-  const { me, ready, api } = useSession();
+  const { me, ready, api, login } = useSession();
   const nav = useNavigate();
   if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="ranking" /></div></section>;
-  if (!me) return <NeedLogin what="랭킹" />;
+  if (!me) return (
+    <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
+      <div className="page-head"><div><h1>랭킹</h1><p>Prism에 기록된 아수라장 판으로만 매기는 우리끼리의 순위예요. 시즌은 분기마다 새로 시작합니다.</p></div></div>
+      <RankingTeaser onLogin={login} />
+    </div></section>
+  );
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
       <div className="page-head"><div><h1>랭킹</h1><p>점수는 승률을 판수만큼 믿은 값이에요. 판이 적으면 500점 쪽으로 당겨져, 많이 하면서 잘 이기는 사람이 위로 갑니다.</p></div></div>
