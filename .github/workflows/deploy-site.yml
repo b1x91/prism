@@ -60,3 +60,5 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: ${{ vars.FIREBASE_PROJECT_ID || 'prism-90' }}
           channelId: live
+          # 15.34.1 부터 배포 전에 serviceusage.services.get 권한을 확인한다 — 서비스 계정에 'Service Usage Consumer' 역할을 주면 latest 로 되돌려도 된다
+          firebaseToolsVersion: 15.34.0
