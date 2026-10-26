@@ -243,11 +243,16 @@ function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: n
 
 // ───────── 회원 페이지 ─────────
 
-export function MemberView({ api, id, self, onChampion, actions, insight, onShop }: {
+export function MemberView({ api, id, self, onChampion, actions, insight, onShop, studio, studioBtn = true, onStudioClose }: {
   api: Api; id: string; self?: boolean; onChampion?: (championId: number) => void; actions?: ReactNode;
   /** 상점에서 '리포트 보기'로 왔으면 그 인사이트를 열고 그 자리로 */
   insight?: InsightKind | null;
   onShop?: () => void;
+  /** 프로필 꾸미기 창을 바로 연다 (웹 상단 내 프로필 메뉴 → /me?studio=1) */
+  studio?: boolean;
+  /** 머리의 '프로필 꾸미기' 단추 (웹은 상단 내 프로필 메뉴에 있어 뺀다) */
+  studioBtn?: boolean;
+  onStudioClose?: () => void;
 }) {
   const { data, error, reload } = useLoad<MemberPage>(api, `/api/members/${encodeURIComponent(id)}`);
   // 내 페이지: 인사이트·명장면 액자 (상점 상태)
@@ -261,6 +266,8 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
   }, [insight, Boolean(data), Boolean(shop)]);
   const skins = useSkins();
   const [edit, setEdit] = useState<false | 'skin' | 'intro'>(false);
+  useEffect(() => { if (studio) setEdit('skin'); }, [studio]);
+  const closeEdit = () => { setEdit(false); onStudioClose?.(); };
   const [shareOn, setShared] = useState<boolean | null>(null);
   // 내 페이지는 상점 상태(명장면 액자·인사이트)까지 함께 기다린다 — 늦게 온 칸이 끼어들며 밀리지 않게 (v3.93)
   const ready = Boolean(data) && (!self || Boolean(shop) || Boolean(shopLoad.error));
@@ -283,14 +290,14 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
     <div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
       <ProfileHero lift={total.n > 0} presence={m.presence} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
-        actions={<>{m.self && <button type="button" className="btn sm" onClick={() => setEdit('skin')}><Icon name="spark" />프로필 꾸미기</button>}
+        actions={<>{m.self && studioBtn && <button type="button" className="btn sm" onClick={() => setEdit('skin')}><Icon name="spark" />프로필 꾸미기</button>}
           {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}
         chips={<><span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
           {skin && <span className="pill dark">{skin.name}</span>}{(m.presence === 'game' || m.presence === 'both') && <span className="pill dark"><PresenceTag p={m.presence} /></span>}
           {m.about && (m.self
             ? <button type="button" className="pill dark about-edit" title="소개 바꾸기" onClick={() => setEdit('intro')}><span>{m.about.mbti}</span><span>{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span>{aboutWhen(m.about)}</span><Icon name="edit" /></button>
             : <><span className="pill dark">{m.about.mbti}</span><span className="pill dark">{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span className="pill dark">{aboutWhen(m.about)}</span></>)}</>} />
-      {edit && m.self && <ProfileStudio api={api} page={data} skins={skins} start={edit} onClose={() => setEdit(false)} onSaved={() => { setEdit(false); reload(); }} />}
+      {edit && m.self && <ProfileStudio api={api} page={data} skins={skins} start={edit} onClose={closeEdit} onSaved={() => { closeEdit(); reload(); }} />}
       {m.self && !m.riotId && <section className="card pad"><b>아직 롤 계정이 연결되지 않았어요</b><div className="muted">PC의 Prism 앱에서 로그인한 뒤 맨 위의 <b>"동의하고 연결"</b>을 누르면, 그때부터 판이 여기에 쌓입니다. 앱에 이미 보이는 최근 판도 함께 올라와요.</div></section>}
       {total.n > 0 ? <StatBoard data={data} games={games} kda={kda} streak={st} /> : <div className="grid4">
         <section className="card stat"><span className="k">기록된 판</span><span className="v">0<small>판</small></span></section>

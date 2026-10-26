@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Empty, Gem, Icon, MemberSkeleton, MemberView, MissionsView, PageSkeleton, PublicProfileView, RankingTeaser, RankingView, ShopView } from '@prism/ui';
 import type { PublicProfile } from '@prism/core';
 import { josa } from '@prism/core';
@@ -30,15 +30,16 @@ export function RankingPage() {
 
 export function MemberPage() {
   const { id } = useParams();
-  const { me, ready, api, logout } = useSession();
+  const { me, ready, api } = useSession();
   const nav = useNavigate();
+  const studio = new URLSearchParams(useLocation().search).get('studio') === '1';
   if (!ready) return <section className="section tight"><div className="wrap"><MemberSkeleton self={!id} /></div></section>;
   if (!me) return <NeedLogin what={id ? '회원 페이지' : '내 페이지'} />;
   const target = id ?? me.id;
   return (
     <section className="section tight"><div className="wrap">
       <MemberView key={target} api={api} id={target} self={target === me.id} onChampion={(c) => nav(`/champions/${c}`)} insight={insightParam()} onShop={() => nav('/shop')}
-        actions={target === me.id ? <button type="button" className="btn sm" onClick={logout}>로그아웃</button> : undefined} />
+        studio={studio && target === me.id} studioBtn={false} onStudioClose={() => { if (studio) nav('/me', { replace: true }); }} />
     </div></section>
   );
 }
