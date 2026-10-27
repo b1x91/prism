@@ -10,6 +10,8 @@ import { PROMOTION, liveRoles, setRole } from './promote.js';
 import { ROLES, can, isPending, isSpecial, unapproved, levelOf, rolesOf, topRole } from './roles.js';
 import { FACE, HttpError, json, type Env, type Member } from './util.js';
 import { INVITE_BONUS } from '../../packages/core/src/shop.js';
+import { weekStart } from '../../packages/core/src/missions.js';
+import { rankScore } from '../../packages/core/src/ranking.js';
 
 const roleId = (key: string) => ROLES.find((r) => r.key === key)!.id;
 /** 여기서 바꾸는 회원 역할 (단계 1~3). 승급은 아래 단계 역할을 남긴다 (자동 승급과 같은 규칙) */
@@ -52,16 +54,20 @@ async function gamesWithStaff(env: Env): Promise<Map<string, number>> {
 /** GET /api/staff/members — 멤버 목록 (승인 대기 · 정회원 심사 · 전체) */
 export async function staffMembers(env: Env, me: Member) {
   assertStaff(me);
-  const [{ results }, withStaff, rewards] = await Promise.all([
+  const [{ results }, withStaff, rewards, recentRows] = await Promise.all([
     env.DB.prepare(
       `SELECT m.id, m.nick, m.discord_name AS discordName, ${FACE('m')}, m.tier, m.discord_roles, m.app_first_at, m.joined_at AS joined,
          MAX(COALESCE(m.last_seen_at, 0), COALESCE(m.web_seen_at, 0), COALESCE(m.app_seen_at, 0)) AS seen,
          m.riot_id AS riotId, m.invited_by AS invitedBy, m.approved_at AS approvedAt,
-         (SELECT COUNT(*) FROM participants p WHERE p.member_id = m.id) AS games
+         (SELECT COUNT(*) FROM participants p WHERE p.member_id = m.id) AS games,
+         (SELECT COALESCE(SUM(p.win), 0) FROM participants p WHERE p.member_id = m.id) AS wins,
+         (SELECT MAX(p.played_at) FROM participants p WHERE p.member_id = m.id) AS lastPlayed
        FROM members m ORDER BY m.joined_at DESC`,
     ).all<Record<string, any>>(),
     gamesWithStaff(env),
     env.DB.prepare('SELECT inviter, COUNT(*) AS n FROM invite_rewards GROUP BY inviter').all<{ inviter: string; n: number }>(),
+    env.DB.prepare('SELECT member_id AS id, game_id AS g, played_at AS t, win AS w, crew_count AS c FROM participants WHERE played_at >= ?')
+      .bind(weekStart(Date.now()) - (OVERVIEW_WEEKS - 1) * WEEK).all<{ id: string; g: number; t: number; w: number; c: number }>(),
   ]);
   const nick = new Map(results.map((r) => [r.id as string, r.nick as string]));
   const invited = new Map(rewards.results.map((r) => [r.inviter, r.n]));
@@ -80,7 +86,78 @@ export async function staffMembers(env: Env, me: Member) {
       invitedCount: invited.get(r.id) ?? 0,
     };
   });
-  return json({ members, reviewNeed: need, inviteBonus: INVITE_BONUS });
+  return json({ members, reviewNeed: need, inviteBonus: INVITE_BONUS, overview: overviewOf(members as unknown as Row[], recentRows.results) });
+}
+
+const DAY = 86_400_000, WEEK = 7 * DAY;
+const OVERVIEW_WEEKS = 8;
+/** 잘하는 멤버: 최근 2주 판수가 이만큼은 돼야 (점수가 판수로 흔들리지 않게) */
+const STAR_MIN = 5;
+/** 챙겨야 하는 멤버: 이만큼 안 보이면 / 가입하고 이만큼 지나도 판이 없으면 */
+const AWAY_DAYS = 14, QUIET_DAYS = 3;
+
+type Row = { id: string; nick: string; app: boolean; riotId: string | null; skin: number | null; main: number | null; joined: number; seen: number; games: number; lastPlayed: number | null; level: number; pending: boolean; review: boolean; staffGames: number; admin: boolean };
+
+/** 운영 대시보드: 주별 흐름 · 단계 분포 · 최근 2주 잘하는 멤버 · 챙겨야 하는 멤버 (판 기록·접속에서 계산) */
+function overviewOf(members: Row[], rows: { id: string; g: number; t: number; w: number; c: number }[]) {
+  const now = Date.now(), ws = weekStart(now);
+  const weeks = Array.from({ length: OVERVIEW_WEEKS }, (_, i) => ({ start: ws - (OVERVIEW_WEEKS - 1 - i) * WEEK, games: 0, crew: 0, active: 0 }));
+  const seenGame = new Set<number>(), act = weeks.map(() => new Set<string>());
+  for (const r of rows) {
+    const i = Math.floor((r.t - weeks[0].start) / WEEK);
+    if (i < 0 || i >= OVERVIEW_WEEKS) continue;
+    act[i].add(r.id);
+    if (seenGame.has(r.g)) continue;
+    seenGame.add(r.g);
+    weeks[i].games++;
+    if (r.c >= 2) weeks[i].crew++;
+  }
+  weeks.forEach((w, i) => (w.active = act[i].size));
+  // 최근 2주 개인 성적
+  const since = now - 14 * DAY, per = new Map<string, { n: number; w: number; crew: number }>();
+  for (const r of rows) {
+    if (r.t < since) continue;
+    const x = per.get(r.id) ?? { n: 0, w: 0, crew: 0 };
+    x.n++; x.w += r.w; if (r.c >= 2) x.crew++;
+    per.set(r.id, x);
+  }
+  const face = (m: Row) => ({ id: m.id, nick: m.nick, skin: m.skin, main: m.main });
+  const stars = members
+    .map((m) => ({ m, s: per.get(m.id) }))
+    .filter((x): x is { m: Row; s: { n: number; w: number; crew: number } } => Boolean(x.s && x.s.n >= STAR_MIN))
+    .map(({ m, s }) => ({ ...face(m), n: s.n, w: s.w, crew: s.crew, score: rankScore(s.w, s.n) }))
+    .sort((a, b) => b.score - a.score || b.n - a.n)
+    .slice(0, 5);
+  const days = (t: number) => Math.max(0, Math.floor((now - t) / DAY));
+  const care: { id: string; nick: string; skin: number | null; main: number | null; kind: 'pending' | 'review' | 'quiet' | 'away'; days: number; n?: number }[] = [];
+  for (const m of members) {
+    if (m.admin || m.level >= 5) continue;
+    const last = Math.max(m.seen || 0, m.lastPlayed || 0);
+    if (m.pending) care.push({ ...face(m), kind: 'pending', days: days(m.joined) });
+    else if (m.review) care.push({ ...face(m), kind: 'review', days: 0, n: m.staffGames });
+    else if (m.level >= 1 && m.games === 0 && days(m.joined) >= QUIET_DAYS) care.push({ ...face(m), kind: 'quiet', days: days(m.joined) });
+    else if (m.level >= 1 && last > 0 && days(last) >= AWAY_DAYS) care.push({ ...face(m), kind: 'away', days: days(last) });
+  }
+  const order = { pending: 0, review: 1, quiet: 2, away: 3 };
+  care.sort((a, b) => order[a.kind] - order[b.kind] || b.days - a.days);
+  const lv = (k: number) => members.filter((m) => !m.pending && Math.min(m.level, 5) === k).length;
+  const cur = weeks[OVERVIEW_WEEKS - 1], prev = weeks[OVERVIEW_WEEKS - 2];
+  return {
+    weeks,
+    kpi: {
+      members: members.length,
+      joinedWeek: members.filter((m) => m.joined >= ws).length,
+      active: cur.active, activePrev: prev.active,
+      crew: cur.crew, crewPrev: prev.crew,
+      online: members.filter((m) => now - (m.seen || 0) < 150_000).length,
+      app: members.filter((m) => m.app).length,
+      linked: members.filter((m) => m.riotId).length,
+    },
+    levels: { pending: members.filter((m) => m.pending).length, none: lv(0), associate: lv(1), regular: lv(2), excellent: lv(3), staff: lv(5) },
+    stars,
+    care: care.slice(0, 8),
+    careTotal: care.length,
+  };
 }
 
 /**

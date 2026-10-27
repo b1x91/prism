@@ -129,9 +129,19 @@ export type Pulse = { now: PulseNow[]; recent?: PulseSeen[]; feed: PulseItem[]; 
 export type StaffMember = {
   id: string; nick: string; discordName: string; skin: number | null; main: number | null; joined: number; seen: number; riotId: string | null;
   games: number; level: number; special: boolean; pending: boolean; app: boolean; admin: boolean; rolesKnown: boolean; role: DiscordRole | null;
-  staffGames: number; review: boolean; inviter: { id: string; nick: string } | null; invitedCount: number; approvedAt: number | null;
+  staffGames: number; review: boolean; wins: number; lastPlayed: number | null; inviter: { id: string; nick: string } | null; invitedCount: number; approvedAt: number | null;
 };
-export type StaffMembers = { members: StaffMember[]; reviewNeed: number; inviteBonus: number };
+export type StaffFace = { id: string; nick: string; skin: number | null; main: number | null };
+/** 운영 대시보드 (v3.109) */
+export type StaffOverview = {
+  weeks: { start: number; games: number; crew: number; active: number }[];
+  kpi: { members: number; joinedWeek: number; active: number; activePrev: number; crew: number; crewPrev: number; online: number; app: number; linked: number };
+  levels: { pending: number; none: number; associate: number; regular: number; excellent: number; staff: number };
+  stars: (StaffFace & { n: number; w: number; crew: number; score: number })[];
+  care: (StaffFace & { kind: 'pending' | 'review' | 'quiet' | 'away'; days: number; n?: number })[];
+  careTotal: number;
+};
+export type StaffMembers = { members: StaffMember[]; reviewNeed: number; inviteBonus: number; overview?: StaffOverview };
 /** 친구 초대 (v3.107) */
 export type MyInvite = { code: string; bonus: number; rewarded: number; friends: { id: string; nick: string; skin: number | null; main: number | null; joined: number; approved: boolean; pending?: boolean; rewardedAt: number | null }[] };
 export type LookupMember = { id: string; nick: string; skin: number | null; main: number | null };

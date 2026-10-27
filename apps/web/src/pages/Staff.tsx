@@ -13,7 +13,7 @@ export function StaffPage() {
   if (!me?.perms?.manage) return <section className="section"><div className="wrap"><Empty>운영진만 볼 수 있는 화면이에요.</Empty></div></section>;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <div className="page-head"><div><h1>운영</h1><p>새 멤버 승인, 정회원 심사, 단계와 특별회원을 여기서 관리해요.</p></div></div>
+      <div className="page-head"><div><h1>운영</h1><p>Prism 현황을 보고, 새 멤버 승인과 정회원 심사, 단계를 관리해요.</p></div></div>
       <StaffView api={api} onOpen={(id) => nav(id === me.id ? '/me' : `/members/${id}`)} />
     </div></section>
   );
