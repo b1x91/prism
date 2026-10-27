@@ -41,6 +41,7 @@ export type Member = {
   roles_at: number | null; // 역할을 마지막으로 확인한 시각
   web_seen_at: number;
   app_seen_at: number;
+  app_first_at: number; // 앱을 처음 쓴 때 (v3.108, 승인 대기 조건)
   app_lol: number;
   app_open: number;
   about: string | null; // 나를 소개해요 (JSON, v3.47)

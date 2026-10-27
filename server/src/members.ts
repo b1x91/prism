@@ -26,7 +26,7 @@ export async function ranking(env: Env, me: Member, period: string | null, by: s
   const season = seasonOf();
   const since = period === 'season' ? season.start : period === 'month' ? monthStart() : 0;
   const r = await env.DB.prepare(
-    `SELECT m.id, m.nick, m.profile_skin AS skin, m.tier, m.discord_roles, m.deco, COUNT(*) AS n, SUM(p.win) AS w,
+    `SELECT m.id, m.nick, m.profile_skin AS skin, m.tier, m.discord_roles, m.app_first_at, m.deco, COUNT(*) AS n, SUM(p.win) AS w,
        (SELECT q.champion_id FROM participants q WHERE q.member_id = m.id AND q.played_at >= ?1
         GROUP BY q.champion_id ORDER BY COUNT(*) DESC, MAX(q.played_at) DESC LIMIT 1) AS mainChampion
      FROM participants p JOIN members m ON m.id = p.member_id
@@ -34,7 +34,7 @@ export async function ranking(env: Env, me: Member, period: string | null, by: s
   )
     .bind(since)
     .all();
-  let rows = r.results.map(({ discord_roles, deco, tier, ...x }: any) => ({ ...x, role: topRole({ discord_roles }), bg: parseDeco(deco).bg ?? null, ...(isPending({ tier, discord_roles }) ? { pending: true } : {}) }));
+  let rows = r.results.map(({ discord_roles, deco, tier, app_first_at, ...x }: any) => ({ ...x, role: topRole({ discord_roles }), bg: parseDeco(deco).bg ?? null, ...(isPending({ tier, discord_roles, app_first_at }) ? { pending: true } : {}) }));
   // 승률 순위는 서버에서 정렬해야 준회원의 5위까지도 실제 승률 순위가 된다
   if (by === 'winrate') rows = rows.filter((x: any) => x.n >= RANK_MIN_WINRATE).sort((a: any, b: any) => b.w / b.n - a.w / a.n || b.n - a.n);
   else if (by === 'score') rows.sort(byScore);
@@ -48,9 +48,9 @@ export async function ranking(env: Env, me: Member, period: string | null, by: s
 
 /** 회원 페이지: 프로필 + 전체 기록 분석 재료 + (다른 사람이면) 나와 같이 한 판 */
 export async function memberPage(env: Env, me: Member, id: string) {
-  const m = await env.DB.prepare('SELECT id, nick, intro, tier, joined_at AS joinedAt, profile_skin AS skin, riot_id AS riotId, discord_roles, web_seen_at, app_seen_at, app_lol, app_open, deco, share_on, about FROM members WHERE id = ?')
+  const m = await env.DB.prepare('SELECT id, nick, intro, tier, joined_at AS joinedAt, profile_skin AS skin, riot_id AS riotId, discord_roles, app_first_at, web_seen_at, app_seen_at, app_lol, app_open, deco, share_on, about FROM members WHERE id = ?')
     .bind(id)
-    .first<{ id: string; nick: string; intro: string; tier: string; joinedAt: number; skin: number | null; riotId: string | null; discord_roles: string | null; web_seen_at: number; app_seen_at: number; app_lol: number; app_open: number; deco: string | null; share_on: number; about: string | null }>();
+    .first<{ id: string; nick: string; intro: string; tier: string; joinedAt: number; skin: number | null; riotId: string | null; discord_roles: string | null; app_first_at: number; web_seen_at: number; app_seen_at: number; app_lol: number; app_open: number; deco: string | null; share_on: number; about: string | null }>();
   if (!m) throw new HttpError(404, '없는 회원입니다.');
   const self = id === me.id;
 
@@ -96,7 +96,7 @@ export async function memberPage(env: Env, me: Member, id: string) {
   const pinned = await pinnedOf(env, id).catch(() => null);
   return json({
     pinned,
-    member: { id: m.id, nick: m.nick, intro: m.intro, tier: m.tier, joinedAt: m.joinedAt, skin: m.skin, riotId: self ? m.riotId : null, self, role: topRole(m), pending: isPending({ tier: m.tier as Member['tier'], discord_roles: m.discord_roles }), presence: presenceOf({ webAt: m.web_seen_at, appAt: m.app_seen_at, lol: Boolean(m.app_lol), open: Boolean(m.app_open) }), deco: parseDeco(m.deco), shared: Boolean(m.share_on), about: (() => { try { return m.about ? cleanAbout(JSON.parse(m.about)) : null; } catch { return null; } })() },
+    member: { id: m.id, nick: m.nick, intro: m.intro, tier: m.tier, joinedAt: m.joinedAt, skin: m.skin, riotId: self ? m.riotId : null, self, role: topRole(m), pending: isPending({ tier: m.tier as Member['tier'], discord_roles: m.discord_roles, app_first_at: m.app_first_at }), presence: presenceOf({ webAt: m.web_seen_at, appAt: m.app_seen_at, lol: Boolean(m.app_lol), open: Boolean(m.app_open) }), deco: parseDeco(m.deco), shared: Boolean(m.share_on), about: (() => { try { return m.about ? cleanAbout(JSON.parse(m.about)) : null; } catch { return null; } })() },
     total: total.results[0],
     rank: (() => { const all = (rank.results as { id: string; n: number; w: number }[]).sort(byScore); const i = all.findIndex((x) => x.id === id); return i < 0 ? all.length + 1 : i + 1; })(),
     champions: champions.results,

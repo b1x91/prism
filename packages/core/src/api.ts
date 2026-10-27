@@ -128,10 +128,10 @@ export type Pulse = { now: PulseNow[]; recent?: PulseSeen[]; feed: PulseItem[]; 
 /** 운영 (v3.107, 운영진만): 멤버 목록 */
 export type StaffMember = {
   id: string; nick: string; discordName: string; skin: number | null; main: number | null; joined: number; seen: number; riotId: string | null;
-  games: number; level: number; special: boolean; pending: boolean; admin: boolean; rolesKnown: boolean; role: DiscordRole | null;
+  games: number; level: number; special: boolean; pending: boolean; app: boolean; admin: boolean; rolesKnown: boolean; role: DiscordRole | null;
   staffGames: number; review: boolean; inviter: { id: string; nick: string } | null; invitedCount: number; approvedAt: number | null;
 };
 export type StaffMembers = { members: StaffMember[]; reviewNeed: number; inviteBonus: number };
 /** 친구 초대 (v3.107) */
-export type MyInvite = { code: string; bonus: number; rewarded: number; friends: { id: string; nick: string; skin: number | null; main: number | null; joined: number; approved: boolean; rewardedAt: number | null }[] };
+export type MyInvite = { code: string; bonus: number; rewarded: number; friends: { id: string; nick: string; skin: number | null; main: number | null; joined: number; approved: boolean; pending?: boolean; rewardedAt: number | null }[] };
 export type LookupMember = { id: string; nick: string; skin: number | null; main: number | null };

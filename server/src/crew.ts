@@ -62,9 +62,10 @@ export async function setPresence(env: Env, me: Member, body: { via?: unknown; l
     const phase = body.lol && ['lobby', 'select', 'game'].includes(String(body.phase)) ? String(body.phase) : '';
     const champ = Number.isInteger(body.champ) && (body.champ as number) > 0 ? (body.champ as number) : 0;
     await env.DB.prepare(`UPDATE members SET app_seen_at = ?1, app_lol = ?2, app_open = ?3, app_champ = ?5,
-        app_phase_at = CASE WHEN app_phase = ?4 THEN app_phase_at ELSE ?1 END, app_phase = ?4 WHERE id = ?6`)
+        app_phase_at = CASE WHEN app_phase = ?4 THEN app_phase_at ELSE ?1 END, app_phase = ?4,
+        app_first_at = CASE WHEN app_first_at = 0 THEN ?1 ELSE app_first_at END WHERE id = ?6`)
       .bind(now, body.lol ? 1 : 0, body.open ? 1 : 0, phase, champ, me.id).run();
-    Object.assign(me, { app_seen_at: now, app_lol: body.lol ? 1 : 0, app_open: body.open ? 1 : 0 });
+    Object.assign(me, { app_first_at: me.app_first_at || now, app_seen_at: now, app_lol: body.lol ? 1 : 0, app_open: body.open ? 1 : 0 });
   } else if (body.via === 'app-quit') {
     await env.DB.prepare("UPDATE members SET app_seen_at = 0, app_lol = 0, app_open = 0, app_phase = '' WHERE id = ?").bind(me.id).run();
     Object.assign(me, { app_seen_at: 0, app_lol: 0, app_open: 0 });

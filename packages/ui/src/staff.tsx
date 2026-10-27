@@ -13,7 +13,7 @@ import { useKept } from './kept';
 import { Bone, SkeletonFrame, Swap, fadeCls, useReveal } from './skeleton';
 
 type Tab = 'pending' | 'review' | 'all';
-const LEVELS: ['0' | '1' | '2' | '3', string][] = [['0', '승인 대기'], ['1', '준회원'], ['2', '정회원'], ['3', '우수회원']];
+const LEVELS: ['0' | '1' | '2' | '3', string][] = [['0', '역할 없음'], ['1', '준회원'], ['2', '정회원'], ['3', '우수회원']];
 
 export function StaffView({ api, onOpen }: { api: Api; onOpen?: (id: string) => void }) {
   const { data, error, reload } = useLoad<StaffMembers>(api, '/api/staff/members');
@@ -40,7 +40,7 @@ export function StaffView({ api, onOpen }: { api: Api; onOpen?: (id: string) => 
           <Seg value={tab} options={[['pending', `승인 대기 ${lists.pending.length}`], ['review', `정회원 심사 ${lists.review.length}`], ['all', `전체 ${lists.all.length}`]]} onChange={setTab} />
           <label className="stf-search"><Icon name="search" /><input className="input sm" value={q} placeholder="이름으로 찾기" aria-label="이름으로 찾기" onChange={(e) => setQ(e.target.value)} /></label>
         </div>
-        <p className="meta stf-help">{tab === 'pending' ? '승인하면 디스코드 준회원 역할이 붙고, 추천인이 있으면 추천인에게 ' + data.inviteBonus + ' 피스가 들어가요.'
+        <p className="meta stf-help">{tab === 'pending' ? '디스코드 회원 역할이 없고 앱을 쓰는 멤버예요. 승인하면 디스코드 준회원 역할이 붙고, 추천인이 있으면 추천인에게 ' + data.inviteBonus + ' 피스가 들어가요.'
           : tab === 'review' ? `운영진과 같은 판을 ${data.reviewNeed}판 이상 한 준회원이에요. 승인하면 정회원이 돼요.`
             : '단계와 특별회원을 바꾸면 디스코드 역할도 바로 바뀌어요. 운영진 역할은 디스코드에서 직접 바꿔 주세요.'}</p>
         {shown.length ? <section className="card stf-list">
@@ -66,6 +66,7 @@ function StaffRow({ api, m, tab, need, referrers, onDone, onOpen }: { api: Api; 
   const facts = [
     `${shortDate(m.joined)} 가입`,
     m.seen ? `접속 ${ago(m.seen)}` : '',
+    m.app ? '앱 사용' : '앱 안 씀',
     `${m.games}판`,
     `운영진과 ${m.staffGames}판${m.level === 1 && m.staffGames < need ? ` / ${need}` : ''}`,
     m.inviter ? `추천인 ${shortNick(m.inviter.nick)}` : '',

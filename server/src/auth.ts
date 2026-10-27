@@ -5,7 +5,7 @@
  *   → 1회용 code 와 함께 앱 로컬 주소로 리다이렉트 → 앱이 POST /api/app/token 으로 토큰 교환
  * 등급은 DB 가 진실. 디스코드 역할은 읽지 않는다 (CLAUDE.md 6-1).
  */
-import { allowedRedirect, HttpError, json, randomToken, sha256, type Env, type Member } from './util.js';
+import { allowedRedirect, HttpError, isLoopback, json, randomToken, sha256, type Env, type Member } from './util.js';
 
 const STATE_TTL = 10 * 60_000;
 const CODE_TTL = 60_000;
@@ -110,6 +110,8 @@ async function finishLogin(env: Env, redirect: string, id: string, name: string,
   )
     .bind(id, name, avatar, admins.includes(id) ? 'admin' : 'guest', now, JSON.stringify(roles.slice(0, 100)), refresh)
     .run();
+  // 앱(루프백 주소)으로 로그인 = 앱을 쓰는 회원 (승인 대기 조건, v3.108)
+  if (isLoopback(redirect)) await env.DB.prepare('UPDATE members SET app_first_at = ?1 WHERE id = ?2 AND app_first_at = 0').bind(now, id).run();
 
   const code = randomToken(24);
   await env.DB.prepare('INSERT INTO auth_codes (code_hash, member_id, expires_at) VALUES (?, ?, ?)').bind(await sha256(code), id, now + CODE_TTL).run();

@@ -12,7 +12,7 @@ import { isPending } from './roles.js';
 export async function appMembers(env: Env): Promise<Response> {
   const now = Date.now();
   const rows = await env.DB.prepare(
-    `SELECT m.id, m.nick, ${FACE('m')}, m.about, m.joined_at AS joined, m.web_seen_at AS webAt, m.app_seen_at AS appAt, m.app_lol AS lol, m.app_open AS open, m.tier, m.discord_roles,
+    `SELECT m.id, m.nick, ${FACE('m')}, m.about, m.joined_at AS joined, m.web_seen_at AS webAt, m.app_seen_at AS appAt, m.app_lol AS lol, m.app_open AS open, m.tier, m.discord_roles, m.app_first_at,
        (SELECT COUNT(*) FROM matches g WHERE g.collected_by = m.id) AS collected,
        (SELECT COUNT(*) FROM participants p WHERE p.member_id = m.id) AS games,
        (SELECT COUNT(*) FROM participants p WHERE p.member_id = m.id AND p.crew_count >= 2) AS crew
@@ -24,7 +24,7 @@ export async function appMembers(env: Env): Promise<Response> {
       id: r.id, nick: r.nick, skin: r.skin, main: r.main, about,
       joined: r.joined, collected: r.collected, games: r.games, crew: r.crew,
       presence: presenceOf({ webAt: r.webAt, appAt: r.appAt, lol: Boolean(r.lol), open: Boolean(r.open) }, now),
-      ...(isPending({ tier: r.tier, discord_roles: r.discord_roles }) ? { pending: true } : {}),
+      ...(isPending({ tier: r.tier, discord_roles: r.discord_roles, app_first_at: r.app_first_at }) ? { pending: true } : {}),
     };
   });
   return json({ members: list });

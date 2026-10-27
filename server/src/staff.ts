@@ -7,7 +7,7 @@
  */
 import { sendToChannel } from './bot.js';
 import { PROMOTION, liveRoles, setRole } from './promote.js';
-import { ROLES, can, isPending, isSpecial, levelOf, rolesOf, topRole } from './roles.js';
+import { ROLES, can, isPending, isSpecial, unapproved, levelOf, rolesOf, topRole } from './roles.js';
 import { FACE, HttpError, json, type Env, type Member } from './util.js';
 import { INVITE_BONUS } from '../../packages/core/src/shop.js';
 
@@ -54,7 +54,7 @@ export async function staffMembers(env: Env, me: Member) {
   assertStaff(me);
   const [{ results }, withStaff, rewards] = await Promise.all([
     env.DB.prepare(
-      `SELECT m.id, m.nick, m.discord_name AS discordName, ${FACE('m')}, m.tier, m.discord_roles, m.joined_at AS joined,
+      `SELECT m.id, m.nick, m.discord_name AS discordName, ${FACE('m')}, m.tier, m.discord_roles, m.app_first_at, m.joined_at AS joined,
          MAX(COALESCE(m.last_seen_at, 0), COALESCE(m.web_seen_at, 0), COALESCE(m.app_seen_at, 0)) AS seen,
          m.riot_id AS riotId, m.invited_by AS invitedBy, m.approved_at AS approvedAt,
          (SELECT COUNT(*) FROM participants p WHERE p.member_id = m.id) AS games
@@ -66,13 +66,13 @@ export async function staffMembers(env: Env, me: Member) {
   const nick = new Map(results.map((r) => [r.id as string, r.nick as string]));
   const invited = new Map(rewards.results.map((r) => [r.inviter, r.n]));
   const need = PROMOTION.regularReview.withStaff;
-  const members = results.map(({ discord_roles, tier, ...r }) => {
-    const m = { tier, discord_roles } as Pick<Member, 'tier' | 'discord_roles'>;
+  const members = results.map(({ discord_roles, tier, app_first_at, ...r }) => {
+    const m = { tier, discord_roles, app_first_at: Number(app_first_at ?? 0) } as Pick<Member, 'tier' | 'discord_roles'> & { app_first_at: number };
     const level = Math.min(levelOf(m), 5);
     const staffGames = withStaff.get(r.id) ?? 0;
     return {
       ...r,
-      level, special: isSpecial(m) && level < 5, pending: isPending(m), role: topRole(m), admin: tier === 'admin',
+      level, special: isSpecial(m) && level < 5, pending: isPending(m), app: (m.app_first_at ?? 0) > 0, role: topRole(m), admin: tier === 'admin',
       rolesKnown: discord_roles != null,
       staffGames,
       review: level === 1 && staffGames >= need,
@@ -191,10 +191,10 @@ async function inviteCode(env: Env, me: Member): Promise<string> {
 export async function myInvite(env: Env, me: Member) {
   const code = await inviteCode(env, me);
   const { results } = await env.DB.prepare(
-    `SELECT m.id, m.nick, ${FACE('m')}, m.tier, m.discord_roles, m.joined_at AS joined, r.at AS rewardedAt
+    `SELECT m.id, m.nick, ${FACE('m')}, m.tier, m.discord_roles, m.app_first_at, m.joined_at AS joined, r.at AS rewardedAt
      FROM members m LEFT JOIN invite_rewards r ON r.invitee = m.id WHERE m.invited_by = ? ORDER BY m.joined_at DESC`,
   ).bind(me.id).all<Record<string, any>>();
-  const friends = results.map(({ tier, discord_roles, ...r }) => ({ ...r, rewardedAt: (r.rewardedAt ?? null) as number | null, approved: Boolean(r.rewardedAt) || levelOf({ tier, discord_roles }) >= 1 }));
+  const friends = results.map(({ tier, discord_roles, app_first_at, ...r }) => ({ ...r, pending: isPending({ tier, discord_roles, app_first_at }), rewardedAt: (r.rewardedAt ?? null) as number | null, approved: Boolean(r.rewardedAt) || levelOf({ tier, discord_roles }) >= 1 }));
   return json({ code, bonus: INVITE_BONUS, friends, rewarded: friends.filter((f) => f.rewardedAt).length });
 }
 
@@ -212,7 +212,7 @@ export async function claimInvite(req: Request, env: Env, me: Member) {
   if (!byCode && !byId) throw new HttpError(400, '추천인을 찾지 못했어요.');
   if (me.invited_by) return json({ ok: false, reason: 'already' });
   // 이미 승인된(예전부터 쓰던) 회원은 초대받은 사람으로 남기지 않는다 — 보너스를 노린 남용을 막는다
-  if (!isPending(me)) return json({ ok: false, reason: 'member' });
+  if (!unapproved(me)) return json({ ok: false, reason: 'member' });
   const inv = await env.DB.prepare(`SELECT id, tier, discord_roles FROM members WHERE ${byCode ? 'invite_code' : 'id'} = ?`).bind(byCode ? code : member).first<Pick<Member, 'id' | 'tier' | 'discord_roles'>>();
   if (!inv || inv.id === me.id || !approved(inv)) return json({ ok: false, reason: 'invalid' });
   await env.DB.prepare('UPDATE members SET invited_by = ? WHERE id = ? AND invited_by IS NULL').bind(inv.id, me.id).run();

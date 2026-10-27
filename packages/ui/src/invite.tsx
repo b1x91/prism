@@ -35,7 +35,7 @@ export function InviteCard({ api, origin = WEB_ORIGIN }: { api: Api; origin?: st
         {data.friends.map((f) => <span key={f.id} className="inv-f">
           <MemberFace nick={f.nick} skin={f.skin} champion={f.main} size={28} skins={skins} />
           <b>{shortNick(f.nick)}</b>
-          {f.rewardedAt ? <span className="inv-got">+{data.bonus}<PieceIcon size={12} /></span> : f.approved ? null : <PendingChip />}
+          {f.rewardedAt ? <span className="inv-got">+{data.bonus}<PieceIcon size={12} /></span> : f.pending ? <PendingChip /> : null}
         </span>)}
       </div>}
     </section>

@@ -81,6 +81,9 @@ export async function assertRanking(env: Env, m: Pick<Member, 'tier' | 'discord_
   if (!(await rankingGate(env, m)).open) throw new HttpError(403, `랭킹은 회원이 ${RANKING_OPEN_MEMBERS}명 모이면 열려요.`);
 }
 
-/** 승인 대기 (v3.107): 디스코드 회원 역할(준회원 이상·특별회원)이 아직 없다. 역할을 한 번도 확인하지 못한 예전 회원은 대기로 보지 않는다 */
-export const isPending = (m: Pick<Member, 'tier' | 'discord_roles'>) =>
+/** 디스코드 회원 역할(준회원 이상·특별회원)이 아직 없다. 역할을 한 번도 확인하지 못한 예전 회원은 제외 */
+export const unapproved = (m: Pick<Member, 'tier' | 'discord_roles'>) =>
   m.tier !== 'admin' && m.discord_roles != null && levelOf(m) === 0 && !isSpecial(m);
+
+/** 승인 대기 (v3.108): 디스코드 회원 역할이 없고 + 앱을 쓴 적이 있다 (app_first_at). 앱을 안 쓴 웹 방문자는 대기로 보지 않는다 */
+export const isPending = (m: Pick<Member, 'tier' | 'discord_roles'> & { app_first_at: number | null | undefined }) => unapproved(m) && (m.app_first_at ?? 0) > 0;
