@@ -237,6 +237,11 @@ export function PresenceTag({ p }: { p?: Presence | null }) {
 }
 
 /** 디스코드 역할 배지 (디스코드와 같은 색) */
+/** 승인 대기 칩 (v3.106): 운영진 승인 전 회원의 이름 옆. dark = 어두운 무대·그림 위 */
+export function PendingChip({ dark }: { dark?: boolean }) {
+  return <span className={`wait-chip ${dark ? 'dark' : ''}`} title="운영진 승인을 기다리고 있어요">승인대기</span>;
+}
+
 export function RoleBadge({ role, small }: { role?: DiscordRole | null; small?: boolean }) {
   if (!role) return null;
   return <span className={`role-badge ${small ? 'sm' : ''}`} style={{ ['--rc' as string]: role.color }}><i />{role.name}</span>;

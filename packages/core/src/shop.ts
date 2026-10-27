@@ -18,6 +18,9 @@ export const EARN = {
   daily: 10,
 } as const;
 
+/** 친구 초대 보너스 (v3.106): 초대한 친구가 운영진 승인을 받으면 한 명마다. 단계 배율을 곱하지 않는 고정값 */
+export const INVITE_BONUS = 300;
+
 /**
  * 함께 연판 (v3.83): 멤버 2명 이상인 판을 이어서(다음 판이 50분 안에 시작) 할수록 판마다 더 준다.
  * 이어진 k번째 판 = step × (k − 1) — 2번째 +2 · 3번째 +4 · … · 10번째 +18, 10연판부터는 매 판 +18 그대로. 10연판 한 번이면 +90.
@@ -110,7 +113,7 @@ export function parseDeco(s: string | null | undefined): Deco {
 
 /** 번 피스 내역 */
 /** missions: 미션으로 번 피스 (core/missions.ts) */
-export type Earned = { games: number; wins: number; crew: number; levels: number; together: number; daily: number; missions?: number; run?: number };
+export type Earned = { games: number; wins: number; crew: number; levels: number; together: number; daily: number; missions?: number; run?: number; /** 승인된 초대 친구 수 (보너스는 배율 밖, INVITE_BONUS) */ invites?: number };
 export const earnedTotal = (e: Earned) => e.games * EARN.game + e.wins * EARN.win + e.crew * EARN.crew + e.levels + e.together * EARN.together + e.daily * EARN.daily + (e.missions ?? 0) + (e.run ?? 0);
 
 export type Shop = {

@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { CHAMPIONS, ROLE_KO, aboutWhen, cdragon, shortNick, type Api, type AppMember } from '@prism/core';
-import { FacePresence, MemberFace, useSkins } from './basics';
+import { FacePresence, MemberFace, useSkins, PendingChip } from './basics';
 import { useLoad } from './crew';
 import { Bone, Swap, fadeCls, imgIn, useReveal } from './skeleton';
 
@@ -78,7 +78,7 @@ export function AppMembers({ api, onMember }: { api: Api; onMember?: (id: string
               {bg && <img className="am-bg fi" {...imgIn} src={bg} alt="" loading="lazy" />}
               <FacePresence p={m.presence}><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={52} skins={skins} /></FacePresence>
               <span className="am-t">
-                <span className="am-name"><b>{shortNick(m.nick)}</b></span>
+                <span className="am-name"><b>{shortNick(m.nick)}</b>{m.pending && <PendingChip />}</span>
                 <span className="am-chips">{m.about?.mbti && <i>{m.about.mbti}</i>}{m.about?.roles.length ? <i>{m.about.roles.map((r) => ROLE_KO[r as keyof typeof ROLE_KO] ?? r).join('·')}</i> : null}</span>
                 <span className="am-praise">{m.crew > 0 ? <>멤버들과 <b>{m.crew.toLocaleString()}판</b> 함께했어요</> : <>함께한 지 <b>{days}일</b></>}</span>
                 <span className="am-meta">{[m.crew > 0 ? `함께한 지 ${days}일` : '', m.about ? aboutWhen(m.about) : ''].filter(Boolean).join(' · ')}</span>

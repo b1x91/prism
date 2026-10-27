@@ -27,6 +27,7 @@ import { claimWeekly, getWeekly } from './weekly.js';
 import { assertRanking } from './roles.js';
 import { listDiag, saveDiag } from './diag.js';
 import { myInquiries, postInquiry } from './inquiry.js';
+import { claimInvite, lookupMembers, myInvite, publicInvite, staffAction, staffMembers } from './staff.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 
 async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
@@ -49,6 +50,9 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
 
   const pub = pathname.match(/^\/public\/([0-9A-Za-z_-]{1,40})$/);
   if (m === 'GET' && pub) return publicProfile(env, pub[1]);
+  // 친구 초대 링크의 초대한 사람 (이름·얼굴만, v3.106)
+  const inv = pathname.match(/^\/public\/invite\/([a-z0-9]{4,12})$/);
+  if (m === 'GET' && inv) return publicInvite(env, inv[1]);
 
   if (!pathname.startsWith('/api/')) throw new HttpError(404, 'not found');
   const me = await authenticate(req, env);
@@ -85,6 +89,13 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'GET' && pathname === '/api/me/inquiry') return myInquiries(env, me);
   if (m === 'POST' && pathname === '/api/me/inquiry') return postInquiry(req, env, me, ctx);
   if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
+  // 운영 (운영진만, v3.106) · 친구 초대
+  if (m === 'GET' && pathname === '/api/staff/members') return staffMembers(env, me);
+  const st = pathname.match(/^\/api\/staff\/members\/([0-9A-Za-z_-]{1,40})\/(approve|promote|level|special|inviter)$/);
+  if (m === 'POST' && st) return staffAction(req, env, me, st[1], st[2]);
+  if (m === 'GET' && pathname === '/api/me/invite') return myInvite(env, me);
+  if (m === 'POST' && pathname === '/api/me/invited') return claimInvite(req, env, me);
+  if (m === 'GET' && pathname === '/api/members/lookup') return lookupMembers(env, me, new URL(req.url).searchParams.get('q'));
   // 매일 밤 공지 미리 보기 (올리지 않는다). ?day=YYYY-MM-DD 로 다른 날
   if (m === 'GET' && pathname === '/api/admin/daily') {
     if (me.tier !== 'admin') throw new HttpError(403, '관리자만 볼 수 있어요');

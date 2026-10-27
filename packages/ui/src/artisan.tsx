@@ -4,7 +4,7 @@
  */
 import { useMemo } from 'react';
 import { AUGMENT, CHAMPIONS, type Api, type ArtisanRank, type ArtisanRanking, type Artisans as ArtisansData, shortNick } from '@prism/core';
-import { ChampImg, Empty, LockedMore, MemberFace, useSkins } from './basics';
+import { ChampImg, Empty, LockedMore, MemberFace, useSkins, PendingChip } from './basics';
 import { NickName } from './studio';
 import { AugRing } from './augment';
 import { useLoad } from './crew';
@@ -28,7 +28,7 @@ export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champio
         {!data ? <div className="art2-plaque" aria-busy="true"><span className="art2-ring"><Bone w={56} h={56} r="round" dark /></span><b className="art2-nm"><Bone w={120} h={14} dark style={IL} /></b><small><Bone w={200} h={10} dark style={IL} /><span className="art2-sk2"><br /><Bone w={140} h={10} dark style={IL} /></span></small></div> : masters.length ? <div className="art2-masters">{masters.slice(0, 3).map((a) => (
           <button key={a.id} type="button" className="art2-plaque on" onClick={() => onMember?.(a.id)}>
             <span className="art2-ring"><MemberFace nick={a.nick} skin={a.skin} champion={a.main} size={56} skins={skins} /></span>
-            <b className="art2-nm"><NickName nick={a.nick} /></b>
+            <b className="art2-nm"><NickName nick={a.nick} />{a.pending && <PendingChip dark />}</b>
             <small>{a.w}승 · {a.n}판</small>
           </button>
         ))}{masters.length > 3 && <span className="art2-more">+{masters.length - 3}</span>}</div>
@@ -45,7 +45,7 @@ export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champio
             <li key={a.id}><button type="button" className="art2-row" onClick={() => onMember?.(a.id)}>
               <span className="rk">{i + 1}</span>
               <MemberFace nick={a.nick} skin={a.skin} champion={a.main} size={28} skins={skins} />
-              <span className="nm"><NickName nick={a.nick} /></span>
+              <span className="nm"><NickName nick={a.nick} />{a.pending && <PendingChip />}</span>
               <span className="art2-prog"><span style={{ width: `${(a.done / Math.max(1, a.total)) * 100}%` }} /></span>
               <span className="art2-n"><b>{a.done}</b>/{a.total}</span>
             </button></li>
@@ -79,7 +79,7 @@ function ArtRow({ r, rank, kind, me, skins, onOpen }: { r: ArtisanRank; rank: nu
     <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 && r.masters > 0 ? 'first' : ''}`} onClick={() => onOpen(r.id)}>
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.main} skins={skins} size={40} />
-      <span className="who"><b>{shortNick(r.nick)}</b>
+      <span className="who"><b>{shortNick(r.nick)}{r.pending && <PendingChip />}</b>
         {r.masterIds.length ? <span className="art-icons">{r.masterIds.map(icon)}</span>
           : r.best ? <span className="meta">가장 가까운 {(kind === 'champions' ? CHAMPIONS[r.best.id]?.name : AUGMENT[r.best.id]?.name) ?? ''} · {r.best.done}/6</span> : null}</span>
       <span className="num key">{r.masters > 0 && <PrismMark size={16} />}{r.masters}<small>장인</small></span>

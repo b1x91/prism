@@ -1,6 +1,6 @@
 /**
  * 디스코드 역할 자동 승급·강등 (CLAUDE.md v3.53). 매일 한 번(크론) 기록에서 다시 계산해, 바뀔 사람만 봇이 역할을 주고 뺀다.
- * - 준회원 → 정회원: 최근 14일 안에 모임 판(회원 2명 이상) 5판 이상 또는 내전(사용자 설정 판, 회원 2명 이상) 1회
+ * - 준회원 → 정회원: 자동이 아니다 (v3.106). 운영진과 같은 판 3판 이상이면 '운영' 페이지 정회원 심사 → 운영진 승인 (staff.ts)
  * - 정회원 → 우수회원: 최근 14일 안에 7일 연속(KST 날짜) 매일 모임 판이 있고, 그 7일 동안 운영자(ADMIN 첫 번째)와 같은 판 3판 이상
  * - 30일 동안 판·접속이 모두 없으면 한 단계 내림 (우수회원 → 정회원, 정회원 → 준회원)
  * - 운영진·특별회원·관리자는 사람이 정한다 (건드리지 않는다)
@@ -13,7 +13,8 @@ import type { Env, Member } from './util.js';
 
 /** 숫자는 여기 한 곳 */
 export const PROMOTION = {
-  regular: { days: 14, crewGames: 5, scrims: 1 },
+  /** 정회원 심사에 올라가는 기준: 운영진(운영진 역할·관리자)과 같은 판 수 (v3.106, staff.ts) */
+  regularReview: { withStaff: 3 },
   excellent: { window: 14, streak: 7, withHost: 3 },
   demoteAfterDays: 30,
 } as const;
@@ -22,7 +23,7 @@ const DAY = 86400_000, KST = 9 * 3600_000;
 const role = (key: string) => ROLES.find((r) => r.key === key)!.id;
 const kstDay = (t: number) => Math.floor((t + KST) / DAY);
 
-async function setRole(env: Env, memberId: string, roleId: string, on: boolean, reason: string): Promise<boolean> {
+export async function setRole(env: Env, memberId: string, roleId: string, on: boolean, reason: string): Promise<boolean> {
   const r = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members/${memberId}/roles/${roleId}`, {
     method: on ? 'PUT' : 'DELETE',
     headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`, 'X-Audit-Log-Reason': encodeURIComponent(reason) },
@@ -33,7 +34,7 @@ async function setRole(env: Env, memberId: string, roleId: string, on: boolean, 
 }
 
 /** 디스코드에 지금 역할을 물어본다 (12시간마다 갱신하는 로컬 기록이 늦을 수 있어서). 실패하면 null */
-async function liveRoles(env: Env, memberId: string): Promise<string[] | null> {
+export async function liveRoles(env: Env, memberId: string): Promise<string[] | null> {
   const r = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members/${memberId}`, {
     headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }, signal: AbortSignal.timeout(8000),
   }).catch(() => null);
@@ -46,17 +47,8 @@ export async function promoteSweep(env: Env, now = Date.now()) {
   if (!env.DISCORD_BOT_TOKEN) return;
   const host = (env.ADMIN_DISCORD_IDS ?? '').split(',').map((s) => s.trim()).filter(Boolean)[0];
   const { results: members } = await env.DB.prepare('SELECT * FROM members').all<Member>();
-  const since = now - PROMOTION.regular.days * DAY;
   const win = now - PROMOTION.excellent.window * DAY;
 
-  const count = async (sql: string, ...args: unknown[]) => {
-    const m = new Map<string, number>();
-    for (const r of (await env.DB.prepare(sql).bind(...args).all<{ id: string; n: number }>()).results) m.set(r.id, r.n);
-    return m;
-  };
-  const crew = await count('SELECT member_id AS id, COUNT(*) AS n FROM participants WHERE played_at >= ? AND crew_count >= 2 GROUP BY member_id', since);
-  const scrims = await count(`SELECT p.member_id AS id, COUNT(*) AS n FROM participants p JOIN matches m ON m.game_id = p.game_id
-    WHERE p.played_at >= ? AND p.crew_count >= 2 AND m.queue_id != 2400 GROUP BY p.member_id`, since);
   // 우수회원 판단용: 최근 창의 모임 판 (판·날짜·운영자와 같은 판인지)
   const { results: rows } = await env.DB.prepare(`SELECT p.member_id AS id, p.played_at AS t,
       EXISTS (SELECT 1 FROM participants h WHERE h.game_id = p.game_id AND h.member_id = ?) AS withHost
@@ -102,8 +94,9 @@ export async function promoteSweep(env: Env, now = Date.now()) {
       }
       if (changed) await env.DB.prepare('INSERT OR REPLACE INTO ext_cache (k, v, at) VALUES (?, ?, ?)').bind(`demoted-${m.id}`, '1', now).run();
     } else {
-      const up = lv <= 1 && ((crew.get(m.id) ?? 0) >= PROMOTION.regular.crewGames || (scrims.get(m.id) ?? 0) >= PROMOTION.regular.scrims) ? { id: R.regular, lv: 2, name: '정회원', why: 'Prism: 모임 판 기준 충족' }
-        : lv === 2 && excellent(m.id) ? { id: R.excellent, lv: 3, name: '우수회원', why: 'Prism: 7일 연속 모임 판' } : null;
+      // 승인 대기(역할 없음)는 자동으로 올리지 않는다 — 운영진 승인이 먼저 (v3.106)
+      // 준회원 → 정회원은 자동으로 올리지 않는다: 운영진과 3판 이상 함께하면 '운영' 페이지 정회원 심사에 올라가고 승인으로 (v3.106, staff.ts)
+      const up = lv === 2 && excellent(m.id) ? { id: R.excellent, lv: 3, name: '우수회원', why: 'Prism: 7일 연속 모임 판' } : null;
       if (up) {
         const live = await liveRoles(env, m.id);
         if (live === null) continue; // 서버를 나갔거나 확인 실패 — 다음 날 다시

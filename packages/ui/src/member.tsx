@@ -9,7 +9,7 @@ import {
   type Api, type Game, type InsightKind, type MemberPage, type Ranking, type Shop, type RankingRow, type Skin,
   rankScore, byScore, seasonOf, improveOf, type WinTip,
 } from '@prism/core';
-import { AugImg, ChampImg, Empty, Gem, LockedMore, MemberFace, PresenceTag, faceSrc, RoleBadge, Seg, useSkins } from './basics';
+import { AugImg, ChampImg, Empty, Gem, LockedMore, MemberFace, PendingChip, PresenceTag, faceSrc, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
 import { ArtisanRankingView } from './artisan';
 import { Icon } from './icons';
@@ -199,7 +199,7 @@ function Podium({ r, rank, by, me, skins, onOpen, play }: { r: RankingRow; rank:
       {r.bg ? <BgScene id={r.bg} /> : <span className="phero-tint" style={{ ['--tint' as string]: baseTint(r.nick) }} aria-hidden="true" />}
       {rank === 1 && <span className="lb-crown" aria-hidden="true"><Gem size={28} src="/brand/prism-32.png" /></span>}
       <span className="lb-face"><MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={rank === 1 ? 88 : 72} /></span>
-      <span className="lb-nm"><NickName nick={r.nick} /></span>
+      <span className="lb-nm"><NickName nick={r.nick} />{r.pending && <PendingChip dark />}</span>
       <span className="lb-st"><b><CountUp text={scoreTab(by) ? `${rankScore(r.w, r.n)}점` : `${r.n}판`} delay={[0, 1150, 950, 800][rank]} play={play} /></b><small>{scoreTab(by) ? `${r.n}판 · ${pct(r.w, r.n)}` : `승률 ${pct(r.w, r.n)}`}</small></span>
     </button>
   );
@@ -234,7 +234,7 @@ function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: n
       {r.bg && <BgScene id={r.bg} row />}
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={40} />
-      <span className="who"><b><NickName nick={r.nick} /></b><span className="meta">{[r.mainChampion ? `주 챔프 ${CHAMPIONS[r.mainChampion]?.name}` : '', scoreTab(by) ? `${r.n}판` : ''].filter(Boolean).join(' · ')}</span></span>
+      <span className="who"><b><NickName nick={r.nick} />{r.pending && <PendingChip dark={Boolean(r.bg)} />}</b><span className="meta">{[r.mainChampion ? `주 챔프 ${CHAMPIONS[r.mainChampion]?.name}` : '', scoreTab(by) ? `${r.n}판` : ''].filter(Boolean).join(' · ')}</span></span>
       {scoreTab(by) ? <span className="num key">{rankScore(r.w, r.n)}<small>점</small></span> : <span className="num key">{r.n}<small>판</small></span>}
       <span className="num">{pct(r.w, r.n)}</span>
     </button>
@@ -292,11 +292,12 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
         actions={<>{m.self && studioBtn && <button type="button" className="btn sm" onClick={() => setEdit('skin')}><Icon name="spark" />프로필 꾸미기</button>}
           {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}
-        chips={<><span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
+        chips={<>{m.pending && <span className="pill dark wait">승인 대기 중</span>}<span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
           {skin && <span className="pill dark">{skin.name}</span>}{(m.presence === 'game' || m.presence === 'both') && <span className="pill dark"><PresenceTag p={m.presence} /></span>}
           {m.about && (m.self
             ? <button type="button" className="pill dark about-edit" title="소개 바꾸기" onClick={() => setEdit('intro')}><span>{m.about.mbti}</span><span>{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span>{aboutWhen(m.about)}</span><Icon name="edit" /></button>
-            : <><span className="pill dark">{m.about.mbti}</span><span className="pill dark">{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span className="pill dark">{aboutWhen(m.about)}</span></>)}</>} />
+            : <><span className="pill dark">{m.about.mbti}</span><span className="pill dark">{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span className="pill dark">{aboutWhen(m.about)}</span></>)}
+          {m.about?.insta && <a className="pill dark insta" href={`https://instagram.com/${m.about.insta}`} target="_blank" rel="noopener noreferrer" title="인스타그램">@{m.about.insta}</a>}</>} />
       {edit && m.self && <ProfileStudio api={api} page={data} skins={skins} start={edit} onClose={closeEdit} onSaved={() => { closeEdit(); reload(); }} />}
       {m.self && !m.riotId && <section className="card pad"><b>아직 롤 계정이 연결되지 않았어요</b><div className="muted">PC의 Prism 앱에서 로그인한 뒤 맨 위의 <b>"동의하고 연결"</b>을 누르면, 그때부터 판이 여기에 쌓입니다. 앱에 이미 보이는 최근 판도 함께 올라와요.</div></section>}
       {total.n > 0 ? <StatBoard data={data} games={games} kda={kda} streak={st} /> : <div className="grid4">

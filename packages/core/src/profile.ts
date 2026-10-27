@@ -9,13 +9,15 @@ import { fitOf, fitPoints, tierOf } from './synergy';
 export type ChampAgg = { id: number; n: number; w: number; k?: number; d?: number; a?: number };
 export type RankingRow = { id: string; nick: string; skin: number | null; n: number; w: number; mainChampion: number | null; role?: import('./api').DiscordRole | null;
   /** 산 배경 (그 사람의 줄에 깔린다) */
-  bg?: string | null };
+  bg?: string | null;
+  /** 승인 대기 (v3.106) */
+  pending?: boolean };
 export type Ranking = { period: 'all' | 'month' | 'season'; season?: { key: string; label: string; start: number; end: number }; minWinrate: number; rows: RankingRow[]; limited?: { total: number; mine: (RankingRow & { rank: number }) | null } };
 export type MemberGame = { gameId: number; playedAt: number; duration: number; championId: number; win: boolean; kills: number; deaths: number; assists: number; augments: number[]; items: number[]; damageToChampions: number | null; goldEarned: number | null; crewCount: number; custom?: boolean };
 export type MemberPage = {
   /** 걸어 둔 명장면 (명장면 액자, v3.99 — 예전 서버는 보내지 않는다) */
   pinned?: import('./highlight').Highlight | null;
-  member: { id: string; nick: string; intro: string; tier: 'guest' | 'member' | 'admin'; joinedAt: number; skin: number | null; riotId: string | null; self: boolean; role?: import('./api').DiscordRole | null; presence?: import('./presence').Presence; deco?: import('./shop').Deco; shared?: boolean; about?: import('./about').About | null };
+  member: { id: string; nick: string; intro: string; tier: 'guest' | 'member' | 'admin'; joinedAt: number; skin: number | null; riotId: string | null; self: boolean; role?: import('./api').DiscordRole | null; presence?: import('./presence').Presence; deco?: import('./shop').Deco; shared?: boolean; about?: import('./about').About | null; pending?: boolean };
   total: NW & { k: number; d: number; a: number; first: number | null };
   rank: number;
   champions: ChampAgg[];

@@ -23,7 +23,7 @@ export interface Api {
  */
 export const CACHE_TTL = 3600_000;
 const LIVE_EXACT = new Set(['/api/me', '/api/me/games', '/api/crew/targets', '/links']);
-const LIVE_PREFIX = ['/api/discord', '/api/me/inquiry', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
+const LIVE_PREFIX = ['/api/discord', '/api/staff', '/api/me/invite', '/api/members/lookup', '/api/me/inquiry', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
 const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag'];
 export function withCache(api: Api, ttl = CACHE_TTL): Api {
   const memo = new Map<string, { at: number; data: unknown }>();
@@ -58,7 +58,7 @@ export class ApiError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
-export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; level?: number; rates?: Rates; presence?: import('./presence').Presence; rankingGate?: { have: number; need: number }; about?: import('./about').About | null };
+export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; level?: number; rates?: Rates; presence?: import('./presence').Presence; rankingGate?: { have: number; need: number }; about?: import("./about").About | null; pending?: boolean };
 /** 회원 얼굴 재료 (서버 FACE): 대표 스킨, 주 챔피언 */
 export type FaceInfo = { skin?: number | null; main?: number | null };
 export type Note = { id: number; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1; canDelete?: 0 | 1 } & FaceInfo;
@@ -91,7 +91,7 @@ export type Prospects = { prospects: Prospect[]; queueMin: number; limited?: { t
 
 /** 디스코드 역할 (가장 높은 것 하나) 과 앱 기능 권한 */
 export type DiscordRole = { key: string; name: string; color: string; level: number };
-export type Perms = { party: boolean; scrim: boolean; prospects: boolean; moderate: boolean; shop?: boolean; prospectsAll?: boolean; rankingAll?: boolean; ranking?: boolean };
+export type Perms = { party: boolean; scrim: boolean; prospects: boolean; moderate: boolean; shop?: boolean; prospectsAll?: boolean; rankingAll?: boolean; ranking?: boolean; manage?: boolean };
 /** 단계별 혜택: 피스 배율 · 도감 경험치 배율 · 상점 할인(특별회원) */
 export type Rates = { piece: number; dexXp: number; discount: number };
 
@@ -101,9 +101,9 @@ export type OnlineMember = { name: string; avatar: string; status: string; membe
 export type DiscordNow = { enabled: false; invite: string | null } | { enabled: true; online: number; inVoice: number; invite: string | null; channels: { id: string; name: string; link: string; invite: string | null; members: VoiceMember[] }[]; members: OnlineMember[] };
 
 /** 장인 (도감 마스터 여정, server/src/artisans.ts) */
-export type Artisan = { id: string; nick: string; master: boolean; done: number; total: number; n: number; w: number; special: boolean } & FaceInfo;
+export type Artisan = { id: string; nick: string; pending?: boolean; master: boolean; done: number; total: number; n: number; w: number; special: boolean } & FaceInfo;
 export type Artisans = { artisans: Artisan[] };
-export type ArtisanRank = { id: string; nick: string; masters: number; masterIds: number[]; caught: number; goals: number; best: { id: number; done: number; w: number } | null } & FaceInfo;
+export type ArtisanRank = { id: string; nick: string; pending?: boolean; masters: number; masterIds: number[]; caught: number; goals: number; best: { id: number; done: number; w: number } | null } & FaceInfo;
 export type ArtisanRanking = { champions: ArtisanRank[]; augments: ArtisanRank[]; limited?: { champions: number; augments: number } };
 
 /** 멤버 근황 (v3.74): 지금 접속한 멤버 + 최근 3일 근황 */
@@ -117,10 +117,21 @@ export type PulseItem =
   | { kind: 'firsts'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[] }
   | { kind: 'joined'; at: number; id: string; nick: string; skin: number | null; main: number | null };
 /** 앱을 쓰는 멤버 (v3.84): collected = 이 멤버의 앱이 모은 판, games = 본인 판, crew = 멤버 2명 이상 판 */
-export type AppMember = { id: string; nick: string; skin: number | null; main: number | null; about: import('./about').About | null; joined: number; collected: number; games: number; crew: number; presence: import('./presence').Presence };
+export type AppMember = { id: string; nick: string; skin: number | null; main: number | null; about: import('./about').About | null; joined: number; collected: number; games: number; crew: number; presence: import('./presence').Presence; pending?: boolean };
 export type PulseFace = { id: string; nick: string; skin: number | null; main: number | null };
 /** 오늘(KST) 요약. games = 서로 다른 판 수, n·w = 멤버별 판·승 합 (예전 서버는 없음) */
 export type PulseToday = { players: PulseFace[]; games: number; n: number; w: number };
 /** 최근 접속 (지금은 나가 있는 멤버, 14일, 마지막 접속 순). 예전 서버는 없음 */
 export type PulseSeen = PulseFace & { at: number };
 export type Pulse = { now: PulseNow[]; recent?: PulseSeen[]; feed: PulseItem[]; today?: PulseToday; at: number };
+
+/** 운영 (v3.106, 운영진만): 멤버 목록 */
+export type StaffMember = {
+  id: string; nick: string; discordName: string; skin: number | null; main: number | null; joined: number; seen: number; riotId: string | null;
+  games: number; level: number; special: boolean; pending: boolean; admin: boolean; rolesKnown: boolean; role: DiscordRole | null;
+  staffGames: number; review: boolean; inviter: { id: string; nick: string } | null; invitedCount: number; approvedAt: number | null;
+};
+export type StaffMembers = { members: StaffMember[]; reviewNeed: number; inviteBonus: number };
+/** 친구 초대 (v3.106) */
+export type MyInvite = { code: string; bonus: number; rewarded: number; friends: { id: string; nick: string; skin: number | null; main: number | null; joined: number; approved: boolean; rewardedAt: number | null }[] };
+export type LookupMember = { id: string; nick: string; skin: number | null; main: number | null };

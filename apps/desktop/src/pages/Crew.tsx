@@ -1,4 +1,4 @@
-import { AppMembers, BoardView, ChannelButtons, CrewPulse, Empty, Icon, DiscordNowCard, ProspectBoard, useLoad } from '@prism/ui';
+import { AppMembers, InviteCard, BoardView, ChannelButtons, CrewPulse, Empty, Icon, DiscordNowCard, ProspectBoard, useLoad } from '@prism/ui';
 import { useNavigate } from 'react-router-dom';
 import { withDefaults, type Links } from '@prism/core';
 import type { State } from '../controller';
@@ -16,6 +16,7 @@ export function CrewPage({ s, onLogin }: { s: State; onLogin: () => void }) {
       <CrewPulse api={api} onMember={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} />
       <AppMembers api={api} onMember={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} />
       {<ProspectBoard api={api} invite={links.discord} admin={Boolean(s.me.perms?.moderate)} />}
+      <InviteCard api={api} />
       <BoardView api={api} />
     </div>
   );

@@ -47,7 +47,7 @@ export function Onboarding({ s, onLogin }: { s: State; onLogin: () => Promise<vo
             {step === 3 && <FavChampPick api={api} verb="계속" onDone={(id) => { setPicked(id); void refreshSession(); }} />}
           </Step>
           <Step n={4} done={hasAbout} active={step === 4} title="나를 소개해요" sub={hasAbout ? '멤버 환영 채널에 소개 카드가 올라갔어요' : '좋아하는 역할·자주 하는 요일과 시간대·MBTI'}>
-            {step === 4 && <AboutPick api={api} verb="계속" onDone={() => { setAboutDone(true); void refreshSession(); }} />}
+            {step === 4 && <AboutPick api={api} verb="계속" askReferrer onDone={() => { setAboutDone(true); void refreshSession(); }} />}
           </Step>
           <Step n={5} done={false} active={step === 5} title="기록 수집 동의" sub="동의해야 Prism 앱을 쓸 수 있어요">
             {step === 5 && <div className="stack" style={{ gap: 12 }}>

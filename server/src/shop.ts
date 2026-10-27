@@ -7,7 +7,7 @@ import { augMastery, champMastery, dexLevel, type DexLevel } from '../../package
 import { dexFromRows } from '../../packages/core/src/history.js';
 import { parseFeat } from '../../packages/core/src/challenges.js';
 import { usesOf } from './goods.js';
-import { EARN, SHOP_ITEM, forSale, earnedTotal, runBonusOf, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
+import { EARN, INVITE_BONUS, SHOP_ITEM, forSale, earnedTotal, runBonusOf, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
 import { dexRows } from './crew.js';
 import { missionPiecesOf } from './missions.js';
 import { HttpError, json, type Env, type Member } from './util.js';
@@ -35,7 +35,7 @@ export async function levelsOf(env: Env, id: string) {
 
 export async function earned(env: Env, id: string, lv?: Awaited<ReturnType<typeof levelsOf>>): Promise<Earned> {
   const now = Date.now();
-  const [g, t, d, cr] = await env.DB.batch([
+  const [g, t, d, cr, inv] = await env.DB.batch([
     env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w, COALESCE(SUM(CASE WHEN crew_count >= 2 THEN 1 ELSE 0 END), 0) AS c FROM participants WHERE member_id = ?').bind(id),
     // 함께 해요: 참여한 판·내전의 시간(30분 전 ~ 3시간 뒤)에 실제로 기록된 판이 있으면
     env.DB.prepare(
@@ -48,11 +48,13 @@ export async function earned(env: Env, id: string, lv?: Awaited<ReturnType<typeo
     env.DB.prepare('SELECT COUNT(*) AS n FROM piece_daily WHERE member_id = ?').bind(id),
     // 함께 연판: 멤버 2명 이상 판의 시각 (v3.83)
     env.DB.prepare('SELECT played_at AS t FROM participants WHERE member_id = ? AND crew_count >= 2 ORDER BY played_at').bind(id),
+    // 친구 초대: 초대한 친구가 승인된 수 (v3.106)
+    env.DB.prepare('SELECT COUNT(*) AS n FROM invite_rewards WHERE inviter = ?').bind(id),
   ]);
   const gr = g.results[0] as { n: number; w: number; c: number };
   const [{ champs, augs }, missions] = await Promise.all([lv ?? levelsOf(env, id), missionPiecesOf(env, id)]);
   const levels = [...champs, ...augs].reduce((s, x) => s + levelTotal(dexLevel(x.m)), 0);
-  return { games: gr.n, wins: gr.w, crew: gr.c, levels, together: (t.results[0] as { n: number }).n, daily: (d.results[0] as { n: number }).n, missions, run: runBonusOf((cr.results as { t: number }[]).map((r) => r.t)) };
+  return { games: gr.n, wins: gr.w, crew: gr.c, levels, together: (t.results[0] as { n: number }).n, daily: (d.results[0] as { n: number }).n, missions, run: runBonusOf((cr.results as { t: number }[]).map((r) => r.t)), invites: (inv.results[0] as { n: number } | undefined)?.n ?? 0 };
 }
 
 /** 단계별 피스 배율·특별회원 할인 (v3.32) */
@@ -70,7 +72,8 @@ export async function state(env: Env, id: string, m: Pick<Member, 'tier' | 'disc
   ]);
   const spent = own.results.reduce((s, x) => s + x.price, 0) + (spend?.s ?? 0);
   const rates = ratesOf(m);
-  const total = Math.round(earnedTotal(e) * rates.piece);
+  // 초대 보너스는 배율 밖 고정값 (v3.106)
+  const total = Math.round(earnedTotal(e) * rates.piece) + (e.invites ?? 0) * INVITE_BONUS;
   return { balance: total - spent, earned: e, spent, owned: own.results.map((x) => x.id), deco: parseDeco(row?.deco), shared: Boolean(row?.share_on), rates, uses };
 }
 

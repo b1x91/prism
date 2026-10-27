@@ -45,6 +45,9 @@ export type Member = {
   app_open: number;
   about: string | null; // 나를 소개해요 (JSON, v3.47)
   about_posted_at: number | null; // 멤버 환영 채널에 소개를 올린 때
+  approved_at?: number | null; // 운영진이 승인한 때 (v3.106)
+  invited_by?: string | null; // 초대한 회원
+  invite_code?: string | null; // 내 초대 링크 번호
 };
 
 export class HttpError extends Error {

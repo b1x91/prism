@@ -1,4 +1,4 @@
-import { AppMembers, BoardView, ChannelButtons, CrewPulse, Gem, Icon, DiscordNowCard, Lines, PageSkeleton, ProspectBoard } from '@prism/ui';
+import { AppMembers, InviteCard, BoardView, ChannelButtons, CrewPulse, Gem, Icon, DiscordNowCard, Lines, PageSkeleton, ProspectBoard } from '@prism/ui';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session';
 import { shortNick } from '@prism/core';
@@ -50,6 +50,7 @@ export function Crew() {
       <CrewPulse api={api} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />
       <AppMembers api={api} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />
       {<ProspectBoard api={api} invite={links.discord} admin={Boolean(me.perms?.moderate)} />}
+      <InviteCard api={api} origin={location.origin} />
       <BoardView api={api} />
     </div></section>
   );

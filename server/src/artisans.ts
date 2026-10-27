@@ -3,7 +3,7 @@
  *  - 챔피언·증강 상세: 그 챔피언(증강)의 장인(마스터)과 장인의 길에 오른 회원 순위
  *  - 랭킹: 챔피언 장인 / 증강 장인 (마스터 수 → 이룬 목표 수)
  */
-import { can, LIMITED } from './roles.js';
+import { can, isPending, LIMITED } from './roles.js';
 import { augMastery, champMastery, type Mastery } from '../../packages/core/src/mastery.js';
 import type { DexEntry, DexPair } from '../../packages/core/src/history.js';
 import { parseFeat, tallyChallenges, type ChallengeTally, type FeatGame } from '../../packages/core/src/challenges.js';
@@ -32,14 +32,15 @@ const FEAT_COLS = 'member_id, champion_id AS championId, win, kills, deaths, fea
 
 type Row = { member_id: string; id?: number; n: number; w: number };
 type PairRow = { member_id: string; aug: number; champ: number; n: number; w: number };
-type Face = { id: string; nick: string; skin: number | null; main: number | null };
+type Face = { id: string; nick: string; skin: number | null; main: number | null; pending?: boolean };
 
 const entry = (r: { n: number; w: number }): DexEntry => ({ n: r.n, w: r.w ?? 0, first: 0, last: 0 });
 
 async function faces(env: Env, ids: string[]): Promise<Map<string, Face>> {
   if (!ids.length) return new Map();
-  const { results } = await env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')} FROM members m WHERE m.id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all<Face>();
-  return new Map(results.map((f) => [f.id, f]));
+  const { results } = await env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')}, m.tier, m.discord_roles FROM members m WHERE m.id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all<Face & { tier: Member['tier']; discord_roles: string | null }>();
+  // 승인 대기 표시 (v3.106)
+  return new Map(results.map(({ tier, discord_roles, ...f }) => [f.id, isPending({ tier, discord_roles }) ? { ...f, pending: true } : f]));
 }
 
 const view = (m: Mastery, e: DexEntry) => ({ master: m.master, done: m.done, total: m.total, n: e.n, w: e.w, special: m.special.tried.length > 0 });

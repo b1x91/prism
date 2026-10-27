@@ -12,7 +12,15 @@ export const ABOUT_TIMES = [
 ] as const;
 export const MBTI_LIST = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'] as const;
 
-export type About = { roles: string[]; days: string[]; times: string[]; mbti: string };
+/** insta: 인스타그램 아이디 (선택, v3.106 — '@'·주소 없이 아이디만) */
+export type About = { roles: string[]; days: string[]; times: string[]; mbti: string; insta?: string };
+
+/** 인스타그램 아이디만 남긴다: '@abc', 'instagram.com/abc/' → 'abc'. 아이디 규칙(영문·숫자·.·_ 30자)에 안 맞으면 '' */
+export function cleanInsta(v: unknown): string {
+  if (typeof v !== 'string') return '';
+  const s = v.trim().replace(/^https?:\/\/(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/[/?#].*$/, '');
+  return /^[A-Za-z0-9._]{1,30}$/.test(s) ? s : '';
+}
 
 /** 서버·화면 공통 검사: 고른 값만 남기고 순서를 맞춘다. 하나라도 비면 null */
 export function cleanAbout(x: unknown): About | null {
@@ -22,7 +30,8 @@ export function cleanAbout(x: unknown): About | null {
   const days = pick(o.days, ABOUT_DAYS);
   const times = pick(o.times, ABOUT_TIMES.map((t) => t.key));
   const mbti = typeof o.mbti === 'string' && (MBTI_LIST as readonly string[]).includes(o.mbti.toUpperCase()) ? o.mbti.toUpperCase() : '';
-  return roles.length && days.length && times.length && mbti ? { roles, days, times, mbti } : null;
+  const insta = cleanInsta(o.insta);
+  return roles.length && days.length && times.length && mbti ? { roles, days, times, mbti, ...(insta ? { insta } : {}) } : null;
 }
 
 /** "화·목·토 · 밤" 처럼 (매일·주말·평일은 줄여서) */
