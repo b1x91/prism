@@ -12,7 +12,7 @@ export const ABOUT_TIMES = [
 ] as const;
 export const MBTI_LIST = ['INTJ', 'INTP', 'ENTJ', 'ENTP', 'INFJ', 'INFP', 'ENFJ', 'ENFP', 'ISTJ', 'ISFJ', 'ESTJ', 'ESFJ', 'ISTP', 'ISFP', 'ESTP', 'ESFP'] as const;
 
-/** insta: 인스타그램 아이디 (선택, v3.106 — '@'·주소 없이 아이디만) */
+/** insta: 인스타그램 아이디 (선택, v3.107 — '@'·주소 없이 아이디만) */
 export type About = { roles: string[]; days: string[]; times: string[]; mbti: string; insta?: string };
 
 /** 인스타그램 아이디만 남긴다: '@abc', 'instagram.com/abc/' → 'abc'. 아이디 규칙(영문·숫자·.·_ 30자)에 안 맞으면 '' */

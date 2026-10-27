@@ -1,6 +1,6 @@
 /**
  * 디스코드 역할 자동 승급·강등 (CLAUDE.md v3.53). 매일 한 번(크론) 기록에서 다시 계산해, 바뀔 사람만 봇이 역할을 주고 뺀다.
- * - 준회원 → 정회원: 자동이 아니다 (v3.106). 운영진과 같은 판 3판 이상이면 '운영' 페이지 정회원 심사 → 운영진 승인 (staff.ts)
+ * - 준회원 → 정회원: 자동이 아니다 (v3.107). 운영진과 같은 판 3판 이상이면 '운영' 페이지 정회원 심사 → 운영진 승인 (staff.ts)
  * - 정회원 → 우수회원: 최근 14일 안에 7일 연속(KST 날짜) 매일 모임 판이 있고, 그 7일 동안 운영자(ADMIN 첫 번째)와 같은 판 3판 이상
  * - 30일 동안 판·접속이 모두 없으면 한 단계 내림 (우수회원 → 정회원, 정회원 → 준회원)
  * - 운영진·특별회원·관리자는 사람이 정한다 (건드리지 않는다)
@@ -13,7 +13,7 @@ import type { Env, Member } from './util.js';
 
 /** 숫자는 여기 한 곳 */
 export const PROMOTION = {
-  /** 정회원 심사에 올라가는 기준: 운영진(운영진 역할·관리자)과 같은 판 수 (v3.106, staff.ts) */
+  /** 정회원 심사에 올라가는 기준: 운영진(운영진 역할·관리자)과 같은 판 수 (v3.107, staff.ts) */
   regularReview: { withStaff: 3 },
   excellent: { window: 14, streak: 7, withHost: 3 },
   demoteAfterDays: 30,
@@ -94,8 +94,8 @@ export async function promoteSweep(env: Env, now = Date.now()) {
       }
       if (changed) await env.DB.prepare('INSERT OR REPLACE INTO ext_cache (k, v, at) VALUES (?, ?, ?)').bind(`demoted-${m.id}`, '1', now).run();
     } else {
-      // 승인 대기(역할 없음)는 자동으로 올리지 않는다 — 운영진 승인이 먼저 (v3.106)
-      // 준회원 → 정회원은 자동으로 올리지 않는다: 운영진과 3판 이상 함께하면 '운영' 페이지 정회원 심사에 올라가고 승인으로 (v3.106, staff.ts)
+      // 승인 대기(역할 없음)는 자동으로 올리지 않는다 — 운영진 승인이 먼저 (v3.107)
+      // 준회원 → 정회원은 자동으로 올리지 않는다: 운영진과 3판 이상 함께하면 '운영' 페이지 정회원 심사에 올라가고 승인으로 (v3.107, staff.ts)
       const up = lv === 2 && excellent(m.id) ? { id: R.excellent, lv: 3, name: '우수회원', why: 'Prism: 7일 연속 모임 판' } : null;
       if (up) {
         const live = await liveRoles(env, m.id);

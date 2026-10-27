@@ -12,14 +12,14 @@ import { ROLE_DOT } from './champ';
 
 const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
 
-/** 초대 링크(/i/:code)로 들어온 사람의 초대 번호 — 온보딩 추천인 칸이 미리 채운다 (v3.106) */
+/** 초대 링크(/i/:code)로 들어온 사람의 초대 번호 — 온보딩 추천인 칸이 미리 채운다 (v3.107) */
 export const INVITE_KEY = 'prism-invite';
 const savedInvite = () => { try { return localStorage.getItem(INVITE_KEY); } catch { return null; } };
 
 type Referrer = (LookupMember & { code?: undefined }) | { code: string; id?: undefined; nick: string; skin: number | null; main: number | null };
 
 /**
- * 추천인 (v3.106): 실제 멤버 목록에서 이름으로 찾아 골라야만 정해진다 (아무 글자나 적어 두지 못한다).
+ * 추천인 (v3.107): 실제 멤버 목록에서 이름으로 찾아 골라야만 정해진다 (아무 글자나 적어 두지 못한다).
  * 초대 링크로 들어왔으면 그 초대한 사람이 미리 골라져 있다.
  */
 function ReferrerPick({ api, value, onChange }: { api: Api; value: Referrer | null; onChange: (r: Referrer | null) => void }) {

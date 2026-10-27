@@ -1,5 +1,5 @@
 /**
- * 친구 초대 (CLAUDE.md v3.106): 내 초대 링크(przm.web.app/i/번호) + 초대한 친구들.
+ * 친구 초대 (CLAUDE.md v3.107): 내 초대 링크(przm.web.app/i/번호) + 초대한 친구들.
  * 초대한 친구가 운영진 승인을 받으면 한 명마다 보너스 피스 (서버 invite_rewards, 배율 밖 고정값).
  */
 import { useState } from 'react';

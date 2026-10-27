@@ -237,7 +237,7 @@ export function PresenceTag({ p }: { p?: Presence | null }) {
 }
 
 /** 디스코드 역할 배지 (디스코드와 같은 색) */
-/** 승인 대기 칩 (v3.106): 운영진 승인 전 회원의 이름 옆. dark = 어두운 무대·그림 위 */
+/** 승인 대기 칩 (v3.107): 운영진 승인 전 회원의 이름 옆. dark = 어두운 무대·그림 위 */
 export function PendingChip({ dark }: { dark?: boolean }) {
   return <span className={`wait-chip ${dark ? 'dark' : ''}`} title="운영진 승인을 기다리고 있어요">승인대기</span>;
 }

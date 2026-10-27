@@ -1,4 +1,4 @@
--- 승인제 · 친구 초대 (CLAUDE.md v3.106)
+-- 승인제 · 친구 초대 (CLAUDE.md v3.107)
 -- 승인 대기 = 디스코드 회원 역할(준회원 이상)이 아직 없는 회원. 운영진이 승인하면 봇이 준회원 역할을 붙인다.
 ALTER TABLE members ADD COLUMN approved_at INTEGER;   -- 승인한 때 (운영진 메뉴에서)
 ALTER TABLE members ADD COLUMN approved_by TEXT;      -- 승인한 운영진

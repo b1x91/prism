@@ -50,7 +50,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
 
   const pub = pathname.match(/^\/public\/([0-9A-Za-z_-]{1,40})$/);
   if (m === 'GET' && pub) return publicProfile(env, pub[1]);
-  // 친구 초대 링크의 초대한 사람 (이름·얼굴만, v3.106)
+  // 친구 초대 링크의 초대한 사람 (이름·얼굴만, v3.107)
   const inv = pathname.match(/^\/public\/invite\/([a-z0-9]{4,12})$/);
   if (m === 'GET' && inv) return publicInvite(env, inv[1]);
 
@@ -89,7 +89,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'GET' && pathname === '/api/me/inquiry') return myInquiries(env, me);
   if (m === 'POST' && pathname === '/api/me/inquiry') return postInquiry(req, env, me, ctx);
   if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
-  // 운영 (운영진만, v3.106) · 친구 초대
+  // 운영 (운영진만, v3.107) · 친구 초대
   if (m === 'GET' && pathname === '/api/staff/members') return staffMembers(env, me);
   const st = pathname.match(/^\/api\/staff\/members\/([0-9A-Za-z_-]{1,40})\/(approve|promote|level|special|inviter)$/);
   if (m === 'POST' && st) return staffAction(req, env, me, st[1], st[2]);

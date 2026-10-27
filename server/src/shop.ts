@@ -48,7 +48,7 @@ export async function earned(env: Env, id: string, lv?: Awaited<ReturnType<typeo
     env.DB.prepare('SELECT COUNT(*) AS n FROM piece_daily WHERE member_id = ?').bind(id),
     // 함께 연판: 멤버 2명 이상 판의 시각 (v3.83)
     env.DB.prepare('SELECT played_at AS t FROM participants WHERE member_id = ? AND crew_count >= 2 ORDER BY played_at').bind(id),
-    // 친구 초대: 초대한 친구가 승인된 수 (v3.106)
+    // 친구 초대: 초대한 친구가 승인된 수 (v3.107)
     env.DB.prepare('SELECT COUNT(*) AS n FROM invite_rewards WHERE inviter = ?').bind(id),
   ]);
   const gr = g.results[0] as { n: number; w: number; c: number };
@@ -72,7 +72,7 @@ export async function state(env: Env, id: string, m: Pick<Member, 'tier' | 'disc
   ]);
   const spent = own.results.reduce((s, x) => s + x.price, 0) + (spend?.s ?? 0);
   const rates = ratesOf(m);
-  // 초대 보너스는 배율 밖 고정값 (v3.106)
+  // 초대 보너스는 배율 밖 고정값 (v3.107)
   const total = Math.round(earnedTotal(e) * rates.piece) + (e.invites ?? 0) * INVITE_BONUS;
   return { balance: total - spent, earned: e, spent, owned: own.results.map((x) => x.id), deco: parseDeco(row?.deco), shared: Boolean(row?.share_on), rates, uses };
 }

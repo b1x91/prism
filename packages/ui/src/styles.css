@@ -3407,12 +3407,12 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .pl-who.off:hover .face, .pl-who.off:hover .initial { filter: none; opacity: 1; }
 .pl-who.off .pl-who-t b { color: var(--text-2); }
 
-/* 승인 대기 칩 (v3.106) — 이름 옆 작은 알약 */
+/* 승인 대기 칩 (v3.107) — 이름 옆 작은 알약 */
 .wait-chip { display: inline-flex; align-items: center; flex: none; height: 20px; padding: 0 var(--s2); margin-left: var(--s1); border-radius: var(--r-pill); background: color-mix(in srgb, var(--warn) 16%, transparent); color: var(--warn); font-size: var(--fs-xs); font-weight: 750; line-height: 1; letter-spacing: 0; vertical-align: middle; white-space: nowrap; -webkit-text-fill-color: currentColor; }
 .wait-chip.dark { background: rgba(255, 196, 92, .2); color: #ffd58a; }
 .pill.dark.wait { background: rgba(255, 196, 92, .22); color: #ffd58a; }
 
-/* 온보딩: 인스타그램 · 추천인 (v3.106) */
+/* 온보딩: 인스타그램 · 추천인 (v3.107) */
 .abt-insta { display: flex; align-items: center; gap: var(--s2); }
 .abt-insta > span { font-weight: 800; color: var(--text-3); }
 .abt-insta.bad .input { border-color: var(--lose); }
@@ -3425,7 +3425,7 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .ref-picked { display: flex; align-items: center; gap: var(--s2); height: 44px; padding: 0 var(--s2) 0 var(--s2); border-radius: var(--r-m); border: 1px solid var(--accent); background: var(--accent-soft); }
 .ref-picked b { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-/* 운영 (v3.106) */
+/* 운영 (v3.107) */
 .stf-tools { gap: var(--s3); justify-content: space-between; }
 .stf-search { display: inline-flex; align-items: center; gap: var(--s2); color: var(--text-3); }
 .stf-search .input { width: 200px; }
@@ -3445,7 +3445,7 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .stf-err { grid-column: 1 / -1; margin: 0; font-size: var(--fs-xs); }
 @media (max-width: 640px) { .stf-row { grid-template-columns: 1fr; } .stf-act { justify-content: flex-start; } .stf-search { flex: 1 1 100%; } .stf-search .input { width: 100%; } .stf-t .meta { white-space: normal; } }
 
-/* 친구 초대 (v3.106) */
+/* 친구 초대 (v3.107) */
 .inv-card { display: grid; gap: var(--s3); }
 .inv-card .card-head { margin: 0; }
 .inv-bonus { display: inline-flex; align-items: center; gap: var(--s1); font-size: var(--fs-sm); color: var(--text-2); font-weight: 650; }

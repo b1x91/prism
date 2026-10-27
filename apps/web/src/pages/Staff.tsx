@@ -5,7 +5,7 @@ import { shortNick } from '@prism/core';
 import { SERVER, useSession } from '../session';
 import { useState } from 'react';
 
-/** 운영 (v3.106) — 운영진만. 메뉴에도 운영진에게만 보인다 */
+/** 운영 (v3.107) — 운영진만. 메뉴에도 운영진에게만 보인다 */
 export function StaffPage() {
   const { me, ready, api } = useSession();
   const nav = useNavigate();

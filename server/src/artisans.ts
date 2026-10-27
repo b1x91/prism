@@ -39,7 +39,7 @@ const entry = (r: { n: number; w: number }): DexEntry => ({ n: r.n, w: r.w ?? 0,
 async function faces(env: Env, ids: string[]): Promise<Map<string, Face>> {
   if (!ids.length) return new Map();
   const { results } = await env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')}, m.tier, m.discord_roles FROM members m WHERE m.id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all<Face & { tier: Member['tier']; discord_roles: string | null }>();
-  // 승인 대기 표시 (v3.106)
+  // 승인 대기 표시 (v3.107)
   return new Map(results.map(({ tier, discord_roles, ...f }) => [f.id, isPending({ tier, discord_roles }) ? { ...f, pending: true } : f]));
 }
 

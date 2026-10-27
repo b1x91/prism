@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import obfuscator from 'rollup-plugin-obfuscator';
 
-// 배포 빌드에서만 우리 코드(packages/core·ui, apps/web)를 난독화한다 (v3.106, 앱과 같은 방식 — apps/desktop/vite.config.ts).
+// 배포 빌드에서만 우리 코드(packages/core·ui, apps/web)를 난독화한다 (v3.107, 앱과 같은 방식 — apps/desktop/vite.config.ts).
 // 웹은 누구나 받아 볼 수 있어 증강 어울림 표·티어 계산·문구가 그대로 읽혔다. 라이브러리·게임 데이터(JSON)는 그대로 (속도·크기).
 // 완전한 암호화는 아니다 — 브라우저가 풀어 실행해야 하므로 문턱을 높이는 용도.
 const OURS = /[\\/](packages[\\/](core|ui)[\\/]src|apps[\\/]web[\\/]src)[\\/].+\.(ts|tsx)$/;

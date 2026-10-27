@@ -46,7 +46,7 @@ export function MissionsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
   return <MissionsView api={api} onChampion={(id) => nav(`/champions/${id}`)} />;
 }
 
-/** 운영 (v3.106) — 운영진만. 사이드바에도 운영진에게만 보인다 */
+/** 운영 (v3.107) — 운영진만. 사이드바에도 운영진에게만 보인다 */
 export function StaffPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   const nav = useNavigate();
   if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="운영" />;

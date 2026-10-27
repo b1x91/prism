@@ -6,7 +6,7 @@ import { useSession } from './session';
 
 const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '멤버', 'users']];
 
-/** 운영 메뉴는 운영진에게만 (v3.106) */
+/** 운영 메뉴는 운영진에게만 (v3.107) */
 const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => (me?.perms?.manage ? [...NAV, ['/staff', '운영', 'gear']] : NAV);
 
 export function Layout() {

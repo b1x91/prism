@@ -15,7 +15,7 @@ export const ROLES = [
 
 /**
  * 기능별 필요한 최소 단계 (CLAUDE.md v3.32). 단계 = 준회원 1 · 정회원 2 · 우수회원 3 · 운영진 5 (특별회원은 단계가 아니라 따로 붙는 혜택).
- * 역할이 없는 디스코드 서버 회원은 '승인 대기'(v3.106) — 기능은 준회원과 같고, 운영진이 승인하면 준회원 역할이 붙는다.
+ * 역할이 없는 디스코드 서버 회원은 '승인 대기'(v3.107) — 기능은 준회원과 같고, 운영진이 승인하면 준회원 역할이 붙는다.
  */
 export const FEATURES = {
   party: 0, // 같이 할 판 열기·참여 (화면은 지금 없음)
@@ -25,7 +25,7 @@ export const FEATURES = {
   rankingAll: 2, // 랭킹 전체 (준회원은 5위까지)
   moderate: 5, // 남의 글·팁 지우기, 함께한 친구 기록 지우기 (운영진)
   shop: 0, // 상점 사기·장착 (2026-10-18 모두에게 열림, v3.77)
-  manage: 5, // 운영진 메뉴: 멤버 승인·단계·특별회원 (v3.106)
+  manage: 5, // 운영진 메뉴: 멤버 승인·단계·특별회원 (v3.107)
   ranking: 5, // 랭킹 보기 — 회원이 RANKING_OPEN_MEMBERS 명 모이기 전까지는 운영진만 (모이면 자동으로 모두에게)
 } as const;
 /** 롤 계정을 연결한 회원이 이만큼 모이면 랭킹이 모두에게 열린다 */
@@ -81,6 +81,6 @@ export async function assertRanking(env: Env, m: Pick<Member, 'tier' | 'discord_
   if (!(await rankingGate(env, m)).open) throw new HttpError(403, `랭킹은 회원이 ${RANKING_OPEN_MEMBERS}명 모이면 열려요.`);
 }
 
-/** 승인 대기 (v3.106): 디스코드 회원 역할(준회원 이상·특별회원)이 아직 없다. 역할을 한 번도 확인하지 못한 예전 회원은 대기로 보지 않는다 */
+/** 승인 대기 (v3.107): 디스코드 회원 역할(준회원 이상·특별회원)이 아직 없다. 역할을 한 번도 확인하지 못한 예전 회원은 대기로 보지 않는다 */
 export const isPending = (m: Pick<Member, 'tier' | 'discord_roles'>) =>
   m.tier !== 'admin' && m.discord_roles != null && levelOf(m) === 0 && !isSpecial(m);
