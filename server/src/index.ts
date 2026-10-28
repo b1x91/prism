@@ -27,6 +27,7 @@ import { claimWeekly, getWeekly } from './weekly.js';
 import { assertRanking } from './roles.js';
 import { listDiag, saveDiag } from './diag.js';
 import { myInquiries, postInquiry } from './inquiry.js';
+import { createNews, deleteNews, editNews, ensureAuto, heartNews, listNews, readNews } from './news.js';
 import { claimInvite, lookupMembers, myInvite, publicInvite, staffAction, staffMembers } from './staff.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 
@@ -89,6 +90,14 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'GET' && pathname === '/api/me/inquiry') return myInquiries(env, me);
   if (m === 'POST' && pathname === '/api/me/inquiry') return postInquiry(req, env, me, ctx);
   if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
+  // 소식 피드 (v3.111)
+  if (m === 'GET' && pathname === '/api/news') return listNews(env, me);
+  if (m === 'POST' && pathname === '/api/news') return createNews(req, env, me);
+  if (m === 'POST' && pathname === '/api/news/read') return readNews(env, me);
+  const nw = pathname.match(/^\/api\/news\/(\d{1,9})(\/heart)?$/);
+  if (nw && m === 'POST' && nw[2]) return heartNews(env, me, Number(nw[1]));
+  if (nw && m === 'POST' && !nw[2]) return editNews(req, env, me, Number(nw[1]));
+  if (nw && m === 'DELETE' && !nw[2]) return deleteNews(env, me, Number(nw[1]));
   // 운영 (운영진만, v3.107) · 친구 초대
   if (m === 'GET' && pathname === '/api/staff/members') return staffMembers(env, me);
   const st = pathname.match(/^\/api\/staff\/members\/([0-9A-Za-z_-]{1,40})\/(approve|promote|level|special|inviter)$/);
@@ -189,7 +198,10 @@ export default {
 
   // 매일 밤 21:00 KST: 봇 공지 / 매일 03:17 KST: 만료 코드 정리 + 역할 자동 승급·강등
   async scheduled(controller: ScheduledController, env: Env) {
-    if (controller.cron === '0 12 * * *') return dailyPost(env).catch((e) => console.error('매일 공지 실패', e));
+    if (controller.cron === '0 12 * * *') {
+      await ensureAuto(env).catch((e) => console.error('자동 소식 실패', e));
+      return dailyPost(env).catch((e) => console.error('매일 공지 실패', e));
+    }
     await promoteSweep(env).catch((e) => console.error('역할 자동 승급 실패', e));
     const now = Date.now();
     await env.DB.batch([

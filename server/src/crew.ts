@@ -11,6 +11,7 @@ import skinData from '../../packages/core/data/skins.json';
 import { presenceOf } from '../../packages/core/src/presence.js';
 import { aboutOf } from './about.js';
 import { ITEM } from '../../packages/core/src/data.js';
+import { unreadNews } from './news.js';
 import { isFinished, type CrewItems } from '../../packages/core/src/build.js';
 import { bondOf } from '../../packages/core/src/duo.js';
 import type { DuoGame } from '../../packages/core/src/profile.js';
@@ -32,7 +33,9 @@ type NW = { n: number; w: number };
 export async function getMe(env: Env, me: Member) {
   const row = await env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w FROM participants WHERE member_id = ?').bind(me.id).first<NW>();
   const gate = await rankingGate(env, me);
+  const newsUnread = await unreadNews(env, me);
   return json({
+    newsUnread,
     id: me.id,
     nick: me.nick,
     tier: me.tier,

@@ -16,7 +16,7 @@ import { GamePage } from './pages/Game';
 import { AugmentsPage } from './pages/Augments';
 import { DexPage } from './pages/Dex';
 import { ChampionsPage } from './pages/Champions';
-import { MemberPage, MissionsPage, RankingPage, ShopPage, StaffMembersPage, StaffPage } from './pages/Members';
+import { MemberPage, MissionsPage, NewsPage, RankingPage, ShopPage, StaffMembersPage, StaffPage } from './pages/Members';
 import { CrewPage } from './pages/Crew';
 import { SettingsPage } from './pages/Settings';
 import { lockdown } from './lockdown';
@@ -158,7 +158,7 @@ function App() {
         {/* 새 버전을 받아 두었을 때만. 게임·챔프 선택 중에는 숨긴다 (끝나면 다시) */}
         {up.info?.ready && !up.info.managed && !playing && <button type="button" className="side-update" disabled={up.applying} onClick={() => void applyUpdate()} title={up.error ?? `지금 v${VERSION} · 누르면 몇 초 뒤 다시 켜져요`}><span className="dot" />{up.applying ? '적용하는 중…' : `새 버전 ${up.info.latest} · 적용`}</button>}
         {up.error && up.info?.ready && !playing && <span className="side-err l">{up.error}</span>}
-        <nav className="side-nav">{(s.me?.perms?.manage ? [...NAV, ['/staff', '운영', 'shield'] as [string, string, IconName]] : NAV).map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}</NavLink>)}</nav>
+        <nav className="side-nav">{[...NAV, ...(s.me ? [['/news', '소식', 'megaphone'] as [string, string, IconName]] : []), ...(s.me?.perms?.manage ? [['/staff', '운영', 'shield'] as [string, string, IconName]] : [])].map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}{to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="news-dot" aria-label="새 소식" />}</NavLink>)}</nav>
         <span className="sp" />
         {/* 아래쪽 한 줄: 상점 · 설정 (디스코드·카카오톡은 모임 화면 오른쪽 위) */}
         <nav className="side-dock" aria-label="상점과 설정">
@@ -196,6 +196,7 @@ function App() {
           <Route path="shop" element={<ShopPage s={s} onLogin={login} />} />
           <Route path="missions" element={<MissionsPage s={s} onLogin={login} />} />
           <Route path="settings" element={<SettingsPage s={s} onLogin={login} />} />
+          <Route path="news" element={<NewsPage s={s} onLogin={login} />} />
           <Route path="staff" element={<StaffPage s={s} onLogin={login} />} />
           <Route path="staff/members" element={<StaffMembersPage s={s} onLogin={login} />} />
           <Route path="*" element={<GamePage s={s} />} />

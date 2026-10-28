@@ -17,6 +17,12 @@ function read<T>(key: string, init: T): T {
   return init;
 }
 
+/** 다른 화면이 미리 걸어 둔다 (예: 소식의 '새로운 증강 보기' → 증강 탭 거르기 켬) */
+export function setKept<T>(key: string, v: T) {
+  mem.set(key, v);
+  try { sessionStorage.setItem(KEY(key), JSON.stringify(v)); } catch { /* 저장 막힘 */ }
+}
+
 /** useState 와 같게 쓰고, key 가 같으면 화면을 다시 열어도 마지막 값으로 시작한다 */
 export function useKept<T>(key: string, init: T): [T, (v: SetStateAction<T>) => void] {
   const [v, setV] = useState<T>(() => read(key, init));

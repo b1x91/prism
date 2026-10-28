@@ -15,6 +15,7 @@ import { DexPage } from './pages/Dex';
 import { DiagPage } from './pages/Diag';
 import { Privacy } from './pages/Privacy';
 import { InvitePage, StaffMembersPage, StaffPage } from './pages/Staff';
+import { NewsPage } from './pages/News';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -42,6 +43,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="auth/done" element={<AuthDone />} />
             <Route path="privacy" element={<Privacy />} />
             <Route path="admin/diag" element={<DiagPage />} />
+            <Route path="news" element={<NewsPage />} />
             <Route path="staff" element={<StaffPage />} />
             <Route path="staff/members" element={<StaffMembersPage />} />
             <Route path="i/:code" element={<InvitePage />} />

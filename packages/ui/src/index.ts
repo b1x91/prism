@@ -28,4 +28,5 @@ export * from './build';
 export * from './goods';
 export * from './inquiry';
 export * from './staff';
+export * from './news';
 export * from './invite';

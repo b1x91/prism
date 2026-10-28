@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { Empty, Icon, MemberView, MissionsView, RankingView, ShopView, StaffMembersView, StaffView, goBack } from '@prism/ui';
-import type { State } from '../controller';
+import { Empty, Icon, MemberView, MissionsView, NewsView, RankingView, ShopView, StaffMembersView, StaffView, goBack, setKept } from '@prism/ui';
+import { refreshSession, type State } from '../controller';
 import { josa } from '@prism/core';
 import { api } from '../bridge';
 
@@ -44,6 +44,18 @@ export function MissionsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
   const nav = useNavigate();
   if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="미션" />;
   return <MissionsView api={api} onChampion={(id) => nav(`/champions/${id}`)} />;
+}
+
+/** 소식 (v3.111) — 회원에게만 */
+export function NewsPage({ s, onLogin }: { s: State; onLogin: () => void }) {
+  const nav = useNavigate();
+  if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="소식" />;
+  return (
+    <div className="stack" style={{ gap: 16 }}>
+      <h1 className="h1">소식</h1>
+      <NewsView api={api} onRead={() => void refreshSession()} onNewAugments={() => { setKept('aug.fresh', true); nav('/augments'); }} />
+    </div>
+  );
 }
 
 /** 운영 (v3.107) — 운영진만. 사이드바에도 운영진에게만 보인다 */

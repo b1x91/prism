@@ -25,6 +25,8 @@ const P: Record<string, ReactElement> = {
   back: <path d="M19 12H5M11 6l-6 6 6 6" />,
   arrowDown: <path d="M12 5v14M6 13l6 6 6-6" />,
   arrowUp: <path d="M12 19V5M6 11l6-6 6 6" />,
+  pin: <><path d="M9 4h6l-1 5 3 3v2H7v-2l3-3z" /><path d="M12 14v6" /></>,
+  megaphone: <><path d="M4 10v4h3l7 4V6L7 10z" /><path d="M17.5 9.5a3.5 3.5 0 0 1 0 5" /><path d="M7 14l1.5 5h2.5L10 15" /></>,
   bell: <><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></>,
   shuffle: <><path d="M16 4h4v4M4 20 20 4" /><path d="M20 16v4h-4M14 14l6 6" /><path d="M4 4l5 5" /></>,
   game: <><rect x="2.5" y="7" width="19" height="11" rx="4" /><path d="M7 11v3M5.5 12.5h3M15.5 12h.01M18 13.5h.01" /></>,

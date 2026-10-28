@@ -4,6 +4,8 @@ import champData from '../data/mayhem-champions.json';
 import itemData from '../data/items.json';
 import type { ChampionProfile, MayhemAugment } from './synergy';
 
+/** 증강 데이터를 만든 때 (소식 피드의 패치 소식 시각, 패치 시각을 모를 때) */
+export const DATA_GENERATED_AT = Date.parse(String((augData as { generatedAt?: string }).generatedAt ?? '')) || null;
 export const DATA_VERSION = (augData.version as string).split('.').slice(0, 2).join('.');
 export const AUGMENTS = augData.augments as MayhemAugment[];
 

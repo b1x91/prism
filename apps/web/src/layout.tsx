@@ -7,7 +7,9 @@ import { useSession } from './session';
 const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '멤버', 'users']];
 
 /** 운영 메뉴는 운영진에게만 (v3.107) */
-const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => (me?.perms?.manage ? [...NAV, ['/staff', '운영', 'shield']] : NAV);
+/** 소식은 회원에게만 (v3.111), 운영은 운영진에게만 */
+const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => [...NAV, ...(me ? [['/news', '소식', 'megaphone'] as const] : []), ...(me?.perms?.manage ? [['/staff', '운영', 'shield'] as const] : [])] as typeof NAV;
+const dotOf = (me: { newsUnread?: number } | null, to: string) => (to === '/news' && (me?.newsUnread ?? 0) > 0 ? 'nav-dot' : undefined);
 
 export function Layout() {
   const { me, login, links, api, refresh, member } = useSession();
@@ -44,7 +46,7 @@ export function Layout() {
     <>
       <header className="top"><div className="wrap">
         <NavLink to="/" className="brand"><Gem size={22} />PRISM</NavLink>
-        <nav className="tabs">{navOf(me).map(([to, label]) => <NavLink key={to} to={to}>{label}</NavLink>)}</nav>
+        <nav className="tabs">{navOf(me).map(([to, label]) => <NavLink key={to} to={to} className={dotOf(me, to)}>{label}</NavLink>)}</nav>
         <span className="sp" />
         <span className="top-wide"><NavLink to="/shop" className="icon-btn top-shop" title="상점" aria-label="상점"><Icon name="bag" /></NavLink>
           <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>
@@ -130,7 +132,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); nav('/me?studio=1'); }}><Icon name="spark" />프로필 꾸미기</button>
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); logout().then(() => nav('/')); }}><Icon name="logout" />로그아웃</button>
         </div>}
-        <nav className="mmenu-nav">{navOf(me).map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}</NavLink>)}</nav>
+        <nav className="mmenu-nav">{navOf(me).map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{dotOf(me, to) && <i className="news-dot" aria-label="새 소식" />}</NavLink>)}</nav>
         <span className="sp" />
         <div className="mmenu-foot">
           <NavLink to="/shop" className="mmenu-shop" tabIndex={open ? 0 : -1}><Icon name="bag" />상점</NavLink>
