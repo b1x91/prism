@@ -5,7 +5,7 @@
 export type NewsKind = 'notice' | 'event' | 'update' | 'patch' | 'season';
 export type NewsItem = {
   id: number; kind: NewsKind; title: string; body: string; data: Record<string, unknown> | null;
-  pinned: boolean; at: number; edited: number | null; auto: boolean; author: string | null; hearts: number; mine: boolean;
+  pinned: boolean; fixed?: boolean; at: number; edited: number | null; auto: boolean; author: string | null; hearts: number; mine: boolean;
 };
 export type NewsList = { items: NewsItem[]; readAt: number; canWrite: boolean };
 /** 이름표 (거르기 칩·카드 꼬리표) */

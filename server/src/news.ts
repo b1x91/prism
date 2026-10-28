@@ -65,12 +65,13 @@ export async function listNews(env: Env, me: Member) {
        (SELECT COUNT(*) FROM news_hearts h WHERE h.news_id = n.id) AS hearts,
        EXISTS (SELECT 1 FROM news_hearts h WHERE h.news_id = n.id AND h.member_id = ?1) AS mine
      FROM news n LEFT JOIN members a ON a.id = n.author WHERE n.kind != 'hidden'
-     ORDER BY n.pinned DESC, n.created_at DESC LIMIT ?2`,
+     ORDER BY (n.auto_key LIKE 'fixed:%') DESC, n.pinned DESC, n.created_at DESC LIMIT ?2`,
   ).bind(me.id, NEWS_LIMIT).all<Record<string, any>>();
   const items: NewsItem[] = results.map((r) => {
+    const fixed = typeof r.autoKey === 'string' && r.autoKey.startsWith('fixed:');
     let data: Record<string, unknown> | null = null;
     try { data = r.data ? JSON.parse(r.data) : null; } catch { /* 없음 */ }
-    return { id: r.id, kind: r.kind, title: r.title, body: r.body, data, pinned: Boolean(r.pinned), at: r.at, edited: r.edited ?? null, auto: Boolean(r.autoKey), author: r.authorNick ?? null, hearts: r.hearts, mine: Boolean(r.mine) };
+    return { id: r.id, kind: r.kind, title: r.title, body: r.body, data, pinned: fixed || Boolean(r.pinned), fixed, at: r.at, edited: r.edited ?? null, auto: Boolean(r.autoKey) && !fixed, author: r.authorNick ?? null, hearts: r.hearts, mine: Boolean(r.mine) };
   });
   return json({ items, readAt: me.news_read_at ?? 0, canWrite: can(me, 'manage') });
 }
@@ -125,7 +126,8 @@ export async function createNews(req: Request, env: Env, me: Member) {
   let posted = false;
   if (b.discord !== false && env.BOT_CHANNEL_ID) {
     const label = kind === 'event' ? '이벤트' : '공지';
-    const short = text.length > 600 ? `${text.slice(0, 600)}…` : text;
+    const plain = text.replace(/^\[(.+?)\]\?\s*$/gm, '[$1]');
+    const short = plain.length > 600 ? `${plain.slice(0, 600)}…` : plain;
     posted = await sendToChannel(env, env.BOT_CHANNEL_ID, {
       content: `📢 **[${label}] ${title}**${short ? `\n${short}` : ''}\n${webUrl(env)}/news`,
       allowed_mentions: { parse: [] },
@@ -138,9 +140,10 @@ export async function createNews(req: Request, env: Env, me: Member) {
 export async function editNews(req: Request, env: Env, me: Member, id: number) {
   assertWriter(me);
   const b = (await req.json().catch(() => ({}))) as { title?: unknown; body?: unknown; pinned?: unknown };
-  const row = await env.DB.prepare('SELECT id FROM news WHERE id = ?').bind(id).first();
+  const row = await env.DB.prepare('SELECT id, auto_key FROM news WHERE id = ?').bind(id).first<{ id: number; auto_key: string | null }>();
   if (!row) throw new HttpError(404, '없는 소식이에요.');
-  if (typeof b.pinned === 'boolean') await env.DB.prepare('UPDATE news SET pinned = ? WHERE id = ?').bind(b.pinned ? 1 : 0, id).run();
+  const fixed = Boolean(row.auto_key?.startsWith('fixed:'));
+  if (typeof b.pinned === 'boolean' && !fixed) await env.DB.prepare('UPDATE news SET pinned = ? WHERE id = ?').bind(b.pinned ? 1 : 0, id).run();
   if (typeof b.title === 'string' || typeof b.body === 'string') {
     const { title, text } = clean(b);
     await env.DB.prepare('UPDATE news SET title = ?, body = ?, edited_at = ? WHERE id = ?').bind(title, text, Date.now(), id).run();
@@ -153,6 +156,7 @@ export async function deleteNews(env: Env, me: Member, id: number) {
   assertWriter(me);
   const row = await env.DB.prepare('SELECT auto_key FROM news WHERE id = ?').bind(id).first<{ auto_key: string | null }>();
   if (!row) throw new HttpError(404, '없는 소식이에요.');
+  if (row.auto_key?.startsWith('fixed:')) throw new HttpError(400, '늘 고정되는 공지는 지울 수 없어요. 내용은 고칠 수 있어요.');
   await env.DB.prepare('DELETE FROM news_hearts WHERE news_id = ?').bind(id).run();
   if (row.auto_key) await env.DB.prepare("UPDATE news SET kind = 'hidden', pinned = 0 WHERE id = ?").bind(id).run();
   else await env.DB.prepare('DELETE FROM news WHERE id = ?').bind(id).run();

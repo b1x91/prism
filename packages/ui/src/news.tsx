@@ -4,9 +4,9 @@
  *  - 거르기 칩(공지·이벤트·업데이트·패치·시즌, 전체 칩 없음) · 하트 · 안 읽은 소식은 NEW.
  *  - 운영진: 위에 '소식 쓰기'(공지/이벤트 · 제목 · 내용 · 고정 · 디스코드에도 올리기), 카드마다 고정·고치기·지우기.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { AUGMENT, NEWS_LABEL, NEWS_MAX, shortDate, type Api, type NewsItem, type NewsKind, type NewsList } from '@prism/core';
-import { Empty, Seg, Toggle } from './basics';
+import { Empty, Hover, Seg, Toggle } from './basics';
 import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
 import { useLoad } from './crew';
@@ -93,18 +93,18 @@ function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }
         {isNew && <span className="nw-new">NEW</span>}
         <span className="meta">{x.auto ? '자동 소식' : x.author ?? '운영진'} · {x.pinned ? `${shortDate(x.at)} ${clock(x.at)}` : clock(x.at)}{x.edited ? ' · 고침' : ''}</span>
         {canWrite && !edit && <span className="nw-tools">
-          <button type="button" className="nw-ib" title={x.pinned ? '고정 풀기' : '맨 위에 고정'} aria-label={x.pinned ? '고정 풀기' : '맨 위에 고정'} disabled={busy} onClick={() => run(async () => { await api.post(`/api/news/${x.id}`, { pinned: !x.pinned }); onChanged(); })}><Icon name="pin" /></button>
+          {!x.fixed && <button type="button" className="nw-ib" title={x.pinned ? '고정 풀기' : '맨 위에 고정'} aria-label={x.pinned ? '고정 풀기' : '맨 위에 고정'} disabled={busy} onClick={() => run(async () => { await api.post(`/api/news/${x.id}`, { pinned: !x.pinned }); onChanged(); })}><Icon name="pin" /></button>}
           <button type="button" className="nw-ib" title="고치기" aria-label="고치기" disabled={busy} onClick={() => { setTitle(x.title); setBody(x.body); setEdit(true); }}><Icon name="edit" /></button>
-          <button type="button" className={`nw-ib ${del ? 'warn' : ''}`} title={del ? '한 번 더 누르면 지워요' : '지우기'} aria-label="지우기" disabled={busy} onBlur={() => setDel(false)} onClick={() => (del ? run(async () => { await api.del(`/api/news/${x.id}`); onChanged(); }) : setDel(true))}><Icon name="trash" />{del && <span>지우기</span>}</button>
+          {!x.fixed && <button type="button" className={`nw-ib ${del ? 'warn' : ''}`} title={del ? '한 번 더 누르면 지워요' : '지우기'} aria-label="지우기" disabled={busy} onBlur={() => setDel(false)} onClick={() => (del ? run(async () => { await api.del(`/api/news/${x.id}`); onChanged(); }) : setDel(true))}><Icon name="trash" />{del && <span>지우기</span>}</button>}
         </span>}
       </div>
       {edit ? <div className="nw-edit">
         <input className="input" value={title} maxLength={NEWS_MAX.title} aria-label="제목" onChange={(e) => setTitle(e.target.value)} />
-        <textarea className="input nw-ta" value={body} maxLength={NEWS_MAX.body} rows={5} aria-label="내용" onChange={(e) => setBody(e.target.value)} />
+        <textarea className="input nw-ta" value={body} maxLength={NEWS_MAX.body} rows={Math.min(24, Math.max(5, body.split('\n').length + 1))} aria-label="내용" onChange={(e) => setBody(e.target.value)} />
         <div className="nw-act"><button type="button" className="btn sm" onClick={() => setEdit(false)}>그만두기</button><button type="button" className="btn sm primary" disabled={busy || title.trim().length < 2} onClick={() => run(async () => { await api.post(`/api/news/${x.id}`, { title, body }); setEdit(false); onChanged(); })}>저장</button></div>
       </div> : <>
         {x.kind === 'event' ? <div className="nw-hero"><h3>{x.title}</h3></div> : <h3 className="nw-title">{x.title}</h3>}
-        {x.body && <p className="nw-body">{x.body}</p>}
+        {x.body && <NewsBody text={x.body} />}
         {augs.length > 0 && <div className="nw-augs">
           {augs.slice(0, 10).map((id) => <AugmentLink key={id} id={id} inline><AugRing id={id} size={36} /></AugmentLink>)}
           {augs.length > 10 && <span className="nw-more">+{augs.length - 10}</span>}
@@ -114,6 +114,46 @@ function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }
       {err && <p className="l nw-err">{err}</p>}
       {!edit && <div className="nw-foot"><HeartBurst on={x.mine} count={x.hearts} label={x.mine ? '하트 취소' : '하트'} size="sm" onToggle={heart} /></div>}
     </article>
+  );
+}
+
+// ───────── 본문 서식: [제목] 소제목 · •/- 목록 · [제목]? 설명 칩(마우스를 올리면 목록) · 주소는 링크 ─────────
+type Block = { title?: string; tip?: boolean; lines: { li: boolean; text: string }[] };
+const HEAD = /^\[(.+?)\](\?)?\s*$/;
+const BULLET = /^\s*[•\-·*]\s+(.+)$/;
+function blocksOf(text: string): Block[] {
+  const out: Block[] = [{ lines: [] }];
+  for (const raw of text.split('\n')) {
+    const h = HEAD.exec(raw.trim());
+    if (h) { out.push({ title: h[1], tip: Boolean(h[2]), lines: [] }); continue; }
+    if (!raw.trim()) continue;
+    const b = BULLET.exec(raw);
+    out[out.length - 1].lines.push(b ? { li: true, text: b[1] } : { li: false, text: raw.trim() });
+  }
+  return out.filter((b) => b.title || b.lines.length);
+}
+const URL_RE = /((?:https?:\/\/)?(?:przm\.web\.app|discord\.gg|open\.kakao\.com)\/?[^\s)]*|https?:\/\/[^\s)]+)/g;
+function linkify(t: string) {
+  const parts = t.split(URL_RE);
+  return parts.map((p, i) => (i % 2 ? <a key={i} href={p.startsWith('http') ? p : `https://${p}`} target="_blank" rel="noopener noreferrer">{p}</a> : p));
+}
+function Lines({ lines }: { lines: Block['lines'] }) {
+  const out: ReactElement[] = [];
+  let ul: ReactElement[] = [];
+  const flush = () => { if (ul.length) out.push(<ul key={`u${out.length}`} className="nw-ul">{ul}</ul>); ul = []; };
+  lines.forEach((l, i) => { if (l.li) ul.push(<li key={i}>{linkify(l.text)}</li>); else { flush(); out.push(<p key={i}>{linkify(l.text)}</p>); } });
+  flush();
+  return <>{out}</>;
+}
+function NewsBody({ text }: { text: string }) {
+  const blocks = blocksOf(text);
+  if (!blocks.some((b) => b.title)) return <p className="nw-body">{linkify(text)}</p>;
+  return (
+    <div className="nw-doc">
+      {blocks.map((b, i) => b.tip
+        ? <div key={i} className="nw-sec tip"><Hover className="nw-hov" tip={<ul className="nw-tipul">{b.lines.map((l, j) => <li key={j}>{l.text}</li>)}</ul>}><button type="button" className="nw-tipbtn"><Icon name="info" />{b.title}</button></Hover></div>
+        : <div key={i} className={`nw-sec ${b.title ? '' : 'lead'}`}>{b.title && <h4 className="nw-sh">{b.title}</h4>}<Lines lines={b.lines} /></div>)}
+    </div>
   );
 }
 
@@ -141,7 +181,7 @@ function Composer({ api, onDone }: { api: Api; onDone: () => void }) {
     <section className="card pad nw-compose">
       <div className="nw-crow"><Seg value={kind} options={[['notice', '공지'], ['event', '이벤트']]} onChange={setKind} /><span className="meta">{title.length}/{NEWS_MAX.title}</span></div>
       <input className="input" value={title} maxLength={NEWS_MAX.title} placeholder={kind === 'event' ? '예: 11월 첫 주 내전 · 토요일 밤 10시' : '예: Prism 이용 수칙 안내'} aria-label="제목" onChange={(e) => setTitle(e.target.value)} />
-      <textarea className="input nw-ta" value={body} maxLength={NEWS_MAX.body} rows={5} placeholder="내용 (줄바꿈 그대로 보여요)" aria-label="내용" onChange={(e) => setBody(e.target.value)} />
+      <textarea className="input nw-ta" value={body} maxLength={NEWS_MAX.body} rows={5} placeholder={'내용 (줄바꿈 그대로) · [제목] 줄은 소제목 · • 로 시작하면 목록 · [제목]? 는 마우스를 올리면 펼쳐지는 설명'} aria-label="내용" onChange={(e) => setBody(e.target.value)} />
       <div className="nw-crow">
         <span className="nw-sw"><Toggle label="맨 위에 고정" on={pinned} onChange={setPinned} /><span>맨 위에 고정</span></span>
         <span className="nw-sw"><Toggle label="디스코드에도 올리기" on={discord} onChange={setDiscord} /><span>디스코드에도 올리기</span></span>
