@@ -66,7 +66,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!loggedIn) return;
     const ping = () => {
       if (document.visibilityState !== 'visible') return;
-      api.post<{ presence: Presence }>('/api/me/presence', { via: 'web' }).then((r) => setMe((m) => (m && m.presence !== r.presence ? { ...m, presence: r.presence } : m)), () => {});
+      api.post<{ presence: Presence; newsUnread?: number }>('/api/me/presence', { via: 'web' }).then((r) => setMe((m) => {
+        if (!m) return m;
+        const unread = typeof r.newsUnread === 'number' ? r.newsUnread : m.newsUnread;
+        return m.presence !== r.presence || m.newsUnread !== unread ? { ...m, presence: r.presence, newsUnread: unread } : m;
+      }), () => {});
     };
     ping();
     const t = setInterval(ping, 60_000);

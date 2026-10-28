@@ -76,7 +76,8 @@ export async function setPresence(env: Env, me: Member, body: { via?: unknown; l
     await env.DB.prepare('UPDATE members SET web_seen_at = ? WHERE id = ?').bind(now, me.id).run();
     me.web_seen_at = now;
   }
-  return json({ presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }, now) });
+  // 안 읽은 소식 수도 함께 — 앱·웹이 1분마다 알릴 때 메뉴의 빨간 점을 맞춘다
+  return json({ presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }, now), newsUnread: await unreadNews(env, me) });
 }
 
 /** 내 판 목록 (최근 100판). 웹·앱의 "내 기록" 화면용. 본인 것만 */

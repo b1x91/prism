@@ -360,7 +360,9 @@ async function pingPresence() {
   if (key === presenceKey && now - presenceAt < 60_000) return;
   presenceKey = key;
   presenceAt = now;
-  await api.post('/api/me/presence', { via: 'app', lol, open, phase, champ }).catch(() => { presenceKey = ''; });
+  const r = await api.post<{ newsUnread?: number }>('/api/me/presence', { via: 'app', lol, open, phase, champ }).catch(() => { presenceKey = ''; return null; });
+  // 새 소식이 오면 '소식' 메뉴에 빨간 점 (v3.114)
+  if (r && typeof r.newsUnread === 'number' && state.me && state.me.newsUnread !== r.newsUnread) set({ me: { ...state.me, newsUnread: r.newsUnread } });
 }
 
 let started = false;

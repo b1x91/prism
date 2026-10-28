@@ -310,8 +310,11 @@ body { overflow: hidden; background: var(--bg); }
 .side-nav a .live-dot { width: 8px; height: 8px; margin-left: auto; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); animation: live-ping 1.8s ease-out infinite; }
 @keyframes nav-live { 0%, 100% { background: color-mix(in srgb, var(--accent) 8%, transparent); } 50% { background: color-mix(in srgb, var(--accent) 22%, transparent); } }
 @keyframes live-ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--ok) 60%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
-@media (max-width: 900px) { .side-nav a .live-dot { position: absolute; top: 6px; right: 6px; margin: 0; } }
-@media (prefers-reduced-motion: reduce) { .side-nav a.live, .side-nav a .live-dot { animation: none; } .side-nav a.live { background: color-mix(in srgb, var(--accent) 14%, transparent); } }
+/* 새 소식: '게임' 메뉴의 점과 같은 자리·크기, 빨간색으로 (v3.114) */
+.side-nav a .news-dot { position: static; width: 8px; height: 8px; margin-left: auto; border-radius: 50%; background: var(--lose); box-shadow: 0 0 0 0 color-mix(in srgb, var(--lose) 60%, transparent); animation: news-ping 1.8s ease-out infinite; }
+@keyframes news-ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lose) 60%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
+@media (max-width: 900px) { .side-nav a .live-dot, .side-nav a .news-dot { position: absolute; top: 6px; right: 6px; margin: 0; } }
+@media (prefers-reduced-motion: reduce) { .side-nav a.live, .side-nav a .live-dot, .side-nav a .news-dot { animation: none; } .side-nav a.live { background: color-mix(in srgb, var(--accent) 14%, transparent); } }
 
 /* 사이드바 내 정보·설정: 누른 뒤 남는 외곽선·하이라이트 없음 (v3.24) */
 .side-me-card .side-me, .side-me-card .gear { outline: none; -webkit-tap-highlight-color: transparent; }
