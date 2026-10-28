@@ -16,7 +16,7 @@ import { GamePage } from './pages/Game';
 import { AugmentsPage } from './pages/Augments';
 import { DexPage } from './pages/Dex';
 import { ChampionsPage } from './pages/Champions';
-import { MemberPage, MissionsPage, RankingPage, ShopPage, StaffPage } from './pages/Members';
+import { MemberPage, MissionsPage, RankingPage, ShopPage, StaffMembersPage, StaffPage } from './pages/Members';
 import { CrewPage } from './pages/Crew';
 import { SettingsPage } from './pages/Settings';
 import { lockdown } from './lockdown';
@@ -197,6 +197,7 @@ function App() {
           <Route path="missions" element={<MissionsPage s={s} onLogin={login} />} />
           <Route path="settings" element={<SettingsPage s={s} onLogin={login} />} />
           <Route path="staff" element={<StaffPage s={s} onLogin={login} />} />
+          <Route path="staff/members" element={<StaffMembersPage s={s} onLogin={login} />} />
           <Route path="*" element={<GamePage s={s} />} />
         </Routes></Page>}</PullRefresh></MatchNote.Provider></MatchSource.Provider></AugmentOpen.Provider>
       </main>

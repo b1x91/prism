@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Empty, Gem, Icon, INVITE_KEY, MemberFace, PageSkeleton, StaffView } from '@prism/ui';
+import { Empty, Gem, Icon, INVITE_KEY, MemberFace, PageSkeleton, StaffMembersView, StaffView, goBack } from '@prism/ui';
 import { shortNick } from '@prism/core';
 import { SERVER, useSession } from '../session';
 import { useState } from 'react';
@@ -13,8 +13,22 @@ export function StaffPage() {
   if (!me?.perms?.manage) return <section className="section"><div className="wrap"><Empty>운영진만 볼 수 있는 화면이에요.</Empty></div></section>;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <div className="page-head"><div><h1>운영</h1><p>Prism 현황을 보고, 새 멤버 승인과 정회원 심사, 단계를 관리해요.</p></div></div>
-      <StaffView api={api} onOpen={(id) => nav(id === me.id ? '/me' : `/members/${id}`)} />
+      <div className="page-head"><div><h1>운영</h1><p>Prism 현황을 한눈에 보고, 멤버 관리로 승인·단계를 바꿔요.</p></div></div>
+      <StaffView api={api} onOpen={(id) => nav(id === me.id ? '/me' : `/members/${id}`)} onMembers={() => nav('/staff/members')} />
+    </div></section>
+  );
+}
+
+/** 운영 › 멤버 관리 (v3.110) — 승인할 멤버 카드 + 전체 멤버 거르기·정렬 */
+export function StaffMembersPage() {
+  const { me, ready, api } = useSession();
+  const nav = useNavigate();
+  if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="crew" /></div></section>;
+  if (!me?.perms?.manage) return <section className="section"><div className="wrap"><Empty>운영진만 볼 수 있는 화면이에요.</Empty></div></section>;
+  return (
+    <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
+      <div className="page-head"><div><button type="button" className="crumb" onClick={() => goBack(nav, '/staff')}><Icon name="back" />운영</button><h1>멤버 관리</h1><p>승인할 멤버를 먼저, 그 아래에서 전체 멤버를 거르고 정렬해요.</p></div></div>
+      <StaffMembersView api={api} onOpen={(id) => nav(id === me.id ? '/me' : `/members/${id}`)} />
     </div></section>
   );
 }

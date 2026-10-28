@@ -129,7 +129,7 @@ export type Pulse = { now: PulseNow[]; recent?: PulseSeen[]; feed: PulseItem[]; 
 export type StaffMember = {
   id: string; nick: string; discordName: string; skin: number | null; main: number | null; joined: number; seen: number; riotId: string | null;
   games: number; level: number; special: boolean; pending: boolean; app: boolean; admin: boolean; rolesKnown: boolean; role: DiscordRole | null;
-  staffGames: number; review: boolean; wins: number; lastPlayed: number | null; inviter: { id: string; nick: string } | null; invitedCount: number; approvedAt: number | null;
+  staffGames: number; review: boolean; wins: number; recent: number; score: number; lastPlayed: number | null; inviter: { id: string; nick: string } | null; invitedCount: number; approvedAt: number | null;
 };
 export type StaffFace = { id: string; nick: string; skin: number | null; main: number | null };
 /** 운영 대시보드 (v3.109) */

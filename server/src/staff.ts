@@ -72,6 +72,9 @@ export async function staffMembers(env: Env, me: Member) {
   const nick = new Map(results.map((r) => [r.id as string, r.nick as string]));
   const invited = new Map(rewards.results.map((r) => [r.inviter, r.n]));
   const need = PROMOTION.regularReview.withStaff;
+  // 최근 2주 판수 (멤버 관리 거르기·내전 인원 고르기용)
+  const since14 = Date.now() - 14 * DAY, recent = new Map<string, number>();
+  for (const r of recentRows.results) if (r.t >= since14) recent.set(r.id, (recent.get(r.id) ?? 0) + 1);
   const members = results.map(({ discord_roles, tier, app_first_at, ...r }) => {
     const m = { tier, discord_roles, app_first_at: Number(app_first_at ?? 0) } as Pick<Member, 'tier' | 'discord_roles'> & { app_first_at: number };
     const level = Math.min(levelOf(m), 5);
@@ -81,6 +84,8 @@ export async function staffMembers(env: Env, me: Member) {
       level, special: isSpecial(m) && level < 5, pending: isPending(m), app: (m.app_first_at ?? 0) > 0, role: topRole(m), admin: tier === 'admin',
       rolesKnown: discord_roles != null,
       staffGames,
+      recent: recent.get(r.id) ?? 0,
+      score: rankScore(Number(r.wins) || 0, Number(r.games) || 0),
       review: level === 1 && staffGames >= need,
       inviter: r.invitedBy ? { id: r.invitedBy, nick: nick.get(r.invitedBy) ?? '알 수 없음' } : null,
       invitedCount: invited.get(r.id) ?? 0,

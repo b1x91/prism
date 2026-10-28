@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { Empty, Icon, MemberView, MissionsView, RankingView, ShopView, StaffView } from '@prism/ui';
+import { Empty, Icon, MemberView, MissionsView, RankingView, ShopView, StaffMembersView, StaffView, goBack } from '@prism/ui';
 import type { State } from '../controller';
 import { josa } from '@prism/core';
 import { api } from '../bridge';
@@ -54,7 +54,20 @@ export function StaffPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   return (
     <div className="stack" style={{ gap: 16 }}>
       <h1 className="h1">운영</h1>
-      <StaffView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} />
+      <StaffView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} onMembers={() => nav('/staff/members')} />
+    </div>
+  );
+}
+
+/** 운영 › 멤버 관리 (v3.110) */
+export function StaffMembersPage({ s, onLogin }: { s: State; onLogin: () => void }) {
+  const nav = useNavigate();
+  if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="운영" />;
+  if (!s.me.perms?.manage) return <section className="card pad"><Empty>운영진만 볼 수 있는 화면이에요.</Empty></section>;
+  return (
+    <div className="stack" style={{ gap: 16 }}>
+      <div><button type="button" className="crumb" onClick={() => goBack(nav, '/staff')}><Icon name="back" />운영</button><h1 className="h1">멤버 관리</h1></div>
+      <StaffMembersView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} />
     </div>
   );
 }

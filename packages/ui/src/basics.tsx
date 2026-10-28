@@ -48,12 +48,21 @@ export function GlassBtn({ icon, label, onClick, href, as: Link }: { icon: IconN
 
 /**
  * 드롭다운 (브라우저 기본 select 대신, 앱 전체 공용). 눌러서 열고, 바깥·Esc 로 닫힌다. 위아래 화살표·Enter 로도 고른다.
+ * 아래에 자리가 모자라면 위로 펼치고, 양쪽 다 모자라면 칸 안에서 스크롤 — 목록이 화면 밖으로 나가 페이지가 길어지지 않게.
  */
 export function Select<T extends string>({ value, options, onChange, label }: { value: T; options: [T, string][]; onChange: (v: T) => void; label: string }) {
   const [open, setOpen] = useState(false);
   const [hi, setHi] = useState(0);
   const ref = useRef<HTMLDivElement>(null);
+  const [place, setPlace] = useState<{ up: boolean; max: number }>({ up: false, max: 0 });
   const cur = options.find(([k]) => k === value);
+  useLayoutEffect(() => {
+    if (!open || !ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    const need = options.length * 38 + 12, below = innerHeight - r.bottom - 12, above = r.top - 12;
+    const up = below < need && above > below;
+    setPlace({ up, max: Math.max(120, Math.min(need, up ? above : below)) });
+  }, [open, options.length]);
   useEffect(() => {
     if (!open) return;
     setHi(Math.max(0, options.findIndex(([k]) => k === value)));
@@ -75,7 +84,7 @@ export function Select<T extends string>({ value, options, onChange, label }: { 
       <button type="button" className="sel-btn" aria-haspopup="listbox" aria-expanded={open} aria-label={label} onClick={() => setOpen(!open)}>
         <span>{cur?.[1]}</span><Icon name="chevD" />
       </button>
-      {open && <div className="sel-pop" role="listbox" aria-label={label}>
+      {open && <div className={`sel-pop ${place.up ? 'up' : ''}`} style={place.max ? { maxHeight: place.max } : undefined} role="listbox" aria-label={label}>
         {options.map(([k, l], i) => (
           <button key={k} type="button" role="option" aria-selected={k === value} className={`sel-opt ${k === value ? 'on' : ''} ${i === hi ? 'hi' : ''}`} onMouseEnter={() => setHi(i)} onClick={() => { onChange(k); setOpen(false); }}>
             <span>{l}</span>{k === value && <Icon name="check" />}
