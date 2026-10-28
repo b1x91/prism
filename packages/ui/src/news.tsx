@@ -75,6 +75,9 @@ function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }
   const [title, setTitle] = useState(x.title);
   const [body, setBody] = useState(x.body);
   const [err, setErr] = useState('');
+  // 고정 소식은 접힌 채로 (제목만), 누르면 펼친다
+  const [open, setOpen] = useState(!x.pinned);
+  const folded = x.pinned && !open && !edit;
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true); setErr('');
     try { await fn(); } catch (e) { setErr(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
@@ -86,7 +89,7 @@ function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }
   };
   const augs = x.kind === 'patch' && Array.isArray(x.data?.augments) ? (x.data!.augments as number[]).filter((id) => AUGMENT[id]) : [];
   return (
-    <article className={`card nw-card k-${x.kind} ${x.pinned ? 'pinned' : ''} ${busy ? 'busy' : ''}`}>
+    <article className={`card nw-card k-${x.kind} ${x.pinned ? 'pinned' : ''} ${open ? 'open' : ''} ${busy ? 'busy' : ''}`}>
       <div className="nw-top">
         <span className={`nw-tag k-${x.kind}`}>{NEWS_LABEL[x.kind]}</span>
         {x.pinned && <span className="nw-pin"><Icon name="pin" />고정</span>}
@@ -103,16 +106,18 @@ function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }
         <textarea className="input nw-ta" value={body} maxLength={NEWS_MAX.body} rows={Math.min(24, Math.max(5, body.split('\n').length + 1))} aria-label="내용" onChange={(e) => setBody(e.target.value)} />
         <div className="nw-act"><button type="button" className="btn sm" onClick={() => setEdit(false)}>그만두기</button><button type="button" className="btn sm primary" disabled={busy || title.trim().length < 2} onClick={() => run(async () => { await api.post(`/api/news/${x.id}`, { title, body }); setEdit(false); onChanged(); })}>저장</button></div>
       </div> : <>
-        {x.kind === 'event' ? <div className="nw-hero"><h3>{x.title}</h3></div> : <h3 className="nw-title">{x.title}</h3>}
-        {x.body && <NewsBody text={x.body} />}
-        {augs.length > 0 && <div className="nw-augs">
+        {x.pinned
+          ? <button type="button" className="nw-fold" aria-expanded={open} onClick={() => setOpen(!open)}><h3 className="nw-title">{x.title}</h3><span className="nw-fold-ic"><span>{open ? '접기' : '내용 보기'}</span><Icon name="chevD" /></span></button>
+          : x.kind === 'event' ? <div className="nw-hero"><h3>{x.title}</h3></div> : <h3 className="nw-title">{x.title}</h3>}
+        {!folded && x.body && <NewsBody text={x.body} />}
+        {!folded && augs.length > 0 && <div className="nw-augs">
           {augs.slice(0, 10).map((id) => <AugmentLink key={id} id={id} inline><AugRing id={id} size={36} /></AugmentLink>)}
           {augs.length > 10 && <span className="nw-more">+{augs.length - 10}</span>}
           {onNewAugments && <button type="button" className="btn sm nw-go" onClick={onNewAugments}>새로운 증강 보기<Icon name="chevR" /></button>}
         </div>}
       </>}
       {err && <p className="l nw-err">{err}</p>}
-      {!edit && <div className="nw-foot"><HeartBurst on={x.mine} count={x.hearts} label={x.mine ? '하트 취소' : '하트'} size="sm" onToggle={heart} /></div>}
+      {!edit && !folded && <div className="nw-foot"><HeartBurst on={x.mine} count={x.hearts} label={x.mine ? '하트 취소' : '하트'} size="sm" onToggle={heart} /></div>}
     </article>
   );
 }
