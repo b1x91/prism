@@ -3606,10 +3606,10 @@ button.stf-person:hover { background: var(--surface-2); }
 .k-season { --nk: var(--text-3); }
 .nw-kd { background: var(--nk); }
 .nw-feed { position: relative; display: grid; gap: var(--s3); padding-left: var(--s6); }
-.nw-feed::before { content: ""; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; border-radius: 2px; background: var(--line-2); }
+.nw-feed::before { content: ""; position: absolute; left: 7px; top: calc(var(--s2) + 10px); bottom: 8px; width: 2px; border-radius: 2px; background: var(--line-2); }
 .nw-group { display: grid; gap: var(--s3); }
-.nw-day { position: relative; margin: var(--s2) 0 0; font-size: var(--fs-xs); font-weight: 800; color: var(--text-3); }
-.nw-day::before { content: ""; position: absolute; left: calc(-1 * var(--s6) + 3px); top: 50%; width: 10px; height: 10px; margin-top: -5px; border-radius: 50%; background: var(--bg); border: 2px solid var(--text-3); }
+.nw-day { position: relative; margin: var(--s2) 0 0; height: 20px; line-height: 20px; font-size: var(--fs-xs); font-weight: 800; color: var(--text-3); }
+.nw-day::before { content: ""; position: absolute; box-sizing: border-box; left: calc(-1 * var(--s6) + 2px); top: 50%; width: 12px; height: 12px; margin-top: -6px; border-radius: 50%; background: var(--bg); border: 2px solid var(--text-3); }
 .nw-day.pin::before { background: var(--gold); border-color: var(--gold); }
 .nw-day.pin { color: var(--warn); }
 .nw-card { position: relative; display: grid; gap: var(--s2); padding: var(--s4); }
@@ -3686,7 +3686,7 @@ button.stf-person:hover { background: var(--surface-2); }
 .news-dot { width: 7px; height: 7px; margin-left: auto; border-radius: 50%; background: var(--lose); flex: none; }
 .nav-dot { position: relative; }
 .nav-dot::after { content: ""; position: absolute; top: 4px; right: 2px; width: 7px; height: 7px; border-radius: 50%; background: var(--lose); box-shadow: 0 0 0 2px var(--surface); }
-@media (max-width: 640px) { .nw-feed { padding-left: var(--s5); } .nw-day::before { left: calc(-1 * var(--s5) + 3px); } .nw-go { margin-left: 0; } }
+@media (max-width: 640px) { .nw-feed { padding-left: var(--s5); } .nw-day::before { left: calc(-1 * var(--s5) + 2px); } .nw-go { margin-left: 0; } }
 
 /* 친구 초대 (v3.107) */
 .inv-card { display: grid; gap: var(--s3); }

@@ -13,6 +13,8 @@ import { seasonOf } from '../../packages/core/src/ranking.js';
 import { NEWS_LIMIT, NEWS_MAX, type NewsItem, type NewsKind } from '../../packages/core/src/news.js';
 
 const WRITE_KINDS: NewsKind[] = ['notice', 'event'];
+/** 새 소식마다 붙는 하트 기본 수 1~5 (누가 누른 것으로 치지 않는다) */
+const seedHearts = () => 1 + Math.floor(Math.random() * 5);
 const RANK = { prismatic: 0, gold: 1, silver: 2 } as const;
 
 /** 앱 업데이트 카드에 넣지 않는 개발용 커밋 제목 (운영진이 나중에 고칠 수 있다) */
@@ -23,8 +25,8 @@ async function cacheGet(env: Env, k: string) {
 }
 
 async function insertAuto(env: Env, key: string, row: { kind: NewsKind; title: string; body: string; data?: unknown; at: number }) {
-  await env.DB.prepare('INSERT OR IGNORE INTO news (kind, title, body, data, auto_key, created_at) VALUES (?, ?, ?, ?, ?, ?)')
-    .bind(row.kind, row.title, row.body, row.data == null ? null : JSON.stringify(row.data), key, row.at).run();
+  await env.DB.prepare('INSERT OR IGNORE INTO news (kind, title, body, data, auto_key, created_at, seed_hearts) VALUES (?, ?, ?, ?, ?, ?, ?)')
+    .bind(row.kind, row.title, row.body, row.data == null ? null : JSON.stringify(row.data), key, row.at, seedHearts()).run();
 }
 
 /** 저절로 생기는 소식을 채운다 (소식을 열 때·매일 밤 공지 때). 이미 있으면 아무것도 하지 않는다 */
@@ -62,7 +64,7 @@ export async function listNews(env: Env, me: Member) {
   const { results } = await env.DB.prepare(
     `SELECT n.id, n.kind, n.title, n.body, n.data, n.pinned, n.created_at AS at, n.edited_at AS edited, n.auto_key AS autoKey,
        a.nick AS authorNick,
-       (SELECT COUNT(*) FROM news_hearts h WHERE h.news_id = n.id) AS hearts,
+       n.seed_hearts + (SELECT COUNT(*) FROM news_hearts h WHERE h.news_id = n.id) AS hearts,
        EXISTS (SELECT 1 FROM news_hearts h WHERE h.news_id = n.id AND h.member_id = ?1) AS mine
      FROM news n LEFT JOIN members a ON a.id = n.author WHERE n.kind != 'hidden'
      ORDER BY (n.auto_key LIKE 'fixed:%') DESC, n.pinned DESC, n.created_at DESC LIMIT ?2`,
@@ -98,7 +100,7 @@ export async function heartNews(env: Env, me: Member, id: number) {
     if (!ok) throw new HttpError(404, '없는 소식이에요.');
     await env.DB.prepare('INSERT OR IGNORE INTO news_hearts (news_id, member_id, at) VALUES (?, ?, ?)').bind(id, me.id, Date.now()).run();
   }
-  const n = await env.DB.prepare('SELECT COUNT(*) AS n FROM news_hearts WHERE news_id = ?').bind(id).first<{ n: number }>();
+  const n = await env.DB.prepare('SELECT n.seed_hearts + (SELECT COUNT(*) FROM news_hearts h WHERE h.news_id = n.id) AS n FROM news n WHERE n.id = ?').bind(id).first<{ n: number }>();
   return json({ hearts: n?.n ?? 0, mine: !has });
 }
 
@@ -119,8 +121,8 @@ export async function createNews(req: Request, env: Env, me: Member) {
   const kind = WRITE_KINDS.includes(b.kind as NewsKind) ? (b.kind as NewsKind) : 'notice';
   const { title, text } = clean(b);
   const now = Date.now();
-  const r = await env.DB.prepare('INSERT INTO news (kind, title, body, pinned, author, created_at) VALUES (?, ?, ?, ?, ?, ?) RETURNING id')
-    .bind(kind, title, text, b.pinned ? 1 : 0, me.id, now).first<{ id: number }>();
+  const r = await env.DB.prepare('INSERT INTO news (kind, title, body, pinned, author, created_at, seed_hearts) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id')
+    .bind(kind, title, text, b.pinned ? 1 : 0, me.id, now, seedHearts()).first<{ id: number }>();
   // 쓴 사람은 읽은 것으로
   await env.DB.prepare('UPDATE members SET news_read_at = ? WHERE id = ?').bind(now, me.id).run();
   let posted = false;
