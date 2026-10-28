@@ -18,6 +18,7 @@ import type { DuoGame } from '../../packages/core/src/profile.js';
 import { stakesOf } from '../../packages/core/src/weekly.js';
 import { shortNick } from '../../packages/core/src/text.js';
 import { weeklyOf } from './weekly.js';
+import { checkTagBonus } from './tagbonus.js';
 
 /** 스킨 등급 (없는 스킨이면 null) */
 const skinTier = (id: number): number | null => (skinData.skins as unknown as Record<string, [string, number, string, string]>)[id]?.[1] ?? null;
@@ -130,6 +131,7 @@ export async function linkRiot(req: Request, env: Env, me: Member) {
   const rid = typeof riotId === 'string' && riotId.includes('#') ? riotId.trim().slice(0, 40) : null;
   // 표시 이름 = 롤 계정 이름 (이름#태그)
   await env.DB.prepare('UPDATE members SET riot_puuid = ?1, riot_id = ?2, nick = COALESCE(?3, nick) WHERE id = ?4').bind(puuid, rid, rid, me.id).run();
+  await checkTagBonus(env, me.id, rid).catch(() => false);
   return json({ ok: true });
 }
 

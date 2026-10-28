@@ -37,7 +37,7 @@ function TodayPick({ personal }: { personal: Personal }) {
   const rec = personal.champions[pick.id];
   const guide = guideOf(GAME_DATA, pick.id);
   const mine = personal.augmentsByChampion[pick.id] ?? [];
-  const rows = guide ? (['prismatic', 'gold', 'silver'] as const).map((r) => [r, guide[r].slice(0, 2)] as const) : [];
+  const rows = guide ? (['prismatic', 'gold', 'silver'] as const).map((r) => [r, guide[r].slice(0, 3)] as const) : [];
   return (
     <section className="today">
       <ChampBanner id={pick.id} eyebrow={pick.why === 'best' ? '오늘은 이 챔프 어때요? · 내 기록에서 가장 잘 이긴 챔프' : '오늘은 이 챔프 어때요? · 아직 만나지 못한 챔프'}
@@ -45,7 +45,7 @@ function TodayPick({ personal }: { personal: Personal }) {
         foot={<button type="button" className="btn sm primary" onClick={() => nav(`/champions/${pick.id}`)}>증강 가이드<Icon name="arrow" /></button>}>
         <p className="today-why">{rec ? <>내 기록 <b>{rec.n}판 {rec.w}승</b> ({pct(rec.w, rec.n)}). 주사위나 대기석에서 보이면 잡아보세요.</> : <>도감을 채울 기회예요. 주사위나 대기석에서 보이면 잡아보세요.</>}</p>
       </ChampBanner>
-      <div className="today-augs">
+      <div className={`today-augs ${mine.length ? 'n4' : 'n3'}`}>
         {rows.map(([r, list]) => (
           <div key={r} className="ta-col">
             <span className={`k ${r}`}>{r === 'prismatic' ? '프리즘' : r === 'gold' ? '골드' : '실버'}</span>

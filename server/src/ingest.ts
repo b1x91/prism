@@ -10,6 +10,7 @@
  *   5. 같은 팀 5명 수치가 모두 있을 때만 점유율 계산.
  */
 import { firstRecord } from './bot.js';
+import { checkTagBonus } from './tagbonus.js';
 import { featOf, type FeatSource } from '../../packages/core/src/challenges.js';
 import { finite, HttpError, int, json, type Env, type Member } from './util.js';
 
@@ -277,6 +278,11 @@ export async function ingest(req: Request, env: Env, me: Member) {
     if (before.has(id)) continue;
     const first = await env.DB.prepare('SELECT champion_id AS c, win AS w FROM participants WHERE member_id = ? ORDER BY played_at LIMIT 1').bind(id).first<{ c: number; w: number }>();
     if (first) await firstRecord(env, id, first.c, Boolean(first.w)).catch(() => {});
+  }
+  // #PRSM 태그 보상 (v3.116): 판 기록으로 맞춘 롤 이름이 #PRSM 이면 한 번만
+  if (crewIds.length) {
+    const { results } = await env.DB.prepare(`SELECT id, riot_id FROM members WHERE id IN (${crewIds.map(() => '?').join(',')}) AND riot_id LIKE '%#%' AND id NOT IN (SELECT member_id FROM tag_rewards)`).bind(...crewIds).all<{ id: string; riot_id: string }>().catch(() => ({ results: [] as { id: string; riot_id: string }[] }));
+    for (const r of results) await checkTagBonus(env, r.id, r.riot_id).catch(() => false);
   }
   return json(result);
 }
