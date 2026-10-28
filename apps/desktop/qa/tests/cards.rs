@@ -126,3 +126,17 @@ fn 카드_없는_화면() {
     }
     println!("카드 없는 화면 {}장 중 '있다' {fp}", ec.len());
 }
+
+/// 놓친 카드 그림 (v3.115): 카드 자리만 잘라 작은 JPEG 으로
+#[test]
+fn 놓친_카드_그림() {
+    let (w, h) = (1920usize, 1080usize);
+    let mut buf = vec![0u8; w * h * 4];
+    for (i, p) in buf.chunks_exact_mut(4).enumerate() { p[0] = (i % 251) as u8; p[1] = (i % 97) as u8; p[2] = 40; p[3] = 255; }
+    let b64 = prism_vision_qa::shot::card_jpeg(&buf, w, h, (700, 1060, 300, 820)).expect("그림");
+    use base64::Engine;
+    let jpg = base64::engine::general_purpose::STANDARD.decode(&b64).unwrap();
+    assert_eq!(&jpg[..2], &[0xFF, 0xD8]);
+    assert!(b64.len() < 60_000, "너무 큼 {}", b64.len());
+    assert!(prism_vision_qa::shot::card_jpeg(&buf, w, h, (10, 12, 10, 12)).is_none());
+}

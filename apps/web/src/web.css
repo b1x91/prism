@@ -4,6 +4,9 @@
 /* 워드마크는 대문자 PRISM — 대문자 높이(약 12px)에 맞춰 보석은 22px, 글자 사이는 넓게 */
 .brand { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg); font-weight: 800; letter-spacing: .1em; line-height: 1; }
 .tabs { display: flex; gap: var(--s1); margin-left: var(--s4); }
+/* 메뉴 묶음 (v3.115): 묶음 사이에 짧은 세로선 */
+.tab-group { display: flex; align-items: center; gap: var(--s1); }
+.tab-sep { width: 1px; height: 16px; margin: 0 var(--s2); background: var(--line-2); }
 .tabs a { height: 36px; display: inline-flex; align-items: center; padding: 0 var(--s3); border-radius: var(--r-m); color: var(--text-2); font-weight: 650; }
 .tabs a:hover { color: var(--text); background: var(--surface-2); }
 .tabs a.active { color: var(--text); background: var(--surface-2); }
@@ -41,7 +44,9 @@ main { min-height: calc(100vh - 64px); }
   .mmenu-me b { display: block; font-size: var(--fs-md); }
   .mmenu-me small { color: var(--text-3); font-size: var(--fs-xs); }
   .mmenu-login { justify-content: center; }
-  .mmenu-nav { display: grid; gap: 2px; }
+  .mmenu-nav { display: grid; gap: var(--s4); }
+  .mmenu-group { display: grid; gap: 2px; }
+  .mmenu-glabel { padding: 0 var(--s3); margin-bottom: 2px; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .04em; color: var(--text-3); }
   .mmenu-nav a { display: flex; align-items: center; gap: var(--s3); height: 48px; padding: 0 var(--s3); border-radius: var(--r-m); color: var(--text-2); font-size: var(--fs-lg); font-weight: 650; }
   .mmenu-nav a .icon { width: 20px; height: 20px; }
   .mmenu-nav a.active { color: var(--text); background: var(--surface); box-shadow: inset 3px 0 0 var(--accent); }

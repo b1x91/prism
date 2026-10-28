@@ -1,12 +1,33 @@
 /**
  * 관리자: 앱 자동 진단 (CLAUDE.md v3.64·v3.66). 게임 위 작은 창이 한 판 내내 안 뜬 판, 증강을 세 칸 다 못 채운 판의 인식 기록.
- * 모니터 수·게임 화면 위치·배율·실패 이유·읽은 글자 몇 줄 (화면 그림은 없다).
+ * 모니터 수·게임 화면 위치·배율·실패 이유·읽은 글자 몇 줄 + 끝까지 못 읽은 카드 그림(카드 한 장, v3.115).
  */
 import { useEffect, useState } from 'react';
 import { Empty, RowsSkeleton } from '@prism/ui';
 import { useSession } from '../session';
 
-type Item = { id: number; member: string; nick: string | null; at: number; body: any };
+type Item = { id: number; member: string; nick: string | null; at: number; body: any; shots?: number };
+type Shot = { cx: number; found: number[]; jpg: string };
+
+/** 놓친 카드 그림: 누르면 그때 받아 온다 (목록에는 장 수만) */
+function Shots({ id, n }: { id: number; n: number }) {
+  const { api } = useSession();
+  const [shots, setShots] = useState<Shot[] | null>(null);
+  const [busy, setBusy] = useState(false);
+  if (!n) return null;
+  const load = () => { if (shots || busy) return; setBusy(true); api.get<{ shots: Shot[] }>(`/api/admin/diag/${id}/shots`).then((r) => setShots(r.shots)).finally(() => setBusy(false)); };
+  return (
+    <details onToggle={(e) => { if ((e.target as HTMLDetailsElement).open) load(); }}>
+      <summary className="meta">못 읽은 카드 그림 {n}장</summary>
+      {!shots ? <p className="meta">{busy ? '불러오는 중…' : ''}</p> : <div className="row" style={{ gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        {shots.map((s, i) => <figure key={i} style={{ margin: 0 }}>
+          <img src={`data:image/jpeg;base64,${s.jpg}`} alt={`못 읽은 카드 ${i + 1}`} style={{ display: 'block', maxWidth: 260, borderRadius: 8 }} />
+          <figcaption className="meta">x={s.cx} · 그때 찾은 칸 {s.found.join(', ') || '없음'}</figcaption>
+        </figure>)}
+      </div>}
+    </details>
+  );
+}
 
 export function DiagPage() {
   const { me, ready, api } = useSession();
@@ -28,13 +49,14 @@ export function DiagPage() {
         return (
           <article key={x.id} className="card pad stack" style={{ gap: 8 }}>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <b>{x.nick ?? x.member}</b><span className="pill">{x.body?.kind === 'partial' ? `세 칸 못 채움 ${d.partial}/${d.offers}` : '작은 창 안 뜸'}</span><span className="meta">{new Date(x.at).toLocaleString('ko-KR')}</span>
+              <b>{x.nick ?? x.member}</b><span className="pill">{x.body?.kind === 'partial' ? `세 칸 못 채움 ${d.partial}/${d.offers}` : '작은 창 안 뜸'}</span>{(x.shots ?? 0) > 0 && <span className="pill">카드 그림 {x.shots}장</span>}<span className="meta">{new Date(x.at).toLocaleString('ko-KR')}</span>
               <span className="pill">v{x.body?.version}</span><span className="pill">모니터 {d.monitors}</span><span className="pill">배율 {d.scale}</span>
               <span className="pill">인식기 {x.body?.engine}</span><span className="pill">위치 {x.body?.position === 'top' ? '위' : '오른쪽'}</span>
             </div>
             <div className="meta">게임 화면 {(d.game_rect ?? []).join(', ')} · 읽는 곳 {(d.region ?? []).join(', ')} · 찾은 방법 {d.how}</div>
             <div className="meta">맨앞 {d.front} / 뒤 {d.not_front} · 복사 실패 {d.capture_fails} · 인식 오류 {d.ocr_errors} · 최대 찾은 수 {d.max_hits} · 다시 올림 {d.raised} · 그림으로 찾음 {d.by_icon ?? 0}</div>
             <div className="meta">단계: {stages}</div>
+            <Shots id={x.id} n={x.shots ?? 0} />
             {(d.partial_trace ?? []).map((t: string[], i: number) => (
               <details key={i}><summary className="meta">세 칸 못 채운 고르기 {i + 1}</summary>
                 <pre style={{ whiteSpace: 'pre-wrap', fontSize: 12, margin: 0 }}>{t.join('\n')}</pre>

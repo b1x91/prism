@@ -98,6 +98,16 @@ pub struct GameDiag {
     pub by_icon: u32,
     /// 세 칸을 못 채운 고르기가 끝난 순간의 인식 기록 (최근 3번, 각 20줄 — 판이 끝날 때까지 다른 기록에 밀리지 않게)
     pub partial_trace: Vec<Vec<String>>,
+    /// 끝까지 못 읽은 카드 그림 (한 판에 최대 4장, v3.115 — 원인 확인·QA 사진용, 관리자만 본다)
+    pub shots: Vec<MissShot>,
+}
+
+/// 놓친 카드 한 장: 게임 화면 기준 가운데 x · 그때 찾은 칸 · 줄인 JPEG(base64)
+#[derive(Serialize, Clone, Default)]
+pub struct MissShot {
+    pub cx: i32,
+    pub found: Vec<u32>,
+    pub jpg: String,
 }
 
 pub struct Vision {
@@ -540,6 +550,8 @@ mod imp {
         // 카드마다 따로 읽기가 연속으로 아무것도 더 못 찾은 횟수 — 끝까지 안 읽히는 카드 하나 때문에 카드가 떠 있는 내내
         // 문자 인식을 쉬지 않고 돌리지 않게, 세 번 실패하면 세 번에 한 번만 다시 (v3.68)
         let mut card_fails: u32 = 0;
+        // 이번 고르기에서 아직 못 읽은 카드의 마지막 그림 (가운데 x, JPEG) — 고르기가 끝날 때 세 칸이 안 찼으면 진단으로 (v3.115)
+        let mut miss_shots: Vec<(f32, String)> = Vec::new();
         loop {
             let s = v.settings.lock().unwrap().clone();
             let allowed = v.allowed.load(Ordering::SeqCst);
@@ -666,6 +678,17 @@ mod imp {
                             changed = true;
                         }
                     }
+                    // 아직 못 읽은 카드는 그 자리 그림을 남겨 둔다 (같은 자리는 마지막 것으로 바꾼다)
+                    if slots.len() < 3 {
+                        for k in 0..cards.len() {
+                            let (cx, half) = (cx_of(k), (cards[k].1 - cards[k].0) as f32 / 2.0);
+                            if slots.near(cx, half) { continue; }
+                            if let Some(jpg) = crate::shot::card_jpeg(&buf, ww as usize, wh as usize, cards[k]) {
+                                miss_shots.retain(|(x, _)| (x - cx).abs() >= half);
+                                miss_shots.push((cx, jpg));
+                            }
+                        }
+                    }
                     v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
                     hint = false;
                     card_fails = if changed { 0 } else { card_fails + 1 };
@@ -780,7 +803,12 @@ mod imp {
                                 let t = v.report.lock().unwrap().trace.clone();
                                 let tail = t[t.len().saturating_sub(20)..].to_vec();
                                 v.diag(|d| if d.partial_trace.len() < 3 { d.partial_trace.push(tail) });
+                                let found = slots.ids_sorted();
+                                let pitch = slots.pitch(gw).unwrap_or(gw / 4.0);
+                                let left: Vec<(f32, String)> = miss_shots.drain(..).filter(|(x, _)| !slots.near(*x, pitch * 0.4)).collect();
+                                v.diag(|d| for (x, jpg) in left { if d.shots.len() < 4 { d.shots.push(MissShot { cx: x as i32, found: found.clone(), jpg }); } });
                             }
+                            miss_shots.clear();
                             last.clear();
                             slots.clear();
                             seen_at = None;

@@ -7,6 +7,7 @@ mod live;
 mod icons;
 mod matcher;
 mod server;
+mod shot;
 mod update;
 mod vision;
 mod winstate;

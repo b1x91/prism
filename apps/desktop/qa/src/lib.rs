@@ -5,6 +5,8 @@ pub mod matcher;
 #[path = "../../src-tauri/src/icons.rs"]
 #[allow(dead_code)]
 pub mod icons;
+#[path = "../../src-tauri/src/shot.rs"]
+pub mod shot;
 
 pub const AUGMENTS_JSON: &str = include_str!("../../../../packages/core/data/mayhem-augments.json");
 pub const AUG_ICONS: &[u8] = include_bytes!("../../../../packages/core/data/aug-icons.bin");

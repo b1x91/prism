@@ -34,7 +34,10 @@ body { overflow: hidden; background: var(--bg); }
 .side-update .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: blink 1.6s ease-in-out infinite; }
 .side-update:disabled { opacity: .7; cursor: default; }
 @media (prefers-reduced-motion: reduce) { .brand-mark::before, .brand-word, .side-update .dot { animation: none; } }
-.side-nav { display: grid; gap: var(--s1); }
+.side-nav { display: grid; gap: var(--s4); }
+/* 메뉴 묶음 (v3.115): 플레이 · 성장 · 모임 — 작은 제목 아래 몇 개씩 */
+.side-group { display: grid; gap: var(--s1); }
+.side-glabel { padding: 0 var(--s3); margin-bottom: 2px; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .04em; color: var(--text-3); }
 .side-nav a, .side-nav button { display: flex; align-items: center; gap: var(--s3); height: 40px; padding: 0 var(--s3); border: 0; border-radius: var(--r-m); background: none; color: var(--text-2); font: inherit; font-weight: 650; text-align: left; text-decoration: none; cursor: pointer; }
 .side-nav a svg, .side-nav button svg { width: 20px; height: 20px; flex: none; }
 .side-nav a:hover, .side-nav button:not(:disabled):hover { background: var(--surface-2); color: var(--text); }
@@ -147,6 +150,7 @@ body { overflow: hidden; background: var(--bg); }
 
 @media (max-width: 900px) {
   .shell { --side: 72px; grid-template-columns: var(--side) minmax(0, 1fr); }
+  .side-glabel { display: none; } .side-group + .side-group { padding-top: var(--s3); border-top: 1px solid var(--line); } .side-nav { gap: var(--s3); }
   .brand-word, .side-arrows, .brand-line { display: none; } .side-brand { justify-content: center; padding: 0; } .side-nav a, .side-nav button { font-size: 0; justify-content: center; padding: 0; } .side-nav button small { display: none; }
   .side-ch span, .side-status, .side-me span:last-child { display: none; }
   .side-foot { flex-direction: column; } .side-foot .btn { padding: 0; width: 40px; font-size: 0; }
@@ -313,7 +317,7 @@ body { overflow: hidden; background: var(--bg); }
 /* 새 소식: '게임' 메뉴의 점과 같은 자리·크기, 빨간색으로 (v3.114) */
 .side-nav a .news-dot { position: static; width: 8px; height: 8px; margin-left: auto; border-radius: 50%; background: var(--lose); box-shadow: 0 0 0 0 color-mix(in srgb, var(--lose) 60%, transparent); animation: news-ping 1.8s ease-out infinite; }
 @keyframes news-ping { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--lose) 60%, transparent); } 100% { box-shadow: 0 0 0 8px transparent; } }
-@media (max-width: 900px) { .side-nav a .live-dot, .side-nav a .news-dot { position: absolute; top: 6px; right: 6px; margin: 0; } }
+@media (max-width: 900px) { .side-nav a { position: relative; } .side-nav a .live-dot, .side-nav a .news-dot { position: absolute; top: 6px; right: 6px; margin: 0; } }
 @media (prefers-reduced-motion: reduce) { .side-nav a.live, .side-nav a .live-dot, .side-nav a .news-dot { animation: none; } .side-nav a.live { background: color-mix(in srgb, var(--accent) 14%, transparent); } }
 
 /* 사이드바 내 정보·설정: 누른 뒤 남는 외곽선·하이라이트 없음 (v3.24) */

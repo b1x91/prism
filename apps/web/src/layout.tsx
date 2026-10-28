@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AugmentOpen, Bone, useScrollKeeper, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AugmentOpen, Bone, groupNav, useScrollKeeper, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -46,7 +46,7 @@ export function Layout() {
     <>
       <header className="top"><div className="wrap">
         <NavLink to="/" className="brand"><Gem size={22} />PRISM</NavLink>
-        <nav className="tabs">{navOf(me).map(([to, label]) => <NavLink key={to} to={to} className={dotOf(me, to)}>{label}</NavLink>)}</nav>
+        <nav className="tabs">{groupNav(navOf(me)).map((g, gi) => <span key={g.key} className="tab-group" role="group" aria-label={g.label}>{gi > 0 && <i className="tab-sep" aria-hidden="true" />}{g.items.map(([to, label]) => <NavLink key={to} to={to} className={dotOf(me, to)}>{label}</NavLink>)}</span>)}</nav>
         <span className="sp" />
         <span className="top-wide"><NavLink to="/shop" className="icon-btn top-shop" title="상점" aria-label="상점"><Icon name="bag" /></NavLink>
           <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>
@@ -132,7 +132,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); nav('/me?studio=1'); }}><Icon name="spark" />프로필 꾸미기</button>
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); logout().then(() => nav('/')); }}><Icon name="logout" />로그아웃</button>
         </div>}
-        <nav className="mmenu-nav">{navOf(me).map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{dotOf(me, to) && <i className="news-dot" aria-label="새 소식" />}</NavLink>)}</nav>
+        <nav className="mmenu-nav">{groupNav(navOf(me)).map((g) => <div key={g.key} className="mmenu-group" role="group" aria-label={g.label}><span className="mmenu-glabel">{g.label}</span>{g.items.map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{dotOf(me, to) && <i className="news-dot" aria-label="새 소식" />}</NavLink>)}</div>)}</nav>
         <span className="sp" />
         <div className="mmenu-foot">
           <NavLink to="/shop" className="mmenu-shop" tabIndex={open ? 0 : -1}><Icon name="bag" />상점</NavLink>

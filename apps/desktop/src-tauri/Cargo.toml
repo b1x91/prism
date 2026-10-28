@@ -1,6 +1,6 @@
 [package]
 name = "prism-desktop"
-version = "1.0.3"
+version = "1.0.4"
 description = "Prism — 아수라장 동반 앱"
 edition = "2021"
 publish = false
@@ -23,6 +23,8 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "nat
 sysinfo = { version = "0.37", default-features = false, features = ["system"] }
 tokio = { version = "1", features = ["net", "io-util", "time", "sync", "macros"] }
 base64 = "0.22"
+# 놓친 증강 카드 그림을 작은 JPEG 으로 (shot.rs, v3.115)
+jpeg-encoder = "0.6"
 url = "2"
 sha2 = "0.10"
 
