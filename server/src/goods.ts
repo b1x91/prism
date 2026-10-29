@@ -181,6 +181,7 @@ export async function gift(req: Request, env: Env, me: Member) {
   if (!can(me, 'shop')) throw new HttpError(403, SHOP_CLOSED);
   const { to, id, note } = (await req.json().catch(() => ({}))) as { to?: string; id?: string; note?: string };
   const item = id ? SHOP_ITEM[id] : undefined;
+  if (item?.retired) throw new HttpError(400, '판매가 끝난 상품은 선물할 수 없어요.');
   if (!item || !forSale(item)) throw new HttpError(400, '선물할 수 없는 상품입니다.');
   if (!to || to === me.id) throw new HttpError(400, '받을 멤버를 골라 주세요.');
   const [mine, them] = await Promise.all([

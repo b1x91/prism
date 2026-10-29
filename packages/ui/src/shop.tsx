@@ -216,7 +216,7 @@ function ShopOpen({ api, me, onGo }: { api: Api; me: Me; onGo?: (to: 'dex' | 'mi
       </div>
       {slot === 'use' ? <GoodsGrid api={api} data={data} onChange={update} onOpenInsight={(k) => onGo?.('me', k)} onGo={(to) => onGo?.(to)} />
         : list.length ? <div className="shop-grid">{list.map((x) => <ShopCard key={x.id} x={x} me={me} data={data} busy={busy === x.id}
-        onBuy={() => setBuying(x)} onGift={data.uses?.app ? () => setGiving(x) : undefined}
+        onBuy={() => setBuying(x)} onGift={data.uses?.app && forSale(x) ? () => setGiving(x) : undefined}
         onEquip={(on) => run(x.id, () => api.post('/api/me/equip', { slot: x.slot, id: on ? x.id : null }))} />)}</div>
         : <Empty>아직 보유한 {slot === 'hot' ? '아이템이' : josa(SLOT_KO[slot], '이/가')} 없어요.</Empty>}
       {boxOpen && <BoxDialog api={api} data={data} me={me} onClose={() => setBoxOpen(false)} onDone={update} />}
