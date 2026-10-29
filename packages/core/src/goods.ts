@@ -11,11 +11,12 @@
 import { SHOP, type ShopItem, type ShopRarity } from './shop';
 
 export const USE_PRICE = {
-  insight: { aug: 150, partner: 150, golden: 120 },
-  lens: 30,
-  reroll: 30,
-  box: 400,
-  frame: 300,
+  // v3.128: 피스 버는 양을 줄인 뒤(v3.120)에도 이용권이 너무 쌌다 → 두 배
+  insight: { aug: 300, partner: 300, golden: 240 },
+  lens: 60,
+  reroll: 60,
+  box: 800,
+  frame: 600,
 } as const;
 /** 인사이트권 하나로 열리는 기간 */
 export const INSIGHT_DAYS = 7;

@@ -1,7 +1,7 @@
 /**
  * 피스(Prism 화폐)와 상점 (CLAUDE.md v3.24). 서버와 화면이 같은 표를 쓴다.
  *  - 버는 법: 기록된 판 · 이긴 판 · 모임 판(회원 2명 이상) · 도감 레벨 오르기 · 미션 · 매일 첫 접속 (함께 해요 참여는 예전 기록만)
- *  - 쓰는 곳: 내 페이지 꾸미기 (배경 · 머리 테두리 · 머리 효과 · 이름 효과 · 칭호). 배경은 랭킹의 내 줄에도 깔린다 (v3.34)
+ *  - 쓰는 곳: 내 페이지 꾸미기 (배경 · 프로필 테두리 · 프로필 효과 · 이름 효과 · 칭호). 배경은 랭킹의 내 줄에도 깔린다 (v3.34)
  * 숫자는 여기 한 곳에서 바꾼다. 번 피스는 기록에서 늘 다시 계산하므로 기준을 바꾸면 지난 기록에도 적용된다.
  */
 import type { DexLevel } from './mastery';
@@ -77,7 +77,7 @@ export const LEVEL_REWARD: Record<DexLevel, number> = { 0: 0, 1: 0, 2: 3, 3: 10,
 export const levelTotal = (l: DexLevel, table: Record<DexLevel, number> = LEVEL_REWARD) => ([1, 2, 3, 4, 5] as DexLevel[]).filter((x) => x <= l).reduce<number>((s, x) => s + table[x], 0);
 
 export type ShopSlot = 'bg' | 'frame' | 'fx' | 'name' | 'title';
-export const SLOT_KO: Record<ShopSlot, string> = { bg: '배경', frame: '머리 테두리', fx: '머리 효과', name: '이름 효과', title: '칭호' };
+export const SLOT_KO: Record<ShopSlot, string> = { bg: '배경', frame: '프로필 테두리', fx: '프로필 효과', name: '이름 효과', title: '칭호' };
 export type ShopRarity = 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
 export const RARITY_SHOP_KO: Record<ShopRarity, string> = { common: '일반', rare: '희귀', epic: '영웅', legendary: '전설', mythic: '신화' };
 /** 낮은 등급부터 (신화는 배경에만, v3.123) */
@@ -109,7 +109,7 @@ export const SHOP: ShopItem[] = [
   it('bg-bloodmoon', 'bg', 'legendary', 3000, '붉은 달의 다리', '붉은 달 아래 다리에 재가 흩날린다', { img: 'bg/bloodmoon-v1.webp', pos: '58% 40%', row: '62% 28%', mote: '#ff8a5c', glow: '72% 22%' }),
   it('bg-galaxy', 'bg', 'mythic', 9000, '은하의 심장', '은하의 중심이 소용돌이치며 별을 끌어당긴다', { img: 'bg/galaxy-v1.webp', pos: '50% 45%', row: '50% 42%', mote: '#ffe7a8', glow: '52% 42%' }),
   it('bg-sanctum', 'bg', 'mythic', 9000, '빛의 성소', '거대한 결정이 성소를 금빛으로 비춘다', { img: 'bg/sanctum-v1.webp', pos: '62% 40%', row: '64% 42%', mote: '#fff0c4', glow: '64% 40%' }),
-  // 머리 테두리: 얼굴 테두리 + 머리 아래 빛 띠
+  // 프로필 테두리: 얼굴 테두리 + 프로필 아래 빛 띠
   it('frame-silver', 'frame', 'common', 200, '은빛 테두리', '단정한 은빛으로 얼굴을 두른다'),
   it('frame-gold', 'frame', 'rare', 400, '금빛 테두리', '묵직한 금빛 테두리와 금빛 띠'),
   it('frame-jade', 'frame', 'rare', 450, '비취 테두리', '맑은 초록빛 비취 테두리'),
@@ -118,8 +118,11 @@ export const SHOP: ShopItem[] = [
   it('frame-void', 'frame', 'epic', 800, '공허 테두리', '보랏빛 어둠이 천천히 일렁인다'),
   it('frame-starlight', 'frame', 'legendary', 1200, '별빛 테두리', '밤하늘 테두리에 별이 반짝인다'),
   it('frame-prism', 'frame', 'legendary', 1500, '프리즘 테두리', '스펙트럼이 얼굴을 따라 돈다'),
-  // 머리 효과: 머리 전체에 흐르는 움직임
-  it('fx-sparkle', 'fx', 'common', 300, '반짝임', '머리 곳곳에 작은 빛이 반짝인다'),
+  // 신화 테두리 (v3.128): 모양은 shop/looks.css — 앱을 다시 내지 않고 웹에서 받는다
+  it('frame-crimson', 'frame', 'mythic', 5000, '진홍 성광', '진홍빛 고리가 돌고 상아빛 별이 반짝인다'),
+  it('frame-sovereign', 'frame', 'mythic', 5000, '상아 왕관', '상아빛 고리 위에 진홍 보석이 박혀 빛난다'),
+  // 프로필 효과: 프로필 전체에 흐르는 움직임
+  it('fx-sparkle', 'fx', 'common', 300, '반짝임', '프로필 곳곳에 작은 빛이 반짝인다'),
   it('fx-snow', 'fx', 'rare', 450, '눈송이', '하얀 눈이 조용히 내린다'),
   it('fx-petals', 'fx', 'rare', 500, '꽃잎', '분홍 꽃잎이 바람에 흩날린다'),
   it('fx-fireflies', 'fx', 'epic', 650, '반딧불', '노란 빛이 둥실 떠다닌다'),
@@ -162,7 +165,7 @@ export const SHOP_ITEM: Record<string, ShopItem> = Object.fromEntries(SHOP.map((
  * 이미 깔린 앱도 다음에 켤 때(또는 당겨서 새로고침) 새 상품을 본다. 그림·looks.css 는 앱이 웹(przm.web.app)에서 받는다.
  * SHOP_REV 는 looks.css 캐시를 깨는 번호 — 상품을 더할 때 올린다.
  */
-export const SHOP_REV = 2;
+export const SHOP_REV = 3;
 export type ShopCatalog = { rev: number; items: ShopItem[]; launch: typeof LAUNCH };
 /** 이 빌드에 들어 있던 상품 (그림이 앱 안에 있는 것) */
 const BUNDLED = new Set(SHOP.map((x) => x.id));
@@ -246,7 +249,7 @@ export const priceWith = (price: number, discount = 0) => Math.round(price * (1 
 export const LAUNCH = {
   from: Date.parse('2026-10-29T00:00:00+09:00'),
   until: Date.parse('2026-11-28T00:00:00+09:00'),
-  items: ['bg-icefall', 'bg-lighthouse', 'bg-ruins', 'bg-skygarden', 'bg-bloodmoon', 'bg-galaxy', 'bg-sanctum'],
+  items: ['bg-icefall', 'bg-lighthouse', 'bg-ruins', 'bg-skygarden', 'bg-bloodmoon', 'bg-galaxy', 'bg-sanctum', 'frame-crimson', 'frame-sovereign'],
   saleItems: ['bg-dawn', 'bg-abyss', 'bg-dusk'],
   sale: 0.2,
 };

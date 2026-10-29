@@ -154,7 +154,7 @@ function ShopSoon({ me }: { api: Api; me: Me }) {
       <div className="ss-txt">
         <span className="ss-k">PRISM SHOP</span>
         <h1>상점 준비 중</h1>
-        <p>배경 · 머리 테두리 · 머리 효과 · 이름 효과 · 칭호를 준비하고 있어요.<br />{PIECE}는 지금도 모이고 있으니, 열리면 모은 {PIECE}로 바로 꾸밀 수 있어요.</p>
+        <p>배경 · 프로필 테두리 · 프로필 효과 · 이름 효과 · 칭호를 준비하고 있어요.<br />{PIECE}는 지금도 모이고 있으니, 열리면 모은 {PIECE}로 바로 꾸밀 수 있어요.</p>
       </div>
     </section>
   );
@@ -197,7 +197,7 @@ function ShopOpen({ api, me, onGo }: { api: Api; me: Me; onGo?: (to: 'dex' | 'mi
       <header className="shop-head">
         <h1>상점</h1>
         {(data.rates?.discount ?? 0) > 0 && <span className="shop-sale">특별회원 {Math.round((data.rates!.discount) * 100)}% 할인{launchOn && !data.rates?.admin ? ' · 새 배경 제외' : ''}</span>}
-        {launchOn && <span className="shop-sale launch">새 배경 7종 · 일반 배경 {Math.round(LAUNCH.sale * 100)}% 할인 ~{launchEnd}</span>}
+        {launchOn && <span className="shop-sale launch">새 상품 {LAUNCH.items.length}종 · 일반 배경 {Math.round(LAUNCH.sale * 100)}% 할인 ~{launchEnd}</span>}
       </header>
       {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
       <GiftNotice data={data} />

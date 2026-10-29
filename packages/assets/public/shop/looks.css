@@ -1,6 +1,44 @@
 /*
  * 새 상점 상품의 모양 (CLAUDE.md v3.124). 앱을 다시 내지 않고 상품을 더하려고, 앱·웹 모두 이 파일을 웹(przm.web.app/shop/looks.css)에서 받는다.
- * 테두리 · 머리 효과 · 이름 효과 상품은 클래스가 곧 상품 id 다 (예: .fr-새테두리, .fx-새효과, .nm-새이름) — 기존 상품의 규칙(styles.css)을 보고 같은 틀로 쓴다.
- * 디자인 토큰(간격·글자·모서리)과 동작 줄이기(prefers-reduced-motion)는 여기서도 지킨다.
- * 상품을 더하면 packages/core/src/shop.ts 의 SHOP_REV 를 올려 캐시를 깬다.
+ * 클래스는 상품 id 그대로 프로필 머리(.phero)에 붙는다 — 프로필 테두리 .phero.frame-…, 프로필 효과 .phero.fx-…, 이름 효과 .phero.nm-… (기존 규칙은 styles.css).
+ * 디자인 토큰과 동작 줄이기(prefers-reduced-motion)는 여기서도 지킨다. 상품을 더하면 packages/core/src/shop.ts 의 SHOP_REV 를 올려 캐시를 깬다.
  */
+
+/* ───── 신화 · 진홍 성광 (v3.128): 진홍·상아 고리가 천천히 돌고, 오른쪽 위에 상아빛 별이 반짝인다 ───── */
+.phero.frame-crimson .phero-face {
+  padding: 5px;
+  background: conic-gradient(from var(--dx-ang), #ff4d6d, #fff4e0 10%, #c4163a 24%, #ff4d6d 38%, #fff4e0 50%, #7a0a1e 64%, #ff4d6d 78%, #fff4e0 90%, #ff4d6d);
+  box-shadow: 0 0 0 1px rgba(255, 244, 224, .55), 0 0 32px rgba(255, 77, 109, .6), 0 0 72px rgba(255, 77, 109, .22);
+  animation: dx-spin 8s linear infinite, mf-crimson 3.6s ease-in-out infinite;
+}
+.phero.frame-crimson .phero-face::before {
+  content: ""; position: absolute; top: -7px; right: -7px; width: 18px; height: 18px; z-index: 3; pointer-events: none;
+  background: radial-gradient(circle, #fffaf0 0 18%, #ffd7a8 40%, transparent 62%);
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  filter: drop-shadow(0 0 6px rgba(255, 244, 224, .9));
+  animation: mf-star 2.8s ease-in-out infinite;
+}
+.phero.frame-crimson::after { background: linear-gradient(90deg, transparent, #7a0a1e 10%, #ff4d6d 35%, #fff4e0 50%, #ff4d6d 65%, #7a0a1e 90%, transparent); background-size: 200% 100%; animation: mf-band 5s linear infinite; }
+
+/* ───── 신화 · 상아 왕관: 상아·금빛 고리, 위 가운데 진홍 보석 ───── */
+.phero.frame-sovereign .phero-face {
+  padding: 5px;
+  background: linear-gradient(145deg, #fffaf0, #f3dfb0 28%, #c9a45c 52%, #fff4e0 72%, #a87c34);
+  box-shadow: 0 0 0 1px rgba(255, 250, 240, .7), 0 0 30px rgba(255, 228, 170, .55), 0 0 70px rgba(255, 77, 109, .16);
+  animation: mf-ivory 4s ease-in-out infinite;
+}
+.phero.frame-sovereign .phero-face::before {
+  content: ""; position: absolute; top: -8px; left: 50%; width: 16px; height: 16px; z-index: 3; pointer-events: none;
+  transform: translateX(-50%) rotate(45deg); border-radius: 3px;
+  background: radial-gradient(circle at 35% 35%, #ffd0d8, #ff4d6d 45%, #8a0b24);
+  box-shadow: 0 0 0 2px #fff4e0, 0 0 14px rgba(255, 77, 109, .8);
+}
+.phero.frame-sovereign::after { background: linear-gradient(90deg, transparent, #f3dfb0 20%, #fff4e0 42%, #ff4d6d 50%, #fff4e0 58%, #f3dfb0 80%, transparent); }
+
+@keyframes mf-crimson { 50% { box-shadow: 0 0 0 1px rgba(255, 244, 224, .75), 0 0 44px rgba(255, 77, 109, .85), 0 0 96px rgba(255, 77, 109, .3); } }
+@keyframes mf-ivory { 50% { box-shadow: 0 0 0 1px rgba(255, 250, 240, .9), 0 0 42px rgba(255, 228, 170, .8), 0 0 90px rgba(255, 77, 109, .22); } }
+@keyframes mf-star { 0%, 100% { transform: scale(.6) rotate(0deg); opacity: .55; } 50% { transform: scale(1.15) rotate(45deg); opacity: 1; } }
+@keyframes mf-band { to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .phero.frame-crimson .phero-face, .phero.frame-sovereign .phero-face, .phero.frame-crimson .phero-face::before, .phero.frame-crimson::after { animation: none; }
+}
