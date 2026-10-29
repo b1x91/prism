@@ -66,7 +66,7 @@ export function StaffPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   return (
     <div className="stack" style={{ gap: 16 }}>
       <h1 className="h1">운영</h1>
-      <StaffView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} onMembers={() => nav('/staff/members')} />
+      <StaffView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} onMembers={() => nav('/staff/members')} onSeen={() => void refreshSession()} />
     </div>
   );
 }
@@ -79,7 +79,7 @@ export function StaffMembersPage({ s, onLogin }: { s: State; onLogin: () => void
   return (
     <div className="stack" style={{ gap: 16 }}>
       <div><button type="button" className="crumb" onClick={() => goBack(nav, '/staff')}><Icon name="back" />운영</button><h1 className="h1">멤버 관리</h1></div>
-      <StaffMembersView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} />
+      <StaffMembersView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} onSeen={() => void refreshSession()} />
     </div>
   );
 }

@@ -9,7 +9,7 @@ const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/
 /** 운영 메뉴는 운영진에게만 (v3.107) */
 /** 소식은 회원에게만 (v3.111), 운영은 운영진에게만 */
 const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => [...NAV, ...(me ? [['/news', '소식', 'megaphone'] as const] : []), ...(me?.perms?.manage ? [['/staff', '운영', 'shield'] as const] : [])] as typeof NAV;
-const dotOf = (me: { newsUnread?: number } | null, to: string) => (to === '/news' && (me?.newsUnread ?? 0) > 0 ? 'nav-dot' : undefined);
+const dotOf = (me: { newsUnread?: number; staffUnread?: number } | null, to: string) => ((to === '/news' && (me?.newsUnread ?? 0) > 0) || (to === '/staff' && (me?.staffUnread ?? 0) > 0) ? 'nav-dot' : undefined);
 
 export function Layout() {
   const { me, login, links, api, refresh, member, attend, clearAttend } = useSession();
@@ -137,7 +137,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); nav('/me?studio=1'); }}><Icon name="spark" />프로필 꾸미기</button>
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); logout().then(() => nav('/')); }}><Icon name="logout" />로그아웃</button>
         </div>}
-        <nav className="mmenu-nav">{groupNav(navOf(me)).map((g) => <div key={g.key} className="mmenu-group" role="group" aria-label={g.label}><span className="mmenu-glabel">{g.label}</span>{g.items.map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{dotOf(me, to) && <i className="news-dot" aria-label="새 소식" />}</NavLink>)}</div>)}</nav>
+        <nav className="mmenu-nav">{groupNav(navOf(me)).map((g) => <div key={g.key} className="mmenu-group" role="group" aria-label={g.label}><span className="mmenu-glabel">{g.label}</span>{g.items.map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{dotOf(me, to) && <i className="news-dot" aria-label={to === "/staff" ? "승인할 멤버" : "새 소식"} />}</NavLink>)}</div>)}</nav>
         <span className="sp" />
         <div className="mmenu-foot">
           <NavLink to="/shop" className="mmenu-shop" tabIndex={open ? 0 : -1}><Icon name="bag" />상점</NavLink>

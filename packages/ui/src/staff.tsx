@@ -4,7 +4,7 @@
  *  - 멤버 관리 (`StaffMembersView`, 따로 한 페이지): 위에 승인이 필요한 멤버 카드(승인 대기 · 정회원 심사),
  *    아래에 전체 멤버 — 검색 · 거르기(단계·특별·앱·롤 연결·지금 접속·최근 2주 활동) · 정렬(최근 활동·판수·승률·점수·2주 판수·운영진과·가입)
  */
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ago, matchName, pct, shortDate, shortNick, type Api, type StaffMember, type StaffMembers, type StaffOverview } from '@prism/core';
 import { Empty, MemberFace, PendingChip, RoleBadge, Select, Toggle, useSkins } from './basics';
 import { Icon } from './icons';
@@ -28,8 +28,15 @@ const ONLINE_MS = 150_000;
 const DAY = 86_400_000;
 
 /** 운영 대시보드. onMembers = 멤버 관리 페이지로 */
-export function StaffView({ api, onOpen, onMembers }: { api: Api; onOpen?: (id: string) => void; onMembers?: () => void }) {
+/** 서버는 멤버 목록을 줄 때 처리할 멤버를 '본 것'으로 적는다 (v3.125) — 받으면 메뉴의 빨간 점을 끄도록 알린다 */
+function useSeen(data: unknown, onSeen?: () => void) {
+  const done = useRef(false);
+  useEffect(() => { if (data && !done.current) { done.current = true; onSeen?.(); } }, [data, onSeen]);
+}
+
+export function StaffView({ api, onOpen, onMembers, onSeen }: { api: Api; onOpen?: (id: string) => void; onMembers?: () => void; /** 처리할 멤버를 본 것으로 적었을 때 (메뉴의 빨간 점을 끈다) */ onSeen?: () => void }) {
   const { data, error, reload } = useLoad<StaffMembers>(api, '/api/staff/members');
+  useSeen(data, onSeen);
   const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <StaffSkeleton />;
@@ -208,8 +215,9 @@ const SORT_VAL: Record<Sort, (m: StaffMember) => number | string> = {
   staff: (m) => m.staffGames, joined: (m) => m.joined, name: (m) => m.nick.toLowerCase(),
 };
 
-export function StaffMembersView({ api, onOpen }: { api: Api; onOpen?: (id: string) => void }) {
+export function StaffMembersView({ api, onOpen, onSeen }: { api: Api; onOpen?: (id: string) => void; onSeen?: () => void }) {
   const { data, error, reload } = useLoad<StaffMembers>(api, '/api/staff/members');
+  useSeen(data, onSeen);
   // 승인 카드: 승인 → 완료 → 카드가 빠지고 옆 카드가 미끄러져 자리를 메운다 (v3.121)
   const todoAct = useResolve(reload);
   const hadTodo = useRef(false);

@@ -175,7 +175,7 @@ function App() {
         <nav className="side-nav">{groupNav([...NAV, ...(s.me ? [['/news', '소식', 'megaphone'] as [string, string, IconName]] : []), ...(s.me?.perms?.manage ? [['/staff', '운영', 'shield'] as [string, string, IconName]] : [])]).map((g) => (
           <div key={g.key} className="side-group" role="group" aria-label={g.label}>
             <span className="side-glabel">{g.label}</span>
-            {g.items.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}{to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="news-dot" aria-label="새 소식" />}</NavLink>)}
+            {g.items.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}{to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="news-dot" aria-label="새 소식" />}{to === '/staff' && (s.me?.staffUnread ?? 0) > 0 && <i className="news-dot" aria-label="승인할 멤버" />}</NavLink>)}
           </div>))}</nav>
         <span className="sp" />
         {/* 아래쪽 한 줄: 상점 · 설정 (디스코드·카카오톡은 모임 화면 오른쪽 위) */}

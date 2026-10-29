@@ -43,6 +43,7 @@ export type Member = {
   app_seen_at: number;
   app_first_at: number; // 앱을 처음 쓴 때 (v3.108, 승인 대기 조건)
   news_read_at?: number; // 소식을 어디까지 읽었는지 (v3.111)
+  staff_seen?: string | null; // 운영 화면에서 마지막으로 본 처리할 멤버 ID 목록 JSON (v3.125)
   app_lol: number;
   app_open: number;
   about: string | null; // 나를 소개해요 (JSON, v3.47)

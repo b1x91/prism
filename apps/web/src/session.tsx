@@ -69,10 +69,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!loggedIn) return;
     const ping = () => {
       if (document.visibilityState !== 'visible') return;
-      api.post<{ presence: Presence; newsUnread?: number; attend?: Attend }>('/api/me/presence', { via: 'web' }).then((r) => { if (r.attend) setAttend(r.attend); return r; }).then((r) => setMe((m) => {
+      api.post<{ presence: Presence; newsUnread?: number; staffUnread?: number; attend?: Attend }>('/api/me/presence', { via: 'web' }).then((r) => { if (r.attend) setAttend(r.attend); return r; }).then((r) => setMe((m) => {
         if (!m) return m;
         const unread = typeof r.newsUnread === 'number' ? r.newsUnread : m.newsUnread;
-        return m.presence !== r.presence || m.newsUnread !== unread ? { ...m, presence: r.presence, newsUnread: unread } : m;
+        const staff = typeof r.staffUnread === 'number' ? r.staffUnread : m.staffUnread;
+        return m.presence !== r.presence || m.newsUnread !== unread || m.staffUnread !== staff ? { ...m, presence: r.presence, newsUnread: unread, staffUnread: staff } : m;
       }), () => {});
     };
     ping();

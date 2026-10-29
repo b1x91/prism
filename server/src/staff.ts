@@ -51,6 +51,25 @@ async function gamesWithStaff(env: Env): Promise<Map<string, number>> {
   return out;
 }
 
+/**
+ * 운영 메뉴의 빨간 점 (v3.125): 처리할 멤버(승인 대기 · 정회원 심사) 중 이 운영진이 운영 화면에서 아직 못 본 사람 수.
+ * 운영진이 아니면 undefined. 운영 화면(멤버 목록)을 열면 그때의 처리할 멤버를 '본 것'으로 적는다.
+ */
+async function todoIds(env: Env): Promise<string[]> {
+  const [{ results }, withStaff] = await Promise.all([
+    env.DB.prepare('SELECT id, tier, discord_roles, app_first_at FROM members').all<Pick<Member, 'id' | 'tier' | 'discord_roles' | 'app_first_at'>>(),
+    gamesWithStaff(env),
+  ]);
+  const need = PROMOTION.regularReview.withStaff;
+  return results.filter((m) => isPending(m) || (Math.min(levelOf(m), 5) === 1 && (withStaff.get(m.id) ?? 0) >= need)).map((m) => m.id);
+}
+const seenOf = (me: Member) => { try { const v = JSON.parse(me.staff_seen ?? '[]'); return new Set<string>(Array.isArray(v) ? v : []); } catch { return new Set<string>(); } };
+export async function staffUnread(env: Env, me: Member): Promise<number | undefined> {
+  if (!can(me, 'manage')) return undefined;
+  const seen = seenOf(me);
+  return (await todoIds(env).catch(() => [])).filter((id) => !seen.has(id)).length;
+}
+
 /** GET /api/staff/members — 멤버 목록 (승인 대기 · 정회원 심사 · 전체) */
 export async function staffMembers(env: Env, me: Member) {
   assertStaff(me);
@@ -91,6 +110,9 @@ export async function staffMembers(env: Env, me: Member) {
       invitedCount: invited.get(r.id) ?? 0,
     };
   });
+  // 지금 처리할 멤버를 '본 것'으로 (메뉴의 빨간 점이 꺼진다)
+  const todo = members.filter((x) => x.pending || x.review).map((x) => (x as unknown as { id: string }).id);
+  await env.DB.prepare('UPDATE members SET staff_seen = ? WHERE id = ?').bind(JSON.stringify(todo), me.id).run().catch(() => {});
   return json({ members, reviewNeed: need, inviteBonus: INVITE_BONUS, overview: overviewOf(members as unknown as Row[], recentRows.results) });
 }
 

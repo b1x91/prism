@@ -363,10 +363,12 @@ async function pingPresence() {
   if (key === presenceKey && now - presenceAt < 60_000) return;
   presenceKey = key;
   presenceAt = now;
-  const r = await api.post<{ newsUnread?: number; attend?: Attend }>('/api/me/presence', { via: 'app', lol, open, phase, champ }).catch(() => { presenceKey = ''; return null; });
+  const r = await api.post<{ newsUnread?: number; staffUnread?: number; attend?: Attend }>('/api/me/presence', { via: 'app', lol, open, phase, champ }).catch(() => { presenceKey = ''; return null; });
   if (r?.attend) set({ attend: r.attend });
   // 새 소식이 오면 '소식' 메뉴에 빨간 점 (v3.114)
   if (r && typeof r.newsUnread === 'number' && state.me && state.me.newsUnread !== r.newsUnread) set({ me: { ...state.me, newsUnread: r.newsUnread } });
+  // 운영진: 승인할 멤버가 새로 생기면 '운영' 메뉴에 빨간 점 (v3.125)
+  if (r && typeof r.staffUnread === 'number' && state.me && state.me.staffUnread !== r.staffUnread) set({ me: { ...state.me, staffUnread: r.staffUnread } });
 }
 
 /** 출석 연출을 다 보면 지운다 */
