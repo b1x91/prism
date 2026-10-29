@@ -21,7 +21,7 @@ import { CrewPage } from './pages/Crew';
 import { SettingsPage } from './pages/Settings';
 import { lockdown } from './lockdown';
 
-const NAV: [string, string, IconName][] = [['/', '게임', 'game'], ['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '멤버', 'users']];
+const NAV: [string, string, IconName][] = [['/', '분석', 'game'], ['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '멤버', 'users']];
 
 /** 롤 클라이언트 연결 상태 (사이드바 내 얼굴의 점에 마우스를 올리면) */
 const STATUS: Record<State['status'], [string, string]> = {
@@ -127,7 +127,7 @@ function App() {
   const dot = lol && discord ? 'both' : lol ? 'lol' : discord ? 'discord' : 'off';
   const dotLabel = { both: '롤 클라이언트 · 디스코드 켜짐', lol: '롤 클라이언트 켜짐', discord: '디스코드 켜짐', off: '롤 클라이언트 · 디스코드 꺼짐' }[dot];
   // 운영진은 글자 대신 카드가 프리즘처럼 빛난다
-  // 게임·챔프 선택 중에는 '게임' 메뉴가 반짝인다 (다른 화면에 있다가도 바로 돌아오게)
+  // 게임·챔프 선택 중에는 '분석' 메뉴가 반짝인다 (다른 화면에 있다가도 바로 돌아오게)
   const playing = s.status === 'in-game' || s.status === 'champ-select';
   const staff = s.me?.tier === 'admin' || (s.me?.role?.level ?? 0) >= 5;
   const skins = useSkins();

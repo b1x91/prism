@@ -3,7 +3,7 @@
  *  플레이 = 게임·챔프·증강 · 성장 = 도감·미션·랭킹 · 모임 = 멤버·소식·운영
  */
 export const NAV_GROUPS: { key: string; label: string; paths: string[] }[] = [
-  { key: 'play', label: '플레이', paths: ['/', '/champions', '/augments'] },
+  { key: 'play', label: '게임', paths: ['/', '/champions', '/augments'] },
   { key: 'grow', label: '성장', paths: ['/dex', '/missions', '/ranking'] },
   { key: 'crew', label: '모임', paths: ['/crew', '/news', '/staff'] },
 ];

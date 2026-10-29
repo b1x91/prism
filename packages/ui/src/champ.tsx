@@ -95,7 +95,7 @@ export function ChampGrid({ onPick, query = '', onQuery, record }: { onPick: (id
 }
 
 /** 챔피언 일러스트 배너 */
-export function ChampBanner({ id, eyebrow, actions, foot, children }: { id: number; eyebrow?: string; actions?: ReactNode; foot?: ReactNode; children?: ReactNode }) {
+export function ChampBanner({ id, eyebrow, actions, foot, children, fav = true }: { id: number; eyebrow?: string; actions?: ReactNode; foot?: ReactNode; children?: ReactNode; /** 좋아요 하트 (게임 화면에서는 끈다, v3.118) */ fav?: boolean }) {
   const c = CHAMPIONS[id];
   if (!c) return null;
   const tags = [ROLE_KO[c.roles[0]], c.roles[1] && ROLE_KO[c.roles[1]], c.damage === 'MIX' ? 'AP·AD' : c.damage, c.range === 'ranged' ? '원거리' : '근접'].filter(Boolean) as string[];
@@ -103,7 +103,7 @@ export function ChampBanner({ id, eyebrow, actions, foot, children }: { id: numb
     <div className="banner">
       <SplashSwap className="bg" src={cdragon(c.splash)} />
       {/* 오른쪽 위 구석: 좋아요 + 페이지 버튼 */}
-      <div className="actions"><FavStar kind="champ" id={id} />{actions}</div>
+      {(fav || actions) && <div className="actions">{fav && <FavStar kind="champ" id={id} />}{actions}</div>}
       <div>
         {eyebrow && <div className="eyebrow">{eyebrow}</div>}
         <h1>{c.name}</h1>
