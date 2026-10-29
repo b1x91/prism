@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AttendBurst, OfflineScreen, AugmentOpen, Bone, groupNav, useScrollKeeper, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, useScrollKeeper, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -13,6 +13,8 @@ const dotOf = (me: { newsUnread?: number } | null, to: string) => (to === '/news
 
 export function Layout() {
   const { me, login, links, api, refresh, member, attend, clearAttend } = useSession();
+  // 상품 목록은 서버에서 (v3.124): 상점 업데이트를 앱 업데이트와 따로
+  useEffect(() => startShopCatalog(api, '/'), [api]);
   // 최애 챔프(대표 스킨)나 '나를 소개해요'가 아직 없는 회원에게 (v3.47). '나중에'는 이번 접속에서만 닫는다
   const [welcomeOff, setWelcomeOff] = useState(() => { try { return sessionStorage.getItem('prism-welcome') === 'later'; } catch { return false; } });
   const welcome = Boolean(me && (!me.skin || !me.about) && !welcomeOff);

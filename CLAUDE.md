@@ -1364,3 +1364,13 @@ DAILY_POST_TITLE =
 - 카톡·디스코드 양쪽에 상태 따로 관리 — 진실은 Firestore 하나
 - 참여 신청에 확인 모달·추가 입력
 - 참고 레포 코드 복사
+
+## v3.124 변경 (2026-10-29, 사용자 결정) — 상점 업데이트를 앱 업데이트와 따로 · 좁은 창 · 디스코드 카드
+
+1. **상품 목록은 서버가 내준다** (`GET /shop/catalog`, `packages/core/src/shop.ts` `applyCatalog`·`SHOP_REV`, 화면 `packages/ui/src/catalog.ts` `startShopCatalog`). 앱·웹이 켤 때·당겨서 새로고침 때 받아 상품 표(`SHOP`·`SHOP_ITEM`·`LAUNCH`)를 갈아 끼운다. 못 받으면 빌드에 든 목록 그대로.
+   - **그림 배경은 데이터로** (`ShopItem.look`: 그림 경로·위치·빛 알갱이·빛나는 곳). 이 빌드에 없던 상품의 그림은 앱이 웹(`przm.web.app/bg/…`)에서 받는다 (`shopAsset`).
+   - **CSS 상품(테두리·머리 효과·이름 효과)의 새 모양은 `packages/assets/public/shop/looks.css`** — 앱·웹 모두 웹에서 받는다(`?v=SHOP_REV`), 못 받으면 앱 안의 파일.
+   - **새 상품 = shop.ts 에 한 줄 + (그림이면) `packages/assets/public/bg/` + (CSS 면) looks.css + `SHOP_REV` 올리기 → push.** deploy-server(이제 `packages/core/**` 도 본다)·deploy-site 가 돌면 이미 깔린 앱도 다음에 켤 때 새 상품을 본다. **앱 배포가 필요 없다.** 앱 CSP 에 `https://przm.web.app`(그림·스타일)을 더했다 — 1.0.8 부터.
+   - 앱 배포가 필요한 경우는 새 '종류'의 움직임(새 컴포넌트·새 SVG 장면)을 만들 때뿐.
+2. **좁은 창에서 글이 한 단어씩 세로로 뭉개지지 않게:** 글 + 옆 단추 줄은 `flex-wrap` + 글 칸 최소 폭(`flex: 1 1 220px`)으로 단추가 아래 줄로 (명장면 액자·도감 돋보기). 줄바꿈 점검(`scripts/qa/wrap.mjs`)에 **'뭉개짐'**(세 줄 이상인데 줄마다 평균 6글자 이하)을 더하고 폭 600·400 도 본다.
+3. **'지금 디스코드' → '디스코드'.** 머리 높이를 다른 카드와 같게(28px, 접속 얼굴 묶음 32px 를 머리 안에), 머리 아래 간격 16.

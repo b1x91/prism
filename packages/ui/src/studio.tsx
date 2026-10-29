@@ -6,6 +6,7 @@
  * 꾸밈은 가진 것만 고를 수 있고, 안 가진 것은 잠금 + 가격으로 보여 준다 (상점에서 산다).
  */
 import { useEffect, useMemo, useState } from 'react';
+import { useShopRev } from './catalog';
 import {
   CHAMPIONS, CHAMPION_LIST, PIECE, RARITY_SHOP_KO, SHOP, SKIN_TIERS, SLOT_KO, baseSkin, itemDiscount, matchName, priceWith, skinNeed,
   TITLE_RULE, type About, type Api, type Deco, type MemberPage, type Shop, type ShopSlot, type Skin, josa } from '@prism/core';
@@ -31,6 +32,7 @@ export function NickName({ nick }: { nick: string }) {
 export function ProfileStudio({ api, page, skins, onClose, onSaved, start = 'skin' }: {
   api: Api; page: MemberPage; skins: Record<number, Skin> | null; onClose: () => void; onSaved: () => void; start?: 'skin' | 'intro';
 }) {
+  useShopRev();
   const m = page.member;
   const n = page.total.n;
   const [tab, setTab] = useState<Tab>(start);
@@ -155,6 +157,7 @@ function SkinPanel({ page, skins, pick, onPick, n }: { page: MemberPage; skins: 
 }
 
 function DecoPanel({ slot, shop, deco, me, onPick }: { slot: ShopSlot; shop: Shop; deco: Deco; me: { nick: string; skin: number | null; champion: number | null }; onPick: (id: string | null) => void }) {
+  useShopRev();
   // 칭호는 상점에서 팔지 않고 얻는다 (v3.99): 산 적 있거나 조건을 채운 것
   const hasIt = (id: string) => shop.owned.includes(id) || (slot === 'title' && Boolean(shop.uses?.titles.includes(id)));
   const items = SHOP.filter((x) => x.slot === slot).sort((a, b) => Number(hasIt(b.id)) - Number(hasIt(a.id)) || RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.price - b.price);

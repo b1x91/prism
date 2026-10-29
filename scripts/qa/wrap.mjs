@@ -2,6 +2,7 @@
 // 앱·웹 모든 화면을 여러 폭으로 열고, 글이 들어 있는 칸마다 글자 위치를 재서
 //  - 단어 쪼개짐: 띄어쓰기 없이 붙은 글자(예: '2개', '챔프를')가 줄 끝과 다음 줄 첫머리로 갈라짐
 //  - 외톨이 줄: 두 줄 이상인데 마지막 줄에 1~2글자만 남음
+//  - 뭉개짐: 옆 칸에 밀려 글이 한두 단어씩 세로로 쌓임 (v3.124)
 // 을 찾는다. 일부러 두 줄로 나눈 칸(도감 번호/이름 .dx)은 뺀다. 실행: 로컬 서버(8787)·dev-bridge(5199)·앱(5180)·웹(5173)을 켠 뒤
 //   node scripts/qa/wrap.mjs <출력 폴더> [app|web]
 import { chromium } from 'playwright-core';
@@ -63,6 +64,9 @@ const detect = () => {
     const last = lines.length - 1;
     const lastChars = chars.filter((x) => x.top !== null && x.c.trim() && lineOf(x.top, x.h) === last).map((x) => x.c).join('');
     if (lastChars.length > 0 && lastChars.length <= 2) out.push({ t: '외톨이 줄', where, text, at: lastChars });
+    // 뭉개짐: 옆 칸에 밀려 글이 한두 단어씩 세로로 쌓임 (세 줄 이상인데 줄마다 평균 6글자 이하)
+    const shown = chars.filter((x) => x.top !== null && x.c.trim()).length;
+    if (lines.length >= 3 && shown / lines.length <= 6) out.push({ t: '뭉개짐', where, text, at: `${lines.length}줄 · 폭 ${Math.round(box.width)}` });
   }
   return out;
 };
@@ -70,7 +74,7 @@ const detect = () => {
 const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
 const report = {};
 let total = 0;
-for (const [kind, w] of [['app', 1280], ['app', 1000], ['app', 760], ['web', 1280], ['web', 820], ['web', 390], ['web', 360]]) {
+for (const [kind, w] of [['app', 1280], ['app', 1000], ['app', 760], ['web', 1280], ['web', 820], ['web', 600], ['web', 400], ['web', 360]]) {
   if (only && only !== kind) continue;
   const ctx = await b.newContext({ viewport: { width: w, height: 1400 }, colorScheme: 'dark' });
   const p = await ctx.newPage();

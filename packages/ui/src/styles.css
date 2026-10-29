@@ -712,9 +712,9 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .wchip .face, .wchip .initial { border-radius: 50%; }
 
 /* 지금 디스코드 */
-.dnow { display: grid; gap: var(--s3); }
+.dnow { display: grid; gap: var(--s4); }
 .dnow.off { gap: var(--s1); }
-.dnow .card-head { margin-bottom: 0; gap: var(--s3); }
+.dnow .card-head { margin-bottom: 0; gap: var(--s3); height: 28px; } /* 다른 카드 머리와 같은 높이 — 접속 얼굴 묶음이 머리를 키우지 않게 */
 .vchans { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s3); }
 .vchan { display: flex; flex-direction: column; gap: var(--s2); padding: var(--s3) var(--s4); border-radius: var(--r-m); background: var(--surface-2); border: 1px solid transparent; }
 .vchan.live { border-color: color-mix(in srgb, #5865f2 45%, var(--line)); background: color-mix(in srgb, #5865f2 8%, var(--surface-2)); }
@@ -989,7 +989,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 /* 지금 디스코드: 접속 중인 사람은 오른쪽 위에 얼굴만 겹쳐서, 누르면 목록 */
 .dnow { position: relative; }
 .dn-peek { position: relative; }
-.dn-who { display: inline-flex; align-items: center; gap: var(--s2); height: 40px; padding: 0 var(--s3) 0 6px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
+.dn-who { display: inline-flex; align-items: center; gap: var(--s2); height: 32px; margin: -2px 0; padding: 0 var(--s3) 0 4px; border-radius: var(--r-pill); border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; cursor: pointer; }
 .dn-who:hover, .dn-who.on { border-color: var(--line-2); background: var(--surface-2); }
 .dn-stack { display: flex; }
 .dn-f { line-height: 0; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface); }
@@ -3338,8 +3338,9 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .hl-story p:first-child { color: #fff; font-weight: 700; }
 @media (max-width: 720px) { .hl-in { padding: var(--s5); } .hl-title { font-size: var(--fs-2xl); } .hl-shade { background: linear-gradient(0deg, rgba(5, 6, 11, .96) 30%, rgba(5, 6, 11, .5) 100%); } }
 @media (prefers-reduced-motion: reduce) { .hl-v { animation: none; } }
-.hl-empty { display: flex; align-items: center; gap: var(--s4); }
-.hl-empty > div { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.hl-empty { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3) var(--s4); }
+/* 좁으면 글이 한 단어씩 세로로 뭉개지지 않고 단추가 아래 줄로 */
+.hl-empty > div { flex: 1 1 220px; min-width: 0; display: grid; gap: 2px; }
 .hl-empty p { margin: 0; }
 .hl-ic { width: 48px; height: 48px; flex: none; display: grid; place-items: center; border-radius: var(--r-m); background: linear-gradient(180deg, #1a1d36, #0b0d1a); color: #ffd27a; }
 .hl-ic .icon { width: 24px; height: 24px; }
@@ -3355,11 +3356,11 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .hr-t small { font-size: var(--fs-xs); color: var(--text-3); }
 
 /* 도감 돋보기 */
-.lens-gate { display: flex; align-items: center; gap: var(--s3); padding: var(--s4); border-radius: var(--r-m); border: 1px dashed var(--line-2); background: var(--surface-2); }
+.lens-gate { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); padding: var(--s4); border-radius: var(--r-m); border: 1px dashed var(--line-2); background: var(--surface-2); }
 .lens-gate.sk { border: 0; height: 72px; width: auto; }
 .lg-ic { width: 40px; height: 40px; flex: none; display: grid; place-items: center; border-radius: var(--r-pill); background: var(--accent-soft); color: var(--accent); }
 .lg-ic .icon { width: 20px; height: 20px; }
-.lg-txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.lg-txt { flex: 1 1 200px; min-width: 0; display: grid; gap: 2px; }
 .lg-txt b { font-size: var(--fs-md); }
 .lens-gate .btn { white-space: nowrap; }
 .lens-open { display: grid; gap: var(--s4); animation: lens-in .5s cubic-bezier(.16, 1, .3, 1); }

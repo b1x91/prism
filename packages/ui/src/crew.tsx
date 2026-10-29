@@ -452,10 +452,10 @@ function OnlinePeek({ data }: { data: Extract<DiscordNow, { enabled: true }> }) 
   return (
     <div className="dn-peek" ref={ref}>
       <button type="button" className={`dn-who ${open ? 'on' : ''}`} onClick={() => setOpen(!open)} aria-expanded={open} aria-label={`접속 중 ${data.online}명`}>
-        <span className="dn-stack">{peek.map((m) => <span key={m.name} className="dn-f"><MemberFace nick={m.name} skin={m.skin} champion={m.main} size={28} /></span>)}</span>
+        <span className="dn-stack">{peek.map((m) => <span key={m.name} className="dn-f"><MemberFace nick={m.name} skin={m.skin} champion={m.main} size={24} /></span>)}</span>
         <span className="dn-n"><i className="dot" />{data.online}</span>
       </button>
-      {open && <div className="dn-pop" role="dialog" aria-label="지금 디스코드에 접속 중인 사람">
+      {open && <div className="dn-pop" role="dialog" aria-label="디스코드에 접속 중인 사람">
         <div className="dn-pop-h">
           <span className="dn-cnt"><i className="dot" />온라인 <b>{data.online}</b></span>
           {data.inVoice > 0 && <span className="dn-cnt voice">음성 <b>{data.inVoice}</b></span>}
@@ -486,7 +486,7 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
   // 아직 못 받았으면(디스코드가 늦거나 잠깐 실패) 자리를 잡아 두고 수집 중이라고 알린다 — 사라지지 않게
   if (!data) return (
     <section className="card pad dnow loading" aria-busy="true">
-      <div className="card-head"><h2>지금 디스코드</h2><span className="sp" /><span className="dn-collect"><i className="dn-spin" aria-hidden="true" />정보를 수집하고 있습니다</span></div>
+      <div className="card-head"><h2>디스코드</h2><span className="sp" /><span className="dn-collect"><i className="dn-spin" aria-hidden="true" />정보를 수집하고 있습니다</span></div>
       <div className="vchans">{[0, 1, 2].map((i) => <div key={i} className="vchan sk-chan"><div className="vh"><i className="sk ln t" /><i className="sk ln s" /></div><div className="vmembers"><span className="vm"><i className="sk sq28" /><i className="sk ln s" /></span></div><span className="vact"><i className="sk sq32" /><i className="sk sq32" /></span></div>)}</div>
     </section>
   );
@@ -494,10 +494,10 @@ export function DiscordNowCard({ api, onOpen, admin }: { api: Api; onOpen?: (url
     try { await navigator.clipboard.writeText(link); setCopied(id); setTimeout(() => setCopied((x) => (x === id ? null : x)), 2000); } catch { /* 클립보드 막힘 */ }
   };
   const open = (u: string | null) => { if (!u) return; if (onOpen) onOpen(u); else window.open(u, '_blank', 'noopener'); };
-  if (!data.enabled) return admin ? <section className="card pad dnow off"><b>지금 디스코드</b><span className="meta">디스코드 서버 설정에서 '서버 위젯'을 켜면 음성방에 누가 있는지 여기에 떠요.</span></section> : null;
+  if (!data.enabled) return admin ? <section className="card pad dnow off"><b>디스코드</b><span className="meta">디스코드 서버 설정에서 '서버 위젯'을 켜면 음성방에 누가 있는지 여기에 떠요.</span></section> : null;
   return (
     <section className="card pad dnow">
-      <div className="card-head"><h2>지금 디스코드</h2><span className="sp" />
+      <div className="card-head"><h2>디스코드</h2><span className="sp" />
         <OnlinePeek data={data} /></div>
       <div className="vchans">{data.channels.map((c) => (
         <div key={c.id} className={`vchan ${c.members.length ? 'live' : ''}`}>

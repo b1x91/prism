@@ -5,7 +5,8 @@
  * 움직임은 CSS(동작 줄이기 존중)로만 준다.
  */
 import { useId, type CSSProperties, type ReactNode } from 'react';
-import { SHOP } from '@prism/core';
+import { SHOP_ITEM, shopAsset } from '@prism/core';
+import { useShopRev } from './catalog';
 
 /** 납작한 칸(랭킹 줄)에서 보여 줄 띠: 장면마다 가장 그럴듯한 높이 */
 const ROW_VIEW: Record<string, string> = { 'bg-dusk': '0 330 1600 120', 'bg-magma': '0 380 1600 160' };
@@ -16,22 +17,9 @@ const SVG_SCENES: Record<string, (k: string, view?: string) => ReactNode> = {
 };
 
 /**
- * 그림 장면 (Artlist 생성 일러스트, packages/assets/public/bg). pos: 넓은 칸 / row: 랭킹 줄에서 보여 줄 위치
- * mote: 떠다니는 빛 알갱이 색 · glow: 장면의 빛나는 곳 (전설·신화는 그 자리가 숨 쉬듯 밝아진다)
+ * 그림 장면: 상품 데이터의 look (packages/core/src/shop.ts, v3.124 — 새 배경은 앱을 다시 내지 않고 더한다).
  * 등급이 높을수록 더 움직인다 (v3.123): 영웅 = 빛 알갱이·스치는 빛 / 전설 = + 그림이 아주 천천히 흐름 / 신화 = + 빛나는 곳이 숨 쉬고 알갱이가 더 많다
  */
-type ImgScene = { src: string; pos: string; row: string; mote?: string; glow?: string };
-const IMG_SCENES: Record<string, ImgScene> = {
-  'bg-crystal': { src: '/bg/crystal-v1.webp', pos: '62% 55%', row: '60% 72%' },
-  'bg-icefall': { src: '/bg/icefall-v1.webp', pos: '55% 45%', row: '55% 70%', mote: '#e6f6ff' },
-  'bg-lighthouse': { src: '/bg/lighthouse-v1.webp', pos: '62% 40%', row: '64% 30%', mote: '#ffd9a0' },
-  'bg-ruins': { src: '/bg/ruins-v1.webp', pos: '60% 50%', row: '62% 45%', mote: '#ffd27a' },
-  'bg-skygarden': { src: '/bg/skygarden-v1.webp', pos: '55% 40%', row: '58% 40%', mote: '#fff3d0', glow: '50% 20%' },
-  'bg-bloodmoon': { src: '/bg/bloodmoon-v1.webp', pos: '58% 40%', row: '62% 28%', mote: '#ff8a5c', glow: '72% 22%' },
-  'bg-galaxy': { src: '/bg/galaxy-v1.webp', pos: '50% 45%', row: '50% 42%', mote: '#ffe7a8', glow: '52% 42%' },
-  'bg-sanctum': { src: '/bg/sanctum-v1.webp', pos: '62% 40%', row: '64% 42%', mote: '#fff0c4', glow: '64% 40%' },
-};
-const TIER: Record<string, string> = Object.fromEntries(SHOP.filter((x) => x.slot === 'bg').map((x) => [x.id, x.rarity]));
 
 /** 다 받아지면 자리표시 빛을 끈다 (skeleton.tsx 의 imgIn 과 같음, 서로 불러오지 않게 따로 둔다) */
 const ld = (e: { currentTarget: HTMLImageElement }) => e.currentTarget.classList.add('ld');
@@ -39,12 +27,13 @@ const ld = (e: { currentTarget: HTMLImageElement }) => e.currentTarget.classList
 /** row: 랭킹 줄처럼 아주 납작한 칸 */
 export function BgScene({ id, row }: { id: string; row?: boolean }) {
   const k = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const img = IMG_SCENES[id];
-  if (img) {
-    const tier = TIER[id] ?? 'epic', high = tier === 'legendary' || tier === 'mythic';
+  useShopRev();
+  const item = SHOP_ITEM[id], img = item?.look?.img ? item.look : null;
+  if (img?.img) {
+    const tier = item.rarity, high = tier === 'legendary' || tier === 'mythic';
     return (
       <span className={`bgx ${id} img t-${tier}`} aria-hidden="true" style={{ ...(img.mote ? { '--mote': img.mote } : {}), ...(img.glow ? { '--glow': img.glow } : {}) } as CSSProperties}>
-        <img className="fi" onLoad={ld} onError={ld} src={img.src} alt="" loading="lazy" decoding="async" style={{ objectPosition: row ? img.row : img.pos }} />
+        <img className="fi" onLoad={ld} onError={ld} src={shopAsset(id, img.img)} alt="" loading="lazy" decoding="async" style={{ objectPosition: (row ? img.row : img.pos) ?? '50% 50%' }} />
         {high && img.glow && <span className="bgx-glow" />}
         <span className="bgx-motes">{Array.from({ length: tier === 'mythic' ? 18 : 10 }, (_, i) => <i key={i} />)}</span>
         <span className="bgx-sheen" />

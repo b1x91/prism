@@ -1,0 +1,6 @@
+/*
+ * 새 상점 상품의 모양 (CLAUDE.md v3.124). 앱을 다시 내지 않고 상품을 더하려고, 앱·웹 모두 이 파일을 웹(przm.web.app/shop/looks.css)에서 받는다.
+ * 테두리 · 머리 효과 · 이름 효과 상품은 클래스가 곧 상품 id 다 (예: .fr-새테두리, .fx-새효과, .nm-새이름) — 기존 상품의 규칙(styles.css)을 보고 같은 틀로 쓴다.
+ * 디자인 토큰(간격·글자·모서리)과 동작 줄이기(prefers-reduced-motion)는 여기서도 지킨다.
+ * 상품을 더하면 packages/core/src/shop.ts 의 SHOP_REV 를 올려 캐시를 깬다.
+ */

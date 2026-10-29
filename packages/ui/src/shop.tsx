@@ -5,7 +5,8 @@
  *  - PublicProfileView: 로그인 없이 보는 그 사람의 강점 (모임 정보 없음)
  */
 import { useKept } from './kept';
-import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useEffect, useId, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { useShopRev } from './catalog';
 import {
   CHAMPIONS, DEX_LEVEL_KO, LAUNCH, PIECE, forSale, isNewItem, itemDiscount, priceWith, saleOf, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
   type Api, type Deco, type DexLevel, type InsightKind, type Presence, type PublicProfile, type Shop, type ShopItem, type ShopSlot, josa } from '@prism/core';
@@ -175,7 +176,9 @@ function ShopOpen({ api, me, onGo }: { api: Api; me: Me; onGo?: (to: 'dex' | 'mi
   const [msg, setMsg] = useState('');
   // '인기'가 첫 탭. 지금은 판매 기록이 적어 무작위로 섞은 12개 (들어올 때마다 한 번, HOT_MAX)
   const [slot, setSlot] = useKept<ShopSlot | 'hot' | 'use'>('shop.slot', 'hot');
-  const [hot] = useState(() => SHOP.filter(forSale).map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x));
+  // 상품 목록은 서버에서 받아 갈아 끼울 수 있다 (v3.124) — 바뀌면 다시 섞는다
+  const rev = useShopRev();
+  const hot = useMemo(() => SHOP.filter(forSale).map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x), [rev]);
   const [owned, setOwned] = useKept('shop.owned', false);
   const [buying, setBuying] = useState<ShopItem | null>(null);
   const run = async (k: string, f: () => Promise<unknown>) => { setBusy(k); setMsg(''); try { await f(); await reload(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); } };

@@ -7,7 +7,7 @@ name: deploy-server
 on:
   push:
     branches: [main, claude/new-session-18cxmx]
-    paths: ['server/**', 'scripts/ci/**', '.github/workflows/deploy-server.yml']
+    paths: ['server/**', 'packages/core/**', 'scripts/ci/**', '.github/workflows/deploy-server.yml']
   workflow_dispatch:
 
 concurrency: deploy-server

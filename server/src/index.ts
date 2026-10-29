@@ -30,6 +30,7 @@ import { myInquiries, postInquiry } from './inquiry.js';
 import { createNews, deleteNews, editNews, ensureAuto, heartNews, listNews, readNews } from './news.js';
 import { claimInvite, lookupMembers, myInvite, publicInvite, staffAction, staffMembers } from './staff.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
+import { LAUNCH, SHOP, SHOP_REV, type ShopCatalog } from '../../packages/core/src/shop.js';
 
 async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
   const { pathname } = new URL(req.url);
@@ -42,6 +43,8 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'POST' && pathname === '/api/app/token') return exchangeCode(req, env);
   if (m === 'POST' && pathname === '/api/logout') return logout(req, env);
   if (m === 'GET' && pathname === '/links') return json(links(env));
+  // 상품 목록 (v3.124): 앱을 다시 내지 않아도 새 상품이 보이게 앱·웹이 켤 때 받는다
+  if (m === 'GET' && pathname === '/shop/catalog') return json({ rev: SHOP_REV, items: SHOP, launch: LAUNCH } satisfies ShopCatalog);
   if (m === 'POST' && pathname === '/discord/interactions') return interactions(req, env, ctx);
   // 앱 설치 파일·업데이트 정보 (로그인 없이)
   if (m === 'GET' && pathname === '/app/latest') return latest(req, env);
