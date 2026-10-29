@@ -9,7 +9,7 @@ import { dexFromRows } from '../../packages/core/src/history.js';
 import { parseFeat } from '../../packages/core/src/challenges.js';
 import { usesOf } from './goods.js';
 import { checkTagBonus } from './tagbonus.js';
-import { EARN, INVITE_BONUS, TAG_BONUS, LEGACY, SHOP_ITEM, attendBase, attendOf, attendReward, attendStage, forSale, earnedTotal, legacyTotal, runBonusOf, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
+import { EARN, INVITE_BONUS, TAG_BONUS, LEGACY, SHOP_ITEM, attendBase, attendOf, attendReward, attendStage, forSale, itemDiscount, earnedTotal, legacyTotal, runBonusOf, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
 import { dexRows } from './crew.js';
 import { missionPiecesOf } from './missions.js';
 import { HttpError, json, type Env, type Member } from './util.js';
@@ -156,7 +156,8 @@ export async function buy(req: Request, env: Env, me: Member) {
   if (!forSale(item)) throw new HttpError(400, '칭호는 미션·도감·활약으로 얻어요.');
   const s = await state(env, me.id, me);
   if (s.owned.includes(item.id)) throw new HttpError(409, '이미 가지고 있어요.');
-  const price = priceFor(item.price, s.rates.discount);
+  // 출시 기간 새 상품은 관리자 말고는 할인 없음 · 일반 배경 20% (v3.123, 화면과 같은 itemDiscount)
+  const price = priceFor(item.price, itemDiscount(item.id, s.rates.discount, s.rates.admin));
   if (s.balance < price) throw new HttpError(400, `피스가 ${price - s.balance}개 모자라요.`);
   await env.DB.prepare('INSERT OR IGNORE INTO shop_owned (member_id, item_id, price, bought_at) VALUES (?, ?, ?, ?)').bind(me.id, item.id, price, Date.now()).run();
   if (wear !== false) {

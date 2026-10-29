@@ -8,7 +8,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  AUGMENT, CHAMPIONS, GIFT_NOTE_MAX, INSIGHTS, INSIGHT_DAYS, MULTI_KO, RARITY_SHOP_KO, REROLL_PER_WEEK, SHOP_ITEM, SLOT_KO, USE_PRICE, boxPool, cdragon, josa, priceWith, storyOf,
+  AUGMENT, CHAMPIONS, GIFT_NOTE_MAX, INSIGHTS, INSIGHT_DAYS, MULTI_KO, RARITY_SHOP_KO, REROLL_PER_WEEK, SHOP_ITEM, SLOT_KO, USE_PRICE, BOX_ODDS, boxPool, cdragon, itemDiscount, josa, priceWith, storyOf,
   type Api, type AugReport, type GoldenReport, type Highlight, type InsightKind, type PartnerReport, type Shop, type ShopItem, type ShopRarity,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, GlassBtn, MemberFace, useSkins } from './basics';
@@ -144,7 +144,7 @@ export function GiftDialog({ api, item, data, onClose, onDone }: { api: Api; ite
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [done, setDone] = useState<string | null>(null);
-  const price = priceWith(item.price, data.rates?.discount ?? 0), lack = price > data.balance;
+  const price = priceWith(item.price, itemDiscount(item.id, data.rates?.discount ?? 0, data.rates?.admin)), lack = price > data.balance;
   useEffect(() => { api.get<{ members: Target[] }>('/api/shop/gift').then((r) => setList(r.members)).catch((e) => setErr(msgOf(e))); }, [api]);
   useEffect(() => { const esc = (e: KeyboardEvent) => { if (e.key === 'Escape' && !busy) onClose(); }; addEventListener('keydown', esc); return () => removeEventListener('keydown', esc); }, [busy, onClose]);
   const send = async () => {
@@ -206,7 +206,7 @@ export function BoxBanner({ data, onOpen }: { data: Shop; onOpen: () => void }) 
         <span className="bb-k">RANDOM BOX</span>
         <h2>프리즘 상자</h2>
         <p>아직 없는 꾸밈 하나가 나와요. 겹치지 않아요.</p>
-        <div className="bb-odds">{(['common', 'rare', 'epic', 'legendary'] as ShopRarity[]).map((r) => <span key={r} className={`r-${r}`}><i />{RARITY_SHOP_KO[r]} {Math.round({ common: 60, rare: 28, epic: 10, legendary: 2 }[r])}%</span>)}</div>
+        <div className="bb-odds">{(['common', 'rare', 'epic', 'legendary'] as ShopRarity[]).map((r) => <span key={r} className={`r-${r}`}><i />{RARITY_SHOP_KO[r]} {Math.round(BOX_ODDS[r] * 100)}%</span>)}</div>
       </div>
       <div className="bb-act">
         <Price n={price} lack={lack} />

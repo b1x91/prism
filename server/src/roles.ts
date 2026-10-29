@@ -69,7 +69,7 @@ export const isSpecial = (m: Pick<Member, 'tier' | 'discord_roles'>) => levelOf(
 export const ratesOf = (m: Pick<Member, 'tier' | 'discord_roles'>) => {
   const lv = levelOf(m);
   const r = RATES.find((x) => lv >= x.at)!;
-  return { piece: r.piece, dexXp: r.dexXp, discount: isSpecial(m) ? SPECIAL_DISCOUNT : 0 };
+  return { piece: r.piece, dexXp: r.dexXp, discount: isSpecial(m) ? SPECIAL_DISCOUNT : 0, admin: m.tier === 'admin' };
 };
 export const can = (m: Pick<Member, 'tier' | 'discord_roles'>, f: Feature) => levelOf(m) >= FEATURES[f];
 export const permsOf = (m: Pick<Member, 'tier' | 'discord_roles'>) => Object.fromEntries((Object.keys(FEATURES) as Feature[]).map((f) => [f, can(m, f)])) as Record<Feature, boolean>;

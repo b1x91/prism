@@ -7,7 +7,7 @@
 import { useKept } from './kept';
 import { useEffect, useId, useState, useSyncExternalStore, type ReactNode } from 'react';
 import {
-  CHAMPIONS, DEX_LEVEL_KO, PIECE, forSale, priceWith, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
+  CHAMPIONS, DEX_LEVEL_KO, LAUNCH, PIECE, forSale, isNewItem, itemDiscount, priceWith, saleOf, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
   type Api, type Deco, type DexLevel, type InsightKind, type Presence, type PublicProfile, type Shop, type ShopItem, type ShopSlot, josa } from '@prism/core';
 import { ChampImg, Empty, Gem, MemberFace, PresenceDot, Toggle, useSkins } from './basics';
 import { useLoad } from './crew';
@@ -134,7 +134,7 @@ export function ShareButton({ api, id }: { api: Api; id: string; shared?: boolea
 // ───────── 상점 ─────────
 
 type Me = { nick: string; skin?: number | null; champion?: number | null };
-const RARITY_ORDER = ['legendary', 'epic', 'rare', 'common'] as const;
+const RARITY_ORDER = ['mythic', 'legendary', 'epic', 'rare', 'common'] as const;
 
 /** onGo: 이용권이 쓰이는 화면으로 (도감·미션·내 페이지 — 인사이트는 내 페이지의 '인사이트' 칸) */
 export function ShopView({ api, me, open = true, onGo }: { api: Api; me: Me; open?: boolean; onGo?: (to: 'dex' | 'missions' | 'me', insight?: InsightKind) => void }) {
@@ -186,12 +186,15 @@ function ShopOpen({ api, me, onGo }: { api: Api; me: Me; onGo?: (to: 'dex' | 'mi
   const list = slot === 'use' ? [] : slot === 'hot' ? hot.filter((x) => !owned || data.owned.includes(x.id)).slice(0, HOT_MAX)
     : SHOP.filter((x) => x.slot === slot && (!owned || data.owned.includes(x.id)))
       .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || b.price - a.price);
+  const launchOn = Date.now() >= LAUNCH.from && Date.now() < LAUNCH.until;
+  const launchEnd = `${new Date(LAUNCH.until - 1).getMonth() + 1}/${new Date(LAUNCH.until - 1).getDate()}`;
   const count = (sl: ShopSlot) => [SHOP.filter((x) => x.slot === sl && data.owned.includes(x.id)).length, SHOP.filter((x) => x.slot === sl).length];
   return (<Swap on={rv} skeleton={<ShopSkeleton />}>
     <div className={`shop ${fadeCls(rv)}`}>
       <header className="shop-head">
         <h1>상점</h1>
-        {(data.rates?.discount ?? 0) > 0 && <span className="shop-sale">특별회원 {Math.round((data.rates!.discount) * 100)}% 할인</span>}
+        {(data.rates?.discount ?? 0) > 0 && <span className="shop-sale">특별회원 {Math.round((data.rates!.discount) * 100)}% 할인{launchOn && !data.rates?.admin ? ' · 새 배경 제외' : ''}</span>}
+        {launchOn && <span className="shop-sale launch">새 배경 7종 · 일반 배경 {Math.round(LAUNCH.sale * 100)}% 할인 ~{launchEnd}</span>}
       </header>
       {msg && <p className="l" style={{ margin: 0 }}>{msg}</p>}
       <GiftNotice data={data} />
@@ -221,7 +224,8 @@ function ShopOpen({ api, me, onGo }: { api: Api; me: Me; onGo?: (to: 'dex' | 'mi
 }
 
 function ShopCard({ x, me, data, busy, onBuy, onEquip, onGift }: { x: ShopItem; me: Me; data: Shop; busy: boolean; onBuy: () => void; onEquip: (on: boolean) => void; onGift?: () => void }) {
-  const disc = data.rates?.discount ?? 0, price = priceWith(x.price, disc);
+  const disc = itemDiscount(x.id, data.rates?.discount ?? 0, data.rates?.admin), price = priceWith(x.price, disc);
+  const fresh = isNewItem(x.id), sale = saleOf(x.id);
   const own = data.owned.includes(x.id), on = data.deco[x.slot] === x.id, lack = price - data.balance;
   // 진열: 그 상품 하나만 무대 위에 (다른 꾸밈은 빼서 상품마다 다르게 보이게)
   const look: Deco = { [x.slot]: x.id };
@@ -230,7 +234,8 @@ function ShopCard({ x, me, data, busy, onBuy, onEquip, onGift }: { x: ShopItem; 
       <div className="sc-prev">
         <ProfileHero stage nick={me.nick} skin={me.skin} champion={me.champion} deco={look} />
         <span className={`sc-rar r-${x.rarity}`}><i />{RARITY_SHOP_KO[x.rarity]}</span>
-        {on ? <span className="sc-tag on"><Icon name="check" />장착 중</span> : own && <span className="sc-tag">보유</span>}
+        {on ? <span className="sc-tag on"><Icon name="check" />장착 중</span> : own ? <span className="sc-tag">보유</span>
+          : fresh ? <span className="sc-tag new">NEW</span> : sale > 0 && disc === sale ? <span className="sc-tag sale">{Math.round(sale * 100)}% 할인</span> : null}
       </div>
       <div className="sc-body">
         <b className="sc-nm">{x.name}</b>

@@ -93,7 +93,7 @@ export type Prospects = { prospects: Prospect[]; queueMin: number; limited?: { t
 export type DiscordRole = { key: string; name: string; color: string; level: number };
 export type Perms = { party: boolean; scrim: boolean; prospects: boolean; moderate: boolean; shop?: boolean; prospectsAll?: boolean; rankingAll?: boolean; ranking?: boolean; manage?: boolean };
 /** 단계별 혜택: 피스 배율 · 도감 경험치 배율 · 상점 할인(특별회원) */
-export type Rates = { piece: number; dexXp: number; discount: number };
+export type Rates = { piece: number; dexXp: number; discount: number; /** 관리자 — 출시 기간 새 상품에도 원래 할인 (v3.123) */ admin?: boolean };
 
 /** 지금 디스코드 (서버 위젯) */
 export type VoiceMember = { name: string; avatar: string; muted: boolean; deaf: boolean; memberId: string | null; skin: number | null; main: number | null };

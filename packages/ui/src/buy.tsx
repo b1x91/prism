@@ -6,7 +6,7 @@
  * 원본(#081)의 구조·모션 값(시간·곡선)을 따르고, 크기와 색은 프로젝트 토큰에 맞췄다 (styles.css .u081).
  */
 import { useEffect, useRef, useState } from 'react';
-import { PIECE, RARITY_SHOP_KO, SLOT_KO, priceWith, type Api, type Deco, type Shop, type ShopItem } from '@prism/core';
+import { PIECE, RARITY_SHOP_KO, SLOT_KO, itemDiscount, priceWith, saleOf, type Api, type Deco, type Shop, type ShopItem } from '@prism/core';
 import { PieceIcon, ProfileHero } from './shop';
 
 type Phase = 'confirm' | 'run' | 'ok' | 'rec' | 'error';
@@ -15,7 +15,8 @@ export function BuyDialog({ api, item, data, me, onClose, onDone }: {
   api: Api; item: ShopItem; data: Shop; me: { nick: string; skin?: number | null; champion?: number | null };
   onClose: () => void; onDone: (s: Shop) => void;
 }) {
-  const disc = data.rates?.discount ?? 0;
+  // 출시 기간 새 상품·일반 배경 할인은 상품마다 (itemDiscount, v3.123)
+  const disc = itemDiscount(item.id, data.rates?.discount ?? 0, data.rates?.admin);
   const price = priceWith(item.price, disc);
   const after = data.balance - price;
   const [phase, setPhase] = useState<Phase>('confirm');
@@ -75,7 +76,7 @@ export function BuyDialog({ api, item, data, me, onClose, onDone }: {
         <div className="u081-prev"><ProfileHero stage nick={me.nick} skin={me.skin ?? null} champion={me.champion ?? null} deco={look} /></div>
         <div className="u081-sum">
           <div><span>{item.name}</span><span className="u081-n">{item.price.toLocaleString()}<PieceIcon size={12} /></span></div>
-          {disc > 0 && <div><span>특별회원 할인</span><span className="u081-n">−{(item.price - price).toLocaleString()}<PieceIcon size={12} /></span></div>}
+          {disc > 0 && <div><span>{disc === saleOf(item.id) && disc > (data.rates?.discount ?? 0) ? '일반 배경 할인' : '특별회원 할인'}</span><span className="u081-n">−{(item.price - price).toLocaleString()}<PieceIcon size={12} /></span></div>}
           <div className="t"><span>사용할 {PIECE}</span><span className="u081-n">{price.toLocaleString()}<PieceIcon size={14} /></span></div>
         </div>
         <div className="u081-card"><i aria-hidden="true"><PieceIcon size={16} /></i>보유 {PIECE}<small>{data.balance.toLocaleString()} → <b>{after.toLocaleString()}</b></small></div>

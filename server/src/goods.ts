@@ -7,7 +7,7 @@
 import { AUGMENT } from '../../packages/core/src/data.js';
 import { parseFeat } from '../../packages/core/src/challenges.js';
 import { pioneer, weekStart } from '../../packages/core/src/missions.js';
-import { SHOP_ITEM, forSale } from '../../packages/core/src/shop.js';
+import { SHOP_ITEM, forSale, itemDiscount } from '../../packages/core/src/shop.js';
 import {
   GIFT_NOTE_MAX, INSIGHT_DAYS, REROLL_PER_WEEK, TITLE_RULES, USE_PRICE, boxPool, drawBox, earnedTitles,
   type InsightKind, type TitleStats,
@@ -87,9 +87,10 @@ export async function usesOf(env: Env, id: string, lv: Awaited<ReturnType<typeof
 }
 
 const SHOP_CLOSED = '상점은 준비 중입니다.';
-async function pay(env: Env, me: Member, kind: string, ref: string, base: number) {
+async function pay(env: Env, me: Member, kind: string, ref: string, base: number, itemId?: string) {
   const s = await state(env, me.id, me);
-  const price = priceFor(base, s.rates.discount);
+  // 꾸밈 선물은 그 상품의 할인 규칙 그대로 (출시 기간 새 상품 등, v3.123)
+  const price = priceFor(base, itemId ? itemDiscount(itemId, s.rates.discount, s.rates.admin) : s.rates.discount);
   if (s.balance < price) throw new HttpError(400, `피스가 ${price - s.balance}개 모자라요.`);
   await env.DB.prepare('INSERT INTO piece_spend (member_id, kind, ref, price, at) VALUES (?, ?, ?, ?, ?)').bind(me.id, kind, ref, price, Date.now()).run();
   return s;
@@ -191,7 +192,7 @@ export async function gift(req: Request, env: Env, me: Member) {
   const has = await env.DB.prepare('SELECT 1 AS x FROM shop_owned WHERE member_id = ? AND item_id = ?').bind(to, item.id).first();
   if (has) throw new HttpError(409, '이미 가지고 있는 꾸밈이에요.');
   const msg = (note ?? '').replace(/\s+/g, ' ').trim().slice(0, GIFT_NOTE_MAX) || null;
-  await pay(env, me, 'gift', `${to}:${item.id}`, item.price);
+  await pay(env, me, 'gift', `${to}:${item.id}`, item.price, item.id);
   await env.DB.prepare("INSERT OR IGNORE INTO shop_owned (member_id, item_id, price, bought_at, source, from_id, note) VALUES (?, ?, 0, ?, 'gift', ?, ?)")
     .bind(to, item.id, Date.now(), me.id, msg).run();
   if (botReady(env)) {

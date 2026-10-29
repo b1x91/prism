@@ -78,8 +78,10 @@ export const levelTotal = (l: DexLevel, table: Record<DexLevel, number> = LEVEL_
 
 export type ShopSlot = 'bg' | 'frame' | 'fx' | 'name' | 'title';
 export const SLOT_KO: Record<ShopSlot, string> = { bg: '배경', frame: '머리 테두리', fx: '머리 효과', name: '이름 효과', title: '칭호' };
-export type ShopRarity = 'common' | 'rare' | 'epic' | 'legendary';
-export const RARITY_SHOP_KO: Record<ShopRarity, string> = { common: '일반', rare: '희귀', epic: '영웅', legendary: '전설' };
+export type ShopRarity = 'common' | 'rare' | 'epic' | 'legendary' | 'mythic';
+export const RARITY_SHOP_KO: Record<ShopRarity, string> = { common: '일반', rare: '희귀', epic: '영웅', legendary: '전설', mythic: '신화' };
+/** 낮은 등급부터 (신화는 배경에만, v3.123) */
+export const RARITY_LADDER: ShopRarity[] = ['common', 'rare', 'epic', 'legendary', 'mythic'];
 export type ShopItem = { id: string; slot: ShopSlot; name: string; price: number; desc: string; rarity: ShopRarity };
 
 const it = (id: string, slot: ShopSlot, rarity: ShopRarity, price: number, name: string, desc: string): ShopItem => ({ id, slot, rarity, price, name, desc });
@@ -91,6 +93,14 @@ export const SHOP: ShopItem[] = [
   it('bg-starry', 'bg', 'rare', 600, '별 내리는 밤', '깊은 밤하늘에 별과 성운이 반짝인다'),
   it('bg-magma', 'bg', 'rare', 650, '용암 균열', '검은 바위 틈으로 용암이 숨 쉰다'),
   it('bg-crystal', 'bg', 'epic', 1000, '수정 동굴', '푸른 수정 결정 사이로 빛이 스친다'),
+  // v3.123 새 배경 (그림: Artlist 생성 일러스트)
+  it('bg-icefall', 'bg', 'epic', 1000, '얼어붙은 폭포', '얼음 폭포 동굴에 서리 가루가 내린다'),
+  it('bg-lighthouse', 'bg', 'epic', 1000, '안개 속 등대', '밤바다 안개 위로 등대 빛이 돈다'),
+  it('bg-ruins', 'bg', 'epic', 1100, '황금 유적', '해 질 녘 사막 유적에 모래 먼지가 빛난다'),
+  it('bg-skygarden', 'bg', 'legendary', 3000, '천공의 정원', '구름 위 떠 있는 섬에서 폭포가 쏟아진다'),
+  it('bg-bloodmoon', 'bg', 'legendary', 3000, '붉은 달의 다리', '붉은 달 아래 다리에 재가 흩날린다'),
+  it('bg-galaxy', 'bg', 'mythic', 9000, '은하의 심장', '은하의 중심이 소용돌이치며 별을 끌어당긴다'),
+  it('bg-sanctum', 'bg', 'mythic', 9000, '빛의 성소', '거대한 결정이 성소를 금빛으로 비춘다'),
   // 머리 테두리: 얼굴 테두리 + 머리 아래 빛 띠
   it('frame-silver', 'frame', 'common', 200, '은빛 테두리', '단정한 은빛으로 얼굴을 두른다'),
   it('frame-gold', 'frame', 'rare', 400, '금빛 테두리', '묵직한 금빛 테두리와 금빛 띠'),
@@ -179,6 +189,28 @@ export type ShopUses = {
 };
 /** 특별회원 할인 가격 (서버와 같은 계산) */
 export const priceWith = (price: number, discount = 0) => Math.round(price * (1 - discount));
+
+/**
+ * 출시 기간 (v3.123): 새 배경 7종이 나온 뒤 한 달.
+ * - 새 상품은 그동안 누구에게도 할인이 없다 (특별회원·운영진 50% 도 적용 안 함). 관리자만 원래 할인.
+ * - 가장 낮은 줄(일반 배경)은 모두에게 20% 할인. 특별회원처럼 더 큰 할인이 있으면 큰 쪽 하나만 (겹치지 않는다).
+ * 화면과 서버가 같은 함수(itemDiscount)로 값을 정한다. 기간이 끝나면 저절로 원래대로.
+ */
+export const LAUNCH = {
+  from: Date.parse('2026-10-29T00:00:00+09:00'),
+  until: Date.parse('2026-11-28T00:00:00+09:00'),
+  items: ['bg-icefall', 'bg-lighthouse', 'bg-ruins', 'bg-skygarden', 'bg-bloodmoon', 'bg-galaxy', 'bg-sanctum'],
+  saleItems: ['bg-dawn', 'bg-abyss', 'bg-dusk'],
+  sale: 0.2,
+} as const;
+const inLaunch = (now: number) => now >= LAUNCH.from && now < LAUNCH.until;
+export const isNewItem = (id: string, now = Date.now()) => inLaunch(now) && (LAUNCH.items as readonly string[]).includes(id);
+export const saleOf = (id: string, now = Date.now()) => (inLaunch(now) && (LAUNCH.saleItems as readonly string[]).includes(id) ? LAUNCH.sale : 0);
+/** 이 상품에 붙는 할인 (base = 회원 등급 할인, admin = 관리자) */
+export function itemDiscount(id: string, base: number, admin = false, now = Date.now()): number {
+  if (isNewItem(id, now)) return admin ? base : 0;
+  return Math.max(base, saleOf(id, now));
+}
 
 /** 공개 링크로 보는 그 사람의 강점 (모임 정보 없음) */
 export type PublicProfile = {

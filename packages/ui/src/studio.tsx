@@ -7,7 +7,7 @@
  */
 import { useEffect, useMemo, useState } from 'react';
 import {
-  CHAMPIONS, CHAMPION_LIST, PIECE, RARITY_SHOP_KO, SHOP, SKIN_TIERS, SLOT_KO, baseSkin, matchName, priceWith, skinNeed,
+  CHAMPIONS, CHAMPION_LIST, PIECE, RARITY_SHOP_KO, SHOP, SKIN_TIERS, SLOT_KO, baseSkin, itemDiscount, matchName, priceWith, skinNeed,
   TITLE_RULE, type About, type Api, type Deco, type MemberPage, type Shop, type ShopSlot, type Skin, josa } from '@prism/core';
 import { ChampImg } from './basics';
 import { Icon } from './icons';
@@ -19,7 +19,7 @@ import { imgIn } from './skeleton';
 type Tab = 'skin' | ShopSlot | 'intro';
 const TABS: [Tab, string][] = [['skin', '대표 스킨'], ['bg', SLOT_KO.bg], ['frame', SLOT_KO.frame], ['fx', SLOT_KO.fx], ['name', SLOT_KO.name], ['title', SLOT_KO.title], ['intro', '소개']];
 const SLOTS: ShopSlot[] = ['bg', 'frame', 'fx', 'name', 'title'];
-const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary'] as const;
+const RARITY_ORDER = ['common', 'rare', 'epic', 'legendary', 'mythic'] as const;
 
 /** 이름#태그 — 태그는 흐리게 (같은 이름도 태그로 구분된다) */
 export function NickName({ nick }: { nick: string }) {
@@ -162,7 +162,7 @@ function DecoPanel({ slot, shop, deco, me, onPick }: { slot: ShopSlot; shop: Sho
   const disc = shop.rates?.discount ?? 0;
   const owned = items.filter((x) => hasIt(x.id)).length;
   const lockOf = (x: (typeof items)[number]) => {
-    if (slot !== 'title') return { tip: `${x.name} · 상점에서 ${priceWith(x.price, disc).toLocaleString()} ${PIECE}`, tag: <>{priceWith(x.price, disc).toLocaleString()}<PieceIcon size={12} /></> };
+    if (slot !== 'title') { const pr = priceWith(x.price, itemDiscount(x.id, disc, shop.rates?.admin)); return { tip: `${x.name} · 상점에서 ${pr.toLocaleString()} ${PIECE}`, tag: <>{pr.toLocaleString()}<PieceIcon size={12} /></> }; }
     const r = TITLE_RULE[x.id], pr = shop.uses?.titleProgress[x.id];
     return { tip: r ? `${x.name} · ${r.how}` : x.name, tag: pr ? <>{pr[0].toLocaleString()}/{pr[1].toLocaleString()}</> : null };
   };

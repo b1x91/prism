@@ -1435,6 +1435,10 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .shop-card.r-rare { --rc: #4a8cff; --rg: rgba(74, 140, 255, .45); }
 .shop-card.r-epic { --rc: #a46bff; --rg: rgba(164, 107, 255, .5); }
 .shop-card.r-legendary { --rc: #f2a93b; --rg: rgba(242, 169, 59, .55); }
+/* 신화 (v3.123, 배경에만): 진홍 + 상아빛. 스펙트럼은 쓰지 않는다 */
+.shop-card.r-mythic { --rc: #ff4d6d; --rg: rgba(255, 77, 109, .55); border-color: color-mix(in srgb, #ff4d6d 45%, var(--line)); }
+.shop-card.r-mythic .sc-prev::before { content: ""; position: absolute; inset: -40% -60%; z-index: 3; pointer-events: none; background: linear-gradient(105deg, transparent 40%, rgba(255, 228, 214, .26) 50%, transparent 60%); animation: sc-shine 3.6s ease-in-out infinite; }
+.shop-card.r-mythic .sc-prev { box-shadow: inset 0 0 0 1px rgba(255, 120, 140, .35), inset 0 -40px 60px -30px rgba(255, 77, 109, .45); }
 .shop-card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px rgba(0, 0, 0, .18), 0 0 0 1px color-mix(in srgb, var(--rc) 50%, transparent); }
 /* 장착 중은 '구매'(파란 버튼)와 헷갈리지 않게 초록 — 테두리·표시 모두 */
 .shop-card.on { border-color: color-mix(in srgb, var(--ok) 70%, transparent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ok) 18%, transparent), var(--shadow); }
@@ -1447,9 +1451,11 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 @keyframes sc-breathe { 0%, 100% { opacity: .55; } 50% { opacity: 1; } }
 .sc-rar { position: absolute; top: var(--s3); left: var(--s3); z-index: 4; display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); background: rgba(0, 0, 0, .45); border: 1px solid color-mix(in srgb, var(--rc) 60%, transparent); color: #fff; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .02em; backdrop-filter: blur(6px); }
 .sc-rar i { width: 8px; height: 8px; border-radius: 2px; transform: rotate(45deg); background: var(--rc); box-shadow: 0 0 8px var(--rc); }
-.sc-rar.r-common { --rc: #a3abbd; } .sc-rar.r-rare { --rc: #4a8cff; } .sc-rar.r-epic { --rc: #a46bff; } .sc-rar.r-legendary { --rc: #f2a93b; }
+.sc-rar.r-common { --rc: #a3abbd; } .sc-rar.r-rare { --rc: #4a8cff; } .sc-rar.r-epic { --rc: #a46bff; } .sc-rar.r-legendary { --rc: #f2a93b; } .sc-rar.r-mythic { --rc: #ff4d6d; }
 .sc-tag { position: absolute; top: var(--s3); right: var(--s3); z-index: 4; display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); background: rgba(255, 255, 255, .14); color: #fff; font-size: var(--fs-xs); font-weight: 800; backdrop-filter: blur(6px); }
 .sc-tag.on { background: #15803d; color: #fff; }
+.sc-tag.new { background: #ff4d6d; color: #fff; letter-spacing: .04em; }
+.sc-tag.sale { background: #f2a93b; color: #1a1205; }
 .sc-tag .icon { width: 12px; height: 12px; }
 .sc-body { display: grid; gap: var(--s1); padding: var(--s3) var(--s4) var(--s4); }
 .sc-nm { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -.01em; }
@@ -1734,6 +1740,8 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .lm-foot b { color: var(--text); }
 .rank-list .locked-more { padding: var(--s3); }
 /* 상점: 특별회원 할인 · 할인 전 가격 */
+.shop-head .shop-sale.launch { background: color-mix(in srgb, #ff4d6d 14%, transparent); color: #e0314f; }
+.shop-head .shop-sale + .shop-sale { margin-left: 0; }
 .shop-head .shop-sale { margin-left: auto; padding: 4px var(--s3); border-radius: var(--r-pill); background: color-mix(in srgb, #9b59b6 16%, transparent); color: #9b59b6; font-size: var(--fs-sm); font-weight: 850; }
 .sc-price s { margin-left: 4px; font-size: var(--fs-xs); color: var(--text-3); font-weight: 600; }
 /* 피스: 숫자 오른쪽에 아이콘 */
@@ -1866,7 +1874,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .pst-none .icon { width: 28px; height: 28px; }
 .pst-nm { margin-top: var(--s2); font-size: var(--fs-sm); font-weight: 750; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pst-sub { font-size: var(--fs-xs); color: var(--text-3); font-weight: 650; }
-.pst-sub.r-rare { color: #5a8dff; } .pst-sub.r-epic { color: #b072ff; } .pst-sub.r-legendary { color: #f0a63a; }
+.pst-sub.r-rare { color: #5a8dff; } .pst-sub.r-epic { color: #b072ff; } .pst-sub.r-legendary { color: #f0a63a; } .pst-sub.r-mythic { color: #ff4d6d; }
 .pst-clear { margin-top: var(--s4); }
 .pst-load { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: var(--s3); }
 .pst-load .sk { aspect-ratio: 4 / 3; border-radius: var(--r-m); }
@@ -3017,7 +3025,7 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 /* ───────── 꾸밈 밖 상품 (v3.99) ───────── */
 .goods-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: var(--s4); }
 .goods-card { --rc: #8b93a7; position: relative; display: grid; grid-template-columns: 96px 1fr; overflow: hidden; border-radius: var(--r-l); background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); }
-.goods-card.r-rare { --rc: #4a8cff; } .goods-card.r-epic { --rc: #a46bff; } .goods-card.r-legendary { --rc: #f2a93b; }
+.goods-card.r-rare { --rc: #4a8cff; } .goods-card.r-epic { --rc: #a46bff; } .goods-card.r-legendary { --rc: #f2a93b; } .goods-card.r-mythic { --rc: #ff4d6d; }
 .goods-card.on { border-color: color-mix(in srgb, var(--ok) 60%, transparent); }
 .gc-art { display: grid; place-items: center; background: radial-gradient(90% 80% at 50% 100%, color-mix(in srgb, var(--rc) 40%, transparent), transparent 70%), linear-gradient(180deg, #0c0f1a, #05060b); color: color-mix(in srgb, var(--rc) 70%, #fff); }
 .gc-art svg { width: 44px; height: 44px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 10px color-mix(in srgb, var(--rc) 60%, transparent)); }
