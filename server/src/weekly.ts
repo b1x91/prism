@@ -2,6 +2,7 @@
  * 이번 주 도전 (CLAUDE.md v3.90). 규칙은 공용 core/weekly.ts. 서버는 내 판(같은 팀 멤버 포함)과
  * 주마다 모임 전체가 함께 이긴 판 수만 넘기고, 받기는 미션 받기와 같은 표(mission_claims)에 남긴다.
  */
+import { ensureSnapshot } from './shop.js';
 import { WEEKLY, weekStart, weeklyClaimable, weeklyState, type TonightDay, type WGame } from '../../packages/core/src/index.js';
 import { FACE, HttpError, json, type Env, type Member } from './util.js';
 import { ratesOf } from './roles.js';
@@ -93,6 +94,7 @@ export async function claimWeekly(req: Request, env: Env, me: Member) {
   const want = body.all ? [...open.keys()] : Array.isArray(body.ids) ? body.ids.filter((v): v is string => typeof v === 'string' && open.has(v)).slice(0, 100) : [];
   if (!want.length) throw new HttpError(400, '받을 수 있는 보상이 없어요.');
   const now = Date.now();
+  await ensureSnapshot(env, me); // 피스 기준을 바꾼 순간의 잔액을 먼저 적어 둔다 (v3.120)
   await env.DB.batch(want.map((id) => env.DB.prepare('INSERT OR IGNORE INTO mission_claims (member_id, mission_id, reward, at) VALUES (?, ?, ?, ?)').bind(me.id, id, open.get(id)!, now)));
   const base = want.reduce((s, id) => s + open.get(id)!, 0);
   return json({ gained: Math.round(base * ratesOf(me).piece), ids: want, state: await weeklyOf(env, me) });

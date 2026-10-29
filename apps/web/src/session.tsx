@@ -5,6 +5,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ApiError, withCache, withDefaults, type Api, type Links, type Me, type Presence } from '@prism/core';
 import { connectFavs } from '@prism/ui';
+import type { Attend } from '@prism/ui';
 
 export const SERVER = (import.meta.env.VITE_PRISM_SERVER ?? '').replace(/\/$/, '');
 /** Windows 앱 설치 파일 주소. 기본은 GitHub Releases 최신판 (build-desktop 이 늘 같은 이름으로 올린다) */
@@ -37,7 +38,8 @@ async function call<T>(method: string, path: string, body?: unknown, onUnauthori
 }
 
 /** member: 회원이면 true, 아니면 false, 로그인 확인 전(토큰은 있음)이면 null — 확인 전에 비회원 화면을 잠깐 보였다가 바꾸지 않게 (v3.93) */
-type Session = { api: Api; me: Me | null; ready: boolean; member: boolean | null; links: Links; login: () => void; logout: () => Promise<void>; finishLogin: (code: string) => Promise<void>; refresh: () => void };
+type Session = { api: Api; me: Me | null; ready: boolean; member: boolean | null; links: Links;
+  /** 오늘 처음 접속했을 때 서버가 돌려준 출석 (연출을 띄우고 지운다, v3.120) */ attend: Attend | null; clearAttend: () => void; login: () => void; logout: () => Promise<void>; finishLogin: (code: string) => Promise<void>; refresh: () => void };
 const Ctx = createContext<Session | null>(null);
 export const useSession = () => useContext(Ctx)!;
 
@@ -45,6 +47,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me | null>(null);
   const [ready, setReady] = useState(false);
   const [links, setLinks] = useState<Links>(FALLBACK_LINKS);
+  const [attend, setAttend] = useState<Attend | null>(null);
   const api = useMemo<Api>(() => {
     const out = () => setMe(null);
     // 화면이 받은 것은 1시간 담아 둔다 — 메뉴를 옮길 때마다 자리표시를 띄우며 다시 받지 않게 (withCache, v3.67)
@@ -66,7 +69,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!loggedIn) return;
     const ping = () => {
       if (document.visibilityState !== 'visible') return;
-      api.post<{ presence: Presence; newsUnread?: number }>('/api/me/presence', { via: 'web' }).then((r) => setMe((m) => {
+      api.post<{ presence: Presence; newsUnread?: number; attend?: Attend }>('/api/me/presence', { via: 'web' }).then((r) => { if (r.attend) setAttend(r.attend); return r; }).then((r) => setMe((m) => {
         if (!m) return m;
         const unread = typeof r.newsUnread === 'number' ? r.newsUnread : m.newsUnread;
         return m.presence !== r.presence || m.newsUnread !== unread ? { ...m, presence: r.presence, newsUnread: unread } : m;
@@ -78,7 +81,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     return () => { clearInterval(t); document.removeEventListener('visibilitychange', ping); };
   }, [loggedIn, api]);
   const value: Session = {
-    api, me, ready, links, refresh, member: me ? true : ready ? false : null,
+    api, me, ready, links, refresh, member: me ? true : ready ? false : null, attend, clearAttend: () => setAttend(null),
     login: () => {
       if (!SERVER) return;
       const back = `${location.origin}/auth/done`;

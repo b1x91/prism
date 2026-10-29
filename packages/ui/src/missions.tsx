@@ -35,7 +35,7 @@ function fx(cls: string, x: number, y: number, html = '') {
   return el;
 }
 
-function flyPieces(from: DOMRect, count: number) {
+export function flyPieces(from: DOMRect, count: number) {
   if (reduced()) return 0;
   const target = [...document.querySelectorAll<HTMLElement>('[data-pieces]')].find((e) => e.offsetParent !== null);
   const to = target?.getBoundingClientRect() ?? new DOMRect(innerWidth - 48, 16, 24, 24);

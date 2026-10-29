@@ -3,26 +3,67 @@
  *  - 번 피스는 기록(판·도감·함께 해요)에서 늘 다시 계산한다. 따로 남기는 것은 매일 첫 접속과 산 꾸밈뿐.
  *  - 공개 링크(/api/public/:id)는 본인이 켰을 때만, 모임 정보 없이 그 사람의 강점만.
  */
-import { augMastery, champMastery, dexLevel, type DexLevel } from '../../packages/core/src/mastery.js';
+import { augMastery, champMastery, itemMastery, dexLevel, type DexLevel } from '../../packages/core/src/mastery.js';
+import { ITEM_DEX } from '../../packages/core/src/data.js';
 import { dexFromRows } from '../../packages/core/src/history.js';
 import { parseFeat } from '../../packages/core/src/challenges.js';
 import { usesOf } from './goods.js';
 import { checkTagBonus } from './tagbonus.js';
-import { EARN, INVITE_BONUS, TAG_BONUS, SHOP_ITEM, forSale, earnedTotal, runBonusOf, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
+import { EARN, INVITE_BONUS, TAG_BONUS, LEGACY, SHOP_ITEM, attendBase, attendOf, attendReward, attendStage, forSale, earnedTotal, legacyTotal, runBonusOf, levelTotal, parseDeco, type Deco, type Earned, type ShopSlot } from '../../packages/core/src/shop.js';
 import { dexRows } from './crew.js';
 import { missionPiecesOf } from './missions.js';
 import { HttpError, json, type Env, type Member } from './util.js';
-import { can, ratesOf } from './roles.js';
+import { can, legacyRateOf, ratesOf } from './roles.js';
 
+const ITEM_DEX_SET = new Set(ITEM_DEX);
 const SHOP_CLOSED = '상점은 준비 중입니다.';
 
 const HOUR = 3_600_000;
 /** 한국 날짜 (매일 첫 접속) */
 const kstDay = (t = Date.now()) => new Date(t + 9 * HOUR).toISOString().slice(0, 10);
 
-/** 매일 첫 접속: 접속 소식(presence)이 올 때 하루 한 번 남긴다 */
-export async function markDaily(env: Env, id: string) {
-  await env.DB.prepare('INSERT OR IGNORE INTO piece_daily (member_id, day) VALUES (?, ?)').bind(id, kstDay()).run().catch(() => {});
+export type Attend = { day: string; streak: number; reward: number; base: number; bonus: number; stage: 1 | 2 | 3 | 4 | 5 };
+
+/**
+ * 출석 (v3.120): 접속 소식(presence)이 올 때 하루 한 번 남긴다. 오늘 처음이면 연속 일수·받은 피스를 돌려준다 (화면이 출석 연출을 띄운다).
+ */
+export async function markDaily(env: Env, m: Pick<Member, 'id' | 'tier' | 'discord_roles'>): Promise<Attend | null> {
+  const day = kstDay();
+  const had = await env.DB.prepare('SELECT 1 AS x FROM piece_daily WHERE member_id = ? AND day = ?').bind(m.id, day).first().catch(() => null);
+  if (had) return null;
+  await ensureSnapshot(env, m).catch(() => {});
+  const r = await env.DB.prepare('INSERT OR IGNORE INTO piece_daily (member_id, day) VALUES (?, ?)').bind(m.id, day).run().catch(() => null);
+  if (!r?.meta?.changes) return null;
+  const days = await env.DB.prepare('SELECT day FROM piece_daily WHERE member_id = ? ORDER BY day DESC LIMIT 400').bind(m.id).all<{ day: string }>();
+  const { streak } = attendOf(days.results.map((x) => x.day));
+  const rate = ratesOf(m).piece;
+  const base = Math.round(attendBase(streak) * rate), bonus = Math.round((attendReward(streak) - attendBase(streak)) * rate);
+  return { day, streak, reward: base + bonus, base, bonus, stage: attendStage(streak) };
+}
+
+/**
+ * 피스 기준을 바꾼 순간의 잔액 지키기 (v3.120). 회원마다 처음 한 번, 예전 기준 합과 새 기준 합을 같은 순간에 적어 둔다.
+ * 잔액 = 예전 기준 합(그때) + (새 기준 합(지금) − 새 기준 합(그때)) − 쓴 것. 판·출석·받기를 기록하기 전에 늘 먼저 부른다.
+ */
+type Snap = { legacy: number; fresh: number };
+export async function ensureSnapshot(env: Env, m: Pick<Member, 'id' | 'tier' | 'discord_roles'>): Promise<Snap> {
+  const got = await env.DB.prepare('SELECT legacy, fresh FROM piece_snapshot WHERE member_id = ?').bind(m.id).first<Snap>();
+  if (got) return got;
+  const t = await totals(env, m.id, m);
+  await env.DB.prepare('INSERT OR IGNORE INTO piece_snapshot (member_id, legacy, fresh, at) VALUES (?, ?, ?, ?)').bind(m.id, t.legacy, t.fresh, Date.now()).run();
+  return (await env.DB.prepare('SELECT legacy, fresh FROM piece_snapshot WHERE member_id = ?').bind(m.id).first<Snap>()) ?? { legacy: t.legacy, fresh: t.fresh };
+}
+/** 회원 id 로 (등급 정보를 읽어) */
+export async function ensureSnapshotById(env: Env, id: string) {
+  const m = await env.DB.prepare('SELECT id, tier, discord_roles FROM members WHERE id = ?').bind(id).first<Pick<Member, 'id' | 'tier' | 'discord_roles'>>();
+  if (m) await ensureSnapshot(env, m);
+}
+
+/** 새 기준·예전 기준 합 (배율·고정 보상 포함) */
+async function totals(env: Env, id: string, m: Pick<Member, 'tier' | 'discord_roles'>, lv?: Awaited<ReturnType<typeof levelsOf>>, e?: Earned) {
+  const ee = e ?? await earned(env, id, lv);
+  const fixed = (ee.invites ?? 0) * INVITE_BONUS + (ee.tag ? TAG_BONUS.pieces : 0);
+  return { e: ee, fresh: Math.round(earnedTotal(ee) * ratesOf(m).piece) + fixed, legacy: Math.round(legacyTotal(ee) * legacyRateOf(m)) + fixed };
 }
 
 /** 도감 레벨: 챔피언·증강마다 지금 레벨 */
@@ -31,7 +72,9 @@ export async function levelsOf(env: Env, id: string) {
   const ch = dex.challenges ?? null;
   const champs = Object.entries(dex.champions).map(([k, e]) => ({ id: Number(k), m: champMastery(Number(k), e, dex.pairs, ch) }));
   const augs = Object.entries(dex.augments).map(([k, e]) => ({ id: Number(k), m: augMastery(Number(k), e, dex.pairs) }));
-  return { champs, augs };
+  // 아이템 도감 (v3.119) — 도감 목록에 있는 아이템만
+  const items = Object.entries(dex.items ?? {}).filter(([k]) => ITEM_DEX_SET.has(Number(k))).map(([k, e]) => ({ id: Number(k), m: itemMastery(Number(k), e, dex.itemPairs ?? []) }));
+  return { champs, augs, items };
 }
 
 export async function earned(env: Env, id: string, lv?: Awaited<ReturnType<typeof levelsOf>>): Promise<Earned> {
@@ -46,7 +89,7 @@ export async function earned(env: Env, id: string, lv?: Awaited<ReturnType<typeo
          SELECT x.start_at AS at FROM scrim_slots s JOIN scrims x ON x.id = s.scrim_id WHERE s.member_id = ?1 AND x.cancelled_at IS NULL AND x.start_at < ?2
        ) t WHERE EXISTS (SELECT 1 FROM participants q WHERE q.member_id = ?1 AND q.played_at BETWEEN t.at - 1800000 AND t.at + 10800000)`,
     ).bind(id, now),
-    env.DB.prepare('SELECT COUNT(*) AS n FROM piece_daily WHERE member_id = ?').bind(id),
+    env.DB.prepare('SELECT day FROM piece_daily WHERE member_id = ?').bind(id),
     // 함께 연판: 멤버 2명 이상 판의 시각 (v3.83)
     env.DB.prepare('SELECT played_at AS t FROM participants WHERE member_id = ? AND crew_count >= 2 ORDER BY played_at').bind(id),
     // 친구 초대: 초대한 친구가 승인된 수 (v3.107)
@@ -58,9 +101,19 @@ export async function earned(env: Env, id: string, lv?: Awaited<ReturnType<typeo
   // 연결·판 기록 때 놓쳤어도 여기서 확정한다 (처음이면 채널 축하)
   const tag = Boolean(tg?.got) || (await checkTagBonus(env, id, tg?.rid));
   const gr = g.results[0] as { n: number; w: number; c: number };
-  const [{ champs, augs }, missions] = await Promise.all([lv ?? levelsOf(env, id), missionPiecesOf(env, id)]);
-  const levels = [...champs, ...augs].reduce((s, x) => s + levelTotal(dexLevel(x.m)), 0);
-  return { games: gr.n, wins: gr.w, crew: gr.c, levels, together: (t.results[0] as { n: number }).n, daily: (d.results[0] as { n: number }).n, missions, run: runBonusOf((cr.results as { t: number }[]).map((r) => r.t)), invites: (inv.results[0] as { n: number } | undefined)?.n ?? 0, tag };
+  const [{ champs, augs, items }, ms] = await Promise.all([lv ?? levelsOf(env, id), missionPiecesOf(env, id)]);
+  const levels = [...champs, ...augs, ...items].reduce((s, x) => s + levelTotal(dexLevel(x.m)), 0);
+  // 예전 기준: 아이템 도감은 없었고 레벨 보상·연판·미션(받기 전 몫)이 더 컸다
+  const legacyLevels = [...champs, ...augs].reduce((s, x) => s + levelTotal(dexLevel(x.m), LEGACY.level), 0);
+  const days = (d.results as { day: string }[]).map((x) => x.day);
+  const att = attendOf(days);
+  const times = (cr.results as { t: number }[]).map((r) => r.t);
+  return {
+    games: gr.n, wins: gr.w, crew: gr.c, levels, together: (t.results[0] as { n: number }).n, daily: days.length,
+    missions: ms.legacy + ms.claimed, run: runBonusOf(times), attend: att.total, streak: att.streak,
+    invites: (inv.results[0] as { n: number } | undefined)?.n ?? 0, tag,
+    legacy: { levels: legacyLevels, run: runBonusOf(times, LEGACY.run), missions: ms.legacy * LEGACY.missionMult + ms.claimed },
+  };
 }
 
 /** 단계별 피스 배율·특별회원 할인 (v3.32) */
@@ -78,13 +131,19 @@ export async function state(env: Env, id: string, m: Pick<Member, 'tier' | 'disc
   ]);
   const spent = own.results.reduce((s, x) => s + x.price, 0) + (spend?.s ?? 0);
   const rates = ratesOf(m);
-  // 초대 보너스·#PRSM 태그 보상은 배율 밖 고정값 (v3.107·v3.116)
-  const total = Math.round(earnedTotal(e) * rates.piece) + (e.invites ?? 0) * INVITE_BONUS + (e.tag ? TAG_BONUS.pieces : 0);
+  // 초대 보너스·#PRSM 태그 보상은 배율 밖 고정값 (v3.107·v3.116). 기준을 바꾼 순간의 잔액은 그대로 (v3.120)
+  const t = await totals(env, id, m, lv, e);
+  let snap = await env.DB.prepare('SELECT legacy, fresh FROM piece_snapshot WHERE member_id = ?').bind(id).first<Snap>();
+  if (!snap) {
+    await env.DB.prepare('INSERT OR IGNORE INTO piece_snapshot (member_id, legacy, fresh, at) VALUES (?, ?, ?, ?)').bind(id, t.legacy, t.fresh, Date.now()).run();
+    snap = (await env.DB.prepare('SELECT legacy, fresh FROM piece_snapshot WHERE member_id = ?').bind(id).first<Snap>()) ?? { legacy: t.legacy, fresh: t.fresh };
+  }
+  const total = snap.legacy + (t.fresh - snap.fresh);
   return { balance: total - spent, earned: e, spent, owned: own.results.map((x) => x.id), deco: parseDeco(row?.deco), shared: Boolean(row?.share_on), rates, uses };
 }
 
 export async function getShop(env: Env, me: Member) {
-  await markDaily(env, me.id);
+  // 출석은 접속 소식(presence)에서만 남긴다 — 그 답으로 출석 연출을 띄우므로
   return json(await state(env, me.id, me));
 }
 

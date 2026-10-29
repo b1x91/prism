@@ -112,7 +112,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
     const q = new URL(req.url).searchParams.get('day');
     return json(await dailyPayload(env, q ? Date.parse(`${q}T21:00:00+09:00`) : Date.now()));
   }
-  if (m === 'POST' && pathname === '/api/me/presence') { await markDaily(env, me.id); return setPresence(env, me, await req.json<Record<string, unknown>>().catch(() => ({}))); }
+  if (m === 'POST' && pathname === '/api/me/presence') { const attend = await markDaily(env, me).catch(() => null); return setPresence(env, me, await req.json<Record<string, unknown>>().catch(() => ({})), attend); }
   if (m === 'GET' && pathname === '/api/crew/targets') return crewTargets(env);
   if (m === 'POST' && pathname === '/api/ingest') return ingest(req, env, me);
   if (m === 'POST' && pathname === '/api/champselect') return champSelect(req, env, me);

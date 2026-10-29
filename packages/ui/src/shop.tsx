@@ -52,6 +52,14 @@ export function addPieces(n: number, dur = 700) {
   const step = (t: number) => { const k = Math.min(1, (t - t0) / dur); setPieces(Math.round(from + (to - from) * (1 - (1 - k) ** 3))); if (k < 1) requestAnimationFrame(step); };
   requestAnimationFrame(step);
 }
+/** 서버의 잔액을 다시 받아 차이만큼 차오르게 (출석처럼 접속 알림으로 들어온 피스) */
+export async function refreshPieces(api: Api, dur = 700) {
+  api.forget?.('/api/shop');
+  const d = await api.get<Shop>('/api/shop').catch(() => null);
+  if (!d) return;
+  if (pieceBal === null) { setPieces(d.balance); return; }
+  addPieces(d.balance - pieceBal, dur);
+}
 export function usePieces(api: Api | null, every = 300_000) {
   const n = useSyncExternalStore((f) => { pieceSubs.add(f); return () => { pieceSubs.delete(f); }; }, () => pieceBal);
   useEffect(() => {

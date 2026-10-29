@@ -2,6 +2,7 @@
  * 앱의 흐름: 롤 클라이언트 확인 주기, 전적 정리, 챔프 선택, 업로드, 회원 대신 수집.
  * 원칙 (CLAUDE.md v3.1-4·5): 게임 중에는 롤에 요청 0, 확인 간격은 상황별.
  */
+import type { Attend } from '@prism/ui';
 import { AUGMENT, isMayhemGame, myKillsOf, liveMatchup, parseLive, mayhemGames, personalStats, toIngestGame, type Game, type InquiryContext, type Me, type Personal } from '@prism/core';
 import { api, bridge } from './bridge';
 import { VERSION } from './version';
@@ -45,6 +46,8 @@ export type State = {
   sessionChecked: boolean;
   sessionError: string | null;
   me: Me | null;
+  /** 오늘 처음 접속했을 때 서버가 돌려준 출석 (화면이 연출을 띄우고 지운다, v3.120) */
+  attend?: Attend | null;
   upload: { lastAt: number; stored: number; error: string | null };
   crewSync: { lastAt: number; running: boolean; games: number; error: string | null };
 };
@@ -360,10 +363,14 @@ async function pingPresence() {
   if (key === presenceKey && now - presenceAt < 60_000) return;
   presenceKey = key;
   presenceAt = now;
-  const r = await api.post<{ newsUnread?: number }>('/api/me/presence', { via: 'app', lol, open, phase, champ }).catch(() => { presenceKey = ''; return null; });
+  const r = await api.post<{ newsUnread?: number; attend?: Attend }>('/api/me/presence', { via: 'app', lol, open, phase, champ }).catch(() => { presenceKey = ''; return null; });
+  if (r?.attend) set({ attend: r.attend });
   // 새 소식이 오면 '소식' 메뉴에 빨간 점 (v3.114)
   if (r && typeof r.newsUnread === 'number' && state.me && state.me.newsUnread !== r.newsUnread) set({ me: { ...state.me, newsUnread: r.newsUnread } });
 }
+
+/** 출석 연출을 다 보면 지운다 */
+export const clearAttend = () => set({ attend: null });
 
 let started = false;
 export function start() {

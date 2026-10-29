@@ -23,21 +23,21 @@ export const tonightWindow = (day: string) => {
 
 export const WEEKLY = {
   /** 연승 [연승 수, 피스] */
-  streak: [[3, 20], [5, 40], [7, 80], [10, 150]] as [number, number][],
+  streak: [[3, 10], [5, 20], [7, 40], [10, 75]] as [number, number][],
   /** 프리즘 연승 (멤버와 같은 팀일 때만) */
-  crewStreak: [[2, 20], [4, 50], [6, 100], [8, 180]] as [number, number][],
+  crewStreak: [[2, 10], [4, 25], [6, 50], [8, 90]] as [number, number][],
   /** 이번 주 멤버와 같은 팀으로 이긴 판 */
-  wins: [[5, 30], [15, 60], [30, 120]] as [number, number][],
+  wins: [[5, 15], [15, 30], [30, 60]] as [number, number][],
   /** 모두의 목표: 이번 주 모임 전체가 함께 이긴 판 (내가 1승 이상 보탰을 때) — 보상만. 목표 판수는 goalTargets 가 주마다 정한다 */
-  goal: [[0, 40], [0, 60]] as [number, number][],
+  goal: [[0, 20], [0, 30]] as [number, number][],
   /** 목표 판수: 지난 4주 '함께 이긴 판' 평균 × 배수 (5 단위로 올림), 최소값. 기록이 없으면 처음 값 (가볍게 시작) */
   goalAuto: { weeks: 4, mult: [0.8, 1.3], min: [10, 20], start: [10, 25] },
   /** 새로운 짝: 같은 팀으로 이겨 본 적 없는 멤버와 첫 승, 한 명마다 · 주에 최대 */
-  pair: { reward: 25, max: 3 },
+  pair: { reward: 15, max: 3 },
   /** 듀오 등급이 오를 때 (짝마다 등급별 한 번) */
-  bond: { 2: 30, 3: 60, 4: 120, 5: 250 } as Record<number, number>,
+  bond: { 2: 15, 3: 30, 4: 60, 5: 125 } as Record<number, number>,
   /** 오늘 밤 증강: 봇이 올린 증강 3개 중 하나를 골라 이기기 (하루 한 번) */
-  tonight: 30,
+  tonight: 15,
 } as const;
 
 const WEEK = 7 * 86_400_000;

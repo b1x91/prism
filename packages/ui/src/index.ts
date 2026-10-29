@@ -31,3 +31,4 @@ export * from './staff';
 export * from './news';
 export * from './invite';
 export * from './navgroups';
+export * from './attend';

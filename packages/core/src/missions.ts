@@ -18,12 +18,12 @@ export const MISSION_ROLES: ChallengeRole[] = ['marksman', 'mage', 'assassin', '
 export const MISSION_ROLE_KO = CHALLENGE_ROLE_KO;
 
 /** 주간 미션 기본 보상 */
-export const MISSION_REWARD = { fresh: 40, weak: 40, spread: 30 } as const;
+export const MISSION_REWARD = { fresh: 20, weak: 20, spread: 15 } as const;
 /** 가장 많이 한 역할의 비율이 이 이상이면 보상 배수 (큰 것부터) */
 export const BIAS_BONUS: [number, number][] = [[0.7, 2], [0.5, 1.5]];
 /** 역할 개척 단계: 그 역할 챔프를 몇 개 해 봤나 (half·all 은 그 역할 챔프 수의 절반·전부) */
 export const PIONEER_STEPS: { at: number | 'half' | 'all'; reward: number }[] = [
-  { at: 3, reward: 20 }, { at: 8, reward: 40 }, { at: 'half', reward: 100 }, { at: 'all', reward: 300 },
+  { at: 3, reward: 10 }, { at: 8, reward: 20 }, { at: 'half', reward: 50 }, { at: 'all', reward: 150 },
 ];
 
 const DAY = 86_400_000, HOUR = 3_600_000, WEEK = 7 * DAY;
@@ -151,11 +151,16 @@ export const legacyItems = (all: MGame[]) => doneItems(all.filter((g) => g.t < C
 
 /** 받은 미션 피스 = 예전에 자동으로 받은 것 + 받기로 받은 것 (claims: 번호 → 받은 보상) */
 export function missionPieces(all: MGame[], claims: Map<string, number>): number {
+  const x = missionSplit(all, claims);
+  return x.legacy + x.claimed;
+}
+/** 받기 전(CLAIM_SINCE 전)에 깬 미션 몫과 받은 미션 몫 — 받은 몫은 받을 때의 값이 그대로 남는다 */
+export function missionSplit(all: MGame[], claims: Map<string, number>): { legacy: number; claimed: number } {
   const legacy = legacyItems(all);
-  let sum = 0;
-  for (const r of legacy.values()) sum += r;
-  for (const [id, r] of claims) if (!legacy.has(id)) sum += r;
-  return sum;
+  let l = 0, c = 0;
+  for (const r of legacy.values()) l += r;
+  for (const [id, r] of claims) if (!legacy.has(id)) c += r;
+  return { legacy: l, claimed: c };
 }
 /** 지금 받을 수 있는 미션 (깼는데 아직 안 받은 것) */
 export function claimable(all: MGame[], claims: Map<string, number>, now = Date.now(), rr: Rerolls = new Map()): Map<string, number> {

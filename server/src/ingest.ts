@@ -11,6 +11,7 @@
  */
 import { firstRecord } from './bot.js';
 import { checkTagBonus } from './tagbonus.js';
+import { ensureSnapshotById } from './shop.js';
 import { featOf, type FeatSource } from '../../packages/core/src/challenges.js';
 import { finite, HttpError, int, json, type Env, type Member } from './util.js';
 
@@ -264,6 +265,8 @@ export async function ingest(req: Request, env: Env, me: Member) {
     for (const r of results) before.add(r.member_id);
   }
 
+  // 피스 기준을 바꾼 순간의 잔액을 판을 넣기 전에 적어 둔다 (회원마다 처음 한 번, v3.120)
+  for (const id of crewIds) await ensureSnapshotById(env, id).catch(() => {});
   // D1 batch 는 트랜잭션으로 실행된다. 한 판이 두 트랜잭션으로 갈라지지 않도록 판 단위로 묶어 보낸다
   let chunk: D1PreparedStatement[] = [];
   for (const stmts of perGame) {

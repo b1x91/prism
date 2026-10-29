@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AugmentOpen, Bone, groupNav, useScrollKeeper, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AttendBurst, AugmentOpen, Bone, groupNav, useScrollKeeper, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -12,7 +12,7 @@ const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => [...N
 const dotOf = (me: { newsUnread?: number } | null, to: string) => (to === '/news' && (me?.newsUnread ?? 0) > 0 ? 'nav-dot' : undefined);
 
 export function Layout() {
-  const { me, login, links, api, refresh, member } = useSession();
+  const { me, login, links, api, refresh, member, attend, clearAttend } = useSession();
   // 최애 챔프(대표 스킨)나 '나를 소개해요'가 아직 없는 회원에게 (v3.47). '나중에'는 이번 접속에서만 닫는다
   const [welcomeOff, setWelcomeOff] = useState(() => { try { return sessionStorage.getItem('prism-welcome') === 'later'; } catch { return false; } });
   const welcome = Boolean(me && (!me.skin || !me.about) && !welcomeOff);
@@ -44,6 +44,7 @@ export function Layout() {
   const pullRefresh = useCallback(() => { api.forget?.(); emitPullRefresh(); refresh(); }, [api, refresh]);
   return (
     <>
+      {attend && <AttendBurst a={attend} api={api} onDone={clearAttend} />}
       <header className="top"><div className="wrap">
         <NavLink to="/" className="brand"><Gem size={22} />PRISM</NavLink>
         <nav className="tabs">{groupNav(navOf(me)).map((g, gi) => <span key={g.key} className="tab-group" role="group" aria-label={g.label}>{gi > 0 && <i className="tab-sep" aria-hidden="true" />}{g.items.map(([to, label]) => <NavLink key={to} to={to} className={dotOf(me, to)}>{label}</NavLink>)}</span>)}</nav>

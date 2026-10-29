@@ -3,7 +3,8 @@
  *  - 미션 계산은 공용 core/missions.ts. 서버는 내 판(챔프·승·시각)만 넘긴다.
  *  - 즐겨찾기는 회원마다 챔프·증강 번호만 남긴다.
  */
-import { claimable, missionPieces, missionState, rerollsFrom, weekMissions, weekStart, type MGame, type Mission, type Rerolls } from '../../packages/core/src/missions.js';
+import { ensureSnapshot } from './shop.js';
+import { claimable, missionSplit, missionState, rerollsFrom, weekMissions, weekStart, type MGame, type Mission, type Rerolls } from '../../packages/core/src/missions.js';
 import { REROLL_PER_WEEK, USE_PRICE } from '../../packages/core/src/goods.js';
 import { priceFor, state as shopState } from './shop.js';
 import { HttpError, json, type Env, type Member } from './util.js';
@@ -22,7 +23,7 @@ async function claimsOf(env: Env, id: string): Promise<Map<string, number>> {
 
 export async function missionPiecesOf(env: Env, id: string) {
   const [games, claims] = await Promise.all([myGamesForMissions(env, id), claimsOf(env, id)]);
-  return missionPieces(games, claims);
+  return missionSplit(games, claims);
 }
 
 /** 미션 다시 뽑기 기록 (v3.99) */
@@ -61,6 +62,7 @@ export async function claimMissions(req: Request, env: Env, me: Member) {
   const want = body.all ? [...open.keys()] : Array.isArray(body.ids) ? body.ids.filter((x): x is string => typeof x === 'string' && open.has(x)).slice(0, 100) : [];
   if (!want.length) throw new HttpError(400, '받을 수 있는 보상이 없어요.');
   const now = Date.now();
+  await ensureSnapshot(env, me); // 피스 기준을 바꾼 순간의 잔액을 먼저 적어 둔다 (v3.120)
   await env.DB.batch(want.map((id) => env.DB.prepare('INSERT OR IGNORE INTO mission_claims (member_id, mission_id, reward, at) VALUES (?, ?, ?, ?)').bind(me.id, id, open.get(id)!, now)));
   const base = want.reduce((s, id) => s + open.get(id)!, 0);
   return json({ gained: Math.round(base * ratesOf(me).piece), ids: want, state: await stateOf(env, me) });

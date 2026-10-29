@@ -10,12 +10,44 @@ import { RUN_GAP } from './praise';
 export const PIECE = '피스';
 
 export const EARN = {
-  game: 10,
-  win: 5,
-  crew: 5,
-  /** 함께 해요에서 연 판·내전에 참여하고 그 시간에 실제로 한 판 */
+  game: 3,
+  win: 2,
+  crew: 2,
+  /** 함께 해요에서 연 판·내전에 참여하고 그 시간에 실제로 한 판 (예전 기록만) */
   together: 20,
-  daily: 10,
+} as const;
+
+/**
+ * 출석 (v3.120): 매일 첫 접속. 이어서 올수록 커진다 — 1일째 5 · 2일째 7 · … · 6일째부터 15 (하루라도 빠지면 1일째부터).
+ * 7·14·30·60·100일째에는 보너스. 출석 날짜만 남기고 피스는 늘 다시 계산한다.
+ */
+export const ATTEND = { base: 5, step: 2, cap: 15, milestones: { 7: 20, 14: 30, 30: 60, 60: 100, 100: 200 } as Record<number, number> } as const;
+export const attendBase = (streak: number) => Math.min(ATTEND.base + ATTEND.step * (Math.max(1, streak) - 1), ATTEND.cap);
+export const attendReward = (streak: number) => attendBase(streak) + (ATTEND.milestones[streak] ?? 0);
+/** 출석 연출 단계 1~5: 1~2일 · 3~6일 · 7~13일 · 14~29일 · 30일부터 */
+export const attendStage = (streak: number): 1 | 2 | 3 | 4 | 5 => (streak >= 30 ? 5 : streak >= 14 ? 4 : streak >= 7 ? 3 : streak >= 3 ? 2 : 1);
+const dayNo = (d: string) => Math.floor(Date.UTC(+d.slice(0, 4), +d.slice(5, 7) - 1, +d.slice(8, 10)) / 86_400_000);
+/** 출석 날짜('YYYY-MM-DD', 한국 날짜)들 → 마지막 날의 연속 일수와 모든 날의 출석 피스 합 */
+export function attendOf(days: string[]): { streak: number; total: number } {
+  const ns = [...new Set(days)].map(dayNo).sort((a, b) => a - b);
+  let streak = 0, total = 0;
+  for (let i = 0; i < ns.length; i++) {
+    streak = i > 0 && ns[i] - ns[i - 1] === 1 ? streak + 1 : 1;
+    total += attendReward(streak);
+  }
+  return { streak, total };
+}
+
+/**
+ * 예전 피스 기준 (v3.120 전). 기준을 바꾼 순간의 잔액을 그대로 지키려고 회원마다 한 번 계산해 적어 둔다 (piece_snapshot).
+ * 그 뒤에 버는 것만 새 기준.
+ */
+export const LEGACY = {
+  game: 10, win: 5, crew: 5, together: 20, daily: 10,
+  run: { step: 2, max: 10 },
+  level: { 0: 0, 1: 5, 2: 10, 3: 20, 4: 30, 5: 100 } as Record<DexLevel, number>,
+  /** 예전 미션 보상은 지금의 두 배 (지금 값은 절반으로 내렸다) */
+  missionMult: 2,
 } as const;
 
 /** 친구 초대 보너스 (v3.107): 초대한 친구가 운영진 승인을 받으면 한 명마다. 단계 배율을 곱하지 않는 고정값 */
@@ -29,20 +61,20 @@ export const hasPrismTag = (riotId: string | null | undefined) => typeof riotId 
  * 함께 연판 (v3.83): 멤버 2명 이상인 판을 이어서(다음 판이 50분 안에 시작) 할수록 판마다 더 준다.
  * 이어진 k번째 판 = step × (k − 1) — 2번째 +2 · 3번째 +4 · … · 10번째 +18, 10연판부터는 매 판 +18 그대로. 10연판 한 번이면 +90.
  */
-export const RUN_BONUS = { step: 2, max: 10 } as const;
-export function runBonusOf(times: number[]) {
+export const RUN_BONUS = { step: 1, max: 5 } as const;
+export function runBonusOf(times: number[], rb: { step: number; max: number } = RUN_BONUS) {
   const t = [...times].sort((a, b) => a - b);
   let sum = 0, k = 0;
   for (let i = 0; i < t.length; i++) {
     k = i > 0 && t[i] - t[i - 1] <= RUN_GAP ? k + 1 : 1;
-    sum += RUN_BONUS.step * (Math.min(k, RUN_BONUS.max) - 1);
+    sum += rb.step * (Math.min(k, rb.max) - 1);
   }
   return sum;
 }
 
-/** 도감 레벨에 오를 때마다 (챔피언·증강 각각). 누적: 실버 5 · 골드 15 · 플래티넘 35 · 다이아몬드 65 · 마스터 165 */
-export const LEVEL_REWARD: Record<DexLevel, number> = { 0: 0, 1: 5, 2: 10, 3: 20, 4: 30, 5: 100 };
-export const levelTotal = (l: DexLevel) => ([1, 2, 3, 4, 5] as DexLevel[]).filter((x) => x <= l).reduce<number>((s, x) => s + LEVEL_REWARD[x], 0);
+/** 도감 레벨에 오를 때마다 (챔프·증강·아이템 각각, v3.120). 누적: 실버 0 · 골드 3 · 플래티넘 13 · 다이아몬드 33 · 마스터 93 */
+export const LEVEL_REWARD: Record<DexLevel, number> = { 0: 0, 1: 0, 2: 3, 3: 10, 4: 20, 5: 60 };
+export const levelTotal = (l: DexLevel, table: Record<DexLevel, number> = LEVEL_REWARD) => ([1, 2, 3, 4, 5] as DexLevel[]).filter((x) => x <= l).reduce<number>((s, x) => s + table[x], 0);
 
 export type ShopSlot = 'bg' | 'frame' | 'fx' | 'name' | 'title';
 export const SLOT_KO: Record<ShopSlot, string> = { bg: '배경', frame: '머리 테두리', fx: '머리 효과', name: '이름 효과', title: '칭호' };
@@ -117,8 +149,12 @@ export function parseDeco(s: string | null | undefined): Deco {
 
 /** 번 피스 내역 */
 /** missions: 미션으로 번 피스 (core/missions.ts) */
-export type Earned = { games: number; wins: number; crew: number; levels: number; together: number; daily: number; missions?: number; run?: number; /** 승인된 초대 친구 수 (보너스는 배율 밖, INVITE_BONUS) */ invites?: number; /** #PRSM 태그 보상을 받았는지 (TAG_BONUS, 배율 밖) */ tag?: boolean };
-export const earnedTotal = (e: Earned) => e.games * EARN.game + e.wins * EARN.win + e.crew * EARN.crew + e.levels + e.together * EARN.together + e.daily * EARN.daily + (e.missions ?? 0) + (e.run ?? 0);
+export type Earned = { games: number; wins: number; crew: number; levels: number; together: number; daily: number; missions?: number; run?: number;
+  /** 출석 피스 (연속 출석으로 커진다, v3.120) · 지금 연속 일수 */ attend?: number; streak?: number;
+  /** 예전 기준으로 다시 센 값 (기준을 바꾸는 순간 한 번 적어 두는 데만 쓴다) */ legacy?: { levels: number; run: number; missions: number }; /** 승인된 초대 친구 수 (보너스는 배율 밖, INVITE_BONUS) */ invites?: number; /** #PRSM 태그 보상을 받았는지 (TAG_BONUS, 배율 밖) */ tag?: boolean };
+export const earnedTotal = (e: Earned) => e.games * EARN.game + e.wins * EARN.win + e.crew * EARN.crew + e.levels + e.together * EARN.together + (e.attend ?? 0) + (e.missions ?? 0) + (e.run ?? 0);
+/** 예전 기준 합 (piece_snapshot 용) */
+export const legacyTotal = (e: Earned) => e.games * LEGACY.game + e.wins * LEGACY.win + e.crew * LEGACY.crew + (e.legacy?.levels ?? 0) + e.together * LEGACY.together + e.daily * LEGACY.daily + (e.legacy?.missions ?? 0) + (e.legacy?.run ?? 0);
 
 export type Shop = {
   balance: number; earned: Earned; spent: number; owned: string[]; deco: Deco; shared: boolean; rates?: import('./api').Rates;

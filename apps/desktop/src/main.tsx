@@ -3,10 +3,10 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { AugmentOpen, Icon, groupNav, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { AttendBurst, type Attend, AugmentOpen, Icon, groupNav, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { pollWhileShown } from './poll';
-import { checkNow, getState, refreshSession, start, subscribe, type State } from './controller';
+import { checkNow, clearAttend, getState, refreshSession, start, subscribe, type State } from './controller';
 import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
 import { api, bridge } from './bridge';
@@ -83,6 +83,20 @@ async function pullRefresh() {
   api.forget?.();
   emitPullRefresh();
   await Promise.all([refreshSession().catch(() => {}), checkNow().catch(() => {})]);
+}
+
+/** 출석 연출은 창을 실제로 보고 있을 때만 (윈도우 시작 시 트레이로 켜졌으면 창을 띄울 때까지 기다린다, v3.120) */
+function AttendGate({ a }: { a: Attend }) {
+  const seen = () => document.visibilityState === 'visible' && document.hasFocus();
+  const [on, setOn] = useState(seen);
+  useEffect(() => {
+    if (on) return;
+    const f = () => { if (seen()) setOn(true); };
+    document.addEventListener('visibilitychange', f);
+    addEventListener('focus', f);
+    return () => { document.removeEventListener('visibilitychange', f); removeEventListener('focus', f); };
+  }, [on]);
+  return on ? <AttendBurst a={a} api={api} onDone={clearAttend} /> : null;
 }
 
 function App() {
@@ -225,6 +239,8 @@ function Root() {
   return <>
     <App />
     {phase !== 'gone' && <Splash leaving={phase === 'leave'} note={s.sessionChecked ? '준비됐어요' : 'Prism에 연결하는 중'} />}
+    {/* 출석 연출: 첫 화면이 걷히고 첫 화면 단계·소개 창을 다 마친 뒤에 */}
+    {phase === 'gone' && s.attend && s.me?.consent && s.me.skin && s.me.about && <AttendGate a={s.attend} />}
   </>;
 }
 

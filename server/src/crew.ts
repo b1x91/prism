@@ -59,7 +59,7 @@ export async function getMe(env: Env, me: Member) {
 }
 
 /** 접속 알림 (앱·웹이 60초마다). 앱은 롤 켜짐·창 떠 있음도 함께 */
-export async function setPresence(env: Env, me: Member, body: { via?: unknown; lol?: unknown; open?: unknown; phase?: unknown; champ?: unknown }) {
+export async function setPresence(env: Env, me: Member, body: { via?: unknown; lol?: unknown; open?: unknown; phase?: unknown; champ?: unknown }, attend?: unknown) {
   const now = Date.now();
   if (body.via === 'app') {
     // 롤 단계·챔프 (멤버 근황 '지금', v3.74). 단계가 바뀔 때만 시작 시각을 새로
@@ -78,7 +78,7 @@ export async function setPresence(env: Env, me: Member, body: { via?: unknown; l
     me.web_seen_at = now;
   }
   // 안 읽은 소식 수도 함께 — 앱·웹이 1분마다 알릴 때 메뉴의 빨간 점을 맞춘다
-  return json({ presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }, now), newsUnread: await unreadNews(env, me) });
+  return json({ presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }, now), newsUnread: await unreadNews(env, me), ...(attend ? { attend } : {}) });
 }
 
 /** 내 판 목록 (최근 100판). 웹·앱의 "내 기록" 화면용. 본인 것만 */

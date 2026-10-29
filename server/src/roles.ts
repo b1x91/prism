@@ -36,11 +36,14 @@ export const LIMITED = 5;
 
 /** 단계별 혜택: 피스 모으는 배율 · 도감 경험치 배율 (높은 단계부터) */
 export const RATES: { at: number; piece: number; dexXp: number }[] = [
-  { at: 5, piece: 2, dexXp: 2 }, // 운영진
-  { at: 3, piece: 1.5, dexXp: 1.5 }, // 우수회원
-  { at: 2, piece: 1.5, dexXp: 1 }, // 정회원
+  { at: 5, piece: 1.5, dexXp: 2 }, // 운영진
+  { at: 3, piece: 1.3, dexXp: 1.5 }, // 우수회원
+  { at: 2, piece: 1.2, dexXp: 1 }, // 정회원
   { at: 0, piece: 1, dexXp: 1 }, // 준회원
 ];
+/** v3.120 전 피스 배율 (기준을 바꾸는 순간의 잔액을 지키는 데만 쓴다) */
+export const LEGACY_PIECE_RATES: { at: number; piece: number }[] = [{ at: 5, piece: 2 }, { at: 3, piece: 1.5 }, { at: 2, piece: 1.5 }, { at: 0, piece: 1 }];
+export const legacyRateOf = (m: Pick<Member, 'tier' | 'discord_roles'>) => LEGACY_PIECE_RATES.find((x) => levelOf(m) >= x.at)!.piece;
 /** 특별회원 상점 할인 (운영진도 받는다) */
 export const SPECIAL_DISCOUNT = 0.5;
 
