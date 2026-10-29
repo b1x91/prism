@@ -3,7 +3,7 @@
  * 로그인 토큰은 Rust 에만 있고 화면에는 오지 않는다.
  */
 import { invoke } from '@tauri-apps/api/core';
-import { withCache, ApiError, type Api } from '@prism/core';
+import { withCache, withNet, ApiError, type Api } from '@prism/core';
 
 const inTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
 const DEV = 'http://127.0.0.1:5199';
@@ -57,11 +57,12 @@ export type VisionState = {
 export type UpdateInfo = { current: string; latest: string; available: boolean; notes: string; ready?: boolean; managed?: boolean };
 
 /** 서버 중계 (토큰은 Rust 에만). 화면이 받은 것은 1시간 담아 둔다 (withCache, v3.67) */
-export const api: Api = withCache({
+// 연결이 끊기면 알린다 (withNet → 연결 안내 화면, v3.122)
+export const api: Api = withCache(withNet({
   get: (path) => call('api', { method: 'GET', path }).catch((e) => { throw err(e); }) as any,
   post: (path, body) => call('api', { method: 'POST', path, body: body ?? {} }).catch((e) => { throw err(e); }) as any,
   del: (path) => call('api', { method: 'DELETE', path }).catch((e) => { throw err(e); }) as any,
-});
+}));
 
 /** 오른쪽 아래 알림 (Rust toast.rs) */
 export type ToastMsg = { title: string; body: string; kind: 'info' | 'ok' | 'busy' | 'warn'; action?: '' | 'apply' | 'open'; at: number };

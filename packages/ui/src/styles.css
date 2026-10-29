@@ -2848,6 +2848,22 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .ss-in { animation: ssIn .42s cubic-bezier(.2, .8, .2, 1) both; will-change: opacity; }
 @keyframes ssIn { from { opacity: 0; scale: 1.035; } to { opacity: 1; scale: 1; } }
 @media (prefers-reduced-motion: reduce) { .ss-in { animation: none; } }
+/* 챔프가 바뀌는 동안 (v3.122): 누르면 바로 글이 물러나고 그림이 어두워졌다가, 새 그림이 준비되면 글·그림이 같은 박자로(0.42초) 함께 나타난다 */
+.banner .bn-txt { transition: opacity .18s ease, transform .18s ease; }
+.banner.swapping .bn-txt, .banner.swapping .banner-foot { opacity: .3; transform: translateY(-3px); }
+.banner .banner-foot { transition: opacity .18s ease, transform .18s ease; }
+.banner > img.bg { transition: filter .22s ease; }
+.banner.swapping > img.bg { filter: brightness(.7); }
+.banner.swapping .glass-ib svg { animation: bnSpin .6s cubic-bezier(.2, .8, .2, 1); }
+.today-augs { transition: opacity .18s ease; }
+.fpk-stage .fpk-txt, .fpk-stage .fpk-art { transition: opacity .18s ease, filter .22s ease; }
+.fpk-stage.swapping .fpk-txt { opacity: .35; }
+.fpk-stage.swapping .fpk-art { filter: brightness(.7); }
+.today-augs.swapping { opacity: .4; }
+.bn-in { animation: bnIn .42s cubic-bezier(.2, .8, .2, 1) both; }
+@keyframes bnIn { from { opacity: 0; transform: translateY(6px); } }
+@keyframes bnSpin { from { transform: rotate(-180deg); } }
+@media (prefers-reduced-motion: reduce) { .banner .bn-txt, .banner .banner-foot, .banner > img.bg { transition: none; } .bn-in, .banner.swapping .glass-ib svg { animation: none; } }
 
 /* Prism을 밝히는 사람들 (v3.84·v3.85): 고마운 분들을 크게 — 대표 스킨이 은은히 깔린 카드, 기록을 가장 많이 모아 준 셋은 오른쪽 위에 결정 휘장 */
 .appm { display: grid; gap: var(--s4); }
@@ -3820,3 +3836,37 @@ button.stf-person:hover { background: var(--surface-2); }
   .act-spin, .act-btn.done .act-stack svg path, .mo-in { animation: none; }
   .act-btn.done .act-stack svg path { stroke-dashoffset: 0; }
 }
+
+/* ───────── 연결이 끊겼을 때 (v3.122, offline.tsx) ───────── */
+.offl { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: var(--s4); background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); animation: offlIn .32s var(--ease-out) both; }
+.offl.out { animation: offlOut .32s var(--ease-out) both; }
+.offl-box { display: grid; justify-items: center; gap: var(--s3); max-width: 380px; text-align: center; }
+.offl-box h2 { margin: var(--s2) 0 0; font-size: var(--fs-xl); font-weight: 800; letter-spacing: -.02em; }
+.offl-box p { margin: 0; color: var(--text-2); font-size: var(--fs-md); line-height: 1.6; }
+.offl-go { margin-top: var(--s3); min-width: 168px; }
+.offl-go:disabled { opacity: 1; }
+.offl-go .act-stack svg { width: 18px; height: 18px; }
+.offl-go.nudge { animation: offlNudge .4s ease; }
+.offl-miss { min-height: 20px; }
+.offl-ill { position: relative; display: grid; place-items: center; width: 112px; height: 112px; border-radius: 50%; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.offl-ill::after { content: ""; position: absolute; inset: -8px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent); opacity: 0; }
+.offl-ill svg { fill: none; stroke: var(--text-3); stroke-width: 4; stroke-linecap: round; }
+.offl-ill .dot { fill: var(--text-3); stroke: none; }
+.offl-ill .slash { stroke: var(--lose); stroke-width: 4.5; stroke-dasharray: 52; stroke-dashoffset: 52; animation: offlSlash .5s .25s var(--ease-out) forwards; }
+.offl-ill.srv .slash { display: none; }
+.offl-ill.srv .a3, .offl-ill.srv .a2 { opacity: .35; }
+/* 확인하는 동안: 안쪽부터 한 줄씩 켜지고, 둘레에 고리가 퍼진다 */
+.offl-ill.scan .slash { opacity: .25; transition: opacity .2s; }
+.offl-ill.scan .a1, .offl-ill.scan .a2, .offl-ill.scan .a3, .offl-ill.scan .dot { animation: offlScan 1.2s ease-in-out infinite; }
+.offl-ill.scan .dot { animation-delay: 0s; }
+.offl-ill.scan .a1 { animation-delay: .15s; }
+.offl-ill.scan .a2 { animation-delay: .3s; }
+.offl-ill.scan .a3 { animation-delay: .45s; }
+.offl-ill.scan::after { animation: offlRing 1.2s ease-out infinite; }
+@keyframes offlScan { 0%, 100% { stroke: var(--text-3); fill-opacity: 1; } 40% { stroke: var(--accent); } }
+@keyframes offlRing { from { opacity: .9; transform: scale(.9); } to { opacity: 0; transform: scale(1.12); } }
+@keyframes offlSlash { to { stroke-dashoffset: 0; } }
+@keyframes offlIn { from { opacity: 0; } }
+@keyframes offlOut { to { opacity: 0; } }
+@keyframes offlNudge { 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+@media (prefers-reduced-motion: reduce) { .offl, .offl.out, .offl-go.nudge, .offl-ill.scan *, .offl-ill.scan::after { animation: none; } .offl-ill .slash { animation: none; stroke-dashoffset: 0; } }

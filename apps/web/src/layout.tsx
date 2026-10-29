@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AttendBurst, AugmentOpen, Bone, groupNav, useScrollKeeper, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { AttendBurst, OfflineScreen, AugmentOpen, Bone, groupNav, useScrollKeeper, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -45,6 +45,8 @@ export function Layout() {
   return (
     <>
       {attend && <AttendBurst a={attend} api={api} onDone={clearAttend} />}
+      {/* 인터넷·서버 연결이 끊기면 화면 전체에 안내, 돌아오면 저절로 다시 불러온다 (v3.122) */}
+      <OfflineScreen api={api} onBack={refresh} />
       <header className="top"><div className="wrap">
         <NavLink to="/" className="brand"><Gem size={22} />PRISM</NavLink>
         <nav className="tabs">{groupNav(navOf(me)).map((g, gi) => <span key={g.key} className="tab-group" role="group" aria-label={g.label}>{gi > 0 && <i className="tab-sep" aria-hidden="true" />}{g.items.map(([to, label]) => <NavLink key={to} to={to} className={dotOf(me, to)}>{label}</NavLink>)}</span>)}</nav>

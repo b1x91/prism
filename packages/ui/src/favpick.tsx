@@ -2,7 +2,7 @@
  * 최애 챔프 고르기 (v3.41). 새 회원이 처음 들어올 때 한 번: 고른 챔프의 기본 스킨이 프로필 사진이 되고 '내 챔프'에도 담긴다.
  * 앱은 첫 화면(Onboarding)의 한 단계로, 웹은 처음 로그인했을 때 한 번 뜨는 창(WelcomePick)으로 같은 화면을 쓴다.
  */
-import { SplashSwap } from './splash';
+import { SplashSwap, useSplashHold } from './splash';
 import { useMemo, useState } from 'react';
 import { CHAMPIONS, CHAMPION_LIST, ROLE_KO, baseSkin, cdragon, matchName, type Api } from '@prism/core';
 import { ChampImg } from './basics';
@@ -17,7 +17,10 @@ export function FavChampPick({ api, onDone, verb = '시작' }: { api: Api; onDon
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const list = useMemo(() => CHAMPION_LIST.filter((c) => matchName(c.name, q)), [q]);
-  const c = pick ? CHAMPIONS[pick] : null;
+  // 고른 챔프의 큰 그림이 준비되면 이름·그림을 한 번에 (v3.122)
+  const hold = useSplashHold(pick, pick);
+  const shownPick = hold.value;
+  const c = shownPick ? CHAMPIONS[shownPick] : null;
   const save = async () => {
     if (!pick) return;
     setBusy(true); setErr('');
@@ -30,11 +33,11 @@ export function FavChampPick({ api, onDone, verb = '시작' }: { api: Api; onDon
   };
   return (
     <div className="fpk">
-      <div className={`fpk-stage ${c ? 'on' : ''}`}>
+      <div className={`fpk-stage ${c ? 'on' : ''} ${hold.pending ? 'swapping' : ''}`}>
         {c ? <>
           <SplashSwap className="fpk-art" src={cdragon(c.splash)} />
-          <span className="fpk-face"><ChampImg id={pick!} size={56} /></span>
-          <span className="fpk-txt"><b>{c.name}</b><small>{ROLE_KO[c.roles[0]]} · 이 챔프가 내 프로필 사진이 돼요</small></span>
+          <span className="fpk-face" key={`f${shownPick}`}><ChampImg id={shownPick!} size={56} /></span>
+          <span className="fpk-txt bn-in" key={`t${shownPick}`}><b>{c.name}</b><small>{ROLE_KO[c.roles[0]]} · 이 챔프가 내 프로필 사진이 돼요</small></span>
         </> : <span className="fpk-empty"><Icon name="star" />가장 좋아하는 챔프를 골라 주세요</span>}
       </div>
       <label className="fpk-q"><Icon name="search" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder="챔프 이름 (예: 아리, ㅇㄹ)" /></label>
@@ -46,7 +49,7 @@ export function FavChampPick({ api, onDone, verb = '시작' }: { api: Api; onDon
         ))}
       </div>
       {err && <p className="l" style={{ margin: 0 }}>{err}</p>}
-      <button type="button" className="btn primary lg fpk-go" disabled={!pick || busy} onClick={save}>{busy ? '저장 중…' : c ? `${c.name}${ro(c.name)} ${verb}` : `챔프를 고르면 ${verb}`}</button>
+      <button type="button" className="btn primary lg fpk-go" disabled={!pick || busy} onClick={save}>{busy ? '저장 중…' : pick && CHAMPIONS[pick] ? `${CHAMPIONS[pick].name}${ro(CHAMPIONS[pick].name)} ${verb}` : `챔프를 고르면 ${verb}`}</button>
     </div>
   );
 }

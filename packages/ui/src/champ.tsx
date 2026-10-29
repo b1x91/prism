@@ -1,6 +1,6 @@
-import { SplashSwap } from './splash';
+import { SplashSwap, useSplashHold } from './splash';
 import { useKept } from './kept';
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useRef, useState, type ReactNode } from 'react';
 import { CHAMPIONS, CHAMPION_LIST, ROLE_KO, cdragon, matchName } from '@prism/core';
 import { ChampImg } from './basics';
 import { FavMark, FavStar, useFavs } from './favs';
@@ -95,22 +95,28 @@ export function ChampGrid({ onPick, query = '', onQuery, record }: { onPick: (id
 }
 
 /** 챔피언 일러스트 배너 */
-export function ChampBanner({ id, eyebrow, actions, foot, children, fav = true }: { id: number; eyebrow?: string; actions?: ReactNode; foot?: ReactNode; children?: ReactNode; /** 좋아요 하트 (게임 화면에서는 끈다, v3.118) */ fav?: boolean }) {
-  const c = CHAMPIONS[id];
+export function ChampBanner({ id, eyebrow, actions, foot, children, fav = true, waiting = false }: { id: number; eyebrow?: string; actions?: ReactNode; foot?: ReactNode; children?: ReactNode; /** 좋아요 하트 (게임 화면에서는 끈다, v3.118) */ fav?: boolean; /** 바깥에서 다음 챔프를 기다리는 중 (오늘의 챔프처럼 아래 칸까지 함께 바꿀 때) */ waiting?: boolean }) {
+  // 챔프가 바뀌면 그림이 준비될 때까지 지금 글을 두었다가 글·그림을 함께 바꾼다 (v3.122). 오른쪽 위 단추는 늘 지금 것
+  const h = useSplashHold(id, { eyebrow, foot, children });
+  const shown = h.key ?? id;
+  // 처음 그릴 때는 그대로, 챔프가 바뀐 뒤부터 글이 그림과 같은 박자로 떠오른다
+  const last = useRef(shown), swapped = useRef(false);
+  if (last.current !== shown) { last.current = shown; swapped.current = true; }
+  const c = CHAMPIONS[shown];
   if (!c) return null;
   const tags = [ROLE_KO[c.roles[0]], c.roles[1] && ROLE_KO[c.roles[1]], c.damage === 'MIX' ? 'AP·AD' : c.damage, c.range === 'ranged' ? '원거리' : '근접'].filter(Boolean) as string[];
   return (
-    <div className="banner">
+    <div className={`banner ${h.pending || waiting ? 'swapping' : ''}`} aria-busy={h.pending || waiting}>
       <SplashSwap className="bg" src={cdragon(c.splash)} />
       {/* 오른쪽 위 구석: 좋아요 + 페이지 버튼 */}
-      {(fav || actions) && <div className="actions">{fav && <FavStar kind="champ" id={id} />}{actions}</div>}
-      <div>
-        {eyebrow && <div className="eyebrow">{eyebrow}</div>}
+      {(fav || actions) && <div className="actions">{fav && <FavStar kind="champ" id={shown} />}{actions}</div>}
+      <div className={`bn-txt ${swapped.current ? 'bn-in' : ''}`} key={shown}>
+        {h.value.eyebrow && <div className="eyebrow">{h.value.eyebrow}</div>}
         <h1>{c.name}</h1>
         <div className="row wrapr" style={{ gap: 8 }}>{tags.map((t) => <span key={t} className="pill dark">{t}</span>)}</div>
-        {children}
+        {h.value.children}
       </div>
-      {foot && <div className="banner-foot">{foot}</div>}
+      {h.value.foot && <div className="banner-foot">{h.value.foot}</div>}
     </div>
   );
 }

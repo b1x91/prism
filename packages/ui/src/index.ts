@@ -33,3 +33,4 @@ export * from './invite';
 export * from './navgroups';
 export * from './attend';
 export * from './motion';
+export * from './offline';

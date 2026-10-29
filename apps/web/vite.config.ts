@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import obfuscator from 'rollup-plugin-obfuscator';
+import { readFileSync } from 'node:fs';
 
 // 배포 빌드에서만 우리 코드(packages/core·ui, apps/web)를 난독화한다 (v3.107, 앱과 같은 방식 — apps/desktop/vite.config.ts).
 // 웹은 누구나 받아 볼 수 있어 증강 어울림 표·티어 계산·문구가 그대로 읽혔다. 라이브러리·게임 데이터(JSON)는 그대로 (속도·크기).
@@ -11,6 +12,14 @@ const OURS = /[\\/](packages[\\/](core|ui)[\\/]src|apps[\\/]web[\\/]src)[\\/].+\
 export default defineConfig(({ command }) => ({
   plugins: [
     react(),
+    // 인터넷 없이 열었을 때의 안내 페이지와 그걸 띄우는 서비스 워커 (웹 배포판에만, v3.122)
+    {
+      name: 'prism-offline',
+      apply: 'build' as const,
+      generateBundle() {
+        for (const f of ['sw.js', 'offline.html']) this.emitFile({ type: 'asset', fileName: f, source: readFileSync(new URL(`./static/${f}`, import.meta.url)) });
+      },
+    },
     command === 'build' && obfuscator({
       include: [OURS],
       exclude: [/node_modules/, /\.json$/],

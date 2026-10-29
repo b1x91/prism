@@ -511,9 +511,13 @@ body { overflow: hidden; background: var(--bg); }
 @media (max-width: 900px) { .cs-augrow .cs-augs { grid-template-columns: minmax(0, 1fr); } }
 
 /* 챔프를 바꾸면 큰 카드 글자는 짧게 떠오르고(움직임은 4px), 그림은 SplashSwap 이 겹쳐 바꾼다 (v3.80) */
-.cs-swap { animation: csSwap .26s cubic-bezier(.2, .8, .2, 1) both; }
+.cs-swap { animation: csSwap .42s cubic-bezier(.2, .8, .2, 1) both; }
+/* 새 그림을 기다리는 동안 (v3.122): 글이 물러나고 그림이 어두워졌다가, 준비되면 글·그림이 같은 0.42초로 함께 */
+.cs-tile .body, .cs-tile .bg { transition: opacity .18s ease, filter .22s ease; }
+.cs-tile.swapping .body { opacity: .35; }
+.cs-tile.swapping .bg { filter: brightness(.7); }
 @keyframes csSwap { from { opacity: 0; translate: 0 4px; } to { opacity: 1; translate: 0 0; } }
-@media (prefers-reduced-motion: reduce) { .cs-swap { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .cs-swap { animation: none; } .cs-tile .body, .cs-tile .bg { transition: none; } }
 
 /* 챔프 선택 '이번 판' (v3.90): 같은 팀 멤버 | 이번 판에 걸린 것 */
 .csb { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: var(--s5); padding: var(--s4) var(--s5); border-radius: var(--r-l); background: var(--surface-2); }

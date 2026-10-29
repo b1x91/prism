@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PRISM · 연결 끊김</title>
+<style>
+  :root { --bg: #f6f6f3; --text: #14161c; --text-2: #5b606b; --text-3: #9aa0ab; --surface-2: #eceef2; --line: rgba(20, 22, 28, .1); --accent: #3b63f3; --lose: #e5484d; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0c0f17; --text: #eef0f5; --text-2: #a3a9b6; --text-3: #6b7280; --surface-2: #171b26; --line: rgba(255, 255, 255, .08); --accent: #5b7cff; --lose: #ff6369; } }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { display: grid; place-items: center; padding: 16px; background: var(--bg); color: var(--text); font: 400 14px/1.6 "Pretendard Variable", Pretendard, system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; word-break: keep-all; }
+  .box { display: grid; justify-items: center; gap: 12px; max-width: 380px; text-align: center; animation: in .32s cubic-bezier(.16, 1, .3, 1) both; }
+  .brand { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; font-size: 16px; font-weight: 800; letter-spacing: .1em; }
+  .brand img { width: 22px; height: 22px; }
+  .ill { position: relative; display: grid; place-items: center; width: 112px; height: 112px; border-radius: 50%; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+  .ill svg { fill: none; stroke: var(--text-3); stroke-width: 4; stroke-linecap: round; }
+  .ill .dot { fill: var(--text-3); stroke: none; }
+  .ill .slash { stroke: var(--lose); stroke-width: 4.5; stroke-dasharray: 52; stroke-dashoffset: 52; animation: slash .5s .25s cubic-bezier(.16, 1, .3, 1) forwards; }
+  .ill.scan .slash { opacity: .25; }
+  .ill.scan path:not(.slash), .ill.scan .dot { animation: scan 1.2s ease-in-out infinite; }
+  .ill.scan .a1 { animation-delay: .15s; } .ill.scan .a2 { animation-delay: .3s; } .ill.scan .a3 { animation-delay: .45s; }
+  h1 { margin: 8px 0 0; font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+  p { margin: 0; color: var(--text-2); }
+  button { margin-top: 12px; min-width: 168px; height: 48px; padding: 0 20px; border: 0; border-radius: 12px; background: var(--accent); color: #fff; font: inherit; font-size: 16px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  button:disabled { cursor: default; }
+  button svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin .7s linear infinite; }
+  .miss { min-height: 20px; color: var(--text-3); font-size: 13px; }
+  .nudge { animation: nudge .4s ease; }
+  @keyframes in { from { opacity: 0; transform: translateY(6px); } }
+  @keyframes slash { to { stroke-dashoffset: 0; } }
+  @keyframes scan { 40% { stroke: var(--accent); } }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes nudge { 20% { transform: translateX(-5px); } 40% { transform: translateX(5px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+  @media (prefers-reduced-motion: reduce) { .box, .ill *, .nudge, .spin { animation: none !important; } .ill .slash { stroke-dashoffset: 0; } }
+</style>
+</head>
+<body>
+  <main class="box">
+    <div class="brand"><img src="/brand/prism-128.png" alt="" />PRISM</div>
+    <span class="ill" id="ill" aria-hidden="true">
+      <svg viewBox="0 0 64 64" width="64" height="64">
+        <path class="a3" d="M8 26a34 34 0 0 1 48 0" /><path class="a2" d="M16 34a23 23 0 0 1 32 0" /><path class="a1" d="M24 42a12 12 0 0 1 16 0" />
+        <circle class="dot" cx="32" cy="50" r="3.2" /><path class="slash" d="M14 14 50 52" />
+      </svg>
+    </span>
+    <h1>인터넷 연결이 끊겼어요</h1>
+    <p>와이파이나 랜선을 확인한 뒤 새로고침을 눌러 주세요.<br />연결되면 저절로 다시 열려요.</p>
+    <button type="button" id="go"><svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.5-4.6L4 8" /><path d="M4 4v4h4" /><path d="M4 13a8 8 0 0 0 14.5 4.6L20 16" /><path d="M20 20v-4h-4" /></svg>새로고침</button>
+    <span class="miss" id="miss" aria-live="polite">&nbsp;</span>
+  </main>
+  <script>
+    // 연결되면 원래 보던 페이지를 다시 연다. 새로고침은 먼저 닿는지 확인하고 (닿지 않으면 페이지를 바꾸지 않는다)
+    var go = document.getElementById('go'), ill = document.getElementById('ill'), miss = document.getElementById('miss'), label = go.innerHTML, busy = false;
+    function reachable() { return fetch('/brand/prism-32.png?ping=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.ok; }, function () { return false; }); }
+    function check(manual) {
+      if (busy) return; busy = true;
+      if (manual) { go.disabled = true; go.innerHTML = '<i class="spin"></i>연결 확인 중'; ill.classList.add('scan'); }
+      var t0 = Date.now();
+      reachable().then(function (ok) {
+        setTimeout(function () {
+          busy = false;
+          if (ok) { location.reload(); return; }
+          if (manual) { go.disabled = false; go.innerHTML = label; ill.classList.remove('scan'); miss.textContent = '아직 연결되지 않았어요. 연결되면 바로 열려요.'; go.classList.remove('nudge'); void go.offsetWidth; go.classList.add('nudge'); }
+        }, manual ? Math.max(0, 700 - (Date.now() - t0)) : 0);
+      });
+    }
+    go.addEventListener('click', function () { check(true); });
+    addEventListener('online', function () { check(false); });
+    setInterval(function () { if (navigator.onLine !== false) check(false); }, 5000);
+  </script>
+</body>
+</html>

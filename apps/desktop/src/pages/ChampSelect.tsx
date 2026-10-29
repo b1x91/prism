@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from 'react';
 import { AUGMENT, CHAMPIONS, ROLE_KO, cdragon, ccWord, comp, explainFit, fitPoints, guideOf, GAME_DATA, needsOf, pct, planOf, teamFit, tierOf, verdictOf, buildFor, type Build, type ChampionProfile, type Comp, type Need, type Verdict, shortNick, josa } from '@prism/core';
-import { AugRing, AugmentLink, Bone, ChampImg, ItemBuild, ItemBuildSkeleton, MemberFace, PieceIcon, Seg, SplashSwap, TierBadge, preloadSplash } from '@prism/ui';
+import { AugRing, AugmentLink, Bone, ChampImg, ItemBuild, ItemBuildSkeleton, MemberFace, PieceIcon, Seg, SplashSwap, TierBadge, preloadSplash, useSplashHold } from '@prism/ui';
 import { checkNow, isKnownMember, type ChampSelect, type CrewSelect } from '../controller';
 import { bridge } from '../bridge';
 import { Icon } from '@prism/ui';
@@ -258,7 +258,11 @@ const STYLE: [keyof ChampionProfile['style'], string][] = [['damage', '피해'],
 const RANGE_KO = { ranged: '원거리', melee: '근접' } as const;
 
 /** 큰 카드: 내 챔피언(또는 대기석 미리보기)의 성향·내 기록·모임 기록·팀에 넣으면 + 아래 줄: 어울리는 증강·내가 고른 증강 (v3.72) */
-function Featured({ id, isMine, crew, pending, personal, fitText, needs, isReco, onBack }: { id: number; isMine: boolean; crew: CrewSelect; pending: boolean; personal: Personal; fitText: ReturnType<typeof teamFit>; needs: string[]; isReco: boolean; onBack?: () => void }) {
+type FeaturedProps = { id: number; isMine: boolean; crew: CrewSelect; pending: boolean; personal: Personal; fitText: ReturnType<typeof teamFit>; needs: string[]; isReco: boolean; onBack?: () => void };
+function Featured(props: FeaturedProps) {
+  // 챔프를 바꾸면 새 그림이 준비될 때까지 지금 카드를 두었다가 글·그림을 한 번에 바꾼다 (v3.122)
+  const hold = useSplashHold(props.id, props);
+  const { id, isMine, crew, pending, personal, fitText, needs, isReco, onBack } = hold.value;
   const ch = CHAMPIONS[id];
   const g = guideOf(GAME_DATA, id);
   // 등급마다 가장 잘 맞는 증강 하나씩 (프리즘 · 골드 · 실버)
@@ -270,7 +274,7 @@ function Featured({ id, isMine, crew, pending, personal, fitText, needs, isReco,
   const build = buildFor(id, cc?.items);
   return (
     <>
-    <article className={`cs-tile ${isMine ? 'mine' : ''}`}>
+    <article className={`cs-tile ${isMine ? 'mine' : ''} ${hold.pending ? 'swapping' : ''}`}>
       <SplashSwap className="bg" src={cdragon(ch.splash)} />
       <div className="cs-top">
         <span className={`cs-tag ${isMine ? 'mine' : ''}`}>{isMine ? '내 챔프' : '대기석 미리보기'}</span>

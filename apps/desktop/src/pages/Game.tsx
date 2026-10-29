@@ -1,9 +1,9 @@
 import { FullscreenNote } from '../fullscreen';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AUGMENT, CHAMPIONS, ago, guideOf, pct, streakOf, todayPicks, type MissionState, type Personal } from '@prism/core';
 import { AugRing, AugmentLink, Bone, GlassBtn, Icon, TierBadge } from '@prism/ui';
 import { GAME_DATA, fitPoints, tierOf } from '@prism/core';
-import { AugmentCompare, AugmentGuide, LatestMatch, ChampBanner, ChampSearch, Empty, PieceIcon, RecentGames, Seg, useLoad } from '@prism/ui';
+import { AugmentCompare, AugmentGuide, LatestMatch, ChampBanner, ChampSearch, Empty, PieceIcon, RecentGames, Seg, preloadSplash, useLoad, useSplashHold } from '@prism/ui';
 import { api } from '../bridge';
 import { useNavigate } from 'react-router-dom';
 import { editMatchup, type State } from '../controller';
@@ -32,8 +32,16 @@ function TodayPick({ personal }: { personal: Personal }) {
   const nav = useNavigate();
   const picks = todayPicks(personal, Object.keys(CHAMPIONS).map(Number));
   const [i, setI] = useState(0);
+  // '다른 추천'을 누르면 새 그림이 준비될 때까지 지금 챔프·증강 표를 두었다가 한 번에 바꾼다 (v3.122)
+  const want = picks.length ? picks[i % picks.length] : null;
+  const hold = useSplashHold(want?.id, i);
+  const swapped = useRef(false);
+  if (hold.value !== 0) swapped.current = true;
+  // 다음 추천 그림은 미리 받아 둔다 → 누르면 바로 바뀐다
+  const nextId = picks.length > 1 ? picks[(i + 1) % picks.length].id : null;
+  useEffect(() => { if (nextId) preloadSplash([nextId]); }, [nextId]);
   if (!picks.length) return null;
-  const pick = picks[i % picks.length];
+  const pick = picks[hold.value % picks.length];
   const rec = personal.champions[pick.id];
   const guide = guideOf(GAME_DATA, pick.id);
   const mine = personal.augmentsByChampion[pick.id] ?? [];
@@ -42,12 +50,12 @@ function TodayPick({ personal }: { personal: Personal }) {
   const rows = guide ? (['prismatic', 'gold', 'silver'] as const).map((r) => [r, guide[r].slice(0, per)] as const) : [];
   return (
     <section className="today">
-      <ChampBanner id={pick.id} fav={false} eyebrow={pick.why === 'best' ? '오늘은 이 챔프 어때요? · 내 기록에서 가장 잘 이긴 챔프' : '오늘은 이 챔프 어때요? · 아직 만나지 못한 챔프'}
+      <ChampBanner id={pick.id} fav={false} waiting={hold.pending} eyebrow={pick.why === 'best' ? '오늘은 이 챔프 어때요? · 내 기록에서 가장 잘 이긴 챔프' : '오늘은 이 챔프 어때요? · 아직 만나지 못한 챔프'}
         actions={picks.length > 1 ? <GlassBtn icon="shuffle" label="다른 추천" onClick={() => setI(i + 1)} /> : undefined}
         foot={<button type="button" className="btn sm primary" onClick={() => nav(`/champions/${pick.id}`)}>증강 가이드<Icon name="arrow" /></button>}>
         <p className="today-why">{rec ? <>내 기록 <b>{rec.n}판 {rec.w}승</b> ({pct(rec.w, rec.n)}). 주사위나 대기석에서 보이면 잡아보세요.</> : <>도감을 채울 기회예요. 주사위나 대기석에서 보이면 잡아보세요.</>}</p>
       </ChampBanner>
-      <div className={`today-augs ${mine.length ? 'n4' : 'n3'}`}>
+      <div key={pick.id} className={`today-augs ${mine.length ? 'n4' : 'n3'} ${swapped.current ? 'bn-in' : ''} ${hold.pending ? 'swapping' : ''}`}>
         {rows.map(([r, list]) => (
           <div key={r} className="ta-col">
             <span className={`k ${r}`}>{r === 'prismatic' ? '프리즘' : r === 'gold' ? '골드' : '실버'}</span>

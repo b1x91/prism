@@ -32,6 +32,33 @@ export function preloadSplash(ids: (number | null | undefined)[]) {
   for (const id of ids) { const s = id ? cdragon(CHAMPIONS[id]?.splash) : ''; if (s) void ready(s); }
 }
 
+/**
+ * 챔프가 바뀌면 그 챔프의 큰 그림이 준비될 때까지 지금 화면(value)을 그대로 두었다가, 준비되면 글·그림을 한 번에 바꾼다 (v3.122).
+ * 예전엔 이름·기록 글이 먼저 바뀌고 그림이 뒤늦게 바뀌어 어긋났다. 기다리는 동안은 pending — 화면은 살짝 어두워져 눌렀다는 걸 보인다.
+ * 그림이 아주 늦어도(인터넷이 느릴 때) limit ms 뒤에는 바꾼다 (SplashSwap 이 예전 그림을 남겨 두므로 비지 않는다).
+ */
+export function useSplashHold<T>(id: number | null | undefined, value: T, limit = 4000): { value: T; pending: boolean; key: number | null } {
+  const [shown, setShown] = useState<number | null>(id ?? null);
+  const snap = useRef(value);
+  const cur = id ?? null;
+  const srcOf = (x: number | null) => (x ? cdragon(CHAMPIONS[x]?.splash) : '');
+  // 이미 받아 둔 그림이면 기다릴 것 없이 이 렌더에서 바로 (한 프레임도 예전 화면을 보이지 않게)
+  const instant = cur !== shown && (!srcOf(cur) || decoded.has(srcOf(cur)));
+  if (instant) setShown(cur);
+  if (cur === shown || instant) snap.current = value;
+  useEffect(() => {
+    if (cur === shown) return;
+    let on = true;
+    const go = () => { if (on) setShown(cur); };
+    void ready(srcOf(cur)).then(go);
+    const t = setTimeout(go, limit);
+    return () => { on = false; clearTimeout(t); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- srcOf 는 cur 로 정해진다
+  }, [cur, shown, limit]);
+  const now = cur === shown || instant;
+  return { value: now ? value : snap.current, pending: !now, key: now ? cur : shown };
+}
+
 export function SplashSwap({ src, className = '' }: { src: string; className?: string }) {
   const seq = useRef(0);
   const [layers, setLayers] = useState<{ src: string; k: number; first?: boolean }[]>(() => (src ? [{ src, k: 0, first: true }] : []));

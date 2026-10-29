@@ -54,3 +54,8 @@ createRoot(document.getElementById('root')!).render(
     </SessionProvider>
   </StrictMode>,
 );
+
+// 인터넷 없이 열었을 때 브라우저 오류 화면 대신 Prism 연결 안내를 보이는 서비스 워커 (배포판만, v3.122)
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+}
