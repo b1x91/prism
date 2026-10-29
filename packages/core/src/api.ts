@@ -23,8 +23,8 @@ export interface Api {
  */
 export const CACHE_TTL = 3600_000;
 const LIVE_EXACT = new Set(['/api/me', '/api/me/games', '/api/crew/targets', '/links']);
-const LIVE_PREFIX = ['/api/news', '/api/discord', '/api/staff', '/api/me/invite', '/api/members/lookup', '/api/me/inquiry', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
-const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag'];
+const LIVE_PREFIX = ['/api/now', '/api/news', '/api/discord', '/api/staff', '/api/me/invite', '/api/members/lookup', '/api/me/inquiry', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
+const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag', '/api/now'];
 export function withCache(api: Api, ttl = CACHE_TTL): Api {
   const memo = new Map<string, { at: number; data: unknown }>();
   const flying = new Map<string, Promise<unknown>>();
@@ -58,7 +58,11 @@ export class ApiError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
-export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; level?: number; rates?: Rates; presence?: import('./presence').Presence; rankingGate?: { have: number; need: number }; about?: import("./about").About | null; pending?: boolean; newsUnread?: number; /** 운영진만: 운영 화면에서 아직 못 본 처리할 멤버 수 (v3.125) */ staffUnread?: number };
+export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; level?: number; rates?: Rates; presence?: import('./presence').Presence; rankingGate?: { have: number; need: number }; about?: import("./about").About | null; pending?: boolean; newsUnread?: number; /** 운영진만: 운영 화면에서 아직 못 본 처리할 멤버 수 (v3.125) */ staffUnread?: number; /** 로비를 NOW에 자동으로 올리기 (v3.126) */ nowAuto?: boolean };
+/** NOW (v3.126): 지금 모이는 팟 */
+export type NowFace = { id: string; nick: string; skin: number | null; main: number | null };
+export type NowLobby = { id: string; phase: 'lobby' | 'queue' | 'game'; size: number; since: number; leader: string | null; members: NowFace[]; requests: NowFace[] };
+export type NowList = { auto: boolean; lobbies: NowLobby[] };
 /** 회원 얼굴 재료 (서버 FACE): 대표 스킨, 주 챔피언 */
 export type FaceInfo = { skin?: number | null; main?: number | null };
 export type Note = { id: number; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1; canDelete?: 0 | 1 } & FaceInfo;

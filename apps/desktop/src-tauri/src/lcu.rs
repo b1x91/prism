@@ -29,6 +29,8 @@ const ALLOWED: &[&str] = &[
     "/lol-gameflow/v1/gameflow-phase",
     // 게임 시작 직전 양 팀 챔피언 (증강 우선순위의 조합 판단용). 게임이 뜨면 아래 차단 규칙으로 읽지 않는다
     "/lol-gameflow/v1/session",
+    // NOW: 내 로비의 인원·큐 (읽기만, v3.126). 초대·수락 같은 조작은 하지 않는다
+    "/lol-lobby/v2/lobby",
 ];
 
 #[derive(Clone)]

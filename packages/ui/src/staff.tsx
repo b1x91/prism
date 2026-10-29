@@ -6,7 +6,7 @@
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ago, matchName, pct, shortDate, shortNick, type Api, type StaffMember, type StaffMembers, type StaffOverview } from '@prism/core';
-import { Empty, MemberFace, PendingChip, RoleBadge, Select, Toggle, useSkins } from './basics';
+import { Empty, Hover, MemberFace, PendingChip, RoleBadge, Select, Toggle, useSkins } from './basics';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { useKept } from './kept';
@@ -276,6 +276,7 @@ export function StaffMembersView({ api, onOpen, onSeen }: { api: Api; onOpen?: (
             </div>
           </div>
           {shown.length ? <div className="card stf-list">
+            <div className="stf-lh" aria-hidden="true"><span>멤버</span><span className="stf-lh-s"><span>판수</span><span>승률</span><span>{EXTRA[sort] ?? ''}</span><span>최근 활동</span></span><span>단계 · 특별회원</span></div>
             {shown.map((m) => <StaffRow key={m.id} api={api} m={m} sort={sort} need={data.reviewNeed} onDone={reload} onOpen={onOpen} />)}
           </div> : <section className="card pad"><Empty>맞는 멤버가 없어요.</Empty></section>}
         </section>
@@ -315,6 +316,9 @@ function TodoCard({ api, m, need, bonus, referrers, state, run, onOpen }: { api:
   );
 }
 
+/** 정렬을 이 값으로 골랐을 때만 줄에 한 칸 더 */
+const EXTRA: Partial<Record<Sort, string>> = { score: '점수', recent: '2주 판수', staff: '운영진과', joined: '가입' };
+
 function StaffRow({ api, m, sort, need, onDone, onOpen }: { api: Api; m: StaffMember; sort: Sort; need: number; onDone: () => unknown; onOpen?: (id: string) => void }) {
   const skins = useSkins();
   const [busy, setBusy] = useState(false);
@@ -333,22 +337,36 @@ function StaffRow({ api, m, sort, need, onDone, onOpen }: { api: Api; m: StaffMe
   const online = Date.now() - (m.seen || 0) < ONLINE_MS;
   const toReview = m.level === 1 && !m.review;
   const on = (s: Sort) => (sort === s ? 'on' : '');
+  // 줄에는 핵심만(판수·승률·최근 활동 + 고른 정렬 값), 나머지는 마우스를 올리면 (v3.126)
+  const extra = EXTRA[sort];
+  const score = m.games ? String(m.score) : '–';
+  const val: Record<string, string> = { score, recent: String(m.recent), staff: `${m.staffGames}${toReview ? `/${need}` : ''}`, joined: shortDate(m.joined) };
+  const tip = () => (
+    <div className="stf-mtip">
+      <b>{m.nick}</b>
+      <span className="meta">{[m.discordName ? `@${m.discordName}` : '', `${shortDate(m.joined)} 가입`].filter(Boolean).join(' · ')}</span>
+      <dl>
+        <div><dt>점수</dt><dd>{score}</dd></div>
+        <div><dt>2주 판수</dt><dd>{m.recent}</dd></div>
+        <div><dt>운영진과</dt><dd>{m.staffGames}{toReview ? ` / ${need}` : ''}</dd></div>
+        <div><dt>추천인</dt><dd>{m.inviter ? shortNick(m.inviter.nick) : '–'}</dd></div>
+        <div><dt>초대</dt><dd>{m.invitedCount}명</dd></div>
+        <div><dt>앱 · 롤</dt><dd>{m.app ? '앱 사용' : '앱 안 씀'} · {m.riotId ? '연결' : '미연결'}</dd></div>
+      </dl>
+    </div>
+  );
   return (
     <div className={`stf-row ${busy ? 'busy' : ''}`}>
-      <button type="button" className="stf-who" onClick={() => onOpen?.(m.id)} title="회원 페이지">
-        <span className="stf-face"><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={44} skins={skins} />{online && <i className="stf-on" title="지금 접속" />}</span>
-        <span className="stf-t">
-          <b><span className="stf-nm">{shortNick(m.nick)}</span>{m.pending ? <PendingChip /> : <RoleBadge role={m.role} small />}{m.special && <span className="stf-sp">특별회원</span>}</b>
-          <span className="meta">{[m.discordName ? `@${m.discordName}` : '', `${shortDate(m.joined)} 가입`, m.inviter ? `추천인 ${shortNick(m.inviter.nick)}` : '', m.invitedCount ? `초대 ${m.invitedCount}명` : '', m.app ? '' : '앱 안 씀'].filter(Boolean).join(' · ')}</span>
-        </span>
-      </button>
+      <Hover tip={tip} className="stf-hov">
+        <button type="button" className="stf-who" onClick={() => onOpen?.(m.id)}>
+          <span className="stf-face"><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={40} skins={skins} />{online && <i className="stf-on" title="지금 접속" />}</span>
+          <span className="stf-t"><b><span className="stf-nm">{shortNick(m.nick)}</span>{m.pending ? <PendingChip /> : <RoleBadge role={m.role} small />}{m.special && <span className="stf-sp">특별회원</span>}</b></span>
+        </button>
+      </Hover>
       <dl className="stf-stats">
         <div className={on('games')}><dt>판수</dt><dd>{m.games}</dd></div>
         <div className={on('winrate')}><dt>승률</dt><dd>{m.games ? pct(m.wins, m.games) : '–'}</dd></div>
-        <div className={on('score')}><dt>점수</dt><dd>{m.games ? m.score : '–'}</dd></div>
-        <div className={on('recent')}><dt>2주 판수</dt><dd>{m.recent}</dd></div>
-        <div className={`${on('staff')} ${toReview ? 'prog' : ''}`}><dt>운영진과</dt><dd>{m.staffGames}{toReview && <span className="stf-of">/{need}</span>}</dd>
-          {toReview && <i className="stf-pbar" aria-hidden="true"><i style={{ width: `${Math.min(100, (m.staffGames / need) * 100)}%` }} /></i>}</div>
+        <div className={`${extra ? 'on' : 'none'}`}>{extra && <><dt>{extra}</dt><dd>{val[sort]}</dd></>}</div>
         <div className={on('seen')}><dt>최근 활동</dt><dd className="sm">{online ? '지금' : last ? ago(last) : '–'}</dd></div>
       </dl>
       <div className="stf-act">
@@ -390,7 +408,7 @@ function MembersSkeleton() {
       <section className="stf-sec">
         <div className="stf-head big"><h2>전체 멤버</h2><Bone w={32} h={12} /></div>
         <div className="card stf-filter"><div className="stf-frow"><Bone w={240} h={32} r="m" /><Bone w={180} h={40} r="m" /></div><div className="stf-chips">{[0, 1, 2, 3, 4, 5, 6].map((i) => <Bone key={i} w={72} h={32} r="pill" />)}</div></div>
-        <div className="card stf-list">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="stf-row"><span className="stf-who"><Bone w={44} h={44} r="pill" /><span className="stf-t"><Bone w={120} h={14} /><Bone w={180} h={12} /></span></span><div className="stf-stats">{[0, 1, 2, 3, 4, 5].map((j) => <div key={j}><Bone w={32} h={12} /><Bone w={44} h={20} /></div>)}</div><div className="stf-act"><Bone w={132} h={40} r="m" /></div></div>)}</div>
+        <div className="card stf-list">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="stf-row"><span className="stf-who"><Bone w={40} h={40} r="pill" /><span className="stf-t"><Bone w={120} h={16} /></span></span><div className="stf-stats">{[0, 1, 2, 3].map((j) => <div key={j}><Bone w={44} h={20} /></div>)}</div><div className="stf-act"><Bone w={132} h={40} r="m" /></div></div>)}</div>
       </section>
     </SkeletonFrame>
   );

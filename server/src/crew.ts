@@ -38,6 +38,7 @@ export async function getMe(env: Env, me: Member) {
   const [newsUnread, staffUnread] = await Promise.all([unreadNews(env, me), staffUnread_(env, me)]);
   return json({
     newsUnread,
+    nowAuto: Boolean((me as Member & { now_auto?: number }).now_auto ?? 1),
     ...(staffUnread !== undefined ? { staffUnread } : {}),
     id: me.id,
     nick: me.nick,

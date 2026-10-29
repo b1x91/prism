@@ -203,6 +203,13 @@ fn toast_get() -> Option<toast::Toast> {
     toast::last()
 }
 
+/// NOW: 빈자리 + 를 누른 회원이 있으면 방장에게 오른쪽 아래 알림 (v3.126). 누르면 Prism 창이 열린다
+#[tauri::command]
+fn toast_show(handle: tauri::AppHandle, title: String, body: String) {
+    let cut = |s: &str| s.chars().take(80).collect::<String>();
+    toast::show_act(&handle, &cut(&title), &cut(&body), "info", 6000, "open");
+}
+
 #[tauri::command]
 fn toast_close(handle: tauri::AppHandle) {
     let act = toast::action();
@@ -491,7 +498,7 @@ pub fn run() {
                 _ => {}
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_close, lcu_get, lcu_item_set, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, store_update, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
+        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_show, toast_close, lcu_get, lcu_item_set, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, store_update, update_prepare, update_apply, vision_get, vision_set, vision_allow, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }

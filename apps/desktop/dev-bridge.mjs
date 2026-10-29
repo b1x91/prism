@@ -37,6 +37,8 @@ const CS = {
 
 const lcu = (path) => {
   if (path === '/lol-summoner/v1/current-summoner') return ME;
+  // NOW 로비 흉내 (MOCK_LOBBY=1): 내가 방장인 아수라장 로비, 비회원 한 명
+  if (path === '/lol-lobby/v2/lobby') { if (!process.env.MOCK_LOBBY) throw '로비 없음'; return { partyId: 'mock-party', gameConfig: { queueId: 2400 }, members: [{ puuid: ME.puuid, isLeader: true }, { puuid: 'stranger-1', isLeader: false }] }; }
   if (path === '/lol-gameflow/v1/gameflow-phase') return scene === 'champ-select' || scene.startsWith('cs-') ? 'ChampSelect' : 'Lobby';
   // cs-empty: 챔프가 정해지기 전 / cs-solo: 내 챔프만 (대기석·팀원 없음)
   if (path === '/lol-champ-select/v1/session') return scene === 'cs-empty' ? { localPlayerCellId: 0, myTeam: [0, 1, 2, 3, 4].map((i) => ({ cellId: i, championId: 0, puuid: i ? `p${i}` : ME.puuid })), benchChampions: [] }
@@ -74,6 +76,7 @@ const CMD = {
   window_mode: () => (process.env.WINDOW_MODE ? Number(process.env.WINDOW_MODE) : 2),
   bring_to_front: () => null,
   toast_get: () => null,
+  toast_show: ({ title, body }) => { console.log('toast', title, body); return null; },
   lcu_get: ({ path }) => lcu(path),
   lcu_item_set: ({ champion, blocks }) => { if (!champion || !blocks?.length) throw '잘못된 아이템 세트입니다.'; return null; },
   session: () => ({ configured: true, loggedIn: Boolean(token) }),

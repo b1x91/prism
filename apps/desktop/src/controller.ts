@@ -329,6 +329,7 @@ async function tick(): Promise<number> {
       void uploadOwn();
     }
     if (phase === 'None' || phase === 'Lobby') void syncCrew();
+    void syncLobby(phase);
     if (starting && state.matchup?.source !== 'game') return 1500; // 놓치지 않게 잠깐 자주
     // 큐를 돌리는 중(매칭·수락 대기)이면 챔프 선택에 들어가는 순간을 바로 잡도록 자주 본다
     if (phase === 'Matchmaking' || phase === 'ReadyCheck') return INTERVAL.queue;
@@ -337,6 +338,46 @@ async function tick(): Promise<number> {
     set({ status: 'error', message: e instanceof Error ? e.message : String(e), summoner: null });
     return INTERVAL.error;
   }
+}
+
+/**
+ * NOW (v3.126): 내 아수라장 로비를 읽어(GET 만) 서버에 알린다 → '지금 모이는 팟'이 저절로 생기고 채워진다.
+ * 로비 단계에서만 롤 클라이언트를 읽고(8초마다), 큐·챔프 선택·게임 중에는 마지막으로 읽은 로비를 단계만 바꿔 알린다 (게임 중 롤 요청 0).
+ * 방장이면 서버가 돌려준 새 요청(빈자리 +)을 오른쪽 아래 알림으로 띄운다.
+ * [검증필요] 실제 클라이언트의 /lol-lobby/v2/lobby 에 partyId · gameConfig.queueId · members[].puuid · isLeader 가 있는지.
+ */
+type LobbyInfo = { id: string; queue: number; leader: string; members: string[] };
+let lobby: LobbyInfo | null = null;
+let lobbyReadAt = 0;
+let lobbySentKey = '';
+let lobbySentAt = 0;
+const LOBBY_READ = 8_000;
+const LOBBY_KEEP = 15_000;     // 로비에 있는 동안 이만큼마다 알린다 (방장이 요청을 빨리 받게)
+const LOBBY_KEEP_GAME = 10 * 60_000;
+function nowPhase(phase: string): 'lobby' | 'queue' | 'game' | null {
+  if (phase === 'Lobby') return 'lobby';
+  if (phase === 'Matchmaking' || phase === 'ReadyCheck' || phase === 'ChampSelect') return 'queue';
+  if (phase === 'GameStart' || phase === 'InProgress' || phase === 'Reconnect') return 'game';
+  return null;
+}
+async function syncLobby(phase: string) {
+  if (!state.me?.consent) return;
+  const off = state.me.nowAuto === false;
+  const p = off ? null : nowPhase(phase);
+  const now = Date.now();
+  if (p === 'lobby' && now - lobbyReadAt > LOBBY_READ) {
+    lobbyReadAt = now;
+    const l = await bridge.lcuGet<any>('/lol-lobby/v2/lobby').catch(() => null);
+    const members: string[] = Array.isArray(l?.members) ? l.members.map((m: any) => String(m?.puuid ?? '')).filter(Boolean) : [];
+    lobby = l?.partyId ? { id: String(l.partyId), queue: Number(l.gameConfig?.queueId ?? 0), leader: String(l.members?.find((m: any) => m?.isLeader)?.puuid ?? ''), members } : null;
+  }
+  if (!p) lobby = null;
+  const key = lobby && p ? `${lobby.id}-${p}-${lobby.queue}-${lobby.members.join(',')}` : '';
+  if (key === lobbySentKey && (!key || now - lobbySentAt < (p === 'game' ? LOBBY_KEEP_GAME : LOBBY_KEEP))) return;
+  lobbySentKey = key;
+  lobbySentAt = now;
+  const r = await api.post<{ requests?: { id: string; nick: string }[] }>('/api/now/lobby', lobby && p ? { ...lobby, phase: p } : { id: null }).catch(() => { lobbySentKey = ''; return null; });
+  for (const q of r?.requests ?? []) void bridge.toastShow(`${q.nick}님이 들어오고 싶어해요`, '롤 친구 목록에서 초대해 주세요').catch(() => {});
 }
 
 /** 접속 상태 점: 앱이 떠 있는지(트레이면 아님)·롤이 켜져 있는지를 서버에 알린다. 바뀌면 바로, 아니면 60초마다 */

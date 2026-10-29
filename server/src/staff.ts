@@ -149,7 +149,9 @@ function overviewOf(members: Row[], rows: { id: string; g: number; t: number; w:
     per.set(r.id, x);
   }
   const face = (m: Row) => ({ id: m.id, nick: m.nick, skin: m.skin, main: m.main });
+  // 승인 대기 멤버는 '챙겨야 할 멤버'에 있으니 여기에는 두지 않는다 (한 화면에 같은 사람 두 번 금지, v3.32)
   const stars = members
+    .filter((m) => !m.pending)
     .map((m) => ({ m, s: per.get(m.id) }))
     .filter((x): x is { m: Row; s: { n: number; w: number; crew: number } } => Boolean(x.s && x.s.n >= STAR_MIN))
     .map(({ m, s }) => ({ ...face(m), n: s.n, w: s.w, crew: s.crew, score: rankScore(s.w, s.n) }))
