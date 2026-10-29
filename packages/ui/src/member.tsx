@@ -72,6 +72,7 @@ const TEASE_TABS: [string, string][] = [
   ['판수', '가장 많이 함께한 사람'],
   ['챔프 장인', '도감에서 챔프 마스터를 가장 많이 이룬 사람'],
   ['증강 장인', '도감에서 증강 마스터를 가장 많이 이룬 사람'],
+  ['아이템 장인', '도감에서 아이템 마스터를 가장 많이 이룬 사람'],
 ];
 
 export function RankingTeaser({ onLogin }: { onLogin: () => void }) {
@@ -134,10 +135,10 @@ function stageDue(): boolean {
 }
 
 function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (id: string) => void }) {
-  const [by, setByRaw] = useKept<RankBy | 'champ-art' | 'aug-art'>('rank.by', 'season');
+  const [by, setByRaw] = useKept<RankBy | 'champ-art' | 'aug-art' | 'item-art'>('rank.by', 'season');
   const [play, setPlay] = useState(stageDue);
-  const setBy = (v: RankBy | 'champ-art' | 'aug-art') => { setPlay(false); setByRaw(v); };
-  const art = by === 'champ-art' || by === 'aug-art';
+  const setBy = (v: RankBy | 'champ-art' | 'aug-art' | 'item-art') => { setPlay(false); setByRaw(v); };
+  const art = by === 'champ-art' || by === 'aug-art' || by === 'item-art';
   const { data, error } = useLoad<Ranking>(api, art ? null : by === 'season' ? '/api/ranking?period=season&by=score' : by === 'score' ? '/api/ranking?by=score' : '/api/ranking');
   const skins = useSkins();
   const rows = useMemo(() => {
@@ -157,9 +158,9 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
   const rv = useReveal(shown);
   return (
     <div className="stack" style={{ gap: 16 }}>
-      <div className="row wrapr"><Seg value={by} options={[['season', '시즌'], ['score', '전체'], ['games', '판수'], ['champ-art', '챔프 장인'], ['aug-art', '증강 장인']]} onChange={setBy} />
+      <div className="row wrapr"><Seg value={by} options={[['season', '시즌'], ['score', '전체'], ['games', '판수'], ['champ-art', '챔프 장인'], ['aug-art', '증강 장인'], ['item-art', '아이템 장인']]} onChange={setBy} />
         <span className="meta">{art ? '도감 마스터 여정을 모두 이룬 수 (같으면 이룬 목표 수)' : by === 'season' ? (data?.season ? seasonMeta(data.season) : '이번 시즌 점수') : by === 'score' ? '지금까지 모든 판의 점수' : '지금까지 기록된 판수'}</span></div>
-      {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : 'augments'} meId={meId} onOpen={onOpen} />}
+      {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : by === 'item-art' ? 'items' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
       {!art && !shown && !error && <RankingSkeleton />}
       {shown && data && <Swap on={rv} skeleton={<RankingSkeleton />}><div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>

@@ -2,6 +2,7 @@
 import augData from '../data/mayhem-augments.json';
 import champData from '../data/mayhem-champions.json';
 import itemData from '../data/items.json';
+import itemDexData from '../data/item-dex.json';
 import type { ChampionProfile, MayhemAugment } from './synergy';
 
 /** 증강 데이터를 만든 때 (소식 피드의 패치 소식 시각, 패치 시각을 모를 때) */
@@ -47,6 +48,15 @@ export type ItemInfo = { name: string; icon: string; price: number };
 export const ITEM: Record<number, ItemInfo> = Object.fromEntries(
   Object.entries(itemData.items as unknown as Record<string, [string, string, number]>).map(([id, [name, icon, price]]) => [Number(id), { name, icon, price }]),
 );
+
+/** 아이템 도감 목록 (v3.119, npm run data:items): 상점에서 사는 완성 아이템·신발 */
+export const ITEM_DEX: number[] = (itemDexData as { ids: number[] }).ids.filter((id) => ITEM[id]);
+export type ItemGroup = 'boots' | 'ad' | 'ap' | 'tank' | 'support';
+export const ITEM_GROUP_KO: Record<ItemGroup, string> = { ad: '물리', ap: '마법', tank: '방어', support: '지원', boots: '신발' };
+export const ITEM_GROUP: Record<number, ItemGroup> = Object.fromEntries(Object.entries((itemDexData as { group: Record<string, ItemGroup> }).group).map(([k, v]) => [Number(k), v]));
+/** 사면 모습이 바뀌는 아이템은 처음 산 아이템으로 센다 (무라마나 → 마나무네 등) */
+export const ITEM_BASE: Record<number, number> = { 3040: 3003, 3042: 3004, 3121: 3119 };
+export const baseItem = (id: number) => ITEM_BASE[id] ?? id;
 
 /** 아이템 능력치·효과 (마우스를 올렸을 때만 필요해서 따로 불러온다) */
 export type ItemDetail = { stats: string[]; effects: [string, string][] };

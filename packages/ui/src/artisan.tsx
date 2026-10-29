@@ -3,11 +3,12 @@
  * 기준은 도감과 같다 (packages/core/src/mastery.ts, 서버 server/src/artisans.ts).
  */
 import { useMemo } from 'react';
-import { AUGMENT, CHAMPIONS, type Api, type ArtisanRank, type ArtisanRanking, type Artisans as ArtisansData, shortNick } from '@prism/core';
+import { AUGMENT, CHAMPIONS, ITEM, type Api, type ArtisanRank, type ArtisanRanking, type Artisans as ArtisansData, shortNick } from '@prism/core';
 import { ChampImg, Empty, LockedMore, MemberFace, useSkins, PendingChip } from './basics';
 import { NickName } from './studio';
 import { AugRing } from './augment';
 import { useLoad } from './crew';
+import { ItemIcon } from './game';
 import { PrismMark } from './dex';
 import { Bone, SkeletonFrame, useReveal, Swap, fadeCls } from './skeleton';
 
@@ -15,10 +16,10 @@ import { Bone, SkeletonFrame, useReveal, Swap, fadeCls } from './skeleton';
 const IL = { display: 'inline-block', verticalAlign: 'middle' } as const;
 
 /** 챔피언·증강 상세의 장인 칸 (v3.38): 왼쪽 장인 명패(없으면 빈 자리), 오른쪽 장인의 길 순위. 늘 보인다 */
-export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champion' | 'augment'; id: number; onMember?: (id: string) => void }) {
+export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champion' | 'augment' | 'item'; id: number; onMember?: (id: string) => void }) {
   const { data } = useLoad<ArtisansData>(api, `/api/artisans/${kind}/${id}`);
   const skins = useSkins();
-  const what = kind === 'champion' ? '챔프' : '증강';
+  const what = kind === 'champion' ? '챔프' : kind === 'item' ? '아이템' : '증강';
   const masters = data?.artisans.filter((a) => a.master) ?? [];
   const road = data?.artisans.filter((a) => !a.master && a.done > 0).slice(0, 5) ?? [];
   return (
@@ -57,7 +58,7 @@ export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champio
 }
 
 /** 랭킹: 챔피언 장인 / 증강 장인 (마스터 수 → 이룬 목표 수) */
-export function ArtisanRankingView({ api, kind, meId, onOpen }: { api: Api; kind: 'champions' | 'augments'; meId?: string; onOpen: (id: string) => void }) {
+export function ArtisanRankingView({ api, kind, meId, onOpen }: { api: Api; kind: 'champions' | 'augments' | 'items'; meId?: string; onOpen: (id: string) => void }) {
   const { data, error } = useLoad<ArtisanRanking>(api, '/api/ranking/artisans');
   const skins = useSkins();
   const rows = useMemo(() => data?.[kind] ?? [], [data, kind]);
@@ -68,20 +69,20 @@ export function ArtisanRankingView({ api, kind, meId, onOpen }: { api: Api; kind
   return (<Swap on={rv} skeleton={<ArtRankSkeleton />}>
     <div className={`card rank-list art-rank ${fadeCls(rv)}`}>
       {rows.map((r, i) => <ArtRow key={r.id} r={r} rank={i + 1} kind={kind} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
-      {data.limited && <LockedMore more={data.limited[kind] - rows.length} />}
+      {data.limited && <LockedMore more={(data.limited[kind] ?? rows.length) - rows.length} />}
     </div>
   </Swap>);
 }
 
-function ArtRow({ r, rank, kind, me, skins, onOpen }: { r: ArtisanRank; rank: number; kind: 'champions' | 'augments'; me: boolean; skins: ReturnType<typeof useSkins>; onOpen: (id: string) => void }) {
-  const icon = (id: number) => (kind === 'champions' ? <ChampImg key={id} id={id} size={24} /> : <AugRing key={id} id={id} size={24} />);
+function ArtRow({ r, rank, kind, me, skins, onOpen }: { r: ArtisanRank; rank: number; kind: 'champions' | 'augments' | 'items'; me: boolean; skins: ReturnType<typeof useSkins>; onOpen: (id: string) => void }) {
+  const icon = (id: number) => (kind === 'champions' ? <ChampImg key={id} id={id} size={24} /> : kind === 'items' ? <ItemIcon key={id} id={id} size={24} /> : <AugRing key={id} id={id} size={24} />);
   return (
     <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 && r.masters > 0 ? 'first' : ''}`} onClick={() => onOpen(r.id)}>
       <span className="rk">{rank}</span>
       <MemberFace nick={r.nick} skin={r.skin} champion={r.main} skins={skins} size={40} />
       <span className="who"><b>{shortNick(r.nick)}{r.pending && <PendingChip />}</b>
         {r.masterIds.length ? <span className="art-icons">{r.masterIds.map(icon)}</span>
-          : r.best ? <span className="meta">가장 가까운 {(kind === 'champions' ? CHAMPIONS[r.best.id]?.name : AUGMENT[r.best.id]?.name) ?? ''} · {r.best.done}/6</span> : null}</span>
+          : r.best ? <span className="meta">가장 가까운 {(kind === 'champions' ? CHAMPIONS[r.best.id]?.name : kind === 'items' ? ITEM[r.best.id]?.name : AUGMENT[r.best.id]?.name) ?? ''} · {r.best.done}/6</span> : null}</span>
       <span className="num key">{r.masters > 0 && <PrismMark size={16} />}{r.masters}<small>장인</small></span>
       <span className="num">{r.goals}<small>목표</small></span>
     </button>

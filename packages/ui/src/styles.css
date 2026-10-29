@@ -890,6 +890,19 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .dxe { display: grid; gap: var(--s3); }
 .dxe-hero { display: grid; justify-items: center; gap: var(--s3); text-align: center; padding: var(--s4) 0 var(--s2); border-radius: var(--r-m); background: radial-gradient(80% 90% at 50% 30%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%); }
 .dxe-pic { display: grid; place-items: center; width: 128px; height: 128px; border-radius: 50%; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+/* 아이템 도감 (v3.119): 아이템 그림은 둥근 네모 */
+.dx-item { display: block; overflow: hidden; border-radius: var(--r-m); box-shadow: inset 0 0 0 1px var(--line-2); background: var(--surface-3); }
+.dx-item img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.dex-grid.items .dx .pic { border-radius: var(--r-m); }
+.dex-grid.items .dx.unk .pic, .dxe.unk .dxe-pic.item { border-radius: var(--r-m); }
+.dxe-pic.item { border-radius: var(--r-l); }
+.dxe-pic.item .jring { display: none; }
+.dxe-item { display: grid; gap: var(--s2); padding: var(--s3); border-radius: var(--r-m); background: var(--surface-2); }
+.dxi-stats { display: flex; flex-wrap: wrap; gap: var(--s1); }
+.dxi-stats span { padding: 2px var(--s2); border-radius: var(--r-pill); background: var(--surface); font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+.dxi-eff { margin: 0; font-size: var(--fs-sm); color: var(--text-2); line-height: 1.55; }
+.dxi-eff b { color: var(--text); }
+.dxe-champ:not(.won) { opacity: .55; }
 .dxe-pic .champ { border-radius: 50%; }
 .dxe-hero .no { font-size: var(--fs-xs); font-weight: 800; color: var(--text-3); font-variant-numeric: tabular-nums; letter-spacing: .04em; }
 .dxe-hero h2 { margin: 2px 0 var(--s2); font-size: var(--fs-xl); }

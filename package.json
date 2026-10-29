@@ -10,7 +10,7 @@
     "server:migrate": "wrangler d1 migrations apply prism --remote --config server/wrangler.toml",
     "server:deploy": "wrangler deploy --config server/wrangler.toml",
     "data:mayhem": "tsx scripts/mayhem/build.ts && npm run data:skins && npm run data:items && npm run data:skills",
-    "data:items": "tsx scripts/items.ts",
+    "data:items": "tsx scripts/items.ts && tsx scripts/item-dex.ts",
     "data:skins": "tsx scripts/skins.ts",
     "site:build": "npm run web:build",
     "icons": "node scripts/fetch-icons.mjs",

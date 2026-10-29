@@ -95,7 +95,7 @@ async function pay(env: Env, me: Member, kind: string, ref: string, base: number
   return s;
 }
 
-/** 이용권 사기: { kind: 'insight', ref } · { kind: 'lens', ref: 'c:ID' | 'a:ID' } · { kind: 'frame' } */
+/** 이용권 사기: { kind: 'insight', ref } · { kind: 'lens', ref: 'c:ID' | 'a:ID' | 'i:ID' } · { kind: 'frame' } */
 export async function buyUse(req: Request, env: Env, me: Member) {
   if (!can(me, 'shop')) throw new HttpError(403, SHOP_CLOSED);
   const { kind, ref } = (await req.json().catch(() => ({}))) as { kind?: string; ref?: string };
@@ -105,7 +105,7 @@ export async function buyUse(req: Request, env: Env, me: Member) {
     if ((s.uses.insight[ref as InsightKind] ?? 0) > Date.now() + DAY) throw new HttpError(409, '이미 열려 있어요.');
     await pay(env, me, 'insight', ref!, USE_PRICE.insight[ref as InsightKind]);
   } else if (kind === 'lens') {
-    const ok = /^c:\d+$/.test(ref ?? '') || /^a:\d+$/.test(ref ?? '');
+    const ok = /^[cai]:\d+$/.test(ref ?? '');
     if (!ok) throw new HttpError(400, '잘못된 도감 칸입니다.');
     if (s.uses.lens.includes(ref!)) throw new HttpError(409, '이미 열어 봤어요.');
     await pay(env, me, 'lens', ref!, USE_PRICE.lens);

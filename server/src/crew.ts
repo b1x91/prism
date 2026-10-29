@@ -102,10 +102,17 @@ export async function myDex(env: Env, me: Member) {
   return json(await dexRows(env, me.id));
 }
 
+/** 판마다 끝까지 갖고 있던 아이템 (한 판에 같은 아이템은 한 번) — 바뀐 모습은 처음 산 아이템으로 (core ITEM_BASE 와 같게).
+ *  where 는 participants p 에 거는 조건 (자리표시 ? 는 부르는 쪽이 bind) */
+export const itemRows = (where: string) => `SELECT DISTINCT p.member_id, p.game_id, p.champion_id AS champ, p.win, p.played_at,
+    CASE CAST(j.value AS INTEGER) WHEN 3040 THEN 3003 WHEN 3042 THEN 3004 WHEN 3121 THEN 3119 ELSE CAST(j.value AS INTEGER) END AS item
+  FROM participants p, json_each(p.items) j WHERE ${where} AND p.items IS NOT NULL AND CAST(j.value AS INTEGER) > 0`;
+const ITEM_ROWS = itemRows('p.member_id = ?');
+
 /** 한 회원의 도감 재료 (도감 화면·피스 계산·공개 링크가 같이 쓴다) */
 export async function dexRows(env: Env, id: string) {
   const me = { id };
-  const [champs, augs, pairs, feats] = await env.DB.batch([
+  const [champs, augs, pairs, feats, items, itemPairs] = await env.DB.batch([
     env.DB.prepare('SELECT champion_id AS id, COUNT(*) AS n, SUM(win) AS w, MIN(played_at) AS first, MAX(played_at) AS last FROM participants WHERE member_id = ? GROUP BY champion_id').bind(me.id),
     env.DB.prepare(
       `SELECT CAST(j.value AS INTEGER) AS id, COUNT(*) AS n, SUM(p.win) AS w, MIN(p.played_at) AS first, MAX(p.played_at) AS last
@@ -116,10 +123,13 @@ export async function dexRows(env: Env, id: string) {
        FROM participants p, json_each(p.augments) j WHERE p.member_id = ? AND p.augments IS NOT NULL GROUP BY 1, 2`,
     ).bind(me.id),
     env.DB.prepare('SELECT member_id, champion_id AS championId, win, kills, deaths, feats FROM participants WHERE member_id = ? AND feats IS NOT NULL').bind(me.id),
+    // 아이템 도감 (v3.119): 끝까지 갖고 있던 아이템, 모습이 바뀐 아이템은 처음 산 아이템으로
+    env.DB.prepare(`SELECT item AS id, COUNT(*) AS n, SUM(win) AS w, MIN(played_at) AS first, MAX(played_at) AS last FROM (${ITEM_ROWS}) GROUP BY item`).bind(me.id),
+    env.DB.prepare(`SELECT item, champ, COUNT(*) AS n, SUM(win) AS w FROM (${ITEM_ROWS}) GROUP BY item, champ`).bind(me.id),
   ]);
   const known = await knownFeats(env);
   const challenges = tallyByMember(feats.results as Parameters<typeof tallyByMember>[0], known).get(me.id) ?? { counts: {}, known };
-  return { champions: champs.results, augments: augs.results, pairs: pairs.results, challenges } as unknown as import('../../packages/core/src/history.js').DexRows;
+  return { champions: champs.results, augments: augs.results, pairs: pairs.results, items: items.results, itemPairs: itemPairs.results, challenges } as unknown as import('../../packages/core/src/history.js').DexRows;
 }
 
 /** 앱이 로그인된 롤 계정을 연결한다. 클라이언트에 로그인된 계정이라 아이콘 인증을 대신한다 */

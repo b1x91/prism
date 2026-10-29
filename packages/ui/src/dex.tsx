@@ -5,12 +5,14 @@
  */
 import { useKept } from './kept';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, type Shop, championsFor, explainFit, rankFits, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP, josa } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, ITEM, ITEM_DEX, ITEM_GROUP, ITEM_GROUP_KO, itemMastery, type ItemGroup, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, type Shop, championsFor, explainFit, rankFits, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP, josa } from '@prism/core';
 import { ChampImg, Gem, Select, Seg } from './basics';
 import { AugRing, AugmentLink, TierBadge } from './augment';
 import { Icon } from './icons';
 import { Bone, imgIn } from './skeleton';
 import { LensGate } from './goods';
+import { useItemDetail } from './game';
+import { Artisans } from './artisan';
 
 /** 서버에 기록된 내 모든 판 + (앱이면) 이 PC 롤 기록을 합친 도감 */
 export function useDex(api: Api | null, games: Game[] = []) {
@@ -27,7 +29,7 @@ export function useDex(api: Api | null, games: Game[] = []) {
   return { dex, loading };
 }
 
-type Kind = 'champions' | 'augments';
+type Kind = 'champions' | 'augments' | 'items';
 /** 전체 · 내 도감(모두 / 레벨 1~5) · 아직 안 해봄 */
 type Show = 'all' | 'mine' | 'l1' | 'l2' | 'l3' | 'l4' | 'l5' | 'missing';
 type Sort = 'no' | 'progress' | 'most' | 'recent';
@@ -35,6 +37,8 @@ type Sort = 'no' | 'progress' | 'most' | 'recent';
 const RARITY_ORDER: Rarity[] = ['silver', 'gold', 'prismatic'];
 const CHAMP_IDS = Object.keys(CHAMPIONS).map(Number).sort((a, b) => a - b);
 const AUG_IDS = [...ACTIVE_AUGMENTS].sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.id - b.id).map((a) => a.id);
+const GROUP_ORDER: ItemGroup[] = ['ad', 'ap', 'tank', 'support', 'boots'];
+const ITEM_IDS = [...ITEM_DEX].sort((a, b) => GROUP_ORDER.indexOf(ITEM_GROUP[a]) - GROUP_ORDER.indexOf(ITEM_GROUP[b]) || (ITEM[b]?.price ?? 0) - (ITEM[a]?.price ?? 0) || a - b);
 const NO = (i: number) => `No.${String(i + 1).padStart(3, '0')}`;
 const NEW_MS = 3 * 24 * 3600_000;
 const day = (t: number) => { const d = new Date(t); return `${d.getFullYear()}.${d.getMonth() + 1}.${d.getDate()}`; };
@@ -42,7 +46,7 @@ const day = (t: number) => { const d = new Date(t); return `${d.getFullYear()}.$
 /** 진척도 배지 (마스터 여정 전체 비율) */
 const BADGES: [number, string][] = [[10, '첫 발자국'], [25, '탐험가'], [50, '수집가'], [75, '박사'], [100, '도감 마스터']];
 
-const nameOf = (kind: Kind, id: number) => (kind === 'champions' ? CHAMPIONS[id]?.name : AUGMENT[id]?.name) ?? `#${id}`;
+const nameOf = (kind: Kind, id: number) => (kind === 'champions' ? CHAMPIONS[id]?.name : kind === 'items' ? ITEM[id]?.name : AUGMENT[id]?.name) ?? `#${id}`;
 const match = (name: string, q: string) => { const t = q.replace(/\s/g, ''); const n = name.replace(/\s/g, ''); return n.includes(t) || initials(n).includes(t); };
 const stageOf = (m: Mastery) => DEX_LEVEL_KO[dexLevel(m)];
 const stageKey = (m: Mastery) => (m.master ? 'master' : m.caught ? 'caught' : m.seen ? 'seen' : 'unk');
@@ -59,7 +63,7 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1, api }
   const [sort, setSort] = useKept<Sort>('dex.sort', 'no');
   const [group, setGroup] = useKept<string>('dex.group', 'all');
   const [q, setQ] = useKept('dex.q', '');
-  const [sel, setSel] = useKept<Record<Kind, number | null>>('dex.sel', { champions: null, augments: null });
+  const [sel, setSel] = useKept<Record<Kind, number | null>>('dex.sel', { champions: null, augments: null, items: null });
   const [sheet, setSheet] = useState(false); // 좁은 화면: 고르면 아래에서 설명이 올라온다
   const entry = useRef<HTMLElement>(null);
   // 옆 설명 칸: 칸 안에 따로 스크롤을 두지 않는다. 페이지와 함께 내려가다가 칸의 끝이 화면 아래에 닿으면 멈춘다
@@ -85,9 +89,9 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1, api }
     return () => { ro.disconnect(); removeEventListener('resize', fit); };
   }, []);
 
-  const ids = kind === 'champions' ? CHAMP_IDS : AUG_IDS;
-  const got = dex[kind];
-  const ms = useMemo(() => new Map(ids.map((id) => [id, kind === 'champions' ? champMastery(id, got[id], dex.pairs, dex.challenges ?? null) : augMastery(id, got[id], dex.pairs)])), [ids, kind, got, dex.pairs, dex.challenges]);
+  const ids = kind === 'champions' ? CHAMP_IDS : kind === 'items' ? ITEM_IDS : AUG_IDS;
+  const got = (kind === 'items' ? dex.items : dex[kind]) ?? {};
+  const ms = useMemo(() => new Map(ids.map((id) => [id, kind === 'champions' ? champMastery(id, got[id], dex.pairs, dex.challenges ?? null) : kind === 'items' ? itemMastery(id, got[id], dex.itemPairs ?? []) : augMastery(id, got[id], dex.pairs)])), [ids, kind, got, dex.pairs, dex.itemPairs, dex.challenges]);
   const no = useMemo(() => new Map(ids.map((id, i) => [id, i])), [ids]);
   const m = (id: number) => ms.get(id)!;
   const now = Date.now();
@@ -108,8 +112,9 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1, api }
 
   const groups: [string, string][] = kind === 'champions'
     ? Object.entries(ROLE_KO)
+    : kind === 'items' ? GROUP_ORDER.map((g) => [g, ITEM_GROUP_KO[g]] as [string, string])
     : RARITY_ORDER.map((r) => [r, RARITY_KO[r]] as [string, string]);
-  const groupOf = (id: number) => (kind === 'champions' ? CHAMPIONS[id]?.roles[0] : AUGMENT[id]?.rarity);
+  const groupOf = (id: number) => (kind === 'champions' ? CHAMPIONS[id]?.roles[0] : kind === 'items' ? ITEM_GROUP[id] : AUGMENT[id]?.rarity);
   const groupCount = (g: string) => { const all = ids.filter((id) => g === 'all' || groupOf(id) === g); return [all.filter((id) => m(id).caught).length, all.length]; };
 
   const list = ids.filter((id) => {
@@ -132,7 +137,7 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1, api }
   const closest = ids.filter((id) => m(id).seen && !m(id).master).sort((a, b) => m(b).done - m(a).done || (got[b]?.w ?? 0) - (got[a]?.w ?? 0))[0];
   const current = sel[kind] ?? closest ?? ids.find((id) => m(id).seen) ?? ids[0];
   const pick = (id: number) => { setSel({ ...sel, [kind]: id }); setSheet(true); };
-  const what = kind === 'champions' ? '챔프' : '증강';
+  const what = kind === 'champions' ? '챔프' : kind === 'items' ? '아이템' : '증강';
 
   return (
     <div className={`dex ${loading ? 'dex-loading' : 'dex-ready'}`} aria-busy={loading || undefined}>
@@ -140,7 +145,7 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1, api }
         <span className="dex-lens" aria-hidden="true"><Gem size={44} /></span>
         <div className="dex-title">
           <h1>도감</h1>
-          <Seg value={kind} options={[['champions', '챔프'], ['augments', '증강']]} onChange={(k) => { setKind(k); setGroup('all'); setQ(''); setShow('all'); }} />
+          <Seg value={kind} options={[['champions', '챔프'], ['augments', '증강'], ['items', '아이템']]} onChange={(k) => { setKind(k); setGroup('all'); setQ(''); setShow('all'); }} />
           <div className="dex-xp" title={`판 +${DEX_XP.game} · 승리 +${DEX_XP.win} · 이룬 목표 +${DEX_XP.goal} · 마스터 +${DEX_XP.master}`}>
             <span className="lv">Lv.{xp.level}</span>
             <span className="bar"><span style={{ width: `${Math.max(2, Math.round(xp.pct * 100))}%` }} /></span>
@@ -194,7 +199,7 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1, api }
                 <span className="no">{NO(no.get(id)!)}</span>
                 {fresh && !x.caught && <span className="new">NEW</span>}
                 {x.master ? <span className="mark" role="img" aria-label="마스터" title={`마스터 · 목표 ${x.total}개 모두 달성`}><PrismMark size={18} /></span> : x.caught && <span className="mark" role="img" aria-label="골드" title="골드 · 3승 달성"><Crystal size={16} /></span>}
-                <span className="pic">{kind === 'champions' ? <ChampImg id={id} size={56} /> : <AugRing id={id} size={56} />}{!x.seen && <i className="q" aria-hidden="true">?</i>}</span>
+                <span className="pic">{kind === 'champions' ? <ChampImg id={id} size={56} /> : kind === 'items' ? <ItemPic id={id} size={52} /> : <AugRing id={id} size={56} />}{!x.seen && <i className="q" aria-hidden="true">?</i>}</span>
                 <span className="nm">{x.seen ? nameOf(kind, id) : '???'}</span>
                 <Pips m={x} />
               </button>
@@ -206,6 +211,8 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1, api }
         <aside ref={entry} className={`dex-entry card ${sheet ? 'open' : ''}`} aria-live="polite">
           <button type="button" className="dex-close icon-btn" aria-label="닫기" onClick={() => setSheet(false)}><Icon name="x" /></button>
           {loading ? <div className="dex-entry-sk"><Bone w={112} h={112} r="round" /><Bone w={56} h={10} /><Bone w={120} h={28} /><Bone w={160} h={24} r="pill" /><Bone w="100%" h={56} r="m" /><Bone w="100%" h={240} r="m" /><Bone w="100%" h={120} r="m" /></div>
+            : kind === 'items'
+            ? <ItemEntry id={current} no={no.get(current) ?? 0} e={got[current]} m={m(current)} dex={dex} onChampion={onChampion} lens={lens} />
             : kind === 'champions'
             ? <ChampEntry id={current} no={no.get(current) ?? 0} e={got[current]} m={m(current)} dex={dex} onChampion={onChampion} lens={lens} />
             : <AugEntry id={current} no={no.get(current) ?? 0} e={got[current]} m={m(current)} dex={dex} onAugment={onAugment} onChampion={onChampion} lens={lens} />}
@@ -224,7 +231,7 @@ function Pips({ m }: { m: Mastery }) {
   );
 }
 
-const nextText = (g: Goal) => (g.key === 'special' || g.role ? `${g.label}${g.target > 1 && g.cur > 0 ? ` (${g.cur}/${g.target})` : ''}` : `${g.label}까지 ${g.target - g.cur}승`);
+const nextText = (g: Goal) => (g.key === 'special' || g.role || !/^w\d+$/.test(g.key) ? `${g.label}${g.target > 1 && g.cur > 0 ? ` (${g.cur}/${g.target})` : ''}` : `${g.label}까지 ${g.target - g.cur}승`);
 
 function Journey({ m, specialList }: { m: Mastery; specialList: ReactNode }) {
   const base = m.goals.filter((g) => !g.role), role = m.goals.filter((g) => g.role);
@@ -379,6 +386,43 @@ function AugEntry({ id, no, e, m, dex, onAugment, onChampion, lens }: { id: numb
       {champs.length > 0 && <div className="dxe-sub"><span className="k">이 증강을 고른 챔프</span>
         <div className="dxe-champs">{champs.map((p) => <button key={p.champ} type="button" className="dxe-champ" onClick={() => onChampion?.(p.champ)} title={`${CHAMPIONS[p.champ]?.name} ${p.n}판 ${p.w}승`}><ChampImg id={p.champ} size={36} /><span>{p.n}</span></button>)}</div></div>}
       {onAugment && <button type="button" className="btn sm primary" onClick={() => onAugment(id)}>증강 자세히 보기</button>}
+    </div>
+  );
+}
+
+/** 아이템 그림 (도감 칸·설명 머리) */
+function ItemPic({ id, size }: { id: number; size: number }) {
+  const it = ITEM[id];
+  return <span className="dx-item" style={{ width: size, height: size }}>{it && <img className="fi" {...imgIn} src={cdragon(it.icon)} alt="" width={size} height={size} loading="lazy" />}</span>;
+}
+
+function ItemEntry({ id, no, e, m, dex, onChampion, lens }: { id: number; no: number; e?: DexEntry; m: Mastery; dex: Dex; onChampion?: (id: number) => void; lens?: Lens }) {
+  const it = ITEM[id];
+  const detail = useItemDetail(true)?.[id];
+  if (!it) return null;
+  const champs = (dex.itemPairs ?? []).filter((p) => p.item === id).sort((a, b) => b.w - a.w || b.n - a.n).slice(0, 10);
+  const won = new Set(m.special.tried);
+  const group = ITEM_GROUP_KO[ITEM_GROUP[id]];
+  return (
+    <div className={`dxe ${stageKey(m)}`}>
+      {m.master
+        ? <MasterStage kind="items" id={id} no={no} name={it.name} e={e} m={m} pic={<ItemPic id={id} size={96} />} sub={`${group} 아이템 · ${it.price.toLocaleString()} 골드`} />
+        : <div className="dxe-hero">
+          <span className="dxe-pic item"><ItemPic id={id} size={88} />{!m.seen && <i className="q" aria-hidden="true">?</i>}<Ring m={m} /></span>
+          <div><span className="no">{NO(no)}</span><h2>{it.name}</h2><div className="dxe-types"><StageTag m={m} /><span className="pill">{group}</span><span className="pill">{it.price.toLocaleString()} 골드</span></div></div>
+        </div>}
+      {detail && (detail.stats.length > 0 || detail.effects.length > 0) && <div className="dxe-item">
+        {detail.stats.length > 0 && <div className="dxi-stats">{detail.stats.map((x) => <span key={x}>{x}</span>)}</div>}
+        {detail.effects.slice(0, 3).map(([k, v]) => <p key={k} className="dxi-eff"><b>{k}</b> {v}</p>)}
+      </div>}
+      <p className="dxe-text">{e ? `${day(e.first)}에 처음 끝까지 가져갔고, 지금까지 ${e.n}판 · ${e.w}번 이겼다. 서로 다른 챔프 ${won.size}개로 이겼다.` : '아직 끝까지 가져가 본 적 없는 아이템이에요. 판이 끝날 때 갖고 있으면 기록돼요.'}</p>
+      <Lensed lens={lens} m={m} refKey={`i:${id}`}>
+        <Journey m={m} specialList={null} />
+      </Lensed>
+      {e && <Stats e={e} />}
+      {lens && <Artisans api={lens.api} kind="item" id={id} />}
+      {champs.length > 0 && <div className="dxe-sub"><span className="k">이 아이템과 함께한 챔프 <small>이긴 챔프 {won.size}</small></span>
+        <div className="dxe-champs">{champs.map((p) => <button key={p.champ} type="button" className={`dxe-champ ${p.w > 0 ? 'won' : ''}`} onClick={() => onChampion?.(p.champ)} title={`${CHAMPIONS[p.champ]?.name} ${p.n}판 ${p.w}승`}><ChampImg id={p.champ} size={36} /><span>{p.w}승</span></button>)}</div></div>}
     </div>
   );
 }

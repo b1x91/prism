@@ -11,7 +11,7 @@ import { appMembers } from './appmembers.js';
 import { promoteSweep } from './promote.js';
 import { download, latest } from './release.js';
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
-import { artisanRanking, augmentArtisans, championArtisans } from './artisans.js';
+import { artisanRanking, augmentArtisans, championArtisans, itemArtisans } from './artisans.js';
 import { addTip, augmentStats, board, gameDetail, myDex, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setPresence, setConsent, setProfile, toggleLike } from './crew.js';
 import { ingest } from './ingest.js';
 import { memberPage, ranking } from './members.js';
@@ -135,8 +135,8 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
     return augmentStats(env, Number.isInteger(c) && c > 0 ? c : null);
   }
 
-  const art = pathname.match(/^\/api\/artisans\/(champion|augment)\/(\d+)$/);
-  if (m === 'GET' && art) return art[1] === 'champion' ? championArtisans(env, Number(art[2])) : augmentArtisans(env, Number(art[2]));
+  const art = pathname.match(/^\/api\/artisans\/(champion|augment|item)\/(\d+)$/);
+  if (m === 'GET' && art) return art[1] === 'champion' ? championArtisans(env, Number(art[2])) : art[1] === 'item' ? itemArtisans(env, Number(art[2])) : augmentArtisans(env, Number(art[2]));
   const gm = pathname.match(/^\/api\/games\/(\d+)$/);
   if (m === 'GET' && gm) return gameDetail(env, Number(gm[1]));
   const champ = pathname.match(/^\/api\/champions\/(\d+)$/);

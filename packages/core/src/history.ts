@@ -2,6 +2,8 @@
  * 롤 클라이언트(LCU) 전적 해석과 개인 통계. 순수 함수 (앱이 받은 원본을 넘겨준다).
  * LCU 필드 이름은 실측 전 추정이다. 없는 필드는 null/빈 배열로 둔다.
  */
+import { baseItem } from './data';
+
 export const MAYHEM_QUEUE = 2400;
 
 /**
@@ -193,18 +195,21 @@ export function todayPicks(p: Personal, allIds: number[], day = Math.floor(Date.
 
 export type DexEntry = { n: number; w: number; first: number; last: number };
 export type DexPair = { aug: number; champ: number; n: number; w: number };
-export type Dex = { champions: Record<number, DexEntry>; augments: Record<number, DexEntry>; pairs: DexPair[]; challenges?: import('./challenges').ChallengeTally };
+/** 아이템 × 챔프 (v3.119): 그 챔프로 그 아이템을 끝까지 갖고 있던 판 */
+export type ItemPair = { item: number; champ: number; n: number; w: number };
+export type Dex = { champions: Record<number, DexEntry>; augments: Record<number, DexEntry>; pairs: DexPair[]; items?: Record<number, DexEntry>; itemPairs?: ItemPair[]; challenges?: import('./challenges').ChallengeTally };
 /** 서버 /api/me/dex 응답 */
-export type DexRows = { champions: ({ id: number } & DexEntry)[]; augments: ({ id: number } & DexEntry)[]; pairs: DexPair[]; challenges?: import('./challenges').ChallengeTally };
+export type DexRows = { champions: ({ id: number } & DexEntry)[]; augments: ({ id: number } & DexEntry)[]; pairs: DexPair[]; items?: ({ id: number } & DexEntry)[]; itemPairs?: ItemPair[]; challenges?: import('./challenges').ChallengeTally };
 
 export function dexFromRows(r: DexRows): Dex {
   const map = (rows: ({ id: number } & DexEntry)[]) => Object.fromEntries(rows.map(({ id, ...e }) => [id, e]));
-  return { champions: map(r.champions), augments: map(r.augments), pairs: r.pairs, challenges: r.challenges };
+  return { champions: map(r.champions), augments: map(r.augments), pairs: r.pairs, items: map(r.items ?? []), itemPairs: r.itemPairs ?? [], challenges: r.challenges };
 }
 
 export function dexFromGames(games: Game[]): Dex {
   const champions: Record<number, DexEntry> = {}, augments: Record<number, DexEntry> = {};
   const pairs = new Map<string, DexPair>();
+  const items: Record<number, DexEntry> = {}, itemPairs = new Map<string, ItemPair>();
   const add = (m: Record<number, DexEntry>, id: number, g: Game) => {
     const e = (m[id] ??= { n: 0, w: 0, first: g.playedAt, last: g.playedAt });
     e.n++; if (g.win) e.w++;
@@ -219,8 +224,15 @@ export function dexFromGames(games: Game[]): Dex {
       p.n++; if (g.win) p.w++;
       pairs.set(k, p);
     }
+    for (const it of new Set((g.items ?? []).map(baseItem))) {
+      add(items, it, g);
+      const k = `${it}:${g.championId}`;
+      const p = itemPairs.get(k) ?? { item: it, champ: g.championId, n: 0, w: 0 };
+      p.n++; if (g.win) p.w++;
+      itemPairs.set(k, p);
+    }
   }
-  return { champions, augments, pairs: [...pairs.values()] };
+  return { champions, augments, pairs: [...pairs.values()], items, itemPairs: [...itemPairs.values()] };
 }
 
 /**
@@ -238,8 +250,10 @@ export function mergeDex(a: Dex, b: Dex): Dex {
   };
   const pairs = new Map<string, DexPair>();
   for (const p of [...a.pairs, ...b.pairs]) { const k = `${p.aug}:${p.champ}`; const o = pairs.get(k); if (!o || p.n > o.n) pairs.set(k, p); }
+  const ip = new Map<string, ItemPair>();
+  for (const p of [...(a.itemPairs ?? []), ...(b.itemPairs ?? [])]) { const k = `${p.item}:${p.champ}`; const o = ip.get(k); if (!o || p.n > o.n) ip.set(k, p); }
   // 역할 챌린지는 서버만 센다 (10명 전체가 필요해서)
-  return { champions: m(a.champions, b.champions), augments: m(a.augments, b.augments), pairs: [...pairs.values()], challenges: a.challenges ?? b.challenges };
+  return { champions: m(a.champions, b.champions), augments: m(a.augments, b.augments), pairs: [...pairs.values()], items: m(a.items ?? {}, b.items ?? {}), itemPairs: [...ip.values()], challenges: a.challenges ?? b.challenges };
 }
 
 // ───────── 한 판 상세 ─────────

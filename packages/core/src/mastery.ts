@@ -7,7 +7,7 @@
  */
 import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS } from './data';
 import { fitOf, fitPoints, tierOf, type FitTier } from './synergy';
-import type { DexEntry, DexPair } from './history';
+import type { DexEntry, DexPair, ItemPair } from './history';
 import { ROLE_CHALLENGES, challengeRole, type ChallengeRole, type ChallengeTally } from './challenges';
 
 export const WIN_STEPS = [3, 5, 10, 30, 50] as const;
@@ -34,6 +34,8 @@ export type Mastery = {
   special: { tier: FitTier; ids: number[]; tried: number[] };
   /** 챔피언 역할 챌린지의 역할 */
   role?: ChallengeRole | null;
+  /** 레벨을 목표 수가 아니라 규칙으로 정할 때 (아이템, v3.119) */
+  level?: DexLevel;
 };
 
 const TIER_ORDER: FitTier[] = ['S', 'A', 'B', 'C', 'D'];
@@ -104,6 +106,35 @@ export function augMastery(id: number, e: DexEntry | undefined, pairs: DexPair[]
   return build(e, { tier: best.tier, ids: best.ids, tried }, `${best.tier}티어 챔프로 골라 보기`);
 }
 
+// ───────── 아이템 도감 (CLAUDE.md v3.119) ─────────
+/**
+ * 아이템은 '끝까지 갖고 있던 판'으로 센다. 한 챔프로만 채우지 않게 서로 다른 챔프로 이긴 수도 본다.
+ * 실버 1판 · 골드 3승 · 플래티넘 10승 · 다이아몬드 20승 + 챔프 3개로 승리 · 마스터 30승 + 챔프 5개로 승리
+ */
+export const ITEM_STEPS = { gold: 3, plat: 10, dia: [20, 3], master: [30, 5] } as const;
+
+export function itemMastery(id: number, e: DexEntry | undefined, pairs: ItemPair[]): Mastery {
+  const wins = e?.w ?? 0;
+  const champs = [...new Set(pairs.filter((p) => p.item === id && p.w > 0).map((p) => p.champ))];
+  const S = ITEM_STEPS;
+  const g = (key: string, label: string, cur: number, target: number): Goal => ({ key, label, cur: Math.min(cur, target), target, done: cur >= target });
+  const goals: Goal[] = [
+    g('w3', `${S.gold}승`, wins, S.gold),
+    g('w10', `${S.plat}승`, wins, S.plat),
+    g('w20', `${S.dia[0]}승`, wins, S.dia[0]),
+    g('c3', `서로 다른 챔프 ${S.dia[1]}개로 승리`, champs.length, S.dia[1]),
+    g('w30', `${S.master[0]}승`, wins, S.master[0]),
+    g('c5', `서로 다른 챔프 ${S.master[1]}개로 승리`, champs.length, S.master[1]),
+  ];
+  const done = goals.filter((x) => x.done).length;
+  const level: DexLevel = !e ? 0
+    : wins >= S.master[0] && champs.length >= S.master[1] ? 5
+    : wins >= S.dia[0] && champs.length >= S.dia[1] ? 4
+    : wins >= S.plat ? 3
+    : wins >= S.gold ? 2 : 1;
+  return { seen: Boolean(e), caught: wins >= S.gold, master: level === 5, goals, done, total: goals.length, next: goals.find((x) => !x.done) ?? null, special: { tier: 'S', ids: [], tried: champs }, level };
+}
+
 /**
  * 도감 레벨 0~5 (v3.22): 0 아직 안 해봄 · 1 실버(1판) · 2 골드(3승) · 3 플래티넘(목표 절반) · 4 다이아몬드(마지막 목표 하나만 남음, 챔피언은 관문만) · 5 마스터
  */
@@ -118,6 +149,7 @@ export const DEX_LEVEL_RULE: Record<DexLevel, string> = {
   5: '모든 목표를 이뤘어요',
 };
 export function dexLevel(m: Mastery): DexLevel {
+  if (m.level !== undefined) return m.level;
   if (m.master) return 5;
   if (!m.seen) return 0;
   if (!m.caught) return 1;

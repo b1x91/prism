@@ -4,8 +4,9 @@
  *  - 랭킹: 챔피언 장인 / 증강 장인 (마스터 수 → 이룬 목표 수)
  */
 import { can, isPending, LIMITED } from './roles.js';
-import { augMastery, champMastery, type Mastery } from '../../packages/core/src/mastery.js';
-import type { DexEntry, DexPair } from '../../packages/core/src/history.js';
+import { augMastery, champMastery, itemMastery, type Mastery } from '../../packages/core/src/mastery.js';
+import { itemRows } from './crew.js';
+import type { DexEntry, DexPair, ItemPair } from '../../packages/core/src/history.js';
 import { parseFeat, tallyChallenges, type ChallengeTally, type FeatGame } from '../../packages/core/src/challenges.js';
 import { FACE, json, type Env, type Member } from './util.js';
 
@@ -77,22 +78,41 @@ export async function augmentArtisans(env: Env, aug: number) {
   return json({ artisans: await withFaces(env, list) });
 }
 
-/** 랭킹: 챔피언 장인 / 증강 장인. 회원마다 마스터 수·이룬 목표 수·대표 마스터 */
+/** 한 아이템의 장인과 장인의 길 순위 (v3.119) — 끝까지 갖고 있던 판으로 센다. 바뀐 모습(무라마나 등)은 처음 산 아이템으로 */
+export async function itemArtisans(env: Env, item: number) {
+  const { results } = await env.DB.prepare(`SELECT member_id, champ, COUNT(*) AS n, SUM(win) AS w FROM (${itemRows('1 = 1')}) WHERE item = ? GROUP BY member_id, champ`).bind(item).all<{ member_id: string; champ: number; n: number; w: number }>();
+  const by = groupItemPairs(results.map((r) => ({ ...r, item })));
+  const list = [...by].map(([id, ps]) => {
+    const e = entry(ps.reduce((a, p) => ({ n: a.n + p.n, w: a.w + p.w }), { n: 0, w: 0 }));
+    return { id, ...view(itemMastery(item, e, ps), e) };
+  }).sort(order).slice(0, 10);
+  return json({ artisans: await withFaces(env, list) });
+}
+
+function groupItemPairs(rows: { member_id: string; item: number; champ: number; n: number; w: number }[]) {
+  const by = new Map<string, ItemPair[]>();
+  for (const r of rows) { const l = by.get(r.member_id) ?? []; l.push({ item: r.item, champ: r.champ, n: r.n, w: r.w ?? 0 }); by.set(r.member_id, l); }
+  return by;
+}
+
+/** 랭킹: 챔피언 장인 / 증강 장인 / 아이템 장인. 회원마다 마스터 수·이룬 목표 수·대표 마스터 */
 export async function artisanRanking(env: Env, me: Member) {
-  const [champRows, augRows, pairs, feats] = await env.DB.batch([
+  const [champRows, augRows, pairs, feats, itemPairRows] = await env.DB.batch([
     env.DB.prepare('SELECT member_id, champion_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participants GROUP BY member_id, champion_id'),
     env.DB.prepare('SELECT member_id, augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments GROUP BY member_id, augment_id'),
     env.DB.prepare('SELECT member_id, augment_id AS aug, champion_id AS champ, COUNT(*) AS n, SUM(win) AS w FROM participant_augments GROUP BY member_id, augment_id, champion_id'),
     env.DB.prepare(`SELECT ${FEAT_COLS} FROM participants WHERE feats IS NOT NULL`),
+    env.DB.prepare(`SELECT member_id, item, champ, COUNT(*) AS n, SUM(win) AS w FROM (${itemRows('1 = 1')}) GROUP BY member_id, item, champ`),
   ]);
   const byMember = groupPairs(pairs.results as PairRow[]);
+  const byItem = groupItemPairs(itemPairRows.results as { member_id: string; item: number; champ: number; n: number; w: number }[]);
   const kn = await knownFeats(env);
   const ch = tallyByMember(feats.results as FeatRow[], kn);
-  const tally = (rows: Row[], calc: (id: number, e: DexEntry, p: DexPair[], c: ChallengeTally) => Mastery) => {
+  const tally = (rows: Row[], calc: (id: number, e: DexEntry, p: DexPair[], c: ChallengeTally, mid: string) => Mastery) => {
     const acc = new Map<string, { masters: number[]; goals: number; caught: number; best: { id: number; done: number; w: number } | null }>();
     for (const r of rows) {
       const e = entry(r);
-      const m = calc(r.id!, e, byMember.get(r.member_id) ?? [], ch.get(r.member_id) ?? { counts: {}, known: kn });
+      const m = calc(r.id!, e, byMember.get(r.member_id) ?? [], ch.get(r.member_id) ?? { counts: {}, known: kn }, r.member_id);
       const a = acc.get(r.member_id) ?? { masters: [], goals: 0, caught: 0, best: null };
       if (m.master) a.masters.push(r.id!);
       if (m.caught) a.caught++;
@@ -107,11 +127,19 @@ export async function artisanRanking(env: Env, me: Member) {
   };
   const champions = tally(champRows.results as Row[], champMastery);
   const augments = tally(augRows.results as Row[], (id, e, p) => augMastery(id, e, p));
-  const f = await faces(env, [...new Set([...champions, ...augments].map((x) => x.id))]);
+  // 아이템: 회원 × 아이템 합계를 만들어 같은 틀로
+  const itemRowsAll: Row[] = [];
+  for (const [mid, ps] of byItem) {
+    const acc = new Map<number, Row>();
+    for (const p of ps) { const r = acc.get(p.item) ?? { member_id: mid, id: p.item, n: 0, w: 0 }; r.n += p.n; r.w += p.w; acc.set(p.item, r); }
+    itemRowsAll.push(...acc.values());
+  }
+  const items = tally(itemRowsAll, (id, e, _p, _c, mid) => itemMastery(id, e, byItem.get(mid) ?? []));
+  const f = await faces(env, [...new Set([...champions, ...augments, ...items].map((x) => x.id))]);
   const put = <T extends { id: string }>(xs: T[]) => xs.map((x) => ({ ...x, nick: f.get(x.id)?.nick ?? '?', skin: f.get(x.id)?.skin ?? null, main: f.get(x.id)?.main ?? null }));
   const lim = <T>(l: T[]) => (can(me, 'rankingAll') ? l : l.slice(0, LIMITED));
-  const c = put(champions), a = put(augments);
-  return json({ champions: lim(c), augments: lim(a), ...(can(me, 'rankingAll') ? {} : { limited: { champions: c.length, augments: a.length } }) });
+  const c = put(champions), a = put(augments), i = put(items);
+  return json({ champions: lim(c), augments: lim(a), items: lim(i), ...(can(me, 'rankingAll') ? {} : { limited: { champions: c.length, augments: a.length, items: i.length } }) });
 }
 
 function groupPairs(rows: PairRow[]) {

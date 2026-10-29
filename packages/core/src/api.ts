@@ -104,7 +104,7 @@ export type DiscordNow = { enabled: false; invite: string | null } | { enabled: 
 export type Artisan = { id: string; nick: string; pending?: boolean; master: boolean; done: number; total: number; n: number; w: number; special: boolean } & FaceInfo;
 export type Artisans = { artisans: Artisan[] };
 export type ArtisanRank = { id: string; nick: string; pending?: boolean; masters: number; masterIds: number[]; caught: number; goals: number; best: { id: number; done: number; w: number } | null } & FaceInfo;
-export type ArtisanRanking = { champions: ArtisanRank[]; augments: ArtisanRank[]; limited?: { champions: number; augments: number } };
+export type ArtisanRanking = { champions: ArtisanRank[]; augments: ArtisanRank[]; items?: ArtisanRank[]; limited?: { champions: number; augments: number; items?: number } };
 
 /** 멤버 근황 (v3.74): 지금 접속한 멤버 + 최근 3일 근황 */
 export type PulseNow = { id: string; nick: string; skin: number | null; main: number | null; presence: import('./presence').Presence; phase: '' | 'lobby' | 'select' | 'game'; champ: number; since: number };

@@ -11,7 +11,7 @@ import { imgIn } from './skeleton';
 
 /** 아이템 능력치·효과는 처음 마우스를 올릴 때 한 번 불러온다 */
 let details: Record<number, ItemDetail> | null = null;
-function useItemDetail(on: boolean) {
+export function useItemDetail(on: boolean) {
   const [d, setD] = useState(details);
   useEffect(() => { if (on && !d) loadItemDetail().then((x) => { details = x; setD(x); }).catch(() => {}); }, [on, d]);
   return d;
