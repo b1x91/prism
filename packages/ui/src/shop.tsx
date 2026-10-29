@@ -178,7 +178,7 @@ function ShopOpen({ api, me, onGo }: { api: Api; me: Me; onGo?: (to: 'dex' | 'mi
   const [hot] = useState(() => SHOP.filter(forSale).map((x) => [Math.random(), x] as const).sort((a, b) => a[0] - b[0]).map(([, x]) => x));
   const [owned, setOwned] = useKept('shop.owned', false);
   const [buying, setBuying] = useState<ShopItem | null>(null);
-  const run = async (k: string, f: () => Promise<unknown>) => { setBusy(k); setMsg(''); try { await f(); reload(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); } };
+  const run = async (k: string, f: () => Promise<unknown>) => { setBusy(k); setMsg(''); try { await f(); await reload(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); } };
   useEffect(() => { if (data) setPieces(data.balance); }, [data]);
   const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;

@@ -12,6 +12,7 @@ import { AugRing, AugmentLink } from './augment';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { useKept } from './kept';
+import { collapseOut } from './motion';
 import { HeartBurst } from './likeheart';
 import { Bone, SkeletonFrame, Swap, fadeCls, useReveal } from './skeleton';
 
@@ -69,7 +70,7 @@ export function NewsView({ api, onRead, onNewAugments }: { api: Api; onRead?: ()
   );
 }
 
-function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }: { api: Api; x: NewsItem; isNew: boolean; canWrite: boolean; onPatch: (p: Partial<NewsItem>) => void; onChanged: () => void; onNewAugments?: () => void }) {
+function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }: { api: Api; x: NewsItem; isNew: boolean; canWrite: boolean; onPatch: (p: Partial<NewsItem>) => void; onChanged: () => unknown; onNewAugments?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [edit, setEdit] = useState(false);
   const [del, setDel] = useState(false);
@@ -79,6 +80,7 @@ function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }
   // 고정 소식은 카드에 제목만, 누르면 창으로 내용을 띄운다 (v3.117)
   const [open, setOpen] = useState(false);
   const folded = x.pinned && !edit;
+  const self = useRef<HTMLElement>(null);
   const run = async (fn: () => Promise<unknown>) => {
     setBusy(true); setErr('');
     try { await fn(); } catch (e) { setErr(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
@@ -90,22 +92,22 @@ function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }
   };
   const augs = x.kind === 'patch' && Array.isArray(x.data?.augments) ? (x.data!.augments as number[]).filter((id) => AUGMENT[id]) : [];
   return (
-    <article className={`card nw-card k-${x.kind} ${x.pinned ? 'pinned' : ''} ${busy ? 'busy' : ''}`}>
+    <article ref={self} className={`card nw-card k-${x.kind} ${x.pinned ? 'pinned' : ''} ${busy ? 'busy' : ''}`}>
       <div className="nw-top">
         <span className={`nw-tag k-${x.kind}`}>{NEWS_LABEL[x.kind]}</span>
         {x.pinned && <span className="nw-pin"><Icon name="pin" />고정</span>}
         {isNew && <span className="nw-new">NEW</span>}
         <span className="meta">{x.auto ? '자동 소식' : x.author ?? '운영진'} · {x.pinned ? `${shortDate(x.at)} ${clock(x.at)}` : clock(x.at)}{x.edited ? ' · 고침' : ''}</span>
         {canWrite && !edit && <span className="nw-tools">
-          {!x.fixed && <button type="button" className="nw-ib" title={x.pinned ? '고정 풀기' : '맨 위에 고정'} aria-label={x.pinned ? '고정 풀기' : '맨 위에 고정'} disabled={busy} onClick={() => run(async () => { await api.post(`/api/news/${x.id}`, { pinned: !x.pinned }); onChanged(); })}><Icon name="pin" /></button>}
+          {!x.fixed && <button type="button" className="nw-ib" title={x.pinned ? '고정 풀기' : '맨 위에 고정'} aria-label={x.pinned ? '고정 풀기' : '맨 위에 고정'} disabled={busy} onClick={() => run(async () => { await api.post(`/api/news/${x.id}`, { pinned: !x.pinned }); await onChanged(); })}><Icon name="pin" /></button>}
           <button type="button" className="nw-ib" title="고치기" aria-label="고치기" disabled={busy} onClick={() => { setTitle(x.title); setBody(x.body); setEdit(true); }}><Icon name="edit" /></button>
-          {!x.fixed && <button type="button" className={`nw-ib ${del ? 'warn' : ''}`} title={del ? '한 번 더 누르면 지워요' : '지우기'} aria-label="지우기" disabled={busy} onBlur={() => setDel(false)} onClick={() => (del ? run(async () => { await api.del(`/api/news/${x.id}`); onChanged(); }) : setDel(true))}><Icon name="trash" />{del && <span>지우기</span>}</button>}
+          {!x.fixed && <button type="button" className={`nw-ib ${del ? 'warn' : ''}`} title={del ? '한 번 더 누르면 지워요' : '지우기'} aria-label="지우기" disabled={busy} onBlur={() => setDel(false)} onClick={() => (del ? run(async () => { await api.del(`/api/news/${x.id}`); await collapseOut(self.current); await onChanged(); }) : setDel(true))}><Icon name="trash" />{del && <span>지우기</span>}</button>}
         </span>}
       </div>
       {edit ? <div className="nw-edit">
         <input className="input" value={title} maxLength={NEWS_MAX.title} aria-label="제목" onChange={(e) => setTitle(e.target.value)} />
         <textarea className="input nw-ta" value={body} maxLength={NEWS_MAX.body} rows={Math.min(24, Math.max(5, body.split('\n').length + 1))} aria-label="내용" onChange={(e) => setBody(e.target.value)} />
-        <div className="nw-act"><button type="button" className="btn sm" onClick={() => setEdit(false)}>그만두기</button><button type="button" className="btn sm primary" disabled={busy || title.trim().length < 2} onClick={() => run(async () => { await api.post(`/api/news/${x.id}`, { title, body }); setEdit(false); onChanged(); })}>저장</button></div>
+        <div className="nw-act"><button type="button" className="btn sm" onClick={() => setEdit(false)}>그만두기</button><button type="button" className="btn sm primary" disabled={busy || title.trim().length < 2} onClick={() => run(async () => { await api.post(`/api/news/${x.id}`, { title, body }); await onChanged(); setEdit(false); })}>저장</button></div>
       </div> : <>
         {x.pinned
           ? <button type="button" className="nw-fold" aria-haspopup="dialog" onClick={() => setOpen(true)}><h3 className="nw-title">{x.title}</h3><span className="nw-fold-ic"><span>내용 보기</span><Icon name="chevR" /></span></button>
@@ -195,7 +197,7 @@ function NewsBody({ text }: { text: string }) {
 }
 
 /** 운영진: 소식 쓰기 (평소에는 한 줄, 누르면 펼침) */
-function Composer({ api, onDone }: { api: Api; onDone: () => void }) {
+function Composer({ api, onDone }: { api: Api; onDone: () => unknown }) {
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<'notice' | 'event'>('notice');
   const [title, setTitle] = useState('');
@@ -209,9 +211,10 @@ function Composer({ api, onDone }: { api: Api; onDone: () => void }) {
     setBusy(true); setMsg('');
     try {
       const r = await api.post<{ posted: boolean }>('/api/news', { kind, title, body, pinned, discord });
+      // 새 소식이 목록에 들어온 뒤에 쓰기 칸을 닫는다 (닫히고 한참 뒤에 카드가 툭 생기지 않게)
+      await onDone();
       setTitle(''); setBody(''); setPinned(false); setOpen(false);
       setMsg(discord ? (r.posted ? '올렸어요 · 디스코드에도 올렸어요' : '올렸어요 · 디스코드에는 올리지 못했어요') : '올렸어요');
-      onDone();
     } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } finally { setBusy(false); }
   };
   return (

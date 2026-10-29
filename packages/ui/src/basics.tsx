@@ -30,12 +30,12 @@ export function AugImg({ id, size = 36 }: { id: number; size?: number }) {
   return <img className="aug fi" {...imgIn} src={augIcon(id)} width={size} height={size} alt={AUGMENT[id]?.name ?? ''} loading="lazy" />;
 }
 
-export function Empty({ children, action }: { children: ReactNode; action?: ReactNode }) {
-  return <div className="empty"><Gem /><div>{children}</div>{action}</div>;
+export function Empty({ children, action, className = '' }: { children: ReactNode; action?: ReactNode; className?: string }) {
+  return <div className={`empty ${className}`}><Gem /><div>{children}</div>{action}</div>;
 }
 
 /** 아이콘만 있는 작은 버튼. 이름은 마우스를 올리면(title) · 화면 읽기(aria-label)로 */
-export function IconBtn({ icon, label, onClick, tone, done, armed, disabled }: { icon: IconName; label: string; onClick: () => void; tone?: 'go' | 'danger'; done?: boolean; armed?: boolean; disabled?: boolean }) {
+export function IconBtn({ icon, label, onClick, tone, done, armed, disabled }: { icon: IconName; label: string; onClick: (e: ReactMouseEvent<HTMLButtonElement>) => void; tone?: 'go' | 'danger'; done?: boolean; armed?: boolean; disabled?: boolean }) {
   return <button type="button" className={`ibtn ${tone ?? ''} ${done ? 'done' : ''} ${armed ? 'armed' : ''}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}><Icon name={done ? 'check' : icon} /></button>;
 }
 

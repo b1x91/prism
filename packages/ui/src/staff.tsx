@@ -4,12 +4,13 @@
  *  - 멤버 관리 (`StaffMembersView`, 따로 한 페이지): 위에 승인이 필요한 멤버 카드(승인 대기 · 정회원 심사),
  *    아래에 전체 멤버 — 검색 · 거르기(단계·특별·앱·롤 연결·지금 접속·최근 2주 활동) · 정렬(최근 활동·판수·승률·점수·2주 판수·운영진과·가입)
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { ago, matchName, pct, shortDate, shortNick, type Api, type StaffMember, type StaffMembers, type StaffOverview } from '@prism/core';
 import { Empty, MemberFace, PendingChip, RoleBadge, Select, Toggle, useSkins } from './basics';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { useKept } from './kept';
+import { ActBtn, actCls, useFlip, useResolve, type ActState } from './motion';
 import { Bone, SkeletonFrame, Swap, fadeCls, useReveal } from './skeleton';
 
 const LEVELS: ['0' | '1' | '2' | '3', string][] = [['0', '역할 없음'], ['1', '준회원'], ['2', '정회원'], ['3', '우수회원']];
@@ -65,7 +66,7 @@ function Delta({ now, prev }: { now: number; prev: number }) {
   return <span className={`stf-delta ${d > 0 ? 'up' : 'down'}`}>{d > 0 ? '▲' : '▼'} {Math.abs(d)} <span>지난주 대비</span></span>;
 }
 
-function Dashboard({ api, o, need, onOpen, onDone, onMembers }: { api: Api; o: StaffOverview; need: number; onOpen?: (id: string) => void; onDone: () => void; onMembers?: () => void }) {
+function Dashboard({ api, o, need, onOpen, onDone, onMembers }: { api: Api; o: StaffOverview; need: number; onOpen?: (id: string) => void; onDone: () => unknown; onMembers?: () => void }) {
   const k = o.kpi;
   return (
     <>
@@ -159,29 +160,32 @@ function Stars({ stars, onOpen }: { stars: StaffOverview['stars']; onOpen?: (id:
   );
 }
 
-function Care({ api, o, need, onOpen, onDone, onMembers }: { api: Api; o: StaffOverview; need: number; onOpen?: (id: string) => void; onDone: () => void; onMembers?: () => void }) {
+function Care({ api, o, need, onOpen, onDone, onMembers }: { api: Api; o: StaffOverview; need: number; onOpen?: (id: string) => void; onDone: () => unknown; onMembers?: () => void }) {
   const skins = useSkins();
-  const [busy, setBusy] = useState('');
-  const act = async (id: string, action: string) => {
-    setBusy(id);
-    try { await api.post(`/api/staff/members/${id}/${action}`, {}); onDone(); } catch { /* 아래 목록에서 다시 */ } finally { setBusy(''); }
-  };
+  // 승인 → 완료 표시 → 줄이 빠지고 아래 줄이 미끄러져 올라온다 (v3.121)
+  const act = useResolve(onDone);
+  const list = o.care.filter((c) => !act.gone(c.id));
+  // 마지막 줄이 빠져 비면 빈 안내가 서서히 (처음부터 비었으면 그대로)
+  const had = useRef(o.care.length > 0);
+  if (o.care.length) had.current = true;
+  const box = useFlip<HTMLUListElement>(list.map((c) => c.id).join());
+  const go = (id: string, action: string) => { act.run(id, () => api.post(`/api/staff/members/${id}/${action}`, {})).catch(() => { /* 아래 목록에서 다시 */ }); };
   const why = (c: StaffOverview['care'][number]) => c.kind === 'pending' ? `가입 ${c.days}일째` : c.kind === 'review' ? `운영진과 ${c.n ?? need}판 함께했어요` : c.kind === 'quiet' ? `가입 ${c.days}일, 아직 판이 없어요` : `${c.days}일째 소식이 없어요`;
   return (
     <section className="card pad stf-card">
       <div className="stf-head"><h2>챙겨야 할 멤버</h2>{onMembers ? <button type="button" className="stf-more" onClick={onMembers}>{o.careTotal ? `${o.careTotal}명 모두 보기` : '멤버 관리'}<Icon name="chevR" /></button> : <span className="meta">{o.careTotal ? `${o.careTotal}명` : ''}</span>}</div>
-      {o.care.length ? <ul className="stf-people">
-        {o.care.map((c) => (
-          <li key={c.id} className="stf-care">
+      {list.length ? <ul className="stf-people" ref={box}>
+        {list.map((c) => (
+          <li key={c.id} data-flip={c.id} className={`stf-care ${actCls(act.state(c.id))}`}>
             <button type="button" className="stf-person" onClick={() => onOpen?.(c.id)}>
               <MemberFace nick={c.nick} skin={c.skin} champion={c.main} size={36} skins={skins} />
               <span className="stf-pt"><b>{shortNick(c.nick)}<span className={`stf-why k-${c.kind}`}>{CARE_LABEL[c.kind]}</span></b><span className="meta">{why(c)}</span></span>
             </button>
-            {c.kind === 'pending' && <button type="button" className="btn primary sm" disabled={busy === c.id} onClick={() => act(c.id, 'approve')}>{busy === c.id ? '처리 중…' : '승인'}</button>}
-            {c.kind === 'review' && <button type="button" className="btn primary sm" disabled={busy === c.id} onClick={() => act(c.id, 'promote')}>{busy === c.id ? '처리 중…' : '정회원 승인'}</button>}
+            {c.kind === 'pending' && <ActBtn className="btn primary sm" state={act.state(c.id)} label="승인" busy="승인 중" done="승인했어요" onClick={() => go(c.id, 'approve')} />}
+            {c.kind === 'review' && <ActBtn className="btn primary sm" state={act.state(c.id)} label="정회원 승인" busy="승인 중" done="정회원이 됐어요" onClick={() => go(c.id, 'promote')} />}
           </li>
         ))}
-      </ul> : <Empty>지금 챙길 멤버가 없어요.</Empty>}
+      </ul> : <Empty className={had.current ? 'mo-in' : ''}>지금 챙길 멤버가 없어요.</Empty>}
     </section>
   );
 }
@@ -206,6 +210,11 @@ const SORT_VAL: Record<Sort, (m: StaffMember) => number | string> = {
 
 export function StaffMembersView({ api, onOpen }: { api: Api; onOpen?: (id: string) => void }) {
   const { data, error, reload } = useLoad<StaffMembers>(api, '/api/staff/members');
+  // 승인 카드: 승인 → 완료 → 카드가 빠지고 옆 카드가 미끄러져 자리를 메운다 (v3.121)
+  const todoAct = useResolve(reload);
+  const hadTodo = useRef(false);
+  const todoKeys = (data?.members ?? []).filter((m) => (m.pending || m.review) && !todoAct.gone(m.id)).map((m) => m.id).join();
+  const todoBox = useFlip<HTMLDivElement>(todoKeys);
   const rv = useReveal(Boolean(data));
   const [q, setQ] = useKept('staff.q', '');
   const [filters, setFilters] = useKept<Filter[]>('staff.filters', []);
@@ -226,15 +235,17 @@ export function StaffMembersView({ api, onOpen }: { api: Api; onOpen?: (id: stri
   if (!data) return <MembersSkeleton />;
   const todo = all.filter((m) => m.pending || m.review).sort((a, b) => Number(b.pending) - Number(a.pending) || a.joined - b.joined);
   const referrers = all.filter((m) => !m.pending && m.level >= 1);
+  const todoShown = todo.filter((m) => !todoAct.gone(m.id));
+  if (todo.length) hadTodo.current = true;
   const toggle = (f: Filter) => setFilters(filters.includes(f) ? filters.filter((x) => x !== f) : [...filters, f]);
   return (
     <Swap on={rv} skeleton={<MembersSkeleton />}>
       <div className={`stf ${fadeCls(rv)}`}>
         <section className="stf-sec">
           <div className="stf-head big"><h2>승인이 필요한 멤버</h2><span className="meta">{todo.length ? `${todo.length}명` : ''}</span></div>
-          {todo.length ? <div className="stf-todo">
-            {todo.map((m) => <TodoCard key={m.id} api={api} m={m} need={data.reviewNeed} bonus={data.inviteBonus} referrers={referrers} onDone={reload} onOpen={onOpen} />)}
-          </div> : <div className="card pad stf-none"><Icon name="check" />지금 승인할 멤버가 없어요. 디스코드 회원 역할이 없고 앱을 쓰는 멤버가 생기면 여기에 떠요.</div>}
+          {todoShown.length ? <div className="stf-todo" ref={todoBox}>
+            {todoShown.map((m) => <TodoCard key={m.id} api={api} m={m} need={data.reviewNeed} bonus={data.inviteBonus} referrers={referrers} state={todoAct.state(m.id)} run={todoAct.run} onOpen={onOpen} />)}
+          </div> : <div className={`card pad stf-none ${hadTodo.current ? 'mo-in' : ''}`}><Icon name="check" />지금 승인할 멤버가 없어요. 디스코드 회원 역할이 없고 앱을 쓰는 멤버가 생기면 여기에 떠요.</div>}
         </section>
         <section className="stf-sec">
           <div className="stf-head big"><h2>전체 멤버</h2><span className="meta">{shown.length === all.length ? `${all.length}명` : `${shown.length} / ${all.length}명`}</span></div>
@@ -266,20 +277,17 @@ export function StaffMembersView({ api, onOpen }: { api: Api; onOpen?: (id: stri
 }
 
 /** 승인 카드: 승인 대기 → '승인'(추천인이 없으면 고를 수 있다) · 정회원 심사 → '정회원 승인' */
-function TodoCard({ api, m, need, bonus, referrers, onDone, onOpen }: { api: Api; m: StaffMember; need: number; bonus: number; referrers: StaffMember[]; onDone: () => void; onOpen?: (id: string) => void }) {
+function TodoCard({ api, m, need, bonus, referrers, state, run, onOpen }: { api: Api; m: StaffMember; need: number; bonus: number; referrers: StaffMember[]; state: ActState; run: (id: string, f: () => Promise<unknown>) => Promise<void>; onOpen?: (id: string) => void }) {
   const skins = useSkins();
-  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [inviter, setInviter] = useState('');
-  const act = async (action: string, body: Record<string, unknown> = {}) => {
-    setBusy(true); setErr('');
-    try { await api.post(`/api/staff/members/${m.id}/${action}`, body); onDone(); }
-    catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
-    finally { setBusy(false); }
+  const act = (action: string, body: Record<string, unknown> = {}) => {
+    setErr('');
+    run(m.id, () => api.post(`/api/staff/members/${m.id}/${action}`, body)).catch((e) => setErr(e instanceof Error ? e.message : String(e)));
   };
   const days = Math.max(0, Math.floor((Date.now() - m.joined) / DAY));
   return (
-    <div className={`card stf-tc ${m.pending ? 'k-pending' : 'k-review'} ${busy ? 'busy' : ''}`}>
+    <div data-flip={m.id} className={`card stf-tc ${m.pending ? 'k-pending' : 'k-review'} ${actCls(state)}`}>
       <span className={`stf-why ${m.pending ? 'k-pending' : 'k-review'}`}>{m.pending ? '승인 대기' : '정회원 심사'}</span>
       <button type="button" className="stf-person" onClick={() => onOpen?.(m.id)}>
         <MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={44} skins={skins} />
@@ -293,22 +301,25 @@ function TodoCard({ api, m, need, bonus, referrers, onDone, onOpen }: { api: Api
       {m.pending && (m.inviter
         ? <p className="meta stf-tc-ref">추천인 <b>{shortNick(m.inviter.nick)}</b> · 승인하면 {bonus} 피스</p>
         : referrers.length > 0 && <div className="stf-tc-ref"><span className="meta">추천인</span><Select label="추천인" value={inviter} options={[['', '없음'], ...referrers.filter((r) => r.id !== m.id).map((r) => [r.id, shortNick(r.nick)] as [string, string])]} onChange={setInviter} /></div>)}
-      <button type="button" className="btn primary stf-tc-go" disabled={busy} onClick={() => act(m.pending ? 'approve' : 'promote', m.pending && inviter ? { inviter } : {})}>{busy ? '처리 중…' : m.pending ? '승인' : '정회원 승인'}</button>
+      <ActBtn className="btn primary stf-tc-go" state={state} label={m.pending ? '승인' : '정회원 승인'} busy="승인 중" done={m.pending ? '승인했어요' : '정회원이 됐어요'} onClick={() => act(m.pending ? 'approve' : 'promote', m.pending && inviter ? { inviter } : {})} />
       {err && <p className="l stf-err">{err}</p>}
     </div>
   );
 }
 
-function StaffRow({ api, m, sort, need, onDone, onOpen }: { api: Api; m: StaffMember; sort: Sort; need: number; onDone: () => void; onOpen?: (id: string) => void }) {
+function StaffRow({ api, m, sort, need, onDone, onOpen }: { api: Api; m: StaffMember; sort: Sort; need: number; onDone: () => unknown; onOpen?: (id: string) => void }) {
   const skins = useSkins();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const locked = m.admin || m.level >= 5;
+  const [want, setWant] = useState<{ level?: number; special?: boolean }>({});
   const act = async (action: string, body: Record<string, unknown> = {}) => {
     setBusy(true); setErr('');
-    try { await api.post(`/api/staff/members/${m.id}/${action}`, body); onDone(); }
+    // 고른 값을 바로 보이고, 새 목록을 받을 때까지 처리 중으로 — 예전 값으로 잠깐 돌아갔다가 바뀌지 않게 (v3.121)
+    setWant(action === 'level' ? { level: Number(body.level) } : action === 'special' ? { special: Boolean(body.on) } : {});
+    try { await api.post(`/api/staff/members/${m.id}/${action}`, body); await onDone(); }
     catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
-    finally { setBusy(false); }
+    finally { setBusy(false); setWant({}); }
   };
   const last = lastOf(m);
   const online = Date.now() - (m.seen || 0) < ONLINE_MS;
@@ -334,8 +345,8 @@ function StaffRow({ api, m, sort, need, onDone, onOpen }: { api: Api; m: StaffMe
       </dl>
       <div className="stf-act">
         {locked ? <span className="stf-lock"><Icon name="shield" />{m.admin ? '관리자' : '운영진'}</span> : <>
-          <Select label="단계" value={String(Math.min(m.level, 3)) as '0' | '1' | '2' | '3'} options={LEVELS} onChange={(v) => { if (Number(v) !== m.level) void act('level', { level: Number(v) }); }} />
-          <span className="stf-sw"><span className="meta">특별</span><Toggle label="특별회원" on={m.special} disabled={busy} onChange={(v) => act('special', { on: v })} /></span>
+          <Select label="단계" value={String(Math.min(want.level ?? m.level, 3)) as '0' | '1' | '2' | '3'} options={LEVELS} onChange={(v) => { if (Number(v) !== m.level) void act('level', { level: Number(v) }); }} />
+          <span className="stf-sw"><span className="meta">특별</span><Toggle label="특별회원" on={want.special ?? m.special} disabled={busy} onChange={(v) => act('special', { on: v })} /></span>
         </>}
       </div>
       {err && <p className="l stf-err">{err}</p>}

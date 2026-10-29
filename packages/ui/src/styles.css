@@ -3511,7 +3511,7 @@ button.stf-person:hover { background: var(--surface-2); }
 .stf-rank.r1 { color: var(--gold); }
 .stf-score { font-size: var(--fs-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
 .stf-score span { margin-left: 2px; font-size: var(--fs-xs); font-weight: 400; color: var(--text-3); }
-.stf-care { display: flex; align-items: center; gap: var(--s2); }
+.stf-care { display: flex; align-items: center; gap: var(--s2); border-radius: var(--r-m); }
 .stf-care .stf-person { flex: 1; }
 .stf-care > .btn { flex: none; margin-right: var(--s2); }
 .stf-why { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 700; }
@@ -3535,7 +3535,6 @@ button.stf-person:hover { background: var(--surface-2); }
 .stf-todo { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--s3); }
 .stf-tc { display: flex; flex-direction: column; gap: var(--s3); padding: var(--s4); border-top: 3px solid var(--warn); }
 .stf-tc.k-review { border-top-color: var(--accent); }
-.stf-tc.busy { opacity: .6; }
 .stf-tc > .stf-why { align-self: flex-start; }
 .stf-tc .stf-person { padding: 0; }
 .stf-tc .stf-person:hover { background: none; }
@@ -3573,7 +3572,8 @@ button.stf-person:hover { background: var(--surface-2); }
 .stf-row { display: grid; grid-template-columns: minmax(200px, 1fr) auto 240px; align-items: center; gap: var(--s2) var(--s5); padding: var(--s3); border-radius: var(--r-m); transition: background .15s; }
 .stf-row:hover { background: var(--surface-2); }
 .stf-row + .stf-row { box-shadow: 0 -1px 0 var(--line); }
-.stf-row.busy { opacity: .6; }
+.stf-row { transition: opacity .24s var(--ease-out); }
+.stf-row.busy { opacity: .72; }
 .stf-who { display: flex; align-items: center; gap: var(--s3); min-width: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; padding: 0; }
 .stf-t { display: grid; gap: 2px; min-width: 0; }
 .stf-t b { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; font-size: var(--fs-lg); }
@@ -3796,4 +3796,27 @@ button.stf-person:hover { background: var(--surface-2); }
 @media (prefers-reduced-motion: reduce) {
   .att *, .att *::before, .att *::after { animation: none !important; }
   .att-shard, .att-ring, .att-rays { display: none; }
+}
+
+/* ───────── 상호작용 전환 (v3.121, motion.tsx) ───────── */
+.act-btn { transition: background-color .28s var(--ease-out), border-color .28s, color .28s, opacity .2s; }
+.act-btn.busy, .act-btn.done { opacity: 1; cursor: default; }
+.act-btn.done { background: #15803d; border-color: transparent; color: #fff; }
+.act-stack { display: inline-grid; }
+.act-stack > span { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; white-space: nowrap; opacity: 0; transform: translateY(5px); transition: opacity .22s var(--ease-out), transform .3s var(--ease-out); }
+.act-stack > span.on { opacity: 1; transform: none; }
+.act-stack svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.act-btn.done .act-stack svg path { stroke-dasharray: 24; stroke-dashoffset: 24; animation: actCheck .36s .06s var(--ease-out) forwards; }
+.act-spin { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: actSpin .7s linear infinite; }
+@keyframes actSpin { to { transform: rotate(360deg); } }
+@keyframes actCheck { to { stroke-dashoffset: 0; } }
+.mo-item { transition: opacity .24s var(--ease-out), transform .24s var(--ease-out), background-color .3s, box-shadow .3s; }
+.mo-done { background-image: linear-gradient(color-mix(in srgb, #16a34a 9%, transparent), color-mix(in srgb, #16a34a 9%, transparent)); box-shadow: inset 0 0 0 1px color-mix(in srgb, #16a34a 28%, transparent); }
+.mo-out { opacity: 0; transform: scale(.97); pointer-events: none; }
+.mo-in { animation: moIn .34s var(--ease-out) both; }
+@keyframes moIn { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) {
+  .act-btn, .act-stack > span, .mo-item { transition: none; }
+  .act-spin, .act-btn.done .act-stack svg path, .mo-in { animation: none; }
+  .act-btn.done .act-stack svg path { stroke-dashoffset: 0; }
 }

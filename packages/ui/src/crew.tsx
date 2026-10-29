@@ -3,6 +3,7 @@ import { AUGMENT, CHAMPIONS, ago, cdragon, pct, shortDate, type Api, type Board,
 import { AugImg, ChampImg, Empty, Gem, IconBtn, LockedMore, MemberFace } from './basics';
 import { AugmentLink } from './augment';
 import { Icon } from './icons';
+import { collapseOut } from './motion';
 import { BoardSkeleton, ChampionCrewSkeleton, Bone, imgIn, useReveal, Swap, fadeCls, SkeletonFrame } from './skeleton';
 
 /** 서버 데이터 한 덩이 불러오기 (다시 불러오기 함수 포함) */
@@ -18,10 +19,11 @@ export function useLoad<T>(api: Api, path: string | null) {
   const [got, setGot] = useState<{ path: string | null; data: T | null }>(() => ({ path, data: initial(path) }));
   const [error, setError] = useState<string | null>(null);
   const fetchIt = useCallback(() => {
-    if (!path) return;
-    api.get<T>(path).then((d) => { seenOf(api).set(path, d); setGot({ path, data: d }); setError(null); }).catch((e) => setError(e instanceof Error ? e.message : String(e)));
+    if (!path) return Promise.resolve();
+    return api.get<T>(path).then((d) => { seenOf(api).set(path, d); setGot({ path, data: d }); setError(null); }).catch((e) => setError(e instanceof Error ? e.message : String(e)));
   }, [api, path]);
-  const reload = useCallback(() => { if (path) api.forget?.(path); fetchIt(); }, [api, path, fetchIt]);
+  // 새 목록을 다 받으면 풀리는 약속 — 처리 중 표시를 그때까지 둔다 (v3.121)
+  const reload = useCallback(() => { if (path) api.forget?.(path); return fetchIt(); }, [api, path, fetchIt]);
   useEffect(() => {
     if (!path) return;
     setError(null);
@@ -29,7 +31,7 @@ export function useLoad<T>(api: Api, path: string | null) {
     if (kept !== undefined) { setGot({ path, data: kept }); return; }
     const seen = seenOf(api).get(path) as T | undefined;
     setGot({ path, data: seen ?? null });
-    fetchIt();
+    void fetchIt();
   }, [api, path, fetchIt]);
   // 주소가 막 바뀐 렌더: 담아 둔 것이 있으면 그것, 없으면 아직 없음
   const data = got.path === path ? got.data : initial(path);
@@ -411,10 +413,14 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
               </div>
               <div className="pbtns">
                 {invite && <IconBtn icon="link" label={copied === p.puuid ? '복사했어요' : '초대 링크 복사'} done={copied === p.puuid} onClick={() => copy(p.puuid)} />}
-                {admin && <IconBtn icon="trash" tone="danger" done={false} label={del === p.puuid ? '한 번 더 누르면 지워요' : '이 분의 기록 지우기'} onClick={async () => {
+                {admin && <IconBtn icon="trash" tone="danger" done={false} label={del === p.puuid ? '한 번 더 누르면 지워요' : '이 분의 기록 지우기'} onClick={async (e) => {
                   // 실수로 지우지 않게 두 번 눌러야 지운다
                   if (del !== p.puuid) { setDel(p.puuid); setTimeout(() => setDel((x) => (x === p.puuid ? null : x)), 3000); return; }
-                  setDel(null); await api.del(`/api/prospects/${p.puuid}`).catch(() => {}); reload();
+                  // 지운 줄은 높이를 접으며 빠지고, 새 목록이 온 뒤에 사라진다 (v3.121)
+                  const row = e.currentTarget.closest<HTMLElement>('.prow2');
+                  setDel(null);
+                  if (!(await api.del(`/api/prospects/${p.puuid}`).then(() => true, () => false))) return;
+                  await collapseOut(row); await reload();
                 }} armed={del === p.puuid} />}
               </div>
             </div>
