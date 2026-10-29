@@ -34,7 +34,7 @@ export const INSIGHTS: { id: InsightKind; name: string; desc: string; rarity: Sh
 /** 랜덤박스 등급 확률 (안 가진 꾸밈이 없는 등급은 빼고 나머지로 다시 나눈다) */
 export const BOX_ODDS: Record<ShopRarity, number> = { common: 0.6, rare: 0.28, epic: 0.1, legendary: 0.02, mythic: 0 };
 /** 랜덤박스에서 나올 수 있는 것: 칭호·신화를 뺀 꾸밈 중 아직 없는 것 (신화는 9,000 피스라 400 상자에서 나오면 값의 의미가 사라진다, v3.123) */
-export const boxPool = (owned: Iterable<string>) => { const o = new Set(owned); return SHOP.filter((x) => x.slot !== 'title' && x.rarity !== 'mythic' && !o.has(x.id)); };
+export const boxPool = (owned: Iterable<string>) => { const o = new Set(owned); return SHOP.filter((x) => x.slot !== 'title' && x.rarity !== 'mythic' && !x.retired && !o.has(x.id)); };
 export function drawBox(pool: ShopItem[], rnd: () => number = Math.random): ShopItem | null {
   if (!pool.length) return null;
   const rars = (Object.keys(BOX_ODDS) as ShopRarity[]).filter((r) => pool.some((x) => x.rarity === r));

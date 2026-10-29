@@ -8,7 +8,7 @@ import { useKept } from './kept';
 import { useEffect, useId, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useShopRev } from './catalog';
 import {
-  CHAMPIONS, DEX_LEVEL_KO, LAUNCH, PIECE, forSale, isNewItem, itemDiscount, priceWith, saleOf, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
+  CHAMPIONS, DEX_LEVEL_KO, LAUNCH, PIECE, forSale, listedFor, isNewItem, itemDiscount, priceWith, saleOf, RARITY_SHOP_KO, ROLE_KO, SHOP, SHOP_ITEM, SLOT_KO, cdragon, pct, shareUrl, styleOf,
   type Api, type Deco, type DexLevel, type InsightKind, type Presence, type PublicProfile, type Shop, type ShopItem, type ShopSlot, josa } from '@prism/core';
 import { ChampImg, Empty, Gem, MemberFace, PresenceDot, Toggle, useSkins } from './basics';
 import { useLoad } from './crew';
@@ -187,11 +187,11 @@ function ShopOpen({ api, me, onGo }: { api: Api; me: Me; onGo?: (to: 'dex' | 'mi
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <ShopSkeleton />;
   const list = slot === 'use' ? [] : slot === 'hot' ? hot.filter((x) => !owned || data.owned.includes(x.id)).slice(0, HOT_MAX)
-    : SHOP.filter((x) => x.slot === slot && (!owned || data.owned.includes(x.id)))
+    : SHOP.filter((x) => x.slot === slot && listedFor(x, data.owned) && (!owned || data.owned.includes(x.id)))
       .sort((a, b) => RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || b.price - a.price);
   const launchOn = Date.now() >= LAUNCH.from && Date.now() < LAUNCH.until;
   const launchEnd = `${new Date(LAUNCH.until - 1).getMonth() + 1}/${new Date(LAUNCH.until - 1).getDate()}`;
-  const count = (sl: ShopSlot) => [SHOP.filter((x) => x.slot === sl && data.owned.includes(x.id)).length, SHOP.filter((x) => x.slot === sl).length];
+  const count = (sl: ShopSlot) => [SHOP.filter((x) => x.slot === sl && data.owned.includes(x.id)).length, SHOP.filter((x) => x.slot === sl && listedFor(x, data.owned)).length];
   return (<Swap on={rv} skeleton={<ShopSkeleton />}>
     <div className={`shop ${fadeCls(rv)}`}>
       <header className="shop-head">
@@ -237,7 +237,7 @@ function ShopCard({ x, me, data, busy, onBuy, onEquip, onGift }: { x: ShopItem; 
       <div className="sc-prev">
         <ProfileHero stage nick={me.nick} skin={me.skin} champion={me.champion} deco={look} />
         <span className={`sc-rar r-${x.rarity}`}><i />{RARITY_SHOP_KO[x.rarity]}</span>
-        {on ? <span className="sc-tag on"><Icon name="check" />장착 중</span> : own ? <span className="sc-tag">보유</span>
+        {on ? <span className="sc-tag on"><Icon name="check" />장착 중</span> : own ? <span className="sc-tag">{x.retired ? '보유 · 판매 종료' : '보유'}</span>
           : fresh ? <span className="sc-tag new">NEW</span> : sale > 0 && disc === sale ? <span className="sc-tag sale">{Math.round(sale * 100)}% 할인</span> : null}
       </div>
       <div className="sc-body">

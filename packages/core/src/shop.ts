@@ -89,7 +89,8 @@ export const RARITY_LADDER: ShopRarity[] = ['common', 'rare', 'epic', 'legendary
  * 그 밖의 상품(테두리·효과·이름)은 클래스 이름이 곧 id 이고 모양은 CSS — 새 상품의 CSS 는 `packages/assets/public/shop/looks.css` (웹에서 바로 받는다).
  */
 export type ShopLook = { img?: string; pos?: string; row?: string; mote?: string; glow?: string };
-export type ShopItem = { id: string; slot: ShopSlot; name: string; price: number; desc: string; rarity: ShopRarity; look?: ShopLook };
+/** retired: 판매 종료 (v3.127) — 이미 산 회원만 그대로 쓰고, 상점·랜덤박스·선물에서는 나오지 않는다 */
+export type ShopItem = { id: string; slot: ShopSlot; name: string; price: number; desc: string; rarity: ShopRarity; look?: ShopLook; retired?: boolean };
 
 const it = (id: string, slot: ShopSlot, rarity: ShopRarity, price: number, name: string, desc: string, look?: ShopLook): ShopItem => ({ id, slot, rarity, price, name, desc, ...(look ? { look } : {}) });
 export const SHOP: ShopItem[] = [
@@ -99,7 +100,7 @@ export const SHOP: ShopItem[] = [
   it('bg-dusk', 'bg', 'common', 350, '노을 협곡', '붉은 노을이 지평선에 걸린다'),
   it('bg-starry', 'bg', 'rare', 600, '별 내리는 밤', '깊은 밤하늘에 별과 성운이 반짝인다'),
   it('bg-magma', 'bg', 'rare', 650, '용암 균열', '검은 바위 틈으로 용암이 숨 쉰다'),
-  it('bg-crystal', 'bg', 'epic', 1000, '수정 동굴', '푸른 수정 결정 사이로 빛이 스친다', { img: 'bg/crystal-v1.webp', pos: '62% 55%', row: '60% 72%' }),
+  { ...it('bg-crystal', 'bg', 'rare', 1000, '수정 동굴', '푸른 수정 결정 사이로 빛이 스친다', { img: 'bg/crystal-v1.webp', pos: '62% 55%', row: '60% 72%' }), retired: true }, // 판매 종료 (v3.127, 사용자 결정 — 이미 산 회원만)
   // v3.123 새 배경 (그림: Artlist 생성 일러스트)
   it('bg-icefall', 'bg', 'epic', 1000, '얼어붙은 폭포', '얼음 폭포 동굴에 서리 가루가 내린다', { img: 'bg/icefall-v1.webp', pos: '55% 45%', row: '55% 70%', mote: '#e6f6ff' }),
   it('bg-lighthouse', 'bg', 'epic', 1000, '안개 속 등대', '밤바다 안개 위로 등대 빛이 돈다', { img: 'bg/lighthouse-v1.webp', pos: '62% 40%', row: '64% 30%', mote: '#ffd9a0' }),
@@ -149,7 +150,9 @@ export const SHOP: ShopItem[] = [
   it('title-prism', 'title', 'legendary', 1000, '프리즘 수집가', '빛을 모으는 사람'),
 ];
 /** 상점에서 파는 것 (칭호는 얻는 것, v3.99) */
-export const forSale = (x: ShopItem) => x.slot !== 'title';
+export const forSale = (x: ShopItem) => x.slot !== 'title' && !x.retired;
+/** 상점·꾸미기 목록에 보일 상품: 판매 종료 상품은 가진 사람에게만 */
+export const listedFor = (x: ShopItem, owned: readonly string[]) => !x.retired || owned.includes(x.id);
 export const SHOP_ITEM: Record<string, ShopItem> = Object.fromEntries(SHOP.map((x) => [x.id, x]));
 
 /**
@@ -159,7 +162,7 @@ export const SHOP_ITEM: Record<string, ShopItem> = Object.fromEntries(SHOP.map((
  * 이미 깔린 앱도 다음에 켤 때(또는 당겨서 새로고침) 새 상품을 본다. 그림·looks.css 는 앱이 웹(przm.web.app)에서 받는다.
  * SHOP_REV 는 looks.css 캐시를 깨는 번호 — 상품을 더할 때 올린다.
  */
-export const SHOP_REV = 1;
+export const SHOP_REV = 2;
 export type ShopCatalog = { rev: number; items: ShopItem[]; launch: typeof LAUNCH };
 /** 이 빌드에 들어 있던 상품 (그림이 앱 안에 있는 것) */
 const BUNDLED = new Set(SHOP.map((x) => x.id));

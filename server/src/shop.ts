@@ -153,6 +153,7 @@ export async function buy(req: Request, env: Env, me: Member) {
   const { id, equip: wear } = (await req.json().catch(() => ({}))) as { id?: string; equip?: boolean };
   const item = id ? SHOP_ITEM[id] : undefined;
   if (!item) throw new HttpError(400, '없는 상품입니다.');
+  if (item.retired) throw new HttpError(400, '판매가 끝난 상품이에요.');
   if (!forSale(item)) throw new HttpError(400, '칭호는 미션·도감·활약으로 얻어요.');
   const s = await state(env, me.id, me);
   if (s.owned.includes(item.id)) throw new HttpError(409, '이미 가지고 있어요.');

@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useShopRev } from './catalog';
 import {
-  CHAMPIONS, CHAMPION_LIST, PIECE, RARITY_SHOP_KO, SHOP, SKIN_TIERS, SLOT_KO, baseSkin, itemDiscount, matchName, priceWith, skinNeed,
+  CHAMPIONS, CHAMPION_LIST, PIECE, RARITY_SHOP_KO, SHOP, listedFor, SKIN_TIERS, SLOT_KO, baseSkin, itemDiscount, matchName, priceWith, skinNeed,
   TITLE_RULE, type About, type Api, type Deco, type MemberPage, type Shop, type ShopSlot, type Skin, josa } from '@prism/core';
 import { ChampImg } from './basics';
 import { Icon } from './icons';
@@ -160,7 +160,7 @@ function DecoPanel({ slot, shop, deco, me, onPick }: { slot: ShopSlot; shop: Sho
   useShopRev();
   // 칭호는 상점에서 팔지 않고 얻는다 (v3.99): 산 적 있거나 조건을 채운 것
   const hasIt = (id: string) => shop.owned.includes(id) || (slot === 'title' && Boolean(shop.uses?.titles.includes(id)));
-  const items = SHOP.filter((x) => x.slot === slot).sort((a, b) => Number(hasIt(b.id)) - Number(hasIt(a.id)) || RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.price - b.price);
+  const items = SHOP.filter((x) => x.slot === slot && listedFor(x, shop.owned)).sort((a, b) => Number(hasIt(b.id)) - Number(hasIt(a.id)) || RARITY_ORDER.indexOf(a.rarity) - RARITY_ORDER.indexOf(b.rarity) || a.price - b.price);
   const cur = deco[slot] ?? null;
   const disc = shop.rates?.discount ?? 0;
   const owned = items.filter((x) => hasIt(x.id)).length;

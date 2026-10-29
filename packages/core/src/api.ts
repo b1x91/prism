@@ -62,7 +62,10 @@ export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin';
 /** NOW (v3.126): 지금 모이는 팟 */
 export type NowFace = { id: string; nick: string; skin: number | null; main: number | null };
 export type NowLobby = { id: string; phase: 'lobby' | 'queue' | 'game'; size: number; since: number; leader: string | null; members: NowFace[]; requests: NowFace[] };
-export type NowList = { auto: boolean; lobbies: NowLobby[] };
+export type NowTeam = { members: NowFace[]; size: number };
+/** 내전 중 (v3.127): 사용자 설정 로비 · 오늘의 점수(지난 6시간 기록된 사용자 설정 판, 게임 진영 기준) */
+export type NowScrim = { id: string; phase: NowLobby['phase']; size: number; since: number; leader: string | null; blue: NowTeam; red: NowTeam; requests: NowFace[]; series: { blue: number; red: number; games: number } };
+export type NowList = { auto: boolean; lobbies: NowLobby[]; scrims?: NowScrim[] };
 /** 회원 얼굴 재료 (서버 FACE): 대표 스킨, 주 챔피언 */
 export type FaceInfo = { skin?: number | null; main?: number | null };
 export type Note = { id: number; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1; canDelete?: 0 | 1 } & FaceInfo;
