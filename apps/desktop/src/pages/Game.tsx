@@ -37,7 +37,9 @@ function TodayPick({ personal }: { personal: Personal }) {
   const rec = personal.champions[pick.id];
   const guide = guideOf(GAME_DATA, pick.id);
   const mine = personal.augmentsByChampion[pick.id] ?? [];
-  const rows = guide ? (['prismatic', 'gold', 'silver'] as const).map((r) => [r, guide[r].slice(0, 3)] as const) : [];
+  // 칸마다 줄 수를 같게: 내가 고른 증강이 있으면 그 수(2~3)에, 없으면 3에 맞춘다 (v3.117)
+  const per = mine.length ? Math.min(3, Math.max(2, mine.length)) : 3;
+  const rows = guide ? (['prismatic', 'gold', 'silver'] as const).map((r) => [r, guide[r].slice(0, per)] as const) : [];
   return (
     <section className="today">
       <ChampBanner id={pick.id} eyebrow={pick.why === 'best' ? '오늘은 이 챔프 어때요? · 내 기록에서 가장 잘 이긴 챔프' : '오늘은 이 챔프 어때요? · 아직 만나지 못한 챔프'}
@@ -56,7 +58,7 @@ function TodayPick({ personal }: { personal: Personal }) {
         ))}
         {mine.length > 0 && <div className="ta-col mine">
           <span className="k">내가 이 챔프로 고른 증강</span>
-          {mine.slice(0, 3).map((a) => <AugmentLink key={a.id} id={a.id} champion={pick.id} className="ta-row"><AugRing id={a.id} size={36} /><span className="nm">{AUGMENT[a.id]?.name ?? `#${a.id}`}</span><span className="meta">{a.n}번 · {pct(a.w, a.n)}</span></AugmentLink>)}
+          {mine.slice(0, per).map((a) => <AugmentLink key={a.id} id={a.id} champion={pick.id} className="ta-row"><AugRing id={a.id} size={36} /><span className="nm">{AUGMENT[a.id]?.name ?? `#${a.id}`}</span><span className="meta">{a.n}번 · {pct(a.w, a.n)}</span></AugmentLink>)}
         </div>}
       </div>
     </section>
