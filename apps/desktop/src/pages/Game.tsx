@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { AUGMENT, CHAMPIONS, ago, guideOf, pct, streakOf, todayPicks, type MissionState, type Personal } from '@prism/core';
 import { AugRing, AugmentLink, Bone, GlassBtn, Icon, TierBadge } from '@prism/ui';
 import { GAME_DATA, fitPoints, tierOf } from '@prism/core';
-import { AugmentCompare, AugmentGuide, ChampBanner, ChampSearch, Empty, PieceIcon, RecentGames, Seg, useLoad } from '@prism/ui';
+import { AugmentCompare, AugmentGuide, LatestMatch, ChampBanner, ChampSearch, Empty, PieceIcon, RecentGames, Seg, useLoad } from '@prism/ui';
 import { api } from '../bridge';
 import { useNavigate } from 'react-router-dom';
 import { editMatchup, type State } from '../controller';
@@ -114,6 +114,7 @@ export function GamePage({ s }: { s: State }) {
         <section className="card stat"><span className="k">지금</span><span className={`v ${st.win ? 'w' : 'l'}`}>{st.n}<small>{st.win ? '연승' : '연패'}</small></span></section>
         <section className="card stat"><span className="k">만난 챔프</span><span className="v">{Object.keys(P.champions).length}<small>/ {Object.keys(CHAMPIONS).length}</small></span></section>
       </div>}
+      {!s.champSelect && games[0] && <LatestMatch g={games[0]} onChampion={(c) => nav(`/champions/${c}`)} />}
       <RecentGames games={games} onChampion={(c) => nav(`/champions/${c}`)} />
     </div>
   );

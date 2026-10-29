@@ -150,7 +150,8 @@ function fromCard(g: CardGame): MatchDetail {
     players: [{ name: null, championId: g.championId, teamId: 0, win: g.win, kills: g.kills, deaths: g.deaths, assists: g.assists, damageToChampions: g.damageToChampions ?? null, damageTaken: null, goldEarned: g.goldEarned ?? null, items: g.items ?? [], augments: g.augments }] };
 }
 
-export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: () => void; onChampion?: (id: number) => void }) {
+/** 한 판 상세 내용: 창(MatchDialog)과 분석 화면의 '가장 최근 판'(LatestMatch)이 같이 쓴다 */
+function MatchView({ g, onClose, onChampion, inline }: { g: CardGame; onClose?: () => void; onChampion?: (id: number) => void; inline?: boolean }) {
   const source = useContext(MatchSource);
   const note = useContext(MatchNote);
   const [m, setM] = useState<MatchDetail | null>(null);
@@ -160,13 +161,8 @@ export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: 
     setLoading(true);
     (source ? source(g.gameId).catch(() => null) : Promise.resolve(null)).then((x) => { if (on) { setM(x && x.players.length ? x : fromCard(g)); setLoading(false); } });
     return () => { on = false; };
-  }, [g, source]);
-  useEffect(() => {
-    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
-    addEventListener('keydown', esc);
-    const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
-    return () => { removeEventListener('keydown', esc); document.body.style.overflow = prev; };
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 같은 판이면 목록을 새로 받아도 다시 묻지 않는다
+  }, [g.gameId, source]);
   const isMe = (p: MatchPlayer) => p.championId === g.championId && p.win === g.win;
   const mine = m?.players.find(isMe);
   const myTeam = mine?.teamId ?? 0;
@@ -176,17 +172,16 @@ export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: 
   const other = teamIds.find((t) => t !== myTeam);
   const c = CHAMPIONS[g.championId];
   return (
-    <div className="md-wrap" role="dialog" aria-modal="true" aria-label="판 자세히">
-      <button type="button" className="md-scrim" aria-label="닫기" onClick={onClose} />
-      <div className={`md ${g.win ? 'win' : 'lose'}`}>
+      <div className={`md ${inline ? 'md-inline' : ''} ${g.win ? 'win' : 'lose'}`}>
         <div className="md-head">
           {c?.splash && <img className="md-bg fi" {...imgIn} src={cdragon(c.splash)} alt="" />}
           <div className="md-title">
+            {inline && <span className="md-eyebrow">가장 최근 판</span>}
             <span className={`md-res ${g.win ? 'w' : 'l'}`}>{g.win ? '승리' : '패배'}</span>
             <span className="md-sub">{g.custom ? '사용자 설정' : '아수라장'} · {Math.round(g.duration / 60)}분 · {when(g.playedAt)}</span>
           </div>
           {other !== undefined && kills(myTeam) !== null && kills(other) !== null && <div className="md-score"><b className={g.win ? 'w' : 'l'}>{kills(myTeam)}</b><span>:</span><b>{kills(other)}</b><small>킬</small></div>}
-          <button type="button" className="icon-btn md-x" aria-label="닫기" onClick={onClose}><Icon name="x" /></button>
+          {!inline && <button type="button" className="icon-btn md-x" aria-label="닫기" onClick={onClose}><Icon name="x" /></button>}
         </div>
         <div className="md-body">
           {m && !loading && <Lessons m={m} g={g} />}
@@ -215,8 +210,27 @@ export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: 
           {m && !m.full && !loading && <p className="meta md-note">{m.players.length > 1 ? '함께한 Prism 회원의 기록이에요.' : '이 판은 내 기록만 있어요.'}{note ? ` ${note}` : ''}</p>}
         </div>
       </div>
+  );
+}
+
+export function MatchDialog({ g, onClose, onChampion }: { g: CardGame; onClose: () => void; onChampion?: (id: number) => void }) {
+  useEffect(() => {
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    addEventListener('keydown', esc);
+    const prev = document.body.style.overflow; document.body.style.overflow = 'hidden';
+    return () => { removeEventListener('keydown', esc); document.body.style.overflow = prev; };
+  }, [onClose]);
+  return (
+    <div className="md-wrap" role="dialog" aria-modal="true" aria-label="판 자세히">
+      <button type="button" className="md-scrim" aria-label="닫기" onClick={onClose} />
+      <MatchView g={g} onClose={onClose} onChampion={onChampion} />
     </div>
   );
+}
+
+/** 분석 화면 맨 위: 가장 최근 판 상세를 펼쳐 둔다 (v3.119) */
+export function LatestMatch({ g, onChampion }: { g: CardGame; onChampion?: (id: number) => void }) {
+  return <MatchView g={g} onChampion={onChampion} inline />;
 }
 
 /** 판 상세를 불러오는 동안: 실제 모양대로 자리를 잡아 두고 빛이 지나간다 (창 크기가 바뀌지 않게) */
