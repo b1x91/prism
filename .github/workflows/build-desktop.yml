@@ -216,8 +216,6 @@ jobs:
           SHA=$(sha256sum Prism-Setup.exe | cut -d' ' -f1); SIZE=$(stat -c %s Prism-Setup.exe)
           [[ "$SHA" =~ ^[0-9a-f]{64}$ ]] || { echo "::warning::SHA-256 계산 실패"; exit 0; }
           npx wrangler d1 execute prism --remote --config server/wrangler.toml --command "INSERT INTO ext_cache (k, v, at) VALUES ('release-file', '{\"tag\":\"$TAG\",\"sha256\":\"$SHA\",\"size\":$SIZE}', $(date +%s)000) ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at"
-          # 소식 피드 '앱 업데이트' 카드에 쓸 바뀐 점: 지난 공개판 태그 이후 커밋 제목들 (v3.111, 서버가 읽어 자동 소식을 만든다)
-          PREV=$(git tag -l 'app-v*' --sort=-v:refname | grep -vx "$TAG" | head -1)
-          git log ${PREV:+$PREV..}HEAD --no-merges --format=%s | head -20 > notes.txt || true
-          TAG="$TAG" node -e "const fs=require('fs');const notes=fs.readFileSync('notes.txt','utf8').split('\\n').map(s=>s.trim()).filter(Boolean).slice(0,12);const v=JSON.stringify({tag:process.env.TAG,notes}).replace(/'/g,\"''\");fs.writeFileSync('notes.sql','INSERT INTO ext_cache (k, v, at) VALUES (\\'release-notes\\', \\''+v+'\\', '+Date.now()+') ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at;')"
+          # 소식 피드 '앱 업데이트' 카드에 쓸 바뀐 점: 저장소의 release-notes.json (사람이 고른 회원이 체감할 것만, v3.123). 3줄 미만이면 서버가 올리지 않는다
+          TAG="$TAG" node -e "const fs=require('fs');let notes=[];try{notes=(JSON.parse(fs.readFileSync('release-notes.json','utf8')).notes||[]).map(s=>String(s).trim()).filter(Boolean).slice(0,8)}catch{};const v=JSON.stringify({tag:process.env.TAG,notes}).replace(/'/g,\"''\");fs.writeFileSync('notes.sql','INSERT INTO ext_cache (k, v, at) VALUES (\\'release-notes\\', \\''+v+'\\', '+Date.now()+') ON CONFLICT (k) DO UPDATE SET v = excluded.v, at = excluded.at;')"
           npx wrangler d1 execute prism --remote --config server/wrangler.toml --file notes.sql || echo "::warning::바뀐 점 기록 실패 (소식 카드는 버전만)"

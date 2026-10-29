@@ -18,6 +18,8 @@ const seedHearts = () => 1 + Math.floor(Math.random() * 5);
 const RANK = { prismatic: 0, gold: 1, silver: 2 } as const;
 
 /** 앱 업데이트 카드에 넣지 않는 개발용 커밋 제목 (운영진이 나중에 고칠 수 있다) */
+/** 앱 업데이트 소식을 올리는 최소 줄 수 */
+const MIN_NOTES = 3;
 const DEV_NOTE = /^앱 \d|CLAUDE\.md|마이그레이션|Secrets|msstore|스토어 제출|스토어 스크린샷|QA|CI |워크플로/;
 
 async function cacheGet(env: Env, k: string) {
@@ -38,7 +40,8 @@ export async function ensureAuto(env: Env, now = Date.now()) {
     let notes: string[] = [];
     try { const n = notesRow ? JSON.parse(notesRow.v) as { tag?: string; notes?: string[] } : null; if (n?.tag === tag.v) notes = (n.notes ?? []).filter((s) => !DEV_NOTE.test(s)).slice(0, 8); } catch { /* 없음 */ }
     const ver = tag.v.replace(/^app-v/, '');
-    await insertAuto(env, `app:${tag.v}`, { kind: 'update', title: `앱 ${ver}`, body: notes.map((s) => `• ${s}`).join('\n'), data: { version: ver }, at: tag.at || now });
+    // 회원이 체감할 바뀐 점(저장소 release-notes.json)이 3줄은 돼야 올린다 — 적으면 다음 업데이트에 함께 (v3.123)
+    if (notes.length >= MIN_NOTES) await insertAuto(env, `app:${tag.v}`, { kind: 'update', title: `앱 ${ver}`, body: notes.map((s) => `• ${s}`).join('\n'), data: { version: ver }, at: tag.at || now });
   }
   // 증강 패치: 가장 최근 패치에 새로 나온 증강 (패치가 실제로 열린 뒤에만)
   if (NEWEST_PATCH) {
