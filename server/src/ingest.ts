@@ -9,7 +9,6 @@
  *      판 상세용으로 10명 전체의 그 판 기록(롤 이름·챔프·KDA·피해·아이템·증강)은 matches.players 에 둔다 (v3.44, puuid 는 남기지 않음).
  *   5. 같은 팀 5명 수치가 모두 있을 때만 점유율 계산.
  */
-import { firstRecord } from './bot.js';
 import { checkTagBonus } from './tagbonus.js';
 import { ensureSnapshotById } from './shop.js';
 import { featOf, type FeatSource } from '../../packages/core/src/challenges.js';
@@ -257,13 +256,7 @@ export async function ingest(req: Request, env: Env, me: Member) {
     if (!dup) result.stored++;
   }
 
-  // 이번에 처음 기록이 생기는 회원 (봇이 첫 판을 축하한다, v3.53)
   const crewIds = [...new Set(memberByPuuid.values())];
-  const before = new Set<string>();
-  if (crewIds.length) {
-    const { results } = await env.DB.prepare(`SELECT DISTINCT member_id FROM participants WHERE member_id IN (${crewIds.map(() => '?').join(',')})`).bind(...crewIds).all<{ member_id: string }>();
-    for (const r of results) before.add(r.member_id);
-  }
 
   // 피스 기준을 바꾼 순간의 잔액을 판을 넣기 전에 적어 둔다 (회원마다 처음 한 번, v3.120)
   for (const id of crewIds) await ensureSnapshotById(env, id).catch(() => {});
@@ -277,11 +270,6 @@ export async function ingest(req: Request, env: Env, me: Member) {
     chunk.push(...stmts);
   }
   if (chunk.length) await env.DB.batch(chunk);
-  for (const id of crewIds) {
-    if (before.has(id)) continue;
-    const first = await env.DB.prepare('SELECT champion_id AS c, win AS w FROM participants WHERE member_id = ? ORDER BY played_at LIMIT 1').bind(id).first<{ c: number; w: number }>();
-    if (first) await firstRecord(env, id, first.c, Boolean(first.w)).catch(() => {});
-  }
   // #PRSM 태그 보상 (v3.116): 판 기록으로 맞춘 롤 이름이 #PRSM 이면 한 번만
   if (crewIds.length) {
     const { results } = await env.DB.prepare(`SELECT id, riot_id FROM members WHERE id IN (${crewIds.map(() => '?').join(',')}) AND riot_id LIKE '%#%' AND id NOT IN (SELECT member_id FROM tag_rewards)`).bind(...crewIds).all<{ id: string; riot_id: string }>().catch(() => ({ results: [] as { id: string; riot_id: string }[] }));
