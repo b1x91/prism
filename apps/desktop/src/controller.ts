@@ -92,6 +92,20 @@ export async function refreshSession() {
   }
   set({ session: { ...session, loggedIn: Boolean(me) }, me, sessionChecked: true, sessionError });
   if (me?.consent && !state.games.length) void loadServerGames();
+  if (me?.consent) void autostartOnce();
+}
+
+/**
+ * 윈도우 시작 시 실행은 기본으로 켠다 (v3.130, 사용자 결정 — 묻지 않는다). 첫 화면을 마친 뒤 이 기기에서 한 번만 켜고,
+ * 그 뒤 회원이 설정에서 끄면 다시 켜지 않는다. 스토어 판은 매니페스트의 시작 작업을 켠다.
+ */
+const AUTOSTART_KEY = 'prism-autostart-v1';
+async function autostartOnce() {
+  try { if (localStorage.getItem(AUTOSTART_KEY)) return; } catch { return; }
+  try {
+    await bridge.autostart(true);
+    try { localStorage.setItem(AUTOSTART_KEY, '1'); } catch { /* 저장소 없음 */ }
+  } catch { /* 다음에 켤 때 다시 */ }
 }
 
 /** 롤이 꺼져 있어 클라이언트에서 전적을 못 읽을 때: Prism 에 저장된 내 판으로 채운다 (롤이 켜지면 클라이언트 기록으로 바뀐다) */
@@ -275,7 +289,9 @@ async function liveFill() {
     for (let i = 0; i < 60 && state.status === 'in-game'; i++) { // 5초 간격, 최대 5분 (로딩 화면 동안은 아직 열리지 않는다)
       const m = state.matchup;
       if (m?.source === 'manual' || (m?.source === 'game' && m.enemies.length >= 5)) return;
-      const lm = liveMatchup(parseLive(await bridge.liveGame().catch(() => null)));
+      const raw = await bridge.liveGame().catch(() => null);
+      if (!gameKey) void reportGameLive(raw);
+      const lm = liveMatchup(parseLive(raw));
       if (lm && lm.enemies.length) {
         setMatchup({ allies: lm.allies.slice(0, 4), enemies: lm.enemies.slice(0, 5), source: 'game', at: Date.now() });
         if (lm.enemies.length >= 5) return;
@@ -283,6 +299,51 @@ async function liveFill() {
       await new Promise((r) => setTimeout(r, 5000));
     }
   } finally { liveFilling = false; }
+}
+
+/**
+ * NOW '함께 게임 중' (v3.130): 로비를 알리지 않았어도 같은 판에 회원이 2명 이상이면 NOW 에 뜬다.
+ * 게임이 시작될 때(게임 창이 뜨기 전) 롤 클라이언트의 게임 정보를 한 번 읽어 10명(puuid·팀·챔프)을 서버에 알리고 —
+ * 서버가 회원만 골라 얼굴로 남기고 비회원은 수만 센다 — 끝나면 내린다. 게임 중에 앱을 켰으면 라이브 데이터로 한 번.
+ */
+let gameKey = '';
+const canReportGame = () => Boolean(state.me?.consent) && state.me?.nowAuto !== false;
+async function reportGameStart() {
+  if (!canReportGame()) return;
+  const d = await bridge.lcuGet<any>('/lol-gameflow/v1/session');
+  const g = d?.gameData;
+  const id = g?.gameId ? String(g.gameId) : '';
+  if (!id) return;
+  const sel = new Map<string, number>((g.playerChampionSelections ?? []).map((x: any) => [String(x.puuid ?? ''), Number(x.championId) || 0]));
+  const side = (t: any[], team: number) => (Array.isArray(t) ? t : []).map((p: any) => ({
+    puuid: p?.puuid ? String(p.puuid) : undefined,
+    riotId: p?.gameName && p?.tagLine ? `${p.gameName}#${p.tagLine}` : undefined,
+    team, champ: Number(p?.championId) || sel.get(String(p?.puuid ?? '')) || 0,
+  }));
+  const players = [...side(g.teamOne, 100), ...side(g.teamTwo, 200)];
+  if (!players.length) return;
+  gameKey = id;
+  await api.post('/api/now/game', { key: id, queue: Number(g.queue?.id ?? 0), players }).catch(() => { gameKey = ''; });
+}
+async function reportGameLive(raw: any) {
+  if (!canReportGame() || !Array.isArray(raw?.players) || raw.players.length < 2) return;
+  const players = raw.players.map((p: any) => ({
+    riotId: typeof p?.riotId === 'string' ? p.riotId : undefined,
+    team: String(p?.team) === 'CHAOS' ? 200 : 100,
+    champ: parseLive({ players: [p], me: '' })?.players[0]?.championId ?? 0,
+  })).filter((p: { riotId?: string }) => p.riotId);
+  if (players.length < 2) return;
+  // 라이브 데이터에는 게임 번호가 없어 10명의 이름으로 열쇠를 만든다 (같은 판의 다른 회원 앱도 같은 열쇠)
+  const names = players.map((p: { riotId: string }) => p.riotId.toLowerCase()).sort().join('|');
+  let h = 5381;
+  for (let i = 0; i < names.length; i++) h = ((h << 5) + h + names.charCodeAt(i)) >>> 0;
+  gameKey = `l${h.toString(36)}`;
+  await api.post('/api/now/game', { key: gameKey, queue: 2400, players }).catch(() => { gameKey = ''; });
+}
+function endGame() {
+  const k = gameKey;
+  gameKey = '';
+  void api.post('/api/now/game', { end: k }).catch(() => {});
 }
 
 /** 3개 비교 화면에서 직접 고친 조합 */
@@ -314,6 +375,8 @@ async function tick(): Promise<number> {
     // 게임이 시작되는 순간(게임 창이 뜨기 전) 양 팀 챔피언을 한 번 읽는다. 창이 뜨면 Rust 가 요청을 막는다
     const starting = phase === 'GameStart' || phase === 'InProgress' || phase === 'Reconnect';
     if (starting && state.matchup?.source !== 'game') await loadMatchup().catch(() => {});
+    if (starting && !gameKey) await reportGameStart().catch(() => {});
+    if (!starting && gameKey) endGame();
     if (phase === 'ChampSelect') await loadChampSelect();
     else { if (state.champSelect) set({ champSelect: null }); crewKey = ''; }
     // 챔프 선택이 끝나고 게임 창이 뜨기 전(GameStart·InProgress·Reconnect)도 '게임 중'으로 본다 —

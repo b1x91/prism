@@ -4,11 +4,12 @@
  * - 빈자리 + = 방장에게 알림 ('방장에게 알림을 전달했어요' 토스트). 초대는 방장이 롤에서 한다 (Prism 은 클라이언트를 조작하지 않는다).
  * - 기다리는 사람은 빈자리에 금빛 테두리의 흐린 얼굴로. 방장 화면에는 'OO님이 기다려요' 줄도.
  * - '로비를 NOW에 자동으로 올리기' 스위치 (회원마다, 기본 켜짐).
+ * - 함께 게임 중 (v3.130): 로비를 알리지 않았어도 같은 판에 회원이 2명 이상이면. 그 판의 챔프를 얼굴 옆에.
  */
 import { useEffect, useRef, useState } from 'react';
-import type { Api, NowFace, NowList, NowLobby, NowScrim, NowTeam } from '@prism/core';
+import type { Api, NowFace, NowGame, NowGameSide, NowList, NowLobby, NowScrim, NowTeam } from '@prism/core';
 import { useLoad } from './crew';
-import { MemberFace, Toggle } from './basics';
+import { ChampImg, MemberFace, Toggle } from './basics';
 import { Bone, Swap, fadeCls, useReveal } from './skeleton';
 
 const msgOf = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -34,8 +35,10 @@ export function NowCard({ api, meId, onMember, onAutoChange }: { api: Api; meId:
   const on = auto ?? data.auto;
   const lobbies = data.lobbies.slice(0, MAX);
   const scrims = data.scrims ?? [];
+  const games = data.games ?? [];
   const open = lobbies.filter((l) => l.phase === 'lobby').length;
-  const idle = !lobbies.length && !scrims.length;
+  const playing = games.reduce((n, g) => n + g.blue.members.length + g.red.members.length, 0);
+  const idle = !lobbies.length && !scrims.length && !games.length;
   const flash = (text: string, ok: boolean) => {
     setToast({ text, ok, k: Date.now() });
     window.clearTimeout(timer.current);
@@ -67,12 +70,14 @@ export function NowCard({ api, meId, onMember, onAutoChange }: { api: Api; meId:
           <span className="now-k">NOW</span>
           {scrims.length > 0 && <span className="now-live scrim"><i />내전 중</span>}
           {open > 0 && <span className="now-live"><i />팟 {open}개 모집 중</span>}
-          <small className="now-tip">빈자리의 + 를 누르면 방장에게 알림이 가요</small>
+          {playing > 0 && <span className="now-live game"><i />{playing}명 함께 게임 중</span>}
+          <small className="now-tip">{open > 0 || scrims.some((x) => x.phase === 'lobby') ? '빈자리의 + 를 누르면 방장에게 알림이 가요' : ''}</small>
           <label className="now-mini-auto"><small>자동으로 올리기</small><Toggle on={on} onChange={(v) => void toggle(v)} label="로비를 NOW에 자동으로 올리기" /></label>
         </div>
         <div className="now-list">
           {scrims.map((x) => <ScrimPanel key={x.id} x={x} meId={meId} asked={asked.has(x.id)} onAsk={() => void ask(x)} onMember={onMember} />)}
           {lobbies.map((l, i) => <LobbyRow key={l.id} n={i + 1} l={l} meId={meId} asked={asked.has(l.id)} onAsk={() => void ask(l)} onMember={onMember} />)}
+          {games.map((g) => <GameRow key={g.id} g={g} meId={meId} onMember={onMember} />)}
           <div className="now-toast-slot" aria-live="polite">
             {toast && <div key={toast.k} className={`now-toast ${toast.ok ? '' : 'err'}`} role="status">{toast.ok && <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5 6.5 12 13 4.5" /></svg>}{toast.text}</div>}
           </div>
@@ -151,6 +156,33 @@ function LobbyRow({ n, l, meId, asked, onAsk, onMember }: { n: number; l: NowLob
       {isHost && waiting.length > 0 && l.phase === 'lobby' && (
         <div className="now-wait"><i />{waiting.map((r) => r.nick).join(', ')}님이 기다려요<small>롤에서 초대하면 바로 채워져요</small></div>
       )}
+    </div>
+  );
+}
+
+const mins = (t: number) => Math.max(1, Math.floor((Date.now() - t) / 60_000));
+
+/** 함께 게임 중 (v3.130): 같은 판의 회원 얼굴 + 그 판의 챔프. 양 팀에 회원이 있으면 팀을 나눠 'vs' */
+function GameRow({ g, meId, onMember }: { g: NowGame; meId: string; onMember?: (id: string) => void }) {
+  const mine = [...g.blue.members, ...g.red.members].some((m) => m.id === meId);
+  const both = g.blue.members.length > 0 && g.red.members.length > 0;
+  const group = (t: NowGameSide) => t.members.map((m) => (
+    <button key={m.id} type="button" className="now-face" title={m.nick} onClick={() => onMember?.(m.id)}>
+      <MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={48} />
+      {m.champ > 0 && <span className="now-champ"><ChampImg id={m.champ} size={22} /></span>}
+    </button>
+  ));
+  const n = g.blue.members.length + g.red.members.length;
+  return (
+    <div className={`now-row game together ${mine ? 'mine' : ''}`}>
+      <span className="now-n"><b>{both ? '맞대결' : '함께'}</b><i className="now-badge game">게임 중</i></span>
+      <div className="now-slots">
+        {both ? <>{group(g.blue)}<span className="now-vs">vs</span>{group(g.red)}</> : group(g.blue.members.length ? g.blue : g.red)}
+      </div>
+      <span className="now-meta">
+        <span>멤버 {n}명 · {g.custom ? '사용자 설정' : '아수라장'}</span>
+        <small>{mins(g.since)}분째 · 끝나면 저절로 내려가요</small>
+      </span>
     </div>
   );
 }

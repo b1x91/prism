@@ -3957,6 +3957,12 @@ button.stf-person:hover { background: var(--surface-2); }
 .now-row.game .now-slots { gap: 0; }
 .now-row.game .now-face { width: 40px; height: 40px; box-shadow: 0 0 0 2px #142019; border-radius: 50%; }
 .now-row.game .now-face + .now-face { margin-left: -8px; }
+.now-row.together .now-slots { gap: var(--s2); align-items: center; flex-wrap: wrap; }
+.now-row.together .now-face { width: 48px; height: 48px; box-shadow: none; }
+.now-row.together .now-face + .now-face { margin-left: 0; }
+.now-champ { position: absolute; right: -4px; bottom: -4px; width: 22px; height: 22px; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 2px #142019; line-height: 0; }
+.now-champ .champ { width: 22px; height: 22px; border-radius: 50%; }
+.now-vs { padding: 0 var(--s1); font-size: var(--fs-xs); font-weight: 900; letter-spacing: .08em; color: #9a9db0; }
 .now-plus { width: 48px; height: 48px; flex: none; box-sizing: border-box; border-radius: 50%; border: 2px dashed #6f7cff; background: transparent; color: #9aa3ff; font: inherit; font-size: 20px; font-weight: 700; cursor: pointer; display: grid; place-items: center; padding: 0; transition: background .15s, transform .15s; }
 .now-plus:hover:not(:disabled) { background: rgba(111, 124, 255, .16); transform: scale(1.04); }
 .now-plus:disabled { border-color: #3a3d55; color: #4a4e6a; cursor: default; }

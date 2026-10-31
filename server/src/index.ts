@@ -7,7 +7,7 @@
 import { saveAbout } from './about.js';
 import { dailyPayload, dailyPost, interactions } from './bot.js';
 import { pulse } from './pulse.js';
-import { listNow, reportLobby, requestJoin, setNowAuto } from './now.js';
+import { listNow, reportGame, reportLobby, requestJoin, setNowAuto } from './now.js';
 import { appMembers } from './appmembers.js';
 import { promoteSweep } from './promote.js';
 import { download, latest } from './release.js';
@@ -123,6 +123,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'GET' && pathname === '/api/board') return board(env, me);
   if (m === 'GET' && pathname === '/api/crew/pulse') return pulse(env);
   if (m === 'GET' && pathname === '/api/now') return listNow(env, me);
+  if (m === 'POST' && pathname === '/api/now/game') return reportGame(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'POST' && pathname === '/api/now/lobby') return reportLobby(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'POST' && pathname === '/api/me/now-auto') return setNowAuto(env, me, (await req.json<{ on?: boolean }>().catch(() => ({} as { on?: boolean }))).on);
   { const n = pathname.match(/^\/api\/now\/([^/]{1,80})\/request$/); if (m === 'POST' && n) return requestJoin(env, me, decodeURIComponent(n[1])); }

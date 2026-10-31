@@ -4,12 +4,15 @@
  *  - 팟은 동시에 세 개까지 보인다. 비회원은 수만 센다 (puuid·이름을 남기지 않는다).
  *  - 빈자리 + = 방장에게 알림. 방장 앱이 다음에 로비를 알릴 때 받아 오른쪽 아래 알림으로 띄운다 (게임 중이면 끝난 뒤). 같은 사람은 5분에 한 번, 10분 안에 안 들어오면 사라진다.
  *  - 회원마다 '로비를 NOW에 자동으로 올리기' (members.now_auto, 기본 켜짐).
+ *  - 함께 게임 중 (v3.130): 로비를 알리지 않았어도, 게임이 시작될 때 회원 앱이 읽은 그 판의 10명 중 회원이 2명 이상이면 NOW 에 띄운다.
+ *    비회원은 팀별 수만 센다. 게임이 끝나면(앱이 알리거나 50분이 지나면) 내려간다.
  */
 import { FACE, HttpError, json, type Env, type Member } from './util.js';
 
 const MAX_SHOWN = 3;
 const LOBBY_STALE = 3 * 60_000;   // 앱이 이만큼 소식이 없으면 로비가 없어진 것으로
 const GAME_STALE = 70 * 60_000;   // 게임 중 팟은 이만큼까지 둔다
+const TOGETHER_STALE = 50 * 60_000; // 함께 게임 중은 끝났다는 소식이 없으면 이만큼 뒤에 내린다
 const REQ_TTL = 10 * 60_000;
 const REQ_AGAIN = 5 * 60_000;
 const MAYHEM = 2400;
@@ -19,13 +22,15 @@ type Row = { id: string; leader_id: string | null; reporter_id: string; members:
 type Team = { members: Face[]; size: number };
 export type NowScrim = { id: string; phase: NowLobby['phase']; size: number; since: number; leader: string | null; blue: Team; red: Team; requests: Face[]; series: { blue: number; red: number; games: number } };
 export type NowLobby = { id: string; phase: 'lobby' | 'queue' | 'game'; size: number; since: number; leader: string | null; members: Face[]; requests: Face[] };
+type GameFace = Face & { champ: number };
+export type NowGame = { id: string; since: number; custom: boolean; blue: { members: GameFace[]; size: number }; red: { members: GameFace[]; size: number } };
 
 const ids = (s: string): string[] => { try { const v = JSON.parse(s); return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []; } catch { return []; } };
 const str = (v: unknown, max: number) => (typeof v === 'string' && v.length > 0 && v.length <= max ? v : null);
 
 async function prune(env: Env, now: number) {
   await env.DB.batch([
-    env.DB.prepare("DELETE FROM now_lobbies WHERE (phase != 'game' AND updated_at < ?1) OR (phase = 'game' AND updated_at < ?2)").bind(now - LOBBY_STALE, now - GAME_STALE),
+    env.DB.prepare("DELETE FROM now_lobbies WHERE (phase != 'game' AND updated_at < ?1) OR (phase = 'game' AND kind != 'game' AND updated_at < ?2) OR (kind = 'game' AND created_at < ?3)").bind(now - LOBBY_STALE, now - GAME_STALE, now - TOGETHER_STALE),
     env.DB.prepare('DELETE FROM now_requests WHERE at < ? OR lobby_id NOT IN (SELECT id FROM now_lobbies)').bind(now - REQ_TTL),
   ]);
 }
@@ -49,11 +54,11 @@ export async function reportLobby(env: Env, me: Member, body: Record<string, unk
   const off = !(me as Member & { now_auto?: number }).now_auto;
   // 로비를 떠났거나 · 자동 올리기를 껐거나 · 아수라장 로비가 아니면 내가 알린 팟을 내린다
   if (!id || off || (!scrim && queue !== MAYHEM)) {
-    await env.DB.prepare('DELETE FROM now_lobbies WHERE reporter_id = ?').bind(me.id).run();
+    await env.DB.prepare("DELETE FROM now_lobbies WHERE reporter_id = ? AND kind != 'game'").bind(me.id).run();
     return json({ requests: [] });
   }
   // 다른 로비로 옮겼으면 예전 팟은 내린다
-  await env.DB.prepare('DELETE FROM now_lobbies WHERE reporter_id = ? AND id != ?').bind(me.id, id).run();
+  await env.DB.prepare("DELETE FROM now_lobbies WHERE reporter_id = ? AND id != ? AND kind != 'game'").bind(me.id, id).run();
   const allP = [...new Set([...puuids, ...t100, ...t200])];
   const { results } = allP.length
     ? await env.DB.prepare('SELECT id, riot_puuid AS p FROM members WHERE riot_puuid IN (SELECT value FROM json_each(?))').bind(JSON.stringify(allP)).all<{ id: string; p: string }>()
@@ -87,12 +92,19 @@ export async function listNow(env: Env, me: Member) {
   const now = Date.now();
   await prune(env, now);
   const { results: rows } = await env.DB.prepare('SELECT * FROM now_lobbies ORDER BY created_at ASC').all<Row>();
-  const results = rows.filter((r) => r.kind !== 'scrim').slice(0, MAX_SHOWN);
   const scrimRows = rows.filter((r) => r.kind === 'scrim').slice(0, 1);
+  // 함께 게임 중: 내전으로 이미 보이는 판은 빼고
+  const scrimMembers = new Set(scrimRows.flatMap((r) => ids(r.members)));
+  const gameRows = rows.filter((r) => r.kind === 'game' && ids(r.members).filter((x) => scrimMembers.has(x)).length < 2).slice(0, MAX_SHOWN);
+  const inGame = gameRows.map((r) => new Set(ids(r.members)));
+  // 로비에서 출발해 게임 중인 팟이 같은 판으로 이미 보이면 하나만
+  const results = rows.filter((r) => r.kind !== 'scrim' && r.kind !== 'game')
+    .filter((r) => !(r.phase === 'game' && inGame.some((g) => ids(r.members).every((x) => g.has(x)))))
+    .slice(0, MAX_SHOWN);
   const reqRows = results.length || scrimRows.length
     ? (await env.DB.prepare('SELECT lobby_id AS l, member_id AS m FROM now_requests WHERE lobby_id IN (SELECT value FROM json_each(?)) ORDER BY at ASC').bind(JSON.stringify([...results, ...scrimRows].map((r) => r.id))).all<{ l: string; m: string }>()).results
     : [];
-  const all = [...new Set([...[...results, ...scrimRows].flatMap((r) => ids(r.members)), ...reqRows.map((r) => r.m)])];
+  const all = [...new Set([...[...results, ...scrimRows, ...gameRows].flatMap((r) => ids(r.members)), ...reqRows.map((r) => r.m)])];
   const face = await faces(env, all);
   const lobbies: NowLobby[] = results.map((r) => {
     const mem = ids(r.members).map((x) => face.get(x)).filter((x): x is Face => Boolean(x));
@@ -116,7 +128,61 @@ export async function listNow(env: Env, me: Member) {
       series: await seriesOf(env, ids(r.members), now),
     });
   }
-  return json({ auto: Boolean((me as Member & { now_auto?: number }).now_auto ?? 1), lobbies, scrims });
+  const games: NowGame[] = gameRows.map((r) => {
+    let t: Record<string, { m: { id: string; c: number }[]; n: number }> = {};
+    try { t = JSON.parse(r.teams ?? '{}'); } catch { /* 빈 팀 */ }
+    const side = (k: string) => {
+      const m = (t[k]?.m ?? []).map((x) => { const f = face.get(x.id); return f ? { ...f, champ: Number(x.c) || 0 } : null; }).filter((x): x is GameFace => Boolean(x));
+      return { members: m, size: Math.max(m.length, Number(t[k]?.n) || 0) };
+    };
+    return { id: r.id, since: r.created_at, custom: r.size === 0, blue: side('100'), red: side('200') };
+  });
+  return json({ auto: Boolean((me as Member & { now_auto?: number }).now_auto ?? 1), lobbies, scrims, games });
+}
+
+/**
+ * POST /api/now/game — 게임이 시작될 때 앱이 읽은 그 판의 사람들 (v3.130).
+ * body: { key, queue, players: [{ puuid?, riotId?, team: 100|200, champ? }] } — 끝나면 { end: key }.
+ * 회원만 얼굴로 남기고 비회원은 팀별 수만. 회원이 2명 이상일 때만 띄운다. 'NOW에 자동으로 올리기'를 끈 회원은 빼고 센다.
+ */
+export async function reportGame(env: Env, me: Member, body: Record<string, unknown>) {
+  const now = Date.now();
+  const end = str(body.end, 100);
+  if (end) {
+    await env.DB.prepare("DELETE FROM now_lobbies WHERE id = ? AND kind = 'game'").bind(`g:${end}`).run();
+    return json({ ok: true });
+  }
+  const key = str(body.key, 100);
+  if (!key) throw new HttpError(400, 'key');
+  type P = { puuid: string | null; riot: string | null; team: '100' | '200'; champ: number };
+  const players: P[] = (Array.isArray(body.players) ? body.players : []).slice(0, 10).map((x: any) => ({
+    puuid: str(x?.puuid, 100), riot: str(x?.riotId, 60), team: Number(x?.team) === 200 ? '200' as const : '100' as const, champ: Number(x?.champ) || 0,
+  }));
+  if (!players.length) return json({ ok: true });
+  const { results } = await env.DB.prepare(
+    `SELECT id, riot_puuid AS p, lower(riot_id) AS r, now_auto AS a FROM members
+      WHERE riot_puuid IN (SELECT value FROM json_each(?1)) OR lower(riot_id) IN (SELECT value FROM json_each(?2))`,
+  ).bind(JSON.stringify(players.map((x) => x.puuid).filter(Boolean)), JSON.stringify(players.map((x) => x.riot?.toLowerCase()).filter(Boolean))).all<{ id: string; p: string | null; r: string | null; a: number }>();
+  const who = (x: P) => results.find((m) => (x.puuid && m.p === x.puuid) || (x.riot && m.r === x.riot.toLowerCase()));
+  const teams: Record<'100' | '200', { m: { id: string; c: number }[]; n: number }> = { '100': { m: [], n: 0 }, '200': { m: [], n: 0 } };
+  for (const x of players) {
+    teams[x.team].n++;
+    const m = who(x);
+    if (m && m.a !== 0 && !teams[x.team].m.some((y) => y.id === m.id)) teams[x.team].m.push({ id: m.id, c: x.champ });
+  }
+  const members = [...teams['100'].m, ...teams['200'].m].map((x) => x.id);
+  const id = `g:${key}`;
+  if (members.length < 2) {
+    await env.DB.prepare("DELETE FROM now_lobbies WHERE id = ? AND kind = 'game'").bind(id).run();
+    return json({ ok: true });
+  }
+  // size 칸에 '아수라장(1)·사용자 설정(0)'을 적어 둔다 (이 줄은 빈자리가 없다)
+  const mayhem = Number(body.queue) === MAYHEM ? 1 : 0;
+  await env.DB.prepare(
+    `INSERT INTO now_lobbies (id, leader_id, reporter_id, members, size, phase, created_at, updated_at, kind, teams) VALUES (?1, NULL, ?2, ?3, ?4, 'game', ?5, ?5, 'game', ?6)
+     ON CONFLICT(id) DO UPDATE SET reporter_id = ?2, members = ?3, size = ?4, updated_at = ?5, teams = ?6`,
+  ).bind(id, me.id, JSON.stringify(members), mayhem, now, JSON.stringify(teams)).run();
+  return json({ ok: true });
 }
 
 /**

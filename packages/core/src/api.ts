@@ -65,7 +65,10 @@ export type NowLobby = { id: string; phase: 'lobby' | 'queue' | 'game'; size: nu
 export type NowTeam = { members: NowFace[]; size: number };
 /** 내전 중 (v3.127): 사용자 설정 로비 · 오늘의 점수(지난 6시간 기록된 사용자 설정 판, 게임 진영 기준) */
 export type NowScrim = { id: string; phase: NowLobby['phase']; size: number; since: number; leader: string | null; blue: NowTeam; red: NowTeam; requests: NowFace[]; series: { blue: number; red: number; games: number } };
-export type NowList = { auto: boolean; lobbies: NowLobby[]; scrims?: NowScrim[] };
+/** 함께 게임 중 (v3.130): 로비 없이도, 같은 판에 회원이 2명 이상이면. champ = 그 판의 챔프 */
+export type NowGameSide = { members: (NowFace & { champ: number })[]; size: number };
+export type NowGame = { id: string; since: number; custom: boolean; blue: NowGameSide; red: NowGameSide };
+export type NowList = { auto: boolean; lobbies: NowLobby[]; scrims?: NowScrim[]; games?: NowGame[] };
 /** 회원 얼굴 재료 (서버 FACE): 대표 스킨, 주 챔피언 */
 export type FaceInfo = { skin?: number | null; main?: number | null };
 export type Note = { id: number; text: string; createdAt: number; memberId?: string; nick: string; mine: 0 | 1; canDelete?: 0 | 1 } & FaceInfo;

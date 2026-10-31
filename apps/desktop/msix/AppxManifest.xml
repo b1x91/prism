@@ -31,7 +31,7 @@
       <Extensions>
         <!-- 윈도우 시작 시 실행 (설정에서 켜면 store.rs 가 RequestEnable) -->
         <desktop:Extension Category="windows.startupTask" Executable="Prism.exe" EntryPoint="Windows.FullTrustApplication">
-          <desktop:StartupTask TaskId="PrismStartup" Enabled="false" DisplayName="PRISM 증바람" />
+          <desktop:StartupTask TaskId="PrismStartup" Enabled="true" DisplayName="PRISM 증바람" />
         </desktop:Extension>
       </Extensions>
     </Application>
