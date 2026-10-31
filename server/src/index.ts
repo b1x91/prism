@@ -7,6 +7,7 @@
 import { saveAbout } from './about.js';
 import { dailyPayload, dailyPost, interactions } from './bot.js';
 import { pulse } from './pulse.js';
+import { nickSweep } from './discordnick.js';
 import { listNow, reportGame, reportLobby, requestJoin, setNowAuto } from './now.js';
 import { appMembers } from './appmembers.js';
 import { promoteSweep } from './promote.js';
@@ -210,9 +211,11 @@ export default {
   async scheduled(controller: ScheduledController, env: Env) {
     if (controller.cron === '0 12 * * *') {
       await ensureAuto(env).catch((e) => console.error('자동 소식 실패', e));
+      await nickSweep(env).catch((e) => console.error('디스코드 별명 맞추기 실패', e));
       return dailyPost(env).catch((e) => console.error('매일 공지 실패', e));
     }
     await promoteSweep(env).catch((e) => console.error('역할 자동 승급 실패', e));
+    await nickSweep(env).catch((e) => console.error('디스코드 별명 맞추기 실패', e));
     const now = Date.now();
     await env.DB.batch([
       env.DB.prepare('DELETE FROM auth_codes WHERE expires_at < ?').bind(now),
