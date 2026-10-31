@@ -346,13 +346,3 @@ export async function dailyPayload(env: Env, now = Date.now()) {
   return { tonight, hist, message: { flags: V2, components: card(parts) } };
 }
 
-/** 첫 판이 기록된 회원 축하 (회원마다 한 번) */
-export async function firstRecord(env: Env, memberId: string, championId: number, win: boolean) {
-  if (!botReady(env)) return;
-  if (!(await once(env, `bot-first-${memberId}`))) return;
-  const c = CHAMPIONS[championId]?.name;
-  await sendToChannel(env, env.BOT_CHANNEL_ID!, {
-    content: `<@${memberId}> 님의 첫 판이 Prism 에 기록됐어요! 🎉${c ? ` (${c}${win ? ' · 승리' : ''})` : ''}`,
-    allowed_mentions: { users: [memberId] },
-  });
-}
