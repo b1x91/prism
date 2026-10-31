@@ -1,6 +1,6 @@
 /**
  * 게임 위 작은 창 (v3.5). 증강 선택 카드가 보이면 Rust 가 띄우고, 고르고 나면 닫는다.
- * 클릭이 통과하므로 버튼은 없다. 내 챔피언과의 어울림 순서·티어만 보여준다 (승률 없음).
+ * 클릭이 통과한다 — 오른쪽 위 닫기 단추 자리만 마우스가 올라오면 Rust 가 클릭을 받게 바꾼다 (v3.132). 내 챔피언과의 어울림 순서·티어만 보여준다 (승률 없음).
  * 1위가 비슷하면 같은 순위로 묶고 고르는 건 사용자에게 맡긴다.
  */
 import { StrictMode, useEffect, useRef, useState } from 'react';
@@ -71,7 +71,7 @@ function Overlay() {
   const tie = topTie(fits);
   return (
     <div key={slide.k} className={`ov at-${slide.pos} ${slide.out ? 'out' : ''}`}>
-      <div className="ov-head"><Gem size={16} src="/brand/prism-32.png" /><b>Prism</b>{champ && <><ChampImg id={champ} size={18} /><span>{c?.name}</span></>}</div>
+      <div className="ov-head"><Gem size={16} src="/brand/prism-32.png" /><b>Prism</b>{champ && <><ChampImg id={champ} size={18} /><span>{c?.name}</span></>}<button className="ov-x" type="button" title="닫기 · 이번 고르기 동안 숨겨요" aria-label="닫기" onClick={() => { bridge.overlayClose().catch(() => {}); }}><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></button></div>
       {sits.length > 0 && <div className="ov-sits">{sits.map((x) => <span key={x.key}>{x.label}</span>)}</div>}
       {fits.length ? fits.map((f) => (
         <div key={f.id} className={`ov-row ${f.rank === 1 ? 'top' : ''} t-${f.tier}`}>

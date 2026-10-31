@@ -343,11 +343,39 @@ impl Matcher {
 #[derive(Default)]
 pub struct Slots {
     s: Vec<(f32, u32)>,
+    /// 칸마다 '다른 칸 제목은 읽혔는데 이 칸만 안 읽힌' 연속 횟수 (새로고침으로 바뀐 카드를 알아채려고, v3.132)
+    miss: std::collections::HashMap<u32, u8>,
 }
+
+/// 이만큼 연속으로 혼자 안 읽히면 '바뀌었을지 모르는 칸'으로 보고 카드 자리에서 다시 읽는다
+pub const DOUBT_AFTER: u8 = 3;
 
 impl Slots {
     pub fn clear(&mut self) {
         self.s.clear();
+        self.miss.clear();
+    }
+    /// 이번에 읽힌 제목들(ID). 읽힌 칸은 확인, 다른 칸이 읽히는 동안 안 읽힌 칸은 하나씩 의심한다
+    pub fn note_hits(&mut self, hit: &[u32]) {
+        if hit.is_empty() {
+            return;
+        }
+        for &(_, id) in &self.s {
+            if hit.contains(&id) {
+                self.miss.remove(&id);
+            } else {
+                let n = self.miss.entry(id).or_insert(0);
+                *n = n.saturating_add(1);
+            }
+        }
+    }
+    /// 바뀌었을지 모르는 칸 (가운데 x, ID)
+    pub fn doubtful(&self) -> Vec<(f32, u32)> {
+        self.s.iter().filter(|s| self.miss.get(&s.1).is_some_and(|n| *n >= DOUBT_AFTER)).copied().collect()
+    }
+    /// 카드 자리에서 다시 읽어 같은 증강임을 확인했다
+    pub fn confirm(&mut self, id: u32) {
+        self.miss.remove(&id);
     }
     pub fn is_empty(&self) -> bool {
         self.s.is_empty()
@@ -423,7 +451,10 @@ impl Slots {
             let keep = self.s.iter().position(|s| s.1 == id && (s.0 - x).abs() < f32::EPSILON);
             let mut i = 0;
             self.s.retain(|s| { let k = s.1 != id || Some(i) == keep; i += 1; k });
+            self.miss.remove(&id);
         }
+        let ids: Vec<u32> = self.s.iter().map(|s| s.1).collect();
+        self.miss.retain(|id, _| ids.contains(id));
         self.s.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
         self.s.iter().map(|s| s.1).collect()
     }
@@ -703,6 +734,23 @@ mod tests {
         // 제목이 안 읽혀도 설명 속 "흡수량"을 흡수로 잡지 않는다
         let only_desc = vec![vec![w("보호막", 1040.0, 425.0), w("흡수량", 1080.0, 425.0)]];
         assert!(m.find(&only_desc, 2000.0).is_empty());
+    }
+
+    #[test]
+    fn 새로고침한_칸이_안_읽히면_의심한다() {
+        let mut s = Slots::default();
+        s.update(&[(1, 700.0, 0.0), (2, 1000.0, 0.0), (3, 1290.0, 0.0)], 2000.0);
+        for _ in 0..DOUBT_AFTER - 1 { s.note_hits(&[1, 3]); }
+        assert!(s.doubtful().is_empty());
+        s.note_hits(&[1, 3]);
+        assert_eq!(s.doubtful().iter().map(|d| d.1).collect::<Vec<_>>(), vec![2]);
+        // 다시 읽혀 확인되면 의심을 푼다
+        s.confirm(2);
+        assert!(s.doubtful().is_empty());
+        // 새 이름으로 바뀌면 의심 기록도 사라진다
+        for _ in 0..DOUBT_AFTER { s.note_hits(&[1, 3]); }
+        assert_eq!(s.update(&[(9, 1000.0, 0.0)], 2000.0), vec![1, 9, 3]);
+        assert!(s.doubtful().is_empty());
     }
 
     #[test]

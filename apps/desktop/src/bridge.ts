@@ -45,6 +45,7 @@ export const bridge = {
   /** 게임 중 라이브 클라이언트 데이터 (게임이 없거나 동의 전이면 실패) */
   liveGame: () => call<unknown>('live_game'),
   visionGet: () => call<VisionState>('vision_get'),
+  overlayClose: () => call<void>('overlay_close'),
   visionAllow: (allowed: boolean) => call<void>('vision_allow', { allowed }).catch(() => {}),
   visionSet: (enabled: boolean, position: 'right' | 'top') => call<void>('vision_set', { enabled, position }),
   visionTest: () => call<{ ids: number[]; text: string }>('vision_test').catch((e) => { throw err(e); }),

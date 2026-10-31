@@ -118,6 +118,8 @@ pub struct Vision {
     pub matcher: Matcher,
     pub icons: crate::icons::IconBank,
     shown: AtomicBool,
+    /// 이번 고르기에서 사용자가 작은 창을 닫았나 (카드가 사라질 때까지 다시 띄우지 않는다, v3.132)
+    pub dismissed: AtomicBool,
     /// 로그인 + 수집 동의를 마쳤는지 (첫 화면을 끝내기 전에는 인식하지 않는다)
     pub allowed: AtomicBool,
 }
@@ -130,7 +132,7 @@ impl Vision {
     pub fn new(dir: PathBuf) -> Arc<Self> {
         let path = dir.join("vision.json");
         let settings = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
-        Arc::new(Self { path, diag: Mutex::new(None), settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), icons: crate::icons::IconBank::new(AUG_ICONS, AUGMENTS_JSON), shown: AtomicBool::new(false), allowed: AtomicBool::new(false) })
+        Arc::new(Self { path, diag: Mutex::new(None), settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), icons: crate::icons::IconBank::new(AUG_ICONS, AUGMENTS_JSON), shown: AtomicBool::new(false), dismissed: AtomicBool::new(false), allowed: AtomicBool::new(false) })
     }
 
     pub fn set(&self, s: Settings) {
@@ -181,7 +183,29 @@ impl Vision {
 
     /// 백그라운드 확인 루프 (앱이 켜져 있는 동안)
     pub fn start(self: Arc<Self>, app: AppHandle) {
+        let (v2, a2) = (self.clone(), app.clone());
+        std::thread::spawn(move || imp::hot_loop(v2, a2));
         std::thread::spawn(move || imp::run(self, app));
+    }
+
+    /// 사용자가 작은 창의 닫기 단추를 눌렀다: 이번 고르기가 끝날 때까지 다시 띄우지 않는다
+    pub fn close(&self, app: &AppHandle) {
+        self.dismissed.store(true, Ordering::SeqCst);
+        self.trace("사용자가 작은 창을 닫음".into());
+        if self.shown.swap(false, Ordering::SeqCst) {
+            imp::hide_overlay(app);
+        }
+        imp::give_back_focus(app);
+    }
+
+    /// 작은 창 띄우기 (사용자가 이번 고르기에서 닫았으면 띄우지 않는다)
+    fn show(&self, _app: &AppHandle, f: impl FnOnce()) {
+        if self.dismissed.load(Ordering::SeqCst) {
+            return;
+        }
+        f();
+        self.shown.store(true, Ordering::SeqCst);
+        self.diag(|d| d.shown += 1);
     }
 
     pub fn hide(&self, app: &AppHandle) {
@@ -552,6 +576,32 @@ mod imp {
         let mut card_fails: u32 = 0;
         // 이번 고르기에서 아직 못 읽은 카드의 마지막 그림 (가운데 x, JPEG) — 고르기가 끝날 때 세 칸이 안 찼으면 진단으로 (v3.115)
         let mut miss_shots: Vec<(f32, String)> = Vec::new();
+        // 게임 창이 마지막으로 맨 앞이던 때 — 다른 창으로 오래 가 있으면 작은 창을 내린다 (다른 프로그램 위에 떠 있지 않게, v3.132)
+        let mut front_at = std::time::Instant::now();
+        // 고르기 끝: 한동안 카드가 안 보임 = 다 고름. 세 칸을 다 못 채운 고르기는 진단으로 남긴다 (끝날 때 서버로)
+        macro_rules! finish_offer {
+            ($gw:expr) => {{
+                let n = slots.len();
+                v.diag(|d| { d.offers += 1; if n < 3 { d.partial += 1; } });
+                if n < 3 {
+                    v.trace(format!("고르기 끝: {n}칸만 찾음 {:?}", slots.ids_sorted()));
+                    let t = v.report.lock().unwrap().trace.clone();
+                    let tail = t[t.len().saturating_sub(20)..].to_vec();
+                    v.diag(|d| if d.partial_trace.len() < 3 { d.partial_trace.push(tail) });
+                    let found = slots.ids_sorted();
+                    let pitch = slots.pitch($gw).unwrap_or($gw / 4.0);
+                    let left: Vec<(f32, String)> = miss_shots.drain(..).filter(|(x, _)| !slots.near(*x, pitch * 0.4)).collect();
+                    v.diag(|d| for (x, jpg) in left { if d.shots.len() < 4 { d.shots.push(MissShot { cx: x as i32, found: found.clone(), jpg }); } });
+                }
+                miss_shots.clear();
+                last.clear();
+                slots.clear();
+                seen_at = None;
+                v.dismissed.store(false, Ordering::SeqCst);
+                v.publish(&app, vec![], String::new());
+                v.hide(&app);
+            }};
+        }
         loop {
             let s = v.settings.lock().unwrap().clone();
             let allowed = v.allowed.load(Ordering::SeqCst);
@@ -568,6 +618,13 @@ mod imp {
             // 맨 앞 = 맨 앞 창이 게임 창이거나 같은 게임 프로세스의 창 (전체 화면 모드에서는 포커스를 가진 창이 그림 창과 다를 수 있다)
             let front = game.is_some_and(|(h, _)| { let fg = unsafe { GetForegroundWindow() }; fg == h || same_process(fg, h) });
             let how = game.map(|g| g.1).unwrap_or("");
+            if front {
+                front_at = std::time::Instant::now();
+            } else if v.shown.load(Ordering::SeqCst) && front_at.elapsed() > Duration::from_secs(8) {
+                // 게임에서 다른 창으로 8초 넘게 가 있으면 작은 창을 내린다 (칸은 기억 — 돌아와서 카드가 그대로면 다시 뜬다)
+                v.trace("게임 창이 오래 뒤에 있어 작은 창을 내림".into());
+                v.hide(&app);
+            }
             if game.is_some() && eng.is_none() && !warned_engine {
                 warned_engine = true;
                 crate::toast::show(&app, "증강 자동 인식을 쓸 수 없어요", "이 PC에 한국어 문자 인식이 없어요. Windows 설정 → 시간 및 언어 → 언어에서 '한국어'를 추가해 주세요.", "warn", 9000);
@@ -587,6 +644,7 @@ mod imp {
             let (Some((h, _)), Some(eng)) = (game, eng.as_ref()) else {
                 v.stage(if !s.enabled { "off" } else if !allowed { "wait" } else if game.is_none() { "no-game" } else { "back" }, 0, how);
                 v.hide(&app);
+                v.dismissed.store(false, Ordering::SeqCst);
                 band = None;
                 last.clear();
                 slots.clear();
@@ -653,29 +711,51 @@ mod imp {
             // 칸 위치는 게임 화면 기준 x 로 기억한다 (좁은 띠·넓게 읽기의 시작점이 달라도 같은 칸이 같은 값)
             let gw = (rc.right - rc.left) as f32;
             let off = (x - rc.left) as f32;
+            // 고르기 끝 판정은 어느 경로로 읽든 늘 같은 기준으로 (v3.132). 예전엔 넓게 읽는 경로가 카드처럼 생긴 칸만 보여도
+            // '아직 카드가 있다'로 시간을 늘려, 다 고른 뒤에도 작은 창이 떠 있었다. 이제 증강 이름을 실제로 읽어야만 늘린다.
+            // 읽는 데 오래 걸리는 PC 는 그만큼 더 기다린다 (한 번 놓쳤다고 닫지 않게)
+            let hold = HOLD.max(Duration::from_millis(v.report.lock().unwrap().read_ms as u64 * 3));
+            if front && !slots.is_empty() && seen_at.map_or(true, |t| t.elapsed() > hold) {
+                finish_offer!(gw);
+            }
             // 카드 자리를 그림에서 바로 찾아 카드마다 따로 읽는다 (v3.66, 근본 대책). 카드는 속이 검은 큰 직사각형이라
             // 화면 비율·UI 크기·모니터와 상관없이 정확한 자리를 안다. 카드 화면이라는 낌새(이름 한 장 이상)가 있고 세 칸이 안 찼으면 매번
             if slots.is_empty() { card_fails = 0; }
             let retry = card_fails < 3 || { card_fails += 1; card_fails % 3 == 0 };
-            if slots.len() < 3 && (!slots.is_empty() || hint) && retry {
+            // 바뀌었을지 모르는 칸 (새로고침한 카드의 새 제목을 띠 읽기가 놓친 경우) — 카드 자리에서 다시 읽어 확인한다 (v3.132)
+            let doubt = slots.doubtful();
+            if (slots.len() < 3 || !doubt.is_empty()) && (!slots.is_empty() || hint) && retry {
                 let (wx, wy, ww, wh) = region_wide(&rc);
                 let buf = grab(wx, wy, ww, wh);
                 let cards = buf.as_deref().map(|b| crate::matcher::find_cards(b, ww as usize, wh as usize)).unwrap_or_default();
                 if let (true, Some(buf)) = (cards.len() >= 2, buf) {
                     let t0 = std::time::Instant::now();
                     let mut changed = false;
+                    let mut confirmed = false;
                     let cx_of = |k: usize| (wx - rc.left) as f32 + (cards[k].0 + cards[k].1) as f32 / 2.0;
-                    let todo: Vec<usize> = (0..cards.len()).filter(|&k| !slots.near(cx_of(k), (cards[k].1 - cards[k].0) as f32 / 2.0)).collect();
-                    for r in read_cards(eng, &v.matcher, &v.icons, &buf, ww as usize, wh as usize, &cards, &todo, &slots.ids()) {
+                    // 확실한 칸 근처는 건너뛰고, 빈 자리와 의심 칸만 읽는다. 의심 칸의 옛 증강은 후보에 남겨 그대로면 확인된다
+                    let firm_near = |cx: f32, half: f32| slots.near(cx, half) && !doubt.iter().any(|d| (d.0 - cx).abs() < half);
+                    let todo: Vec<usize> = (0..cards.len()).filter(|&k| !firm_near(cx_of(k), (cards[k].1 - cards[k].0) as f32 / 2.0)).collect();
+                    let firm: Vec<u32> = slots.ids().into_iter().filter(|id| !doubt.iter().any(|d| d.1 == *id)).collect();
+                    for r in read_cards(eng, &v.matcher, &v.icons, &buf, ww as usize, wh as usize, &cards, &todo, &firm) {
                         let cx = cx_of(r.idx);
                         v.trace(format!("카드 자리 x={cx:.0} 폭={} {} {:?} | {}", cards[r.idx].1 - cards[r.idx].0, r.how, r.id, r.text.replace('\n', " / ").chars().take(100).collect::<String>()));
                         if let Some((ids, sc, gap)) = &r.icon {
                             v.trace(format!("그림 x={cx:.0} {ids:?} 점수 {sc:.2} 차이 {gap:.2}"));
                         }
                         if r.how == "icon" { v.diag(|d| d.by_icon += 1); }
-                        if let Some(id) = r.id.filter(|id| !slots.contains(*id)) {
-                            slots.update(&[(id, cx, 0.0)], gw);
-                            changed = true;
+                        match r.id {
+                            // 이미 있는 증강 = 그 카드가 그대로 있다
+                            Some(id) if slots.contains(id) => { slots.confirm(id); confirmed = true; }
+                            // 새 증강 = 빈 칸을 채우거나, 새로고침으로 바뀐 칸을 갈아 끼운다
+                            Some(id) => {
+                                if let Some(old) = doubt.iter().find(|d| (d.0 - cx).abs() < (cards[r.idx].1 - cards[r.idx].0) as f32 / 2.0) {
+                                    v.trace(format!("새로고침 x={cx:.0} {} → {id}", old.1));
+                                }
+                                slots.update(&[(id, cx, 0.0)], gw);
+                                changed = true;
+                            }
+                            None => {}
                         }
                     }
                     // 아직 못 읽은 카드는 그 자리 그림을 남겨 둔다 (같은 자리는 마지막 것으로 바꾼다)
@@ -691,18 +771,17 @@ mod imp {
                     }
                     v.report.lock().unwrap().read_ms = t0.elapsed().as_millis() as u32;
                     hint = false;
-                    card_fails = if changed { 0 } else { card_fails + 1 };
+                    card_fails = if changed || confirmed { 0 } else { card_fails + 1 };
                     // 카드처럼 생긴 칸을 찾았는데 하나도 못 읽었으면 (어두운 맵의 헛것) 4초 동안은 평소 확인에서 다시 덤비지 않는다
                     if slots.is_empty() { probe_cool = Some(std::time::Instant::now()); }
-                    if changed || !slots.is_empty() {
+                    // 증강을 실제로 읽었을 때만 '아직 카드가 있다' (카드처럼 생긴 칸만으로는 시간을 늘리지 않는다)
+                    if changed || confirmed {
                         seen_at = Some(std::time::Instant::now());
                         let ids = slots.ids_sorted();
                         if ids != last || !v.shown.load(Ordering::SeqCst) {
                             last = ids.clone();
                             v.publish(&app, ids, String::new());
-                            show_overlay(&app, &rc, &s.position, scale);
-                            v.shown.store(true, Ordering::SeqCst);
-                            v.diag(|d| d.shown += 1);
+                            v.show(&app, || show_overlay(&app, &rc, &s.position, scale));
                         }
                     }
                     std::thread::sleep(FAST.max(t0.elapsed()));
@@ -733,9 +812,7 @@ mod imp {
                             if ids != last {
                                 last = ids.clone();
                                 v.publish(&app, ids, String::new());
-                                show_overlay(&app, &rc, &s.position, scale);
-                                v.shown.store(true, Ordering::SeqCst);
-                                v.diag(|d| d.shown += 1);
+                                v.show(&app, || show_overlay(&app, &rc, &s.position, scale));
                             }
                         }
                         std::thread::sleep(FAST.max(t0.elapsed() * 2));
@@ -778,12 +855,11 @@ mod imp {
                         }
                         let gh: Vec<(u32, f32, f32)> = hits.iter().map(|h| (h.0, h.1 + off, h.2)).collect();
                         let ids = slots.update(&gh, gw);
+                        slots.note_hits(&hits.iter().map(|h| h.0).collect::<Vec<_>>());
                         if ids != last || !shown {
                             last = ids.clone();
                             v.publish(&app, ids, text);
-                            show_overlay(&app, &rc, &s.position, scale);
-                            v.shown.store(true, Ordering::SeqCst);
-                            v.diag(|d| d.shown += 1);
+                            v.show(&app, || show_overlay(&app, &rc, &s.position, scale));
                         }
                     } else {
                         misses += 1;
@@ -794,26 +870,6 @@ mod imp {
                         } else if band.is_some() && misses >= 2 {
                             // 제목 줄에서 못 찾으면 넓게 다시 (창 크기가 바뀌었을 수도)
                             band = None;
-                        } else if shown && seen_at.map_or(true, |t| t.elapsed() > HOLD) {
-                            // 한동안 카드가 안 보임 = 다 고름. 세 칸을 다 못 채운 고르기는 진단으로 남긴다 (끝날 때 서버로)
-                            let n = slots.len();
-                            v.diag(|d| { d.offers += 1; if n < 3 { d.partial += 1; } });
-                            if n < 3 {
-                                v.trace(format!("고르기 끝: {n}칸만 찾음 {:?}", slots.ids_sorted()));
-                                let t = v.report.lock().unwrap().trace.clone();
-                                let tail = t[t.len().saturating_sub(20)..].to_vec();
-                                v.diag(|d| if d.partial_trace.len() < 3 { d.partial_trace.push(tail) });
-                                let found = slots.ids_sorted();
-                                let pitch = slots.pitch(gw).unwrap_or(gw / 4.0);
-                                let left: Vec<(f32, String)> = miss_shots.drain(..).filter(|(x, _)| !slots.near(*x, pitch * 0.4)).collect();
-                                v.diag(|d| for (x, jpg) in left { if d.shots.len() < 4 { d.shots.push(MissShot { cx: x as i32, found: found.clone(), jpg }); } });
-                            }
-                            miss_shots.clear();
-                            last.clear();
-                            slots.clear();
-                            seen_at = None;
-                            v.publish(&app, vec![], String::new());
-                            v.hide(&app);
                         }
                     }
                 }
@@ -920,6 +976,53 @@ mod imp {
             let vis = IsWindowVisible(h).as_bool();
             if let Some(a) = app.try_state::<std::sync::Arc<crate::App>>() {
                 a.vision.trace(format!("작은 창 게임={},{} {}x{} 배율={scale:.2} 목표={x},{} {ow}x{oh} 실제={},{} {}x{} 보임={vis} 모니터={}", rc.left, rc.top, gw, gh, y, fin.left, fin.top, fin.right - fin.left, fin.bottom - fin.top, GetSystemMetrics(SM_CMONITORS)));
+            }
+        }
+    }
+
+    /// 닫기 단추 자리 (작은 창 오른쪽 위, 기준 폭 420 의 CSS px). overlay.css .ov-x 와 맞춘다
+    const HOT_W: f64 = 64.0;
+    const HOT_H: f64 = 60.0;
+
+    /// 작은 창은 클릭이 통과한다. 마우스가 닫기 단추 자리에 올라왔을 때만 클릭을 받도록 바꾼다 (v3.132).
+    /// 창이 떠 있을 때만 커서 위치를 본다 (가벼운 호출, 0.05초마다)
+    pub fn hot_loop(v: Arc<Vision>, app: AppHandle) {
+        let mut clickable = false;
+        loop {
+            let shown = v.shown.load(Ordering::SeqCst);
+            let mut want = false;
+            if shown {
+                if let Some(h) = hwnd_of(&app) {
+                    let mut r = RECT::default();
+                    let mut p = POINT::default();
+                    if unsafe { GetWindowRect(h, &mut r) }.is_ok() && unsafe { GetCursorPos(&mut p) }.is_ok() {
+                        let k = (r.right - r.left) as f64 / 420.0;
+                        let (x0, y1) = (r.right as f64 - HOT_W * k, r.top as f64 + HOT_H * k);
+                        want = (p.x as f64) >= x0 && p.x < r.right && p.y >= r.top && (p.y as f64) < y1;
+                    }
+                }
+            }
+            if want != clickable {
+                if let Some(h) = hwnd_of(&app) {
+                    unsafe {
+                        let ex = GetWindowLongPtrW(h, GWL_EXSTYLE);
+                        let t = WS_EX_TRANSPARENT.0 as isize;
+                        SetWindowLongPtrW(h, GWL_EXSTYLE, if want { ex & !t } else { ex | t });
+                    }
+                    clickable = want;
+                }
+            }
+            std::thread::sleep(Duration::from_millis(if shown { 50 } else { 250 }));
+        }
+    }
+
+    /// 닫기 단추를 누른 순간 포커스가 작은 창으로 왔으면 게임 창에 돌려준다 (게임 조작이 끊기지 않게)
+    pub fn give_back_focus(app: &AppHandle) {
+        let Some(o) = hwnd_of(app) else { return };
+        unsafe {
+            if GetForegroundWindow() != o { return; }
+            if let Ok(g) = FindWindowW(windows::core::w!("RiotWindowClass"), PCWSTR::null()) {
+                if !g.is_invalid() { let _ = SetForegroundWindow(g); }
             }
         }
     }
@@ -1098,6 +1201,8 @@ mod imp {
     }
     pub fn prepare_overlay(_w: &tauri::WebviewWindow) {}
     pub fn hide_overlay(_app: &AppHandle) {}
+    pub fn hot_loop(_v: Arc<Vision>, _app: AppHandle) {}
+    pub fn give_back_focus(_app: &AppHandle) {}
     pub fn test_clipboard(_v: &Vision) -> Result<(Vec<u32>, String), String> {
         Err("윈도우에서만 쓸 수 있습니다.".into())
     }
