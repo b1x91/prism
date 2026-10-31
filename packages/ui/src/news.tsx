@@ -4,7 +4,7 @@
  *  - 거르기 칩(공지·이벤트·업데이트·패치·시즌, 전체 칩 없음) · 하트 · 안 읽은 소식은 NEW.
  *  - 운영진: 위에 '소식 쓰기'(공지/이벤트 · 제목 · 내용 · 고정 · 디스코드에도 올리기), 카드마다 고정·고치기·지우기.
  */
-import { useEffect, useRef, useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent as RKeyEvent, type MouseEvent as RMouseEvent, type ReactElement } from 'react';
 import { createPortal } from 'react-dom';
 import { AUGMENT, NEWS_LABEL, NEWS_MAX, shortDate, type Api, type NewsItem, type NewsKind, type NewsList } from '@prism/core';
 import { Empty, Hover, Seg, Toggle } from './basics';
@@ -92,7 +92,14 @@ function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }
   };
   const augs = x.kind === 'patch' && Array.isArray(x.data?.augments) ? (x.data!.augments as number[]).filter((id) => AUGMENT[id]) : [];
   return (
-    <article ref={self} className={`card nw-card k-${x.kind} ${x.pinned ? 'pinned' : ''} ${busy ? 'busy' : ''}`}>
+    <article ref={self} className={`card nw-card k-${x.kind} ${x.pinned ? 'pinned' : ''} ${folded ? 'tap' : ''} ${busy ? 'busy' : ''}`}
+      {...(folded ? {
+        role: 'button', tabIndex: 0, 'aria-haspopup': 'dialog' as const, 'aria-label': `${x.title} 내용 보기`,
+        // 고정 소식은 카드 어디를 눌러도 창이 열린다 (운영진 도구 단추는 빼고)
+        // 창은 포털이라 DOM 으로는 카드 밖 — 창 안 클릭이 다시 여는 일이 없게 실제로 카드 안을 누른 것만
+        onClick: (e: RMouseEvent<HTMLElement>) => { const t = e.target as HTMLElement; if (e.currentTarget.contains(t) && !t.closest('button, a, input, textarea')) setOpen(true); },
+        onKeyDown: (e: RKeyEvent<HTMLElement>) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); setOpen(true); } },
+      } : {})}>
       <div className="nw-top">
         <span className={`nw-tag k-${x.kind}`}>{NEWS_LABEL[x.kind]}</span>
         {x.pinned && <span className="nw-pin"><Icon name="pin" />고정</span>}
@@ -110,7 +117,7 @@ function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }
         <div className="nw-act"><button type="button" className="btn sm" onClick={() => setEdit(false)}>그만두기</button><button type="button" className="btn sm primary" disabled={busy || title.trim().length < 2} onClick={() => run(async () => { await api.post(`/api/news/${x.id}`, { title, body }); await onChanged(); setEdit(false); })}>저장</button></div>
       </div> : <>
         {x.pinned
-          ? <button type="button" className="nw-fold" aria-haspopup="dialog" onClick={() => setOpen(true)}><h3 className="nw-title">{x.title}</h3><span className="nw-fold-ic"><span>내용 보기</span><Icon name="chevR" /></span></button>
+          ? <h3 className="nw-title">{x.title}</h3>
           : x.kind === 'event' ? <div className="nw-hero"><h3>{x.title}</h3></div> : <h3 className="nw-title">{x.title}</h3>}
         {!folded && x.body && <NewsBody text={x.body} />}
         {!folded && augs.length > 0 && <div className="nw-augs">

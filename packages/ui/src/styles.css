@@ -1457,6 +1457,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .sc-tag.new { background: #ff4d6d; color: #fff; letter-spacing: .04em; }
 .sc-tag.sale { background: #f2a93b; color: #1a1205; }
 .sc-tag .icon { width: 12px; height: 12px; }
+.sc-sold { display: inline-flex; align-items: center; height: 20px; margin-left: var(--s2); padding: 0 var(--s2); border-radius: var(--r-pill); background: var(--surface-2); color: var(--text-3); font-size: var(--fs-xs); font-weight: 800; vertical-align: 2px; }
 .sc-body { display: grid; gap: var(--s1); padding: var(--s3) var(--s4) var(--s4); }
 .sc-nm { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -.01em; }
 .sc-desc { font-size: var(--fs-sm); color: var(--text-2); min-height: 20px; }
@@ -3699,13 +3700,10 @@ button.stf-person:hover { background: var(--surface-2); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nw-card.pinned { background: radial-gradient(120% 140% at 100% 0%, rgba(245, 196, 81, .2), transparent 55%), linear-gradient(135deg, #283069, #33235a); } }
 .nw-card.pinned .nw-pin { color: #f5c451; }
 .nw-card.pinned .nw-ib:hover { background: rgba(255, 255, 255, .1); }
-.nw-fold { display: flex; align-items: center; gap: var(--s3); width: 100%; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
-.nw-fold .nw-title { flex: 1; min-width: 0; }
-.nw-fold-ic { flex: none; display: inline-flex; align-items: center; gap: var(--s1); height: 28px; padding: 0 var(--s3); border-radius: var(--r-pill); background: rgba(255, 255, 255, .1); font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
-.nw-fold-ic svg { width: 14px; height: 14px; transition: transform .2s ease; }
-.nw-fold:hover .nw-fold-ic { background: rgba(255, 255, 255, .16); color: var(--text); }
-.nw-fold:hover .nw-fold-ic svg { transform: translateX(2px); }
-@media (prefers-reduced-motion: reduce) { .nw-fold-ic svg { transition: none; } }
+.nw-card.tap { cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, filter .2s ease; }
+.nw-card.tap:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.nw-card.tap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { .nw-card.tap { transition: none; } .nw-card.tap:hover { transform: none; } }
 /* 고정 소식 내용 창 (v3.117): 머리·꼬리는 붙고 본문만 스크롤 */
 .nw-dlg { position: relative; z-index: 1; width: min(640px, 100%); max-height: calc(100vh - 48px); display: flex; flex-direction: column; border-radius: var(--r-l); background: var(--surface); box-shadow: 0 0 0 1px var(--line), 0 30px 60px -36px rgba(0, 0, 0, .5); overflow: hidden; animation: nw-dlg-in .2s cubic-bezier(.16, 1, .3, 1); }
 @keyframes nw-dlg-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
