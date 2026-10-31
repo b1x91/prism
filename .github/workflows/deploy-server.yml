@@ -9,6 +9,11 @@ on:
     branches: [main, claude/new-session-18cxmx]
     paths: ['server/**', 'packages/core/**', 'scripts/ci/**', '.github/workflows/deploy-server.yml']
   workflow_dispatch:
+    inputs:
+      nick_sync:
+        description: '배포 뒤 디스코드 별명을 지금 롤 게임 이름으로 맞추기'
+        type: boolean
+        default: false
 
 concurrency: deploy-server
 
@@ -99,6 +104,15 @@ jobs:
           code=$(curl -sS -o /tmp/prof.json -w '%{http_code}' -X PATCH "https://discord.com/api/v10/applications/@me" \
             -H "Authorization: Bot $DISCORD_BOT_TOKEN" -H "Content-Type: application/json" --data @server/discord-profile.json)
           if [ "$code" != "200" ]; then echo "::warning::봇 프로필 소개 바꾸기 실패 ($code): $(head -c 300 /tmp/prof.json)"; else echo "봇 프로필 소개 반영"; fi
+      - if: steps.cfg.outputs.ok == 'true' && inputs.nick_sync
+        name: 디스코드 별명 지금 맞추기
+        env:
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+        run: |
+          URL=$(node scripts/ci/server-url.mjs)
+          sleep 5
+          curl -sS -X POST "$URL/internal/nick-sync" -H "Authorization: Bot $DISCORD_BOT_TOKEN" | tee /tmp/nick.json
+          { echo "## 디스코드 별명"; echo '```'; cat /tmp/nick.json; echo; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       - if: steps.cfg.outputs.ok == 'true'
         name: 서버 주소 알리기
         run: |

@@ -7,7 +7,7 @@
 import { saveAbout } from './about.js';
 import { dailyPayload, dailyPost, interactions } from './bot.js';
 import { pulse } from './pulse.js';
-import { nickSweep } from './discordnick.js';
+import { nickSweep, nickSyncNow } from './discordnick.js';
 import { listNow, reportGame, reportLobby, requestJoin, setNowAuto } from './now.js';
 import { appMembers } from './appmembers.js';
 import { promoteSweep } from './promote.js';
@@ -48,6 +48,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   // 상품 목록 (v3.124): 앱을 다시 내지 않아도 새 상품이 보이게 앱·웹이 켤 때 받는다
   if (m === 'GET' && pathname === '/shop/catalog') return json({ rev: SHOP_REV, items: SHOP, launch: LAUNCH } satisfies ShopCatalog);
   if (m === 'POST' && pathname === '/discord/interactions') return interactions(req, env, ctx);
+  if (m === 'POST' && pathname === '/internal/nick-sync') return nickSyncNow(req, env);
   // 앱 설치 파일·업데이트 정보 (로그인 없이)
   if (m === 'GET' && pathname === '/app/latest') return latest(req, env);
   if (m === 'GET' && pathname === '/app/download') return download(req, env);
