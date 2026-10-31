@@ -15,12 +15,20 @@ export const gameNameOf = (riotId: string | null | undefined) => {
 export async function syncNick(env: Env, memberId: string, riotId: string | null | undefined, current?: string | null): Promise<number> {
   const nick = gameNameOf(riotId);
   if (!nick || !env.DISCORD_BOT_TOKEN || !env.DISCORD_GUILD_ID || current === nick) return 0;
-  const r = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members/${memberId}`, {
+  const call = () => fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members/${memberId}`, {
     method: 'PATCH',
     headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`, 'Content-Type': 'application/json', 'X-Audit-Log-Reason': encodeURIComponent('Prism: 롤 게임 이름에 맞춤') },
     body: JSON.stringify({ nick }),
     signal: AbortSignal.timeout(8000),
   }).catch(() => null);
+  let r = await call();
+  // 요청 제한(429)이면 디스코드가 알려 준 만큼 기다렸다가 두 번까지 다시
+  for (let i = 0; i < 2 && r?.status === 429; i++) {
+    const body = await r.json().catch(() => ({})) as { retry_after?: number };
+    const wait = Math.min(10, Math.max(0.5, Number(body.retry_after ?? r.headers.get('Retry-After') ?? 2)));
+    await new Promise((res) => setTimeout(res, wait * 1000 + 100));
+    r = await call();
+  }
   if (!r?.ok) {
     console.error('디스코드 별명 바꾸기 실패', memberId, r?.status, await r?.text().catch(() => ''));
     return r?.status ?? -1;
@@ -41,7 +49,7 @@ export async function nickSweep(env: Env) {
     const st = await syncNick(env, m.id, m.riot_id, m.discord_nick);
     if (st === 200) out.changed.push(name);
     else if (st !== 0) out.failed.push({ name, status: st });
-    await new Promise((res) => setTimeout(res, 400)); // 디스코드 요청 제한에 걸리지 않게 천천히
+    await new Promise((res) => setTimeout(res, 1000)); // 디스코드 요청 제한에 걸리지 않게 천천히
   }
   return out;
 }
