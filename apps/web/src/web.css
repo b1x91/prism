@@ -1,6 +1,6 @@
 /* 웹 전용 틀 (상단 바·모바일 메뉴·첫 화면) */
-.top { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line); }
-.top .wrap { display: flex; align-items: center; gap: var(--s4); height: 64px; }
+.topbar { position: sticky; top: 0; z-index: 30; background: color-mix(in srgb, var(--bg) 80%, transparent); backdrop-filter: blur(16px); border-bottom: 1px solid var(--line); }
+.topbar .wrap { display: flex; align-items: center; gap: var(--s4); height: 64px; }
 /* 워드마크는 대문자 PRISM — 대문자 높이(약 12px)에 맞춰 보석은 22px, 글자 사이는 넓게 */
 .brand { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg); font-weight: 800; letter-spacing: .1em; line-height: 1; }
 .tabs { display: flex; gap: var(--s1); margin-left: var(--s4); }
@@ -26,7 +26,7 @@ main { min-height: calc(100vh - 64px); }
 .foot { padding: var(--s7) 0 var(--s8); border-top: 1px solid var(--line); color: var(--text-3); font-size: var(--fs-xs); margin-top: var(--s8); }
 .foot .wrap { display: flex; flex-wrap: wrap; gap: var(--s3) var(--s6); justify-content: space-between; }
 @media (max-width: 860px) {
-  .top .wrap { height: 56px; gap: var(--s2); }
+  .topbar .wrap { height: 56px; gap: var(--s2); }
   .tabs { display: none; }
   .me-btn span { display: none; }
   .me-btn { padding: 0; background: none; }

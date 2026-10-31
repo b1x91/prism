@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { CHAMPIONS, ROLE_KO, aboutWhen, cdragon, shortNick, type Api, type AppMember } from '@prism/core';
-import { FacePresence, MemberFace, useSkins, PendingChip } from './basics';
+import { CopyRiot, FacePresence, MemberFace, useSkins, PendingChip } from './basics';
 import { useLoad } from './crew';
 import { Bone, Swap, fadeCls, imgIn, useReveal } from './skeleton';
 
@@ -73,7 +73,8 @@ export function AppMembers({ api, onMember }: { api: Api; onMember?: (id: string
           const days = Math.max(1, Math.round((Date.now() - m.joined) / DAY));
           const bg = art(m);
           return (
-            <button key={m.id} type="button" className={`am-card ${top ? `top t${i}` : ''}`} onClick={() => onMember?.(m.id)}>
+            <div key={m.id} className="am-wrap">
+            <button type="button" className={`am-card ${top ? `am-top t${i}` : ''}`} onClick={() => onMember?.(m.id)}>
               {top && <Crest rank={i} />}
               {bg && <img className="am-bg fi" {...imgIn} src={bg} alt="" loading="lazy" />}
               <FacePresence p={m.presence}><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={52} skins={skins} /></FacePresence>
@@ -84,6 +85,8 @@ export function AppMembers({ api, onMember }: { api: Api; onMember?: (id: string
                 <span className="am-meta">{[m.crew > 0 ? `함께한 지 ${days}일` : '', m.about ? aboutWhen(m.about) : ''].filter(Boolean).join(' · ')}</span>
               </span>
             </button>
+            <CopyRiot riot={m.riot} className="am-copy" />
+            </div>
           );
         })}</div>
         {ms.length > SHOW && <button type="button" className="pl-more" onClick={() => setAll(!all)}>{all ? '접기' : `${ms.length - SHOW}명 더 보기`}</button>}

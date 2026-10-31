@@ -2789,6 +2789,17 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .pl-who.select .pl-who-t > span { color: var(--accent); font-weight: 750; }
 .pl-who-t small { font-size: var(--fs-xs); font-weight: 600; opacity: .8; }
 .pl-who .champ { flex: none; border-radius: var(--r-s); }
+/* 롤 닉 복사 (v3.133): 줄 오른쪽 끝. 평소엔 흐리게, 줄에 마우스를 올리면 또렷하게 (터치 화면은 늘 또렷하게) */
+.pl-row { display: flex; align-items: center; gap: var(--s1); min-width: 0; }
+.pl-row > .pl-who { flex: 1; min-width: 0; }
+.copy-riot { flex: none; display: inline-flex; opacity: .5; transition: opacity .15s; }
+.pl-row:hover .copy-riot, .am-wrap:hover .copy-riot, .copy-riot:focus-within { opacity: 1; }
+@media (hover: none) { .copy-riot { opacity: 1; } }
+.phero-nm-row { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
+.phero-nm-row .phero-name { min-width: 0; }
+.copy-riot.dark { opacity: .8; }
+.copy-riot.dark .ibtn { background: rgba(0, 0, 0, .35); border-color: rgba(255, 255, 255, .22); color: #fff; }
+.copy-riot.dark .ibtn:hover { background: rgba(0, 0, 0, .5); }
 /* 최근 근황 — 날짜 + 타임라인 */
 .pl-day { display: grid; gap: var(--s1); }
 .pl-day + .pl-day { margin-top: var(--s3); }
@@ -2896,6 +2907,11 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .appm { display: grid; gap: var(--s4); }
 .appm .card-head { margin-bottom: 0; }
 .am-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s3); }
+.am-wrap { position: relative; display: grid; }
+.am-copy { position: absolute; right: var(--s3); bottom: var(--s3); z-index: 2; transition: opacity .15s, transform .2s var(--zoom-ease, ease); }
+.am-wrap:hover .am-card { border-color: var(--line-2); transform: translateY(-2px); }
+.am-wrap:hover .am-copy { transform: translateY(-2px); }
+.am-wrap .am-card { padding-right: 48px; }
 .am-card { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: var(--s3); align-items: center; min-height: 96px; padding: var(--s3) var(--s4); border: 1px solid var(--line); border-radius: var(--r-l); background: var(--surface-2); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, transform .2s var(--zoom-ease, ease); }
 .am-card:hover { border-color: var(--line-2); transform: translateY(-2px); }
 .am-bg { position: absolute; inset: 0 0 0 auto; z-index: -2; width: 72%; height: 100%; object-fit: cover; object-position: center 20%; opacity: .6; mix-blend-mode: multiply; -webkit-mask-image: linear-gradient(90deg, transparent, #000 85%); mask-image: linear-gradient(90deg, transparent, #000 85%); transition: transform .5s var(--zoom-ease, ease); }

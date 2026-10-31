@@ -117,7 +117,7 @@ export type ArtisanRank = { id: string; nick: string; pending?: boolean; masters
 export type ArtisanRanking = { champions: ArtisanRank[]; augments: ArtisanRank[]; items?: ArtisanRank[]; limited?: { champions: number; augments: number; items?: number } };
 
 /** 멤버 근황 (v3.74): 지금 접속한 멤버 + 최근 3일 근황 */
-export type PulseNow = { id: string; nick: string; skin: number | null; main: number | null; presence: import('./presence').Presence; phase: '' | 'lobby' | 'select' | 'game'; champ: number; since: number };
+export type PulseNow = { id: string; nick: string; riot?: string | null; skin: number | null; main: number | null; presence: import('./presence').Presence; phase: '' | 'lobby' | 'select' | 'game'; champ: number; since: number };
 export type PulseItem =
   | { kind: 'session'; at: number; id: string; nick: string; skin: number | null; main: number | null; n: number; w: number; champ: number; day: 'today' | 'yesterday' | 'before' }
   | { kind: 'multi'; at: number; id: string; nick: string; skin: number | null; main: number | null; multi: number; champ: number; win: boolean }
@@ -127,12 +127,12 @@ export type PulseItem =
   | { kind: 'firsts'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[] }
   | { kind: 'joined'; at: number; id: string; nick: string; skin: number | null; main: number | null };
 /** 앱을 쓰는 멤버 (v3.84): collected = 이 멤버의 앱이 모은 판, games = 본인 판, crew = 멤버 2명 이상 판 */
-export type AppMember = { id: string; nick: string; skin: number | null; main: number | null; about: import('./about').About | null; joined: number; collected: number; games: number; crew: number; presence: import('./presence').Presence; pending?: boolean };
+export type AppMember = { id: string; nick: string; /** 롤 이름#태그 (친구 추가용 복사, v3.133) */ riot?: string | null; skin: number | null; main: number | null; about: import('./about').About | null; joined: number; collected: number; games: number; crew: number; presence: import('./presence').Presence; pending?: boolean };
 export type PulseFace = { id: string; nick: string; skin: number | null; main: number | null };
 /** 오늘(KST) 요약. games = 서로 다른 판 수, n·w = 멤버별 판·승 합 (예전 서버는 없음) */
 export type PulseToday = { players: PulseFace[]; games: number; n: number; w: number };
 /** 최근 접속 (지금은 나가 있는 멤버, 14일, 마지막 접속 순). 예전 서버는 없음 */
-export type PulseSeen = PulseFace & { at: number };
+export type PulseSeen = PulseFace & { at: number; riot?: string | null };
 export type Pulse = { now: PulseNow[]; recent?: PulseSeen[]; feed: PulseItem[]; today?: PulseToday; at: number };
 
 /** 운영 (v3.107, 운영진만): 멤버 목록 */

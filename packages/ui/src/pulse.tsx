@@ -7,7 +7,7 @@
  */
 import { useEffect, useState, type ReactNode } from 'react';
 import { CHAMPIONS, ago, cdragon, josa, shortDate, shortNick, type Api, type Pulse, type PulseFace, type PulseItem, type PulseNow } from '@prism/core';
-import { ChampImg, FacePresence, MemberFace, useSkins } from './basics';
+import { ChampImg, CopyRiot, FacePresence, MemberFace, useSkins } from './basics';
 import { Icon } from './icons';
 import { PieceIcon } from './shop';
 import { useLoad } from './crew';
@@ -211,20 +211,26 @@ export function CrewPulse({ api, onMember }: { api: Api; onMember?: (id: string)
             {data.now.length ? <div className="pl-now">{data.now.map((x) => {
               const st = nowText(x);
               return (
-                <button key={x.id} type="button" className={`pl-who ${x.phase}`} onClick={() => onMember?.(x.id)}>
-                  <FacePresence p={x.presence}><MemberFace nick={x.nick} skin={x.skin} champion={x.main} size={36} /></FacePresence>
-                  <span className="pl-who-t"><b>{shortNick(x.nick)}</b>{st && <span>{st}</span>}</span>
-                  {(x.phase === 'game' || x.phase === 'select') && x.champ > 0 && <ChampImg id={x.champ} size={28} />}
-                </button>
+                <div key={x.id} className={`pl-row ${x.phase}`}>
+                  <button type="button" className={`pl-who ${x.phase}`} onClick={() => onMember?.(x.id)}>
+                    <FacePresence p={x.presence}><MemberFace nick={x.nick} skin={x.skin} champion={x.main} size={36} /></FacePresence>
+                    <span className="pl-who-t"><b>{shortNick(x.nick)}</b>{st && <span>{st}</span>}</span>
+                    {(x.phase === 'game' || x.phase === 'select') && x.champ > 0 && <ChampImg id={x.champ} size={28} />}
+                  </button>
+                  <CopyRiot riot={x.riot} />
+                </div>
               );
             })}</div> : <p className="meta pl-empty">지금 접속한 멤버가 없어요</p>}
             {(data.recent?.length ?? 0) > 0 && <>
               <div className="pl-label pl-label-sub">최근 접속</div>
               <div className="pl-now">{data.recent!.map((x) => (
-                <button key={x.id} type="button" className="pl-who off" onClick={() => onMember?.(x.id)}>
-                  <MemberFace nick={x.nick} skin={x.skin} champion={x.main} size={36} />
-                  <span className="pl-who-t"><b>{shortNick(x.nick)}</b><span>{ago(x.at)}</span></span>
-                </button>
+                <div key={x.id} className="pl-row off">
+                  <button type="button" className="pl-who off" onClick={() => onMember?.(x.id)}>
+                    <MemberFace nick={x.nick} skin={x.skin} champion={x.main} size={36} />
+                    <span className="pl-who-t"><b>{shortNick(x.nick)}</b><span>{ago(x.at)}</span></span>
+                  </button>
+                  <CopyRiot riot={x.riot} />
+                </div>
               ))}</div>
             </>}
           </div>

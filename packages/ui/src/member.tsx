@@ -289,7 +289,7 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
   return (<Swap on={rv} skeleton={<MemberSkeleton self={self} id={id} studioBtn={studioBtn} />}>
     <div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
-      <ProfileHero lift={total.n > 0} presence={m.presence} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
+      <ProfileHero lift={total.n > 0} presence={m.presence} copyNick={!m.self} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
         actions={<>{m.self && studioBtn && <button type="button" className="btn sm" onClick={() => setEdit('skin')}><Icon name="spark" />프로필 꾸미기</button>}
           {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}

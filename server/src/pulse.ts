@@ -23,7 +23,7 @@ export async function pulse(env: Env): Promise<Response> {
   const now = Date.now();
   const since = now - SPAN;
   const [online, games, crew, joined, seen] = await env.DB.batch([
-    env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')}, m.web_seen_at AS webAt, m.app_seen_at AS appAt, m.app_lol AS lol, m.app_open AS open,
+    env.DB.prepare(`SELECT m.id, m.nick, m.riot_id AS riot, ${FACE('m')}, m.web_seen_at AS webAt, m.app_seen_at AS appAt, m.app_lol AS lol, m.app_open AS open,
         m.app_phase AS phase, m.app_champ AS champ, m.app_phase_at AS phaseAt
       FROM members m WHERE m.app_seen_at > ?1 OR m.web_seen_at > ?1`).bind(now - PRESENCE_TTL),
     env.DB.prepare(`SELECT p.member_id AS id, m.nick, ${FACE('m')}, p.game_id AS g, p.played_at AS t, p.champion_id AS c, p.win AS w, p.feats AS f,
@@ -33,7 +33,7 @@ export async function pulse(env: Env): Promise<Response> {
     env.DB.prepare(`SELECT g.game_id AS g, g.played_at AS t, g.team_totals AS tt FROM matches g WHERE g.played_at >= ? AND g.crew_count >= 2 ORDER BY g.played_at DESC LIMIT 160`).bind(since),
     env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')}, m.joined_at AS t FROM members m WHERE m.joined_at >= ? ORDER BY m.joined_at DESC LIMIT 10`).bind(now - 7 * DAY),
     // 최근 접속 (지금은 나가 있는 멤버, 14일) — 지금 접속이 적어도 명단이 비어 보이지 않게
-    env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')}, MAX(COALESCE(m.app_seen_at, 0), COALESCE(m.web_seen_at, 0)) AS at
+    env.DB.prepare(`SELECT m.id, m.nick, m.riot_id AS riot, ${FACE('m')}, MAX(COALESCE(m.app_seen_at, 0), COALESCE(m.web_seen_at, 0)) AS at
       FROM members m WHERE MAX(COALESCE(m.app_seen_at, 0), COALESCE(m.web_seen_at, 0)) BETWEEN ?1 AND ?2 ORDER BY at DESC LIMIT 16`).bind(now - 14 * DAY, now),
   ]);
 
@@ -43,13 +43,13 @@ export async function pulse(env: Env): Promise<Response> {
     const presence = presenceOf({ webAt: r.webAt, appAt: r.appAt, lol: Boolean(r.lol), open: Boolean(r.open) }, now);
     const appLive = now - r.appAt < PRESENCE_TTL && r.lol;
     const phase = (appLive ? r.phase : '') as PulseNow['phase'];
-    return { id: r.id, nick: r.nick, skin: r.skin, main: r.main, presence, phase, champ: phase === 'select' || phase === 'game' ? r.champ : 0, since: phase ? r.phaseAt : 0 };
+    return { id: r.id, nick: r.nick, riot: r.riot ?? null, skin: r.skin, main: r.main, presence, phase, champ: phase === 'select' || phase === 'game' ? r.champ : 0, since: phase ? r.phaseAt : 0 };
   }).filter((x) => x.presence !== 'off')
     .sort((a, b) => order[a.phase] - order[b.phase] || (a.presence === 'web' ? 1 : 0) - (b.presence === 'web' ? 1 : 0) || a.nick.localeCompare(b.nick, 'ko'));
 
   const onlineIds = new Set(nowList.map((x) => x.id));
   const recent: PulseSeen[] = (seen.results as any[]).filter((r) => !onlineIds.has(r.id)).slice(0, RECENT_MAX)
-    .map((r) => ({ id: r.id, nick: r.nick, skin: r.skin, main: r.main, at: r.at }));
+    .map((r) => ({ id: r.id, nick: r.nick, riot: r.riot ?? null, skin: r.skin, main: r.main, at: r.at }));
 
   // ── 최근 근황
   const rows = games.results as any[];

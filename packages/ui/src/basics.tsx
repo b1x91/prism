@@ -39,6 +39,21 @@ export function IconBtn({ icon, label, onClick, tone, done, armed, disabled }: {
   return <button type="button" className={`ibtn ${tone ?? ''} ${done ? 'done' : ''} ${armed ? 'armed' : ''}`} title={label} aria-label={label} onClick={onClick} disabled={disabled}><Icon name={done ? 'check' : icon} /></button>;
 }
 
+/**
+ * 롤 닉(이름#태그) 복사 (v3.133) — 서로 롤 친구가 아닌 멤버에게 바로 친구 추가·초대할 수 있게.
+ * 롤 계정을 연결하지 않은 회원(태그 없음)은 단추를 두지 않는다. 카드·줄을 누르는 동작과 겹치지 않게 전파를 막는다
+ */
+export function CopyRiot({ riot, className = '' }: { riot?: string | null; className?: string }) {
+  const [done, setDone] = useState(false);
+  if (!riot || !riot.includes('#')) return null;
+  const copy = async (e: ReactMouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    try { await navigator.clipboard.writeText(riot); setDone(true); setTimeout(() => setDone(false), 1600); } catch { /* 복사 막힘 */ }
+  };
+  return <span className={`copy-riot ${className}`}><IconBtn icon="copy" label={done ? '복사했어요 · 롤 친구 추가에 붙여 넣으세요' : `롤 닉 복사 (${riot})`} done={done} onClick={copy} /></span>;
+}
+
 /** 어두운 배너 위 아이콘 버튼: 좋아요 하트 알약과 같은 높이·둥근 모서리·유리 바탕 (v3.52). 이름은 마우스를 올리면 */
 export function GlassBtn({ icon, label, onClick, href, as: Link }: { icon: IconName; label: string; onClick?: () => void; href?: string; as?: (p: { to: string; className: string; title: string; 'aria-label': string; children: ReactNode }) => ReactNode }) {
   const inner = <Icon name={icon} />;
