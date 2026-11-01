@@ -4,9 +4,9 @@
  * 운영자가 DM 의 '답장하기'를 누르면 입력 창 → 회원에게 DM + 앱·웹 문의 창에 남는다. '해결'은 표시만 바꾼다.
  * 봇은 늘 켜 둔 프로그램이 아니라서 회원이 봇에게 직접 보낸 DM 은 읽지 못한다 — 그래서 입력은 창·명령으로 받는다.
  */
-import { INQUIRY, INQUIRY_KIND_KO, INQUIRY_KINDS, type Inquiry, type InquiryContext, type InquiryKind, type InquiryStatus } from '../../packages/core/src/inquiry.js';
+import { INQUIRY, INQUIRY_KIND_KO, INQUIRY_KINDS, type Inquiry, type InquiryContext, type InquiryKind, type InquiryStatus, worklistMd, worklistOf } from '../../packages/core/src/inquiry.js';
 import { EPHEMERAL, V2, card, editMessage, faceUrl, line, reply, section, sendDM, text, thumb, webUrl, type Interaction } from './bot.js';
-import { topRole } from './roles.js';
+import { can, topRole } from './roles.js';
 import { HttpError, body, json, type Env, type Member } from './util.js';
 
 type Row = {
@@ -194,4 +194,37 @@ export async function onInquirySubmit(env: Env, it: Interaction, me: Member, ctx
     return json({ type: 7, data: { components: adminCard(env, q, who, '회원에게 DM으로 보냈어요 · 앱·웹 문의 창에도 남아요') } });
   }
   return json({ type: 4, data: { flags: EPHEMERAL, content: '모르는 요청이에요.' } });
+}
+
+// ───────── 문의 작업 목록 (v3.137, 운영진) ─────────
+const ctxShort = (c: string | null, source: Inquiry['source']): { ctx: string; path: string | null } => {
+  let x: InquiryContext = {};
+  try { x = c ? JSON.parse(c) : {}; } catch { /* 빈 상태 */ }
+  const parts = [x.app ? `앱 ${x.app}` : source === 'web' ? '웹' : source === 'discord' ? '디스코드' : '앱', x.lol ? LOL_KO[x.lol] : '', x.fullscreen ? '전체 화면' : '', x.path ? `화면 ${x.path}` : ''].filter(Boolean);
+  return { ctx: parts.join(', '), path: x.path ?? null };
+};
+
+/** GET /api/staff/inquiries — 최근 문의(300건)를 묶어 우선순위 순 작업 목록 + 그대로 붙여 넣을 마크다운. 해결한 것은 수만 */
+export async function inquiryWorklist(env: Env, me: Member): Promise<Response> {
+  if (!can(me, 'manage')) throw new HttpError(403, '운영진만 쓸 수 있어요.');
+  const { results } = await env.DB.prepare(
+    'SELECT q.*, m.nick AS who FROM inquiries q LEFT JOIN members m ON m.id = q.member_id ORDER BY q.at DESC LIMIT 300',
+  ).all<Row & { who: string | null }>();
+  const items = results.map((r) => ({ id: r.id, kind: r.kind, body: r.body, at: r.at, status: r.status, source: r.source, who: r.who ?? '알 수 없음', whoId: r.member_id, reply: r.reply, ...ctxShort(r.context, r.source) }));
+  const now = Date.now();
+  const groups = worklistOf(items, now);
+  const done = items.filter((x) => x.status === 'done').slice(0, 30);
+  return json({ groups, done, md: worklistMd(groups, now), total: items.length });
+}
+
+/** POST /api/staff/inquiries/status { ids, status } — 작업 중 · 해결 · 다시 열기 */
+export async function setInquiryStatus(env: Env, me: Member, b: { ids?: unknown; status?: unknown }): Promise<Response> {
+  if (!can(me, 'manage')) throw new HttpError(403, '운영진만 쓸 수 있어요.');
+  const ids = (Array.isArray(b.ids) ? b.ids : []).map(Number).filter((n) => Number.isInteger(n) && n > 0).slice(0, 100);
+  const status = ['open', 'working', 'done'].includes(String(b.status)) ? String(b.status) : null;
+  if (!ids.length || !status) throw new HttpError(400, '바꿀 문의를 골라 주세요.');
+  // 답장한 문의를 다시 열면 '답장함'으로 둔다
+  await env.DB.prepare(`UPDATE inquiries SET status = CASE WHEN ?1 = 'open' AND reply IS NOT NULL THEN 'replied' ELSE ?1 END WHERE id IN (SELECT value FROM json_each(?2))`)
+    .bind(status, JSON.stringify(ids)).run();
+  return json({ ok: true });
 }

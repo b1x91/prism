@@ -1,8 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { Empty, Icon, MemberView, MissionsView, NewsView, RankingView, ShopView, StaffMembersView, StaffView, goBack, setKept } from '@prism/ui';
-import { refreshSession, type State } from '../controller';
+import { Empty, Icon, InquiryView, MemberView, MissionsView, NewsView, RankingView, ShopView, StaffMembersView, StaffView, goBack, setKept } from '@prism/ui';
+import { inquiryExtra, refreshSession, type State } from '../controller';
 import { josa } from '@prism/core';
 import { api } from '../bridge';
+import { VERSION } from '../version';
 
 function NeedLogin({ s, onLogin, what }: { s: State; onLogin: () => void; what: string }) {
   if (!s.session.configured) return <section className="card pad"><Empty>Prism 모임 기능은 곧 열립니다.</Empty></section>;
@@ -82,4 +83,10 @@ export function StaffMembersPage({ s, onLogin }: { s: State; onLogin: () => void
       <StaffMembersView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} onSeen={() => void refreshSession()} />
     </div>
   );
+}
+
+/** 문의 (v3.137) — 회원: 문의 쓰기(앱 상태 함께) · 내 문의 / 운영진: 작업 목록 */
+export function InquiryPage({ s, onLogin }: { s: State; onLogin: () => void }) {
+  if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="문의" />;
+  return <InquiryView api={api} extra={() => inquiryExtra(VERSION)} canManage={Boolean(s.me.perms?.manage)} />;
 }

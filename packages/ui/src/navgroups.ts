@@ -5,7 +5,7 @@
 export const NAV_GROUPS: { key: string; label: string; paths: string[] }[] = [
   { key: 'play', label: '게임', paths: ['/', '/champions', '/augments'] },
   { key: 'grow', label: '성장', paths: ['/dex', '/missions', '/ranking'] },
-  { key: 'crew', label: '모임', paths: ['/crew', '/news', '/staff'] },
+  { key: 'crew', label: '모임', paths: ['/crew', '/news', '/inquiry', '/staff'] },
 ];
 
 /** [주소, …] 목록을 묶음 순서대로 나눈다 (묶음에 없는 주소는 마지막 묶음 뒤에) */

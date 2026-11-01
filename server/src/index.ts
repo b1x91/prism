@@ -29,7 +29,7 @@ import { buyUse, gift, giftTargets, insight, myHighlights, openBox, pinHighlight
 import { claimWeekly, getWeekly } from './weekly.js';
 import { assertRanking } from './roles.js';
 import { diagShots, listDiag, saveDiag } from './diag.js';
-import { myInquiries, postInquiry } from './inquiry.js';
+import { inquiryWorklist, myInquiries, postInquiry, setInquiryStatus } from './inquiry.js';
 import { createNews, deleteNews, editNews, ensureAuto, heartNews, listNews, readNews } from './news.js';
 import { claimInvite, lookupMembers, myInvite, publicInvite, staffAction, staffMembers } from './staff.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
@@ -96,6 +96,8 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'POST' && pathname === '/api/me/diag') return saveDiag(req, env, me);
   if (m === 'GET' && pathname === '/api/me/inquiry') return myInquiries(env, me);
   if (m === 'POST' && pathname === '/api/me/inquiry') return postInquiry(req, env, me, ctx);
+  if (m === 'GET' && pathname === '/api/staff/inquiries') return inquiryWorklist(env, me);
+  if (m === 'POST' && pathname === '/api/staff/inquiries/status') return setInquiryStatus(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
   { const d = /^\/api\/admin\/diag\/(\d+)\/shots$/.exec(pathname); if (m === 'GET' && d) return diagShots(env, me, Number(d[1])); }
   // 소식 피드 (v3.111)

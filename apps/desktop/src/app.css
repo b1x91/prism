@@ -548,3 +548,5 @@ body { overflow: hidden; background: var(--bg); }
 .csb-augs { display: flex; align-items: center; gap: 4px; }
 .csb-augs small { margin-left: var(--s1); white-space: nowrap; }
 .csb-st.tonight .big { font-size: var(--fs-sm); color: #b7790b; background: color-mix(in srgb, #f2b233 14%, var(--surface)); }
+/* 좁은 사이드바(아이콘만): LIVE 글자 대신 도는 빛 고리 하나 (v3.137) */
+@media (max-width: 900px) { .side-nav a .nav-live { position: absolute; top: 4px; right: 4px; width: 12px; height: 12px; padding: 0; margin: 0; } .side-nav a .nav-live b { display: none; } .side-nav a .nav-live::after { inset: 2px; background: #22c55e; } }

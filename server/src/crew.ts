@@ -9,6 +9,7 @@ import { adoptProspect } from './prospects.js';
 import { knownFeats, tallyByMember } from './artisans.js';
 import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
 import skinData from '../../packages/core/data/skins.json';
+import { nowLiveCount } from './now.js';
 import { presenceOf } from '../../packages/core/src/presence.js';
 import { aboutOf } from './about.js';
 import { ITEM } from '../../packages/core/src/data.js';
@@ -39,6 +40,7 @@ export async function getMe(env: Env, me: Member) {
   const [newsUnread, staffUnread] = await Promise.all([unreadNews(env, me), staffUnread_(env, me)]);
   return json({
     newsUnread,
+    nowLive: await nowLiveCount(env),
     nowAuto: Boolean((me as Member & { now_auto?: number }).now_auto ?? 1),
     ...(staffUnread !== undefined ? { staffUnread } : {}),
     id: me.id,
@@ -82,7 +84,7 @@ export async function setPresence(env: Env, me: Member, body: { via?: unknown; l
     me.web_seen_at = now;
   }
   // 안 읽은 소식 수도 함께 — 앱·웹이 1분마다 알릴 때 메뉴의 빨간 점을 맞춘다
-  return json({ presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }, now), newsUnread: await unreadNews(env, me), ...(await staffUnread_(env, me).then((n) => (n !== undefined ? { staffUnread: n } : {}))), ...(attend ? { attend } : {}) });
+  return json({ presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }, now), newsUnread: await unreadNews(env, me), nowLive: await nowLiveCount(env), ...(await staffUnread_(env, me).then((n) => (n !== undefined ? { staffUnread: n } : {}))), ...(attend ? { attend } : {}) });
 }
 
 /** 내 판 목록 (최근 100판). 웹·앱의 "내 기록" 화면용. 본인 것만 */

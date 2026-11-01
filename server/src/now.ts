@@ -95,7 +95,17 @@ export async function listNow(env: Env, me: Member) {
   const scrimRows = rows.filter((r) => r.kind === 'scrim').slice(0, 1);
   // 함께 게임 중: 내전으로 이미 보이는 판은 빼고
   const scrimMembers = new Set(scrimRows.flatMap((r) => ids(r.members)));
-  const gameRows = rows.filter((r) => r.kind === 'game' && ids(r.members).filter((x) => scrimMembers.has(x)).length < 2).slice(0, MAX_SHOWN);
+  // 한 회원은 한 판에만 있을 수 있다 — 같은 판을 여러 앱이 따로 알렸거나(열쇠가 달라도) 끝난 판 줄이 남아 회원이 겹치면,
+  // 가장 최근에 시작한 줄 하나만 남긴다 (같은 때면 회원이 많은 줄)
+  const gameRows: Row[] = [];
+  const claimed = new Set<string>();
+  for (const r of rows.filter((r) => r.kind === 'game' && ids(r.members).filter((x) => scrimMembers.has(x)).length < 2).sort((a, b) => b.created_at - a.created_at || ids(b.members).length - ids(a.members).length)) {
+    const m = ids(r.members);
+    if (m.some((x) => claimed.has(x))) continue;
+    m.forEach((x) => claimed.add(x));
+    gameRows.push(r);
+  }
+  gameRows.sort((a, b) => a.created_at - b.created_at).splice(MAX_SHOWN);
   const inGame = gameRows.map((r) => new Set(ids(r.members)));
   // 로비에서 출발해 게임 중인 팟이 같은 판으로 이미 보이면 하나만
   const results = rows.filter((r) => r.kind !== 'scrim' && r.kind !== 'game')
@@ -271,4 +281,12 @@ export async function memberLive(env: Env, id: string) {
     }
   }
   return json({ live });
+}
+
+/** NOW 에 지금 돌아가는 것(팟·내전·함께 게임 중)이 있는지 — 메뉴의 LIVE 표시용 (v3.137). 지우지 않고 세기만 */
+export async function nowLiveCount(env: Env, now = Date.now()): Promise<number> {
+  const r = await env.DB.prepare(
+    "SELECT COUNT(*) AS n FROM now_lobbies WHERE (phase != 'game' AND updated_at >= ?1) OR (phase = 'game' AND kind != 'game' AND updated_at >= ?2) OR (kind = 'game' AND created_at >= ?3)",
+  ).bind(now - LOBBY_STALE, now - GAME_STALE, now - TOGETHER_STALE).first<{ n: number }>().catch(() => null);
+  return r?.n ?? 0;
 }

@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, useScrollKeeper, InquiryDialog, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { NavLive, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -8,7 +8,7 @@ const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/
 
 /** 운영 메뉴는 운영진에게만 (v3.107) */
 /** 소식은 회원에게만 (v3.111), 운영은 운영진에게만 */
-const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => [...NAV, ...(me ? [['/news', '소식', 'megaphone'] as const] : []), ...(me?.perms?.manage ? [['/staff', '운영', 'shield'] as const] : [])] as typeof NAV;
+const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => [...NAV, ...(me ? [['/news', '소식', 'megaphone'] as const, ['/inquiry', '문의', 'mail'] as const] : []), ...(me?.perms?.manage ? [['/staff', '운영', 'shield'] as const] : [])] as typeof NAV;
 const dotOf = (me: { newsUnread?: number; staffUnread?: number } | null, to: string) => ((to === '/news' && (me?.newsUnread ?? 0) > 0) || (to === '/staff' && (me?.staffUnread ?? 0) > 0) ? 'nav-dot' : undefined);
 
 export function Layout() {
@@ -22,7 +22,6 @@ export function Layout() {
   const { pathname } = useLocation();
   const matchSource = useCallback((id: number) => (me ? api.get<MatchDetail>(`/api/games/${id}`).catch(() => null) : Promise.resolve(null)), [api, me]);
   const [menu, setMenu] = useState(false);
-  const [asking, setAsking] = useState(false);
   // 새로 들어가면 맨 위, 뒤로·앞으로 돌아오면 보던 위치 (v3.102)
   const navType = useNavigationType();
   const winScroller = useCallback(() => window, []);
@@ -51,7 +50,7 @@ export function Layout() {
       <OfflineScreen api={api} onBack={refresh} />
       <header className="topbar"><div className="wrap">
         <NavLink to="/" className="brand"><Gem size={22} />PRISM</NavLink>
-        <nav className="tabs">{groupNav(navOf(me)).map((g, gi) => <span key={g.key} className="tab-group" role="group" aria-label={g.label}>{gi > 0 && <i className="tab-sep" aria-hidden="true" />}{g.items.map(([to, label]) => <NavLink key={to} to={to} className={dotOf(me, to)}>{label}</NavLink>)}</span>)}</nav>
+        <nav className="tabs">{groupNav(navOf(me)).map((g, gi) => <span key={g.key} className="tab-group" role="group" aria-label={g.label}>{gi > 0 && <i className="tab-sep" aria-hidden="true" />}{g.items.map(([to, label]) => <NavLink key={to} to={to} className={dotOf(me, to)}>{label}{to === '/crew' && (me?.nowLive ?? 0) > 0 && <NavLive n={me!.nowLive!} />}</NavLink>)}</span>)}</nav>
         <span className="sp" />
         <span className="top-wide"><NavLink to="/shop" className="icon-btn top-shop" title="상점" aria-label="상점"><Icon name="bag" /></NavLink>
           <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>
@@ -67,11 +66,9 @@ export function Layout() {
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>
         <span className="row" style={{ gap: 16 }}>
-          {me && <button type="button" className="foot-link" onClick={() => setAsking(true)}>문의하기</button>}
           <NavLink to="/privacy" className="foot-link">개인정보 처리방침</NavLink>
         </span>
       </div></footer>
-      {asking && me && <InquiryDialog api={api} onClose={() => setAsking(false)} />}
     </>
   );
 }
@@ -137,7 +134,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); nav('/me?studio=1'); }}><Icon name="spark" />프로필 꾸미기</button>
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); logout().then(() => nav('/')); }}><Icon name="logout" />로그아웃</button>
         </div>}
-        <nav className="mmenu-nav">{groupNav(navOf(me)).map((g) => <div key={g.key} className="mmenu-group" role="group" aria-label={g.label}><span className="mmenu-glabel">{g.label}</span>{g.items.map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{dotOf(me, to) && <i className="news-dot" aria-label={to === "/staff" ? "승인할 멤버" : "새 소식"} />}</NavLink>)}</div>)}</nav>
+        <nav className="mmenu-nav">{groupNav(navOf(me)).map((g) => <div key={g.key} className="mmenu-group" role="group" aria-label={g.label}><span className="mmenu-glabel">{g.label}</span>{g.items.map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{to === '/crew' && (me?.nowLive ?? 0) > 0 && <NavLive n={me!.nowLive!} />}{dotOf(me, to) && <i className="news-dot" aria-label={to === "/staff" ? "승인할 멤버" : "새 소식"} />}</NavLink>)}</div>)}</nav>
         <span className="sp" />
         <div className="mmenu-foot">
           <NavLink to="/shop" className="mmenu-shop" tabIndex={open ? 0 : -1}><Icon name="bag" />상점</NavLink>

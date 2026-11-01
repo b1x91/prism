@@ -188,8 +188,8 @@ function Care({ api, o, need, onOpen, onDone, onMembers }: { api: Api; o: StaffO
               <MemberFace nick={c.nick} skin={c.skin} champion={c.main} size={36} skins={skins} />
               <span className="stf-pt"><b>{shortNick(c.nick)}<span className={`stf-why k-${c.kind}`}>{CARE_LABEL[c.kind]}</span></b><span className="meta">{why(c)}</span></span>
             </button>
-            {c.kind === 'pending' && <ActBtn className="btn primary sm" state={act.state(c.id)} label="승인" busy="승인 중" done="승인했어요" onClick={() => go(c.id, 'approve')} />}
-            {c.kind === 'review' && <ActBtn className="btn primary sm" state={act.state(c.id)} label="정회원 승인" busy="승인 중" done="정회원이 됐어요" onClick={() => go(c.id, 'promote')} />}
+            {c.kind === 'pending' && <ActBtn className="btn primary sm stf-go" state={act.state(c.id)} label="승인" busy="승인 중" done="승인했어요" onClick={() => go(c.id, 'approve')} />}
+            {c.kind === 'review' && <ActBtn className="btn sm stf-go promote" state={act.state(c.id)} label="승인" busy="승인 중" done="정회원이 됐어요" onClick={() => go(c.id, 'promote')} />}
           </li>
         ))}
       </ul> : <Empty className={had.current ? 'mo-in' : ''}>지금 챙길 멤버가 없어요.</Empty>}
@@ -310,7 +310,7 @@ function TodoCard({ api, m, need, bonus, referrers, state, run, onOpen }: { api:
       {m.pending && (m.inviter
         ? <p className="meta stf-tc-ref">추천인 <b>{shortNick(m.inviter.nick)}</b> · 승인하면 {bonus} 피스</p>
         : referrers.length > 0 && <div className="stf-tc-ref"><span className="meta">추천인</span><Select label="추천인" value={inviter} options={[['', '없음'], ...referrers.filter((r) => r.id !== m.id).map((r) => [r.id, shortNick(r.nick)] as [string, string])]} onChange={setInviter} /></div>)}
-      <ActBtn className="btn primary stf-tc-go" state={state} label={m.pending ? '승인' : '정회원 승인'} busy="승인 중" done={m.pending ? '승인했어요' : '정회원이 됐어요'} onClick={() => act(m.pending ? 'approve' : 'promote', m.pending && inviter ? { inviter } : {})} />
+      <ActBtn className={`btn stf-tc-go ${m.pending ? 'primary' : 'promote'}`} state={state} label="승인" busy="승인 중" done={m.pending ? '승인했어요' : '정회원이 됐어요'} onClick={() => act(m.pending ? 'approve' : 'promote', m.pending && inviter ? { inviter } : {})} />
       {err && <p className="l stf-err">{err}</p>}
     </div>
   );

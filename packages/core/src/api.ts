@@ -58,7 +58,7 @@ export class ApiError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
-export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; level?: number; rates?: Rates; presence?: import('./presence').Presence; rankingGate?: { have: number; need: number }; about?: import("./about").About | null; pending?: boolean; newsUnread?: number; /** 운영진만: 운영 화면에서 아직 못 본 처리할 멤버 수 (v3.125) */ staffUnread?: number; /** 로비를 NOW에 자동으로 올리기 (v3.126) */ nowAuto?: boolean };
+export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; level?: number; rates?: Rates; presence?: import('./presence').Presence; rankingGate?: { have: number; need: number }; about?: import("./about").About | null; pending?: boolean; newsUnread?: number; /** 운영진만: 운영 화면에서 아직 못 본 처리할 멤버 수 (v3.125) */ staffUnread?: number; /** 로비를 NOW에 자동으로 올리기 (v3.126) */ nowAuto?: boolean; /** NOW 에 돌아가는 팟·내전·함께 게임 중 수 — 멤버 메뉴 LIVE (v3.137) */ nowLive?: number };
 /** NOW (v3.126): 지금 모이는 팟 */
 export type NowFace = { id: string; nick: string; skin: number | null; main: number | null };
 export type NowLobby = { id: string; phase: 'lobby' | 'queue' | 'game'; size: number; since: number; leader: string | null; members: NowFace[]; requests: NowFace[] };

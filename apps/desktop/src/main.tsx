@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { NavLive, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, SITE_URL, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { pollWhileShown } from './poll';
 import { checkNow, clearAttend, getState, refreshSession, start, subscribe, type State } from './controller';
@@ -16,7 +16,7 @@ import { GamePage } from './pages/Game';
 import { AugmentsPage } from './pages/Augments';
 import { DexPage } from './pages/Dex';
 import { ChampionsPage } from './pages/Champions';
-import { MemberPage, MissionsPage, NewsPage, RankingPage, ShopPage, StaffMembersPage, StaffPage } from './pages/Members';
+import { MemberPage, MissionsPage, NewsPage, InquiryPage, RankingPage, ShopPage, StaffMembersPage, StaffPage } from './pages/Members';
 import { CrewPage } from './pages/Crew';
 import { SettingsPage } from './pages/Settings';
 import { lockdown } from './lockdown';
@@ -172,10 +172,10 @@ function App() {
         {/* 새 버전을 받아 두었을 때만. 게임·챔프 선택 중에는 숨긴다 (끝나면 다시) */}
         {up.info?.ready && !up.info.managed && !playing && <button type="button" className="side-update" disabled={up.applying} onClick={() => void applyUpdate()} title={up.error ?? `지금 v${VERSION} · 누르면 몇 초 뒤 다시 켜져요`}><span className="dot" />{up.applying ? '적용하는 중…' : `새 버전 ${up.info.latest} · 적용`}</button>}
         {up.error && up.info?.ready && !playing && <span className="side-err l">{up.error}</span>}
-        <nav className="side-nav">{groupNav([...NAV, ...(s.me ? [['/news', '소식', 'megaphone'] as [string, string, IconName]] : []), ...(s.me?.perms?.manage ? [['/staff', '운영', 'shield'] as [string, string, IconName]] : [])]).map((g) => (
+        <nav className="side-nav">{groupNav([...NAV, ...(s.me ? [['/news', '소식', 'megaphone'] as [string, string, IconName], ['/inquiry', '문의', 'mail'] as [string, string, IconName]] : []), ...(s.me?.perms?.manage ? [['/staff', '운영', 'shield'] as [string, string, IconName]] : [])]).map((g) => (
           <div key={g.key} className="side-group" role="group" aria-label={g.label}>
             <span className="side-glabel">{g.label}</span>
-            {g.items.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}{to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="news-dot" aria-label="새 소식" />}{to === '/staff' && (s.me?.staffUnread ?? 0) > 0 && <i className="news-dot" aria-label="승인할 멤버" />}</NavLink>)}
+            {g.items.map(([to, l, i]) => <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}{to === '/crew' && (s.me?.nowLive ?? 0) > 0 && <NavLive n={s.me!.nowLive!} />}{to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="news-dot" aria-label="새 소식" />}{to === '/staff' && (s.me?.staffUnread ?? 0) > 0 && <i className="news-dot" aria-label="승인할 멤버" />}</NavLink>)}
           </div>))}</nav>
         <span className="sp" />
         {/* 아래쪽 한 줄: 상점 · 설정 (디스코드·카카오톡은 모임 화면 오른쪽 위) */}
@@ -215,6 +215,7 @@ function App() {
           <Route path="missions" element={<MissionsPage s={s} onLogin={login} />} />
           <Route path="settings" element={<SettingsPage s={s} onLogin={login} />} />
           <Route path="news" element={<NewsPage s={s} onLogin={login} />} />
+          <Route path="inquiry" element={<InquiryPage s={s} onLogin={login} />} />
           <Route path="staff" element={<StaffPage s={s} onLogin={login} />} />
           <Route path="staff/members" element={<StaffMembersPage s={s} onLogin={login} />} />
           <Route path="*" element={<GamePage s={s} />} />

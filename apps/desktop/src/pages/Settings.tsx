@@ -1,8 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { FullscreenNote, useFullscreen } from '../fullscreen';
-import { Icon, InquiryDialog, MemberFace, RoleBadge, Seg, Toggle, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
+import { Icon, MemberFace, RoleBadge, Seg, Toggle, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
 import { api, bridge, type VisionState } from '../bridge';
-import { inquiryExtra, refreshSession, type State } from '../controller';
+import { refreshSession, type State } from '../controller';
 import { applyUpdate, checkUpdate, useUpdate } from '../update';
 
 import { VERSION } from '../version';
@@ -12,7 +13,7 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
   const up = useUpdate();
   const [msg, setMsg] = useState('');
   const [theme, setTheme] = useState<ThemeMode>(getThemeMode);
-  const [asking, setAsking] = useState(false);
+  const nav = useNavigate();
   const skins = useSkins();
   useEffect(() => { bridge.autostart().then(setAuto).catch(() => setAuto(null)); }, []);
   const run = async (f: () => Promise<unknown>) => { setMsg(''); try { await f(); } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); } };
@@ -33,7 +34,6 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
         )}
       </section>
       {msg && <section className="card pad"><span className="l">{msg}</span></section>}
-      {asking && <InquiryDialog api={api} extra={() => inquiryExtra(VERSION)} onClose={() => setAsking(false)} />}
       <section className="card pad">
         <div className="card-head"><h2>앱</h2></div>
         <div className="kv">
@@ -52,7 +52,7 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
           <div><span className="k">윈도우 시작 시 실행</span><span>{auto === null ? '–' : <Toggle on={auto} label="윈도우 시작 시 실행" onChange={(v) => run(async () => setAuto(await bridge.autostart(v)))} />}</span></div>
           <div><span className="k">문의하기</span><span className="row wrapr" style={{ gap: 8 }}>
             {s.me
-              ? <button type="button" className="btn sm" onClick={() => setAsking(true)}><Icon name="mail" />문의하기</button>
+              ? <button type="button" className="btn sm" onClick={() => nav('/inquiry')}><Icon name="mail" />문의하기</button>
               : <span className="meta">로그인하면 보낼 수 있어요</span>}
           </span></div>
           <div><span className="k">개인정보 처리방침</span><span className="row wrapr" style={{ gap: 8 }}><button type="button" className="btn sm" onClick={() => void bridge.openUrl('https://przm.web.app/privacy')}>보기</button></span></div>
