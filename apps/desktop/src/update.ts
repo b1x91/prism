@@ -21,6 +21,9 @@ let u: U = { info: null, checking: false, preparing: false, applying: false, err
 const subs = new Set<() => void>();
 const set = (p: Partial<U>) => { u = { ...u, ...p }; subs.forEach((f) => f()); };
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+/** 받아 둔 버전이 있는데 더 새 버전이 나와 아직 받는 중이면, 다 받을 때까지 받아 둔 쪽을 그대로 보인다.
+ *  예전엔 확인할 때마다 '새 버전 · 적용' 줄이 사라졌다가 다 받으면 다시 떠 깜빡였다 (적용하면 받아 둔 버전이 깔리고, 다음에 새 것) */
+const keepReady = (next: UpdateInfo): UpdateInfo => (u.info?.ready && !u.info.managed && next.available && !next.ready ? u.info : next);
 
 /** 롤 게임·챔프 선택 중이면 적용하지 않는다 (앱이 잠깐 꺼지므로) */
 const busy = () => { const s = getState().status; return s === 'in-game' || s === 'champ-select'; };
@@ -31,7 +34,7 @@ export async function checkUpdate() {
   lastCheck = Date.now();
   try {
     const info = await bridge.updateCheck();
-    set({ info });
+    set({ info: keepReady(info) });
     if (info.available && !info.ready && !info.managed) void prepare();
   } catch (e) { set({ error: msg(e) }); }
   finally { set({ checking: false }); }
@@ -41,7 +44,7 @@ export async function checkUpdate() {
 async function prepare() {
   if (u.preparing) return;
   set({ preparing: true, error: null });
-  try { set({ info: await bridge.updatePrepare() }); }
+  try { set({ info: keepReady(await bridge.updatePrepare()) }); }
   catch (e) { set({ error: msg(e) }); }
   finally { set({ preparing: false }); }
 }
