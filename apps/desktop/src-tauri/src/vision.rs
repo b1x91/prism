@@ -120,6 +120,8 @@ pub struct Vision {
     shown: AtomicBool,
     /// 이번 고르기에서 사용자가 작은 창을 닫았나 (카드가 사라질 때까지 다시 띄우지 않는다, v3.132)
     pub dismissed: AtomicBool,
+    /// 게임에서 다른 창으로 오래 가 있음 — 게임으로 돌아올 때까지 작은 창을 다시 띄우지 않는다 (v3.139)
+    pub away: AtomicBool,
     /// 로그인 + 수집 동의를 마쳤는지 (첫 화면을 끝내기 전에는 인식하지 않는다)
     pub allowed: AtomicBool,
 }
@@ -132,7 +134,7 @@ impl Vision {
     pub fn new(dir: PathBuf) -> Arc<Self> {
         let path = dir.join("vision.json");
         let settings = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
-        Arc::new(Self { path, diag: Mutex::new(None), settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), icons: crate::icons::IconBank::new(AUG_ICONS, AUGMENTS_JSON), shown: AtomicBool::new(false), dismissed: AtomicBool::new(false), allowed: AtomicBool::new(false) })
+        Arc::new(Self { path, diag: Mutex::new(None), settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), icons: crate::icons::IconBank::new(AUG_ICONS, AUGMENTS_JSON), shown: AtomicBool::new(false), dismissed: AtomicBool::new(false), away: AtomicBool::new(false), allowed: AtomicBool::new(false) })
     }
 
     pub fn set(&self, s: Settings) {
@@ -200,7 +202,7 @@ impl Vision {
 
     /// 작은 창 띄우기 (사용자가 이번 고르기에서 닫았으면 띄우지 않는다)
     fn show(&self, _app: &AppHandle, f: impl FnOnce()) {
-        if self.dismissed.load(Ordering::SeqCst) {
+        if self.dismissed.load(Ordering::SeqCst) || self.away.load(Ordering::SeqCst) {
             return;
         }
         f();
@@ -620,9 +622,13 @@ mod imp {
             let how = game.map(|g| g.1).unwrap_or("");
             if front {
                 front_at = std::time::Instant::now();
-            } else if v.shown.load(Ordering::SeqCst) && front_at.elapsed() > Duration::from_secs(8) {
-                // 게임에서 다른 창으로 8초 넘게 가 있으면 작은 창을 내린다 (칸은 기억 — 돌아와서 카드가 그대로면 다시 뜬다)
-                v.trace("게임 창이 오래 뒤에 있어 작은 창을 내림".into());
+                v.away.store(false, Ordering::SeqCst);
+            } else if front_at.elapsed() > Duration::from_secs(8) && !v.away.swap(true, Ordering::SeqCst) {
+                // 게임에서 다른 창으로 8초 넘게 가 있으면 작은 창을 내리고, 게임으로 돌아올 때까지 다시 띄우지 않는다
+                // (칸은 기억 — 돌아와서 카드가 그대로면 다시 뜬다). 예전엔 내린 다음 확인에서 곧바로 다시 띄워 나왔다 사라졌다를 되풀이했다
+                if v.shown.load(Ordering::SeqCst) {
+                    v.trace("게임 창이 오래 뒤에 있어 작은 창을 내림".into());
+                }
                 v.hide(&app);
             }
             if game.is_some() && eng.is_none() && !warned_engine {
