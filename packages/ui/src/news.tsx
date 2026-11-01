@@ -102,7 +102,7 @@ function NewsCard({ api, x, isNew, canWrite, onPatch, onChanged, onNewAugments }
       } : {})}>
       <div className="nw-top">
         <span className={`nw-tag k-${x.kind}`}>{NEWS_LABEL[x.kind]}</span>
-        {x.pinned && <span className="nw-pin"><Icon name="pin" />고정</span>}
+        {x.pinned && <span className="nw-tag pin">고정</span>}
         {isNew && <span className="nw-new">NEW</span>}
         <span className="meta">{x.auto ? '자동 소식' : x.author ?? '운영진'} · {x.pinned ? `${shortDate(x.at)} ${clock(x.at)}` : clock(x.at)}{x.edited ? ' · 고침' : ''}</span>
         {canWrite && !edit && <span className="nw-tools">
@@ -149,7 +149,7 @@ function NewsModal({ x, onHeart, onClose }: { x: NewsItem; onHeart: () => void; 
         <header className="nw-dlg-head">
           <div className="nw-top">
             <span className={`nw-tag k-${x.kind}`}>{NEWS_LABEL[x.kind]}</span>
-            <span className="nw-pin"><Icon name="pin" />고정</span>
+            <span className="nw-tag pin">고정</span>
             <span className="meta">{x.auto ? '자동 소식' : x.author ?? '운영진'} · {shortDate(x.at)} {clock(x.at)}{x.edited ? ' · 고침' : ''}</span>
           </div>
           <h3 className="nw-dlg-title">{x.title}</h3>

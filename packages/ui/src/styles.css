@@ -3739,7 +3739,8 @@ button.stf-person:hover { background: var(--surface-2); }
 }
 :root[data-theme="dark"] .nw-card.pinned { background: radial-gradient(120% 140% at 100% 0%, rgba(245, 196, 81, .2), transparent 55%), linear-gradient(135deg, #283069, #33235a); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nw-card.pinned { background: radial-gradient(120% 140% at 100% 0%, rgba(245, 196, 81, .2), transparent 55%), linear-gradient(135deg, #283069, #33235a); } }
-.nw-card.pinned .nw-pin { color: #f5c451; }
+.nw-tag.pin { --nk: var(--gold); }
+.nw-card.pinned .nw-tag.pin { background: rgba(245, 196, 81, .18); color: #f5c451; }
 .nw-card.pinned .nw-ib:hover { background: rgba(255, 255, 255, .1); }
 .nw-card.tap { cursor: pointer; transition: transform .2s ease, box-shadow .2s ease, filter .2s ease; }
 .nw-card.tap:hover { filter: brightness(1.08); transform: translateY(-1px); }
@@ -3758,8 +3759,6 @@ button.stf-person:hover { background: var(--surface-2); }
 .nw-card.busy { opacity: .6; }
 .nw-top { display: flex; align-items: center; gap: var(--s2); flex-wrap: wrap; min-height: 28px; }
 .nw-tag { display: inline-flex; align-items: center; height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 800; background: color-mix(in srgb, var(--nk) 15%, transparent); color: color-mix(in srgb, var(--nk) 80%, var(--text)); }
-.nw-pin { display: inline-flex; align-items: center; gap: 2px; font-size: var(--fs-xs); font-weight: 700; color: var(--warn); }
-.nw-pin svg { width: 14px; height: 14px; }
 .nw-new { height: 20px; padding: 0 6px; display: inline-flex; align-items: center; border-radius: var(--r-pill); background: var(--lose); color: #fff; font-size: 11px; font-weight: 800; letter-spacing: .04em; }
 .nw-tools { margin-left: auto; display: inline-flex; gap: var(--s1); }
 .nw-ib { height: 28px; min-width: 28px; padding: 0 6px; display: inline-flex; align-items: center; justify-content: center; gap: var(--s1); border: 0; border-radius: var(--r-s); background: none; color: var(--text-3); font: inherit; font-size: var(--fs-xs); font-weight: 700; cursor: pointer; }
