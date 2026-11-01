@@ -222,3 +222,53 @@ export async function setNowAuto(env: Env, me: Member, on: unknown) {
   if (!v) await env.DB.prepare('DELETE FROM now_lobbies WHERE reporter_id = ?').bind(me.id).run();
   return json({ auto: Boolean(v) });
 }
+
+/**
+ * GET /api/now/member/:id — 회원 페이지 맨 위 '지금 게임 중' 칸 (v3.136).
+ * 앱이 알린 단계(app_phase: game·select)와 챔프 + 같은 판의 NOW 줄(함께 게임 중·내전·팟)에서 같은 팀·상대 팀 회원.
+ * 비회원은 수만. 앱 소식이 끊기면(PRESENCE_TTL) 없음.
+ */
+export type MemberLive = {
+  phase: 'game' | 'select'; champ: number | null; since: number; custom: boolean;
+  allies: (Face & { champ: number | null })[]; foes: (Face & { champ: number | null })[];
+  allySize: number; foeSize: number;
+};
+export async function memberLive(env: Env, id: string) {
+  const now = Date.now();
+  const m = await env.DB.prepare('SELECT app_phase AS phase, app_champ AS champ, app_phase_at AS at, app_seen_at AS seen, app_lol AS lol FROM members WHERE id = ?')
+    .bind(id).first<{ phase: string | null; champ: number | null; at: number | null; seen: number | null; lol: number | null }>();
+  if (!m || !m.lol || now - (m.seen ?? 0) > 150_000 || (m.phase !== 'game' && m.phase !== 'select')) return json({ live: null });
+  const live: MemberLive = { phase: m.phase, champ: m.champ || null, since: m.at || now, custom: false, allies: [], foes: [], allySize: 0, foeSize: 0 };
+  if (m.phase === 'game') {
+    await prune(env, now);
+    const row = await env.DB.prepare(
+      `SELECT * FROM now_lobbies WHERE phase = 'game' AND EXISTS (SELECT 1 FROM json_each(members) WHERE value = ?1)
+        ORDER BY (kind = 'game') DESC, updated_at DESC LIMIT 1`,
+    ).bind(id).first<Row>();
+    if (row) {
+      type Side = { m: ({ id: string; c?: number } | string)[]; n: number };
+      let t: Record<string, Side> = {};
+      try { t = JSON.parse(row.teams ?? '{}'); } catch { /* 팀 없음 */ }
+      const pick = (s?: Side) => (s?.m ?? []).map((x) => (typeof x === 'string' ? { id: x, c: 0 } : { id: x.id, c: Number(x.c) || 0 }));
+      let mine: { id: string; c: number }[] = [], theirs: { id: string; c: number }[] = [], mineN = 0, theirN = 0;
+      if (t['100'] || t['200']) {
+        const a = pick(t['100']), b = pick(t['200']);
+        const inA = a.some((x) => x.id === id);
+        [mine, theirs] = inA ? [a, b] : [b, a];
+        [mineN, theirN] = inA ? [Number(t['100']?.n) || a.length, Number(t['200']?.n) || b.length] : [Number(t['200']?.n) || b.length, Number(t['100']?.n) || a.length];
+      } else {
+        mine = ids(row.members).map((x) => ({ id: x, c: 0 }));
+        mineN = Math.max(row.size, mine.length);
+      }
+      const face = await faces(env, [...mine, ...theirs].map((x) => x.id));
+      const conv = (l: { id: string; c: number }[]) => l.filter((x) => x.id !== id).map((x) => { const f = face.get(x.id); return f ? { ...f, champ: x.c || null } : null; }).filter((x): x is Face & { champ: number | null } => Boolean(x));
+      const me = mine.find((x) => x.id === id);
+      if (me?.c) live.champ = me.c;
+      live.allies = conv(mine); live.foes = conv(theirs);
+      live.allySize = Math.max(0, mineN - 1); live.foeSize = theirN;
+      live.custom = row.kind === 'scrim' || (row.kind === 'game' && row.size === 0);
+      live.since = Math.min(live.since, row.created_at);
+    }
+  }
+  return json({ live });
+}

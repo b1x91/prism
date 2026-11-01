@@ -25,7 +25,7 @@ export function MemberPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   const nav = useNavigate();
   if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="회원 페이지" />;
   const target = id ?? s.me.id;
-  return <MemberView key={target} api={api} id={target} self={target === s.me.id} onChampion={(c) => nav(`/champions/${c}`)} insight={insightParam()} onShop={() => nav('/shop')} />;
+  return <MemberView key={target} api={api} id={target} self={target === s.me.id} onChampion={(c) => nav(`/champions/${c}`)} insight={insightParam()} onShop={() => nav('/shop')} meId={s.me.id} onMember={(x) => nav(x === s.me?.id ? '/me' : `/members/${x}`)} />;
 }
 
 /** 상점 '리포트 보기' → 내 페이지의 그 인사이트 (?insight=aug) */

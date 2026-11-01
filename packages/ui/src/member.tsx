@@ -2,6 +2,7 @@
  * 회원끼리 보는 화면: 랭킹, 회원 페이지(분석·나와의 시너지), 프로필 꾸미기. 웹·앱 공용.
  * 이동은 onOpen(회원 ID) 으로 화면 쪽에 맡긴다 (웹은 /members/:id, 앱은 #/members/:id).
  */
+import { LiveNow, useMemberLive } from './livenow';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useKept } from './kept';
 import {
@@ -244,8 +245,10 @@ function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: n
 
 // ───────── 회원 페이지 ─────────
 
-export function MemberView({ api, id, self, onChampion, actions, insight, onShop, studio, studioBtn = true, onStudioClose }: {
+export function MemberView({ api, id, self, onChampion, actions, insight, onShop, studio, studioBtn = true, onStudioClose, meId, onMember }: {
   api: Api; id: string; self?: boolean; onChampion?: (championId: number) => void; actions?: ReactNode;
+  /** 보는 사람 — '지금 게임 중' 칸에서 나와 같은 팀·맞대결 표시 (v3.136) */
+  meId?: string; onMember?: (id: string) => void;
   /** 상점에서 '리포트 보기'로 왔으면 그 인사이트를 열고 그 자리로 */
   insight?: InsightKind | null;
   onShop?: () => void;
@@ -271,7 +274,9 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
   const closeEdit = () => { setEdit(false); onStudioClose?.(); };
   const [shareOn, setShared] = useState<boolean | null>(null);
   // 내 페이지는 상점 상태(명장면 액자·인사이트)까지 함께 기다린다 — 늦게 온 칸이 끼어들며 밀리지 않게 (v3.93)
-  const ready = Boolean(data) && (!self || Boolean(shop) || Boolean(shopLoad.error));
+  // 지금 게임 중이면 맨 위 칸 (v3.136) — 첫 답은 잠깐 기다려 늦게 끼어들지 않게
+  const lv = useMemberLive(api, id);
+  const ready = Boolean(data) && (!self || Boolean(shop) || Boolean(shopLoad.error)) && lv.ready;
   const rv = useReveal(ready);
   if (error) return <Empty>{error}</Empty>;
   if (!data || !ready) return <MemberSkeleton self={self} id={id} studioBtn={studioBtn} />;
@@ -294,11 +299,12 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
         actions={<>{m.self && studioBtn && <button type="button" className="btn sm" onClick={() => setEdit('skin')}><Icon name="spark" />프로필 꾸미기</button>}
           {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}
         chips={<>{m.pending && <span className="pill dark wait">승인 대기 중</span>}<span className="pill dark">{shortDate(m.joinedAt)} 가입</span>
-          {skin && <span className="pill dark">{skin.name}</span>}{(m.presence === 'game' || m.presence === 'both') && <span className="pill dark"><PresenceTag p={m.presence} /></span>}
+          {skin && <span className="pill dark">{skin.name}</span>}{!lv.live && (m.presence === 'game' || m.presence === 'both') && <span className="pill dark"><PresenceTag p={m.presence} /></span>}
           {m.about && (m.self
             ? <button type="button" className="pill dark about-edit" title="소개 바꾸기" onClick={() => setEdit('intro')}><span>{m.about.mbti}</span><span>{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span>{aboutWhen(m.about)}</span><Icon name="edit" /></button>
             : <><span className="pill dark">{m.about.mbti}</span><span className="pill dark">{m.about.roles.map((r) => ROLE_KO[r]).join('·')}</span><span className="pill dark">{aboutWhen(m.about)}</span></>)}
           {m.about?.insta && <a className="pill dark insta" href={`https://instagram.com/${m.about.insta}`} target="_blank" rel="noopener noreferrer" title="인스타그램">@{m.about.insta}</a>}</>} />
+      {lv.live && <LiveNow live={lv.live} meId={meId} over={total.n > 0} onMember={onMember} />}
       {edit && m.self && <ProfileStudio api={api} page={data} skins={skins} start={edit} onClose={closeEdit} onSaved={() => { closeEdit(); reload(); }} />}
       {m.self && !m.riotId && <section className="card pad"><b>아직 롤 계정이 연결되지 않았어요</b><div className="muted">PC의 Prism 앱에서 로그인한 뒤 맨 위의 <b>"동의하고 연결"</b>을 누르면, 그때부터 판이 여기에 쌓입니다. 앱에 이미 보이는 최근 판도 함께 올라와요.</div></section>}
       {total.n > 0 ? <StatBoard data={data} games={games} kda={kda} streak={st} /> : <div className="grid4">

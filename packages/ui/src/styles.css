@@ -4132,3 +4132,40 @@ button.stf-person:hover { background: var(--surface-2); }
 .ps-stage.vert .ps-slot small { display: none; }
 @media (max-width: 560px) { .ps-foot { gap: var(--s2); } .ps-foot .sp { flex-basis: 100%; height: 0; } }
 @media (prefers-reduced-motion: reduce) { .ps, .ps-start, .ps-slot.on, .ps-foot.on, .ps-count { animation: none; } .ps-person, .ps-prism .ps-glow { transition: none; } }
+
+/* ── 회원 페이지 맨 위 '지금 게임 중' (v3.136) — 늘 어두운 무대 ── */
+.live-now { position: relative; z-index: 2; overflow: hidden; padding: 0; border: 0; background: #0d1017; color: #f3f3f7; box-shadow: 0 8px 16px -12px rgba(7, 9, 15, .4), var(--shadow); animation: ln-in .45s cubic-bezier(.16, 1, .3, 1) both; }
+.live-now.over { margin-top: -64px; }
+.live-now.over ~ .pdash { margin-top: 0; }
+@keyframes ln-in { from { opacity: 0; transform: translateY(8px); } }
+.live-now .ln-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%; opacity: .5; }
+.live-now::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(13, 16, 23, .96) 0%, rgba(13, 16, 23, .78) 45%, rgba(13, 16, 23, .55) 100%); pointer-events: none; }
+.live-now.game { box-shadow: inset 4px 0 0 #22c55e, 0 8px 16px -12px rgba(7, 9, 15, .4), var(--shadow); }
+.live-now.select { box-shadow: inset 4px 0 0 #5b8cff, 0 8px 16px -12px rgba(7, 9, 15, .4), var(--shadow); }
+.ln-in { position: relative; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--s4) var(--s6); padding: var(--s4) var(--s5); }
+.ln-main { display: flex; align-items: center; gap: var(--s3); min-width: 0; flex: 1 1 260px; }
+.ln-icon { flex: none; border-radius: var(--r-m); box-shadow: 0 0 0 2px rgba(255, 255, 255, .14); }
+.ln-wait { width: 56px; height: 56px; background: rgba(255, 255, 255, .08); }
+.ln-t { display: grid; gap: 2px; min-width: 0; }
+.ln-state { display: inline-flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); font-weight: 800; letter-spacing: .02em; }
+.live-now.game .ln-state { color: #86efac; } .live-now.select .ln-state { color: #a8c1ff; }
+.ln-state em { font-style: normal; padding: 0 var(--s2); border-radius: var(--r-pill); background: rgba(255, 255, 255, .1); color: rgba(255, 255, 255, .75); font-weight: 700; }
+.ln-dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.ln-dot::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: currentColor; animation: ln-ping 1.8s ease-out infinite; }
+@keyframes ln-ping { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(2.6); opacity: 0; } }
+.ln-champ { font-size: var(--fs-xl); font-weight: 850; line-height: 1.25; }
+.ln-me { justify-self: start; margin-top: 2px; padding: 0 var(--s2); border-radius: var(--r-pill); background: rgba(34, 197, 94, .18); color: #86efac; font-size: var(--fs-xs); font-weight: 750; }
+.ln-me.vs { background: rgba(255, 93, 108, .18); color: #ffadb5; }
+.ln-teams { display: flex; flex-wrap: wrap; gap: var(--s4) var(--s6); }
+.ln-side { display: grid; gap: var(--s1); }
+.ln-k { font-size: var(--fs-xs); font-weight: 750; color: rgba(255, 255, 255, .6); }
+.ln-side.foe .ln-k { color: #ffadb5; }
+.ln-faces { display: flex; align-items: center; gap: var(--s2); }
+.ln-face { position: relative; padding: 0; border: 0; background: none; cursor: pointer; border-radius: 50%; transition: transform .15s ease; }
+.ln-face:hover { transform: translateY(-2px); }
+.ln-face.me { box-shadow: 0 0 0 2px #86efac; }
+.ln-side.foe .ln-face.me { box-shadow: 0 0 0 2px #ffadb5; }
+.ln-fc { position: absolute; right: -4px; bottom: -4px; border-radius: var(--r-s); box-shadow: 0 0 0 2px #0d1017; overflow: hidden; line-height: 0; }
+.ln-rest { display: grid; place-items: center; min-width: 40px; height: 40px; padding: 0 var(--s2); border-radius: var(--r-pill); background: rgba(255, 255, 255, .08); color: rgba(255, 255, 255, .7); font-size: var(--fs-sm); font-weight: 750; }
+@media (max-width: 760px) { .live-now.over { margin-top: -48px; } .ln-in { padding: var(--s4); } }
+@media (prefers-reduced-motion: reduce) { .live-now, .ln-dot::after { animation: none; } .ln-face { transition: none; } }

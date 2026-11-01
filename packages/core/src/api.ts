@@ -71,6 +71,12 @@ export type NowGame = { id: string; since: number; custom: boolean; blue: NowGam
 /** 내전 팀 나누기 (프리즘 빛 갈래, v3.135). people 순서 = 빛이 지나가는 순서, id 가 없으면 손님 */
 export type NowDraw = { id: number; lobby: string; host: string; start: number; people: { key: string; id: string | null; team: 'blue' | 'red'; score: number; nick?: string; skin?: number | null; main?: number | null }[]; balanced: boolean; confirmed: boolean };
 export type NowDrawRes = { draw: NowDraw | null; now: number };
+/** 회원 페이지 맨 위 '지금 게임 중' (v3.136) */
+export type MemberLive = {
+  phase: 'game' | 'select'; champ: number | null; since: number; custom: boolean;
+  allies: (NowFace & { champ: number | null })[]; foes: (NowFace & { champ: number | null })[];
+  allySize: number; foeSize: number;
+};
 export type NowList = { auto: boolean; lobbies: NowLobby[]; scrims?: NowScrim[]; games?: NowGame[] };
 /** 회원 얼굴 재료 (서버 FACE): 대표 스킨, 주 챔피언 */
 export type FaceInfo = { skin?: number | null; main?: number | null };

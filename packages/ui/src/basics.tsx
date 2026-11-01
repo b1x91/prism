@@ -255,9 +255,9 @@ export function FacePresence({ p, title, children }: { p?: Presence | null; titl
   return <span className="fp">{children}<PresenceDot p={p} title={title} /></span>;
 }
 /** 점 + 글자 (회원 페이지 머리). 롤이 켜져 있을 때만 '온라인', 앱·웹은 점 색으로만 */
-export function PresenceTag({ p }: { p?: Presence | null }) {
+export function PresenceTag({ p, label }: { p?: Presence | null; label?: string }) {
   if (!p || p === 'off') return null;
-  return <span className={`prtag ${p === 'game' || p === 'both' ? '' : 'dot'}`} title={PRESENCE_LABEL[p]}><PresenceDot p={p} />{p === 'game' || p === 'both' ? '온라인' : null}</span>;
+  return <span className={`prtag ${p === 'game' || p === 'both' ? '' : 'dot'}`} title={PRESENCE_LABEL[p]}><PresenceDot p={p} />{p === 'game' || p === 'both' ? (label ?? '온라인') : null}</span>;
 }
 
 /** 디스코드 역할 배지 (디스코드와 같은 색) */

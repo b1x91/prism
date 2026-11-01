@@ -8,7 +8,7 @@ import { saveAbout } from './about.js';
 import { dailyPayload, dailyPost, interactions } from './bot.js';
 import { pulse } from './pulse.js';
 import { nickSweep, nickSyncNow } from './discordnick.js';
-import { listNow, reportGame, reportLobby, requestJoin, setNowAuto } from './now.js';
+import { listNow, reportGame, reportLobby, requestJoin, setNowAuto, memberLive } from './now.js';
 import { confirmDraw, getDraw, startDraw } from './draw.js';
 import { appMembers } from './appmembers.js';
 import { promoteSweep } from './promote.js';
@@ -129,6 +129,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'POST' && pathname === '/api/now/game') return reportGame(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'POST' && pathname === '/api/now/lobby') return reportLobby(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'POST' && pathname === '/api/me/now-auto') return setNowAuto(env, me, (await req.json<{ on?: boolean }>().catch(() => ({} as { on?: boolean }))).on);
+  { const n = pathname.match(/^\/api\/now\/member\/([^/]{1,40})$/); if (m === 'GET' && n) return memberLive(env, decodeURIComponent(n[1])); }
   if (m === 'GET' && pathname === '/api/now/draw') return getDraw(env, new URL(req.url).searchParams.get('lobby'));
   { const n = pathname.match(/^\/api\/now\/draw\/(\d+)\/confirm$/); if (m === 'POST' && n) return confirmDraw(env, me, Number(n[1])); }
   { const n = pathname.match(/^\/api\/now\/([^/]{1,80})\/draw$/); if (m === 'POST' && n) return startDraw(env, me, decodeURIComponent(n[1]), await req.json<{ balance?: unknown }>().catch(() => ({}))); }

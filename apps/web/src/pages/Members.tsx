@@ -38,7 +38,7 @@ export function MemberPage() {
   const target = id ?? me.id;
   return (
     <section className="section tight"><div className="wrap">
-      <MemberView key={target} api={api} id={target} self={target === me.id} onChampion={(c) => nav(`/champions/${c}`)} insight={insightParam()} onShop={() => nav('/shop')}
+      <MemberView key={target} api={api} id={target} self={target === me.id} onChampion={(c) => nav(`/champions/${c}`)} insight={insightParam()} onShop={() => nav('/shop')} meId={me.id} onMember={(x) => nav(x === me.id ? '/me' : `/members/${x}`)}
         studio={studio && target === me.id} studioBtn={false} onStudioClose={() => { if (studio) nav('/me', { replace: true }); }} />
     </div></section>
   );

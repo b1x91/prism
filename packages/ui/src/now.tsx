@@ -64,6 +64,9 @@ export function NowCard({ api, meId, canDraw, onMember, onAutoChange }: { api: A
       </section>
     </Swap>
   );
+  // 팟 이름은 생긴 순서대로 A팟 · B팟 … (로비에서 생긴 팟과 함께 게임 중인 판을 한 줄로 세운다)
+  const order = [...lobbies.map((l) => ({ id: l.id, t: l.since })), ...games.map((g) => ({ id: g.id, t: g.since }))].sort((a, b) => a.t - b.t);
+  const potName = (id: string) => { const i = order.findIndex((o) => o.id === id); return `${i < 26 ? String.fromCharCode(65 + Math.max(0, i)) : i + 1}팟`; };
   return (
     <Swap on={rv} skeleton={<NowSkeleton />}>
       <section className={`card now-card ${fadeCls(rv)}`} aria-label="NOW 지금 모이는 팟"><div className="now-in">
@@ -71,14 +74,18 @@ export function NowCard({ api, meId, canDraw, onMember, onAutoChange }: { api: A
           <span className="now-k">NOW</span>
           {scrims.length > 0 && <span className="now-live scrim"><i />내전 중</span>}
           {open > 0 && <span className="now-live"><i />팟 {open}개 모집 중</span>}
-          {playing > 0 && <span className="now-live game"><i />{playing}명 함께 게임 중</span>}
+          {playing > 0 && <span className="now-live game"><i />멤버 {playing}명 게임 중</span>}
           <small className="now-tip">{open > 0 || scrims.some((x) => x.phase === 'lobby') ? '빈자리의 + 를 누르면 방장에게 알림이 가요' : ''}</small>
           <label className="now-mini-auto"><small>자동으로 올리기</small><Toggle on={on} onChange={(v) => void toggle(v)} label="로비를 NOW에 자동으로 올리기" /></label>
         </div>
         <div className="now-list">
           {scrims.map((x) => <ScrimPanel key={x.id} api={api} x={x} meId={meId} canDraw={Boolean(canDraw)} asked={asked.has(x.id)} onAsk={() => void ask(x)} onMember={onMember} />)}
-          {lobbies.map((l, i) => <LobbyRow key={l.id} n={i + 1} l={l} meId={meId} asked={asked.has(l.id)} onAsk={() => void ask(l)} onMember={onMember} />)}
-          {games.map((g) => <GameRow key={g.id} g={g} meId={meId} onMember={onMember} />)}
+          {order.map((o) => {
+            const l = lobbies.find((x) => x.id === o.id);
+            if (l) return <LobbyRow key={l.id} n={potName(l.id)} l={l} meId={meId} asked={asked.has(l.id)} onAsk={() => void ask(l)} onMember={onMember} />;
+            const g = games.find((x) => x.id === o.id);
+            return g ? <GameRow key={g.id} n={potName(g.id)} g={g} meId={meId} onMember={onMember} /> : null;
+          })}
           <div className="now-toast-slot" aria-live="polite">
             {toast && <div key={toast.k} className={`now-toast ${toast.ok ? '' : 'err'}`} role="status">{toast.ok && <svg aria-hidden="true" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 8.5 6.5 12 13 4.5" /></svg>}{toast.text}</div>}
           </div>
@@ -143,7 +150,7 @@ function ScrimPanel({ api, x, meId, canDraw, asked, onAsk, onMember }: { api: Ap
   );
 }
 
-function LobbyRow({ n, l, meId, asked, onAsk, onMember }: { n: number; l: NowLobby; meId: string; asked: boolean; onAsk: () => void; onMember?: (id: string) => void }) {
+function LobbyRow({ n, l, meId, asked, onAsk, onMember }: { n: string; l: NowLobby; meId: string; asked: boolean; onAsk: () => void; onMember?: (id: string) => void }) {
   const mine = l.members.some((m) => m.id === meId);
   const host = l.members.find((m) => m.id === l.leader) ?? l.members[0];
   const strangers = Math.max(0, l.size - l.members.length);
@@ -153,7 +160,7 @@ function LobbyRow({ n, l, meId, asked, onAsk, onMember }: { n: number; l: NowLob
   const isHost = l.leader === meId || (!l.leader && host?.id === meId);
   return (
     <div className={`now-row ${l.phase} ${mine ? 'mine' : ''}`}>
-      <span className="now-n"><b>{n}팟</b><i className={`now-badge ${l.phase}`}>{mine && l.phase === 'lobby' ? '내 로비' : BADGE[l.phase]}</i></span>
+      <span className="now-n"><b>{n}</b><i className={`now-badge ${l.phase}`}>{mine && l.phase === 'lobby' ? '내 로비' : BADGE[l.phase]}</i></span>
       <div className="now-slots">
         {l.members.map((m) => (
           <button key={m.id} type="button" className={`now-face ${m.id === l.leader ? 'lead' : ''}`} title={m.nick} onClick={() => onMember?.(m.id)}>
@@ -180,7 +187,7 @@ function LobbyRow({ n, l, meId, asked, onAsk, onMember }: { n: number; l: NowLob
 const mins = (t: number) => Math.max(1, Math.floor((Date.now() - t) / 60_000));
 
 /** 함께 게임 중 (v3.130): 같은 판의 회원 얼굴 + 그 판의 챔프. 양 팀에 회원이 있으면 팀을 나눠 'vs' */
-function GameRow({ g, meId, onMember }: { g: NowGame; meId: string; onMember?: (id: string) => void }) {
+function GameRow({ n: name, g, meId, onMember }: { n: string; g: NowGame; meId: string; onMember?: (id: string) => void }) {
   const mine = [...g.blue.members, ...g.red.members].some((m) => m.id === meId);
   const both = g.blue.members.length > 0 && g.red.members.length > 0;
   const group = (t: NowGameSide) => t.members.map((m) => (
@@ -192,12 +199,12 @@ function GameRow({ g, meId, onMember }: { g: NowGame; meId: string; onMember?: (
   const n = g.blue.members.length + g.red.members.length;
   return (
     <div className={`now-row game together ${mine ? 'mine' : ''}`}>
-      <span className="now-n"><b>{both ? '맞대결' : '함께'}</b><i className="now-badge game">게임 중</i></span>
+      <span className="now-n"><b>{name}</b><i className="now-badge game">게임 중</i></span>
       <div className="now-slots">
         {both ? <>{group(g.blue)}<span className="now-vs">vs</span>{group(g.red)}</> : group(g.blue.members.length ? g.blue : g.red)}
       </div>
       <span className="now-meta">
-        <span>멤버 {n}명 · {g.custom ? '사용자 설정' : '아수라장'}</span>
+        <span>멤버 {n}명{both ? ' · 맞대결' : ''} · {g.custom ? '사용자 설정' : '아수라장'}</span>
         <small>{mins(g.since)}분째 · 끝나면 저절로 내려가요</small>
       </span>
     </div>
