@@ -40,18 +40,35 @@ export function IconBtn({ icon, label, onClick, tone, done, armed, disabled }: {
 }
 
 /**
- * 롤 닉(이름#태그) 복사 (v3.133) — 서로 롤 친구가 아닌 멤버에게 바로 친구 추가·초대할 수 있게.
- * 롤 계정을 연결하지 않은 회원(태그 없음)은 단추를 두지 않는다. 카드·줄을 누르는 동작과 겹치지 않게 전파를 막는다
+ * 롤 닉(이름#태그) 복사 — '아이디 캡슐' (v3.141, 사용자가 고른 시안 P1).
+ * 캡슐에는 태그만 (이름은 줄에 이미 있다). 누르면 '이름#태그' 전체가 복사되고, 태그가 위로 굴러 '복사됨' · 체크가 그려지고
+ * 아래 가는 막대가 1.6초 동안 줄어든 뒤 원래대로. reveal: 목록 줄에서는 숨겨 두었다가 줄(.cr-host)에 마우스를 올리면 떠오른다.
+ * 롤 계정을 연결하지 않은 회원(태그 없음)은 두지 않는다. 줄·카드를 누르는 동작과 겹치지 않게 전파를 막는다.
  */
-export function CopyRiot({ riot, className = '' }: { riot?: string | null; className?: string }) {
-  const [done, setDone] = useState(false);
+export function CopyRiot({ riot, className = '', reveal = false }: { riot?: string | null; className?: string; reveal?: boolean }) {
+  const [done, setDone] = useState(0);
   if (!riot || !riot.includes('#')) return null;
+  const tag = riot.slice(riot.lastIndexOf('#') + 1);
   const copy = async (e: ReactMouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     e.preventDefault();
-    try { await navigator.clipboard.writeText(riot); setDone(true); setTimeout(() => setDone(false), 1600); } catch { /* 복사 막힘 */ }
+    try { await navigator.clipboard.writeText(riot); } catch { return; }
+    const n = Date.now();
+    setDone(n);
+    setTimeout(() => setDone((d) => (d === n ? 0 : d)), 1600);
   };
-  return <span className={`copy-riot ${className}`}><IconBtn icon="copy" label={done ? '복사했어요 · 롤 친구 추가에 붙여 넣으세요' : `롤 닉 복사 (${riot})`} done={done} onClick={copy} /></span>;
+  return (
+    <button type="button" key={done || 'idle'} className={`cr-cap ${reveal ? 'reveal' : ''} ${done ? 'is-copied' : ''} ${className}`} onClick={copy}
+      title={done ? '복사했어요 · 롤 친구 추가에 붙여 넣으세요' : `${riot} 복사`} aria-label={`${riot} 복사`}>
+      <span className="cr-roll"><span><i className="cr-tag">#{tag}</i><i className="cr-done">복사됨</i></span></span>
+      <span className="cr-sep" aria-hidden="true" />
+      <span className="cr-ic" aria-hidden="true">
+        <svg className="c" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="12" height="12" rx="3" /><path d="M5 15V6a3 3 0 0 1 3-3h9" /></svg>
+        <svg className="k" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>
+      </span>
+      <span className="sr-only" aria-live="polite">{done ? '복사했어요' : ''}</span>
+    </button>
+  );
 }
 
 /** 어두운 배너 위 아이콘 버튼: 좋아요 하트 알약과 같은 높이·둥근 모서리·유리 바탕 (v3.52). 이름은 마우스를 올리면 */

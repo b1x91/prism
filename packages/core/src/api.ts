@@ -23,7 +23,7 @@ export interface Api {
  */
 export const CACHE_TTL = 3600_000;
 const LIVE_EXACT = new Set(['/api/me', '/api/me/games', '/api/crew/targets', '/links']);
-const LIVE_PREFIX = ['/api/now', '/api/news', '/api/discord', '/api/staff', '/api/me/invite', '/api/members/lookup', '/api/me/inquiry', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
+const LIVE_PREFIX = ['/api/now', '/api/news', '/api/discord', '/api/staff', '/api/me/invite', '/api/members/lookup', '/api/me/inquiry', '/api/inquiry/', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
 const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag', '/api/now'];
 export function withCache(api: Api, ttl = CACHE_TTL): Api {
   const memo = new Map<string, { at: number; data: unknown }>();

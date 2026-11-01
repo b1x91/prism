@@ -9,7 +9,7 @@ import { SHOP_ITEM, shopAsset } from '@prism/core';
 import { useShopRev } from './catalog';
 
 /** 납작한 칸(랭킹 줄)에서 보여 줄 띠: 장면마다 가장 그럴듯한 높이 */
-const ROW_VIEW: Record<string, string> = { 'bg-dusk': '0 330 1600 120', 'bg-magma': '0 380 1600 160' };
+const ROW_VIEW: Record<string, string> = { 'bg-dusk': '140 330 1320 110', 'bg-magma': '0 380 1600 160' };
 
 const SVG_SCENES: Record<string, (k: string, view?: string) => ReactNode> = {
   'bg-dusk': dusk,

@@ -73,7 +73,7 @@ export function AppMembers({ api, onMember }: { api: Api; onMember?: (id: string
           const days = Math.max(1, Math.round((Date.now() - m.joined) / DAY));
           const bg = art(m);
           return (
-            <div key={m.id} className="am-wrap">
+            <div key={m.id} className="am-wrap cr-host">
             <button type="button" className={`am-card ${top ? `am-top t${i}` : ''}`} onClick={() => onMember?.(m.id)}>
               {top && <Crest rank={i} />}
               {bg && <img className="am-bg fi" {...imgIn} src={bg} alt="" loading="lazy" />}
@@ -85,7 +85,7 @@ export function AppMembers({ api, onMember }: { api: Api; onMember?: (id: string
                 <span className="am-meta">{[m.crew > 0 ? `함께한 지 ${days}일` : '', m.about ? aboutWhen(m.about) : ''].filter(Boolean).join(' · ')}</span>
               </span>
             </button>
-            <CopyRiot riot={m.riot} className="am-copy" />
+            <CopyRiot riot={m.riot} className="am-copy" reveal />
             </div>
           );
         })}</div>

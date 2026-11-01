@@ -1,6 +1,6 @@
 /**
  * 문의하기 (CLAUDE.md v3.100). 앱·웹 문의 창(`/api/me/inquiry`)과 디스코드 `/문의`(입력 창)가 같은 곳으로 들어온다.
- * 봇이 운영자(ADMIN_DISCORD_IDS 첫 번째)에게 누가·어디서·무엇을 보냈는지 정리한 DM을 보낸다 (앱 진단은 파일로).
+ * 봇이 운영자(ADMIN_DISCORD_IDS 첫 번째)에게 누가·어디서·무엇을 보냈는지 정리한 DM을 보낸다 (앱 진단은 파일로, 첨부 사진은 그림으로 — v3.141).
  * 운영자가 DM 의 '답장하기'를 누르면 입력 창 → 회원에게 DM + 앱·웹 문의 창에 남는다. '해결'은 표시만 바꾼다.
  * 봇은 늘 켜 둔 프로그램이 아니라서 회원이 봇에게 직접 보낸 DM 은 읽지 못한다 — 그래서 입력은 창·명령으로 받는다.
  */
@@ -17,6 +17,28 @@ type Who = { nick: string; riot_id: string | null; discord_roles: string | null;
 
 const KINDS = new Set<string>(INQUIRY_KINDS.map((k) => k.id));
 const DIAG_MAX = 60_000;
+/** 첨부 사진 (v3.141): 최대 5장 · 장당 1.2MB (화면이 긴 변 1600px 로 줄여 보낸다) */
+export const FILES = { max: 5, bytes: 1_200_000 } as const;
+const MIME = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
+type Upload = { mime: string; data: Uint8Array };
+/** data:image/...;base64,... 를 확인해 바이트로. 그림 머리(매직 바이트)까지 본다 */
+function parseFiles(v: unknown): Upload[] {
+  if (!Array.isArray(v)) return [];
+  if (v.length > FILES.max) throw new HttpError(400, `사진은 ${FILES.max}장까지 붙일 수 있어요.`);
+  return v.map((x) => {
+    const m = /^data:(image\/(?:png|jpeg|webp|gif));base64,([A-Za-z0-9+/=]+)$/.exec(typeof x === 'string' ? x : '');
+    if (!m || !MIME.has(m[1])) throw new HttpError(400, '사진(PNG·JPG·WEBP·GIF)만 붙일 수 있어요.');
+    const bin = atob(m[2]);
+    if (bin.length > FILES.bytes) throw new HttpError(400, '사진 한 장이 너무 커요.');
+    const data = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+    const head = (n: number) => Array.from(data.slice(0, n));
+    const ok = m[1] === 'image/png' ? head(4).join() === '137,80,78,71' : m[1] === 'image/jpeg' ? head(3).join() === '255,216,255'
+      : m[1] === 'image/gif' ? bin.startsWith('GIF8') : bin.startsWith('RIFF') && bin.slice(8, 12) === 'WEBP';
+    if (!ok) throw new HttpError(400, '사진 파일이 올바르지 않아요.');
+    return { mime: m[1], data };
+  });
+}
+const EXT: Record<string, string> = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/gif': 'gif' };
 const ACCENT: Record<InquiryKind, number> = { bug: 0xe5484d, idea: 0x7c9cff, account: 0xf1a33c, etc: 0x8b93a7 };
 const LOL_KO: Record<NonNullable<InquiryContext['lol']>, string> = { off: '롤 꺼짐', on: '롤 켜짐', select: '챔프 고르는 중', game: '게임 중' };
 
@@ -37,10 +59,11 @@ function cleanContext(c: unknown): InquiryContext {
   };
 }
 
-const toItem = (r: Row): Inquiry => ({ id: r.id, kind: r.kind, body: r.body, source: r.source, at: r.at, status: r.status, reply: r.reply, repliedAt: r.replied_at });
+const toItem = (r: Row & { files?: number }): Inquiry => ({ id: r.id, kind: r.kind, body: r.body, source: r.source, at: r.at, status: r.status, reply: r.reply, repliedAt: r.replied_at, files: r.files ?? 0 });
+const FILE_COUNT = '(SELECT COUNT(*) FROM inquiry_files f WHERE f.inquiry_id = q.id) AS files';
 
 async function listMine(env: Env, memberId: string): Promise<Inquiry[]> {
-  const r = await env.DB.prepare('SELECT * FROM inquiries WHERE member_id = ? ORDER BY at DESC LIMIT 10').bind(memberId).all<Row>();
+  const r = await env.DB.prepare(`SELECT q.*, ${FILE_COUNT} FROM inquiries q WHERE q.member_id = ? ORDER BY q.at DESC LIMIT 10`).bind(memberId).all<Row & { files: number }>();
   return (r.results ?? []).map(toItem);
 }
 
@@ -49,7 +72,7 @@ export async function myInquiries(env: Env, me: Member): Promise<Response> {
 }
 
 /** 접수: 확인 → 저장. 운영자 DM 은 응답을 늦추지 않게 뒤에서 (ctx 가 없으면 기다린다) */
-async function create(env: Env, me: Member, kind: string, raw: string, source: Inquiry['source'], context: InquiryContext, diag: string | null, ctx?: ExecutionContext) {
+async function create(env: Env, me: Member, kind: string, raw: string, source: Inquiry['source'], context: InquiryContext, diag: string | null, ctx?: ExecutionContext, files: Upload[] = []) {
   if (!KINDS.has(kind)) throw new HttpError(400, '문의 종류를 골라 주세요.');
   const msg = raw.trim();
   if (msg.length < INQUIRY.min) throw new HttpError(400, `${INQUIRY.min}자 이상 적어 주세요.`);
@@ -61,21 +84,23 @@ async function create(env: Env, me: Member, kind: string, raw: string, source: I
   const ins = await env.DB.prepare('INSERT INTO inquiries (member_id, kind, body, source, context, diag, at) VALUES (?, ?, ?, ?, ?, ?, ?)')
     .bind(me.id, kind, msg, source, JSON.stringify(context), diag, now).run();
   const id = Number(ins.meta.last_row_id);
+  if (files.length) await env.DB.batch(files.map((f, n) => env.DB.prepare('INSERT INTO inquiry_files (inquiry_id, n, mime, data, size) VALUES (?, ?, ?, ?, ?)').bind(id, n, f.mime, f.data, f.data.length)));
   const job = deliver(env, id).catch((e) => console.error('문의 전달 실패', e));
   if (ctx) ctx.waitUntil(job); else await job;
   return id;
 }
 
 export async function postInquiry(req: Request, env: Env, me: Member, ctx?: ExecutionContext): Promise<Response> {
-  const b = await body<{ kind?: string; body?: string; context?: unknown; diag?: unknown }>(req);
+  const b = await body<{ kind?: string; body?: string; context?: unknown; diag?: unknown; files?: unknown }>(req);
   const context = cleanContext(b.context);
   const diag = typeof b.diag === 'string' && b.diag ? b.diag.slice(0, DIAG_MAX) : null;
-  await create(env, me, String(b.kind ?? ''), String(b.body ?? ''), context.app ? 'app' : 'web', context, diag, ctx);
+  const files = parseFiles(b.files);
+  await create(env, me, String(b.kind ?? ''), String(b.body ?? ''), context.app ? 'app' : 'web', context, diag, ctx, files);
   return json({ ok: true, items: await listMine(env, me.id) });
 }
 
 async function load(env: Env, id: number) {
-  const q = await env.DB.prepare('SELECT * FROM inquiries WHERE id = ?').bind(id).first<Row>();
+  const q = await env.DB.prepare(`SELECT q.*, ${FILE_COUNT} FROM inquiries q WHERE q.id = ?`).bind(id).first<Row & { files: number }>();
   if (!q) return null;
   const who = await env.DB.prepare(`SELECT nick, riot_id, discord_roles, profile_skin,
       (SELECT champion_id FROM participants WHERE member_id = m.id GROUP BY champion_id ORDER BY COUNT(*) DESC LIMIT 1) main
@@ -93,7 +118,7 @@ function adminCard(env: Env, q: Row, who: Who | null, note?: string) {
   const head = [
     `### 문의 #${q.id} · ${INQUIRY_KIND_KO[q.kind]}`,
     `<@${q.member_id}> · **${nick}** · ${role}`,
-    `-# ${src} · ${kst(q.at)}${state.length ? ` · ${state.join(' · ')}` : ''}${q.diag ? ' · 앱 진단 파일 첨부' : ''}`,
+    `-# ${src} · ${kst(q.at)}${state.length ? ` · ${state.join(' · ')}` : ''}${q.diag ? ' · 앱 진단 파일 첨부' : ''}${(q as Row & { files?: number }).files ? ` · 사진 ${(q as Row & { files?: number }).files}장` : ''}`,
   ].join('\n');
   const face = who ? faceUrl(who.profile_skin, who.main) : '';
   const status = q.status === 'done' ? '-# 해결로 표시함' : q.status === 'replied' && q.reply ? `**보낸 답장** · ${kst(q.replied_at ?? Date.now())}\n${quote(cut(q.reply, 1500))}` : '-# 아직 답장하지 않았어요';
@@ -119,6 +144,10 @@ async function deliver(env: Env, id: number): Promise<boolean> {
   const msg = await sendDM(env, admin, { flags: V2, components: adminCard(env, got.q, got.who), allowed_mentions: { parse: [] } });
   if (!msg) return false;
   await env.DB.prepare('UPDATE inquiries SET admin_dm = ? WHERE id = ?').bind(`${msg.channel}/${msg.id}`, id).run();
+  // 첨부 사진: 다음 메시지에 그림으로 (디스코드가 미리 보기로 보여 준다)
+  const pics = await env.DB.prepare('SELECT n, mime, data FROM inquiry_files WHERE inquiry_id = ? ORDER BY n').bind(id).all<{ n: number; mime: string; data: ArrayBuffer }>();
+  if (pics.results.length) await sendDM(env, admin, { content: `-# 문의 #${id} 첨부 사진 ${pics.results.length}장`, allowed_mentions: { parse: [] } },
+    pics.results.map((f) => ({ name: `prism-inquiry-${id}-${f.n + 1}.${EXT[f.mime] ?? 'png'}`, data: new Uint8Array(f.data), type: f.mime })));
   if (got.q.diag) await sendDM(env, admin, { content: `-# 문의 #${id} 앱 진단 (다른 플레이어 이름은 지움)`, allowed_mentions: { parse: [] } }, { name: `prism-inquiry-${id}.json`, data: got.q.diag });
   return true;
 }
@@ -208,9 +237,9 @@ const ctxShort = (c: string | null, source: Inquiry['source']): { ctx: string; p
 export async function inquiryWorklist(env: Env, me: Member): Promise<Response> {
   if (!can(me, 'manage')) throw new HttpError(403, '운영진만 쓸 수 있어요.');
   const { results } = await env.DB.prepare(
-    'SELECT q.*, m.nick AS who FROM inquiries q LEFT JOIN members m ON m.id = q.member_id ORDER BY q.at DESC LIMIT 300',
-  ).all<Row & { who: string | null }>();
-  const items = results.map((r) => ({ id: r.id, kind: r.kind, body: r.body, at: r.at, status: r.status, source: r.source, who: r.who ?? '알 수 없음', whoId: r.member_id, reply: r.reply, ...ctxShort(r.context, r.source) }));
+    `SELECT q.*, m.nick AS who, ${FILE_COUNT} FROM inquiries q LEFT JOIN members m ON m.id = q.member_id ORDER BY q.at DESC LIMIT 300`,
+  ).all<Row & { who: string | null; files: number }>();
+  const items = results.map((r) => ({ id: r.id, kind: r.kind, body: r.body, at: r.at, status: r.status, source: r.source, who: r.who ?? '알 수 없음', whoId: r.member_id, reply: r.reply, files: r.files ?? 0, ...ctxShort(r.context, r.source) }));
   const now = Date.now();
   const groups = worklistOf(items, now);
   const done = items.filter((x) => x.status === 'done').slice(0, 30);
@@ -227,4 +256,14 @@ export async function setInquiryStatus(env: Env, me: Member, b: { ids?: unknown;
   await env.DB.prepare(`UPDATE inquiries SET status = CASE WHEN ?1 = 'open' AND reply IS NOT NULL THEN 'replied' ELSE ?1 END WHERE id IN (SELECT value FROM json_each(?2))`)
     .bind(status, JSON.stringify(ids)).run();
   return json({ ok: true });
+}
+
+/** GET /api/inquiry/:id/files — 첨부 사진 (보낸 회원 본인 · 운영진만). JSON 의 data URL 로 (앱은 서버 중계가 JSON 만 다룬다) */
+export async function inquiryFiles(env: Env, me: Member, id: number): Promise<Response> {
+  const q = await env.DB.prepare('SELECT member_id FROM inquiries WHERE id = ?').bind(id).first<{ member_id: string }>();
+  if (!q) throw new HttpError(404, '없는 문의예요.');
+  if (q.member_id !== me.id && !can(me, 'manage')) throw new HttpError(403, '볼 수 없는 문의예요.');
+  const r = await env.DB.prepare('SELECT mime, data FROM inquiry_files WHERE inquiry_id = ? ORDER BY n').bind(id).all<{ mime: string; data: ArrayBuffer }>();
+  const b64 = (buf: ArrayBuffer) => { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode(...u.subarray(i, i + 0x8000)); return btoa(s); };
+  return json({ files: r.results.map((f) => `data:${f.mime};base64,${b64(f.data)}`) });
 }

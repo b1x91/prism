@@ -10,7 +10,7 @@ import { Seg } from './basics';
 import { Icon } from './icons';
 import { useKept } from './kept';
 import { ActBtn, actCls, useResolve } from './motion';
-import { InquiryForm, MyInquiries, type InquiryExtra } from './inquiry';
+import { InquiryForm, InquiryPics, MyInquiries, type InquiryExtra } from './inquiry';
 import { Bone, Swap, fadeCls, useReveal } from './skeleton';
 
 type Worklist = { groups: WorkGroup[]; done: WorkItem[]; md: string; total: number };
@@ -41,7 +41,7 @@ export function InquiryView({ api, extra, canManage }: { api: Api; extra?: () =>
         </section>
         <section className="card pad inq-card">
           <div className="card-head"><h2>내 문의</h2></div>
-          <MyInquiries items={items} />
+          <MyInquiries items={items} api={api} />
         </section>
       </>}
     </div>
@@ -93,6 +93,7 @@ function Worklist({ api }: { api: Api }) {
               <ul className="wl-items">{g.items.filter((x) => !res.gone(`i${x.id}`)).map((x) => (
                 <li key={x.id} className={`wl-item st-${x.status} ${actCls(res.state(`i${x.id}`))}`}>
                   <p>{x.body}</p>
+                  {(x.files ?? 0) > 0 && <InquiryPics api={api} id={x.id} n={x.files!} />}
                   <span className="wl-im">
                     <span className="num">#{x.id}</span><span>{x.who}</span><span>{ago(x.at)}</span>{x.ctx && <span>{x.ctx}</span>}
                     <i className={`wl-st st-${x.status}`}>{ST_KO[x.status]}</i>

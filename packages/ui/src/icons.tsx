@@ -17,6 +17,8 @@ const P: Record<string, ReactElement> = {
   check: <path d="M5 12.5 10 17 19 7" />,
   refresh: <><path d="M20 11a8 8 0 0 0-14.5-4.6L4 8" /><path d="M4 4v4h4" /><path d="M4 13a8 8 0 0 0 14.5 4.6L20 16" /><path d="M20 20v-4h-4" /></>,
   x: <path d="M6 6l12 12M18 6 6 18" />,
+  plus: <path d="M12 5v14M5 12h14" />,
+  image: <><rect x="3.5" y="5" width="17" height="14" rx="2.5" /><circle cx="9" cy="10" r="1.6" /><path d="m20.5 16-4.8-4.6L8 19" /></>,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
   compare: <><path d="M4 7h11M4 7l3-3M4 7l3 3" /><path d="M20 17H9M20 17l-3-3M20 17l-3 3" /></>,
   lock: <><rect x="4.5" y="10.5" width="15" height="10" rx="2.5" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /></>,

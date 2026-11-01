@@ -13,7 +13,7 @@ export const INQUIRY_KIND_KO: Record<InquiryKind, string> = Object.fromEntries(I
 export const INQUIRY = { min: 5, max: 1000, gapMs: 60_000, perDay: 10 } as const;
 
 export type InquiryStatus = 'open' | 'replied' | 'working' | 'done';
-export type Inquiry = { id: number; kind: InquiryKind; body: string; source: 'app' | 'web' | 'discord'; at: number; status: InquiryStatus; reply: string | null; repliedAt: number | null };
+export type Inquiry = { id: number; kind: InquiryKind; body: string; source: 'app' | 'web' | 'discord'; at: number; status: InquiryStatus; reply: string | null; repliedAt: number | null; /** 첨부 사진 수 (v3.141) */ files?: number };
 /** 앱이 함께 보내는 상태 (문제 확인용, 짧게) */
 export type InquiryContext = { app?: string; web?: boolean; lol?: 'off' | 'on' | 'select' | 'game'; vision?: boolean; fullscreen?: boolean; path?: string; ua?: string };
 
@@ -54,7 +54,7 @@ export function areaOf(body: string, path?: string | null): string {
   return byPath.find(([k]) => p.includes(k))?.[1] ?? 'etc';
 }
 
-export type WorkItem = { id: number; kind: InquiryKind; body: string; at: number; status: InquiryStatus; source: Inquiry['source']; who: string; whoId: string; ctx: string; reply: string | null };
+export type WorkItem = { id: number; kind: InquiryKind; body: string; at: number; status: InquiryStatus; source: Inquiry['source']; who: string; whoId: string; ctx: string; reply: string | null; files?: number };
 export type WorkGroup = { key: string; area: string; areaName: string; kind: InquiryKind; title: string; count: number; people: number; first: number; last: number; score: number; items: WorkItem[] };
 
 /** 종류 무게: 버그가 먼저, 그다음 계정·기록, 제안 */
@@ -88,7 +88,7 @@ export function worklistMd(groups: WorkGroup[], now = Date.now()): string {
     out.push(`## ${i + 1}. [${INQUIRY_KIND_KO[g.kind]}] ${g.areaName} — ${g.people}명 · ${g.count}건 (최근 ${mdDate(g.last)})`);
     for (const it of g.items) {
       const one = it.body.replace(/\s+/g, ' ').trim();
-      out.push(`- #${it.id}${it.ctx ? ` (${it.ctx})` : ''}${it.status === 'working' ? ' [작업 중]' : it.status === 'replied' ? ' [답장함]' : ''}: ${one.length > 300 ? `${one.slice(0, 299)}…` : one}`);
+      out.push(`- #${it.id}${it.ctx ? ` (${it.ctx})` : ''}${it.files ? ` [사진 ${it.files}장]` : ''}${it.status === 'working' ? ' [작업 중]' : it.status === 'replied' ? ' [답장함]' : ''}: ${one.length > 300 ? `${one.slice(0, 299)}…` : one}`);
     }
     out.push('');
   });

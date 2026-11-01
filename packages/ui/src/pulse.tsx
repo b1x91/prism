@@ -211,25 +211,27 @@ export function CrewPulse({ api, onMember }: { api: Api; onMember?: (id: string)
             {data.now.length ? <div className="pl-now">{data.now.map((x) => {
               const st = nowText(x);
               return (
-                <div key={x.id} className={`pl-row ${x.phase}`}>
+                <div key={x.id} className={`pl-row cr-host ${x.phase}`}>
                   <button type="button" className={`pl-who ${x.phase}`} onClick={() => onMember?.(x.id)}>
                     <FacePresence p={x.presence}><MemberFace nick={x.nick} skin={x.skin} champion={x.main} size={36} /></FacePresence>
                     <span className="pl-who-t"><b>{shortNick(x.nick)}</b>{st && <span>{st}</span>}</span>
                     {(x.phase === 'game' || x.phase === 'select') && x.champ > 0 && <ChampImg id={x.champ} size={28} />}
+                    <PlChev />
                   </button>
-                  <CopyRiot riot={x.riot} />
+                  <CopyRiot riot={x.riot} reveal />
                 </div>
               );
             })}</div> : <p className="meta pl-empty">지금 접속한 멤버가 없어요</p>}
             {(data.recent?.length ?? 0) > 0 && <>
               <div className="pl-label pl-label-sub">최근 접속</div>
               <div className="pl-now">{data.recent!.map((x) => (
-                <div key={x.id} className="pl-row off">
+                <div key={x.id} className="pl-row cr-host off">
                   <button type="button" className="pl-who off" onClick={() => onMember?.(x.id)}>
                     <MemberFace nick={x.nick} skin={x.skin} champion={x.main} size={36} />
                     <span className="pl-who-t"><b>{shortNick(x.nick)}</b><span>{ago(x.at)}</span></span>
+                    <PlChev />
                   </button>
-                  <CopyRiot riot={x.riot} />
+                  <CopyRiot riot={x.riot} reveal />
                 </div>
               ))}</div>
             </>}
@@ -252,4 +254,9 @@ export function CrewPulse({ api, onMember }: { api: Api; onMember?: (id: string)
       </section>
     </Swap>
   );
+}
+
+/** 줄을 누르면 회원 페이지 — 올리면 오른쪽 끝에 나타나는 › (v3.141) */
+function PlChev() {
+  return <svg className="pl-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6" /></svg>;
 }

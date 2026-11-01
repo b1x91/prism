@@ -50,7 +50,7 @@ export async function sendToChannel(env: Env, channelId: string, payload: unknow
 }
 
 /** 한 사람에게 DM. 파일을 붙이면 multipart 로. 성공하면 보낸 메시지의 채널·ID, 실패(DM 막힘 등)면 null */
-export async function sendDM(env: Env, userId: string, payload: unknown, file?: { name: string; data: string }): Promise<{ channel: string; id: string } | null> {
+export async function sendDM(env: Env, userId: string, payload: unknown, file?: { name: string; data: string | Uint8Array; type?: string } | { name: string; data: string | Uint8Array; type?: string }[]): Promise<{ channel: string; id: string } | null> {
   if (!env.DISCORD_BOT_TOKEN) return null;
   try {
     const ch = await discord(env, '/users/@me/channels', { method: 'POST', body: JSON.stringify({ recipient_id: userId }) });
@@ -60,8 +60,8 @@ export async function sendDM(env: Env, userId: string, payload: unknown, file?: 
     if (file) {
       const fd = new FormData();
       fd.append('payload_json', JSON.stringify(payload));
-      fd.append('files[0]', new Blob([file.data], { type: 'application/json' }), file.name);
-      r = await fetch(`${API}/channels/${channel}/messages`, { method: 'POST', headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }, body: fd, signal: AbortSignal.timeout(8000) });
+      (Array.isArray(file) ? file : [file]).forEach((f, i) => fd.append(`files[${i}]`, new Blob([f.data as BlobPart], { type: f.type ?? 'application/json' }), f.name));
+      r = await fetch(`${API}/channels/${channel}/messages`, { method: 'POST', headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }, body: fd, signal: AbortSignal.timeout(20000) });
     } else r = await discord(env, `/channels/${channel}/messages`, { method: 'POST', body: JSON.stringify(payload) });
     if (!r.ok) { console.error('DM 보내기 실패', r.status, await r.text().catch(() => '')); return null; }
     return { channel, id: ((await r.json()) as { id: string }).id };

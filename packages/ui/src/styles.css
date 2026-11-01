@@ -1792,6 +1792,11 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .rank-row.has-bg .num.key, .rank-row.has-bg .who b { color: #fff; text-shadow: 0 1px 6px rgba(0, 0, 0, .5); }
 .rank-row.has-bg:hover .bgx { filter: brightness(1.12); }
 .rank-row.has-bg.me { box-shadow: inset 0 0 0 2px var(--accent); }
+/* 배경 있는 줄끼리 붙으면 한 장의 그림처럼 이어져 보였다 (v3.141) — 줄마다 떨어진 카드로: 위아래 틈 · 위쪽 빛 테 · 짧은 그림자,
+   같은 장면이 이웃하면 짝수 줄은 좌우를 뒤집어 그림이 이어지지 않게 */
+.rank-row.has-bg { margin-block: 3px; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .1), inset 0 1px 0 rgba(255, 255, 255, .14), 0 2px 6px -2px rgba(5, 7, 12, .35); }
+.rank-row.has-bg.me { box-shadow: inset 0 0 0 2px var(--accent), 0 2px 6px -2px rgba(5, 7, 12, .35); }
+.rank-row.has-bg:nth-child(even) .bgx > * { scale: -1 1; }
 
 /* 새벽 다리 (일반) */
 .bgx.bg-dawn { background: radial-gradient(120% 60% at 70% 105%, rgba(255, 200, 160, .55), transparent 60%), linear-gradient(180deg, #0b1030 0%, #232058 38%, #6a3478 66%, #e07d7c 88%, #ffc49a 100%); }
@@ -2817,14 +2822,8 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 /* 롤 닉 복사 (v3.133): 줄 오른쪽 끝. 평소엔 흐리게, 줄에 마우스를 올리면 또렷하게 (터치 화면은 늘 또렷하게) */
 .pl-row { display: flex; align-items: center; gap: var(--s1); min-width: 0; }
 .pl-row > .pl-who { flex: 1; min-width: 0; }
-.copy-riot { flex: none; display: inline-flex; opacity: .5; transition: opacity .15s; }
-.pl-row:hover .copy-riot, .am-wrap:hover .copy-riot, .copy-riot:focus-within { opacity: 1; }
-@media (hover: none) { .copy-riot { opacity: 1; } }
 .phero-nm-row { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
 .phero-nm-row .phero-name { min-width: 0; }
-.copy-riot.dark { opacity: .8; }
-.copy-riot.dark .ibtn { background: rgba(0, 0, 0, .35); border-color: rgba(255, 255, 255, .22); color: #fff; }
-.copy-riot.dark .ibtn:hover { background: rgba(0, 0, 0, .5); }
 /* 최근 근황 — 날짜 + 타임라인 */
 .pl-day { display: grid; gap: var(--s1); }
 .pl-day + .pl-day { margin-top: var(--s3); }
@@ -2933,10 +2932,9 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .appm .card-head { margin-bottom: 0; }
 .am-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s3); }
 .am-wrap { position: relative; display: grid; }
-.am-copy { position: absolute; right: var(--s3); bottom: var(--s3); z-index: 2; transition: opacity .15s, transform .2s var(--zoom-ease, ease); }
+.am-copy { position: absolute; right: var(--s3); bottom: var(--s3); z-index: 2; }
 .am-wrap:hover .am-card { border-color: var(--line-2); transform: translateY(-2px); }
-.am-wrap:hover .am-copy { transform: translateY(-2px); }
-.am-wrap .am-card { padding-right: 48px; }
+.am-wrap .am-card { padding-right: var(--s4); }
 .am-card { position: relative; isolation: isolate; overflow: hidden; display: grid; grid-template-columns: 52px minmax(0, 1fr); gap: var(--s3); align-items: center; min-height: 96px; padding: var(--s3) var(--s4); border: 1px solid var(--line); border-radius: var(--r-l); background: var(--surface-2); color: inherit; font: inherit; text-align: left; cursor: pointer; transition: border-color .15s, transform .2s var(--zoom-ease, ease); }
 .am-card:hover { border-color: var(--line-2); transform: translateY(-2px); }
 .am-bg { position: absolute; inset: 0 0 0 auto; z-index: -2; width: 72%; height: 100%; object-fit: cover; object-position: center 20%; opacity: .6; mix-blend-mode: multiply; -webkit-mask-image: linear-gradient(90deg, transparent, #000 85%); mask-image: linear-gradient(90deg, transparent, #000 85%); transition: transform .5s var(--zoom-ease, ease); }
@@ -4235,3 +4233,100 @@ button.stf-person:hover { background: var(--surface-2); }
 .stf-go { width: 120px; flex: none; justify-content: center; }
 .btn.promote { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 35%, transparent); color: var(--accent); }
 .btn.promote:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 18%, var(--surface)); }
+
+/* ── 롤 닉 복사 '아이디 캡슐' (v3.141) ──
+   위에서 아래로 옅어지는 면 + 머리카락 테두리 + 위쪽 빛 한 줄 + 두 겹 그림자. 캡슐엔 태그만, 누르면 이름#태그 전체가 복사된다.
+   reveal: 목록 줄(.cr-host)에 마우스를 올리면 0.06초 뒤 떠오르고, 챔프 그림은 물러나며 글자는 캡슐 앞에서 말줄임. 휴대폰은 늘 보인다 */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.cr-cap { --cr-el1: #fff; --cr-el2: #f7f7fa; --cr-hair: rgba(16, 18, 36, .09); --cr-hi: #fff; --cr-sh: 0 1px 1px rgba(16, 18, 36, .05), 0 6px 16px -6px rgba(16, 18, 36, .18); --cr-sh2: 0 2px 2px rgba(16, 18, 36, .05), 0 14px 28px -10px rgba(16, 18, 36, .25);
+  position: relative; flex: none; display: inline-flex; align-items: center; gap: var(--s2); height: 30px; padding: 0 10px 0 12px; border: 0; border-radius: 10px; overflow: hidden; cursor: copy;
+  background: linear-gradient(180deg, var(--cr-el1), var(--cr-el2)); color: var(--text); font: inherit; box-shadow: inset 0 0 0 1px var(--cr-hair), inset 0 1px 0 var(--cr-hi), var(--cr-sh);
+  transition: opacity .2s ease, transform .4s cubic-bezier(.16, 1, .3, 1), box-shadow .25s, background .25s; }
+:root[data-theme="dark"] .cr-cap { --cr-el1: #232534; --cr-el2: #1b1d29; --cr-hair: rgba(255, 255, 255, .09); --cr-hi: rgba(255, 255, 255, .08); --cr-sh: 0 1px 1px rgba(0, 0, 0, .4), 0 8px 18px -6px rgba(0, 0, 0, .6); --cr-sh2: 0 2px 2px rgba(0, 0, 0, .4), 0 16px 32px -10px rgba(0, 0, 0, .7); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .cr-cap { --cr-el1: #232534; --cr-el2: #1b1d29; --cr-hair: rgba(255, 255, 255, .09); --cr-hi: rgba(255, 255, 255, .08); --cr-sh: 0 1px 1px rgba(0, 0, 0, .4), 0 8px 18px -6px rgba(0, 0, 0, .6); --cr-sh2: 0 2px 2px rgba(0, 0, 0, .4), 0 16px 32px -10px rgba(0, 0, 0, .7); } }
+.cr-cap:hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 35%, var(--cr-hair)), inset 0 1px 0 var(--cr-hi), var(--cr-sh2); }
+.cr-cap:active { scale: .97; }
+.cr-cap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cr-roll { display: block; height: 16px; min-width: 40px; overflow: hidden; text-align: center; font-size: var(--fs-xs); font-weight: 700; line-height: 16px; }
+.cr-roll > span { display: block; transition: transform .45s cubic-bezier(.16, 1, .3, 1); }
+.cr-roll i { display: block; font-style: normal; white-space: nowrap; }
+.cr-tag { color: var(--text-2); font-variant-numeric: tabular-nums; letter-spacing: .01em; }
+.cr-done { color: var(--ok); }
+.cr-sep { width: 1px; height: 14px; background: var(--cr-hair); }
+.cr-ic { position: relative; width: 14px; height: 14px; flex: none; color: var(--text-2); }
+.cr-ic svg { position: absolute; inset: 0; width: 14px; height: 14px; transition: opacity .2s, transform .35s cubic-bezier(.16, 1, .3, 1); }
+.cr-ic .k { opacity: 0; transform: scale(.5) rotate(-20deg); }
+.cr-ic .k path { stroke-dasharray: 20; stroke-dashoffset: 20; }
+.cr-cap.is-copied { background: linear-gradient(180deg, var(--cr-el1), color-mix(in srgb, var(--ok) 10%, var(--cr-el2))); }
+.cr-cap.is-copied .cr-roll > span { transform: translateY(-16px); }
+.cr-cap.is-copied .cr-ic { color: var(--ok); }
+.cr-cap.is-copied .cr-ic .c { opacity: 0; transform: scale(.5) rotate(20deg); }
+.cr-cap.is-copied .cr-ic .k { opacity: 1; transform: none; }
+.cr-cap.is-copied .cr-ic .k path { animation: cr-draw .4s .08s cubic-bezier(.16, 1, .3, 1) forwards; }
+@keyframes cr-draw { to { stroke-dashoffset: 0; } }
+.cr-cap::after { content: ""; position: absolute; left: 10px; right: 10px; bottom: 3px; height: 2px; border-radius: 2px; background: var(--ok); opacity: .55; transform: scaleX(0); transform-origin: left; }
+.cr-cap.is-copied::after { animation: cr-drain 1.6s linear forwards; }
+@keyframes cr-drain { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+/* 어두운 머리(회원 페이지) 위: 유리 */
+.cr-cap.dark { --cr-el1: rgba(255, 255, 255, .16); --cr-el2: rgba(255, 255, 255, .08); --cr-hair: rgba(255, 255, 255, .22); --cr-hi: rgba(255, 255, 255, .18); color: #fff; backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.cr-cap.dark .cr-tag, .cr-cap.dark .cr-ic { color: rgba(255, 255, 255, .85); }
+/* 목록 줄: 올리면 떠오름 */
+.cr-host { position: relative; }
+.cr-cap.reveal { position: absolute; z-index: 2; right: 28px; top: 50%; translate: 6px -50%; opacity: 0; pointer-events: none; }
+.am-wrap .cr-cap.reveal { top: auto; bottom: var(--s3); right: var(--s3); translate: 6px 0; }
+.cr-host:hover .cr-cap.reveal, .cr-host:has(:focus-visible) .cr-cap.reveal, .cr-cap.reveal.is-copied { opacity: 1; pointer-events: auto; translate: 0 -50%; }
+.am-wrap.cr-host:hover .cr-cap.reveal, .am-wrap.cr-host:has(:focus-visible) .cr-cap.reveal, .am-wrap .cr-cap.reveal.is-copied { translate: 0 0; }
+.cr-host:hover .cr-cap.reveal { transition-delay: .06s, .06s, 0s, 0s; }
+.pl-row.cr-host > .pl-who { padding-right: var(--s2); }
+.pl-who-t { transition: padding-right .35s cubic-bezier(.16, 1, .3, 1); }
+.pl-row.cr-host:is(:hover, :has(:focus-visible)) .pl-who-t { padding-right: 84px; }
+/* 챔프 그림이 있던 줄은 그 자리(28 + 간격)를 캡슐이 이어 쓰므로 덜 줄인다 */
+.pl-row.cr-host:is(:hover, :has(:focus-visible)) .pl-who:has(.champ) .pl-who-t { padding-right: 44px; }
+.pl-who .champ { transition: opacity .2s, transform .35s cubic-bezier(.16, 1, .3, 1); }
+.pl-row.cr-host:is(:hover, :has(:focus-visible)) .pl-who .champ { opacity: 0; transform: scale(.8); }
+.pl-chev { width: 16px; height: 16px; flex: none; margin-left: auto; color: var(--text-3); opacity: 0; transform: translateX(-4px); transition: opacity .2s, transform .3s cubic-bezier(.16, 1, .3, 1); }
+.pl-who .champ + .pl-chev { margin-left: 0; }
+.pl-row.cr-host:is(:hover, :has(:focus-visible)) .pl-chev { opacity: 1; transform: none; }
+.pl-row.cr-host:not(:has(.cr-cap)) .pl-who-t { padding-right: 0 !important; }
+@media (hover: none) {
+  .cr-cap.reveal { opacity: 1; pointer-events: auto; translate: 0 -50%; }
+  .am-wrap .cr-cap.reveal { translate: 0 0; }
+  .pl-row.cr-host:has(.cr-cap) .pl-who-t { padding-right: 84px; }
+  .pl-row.cr-host:has(.cr-cap) .pl-who:has(.champ) .pl-who-t { padding-right: 44px; }
+  .pl-row.cr-host:has(.cr-cap) .pl-who .champ { display: none; }
+  .pl-chev { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .cr-cap, .cr-roll > span, .cr-ic svg, .pl-who-t, .pl-chev { transition: none; } .cr-cap.is-copied::after, .cr-cap.is-copied .cr-ic .k path { animation: none; stroke-dashoffset: 0; } }
+
+/* ── 문의 첨부 사진 (v3.141) ── */
+.inq-compose { position: relative; display: grid; gap: var(--s2); }
+.inq-attach { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); }
+.inq-attach-t { font-size: var(--fs-xs); color: var(--text-3); }
+.inq-pic { position: relative; width: 64px; height: 64px; flex: none; padding: 0; border: 0; border-radius: var(--r-m); overflow: hidden; background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); cursor: zoom-in; }
+.inq-pic img { width: 100%; height: 100%; object-fit: cover; display: block; }
+span.inq-pic { cursor: default; animation: inq-in .3s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes inq-in { from { opacity: 0; transform: scale(.9); } }
+.inq-pic-x { position: absolute; top: 4px; right: 4px; display: grid; place-items: center; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: rgba(10, 11, 18, .72); color: #fff; cursor: pointer; opacity: 0; transition: opacity .15s; }
+.inq-pic-x svg { width: 12px; height: 12px; }
+.inq-pic:hover .inq-pic-x, .inq-pic-x:focus-visible { opacity: 1; }
+@media (hover: none) { .inq-pic-x { opacity: 1; } }
+.inq-add { display: grid; place-items: center; align-content: center; gap: 2px; width: 64px; height: 64px; flex: none; border: 1.5px dashed var(--line-2); border-radius: var(--r-m); background: transparent; color: var(--text-2); cursor: pointer; transition: border-color .15s, color .15s, background .15s; }
+.inq-add svg { width: 18px; height: 18px; }
+.inq-add small { font-size: var(--fs-xs); font-weight: 650; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.inq-add:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--accent) 6%, transparent); }
+.inq-spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--line-2); border-top-color: var(--accent); animation: upd-rot-ui .8s linear infinite; }
+@keyframes upd-rot-ui { to { transform: rotate(360deg); } }
+.inq-drop { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; gap: var(--s2); border: 2px dashed var(--accent); border-radius: var(--r-l); background: color-mix(in srgb, var(--surface) 88%, var(--accent) 12%); color: var(--accent); font-weight: 750; pointer-events: none; }
+.inq-drop svg { width: 18px; height: 18px; }
+.inq-nf { flex: none; display: inline-flex; align-items: center; gap: 3px; font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); }
+.inq-nf svg { width: 14px; height: 14px; }
+.inq-pics { display: flex; flex-wrap: wrap; gap: var(--s2); }
+.inq-pics .inq-pic.sk { cursor: default; }
+.wl-item .inq-pics { margin: var(--s1) 0; }
+.inq-view { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: var(--s6); background: rgba(6, 7, 12, .86); animation: inq-fade .2s ease both; cursor: zoom-out; }
+@keyframes inq-fade { from { opacity: 0; } }
+.inq-view img { max-width: min(1200px, 100%); max-height: calc(100vh - 96px); border-radius: var(--r-m); box-shadow: 0 24px 60px rgba(0, 0, 0, .5); cursor: default; animation: inq-in .3s cubic-bezier(.16, 1, .3, 1) both; }
+.inq-view-n { position: absolute; bottom: var(--s5); left: 50%; transform: translateX(-50%); padding: var(--s1) var(--s3); border-radius: 999px; background: rgba(255, 255, 255, .12); color: #fff; font-size: var(--fs-sm); font-weight: 650; font-variant-numeric: tabular-nums; }
+.inq-view-x { position: absolute; top: var(--s4); right: var(--s4); display: grid; place-items: center; width: 40px; height: 40px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, .12); color: #fff; cursor: pointer; }
+.inq-view-x svg { width: 20px; height: 20px; }
+@media (prefers-reduced-motion: reduce) { span.inq-pic, .inq-view, .inq-view img, .inq-spin { animation: none; } }
