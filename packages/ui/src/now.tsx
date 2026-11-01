@@ -7,10 +7,11 @@
  * - 함께 게임 중 (v3.130): 로비를 알리지 않았어도 같은 판에 회원이 2명 이상이면. 그 판의 챔프를 얼굴 옆에.
  */
 import { useEffect, useRef, useState } from 'react';
-import type { Api, NowFace, NowGame, NowGameSide, NowList, NowLobby, NowScrim, NowTeam } from '@prism/core';
+import type { Api, NowDrawRes, NowFace, NowGame, NowGameSide, NowList, NowLobby, NowScrim, NowTeam } from '@prism/core';
 import { useLoad } from './crew';
 import { ChampImg, MemberFace, Toggle } from './basics';
 import { Bone, Swap, fadeCls, useReveal } from './skeleton';
+import { PrismSplit, SplitStarter, drawLength, useDraw } from './split';
 
 const msgOf = (e: unknown) => (e instanceof Error ? e.message : String(e));
 const POLL = 15_000;
@@ -18,7 +19,7 @@ const MAX = 3;
 const ago = (t: number) => { const m = Math.floor((Date.now() - t) / 60_000); return m < 1 ? '방금' : m < 60 ? `${m}분 전` : `${Math.floor(m / 60)}시간 전`; };
 const BADGE: Record<NowLobby['phase'], string> = { lobby: '롤 로비', queue: '출발', game: '게임 중' };
 
-export function NowCard({ api, meId, onMember, onAutoChange }: { api: Api; meId: string; onMember?: (id: string) => void; /** 스위치를 바꾼 뒤 (앱은 내 정보를 다시 받아 로비 알리기를 멈춘다) */ onAutoChange?: (on: boolean) => void }) {
+export function NowCard({ api, meId, canDraw, onMember, onAutoChange }: { api: Api; meId: string; /** 내전 팀 나누기를 쓸 수 있나 (우수회원 이상, v3.135) */ canDraw?: boolean; onMember?: (id: string) => void; /** 스위치를 바꾼 뒤 (앱은 내 정보를 다시 받아 로비 알리기를 멈춘다) */ onAutoChange?: (on: boolean) => void }) {
   const { data, reload } = useLoad<NowList>(api, '/api/now');
   const rv = useReveal(Boolean(data));
   const [auto, setAuto] = useState<boolean | null>(null);
@@ -75,7 +76,7 @@ export function NowCard({ api, meId, onMember, onAutoChange }: { api: Api; meId:
           <label className="now-mini-auto"><small>자동으로 올리기</small><Toggle on={on} onChange={(v) => void toggle(v)} label="로비를 NOW에 자동으로 올리기" /></label>
         </div>
         <div className="now-list">
-          {scrims.map((x) => <ScrimPanel key={x.id} x={x} meId={meId} asked={asked.has(x.id)} onAsk={() => void ask(x)} onMember={onMember} />)}
+          {scrims.map((x) => <ScrimPanel key={x.id} api={api} x={x} meId={meId} canDraw={Boolean(canDraw)} asked={asked.has(x.id)} onAsk={() => void ask(x)} onMember={onMember} />)}
           {lobbies.map((l, i) => <LobbyRow key={l.id} n={i + 1} l={l} meId={meId} asked={asked.has(l.id)} onAsk={() => void ask(l)} onMember={onMember} />)}
           {games.map((g) => <GameRow key={g.id} g={g} meId={meId} onMember={onMember} />)}
           <div className="now-toast-slot" aria-live="polite">
@@ -90,11 +91,23 @@ export function NowCard({ api, meId, onMember, onAutoChange }: { api: Api; meId:
 const SCRIM_PHASE: Record<NowScrim['phase'], string> = { lobby: '모이는 중', queue: '챔프 선택', game: '게임 중' };
 
 /** 내전 중 (v3.127): 사용자 설정 로비를 앱이 읽으면. 블루 · 레드 두 팀, 오늘의 점수 */
-function ScrimPanel({ x, meId, asked, onAsk, onMember }: { x: NowScrim; meId: string; asked: boolean; onAsk: () => void; onMember?: (id: string) => void }) {
+function ScrimPanel({ api, x, meId, canDraw, asked, onAsk, onMember }: { api: Api; x: NowScrim; meId: string; canDraw: boolean; asked: boolean; onAsk: () => void; onMember?: (id: string) => void }) {
+  // 팀 나누기 (v3.135): 내전이 떠 있는 동안 1.5초마다 묻는다 → 누가 시작해도 모두의 화면에서 같은 순간에 시작
+  const { draw, setDraw, offset } = useDraw(api, x.id, x.phase !== 'game');
+  const [starting, setStarting] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const fresh = draw && Date.now() + offset.current - draw.start < drawLength(draw.people.length) + 30 * 60_000;
   const inIt = [...x.blue.members, ...x.red.members].some((m) => m.id === meId);
   const waiting = x.requests.filter((r) => ![...x.blue.members, ...x.red.members].some((m) => m.id === r.id));
   const canAsk = x.phase === 'lobby' && !inIt && !asked && !waiting.some((r) => r.id === meId) && x.size < 10;
   const isHost = x.leader === meId;
+  const canRun = canDraw && inIt && x.phase === 'lobby';
+  const confirm = async () => {
+    if (!draw) return;
+    setBusy(true);
+    try { const r = await api.post<NowDrawRes>(`/api/now/draw/${draw.id}/confirm`, {}); setDraw(r.draw); } catch { /* 다음 물음에서 맞춰진다 */ }
+    finally { setBusy(false); }
+  };
   const team = (t: NowTeam, side: 'blue' | 'red') => (
     <div className={`now-team ${side}`}>
       <span className="now-team-h"><i />{side === 'blue' ? '블루' : '레드'}<small>{t.size} / 5</small></span>
@@ -119,8 +132,12 @@ function ScrimPanel({ x, meId, asked, onAsk, onMember }: { x: NowScrim; meId: st
         <small>{x.size} / 10</small>
         <span className="sp" />
         {x.series.games > 0 && <span className="now-series" title="지난 6시간 기록된 사용자 설정 판, 게임 진영 기준">오늘 <b className="blue">{x.series.blue}</b> : <b className="red">{x.series.red}</b></span>}
+        {canRun && !starting && <button type="button" className="now-split-btn" onClick={() => setStarting(true)}><svg viewBox="0 0 20 18" aria-hidden="true"><path d="M10 1.5 18.5 16.5h-17Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" /></svg>팀 나누기</button>}
       </div>
-      <div className="now-teams">{team(x.blue, 'blue')}{team(x.red, 'red')}</div>
+      {starting && <SplitStarter api={api} lobby={x.id} total={x.size} onClose={() => setStarting(false)} onStarted={(r) => { offset.current = r.now - Date.now(); setDraw(r.draw); setStarting(false); }} />}
+      {draw && fresh
+        ? <PrismSplit draw={draw} offset={offset} meId={meId} canRun={canRun} busy={busy} onAgain={() => setStarting(true)} onConfirm={() => void confirm()} />
+        : <div className="now-teams">{team(x.blue, 'blue')}{team(x.red, 'red')}</div>}
       {waiting.length > 0 && x.phase === 'lobby' && <div className="now-wait"><i />{waiting.map((r: NowFace) => r.nick).join(', ')}님이 기다려요{isHost && <small>롤에서 초대하면 바로 채워져요</small>}</div>}
     </div>
   );

@@ -47,7 +47,7 @@ export function Crew() {
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
       <div className="page-head crew-head"><div><h1>Prism</h1><p>{shortNick(me.nick)}님, 오늘 밤도 한 판.</p></div><ChannelButtons links={links} /></div>
       <DiscordNowCard api={api} admin={me.tier === 'admin'} />
-      <NowCard api={api} meId={me.id} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />
+      <NowCard api={api} meId={me.id} canDraw={Boolean(me.canScrim)} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />
       <CrewPulse api={api} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />
       <AppMembers api={api} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />
       {<ProspectBoard api={api} invite={links.discord} admin={Boolean(me.perms?.moderate)} />}

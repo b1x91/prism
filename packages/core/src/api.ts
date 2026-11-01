@@ -68,6 +68,9 @@ export type NowScrim = { id: string; phase: NowLobby['phase']; size: number; sin
 /** 함께 게임 중 (v3.130): 로비 없이도, 같은 판에 회원이 2명 이상이면. champ = 그 판의 챔프 */
 export type NowGameSide = { members: (NowFace & { champ: number })[]; size: number };
 export type NowGame = { id: string; since: number; custom: boolean; blue: NowGameSide; red: NowGameSide };
+/** 내전 팀 나누기 (프리즘 빛 갈래, v3.135). people 순서 = 빛이 지나가는 순서, id 가 없으면 손님 */
+export type NowDraw = { id: number; lobby: string; host: string; start: number; people: { key: string; id: string | null; team: 'blue' | 'red'; score: number; nick?: string; skin?: number | null; main?: number | null }[]; balanced: boolean; confirmed: boolean };
+export type NowDrawRes = { draw: NowDraw | null; now: number };
 export type NowList = { auto: boolean; lobbies: NowLobby[]; scrims?: NowScrim[]; games?: NowGame[] };
 /** 회원 얼굴 재료 (서버 FACE): 대표 스킨, 주 챔피언 */
 export type FaceInfo = { skin?: number | null; main?: number | null };
