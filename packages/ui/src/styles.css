@@ -19,6 +19,13 @@
   --silver: #9ea3ae; --gold: #c3951d;
   --tile: #161b2e; /* 증강 아이콘 칸 (아이콘이 흰 그림이라 테마와 관계없이 어둡게) */
   --shadow: 0 1px 2px rgba(16, 20, 36, .05), 0 12px 32px rgba(16, 20, 36, .07);
+  /* 리퀴드 글래스 (떠 있는 막대·카드, v3.134): 뒤가 비치는 옅은 바탕 + 흐림·채도 + 위쪽 빛 테 + 옅은 그림자 */
+  --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, .72), rgba(255, 255, 255, .5));
+  --glass-line: rgba(255, 255, 255, .7);
+  --glass-edge: rgba(16, 20, 36, .08);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(255, 255, 255, .25);
+  --glass-shadow: 0 8px 28px rgba(16, 20, 36, .1), 0 1px 2px rgba(16, 20, 36, .05);
+  --glass-fill: rgba(255, 255, 255, .55);
   --glow: radial-gradient(900px 420px at 70% -10%, rgba(58, 99, 240, .12), transparent 65%);
 
   --spectrum-1: #ff3d6e; --spectrum-2: #ff8a1f; --spectrum-3: #ffd21f; --spectrum-4: #2fd36b;
@@ -34,6 +41,12 @@
     --accent: #7c9cff; --accent-2: #9bb3ff; --accent-soft: rgba(124, 156, 255, .14); --on-accent: #07090f;
     --win: #6b9dff; --lose: #ff6a6f; --ok: #3fd08f; --warn: #f2b54c;
     --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 16px 40px rgba(0, 0, 0, .35);
+    --glass-bg: linear-gradient(180deg, rgba(36, 42, 64, .62), rgba(20, 24, 40, .48));
+    --glass-line: rgba(255, 255, 255, .14);
+    --glass-edge: rgba(0, 0, 0, .3);
+    --glass-shine: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 -1px 0 rgba(255, 255, 255, .04);
+    --glass-shadow: 0 10px 32px rgba(0, 0, 0, .4), 0 1px 2px rgba(0, 0, 0, .3);
+    --glass-fill: rgba(255, 255, 255, .06);
     --glow: radial-gradient(900px 460px at 70% -12%, rgba(124, 156, 255, .16), transparent 65%);
     color-scheme: dark;
   }
@@ -45,6 +58,12 @@
   --accent: #7c9cff; --accent-2: #9bb3ff; --accent-soft: rgba(124, 156, 255, .14); --on-accent: #07090f;
   --win: #6b9dff; --lose: #ff6a6f; --ok: #3fd08f; --warn: #f2b54c;
   --shadow: 0 1px 2px rgba(0, 0, 0, .4), 0 16px 40px rgba(0, 0, 0, .35);
+  --glass-bg: linear-gradient(180deg, rgba(36, 42, 64, .62), rgba(20, 24, 40, .48));
+  --glass-line: rgba(255, 255, 255, .14);
+  --glass-edge: rgba(0, 0, 0, .3);
+  --glass-shine: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 -1px 0 rgba(255, 255, 255, .04);
+  --glass-shadow: 0 10px 32px rgba(0, 0, 0, .4), 0 1px 2px rgba(0, 0, 0, .3);
+  --glass-fill: rgba(255, 255, 255, .06);
   --glow: radial-gradient(900px 460px at 70% -12%, rgba(124, 156, 255, .16), transparent 65%);
   color-scheme: dark;
 }
@@ -1922,7 +1941,13 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .chip { white-space: nowrap; flex: none; }
 .role-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
 /* 목록 도구 줄: 검색 · 거르기 칩 · 개수. 스크롤해도 위에 붙는다 */
-.ltools { position: sticky; top: var(--s3); z-index: 6; display: flex; flex-wrap: nowrap; align-items: center; gap: var(--s3); padding: var(--s3); border-radius: var(--r-l); background: color-mix(in srgb, var(--surface) 88%, transparent); border: 1px solid var(--line); box-shadow: var(--shadow); backdrop-filter: blur(14px); }
+.ltools { position: sticky; top: var(--s3); z-index: 6; display: flex; flex-wrap: nowrap; align-items: center; gap: var(--s3); padding: var(--s3); border-radius: var(--r-l); }
+/* 리퀴드 글래스: 떠 있는 막대·카드 공용 (도구 줄 · 웹 상단 바, v3.134) */
+.ltools, .glass { background: var(--glass-bg); border: 1px solid var(--glass-line); box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--glass-shadow); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); }
+.ltools .ltools-q { background: var(--glass-fill); border-color: var(--glass-line); }
+.ltools .ltools-q:focus-within { background: var(--surface); border-color: var(--accent); }
+.ltools .chip:not(.on) { background: var(--glass-fill); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .ltools, .glass { background: var(--surface); } }
 .ltools-q { flex: 1 1 280px; min-width: 0; display: flex; align-items: center; gap: var(--s2); height: 40px; padding: 0 var(--s3); border-radius: var(--r-m); background: var(--surface-2); border: 1px solid transparent; color: var(--text-3); }
 .ltools-q:focus-within { border-color: var(--accent); background: var(--surface); }
 .ltools-q input { flex: 1; min-width: 0; border: 0; outline: 0; background: none; color: var(--text); font: inherit; font-size: var(--fs-md); }
