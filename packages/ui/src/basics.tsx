@@ -317,5 +317,5 @@ export function LockedMore({ more, what = '전체 순위', children }: { more: n
 
 /** 메뉴의 LIVE 표시 (v3.137): NOW 에 팟·내전·함께 게임 중이 돌아가는 동안 '멤버' 메뉴 옆. 테두리 빛이 돈다 */
 export function NavLive({ n }: { n: number }) {
-  return <i className="nav-live" title={`지금 NOW ${n}개 진행 중`} aria-label="NOW 진행 중"><b>LIVE</b></i>;
+  return <i className="nav-live" title={`지금 NOW ${n}개 진행 중`} aria-label="NOW 진행 중"><i className="nl-dot" /><b>LIVE</b></i>;
 }
