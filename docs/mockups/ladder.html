@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>내전 팀 사다리 시안</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+<link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;600;700;800&display=swap" />
 <style>
 :root {
   --bg: #f6f6f3; --surface: #ffffff; --surface-2: #f0f1f4; --line: #e3e5ea; --text: #151827; --text-2: #4a5065; --text-3: #8a90a2;
@@ -12,10 +12,10 @@
   --stage: #0b0e1a; --stage-2: #141a2e; --stage-line: rgba(255,255,255,.1);
 }
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #0a0d18; --surface: #12162a; --surface-2: #1a2036; --line: #262d48; --text: #eef1f8; --text-2: #b8bfd6; --text-3: #7c84a0; }
+  :root:not([data-theme="light"]) { --bg: #0a0d18; --surface: #12162a; --surface-2: #1a2036; --line: #262d48; --text: #eef1f8; --text-2: #b8bfd6; --text-3: #7c84a0; }
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Pretendard Variable', Pretendard, system-ui, sans-serif; word-break: keep-all; -webkit-font-smoothing: antialiased; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Pretendard Variable', Pretendard, 'Noto Sans KR', system-ui, sans-serif; word-break: keep-all; -webkit-font-smoothing: antialiased; }
 .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 16px 64px; }
 header.top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
 header.top img { width: 28px; height: 28px; }
