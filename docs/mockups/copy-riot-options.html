@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>롤 닉 복사 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+<style>
+:root { --bg:#f6f6f3; --card:#fff; --line:#e9e9ef; --t1:#15161c; --t2:#5b5e6b; --t3:#9a9dab; --acc:#4b5ef0; --ok:#15803d; --game:#e9f5ee; --gameT:#178a4a; --sel:#eef1fd; --selT:#3f5bd9; --hover:#f2f2f6; }
+:root[data-theme=dark] { --bg:#0b0c12; --card:#14151d; --line:#262836; --t1:#eceef6; --t2:#a7abbd; --t3:#6e7285; --acc:#8a98ff; --ok:#3fd08f; --game:#14261c; --gameT:#4fd38d; --sel:#171c33; --selT:#8fa2ff; --hover:#1b1d28; }
+* { box-sizing:border-box } body { margin:0; background:var(--bg); color:var(--t1); font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif; word-break:keep-all; }
+.wrap { max-width:1180px; margin:0 auto; padding:32px 16px 48px; }
+header { display:flex; align-items:center; gap:12px; margin-bottom:24px; } h1 { font-size:20px; margin:0; } header p { margin:0; color:var(--t2); font-size:13px; } .sp{flex:1}
+.theme { border:1px solid var(--line); background:var(--card); color:var(--t1); border-radius:8px; padding:8px 12px; font:inherit; font-size:13px; cursor:pointer; }
+.grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; } @media (max-width:980px){ .grid{grid-template-columns:1fr} }
+.opt { background:var(--card); border:1px solid var(--line); border-radius:16px; padding:20px; }
+.opt h2 { font-size:16px; margin:0 0 4px; } .opt .d { color:var(--t2); font-size:13px; line-height:1.55; margin:0 0 16px; min-height:60px; }
+.opt .tag { display:inline-block; font-size:12px; font-weight:700; color:var(--acc); margin-bottom:8px; }
+.list { display:grid; gap:4px; }
+.row { position:relative; display:flex; align-items:center; gap:12px; padding:8px 12px; border-radius:12px; transition:background .2s; }
+.row:hover { background:var(--hover); } .row.game { background:var(--game); } .row.sel { background:var(--sel); }
+.face { position:relative; width:40px; height:40px; flex:none; } .face img { width:100%; height:100%; border-radius:12px; object-fit:cover; display:block; }
+.face i { position:absolute; right:-3px; bottom:-3px; width:14px; height:14px; border-radius:50%; background:#18925c; box-shadow:0 0 0 2px var(--card); }
+.who { flex:1; min-width:0; } .who b { display:block; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.who small { display:block; font-size:12px; font-weight:650; color:var(--t3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.row.game small { color:var(--gameT) } .row.sel small { color:var(--selT) }
+.champ { width:28px; height:28px; border-radius:8px; flex:none; transition:transform .25s cubic-bezier(.16,1,.3,1), opacity .2s; }
+/* 공통 복사 완료 표시 */
+.ok { color:var(--ok) !important; }
+svg { display:block }
+
+/* A — 호버하면 나타나는 알약 */
+.a .act { position:absolute; right:12px; top:50%; transform:translate(6px,-50%); opacity:0; pointer-events:none; display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 10px; border:0; border-radius:999px; background:var(--t1); color:var(--card); font:inherit; font-size:12px; font-weight:700; cursor:pointer; transition:opacity .18s, transform .25s cubic-bezier(.16,1,.3,1), background .2s; }
+.a .row:hover .act, .a .act:focus-visible, .a .act.done { opacity:1; transform:translate(0,-50%); pointer-events:auto; }
+.a .row:hover .champ, .a .row:has(.act.done) .champ { opacity:0; transform:translateX(-8px); }
+.a .act.done { background:var(--ok); color:#fff; }
+
+/* B — 이름 옆 태그 칩 */
+.b .nm { display:flex; align-items:baseline; gap:6px; min-width:0; } .b .nm b { flex:0 1 auto; min-width:0; }
+.b .tagchip { flex:none; display:inline-flex; align-items:center; gap:4px; height:20px; padding:0 6px; border:0; border-radius:6px; background:transparent; color:var(--t3); font:inherit; font-size:12px; font-weight:650; cursor:pointer; transition:background .15s, color .15s; }
+.b .tagchip svg { width:12px; height:12px; opacity:0; transition:opacity .15s; }
+.b .row:hover .tagchip svg { opacity:1; }
+.b .tagchip:hover { background:color-mix(in srgb,var(--acc) 12%,transparent); color:var(--acc); }
+.b .tagchip.done { color:var(--ok); background:color-mix(in srgb,var(--ok) 12%,transparent); } .b .tagchip.done svg { opacity:1 }
+
+/* C — 더 보기 메뉴 */
+.c .more { width:28px; height:28px; flex:none; display:grid; place-items:center; border:0; border-radius:8px; background:transparent; color:var(--t3); cursor:pointer; opacity:0; transition:opacity .15s, background .15s; }
+.c .row:hover .more, .c .more[aria-expanded=true] { opacity:1; } .c .more:hover, .c .more[aria-expanded=true] { background:color-mix(in srgb,var(--t1) 8%,transparent); color:var(--t1); }
+.c .menu { position:absolute; right:8px; top:calc(100% - 4px); z-index:5; width:220px; padding:4px; border-radius:12px; background:var(--card); border:1px solid var(--line); box-shadow:0 12px 32px rgb(0 0 0 / .14); display:none; }
+.c .menu.on { display:block; animation:pop .16s cubic-bezier(.16,1,.3,1); } @keyframes pop { from { opacity:0; transform:translateY(-4px) scale(.98) } }
+.c .menu button { width:100%; display:flex; align-items:center; gap:10px; padding:8px 10px; border:0; border-radius:8px; background:none; color:var(--t1); font:inherit; font-size:13px; font-weight:600; text-align:left; cursor:pointer; }
+.c .menu button:hover { background:var(--hover); } .c .menu small { display:block; color:var(--t3); font-size:12px; font-weight:500; }
+.c .menu svg { width:16px; height:16px; flex:none; color:var(--t2); }
+.note { margin-top:12px; font-size:12px; color:var(--t3); line-height:1.5; }
+.toast { position:fixed; left:50%; bottom:24px; transform:translate(-50%,16px); opacity:0; padding:10px 16px; border-radius:12px; background:var(--t1); color:var(--card); font-size:13px; font-weight:650; transition:.25s cubic-bezier(.16,1,.3,1); pointer-events:none; }
+.toast.on { opacity:1; transform:translate(-50%,0); }
+</style></head><body>
+<div class="wrap">
+<header><div><h1>롤 닉 복사 — 시안 3개</h1><p>아카이브 '지금 접속' 줄 기준. 마우스를 올리고 눌러 보세요 (실제로 복사됩니다).</p></div><span class="sp"></span><button class="theme" onclick="const r=document.documentElement;r.dataset.theme=r.dataset.theme==='dark'?'light':'dark'">라이트 / 다크</button></header>
+<div class="grid">
+  <section class="opt a"><span class="tag">시안 A</span><h2>올리면 나타나는 알약</h2><p class="d">평소엔 단추가 없고, 줄에 마우스를 올리면 챔프 그림 자리에 '닉 복사' 알약이 밀려 나옵니다. 누르면 초록 '복사됨'. 가장 조용하지만 기능이 숨어 있습니다.</p><div class="list" data-kind="a"></div><p class="note">휴대폰: 줄을 길게 누르면 알약이 나타남</p></section>
+  <section class="opt b"><span class="tag">시안 B · 추천</span><h2>이름 옆 태그 칩</h2><p class="d">이름 옆에 흐린 '#KR1' 태그를 늘 보여 주고, 태그를 누르면 이름#태그 전체가 복사됩니다. 따로 단추 칸이 없어 줄이 넓고, 무엇을 복사하는지 바로 보입니다.</p><div class="list" data-kind="b"></div><p class="note">올리면 태그 옆에 작은 복사 표시, 누르면 '✓ 복사됨'으로 1.4초</p></section>
+  <section class="opt c"><span class="tag">시안 C</span><h2>더 보기 메뉴</h2><p class="d">줄 끝 '⋯'을 누르면 작은 메뉴: 롤 닉 복사(닉 미리 보기) · 회원 페이지. 나중에 기능(초대 링크 등)이 늘어도 자리가 그대로입니다. 한 번 더 눌러야 합니다.</p><div class="list" data-kind="c"></div><p class="note">메뉴 바깥을 누르거나 Esc 로 닫힘</p></section>
+</div></div>
+<div class="toast" id="toast"></div>
+<script>
+const DD='https://ddragon.leagueoflegends.com/cdn/14.20.1/img/champion/';
+const P=[
+ {n:'굴루따띠온',t:'KR1',f:'Zed',c:'Sona',s:'소나로 게임 중 · 17분째',k:'game'},
+ {n:'공늘보',t:'PRSM',f:'Ahri',c:'Ahri',s:'아리 · 챔프 고르는 중',k:'sel'},
+ {n:'그남자와잔나',t:'0000',f:'Jayce',c:'Zoe',s:'조이 · 챔프 고르는 중',k:'sel'},
+ {n:'지농s',t:'KR2',f:'Neeko',s:'온라인'},
+ {n:'Haze',t:'KR18',f:'Kaisa',s:''},
+];
+const ic={copy:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="3"/><path d="M5 15V6a3 3 0 0 1 3-3h9"/></svg>',
+ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+ more:'<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg>',
+ user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>'};
+const toast=(m)=>{const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('on'),1400);};
+const copy=async(p)=>{try{await navigator.clipboard.writeText(p.n+'#'+p.t)}catch{}};
+document.querySelectorAll('.list').forEach(list=>{const kind=list.dataset.kind;
+ P.forEach(p=>{const r=document.createElement('div');r.className='row '+(p.k||'');
+  const champ=p.c?`<img class="champ" src="${DD}${p.c}.png" alt="">`:'';
+  const face=`<span class="face"><img src="${DD}${p.f}.png" alt=""><i></i></span>`;
+  if(kind==='a'){r.innerHTML=`${face}<span class="who"><b>${p.n}</b><small>${p.s||'&nbsp;'}</small></span>${champ}<button class="act">${ic.copy.replace('<svg','<svg width="14" height="14"')}<span>닉 복사</span></button>`;
+   const b=r.querySelector('.act');b.onclick=async()=>{await copy(p);b.classList.add('done');b.innerHTML=ic.check.replace('<svg','<svg width="14" height="14"')+'<span>복사됨</span>';setTimeout(()=>{b.classList.remove('done');b.innerHTML=ic.copy.replace('<svg','<svg width="14" height="14"')+'<span>닉 복사</span>'},1400)};}
+  if(kind==='b'){r.innerHTML=`${face}<span class="who"><span class="nm"><b>${p.n}</b><button class="tagchip" title="${p.n}#${p.t} 복사"><span>#${p.t}</span>${ic.copy}</button></span><small>${p.s||'&nbsp;'}</small></span>${champ}`;
+   const b=r.querySelector('.tagchip');b.onclick=async()=>{await copy(p);b.classList.add('done');b.innerHTML='<span>복사됨</span>'+ic.check;setTimeout(()=>{b.classList.remove('done');b.innerHTML=`<span>#${p.t}</span>${ic.copy}`},1400)};}
+  if(kind==='c'){r.innerHTML=`${face}<span class="who"><b>${p.n}</b><small>${p.s||'&nbsp;'}</small></span>${champ}<button class="more" aria-expanded="false" aria-label="더 보기">${ic.more}</button><div class="menu"><button data-a="copy">${ic.copy}<span>롤 닉 복사<small>${p.n}#${p.t}</small></span></button><button>${ic.user}<span>회원 페이지</span></button></div>`;
+   const m=r.querySelector('.more'),menu=r.querySelector('.menu');m.onclick=(e)=>{e.stopPropagation();document.querySelectorAll('.c .menu.on').forEach(x=>{x.classList.remove('on');x.previousElementSibling.setAttribute('aria-expanded','false')});menu.classList.add('on');m.setAttribute('aria-expanded','true')};
+   menu.querySelector('[data-a=copy]').onclick=async()=>{await copy(p);menu.classList.remove('on');m.setAttribute('aria-expanded','false');toast(`${p.n}#${p.t} 복사했어요`)};}
+  list.appendChild(r);});});
+const close=()=>document.querySelectorAll('.c .menu.on').forEach(x=>{x.classList.remove('on');x.previousElementSibling.setAttribute('aria-expanded','false')});
+document.addEventListener('click',close);document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+</script></body></html>
