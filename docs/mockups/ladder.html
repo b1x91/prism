@@ -1,0 +1,406 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>내전 팀 사다리 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+<style>
+:root {
+  --bg: #f6f6f3; --surface: #ffffff; --surface-2: #f0f1f4; --line: #e3e5ea; --text: #151827; --text-2: #4a5065; --text-3: #8a90a2;
+  --accent: #3b5bfd; --blue: #3a7bff; --red: #ff4d5e; --gold: #e0a82e; --ok: #16a34a;
+  --stage: #0b0e1a; --stage-2: #141a2e; --stage-line: rgba(255,255,255,.1);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0a0d18; --surface: #12162a; --surface-2: #1a2036; --line: #262d48; --text: #eef1f8; --text-2: #b8bfd6; --text-3: #7c84a0; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Pretendard Variable', Pretendard, system-ui, sans-serif; word-break: keep-all; -webkit-font-smoothing: antialiased; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 32px 16px 64px; }
+header.top { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+header.top img { width: 28px; height: 28px; }
+header.top b { font-size: 16px; font-weight: 800; letter-spacing: .1em; }
+h1 { font-size: 28px; margin: 24px 0 8px; letter-spacing: -.01em; }
+.lead { color: var(--text-2); font-size: 14px; line-height: 1.7; margin: 0 0 24px; max-width: 760px; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 32px; }
+.rules div { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; font-size: 13px; color: var(--text-2); line-height: 1.6; }
+.rules b { display: block; color: var(--text); font-size: 14px; margin-bottom: 4px; }
+.tabs { position: sticky; top: 12px; z-index: 5; display: flex; gap: 8px; padding: 8px; border-radius: 16px; margin-bottom: 24px;
+  background: linear-gradient(180deg, rgba(255,255,255,.72), rgba(255,255,255,.5)); border: 1px solid rgba(255,255,255,.7); box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 0 0 1px rgba(16,20,36,.08), 0 8px 28px rgba(16,20,36,.1); backdrop-filter: blur(22px) saturate(180%); -webkit-backdrop-filter: blur(22px) saturate(180%); }
+@media (prefers-color-scheme: dark) { .tabs { background: linear-gradient(180deg, rgba(36,42,64,.62), rgba(20,24,40,.48)); border-color: rgba(255,255,255,.14); box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 0 0 1px rgba(0,0,0,.3), 0 10px 32px rgba(0,0,0,.4); } }
+.tabs button { flex: 1; height: 44px; border: 0; border-radius: 12px; background: transparent; color: var(--text-2); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.tabs button.on { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.tabs button small { display: block; font-size: 12px; font-weight: 600; color: var(--text-3); }
+section.opt { display: none; }
+section.opt.on { display: block; animation: rise .35s cubic-bezier(.16,1,.3,1); }
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } }
+.opt-h { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.opt-h h2 { margin: 0; font-size: 20px; }
+.opt-h span { color: var(--text-3); font-size: 13px; }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+.notes div { font-size: 13px; color: var(--text-2); line-height: 1.6; padding: 12px 16px; border-radius: 12px; background: var(--surface-2); }
+.notes b { color: var(--text); }
+.notes .pro b { color: var(--ok); } .notes .con b { color: var(--red); }
+
+/* 공용 무대 (앱 카드와 같은 어두운 무대) */
+.stage { position: relative; overflow: hidden; border-radius: 16px; background: radial-gradient(120% 80% at 50% 0%, #1b2342 0%, var(--stage) 60%); color: #eef1f8; padding: 20px; border: 1px solid rgba(255,255,255,.06); }
+.stage-h { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.stage-h .t { font-weight: 800; font-size: 16px; }
+.stage-h .s { color: rgba(255,255,255,.55); font-size: 13px; }
+.stage-h .sp { flex: 1; }
+.btn { height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.08); color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.btn.go { background: #3b5bfd; border-color: #3b5bfd; }
+.btn.ok { background: #15803d; border-color: #15803d; }
+.btn:disabled { opacity: .45; cursor: default; }
+.face { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; font-weight: 800; font-size: 14px; color: #fff; flex: none; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.18); }
+.nm { font-size: 12px; color: rgba(255,255,255,.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 72px; text-align: center; }
+.chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 12px; font-weight: 700; background: rgba(255,255,255,.08); color: rgba(255,255,255,.8); }
+.chip.blue { background: rgba(58,123,255,.2); color: #9fc0ff; } .chip.red { background: rgba(255,77,94,.2); color: #ffadb5; }
+
+/* 결과 팀판 */
+.result { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: stretch; margin-top: 16px; }
+.team { border-radius: 12px; padding: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); min-height: 120px; }
+.team.blue { box-shadow: inset 3px 0 0 var(--blue); } .team.red { box-shadow: inset -3px 0 0 var(--red); }
+.team-h { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: 800; font-size: 14px; }
+.team.blue .team-h b { color: #8fb4ff; } .team.red .team-h b { color: #ff9aa4; }
+.team-h small { color: rgba(255,255,255,.55); font-weight: 600; font-size: 12px; }
+.team-list { display: grid; gap: 8px; }
+.trow { display: flex; align-items: center; gap: 8px; font-size: 13px; animation: pop .35s cubic-bezier(.16,1,.3,1) both; }
+.trow .face { width: 28px; height: 28px; border-radius: 8px; font-size: 12px; }
+.trow small { margin-left: auto; color: rgba(255,255,255,.5); font-variant-numeric: tabular-nums; }
+@keyframes pop { from { opacity: 0; transform: translateY(6px) scale(.96); } }
+.result.compact { display: block; margin-top: 16px; }
+.cbar { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; padding: 12px; border-radius: 12px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); font-size: 13px; font-weight: 700; animation: pop .35s cubic-bezier(.16,1,.3,1) both; }
+.cbar > span:first-child { color: #8fb4ff; } .cbar > span:nth-child(3) { color: #ff9aa4; }
+.vs { display: grid; place-items: center; align-content: center; gap: 4px; text-align: center; min-width: 88px; }
+.vs b { font-size: 20px; letter-spacing: .1em; }
+.vs small { font-size: 12px; color: rgba(255,255,255,.55); }
+.bal { font-size: 12px; font-weight: 700; padding: 4px 8px; border-radius: 999px; background: rgba(22,163,74,.2); color: #7ee2a0; }
+.bal.warn { background: rgba(224,168,46,.2); color: #f4cd6f; }
+
+/* A. 클래식 사다리 */
+.lad { position: relative; }
+.lad-top, .lad-bot { display: grid; grid-template-columns: repeat(10, 1fr); gap: 0; }
+.lad-top > div, .lad-bot > div { display: grid; justify-items: center; gap: 4px; }
+.lad svg { display: block; width: 100%; height: 260px; }
+.slot { width: 52px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-size: 12px; font-weight: 800; background: rgba(255,255,255,.06); color: rgba(255,255,255,.35); border: 1px dashed rgba(255,255,255,.18); transition: all .3s; }
+.slot.blue { background: rgba(58,123,255,.22); color: #b8d0ff; border: 1px solid rgba(58,123,255,.6); }
+.slot.red { background: rgba(255,77,94,.22); color: #ffc0c6; border: 1px solid rgba(255,77,94,.6); }
+.slot.hide { color: transparent; }
+.lad-top .face { cursor: pointer; transition: transform .2s; }
+.lad-top .face:hover { transform: translateY(-2px); }
+.lad-top .face.done { opacity: .45; }
+
+/* B. 프리즘 빛 갈래 */
+.prz { position: relative; height: 420px; }
+.prz svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.prz .col { position: absolute; top: 0; bottom: 0; display: grid; align-content: space-around; }
+.prz .col.l { left: 0; } .prz .col.r { right: 0; }
+.prz .pl { display: flex; align-items: center; gap: 8px; height: 34px; }
+.prz .pl .face { width: 32px; height: 32px; border-radius: 10px; font-size: 12px; }
+.prz .pl.dim { opacity: .4; }
+.prz .tslot { display: flex; align-items: center; gap: 8px; height: 34px; width: 148px; padding: 0 8px; border-radius: 10px; border: 1px dashed rgba(255,255,255,.14); font-size: 12px; color: rgba(255,255,255,.4); }
+.prz .tslot.blue.fill { border: 1px solid rgba(58,123,255,.55); background: rgba(58,123,255,.14); color: #fff; }
+.prz .tslot.red.fill { border: 1px solid rgba(255,77,94,.55); background: rgba(255,77,94,.14); color: #fff; }
+.prz .tslot .face { width: 24px; height: 24px; border-radius: 7px; font-size: 11px; }
+.prz .tlabel { font-size: 12px; font-weight: 800; letter-spacing: .08em; margin: 0 0 4px; }
+.prz .tlabel.blue { color: #8fb4ff; } .prz .tlabel.red { color: #ff9aa4; }
+
+/* C. 구슬 떨어뜨리기 */
+.plk { position: relative; height: 440px; }
+.plk canvas, .plk .peg-layer { position: absolute; inset: 0; width: 100%; height: 100%; }
+.plk .bins { position: absolute; left: 0; right: 0; bottom: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.plk .bin { height: 96px; border-radius: 12px; padding: 8px; display: flex; flex-wrap: wrap; align-content: flex-start; gap: 6px; }
+.plk .bin.blue { background: linear-gradient(180deg, rgba(58,123,255,.04), rgba(58,123,255,.22)); border: 1px solid rgba(58,123,255,.4); }
+.plk .bin.red { background: linear-gradient(180deg, rgba(255,77,94,.04), rgba(255,77,94,.22)); border: 1px solid rgba(255,77,94,.4); }
+.plk .bin .face { width: 30px; height: 30px; border-radius: 50%; font-size: 11px; animation: pop .35s cubic-bezier(.16,1,.3,1) both; }
+.plk .bin-h { width: 100%; display: flex; justify-content: space-between; font-size: 12px; font-weight: 800; }
+.plk .bin.blue .bin-h { color: #8fb4ff; } .plk .bin.red .bin-h { color: #ff9aa4; }
+.plk .queue { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; }
+.plk .queue .face { width: 30px; height: 30px; border-radius: 50%; font-size: 11px; transition: opacity .2s, transform .2s; }
+.plk .queue .face.gone { opacity: 0; transform: scale(.6); }
+.ball { position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,.5), 0 0 18px rgba(160,190,255,.6); z-index: 3; }
+
+@media (max-width: 720px) {
+  .tabs button { height: auto; min-height: 44px; padding: 6px 4px; font-size: 13px; line-height: 1.3; }
+  .tabs button small { display: none; }
+  .lad-top .face { width: 28px; height: 28px; font-size: 11px; border-radius: 8px; }
+  .lad .nm { max-width: 32px; font-size: 10px; }
+  .slot { width: 30px; font-size: 10px; }
+  .result { grid-template-columns: 1fr; }
+  .vs { min-height: 48px; }
+  .prz .tslot { width: 112px; }
+  .prz .pl .nm { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><img src="data:image/png;base64,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" alt="" /><b>PRISM</b></header>
+  <h1>내전 팀 사다리 — 시안 3개</h1>
+  <p class="lead">NOW 의 '내전' 칸(사용자 설정 로비에 10명이 모였을 때)에서 방장이 누르면, 10명이 블루·레드로 나뉘는 과정을 모두가 같은 화면으로 봅니다. 아래 세 가지는 '나뉘는 과정'의 연출만 다르고 규칙은 같습니다. 각 시안의 <b>시작</b>을 눌러 직접 돌려 보세요.</p>
+  <div class="rules">
+    <div><b>늘 5 : 5</b>블루 5칸·레드 5칸을 정해 두고 섞기 때문에 한쪽으로 쏠리지 않아요.</div>
+    <div><b>밸런스 맞추기 (선택)</b>켜면 Prism 점수 합 차이가 가장 작은 조합들 중에서만 뽑아요 (예전 '팀 자동 나누기'와 같은 기준).</div>
+    <div><b>모두 같은 결과</b>방장이 누른 순간의 씨앗값을 서버가 나눠 줘서, 앱·웹 어디서 보든 같은 사다리·같은 결과가 재생돼요.</div>
+    <div><b>팀 확정 → 결과 자동 기록</b>확정하면 그 팀으로 판 결과(블루 N : N 레드)가 잡혀요. 마음에 안 들면 방장이 한 번 더.</div>
+  </div>
+
+  <nav class="tabs" role="tablist">
+    <button class="on" data-t="a">시안 1 · 클래식 사다리<small>누구나 아는 그 사다리</small></button>
+    <button data-t="b">시안 2 · 프리즘 빛 갈래<small>Prism 다운 연출</small></button>
+    <button data-t="c">시안 3 · 구슬 떨어뜨리기<small>한 명씩 두근두근</small></button>
+  </nav>
+
+  <!-- A -->
+  <section class="opt on" id="opt-a">
+    <div class="opt-h"><h2>시안 1 · 클래식 사다리</h2><span>세로줄 10개 · 가로줄 무작위 · 아래 칸은 가려져 있다가 도착하면 열림</span></div>
+    <div class="stage">
+      <div class="stage-h"><span class="t">내전 팀 사다리</span><span class="s">얼굴을 누르면 한 명씩, '모두 내려가기'는 차례로</span><span class="sp"></span>
+        <label class="chip"><input type="checkbox" id="a-bal" checked /> 밸런스 맞추기</label>
+        <button class="btn" id="a-new">사다리 새로</button><button class="btn go" id="a-go">모두 내려가기</button></div>
+      <div class="lad">
+        <div class="lad-top" id="a-top"></div>
+        <svg id="a-svg" viewBox="0 0 1000 260" preserveAspectRatio="none"></svg>
+        <div class="lad-bot" id="a-bot"></div>
+      </div>
+      <div class="result" id="a-res"></div>
+    </div>
+    <div class="notes">
+      <div class="pro"><b>좋은 점</b> · 설명이 필요 없다. 한 명씩 눌러 내려가게 하면 디스코드 음성에서 함께 보며 떠들기 좋다.</div>
+      <div class="con"><b>아쉬운 점</b> · 휴대폰 폭에서는 세로줄 10개가 좁다 (얼굴이 작아짐). 연출이 흔해서 'Prism만의' 느낌은 약하다.</div>
+      <div><b>들어갈 자리</b> · NOW 내전 칸 아래로 펼쳐지는 판 (앱·웹 같음). 결과는 내전 칸의 블루·레드 두 팀 자리에 그대로 채워짐.</div>
+    </div>
+  </section>
+
+  <!-- B -->
+  <section class="opt" id="opt-b">
+    <div class="opt-h"><h2>시안 2 · 프리즘 빛 갈래</h2><span>한 명씩 빛줄기가 되어 프리즘을 지나 파랑·빨강으로 갈라짐</span></div>
+    <div class="stage">
+      <div class="stage-h"><span class="t">내전 팀 나누기</span><span class="s">빛이 프리즘을 지나 어느 쪽으로 꺾일까</span><span class="sp"></span>
+        <label class="chip"><input type="checkbox" id="b-bal" checked /> 밸런스 맞추기</label>
+        <button class="btn go" id="b-go">빛 비추기</button></div>
+      <div class="prz" id="b-prz"></div>
+      <div class="result" id="b-res"></div>
+    </div>
+    <div class="notes">
+      <div class="pro"><b>좋은 점</b> · 로고(빛이 프리즘을 지나 갈라짐)와 같은 이야기라 브랜드 순간으로 딱 맞다. 한 명에 0.6초라 10명이 6초 안에 끝난다.</div>
+      <div class="con"><b>아쉬운 점</b> · '사다리'라는 말 그대로의 모양은 아니다. 처음 보는 사람은 무엇이 정해지는지 한 번 봐야 안다.</div>
+      <div><b>들어갈 자리</b> · NOW 내전 칸을 누르면 뜨는 창(어두운 무대). 끝나면 창 아래 '팀 확정'·'다시'.</div>
+    </div>
+  </section>
+
+  <!-- C -->
+  <section class="opt" id="opt-c">
+    <div class="opt-h"><h2>시안 3 · 구슬 떨어뜨리기</h2><span>위에서 한 명씩 굴러 떨어져 블루·레드 통에 담김</span></div>
+    <div class="stage">
+      <div class="stage-h"><span class="t">내전 팀 뽑기</span><span class="s">한 명씩 떨어뜨리고, 통이 다 차면 남은 사람은 반대편으로</span><span class="sp"></span>
+        <label class="chip"><input type="checkbox" id="c-bal" checked /> 밸런스 맞추기</label>
+        <button class="btn" id="c-one">한 명</button><button class="btn go" id="c-go">모두</button></div>
+      <div class="plk" id="c-plk"></div>
+      <div class="result" id="c-res"></div>
+    </div>
+    <div class="notes">
+      <div class="pro"><b>좋은 점</b> · 한 명씩 떨어질 때마다 긴장감이 크다 ('한 명' 버튼으로 방장이 한 사람씩 진행). 휴대폰 폭에서도 넓게 보인다.</div>
+      <div class="con"><b>아쉬운 점</b> · 움직임이 가장 많아 게임 직전에는 길게 느껴질 수 있다 (모두 = 약 10초). 게임 중 작은 창에는 넣지 않는다.</div>
+      <div><b>들어갈 자리</b> · NOW 내전 칸을 누르면 뜨는 창. 통 안의 얼굴이 곧 결과라 따로 결과판이 짧다.</div>
+    </div>
+  </section>
+</div>
+
+<script>
+// ── 데모 데이터 (실제 앱에서는 내전 로비 10명 · Prism 점수)
+const PEOPLE = [
+  ['하제', 640], ['노을빛', 585], ['새벽감자', 512], ['밤까마귀', 560], ['초코송이', 498],
+  ['고양이발', 530], ['라떼한잔', 605], ['별헤는밤', 470], ['소금빵', 548], ['한판만', 520],
+].map(([n, s], i) => ({ id: i, n, s, c: `hsl(${(i * 36 + 210) % 360} 62% 52%)` }));
+const face = (p, cls = '') => `<span class="face ${cls}" style="background:${p.c}">${p.n[0]}</span>`;
+const rnd = (seed => () => (seed = (seed * 1664525 + 1013904223) >>> 0) / 4294967296)(Date.now() % 100000);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const sum = t => t.reduce((x, p) => x + p.s, 0);
+// 5:5 조합 뽑기. 밸런스면 점수 합 차이가 가장 작은 쪽 상위 15% 안에서 무작위
+function split(balance) {
+  const all = []; const ids = PEOPLE.map(p => p.id);
+  for (let m = 0; m < 1024; m++) if (m & 1 && popc(m) === 5) all.push(m); // 0번은 늘 블루 쪽 묶음 (대칭 제거)
+  let pool = all;
+  if (balance) { const d = m => Math.abs(sum(pick(m)) - sum(pick(~m & 1023))); pool = all.slice().sort((a, b) => d(a) - d(b)).slice(0, Math.ceil(all.length * .15)); }
+  const m = pool[Math.floor(rnd() * pool.length)];
+  const [x, y] = rnd() < .5 ? [m, ~m & 1023] : [~m & 1023, m];
+  return { blue: pick(x), red: pick(y) };
+  function pick(mask) { return ids.filter(i => mask >> i & 1).map(i => PEOPLE[i]); }
+}
+function popc(m) { let c = 0; while (m) { c += m & 1; m >>= 1; } return c; }
+function result(el, blue, red, done, compact) {
+  const d = Math.abs(sum(blue) - sum(red));
+  // 시안 2·3 은 빛줄기 끝 자리·구슬 통이 곧 팀이라 결과판을 다시 그리지 않는다 (같은 것 두 번 금지)
+  if (compact) { el.className = 'result compact'; el.innerHTML = done ? `<div class="cbar"><span>블루 ${sum(blue)}</span><span class="bal ${d > 60 ? 'warn' : ''}">점수 합 차이 ${d}</span><span>레드 ${sum(red)}</span><button class="btn">다시</button><button class="btn ok">팀 확정</button></div>` : ''; return; }
+  el.innerHTML = `
+    <div class="team blue"><div class="team-h"><b>블루</b><small>${blue.length ? '점수 합 ' + sum(blue) : ''}</small></div><div class="team-list">${blue.map((p, i) => `<div class="trow" style="animation-delay:${i * 40}ms">${face(p)}${p.n}<small>${p.s}</small></div>`).join('')}</div></div>
+    <div class="vs"><b>VS</b>${done ? `<span class="bal ${d > 60 ? 'warn' : ''}">차이 ${d}</span><button class="btn ok" style="margin-top:8px">팀 확정</button>` : `<small>${blue.length + red.length} / 10</small>`}</div>
+    <div class="team red"><div class="team-h"><b>레드</b><small>${red.length ? '점수 합 ' + sum(red) : ''}</small></div><div class="team-list">${red.map((p, i) => `<div class="trow" style="animation-delay:${i * 40}ms">${face(p)}${p.n}<small>${p.s}</small></div>`).join('')}</div></div>`;
+}
+
+// ── 탭
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.opt').forEach(s => s.classList.toggle('on', s.id === 'opt-' + b.dataset.t));
+});
+
+// ── A. 클래식 사다리
+(() => {
+  const top = document.getElementById('a-top'), bot = document.getElementById('a-bot'), svg = document.getElementById('a-svg'), res = document.getElementById('a-res');
+  const W = 1000, H = 260, N = 10, X = i => (i + .5) * W / N, ROWS = 14;
+  let rungs, dest, slots, blue, red, busy = false, done;
+  function build() {
+    const s = split(document.getElementById('a-bal').checked);
+    // 사다리를 먼저 무작위로 만들고, 사람 i 가 도착하는 칸에 그 사람의 팀을 적는다 (아래 칸 = 결과)
+    rungs = [];
+    for (let r = 0; r < ROWS; r++) { const used = new Set(); for (let k = 0; k < 4; k++) { const i = Math.floor(rnd() * (N - 1)); if (used.has(i) || used.has(i - 1) || used.has(i + 1)) continue; used.add(i); rungs.push([r, i]); } }
+    dest = PEOPLE.map(p => walk(p.id).end);
+    slots = Array(N).fill(null); s.blue.forEach(p => slots[dest[p.id]] = 'blue'); s.red.forEach(p => slots[dest[p.id]] = 'red');
+    blue = []; red = []; done = new Set();
+    top.innerHTML = PEOPLE.map(p => `<div>${face(p)}<span class="nm">${p.n}</span></div>`).join('');
+    bot.innerHTML = slots.map(t => `<div><span class="slot ${t} hide">${t === 'blue' ? '블루' : '레드'}</span></div>`).join('');
+    draw(); result(res, blue, red, false);
+    top.querySelectorAll('.face').forEach((f, i) => f.onclick = () => run(i));
+  }
+  function walk(i) {
+    const pts = [[X(i), 0]]; let c = i;
+    for (let r = 0; r < ROWS; r++) {
+      const y = (r + .5) * H / ROWS;
+      if (rungs.some(([rr, k]) => rr === r && k === c)) { pts.push([X(c), y], [X(c + 1), y]); c++; }
+      else if (rungs.some(([rr, k]) => rr === r && k === c - 1)) { pts.push([X(c), y], [X(c - 1), y]); c--; }
+    }
+    pts.push([X(c), H]); return { pts, end: c };
+  }
+  function draw() {
+    svg.innerHTML = [...Array(N)].map((_, i) => `<line x1="${X(i)}" y1="0" x2="${X(i)}" y2="${H}" stroke="rgba(255,255,255,.18)" stroke-width="3" vector-effect="non-scaling-stroke"/>`).join('')
+      + rungs.map(([r, i]) => { const y = (r + .5) * H / ROWS; return `<line x1="${X(i)}" y1="${y}" x2="${X(i + 1)}" y2="${y}" stroke="rgba(255,255,255,.18)" stroke-width="3" vector-effect="non-scaling-stroke"/>`; }).join('');
+  }
+  function run(i) {
+    return new Promise(ok => {
+      if (done.has(i)) return ok();
+      done.add(i); top.querySelectorAll('.face')[i].classList.add('done');
+      const { pts, end } = walk(i), team = slots[end], col = team === 'blue' ? '#5b93ff' : '#ff5d6c';
+      const p = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      p.setAttribute('points', pts.map(q => q.join(',')).join(' '));
+      p.setAttribute('fill', 'none'); p.setAttribute('stroke', col); p.setAttribute('stroke-width', '4'); p.setAttribute('vector-effect', 'non-scaling-stroke');
+      p.setAttribute('stroke-linejoin', 'round'); p.style.filter = `drop-shadow(0 0 6px ${col})`;
+      svg.appendChild(p);
+      const len = p.getTotalLength(); p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+      p.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 900, easing: 'cubic-bezier(.45,0,.2,1)', fill: 'forwards' }).onfinish = () => {
+        bot.querySelectorAll('.slot')[end].classList.remove('hide');
+        (team === 'blue' ? blue : red).push(PEOPLE[i]);
+        result(res, blue, red, done.size === N); ok();
+      };
+    });
+  }
+  document.getElementById('a-new').onclick = () => !busy && build();
+  document.getElementById('a-bal').onchange = () => !busy && build();
+  document.getElementById('a-go').onclick = async e => { if (busy) return; busy = true; e.target.disabled = true; for (let i = 0; i < N; i++) await run(i); busy = false; e.target.disabled = false; };
+  build();
+})();
+
+// ── B. 프리즘 빛 갈래
+(() => {
+  const box = document.getElementById('b-prz'), res = document.getElementById('b-res'); let busy = false;
+  function layout() {
+    box.innerHTML = `<svg id="b-svg"></svg>
+      <div class="col l">${PEOPLE.map(p => `<div class="pl" data-i="${p.id}">${face(p)}<span class="nm">${p.n}</span></div>`).join('')}</div>
+      <div class="col r" style="align-content:center;gap:16px">
+        <div><p class="tlabel blue">블루</p>${[0,1,2,3,4].map(k => `<div class="tslot blue" data-k="${k}" style="margin-bottom:6px">빈 자리</div>`).join('')}</div>
+        <div><p class="tlabel red">레드</p>${[0,1,2,3,4].map(k => `<div class="tslot red" data-k="${k}" style="margin-bottom:6px">빈 자리</div>`).join('')}</div>
+      </div>`;
+    const svg = box.querySelector('svg'), r = box.getBoundingClientRect(), cx = r.width * .5, cy = r.height * .5;
+    svg.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
+    svg.innerHTML = `<defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ae7ff" stop-opacity=".9"/><stop offset=".5" stop-color="#b48cff" stop-opacity=".7"/><stop offset="1" stop-color="#ff7ab6" stop-opacity=".8"/></linearGradient>
+      <filter id="gl"><feGaussianBlur stdDeviation="6"/></filter></defs>
+      <polygon points="${cx},${cy - 70} ${cx + 62},${cy + 46} ${cx - 62},${cy + 46}" fill="url(#pg)" opacity=".18" filter="url(#gl)"/>
+      <polygon points="${cx},${cy - 70} ${cx + 62},${cy + 46} ${cx - 62},${cy + 46}" fill="rgba(255,255,255,.06)" stroke="url(#pg)" stroke-width="2"/>
+      <g id="beams"></g>`;
+    return { svg, cx, cy, r };
+  }
+  async function go() {
+    if (busy) return; busy = true; document.getElementById('b-go').disabled = true;
+    const L = layout(), s = split(document.getElementById('b-bal').checked);
+    const team = {}; s.blue.forEach((p, k) => team[p.id] = ['blue', k]); s.red.forEach((p, k) => team[p.id] = ['red', k]);
+    const blue = [], red = []; result(res, blue, red, false, true);
+    const g = L.svg.querySelector('#beams'), br = box.getBoundingClientRect();
+    for (const p of shuffle(PEOPLE)) {
+      const pl = box.querySelector(`.pl[data-i="${p.id}"]`), [t, k] = team[p.id];
+      const slot = box.querySelector(`.tslot.${t}[data-k="${k}"]`);
+      const a = pl.querySelector('.face').getBoundingClientRect(), b = slot.getBoundingClientRect();
+      const x0 = a.right - br.left, y0 = a.top + a.height / 2 - br.top, x2 = b.left - br.left, y2 = b.top + b.height / 2 - br.top;
+      const col = t === 'blue' ? '#5b93ff' : '#ff5d6c';
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M${x0},${y0} L${L.cx - 20},${L.cy} L${L.cx + 20},${L.cy + (t === 'blue' ? -8 : 8)} L${x2},${y2}`);
+      path.setAttribute('fill', 'none'); path.setAttribute('stroke-width', '3'); path.setAttribute('stroke-linecap', 'round');
+      path.setAttribute('stroke', `url(#bm${p.id})`); path.style.filter = `drop-shadow(0 0 6px ${col})`;
+      const gd = document.createElementNS('http://www.w3.org/2000/svg', 'linearGradient');
+      gd.id = 'bm' + p.id; gd.setAttribute('gradientUnits', 'userSpaceOnUse'); gd.setAttribute('x1', x0); gd.setAttribute('x2', x2); gd.setAttribute('y1', 0); gd.setAttribute('y2', 0);
+      gd.innerHTML = `<stop offset="0" stop-color="#fff"/><stop offset=".48" stop-color="#fff"/><stop offset=".55" stop-color="${col}"/><stop offset="1" stop-color="${col}"/>`;
+      L.svg.querySelector('defs').appendChild(gd); g.appendChild(path);
+      const len = path.getTotalLength(); path.style.strokeDasharray = len; path.style.strokeDashoffset = len;
+      pl.classList.add('dim');
+      await path.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }], { duration: 620, easing: 'cubic-bezier(.45,0,.2,1)', fill: 'forwards' }).finished;
+      path.animate([{ opacity: 1 }, { opacity: .25 }], { duration: 500, fill: 'forwards' });
+      slot.classList.add('fill'); slot.innerHTML = `${face(p)}${p.n}`;
+      (t === 'blue' ? blue : red).push(p); result(res, blue, red, blue.length + red.length === 10, true);
+    }
+    busy = false; document.getElementById('b-go').disabled = false;
+  }
+  document.getElementById('b-go').onclick = go;
+  addEventListener('load', layout); requestAnimationFrame(layout);
+  document.querySelector('[data-t="b"]').addEventListener('click', () => !busy && setTimeout(layout, 30));
+})();
+
+// ── C. 구슬 떨어뜨리기
+(() => {
+  const box = document.getElementById('c-plk'), res = document.getElementById('c-res');
+  let queue, team, blue, red, busy = false;
+  function reset() {
+    const s = split(document.getElementById('c-bal').checked);
+    team = {}; s.blue.forEach(p => team[p.id] = 'blue'); s.red.forEach(p => team[p.id] = 'red');
+    queue = shuffle(PEOPLE); blue = []; red = [];
+    box.innerHTML = `<div class="queue">${queue.map(p => `<span data-i="${p.id}">${face(p)}</span>`).join('')}</div><svg class="peg-layer"></svg>
+      <div class="bins"><div class="bin blue"><div class="bin-h"><span>블루</span><span class="n">0 / 5</span></div></div><div class="bin red"><div class="bin-h"><span>레드</span><span class="n">0 / 5</span></div></div></div>`;
+    const r = box.getBoundingClientRect(), svg = box.querySelector('svg'); svg.setAttribute('viewBox', `0 0 ${r.width} ${r.height}`);
+    let pegs = '';
+    for (let row = 0; row < 7; row++) for (let k = 0; k < 9 + (row % 2); k++) {
+      const x = r.width * ((k + (row % 2 ? 0 : .5)) / (9 + .5)) + r.width * .02, y = 70 + row * 34;
+      pegs += `<circle cx="${x}" cy="${y}" r="4" fill="rgba(255,255,255,.28)"/>`;
+    }
+    svg.innerHTML = pegs; result(res, blue, red, false, true);
+  }
+  function drop() {
+    return new Promise(ok => {
+      const p = queue.shift(); if (!p) return ok(false);
+      const t = team[p.id], r = box.getBoundingClientRect();
+      box.querySelector(`.queue [data-i="${p.id}"] .face`).classList.add('gone');
+      const ball = document.createElement('div'); ball.className = 'ball'; ball.style.background = p.c; ball.textContent = p.n[0]; box.appendChild(ball);
+      // 핀마다 좌우로 튀며 내려가다 자기 팀 통 쪽으로 기울어짐
+      const target = t === 'blue' ? r.width * .25 : r.width * .75;
+      let x = r.width / 2, y = 34; const keys = [{ left: x + 'px', top: y + 'px' }];
+      for (let row = 0; row < 7; row++) {
+        y = 70 + row * 34 - 12; const drift = (target - x) / (7 - row) * .9;
+        x = Math.max(20, Math.min(r.width - 20, x + drift + (rnd() - .5) * 46));
+        keys.push({ left: x + 'px', top: y + 'px' });
+      }
+      keys.push({ left: target + (rnd() - .5) * 60 + 'px', top: r.height - 70 + 'px' });
+      ball.animate(keys, { duration: 1100, easing: 'cubic-bezier(.4,0,.6,1)', fill: 'forwards' }).onfinish = () => {
+        ball.remove(); (t === 'blue' ? blue : red).push(p);
+        const bin = box.querySelector(`.bin.${t}`); bin.insertAdjacentHTML('beforeend', face(p)); bin.querySelector('.n').textContent = `${(t === 'blue' ? blue : red).length} / 5`;
+        result(res, blue, red, blue.length + red.length === 10, true); ok(true);
+      };
+    });
+  }
+  document.getElementById('c-one').onclick = async () => { if (busy) return; busy = true; if (!queue.length) reset(); await drop(); busy = false; };
+  document.getElementById('c-go').onclick = async e => { if (busy) return; busy = true; e.target.disabled = true; if (!queue.length) reset(); while (await drop()); busy = false; e.target.disabled = false; };
+  document.getElementById('c-bal').onchange = () => !busy && reset();
+  document.querySelector('[data-t="c"]').addEventListener('click', () => !busy && setTimeout(reset, 30));
+  requestAnimationFrame(reset);
+})();
+</script>
+</body>
+</html>
