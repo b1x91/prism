@@ -7,6 +7,7 @@
  * - 함께 게임 중 (v3.130): 로비를 알리지 않았어도 같은 판에 회원이 2명 이상이면. 그 판의 챔프를 얼굴 옆에.
  */
 import { useEffect, useRef, useState } from 'react';
+import { shortNick } from '@prism/core';
 import type { Api, NowDrawRes, NowFace, NowGame, NowGameSide, NowList, NowLobby, NowScrim, NowTeam } from '@prism/core';
 import { useLoad } from './crew';
 import { ChampImg, MemberFace, Toggle } from './basics';
@@ -95,6 +96,9 @@ export function NowCard({ api, meId, canDraw, onMember, onAutoChange }: { api: A
   );
 }
 
+/** 기다리는 사람: 한 명이면 이름, 여럿이면 '첫 사람 외 N명' (긴 이름 줄을 만들지 않는다) */
+const waitNames = (ws: NowFace[]) => (ws.length > 1 ? `${shortNick(ws[0].nick)}님 외 ${ws.length - 1}명` : shortNick(ws[0]?.nick ?? ''));
+
 const SCRIM_PHASE: Record<NowScrim['phase'], string> = { lobby: '모이는 중', queue: '챔프 선택', game: '게임 중' };
 
 /** 내전 중 (v3.127): 사용자 설정 로비를 앱이 읽으면. 블루 · 레드 두 팀, 오늘의 점수 */
@@ -145,7 +149,7 @@ function ScrimPanel({ api, x, meId, canDraw, asked, onAsk, onMember }: { api: Ap
       {draw && fresh
         ? <PrismSplit draw={draw} offset={offset} meId={meId} canRun={canRun} busy={busy} onAgain={() => setStarting(true)} onConfirm={() => void confirm()} />
         : <div className="now-teams">{team(x.blue, 'blue')}{team(x.red, 'red')}</div>}
-      {waiting.length > 0 && x.phase === 'lobby' && <div className="now-wait"><i />{waiting.map((r: NowFace) => r.nick).join(', ')}님이 기다려요{isHost && <small>롤에서 초대하면 바로 채워져요</small>}</div>}
+      {waiting.length > 0 && x.phase === 'lobby' && <div className="now-wait"><i />{waitNames(waiting)}{waiting.length > 1 ? '이' : '님이'} 기다려요{isHost && <small>롤에서 초대하면 바로 채워져요</small>}</div>}
     </div>
   );
 }
@@ -178,7 +182,7 @@ function LobbyRow({ n, l, meId, asked, onAsk, onMember }: { n: string; l: NowLob
         <small>{l.phase === 'game' ? '끝나면 저절로 내려가요' : l.phase === 'queue' ? '큐를 돌리는 중이에요' : `${ago(l.since)} 올라왔어요`}</small>
       </span>
       {isHost && waiting.length > 0 && l.phase === 'lobby' && (
-        <div className="now-wait"><i />{waiting.map((r) => r.nick).join(', ')}님이 기다려요<small>롤에서 초대하면 바로 채워져요</small></div>
+        <div className="now-wait"><i />{waitNames(waiting)}{waiting.length > 1 ? '이' : '님이'} 기다려요<small>롤에서 초대하면 바로 채워져요</small></div>
       )}
     </div>
   );

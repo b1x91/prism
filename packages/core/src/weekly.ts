@@ -10,6 +10,7 @@ import { bondOf, BOND_GRADES } from './duo';
 import type { DuoGame } from './profile';
 import { weekStart } from './missions';
 import { josa } from './josa';
+import { shortNick } from './text';
 
 /** 판 하나: 시각 · 승(1/0) · 같은 팀이었던 멤버들 · 내가 고른 증강 */
 export type WGame = { t: number; w: number; mates: string[]; augs?: number[] };
@@ -225,9 +226,10 @@ export function stakesOf(w: Pick<WeeklyState, 'streak' | 'crewStreak' | 'wins' |
   const n1 = w.streak.now + 1;
   out.push({ key: 'streak', big: String(n1), title: `이기면 ${n1}연승`, ...subOf(w.streak, n1, '연승') });
   if (mates.length) {
-    const names = mates.map((m) => m.nick).join('·');
+    // 이름을 줄줄이 늘어놓지 않는다 — 같은 팀 멤버는 옆 칸에 얼굴로 이미 있다 (같은 것 두 번 금지)
+    const who = mates.length === 1 ? shortNick(mates[0].nick) : `멤버 ${mates.length}명`;
     const c1 = w.crewStreak.now + 1;
-    out.push({ key: 'crew', big: String(c1), title: `${josa(names, '과/와')} 이기면 프리즘 ${c1}연승`, ...subOf(w.crewStreak, c1, '연승') });
+    out.push({ key: 'crew', big: String(c1), title: `${josa(who, '과/와')} 이기면 프리즘 ${c1}연승`, ...subOf(w.crewStreak, c1, '연승') });
     const w1 = w.wins.now + 1;
     const ws = subOf(w.wins, w1, '승');
     if (ws.reward) out.push({ key: 'wins', big: String(w1), title: `함께 쌓는 승리 ${w1}승`, ...ws });
@@ -236,7 +238,7 @@ export function stakesOf(w: Pick<WeeklyState, 'streak' | 'crewStreak' | 'wins' |
     const won = new Set(w.wonEver);
     const left = WEEKLY.pair.max - w.pairs.length;
     for (const m of mates.filter((x) => !won.has(x.id)).slice(0, Math.max(0, left)))
-      out.push({ key: 'pair', big: '첫', title: `${josa(m.nick, '과/와')} 첫 함께 승리`, sub: '새로운 짝', reward: Math.round(WEEKLY.pair.reward * w.rate) });
+      out.push({ key: 'pair', big: '첫', title: `${josa(shortNick(m.nick), '과/와')} 첫 함께 승리`, sub: '새로운 짝', reward: Math.round(WEEKLY.pair.reward * w.rate) });
   }
   // 오늘 밤 증강: 아직 못 이뤘으면 (보상은 그 증강을 골라야 하므로 금빛으로 띄우지 않는다)
   if (w.tonight && !w.tonight.done)

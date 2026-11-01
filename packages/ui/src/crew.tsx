@@ -409,7 +409,7 @@ export function ProspectBoard({ api, invite, admin }: { api: Api; invite?: strin
               {p.main ? <img className="face fi" {...imgIn} src={cdragon(CHAMPIONS[p.main]?.tile)} width={44} height={44} alt="" loading="lazy" /> : <span className="face ph" />}
               <div className="pinfo">
                 <div className="pname"><b>{name}</b>{tag && <span className="meta">#{tag}</span>}{p.customs > 0 && <span className="ptag">내전 {p.customs}</span>}</div>
-                <div className="meta">같이 {p.n}판 · 그 판 승률 {pct(p.w, p.n)}{p.mates.length > 0 && <> · {p.mates.map((m) => `${shortNick(m.nick)} ${m.n}판`).join(', ')}</>} · {ago(p.lastAt)}</div>
+                <div className="meta">같이 {p.n}판 · 그 판 승률 {pct(p.w, p.n)}{p.mates.length > 0 && <> · {p.mates.slice(0, 2).map((m) => `${shortNick(m.nick)} ${m.n}판`).join(', ')}{p.mates.length > 2 ? ` 외 ${p.mates.length - 2}명` : ''}</>} · {ago(p.lastAt)}</div>
               </div>
               <div className="pbtns">
                 {invite && <IconBtn icon="link" label={copied === p.puuid ? '복사했어요' : '초대 링크 복사'} done={copied === p.puuid} onClick={() => copy(p.puuid)} />}
