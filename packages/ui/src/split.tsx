@@ -7,7 +7,7 @@
  */
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Api, NowDraw, NowDrawRes } from '@prism/core';
-import { MemberFace, Toggle } from './basics';
+import { GuestFace, MemberFace, Toggle } from './basics';
 
 /** 한 사람이 출발하는 간격 · 빛이 자리까지 가는 시간 · 끝난 뒤 결과가 뜨기까지 */
 const STEP = 560;
@@ -129,7 +129,7 @@ export function PrismSplit({ draw, offset, meId, canRun, busy, onAgain, onConfir
 
   const face = (p: NowDraw['people'][number], size: number) => p.id
     ? <MemberFace nick={p.nick ?? '멤버'} skin={p.skin ?? null} champion={p.main ?? null} size={size} />
-    : <span className="ps-guest" style={{ width: size, height: size }}>손</span>;
+    : <GuestFace name={p.nick && !/^손님 \d+$/.test(p.nick) ? p.nick : undefined} size={size} />;
 
   return (
     <div className={`ps ${done ? 'done' : ''} ${t < 0 ? 'wait' : ''}`}>

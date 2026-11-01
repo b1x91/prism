@@ -4,7 +4,7 @@
  *  - 서버가 팀(5:5)과 빛이 지나갈 순서를 정해 두고, 시작 시각(start_at = 누른 때 + LEAD)을 함께 나눠 준다.
  *    모든 화면은 서버 시계에 맞춰 같은 순간에 같은 연출을 시작한다 (늦게 연 화면은 그만큼 앞으로 감아서 따라온다).
  *  - 밸런스 맞추기: Prism 점수(`rankScore`) 합 차이가 가장 작은 조합들 중에서 무작위. 끄면 그냥 무작위 5:5.
- *  - 손님(비회원)은 '손님 N', 점수 500 (기준점). 이름·puuid 는 남기지 않는다.
+ *  - 손님(비회원)은 로비에서 읽은 이름(태그 없이, 없으면 '손님 N'), 점수 500 (기준점). puuid 는 남기지 않는다 (v3.140).
  *  - '팀 확정'은 표시만 (롤 로비의 팀은 방장이 롤에서 직접 옮긴다 — 클라이언트를 조작하지 않는다).
  */
 import { rankScore } from '../../packages/core/src/ranking.js';
@@ -18,7 +18,7 @@ const KEEP = 6 * 3600_000;
 const AGAIN = 8_000;
 const GUEST_SCORE = 500;
 
-type Person = { key: string; id: string | null; team: 'blue' | 'red'; score: number };
+type Person = { key: string; id: string | null; team: 'blue' | 'red'; score: number; name?: string };
 
 const shuffle = <T>(a: T[]) => { const b = a.slice(); for (let i = b.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [b[i], b[j]] = [b[j], b[i]]; } return b; };
 
@@ -68,9 +68,12 @@ export async function startDraw(env: Env, me: Member, lobbyId: string, body: { b
   // 회원 점수 = Prism 점수 (전체 기록)
   const { results } = await env.DB.prepare('SELECT member_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participants WHERE member_id IN (SELECT value FROM json_each(?)) GROUP BY member_id').bind(JSON.stringify(members)).all<{ id: string; n: number; w: number }>();
   const rec = new Map(results.map((r) => [r.id, r]));
+  // 로비에서 읽은 손님 이름 (두 팀)
+  let guests: string[] = [];
+  try { const t = JSON.parse(row.teams ?? '{}'); guests = [...(t?.['100']?.g ?? []), ...(t?.['200']?.g ?? [])].filter((x: unknown): x is string => typeof x === 'string'); } catch { /* 이름 없음 */ }
   const base = [
     ...members.map((id) => ({ key: id, id, score: rankScore(rec.get(id)?.w ?? 0, rec.get(id)?.n ?? 0) })),
-    ...Array.from({ length: total - members.length }, (_, i) => ({ key: `g${i + 1}`, id: null, score: GUEST_SCORE })),
+    ...Array.from({ length: total - members.length }, (_, i) => ({ key: `g${i + 1}`, id: null, score: GUEST_SCORE, ...(guests[i] ? { name: guests[i] } : {}) })),
   ];
   const balanced = body.balance !== false;
   const teams = split(base.map((p) => p.score), balanced);
@@ -99,7 +102,7 @@ export async function getDraw(env: Env, lobbyId: string | null) {
   let g = 0;
   d.people = d.people.map((p) => {
     const f = p.id ? face.get(p.id) : null;
-    return { ...p, nick: f?.nick ?? (p.id ? '멤버' : `손님 ${++g}`), skin: f?.skin ?? null, main: f?.main ?? null };
+    return { ...p, nick: f?.nick ?? (p.id ? '멤버' : (p as Person).name ?? `손님 ${++g}`), skin: f?.skin ?? null, main: f?.main ?? null };
   });
   return json({ draw: d, now });
 }

@@ -319,3 +319,23 @@ export function LockedMore({ more, what = '전체 순위', children }: { more: n
 export function NavLive({ n }: { n: number }) {
   return <i className="nav-live" title={`지금 NOW ${n}개 진행 중`} aria-label="NOW 진행 중"><i className="nl-dot" /><b>LIVE</b></i>;
 }
+
+/** 비회원 얼굴: 이름 첫 글자 (v3.140). 색은 이름마다 정해진 차분한 한 가지. 이름을 모르면(예전 앱) 사람 모양 */
+const GUEST_HUES = [214, 262, 330, 18, 42, 152, 188, 236];
+export function guestHue(name: string) {
+  let h = 0;
+  for (const ch of name) h = (h * 31 + ch.codePointAt(0)!) >>> 0;
+  return GUEST_HUES[h % GUEST_HUES.length];
+}
+export function GuestFace({ name, size = 48 }: { name?: string; size?: number }) {
+  if (!name) return (
+    <span className="now-face other" title="Prism 회원이 아닌 분이 들어와 있어요" style={{ width: size, height: size }}>
+      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M5 20a7 7 0 0 1 14 0" /></svg>
+    </span>
+  );
+  return (
+    <span className="now-face guest" title={`${name} · 멤버가 아닌 분`} aria-label={name} style={{ width: size, height: size, ['--gh' as string]: guestHue(name), fontSize: Math.round(size * 0.4) }}>
+      {[...name][0]}
+    </span>
+  );
+}

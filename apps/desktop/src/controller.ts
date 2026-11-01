@@ -409,7 +409,7 @@ async function tick(): Promise<number> {
  * 방장이면 서버가 돌려준 새 요청(빈자리 +)을 오른쪽 아래 알림으로 띄운다.
  * [검증필요] 실제 클라이언트의 /lol-lobby/v2/lobby 에 partyId · gameConfig.queueId · members[].puuid · isLeader 가 있는지.
  */
-type LobbyInfo = { id: string; queue: number; leader: string; members: string[]; kind?: 'scrim'; team100?: string[]; team200?: string[] };
+type LobbyInfo = { id: string; queue: number; leader: string; members: string[]; kind?: 'scrim'; team100?: string[]; team200?: string[]; names?: Record<string, string> };
 let lobby: LobbyInfo | null = null;
 let lobbyReadAt = 0;
 let lobbySentKey = '';
@@ -437,14 +437,21 @@ async function syncLobby(phase: string) {
     // 내전 (v3.127): 칼바람 나락(맵 12) 사용자 설정 로비. [검증필요] gameConfig.isCustom · mapId · customTeam100/200 이름
     const custom = Boolean(gc.isCustom) && (gc.mapId === undefined || Number(gc.mapId) === 12);
     const team100 = puuidsOf(gc.customTeam100), team200 = puuidsOf(gc.customTeam200);
+    // 비회원도 이름(태그 없이)은 보인다 — 첫 글자 얼굴 (v3.140). puuid 는 서버가 회원 대조에만 쓰고 남기지 않는다
+    const names: Record<string, string> = {};
+    for (const m of [...(l?.members ?? []), ...(gc.customTeam100 ?? []), ...(gc.customTeam200 ?? [])] as any[]) {
+      const n = String(m?.gameName || m?.summonerName || '').trim();
+      if (m?.puuid && n) names[String(m.puuid)] = n.slice(0, 24);
+    }
     lobby = l?.partyId ? {
       id: String(l.partyId), queue: Number(gc.queueId ?? 0), leader: String(l.members?.find((m: any) => m?.isLeader)?.puuid ?? ''),
       members: custom ? [...new Set([...members, ...team100, ...team200])] : members,
       ...(custom ? { kind: 'scrim' as const, team100, team200 } : {}),
+      names,
     } : null;
   }
   if (!p) lobby = null;
-  const key = lobby && p ? `${lobby.id}-${p}-${lobby.queue}-${lobby.members.join(',')}-${lobby.team100?.join(',') ?? ''}` : '';
+  const key = lobby && p ? `${lobby.id}-${p}-${lobby.queue}-${lobby.members.join(',')}-${lobby.team100?.join(',') ?? ''}-${Object.keys(lobby.names ?? {}).length}` : '';
   if (key === lobbySentKey && (!key || now - lobbySentAt < (p === 'game' ? LOBBY_KEEP_GAME : LOBBY_KEEP))) return;
   lobbySentKey = key;
   lobbySentAt = now;

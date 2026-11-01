@@ -1,7 +1,7 @@
 /**
  * NOW (CLAUDE.md v3.126) — 지금 모이는 팟.
  *  - 회원 앱이 롤 클라이언트의 아수라장(2400) 로비를 읽어(GET 만) 알려 준다 → 팟이 저절로 생기고 채워진다. 큐 → '출발', 게임 → '게임 중', 끝나거나 로비를 떠나면 내려간다.
- *  - 팟은 동시에 세 개까지 보인다. 비회원은 수만 센다 (puuid·이름을 남기지 않는다).
+ *  - 팟은 동시에 세 개까지 보인다. 비회원은 이름(태그 없이)만 남겨 첫 글자 얼굴로 보인다 (v3.140, puuid 는 남기지 않는다).
  *  - 빈자리 + = 방장에게 알림. 방장 앱이 다음에 로비를 알릴 때 받아 오른쪽 아래 알림으로 띄운다 (게임 중이면 끝난 뒤). 같은 사람은 5분에 한 번, 10분 안에 안 들어오면 사라진다.
  *  - 회원마다 '로비를 NOW에 자동으로 올리기' (members.now_auto, 기본 켜짐).
  *  - 함께 게임 중 (v3.130): 로비를 알리지 않았어도, 게임이 시작될 때 회원 앱이 읽은 그 판의 10명 중 회원이 2명 이상이면 NOW 에 띄운다.
@@ -19,7 +19,7 @@ const MAYHEM = 2400;
 
 type Face = { id: string; nick: string; skin: number | null; main: number | null };
 type Row = { id: string; leader_id: string | null; reporter_id: string; members: string; size: number; phase: string; created_at: number; updated_at: number; kind?: string; teams?: string | null };
-type Team = { members: Face[]; size: number };
+type Team = { members: Face[]; size: number; guests: string[] };
 export type NowScrim = { id: string; phase: NowLobby['phase']; size: number; since: number; leader: string | null; blue: Team; red: Team; requests: Face[]; series: { blue: number; red: number; games: number } };
 export type NowLobby = { id: string; phase: 'lobby' | 'queue' | 'game'; size: number; since: number; leader: string | null; members: Face[]; requests: Face[] };
 type GameFace = Face & { champ: number };
@@ -69,8 +69,11 @@ export async function reportLobby(env: Env, me: Member, body: Record<string, unk
   const leader = byPuuid.get(String(body.leader ?? '')) ?? null;
   const size = Math.max(members.length, Math.min(scrim ? 10 : 5, puuids.length || 1));
   // 내전: 팀마다 회원 ID 와 전체 인원 (비회원은 수만)
-  const teamOf = (ps: string[]) => ({ m: [...new Set(ps.map((p) => byPuuid.get(p)).filter((x): x is string => Boolean(x)))], n: Math.min(5, ps.length) });
-  const teams = scrim ? JSON.stringify({ '100': teamOf(t100), '200': teamOf(t200) }) : null;
+  // 비회원 이름 (태그 없이, 첫 글자 얼굴용 — v3.140). puuid 는 대조에만 쓰고 남기지 않는다
+  const nameMap = body.names && typeof body.names === 'object' ? body.names as Record<string, unknown> : {};
+  const guestsOf = (ps: string[]) => ps.filter((p) => !byPuuid.has(p)).map((p) => str(nameMap[p], 24)).filter((x): x is string => Boolean(x));
+  const teamOf = (ps: string[]) => ({ m: [...new Set(ps.map((p) => byPuuid.get(p)).filter((x): x is string => Boolean(x)))], n: Math.min(5, ps.length), g: guestsOf(ps).slice(0, 5) });
+  const teams = scrim ? JSON.stringify({ '100': teamOf(t100), '200': teamOf(t200) }) : JSON.stringify({ g: guestsOf(puuids).slice(0, 5) });
   await env.DB.prepare(
     `INSERT INTO now_lobbies (id, leader_id, reporter_id, members, size, phase, created_at, updated_at, kind, teams) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?7, ?8, ?9)
      ON CONFLICT(id) DO UPDATE SET leader_id = ?2, reporter_id = ?3, members = ?4, size = ?5, phase = ?6, updated_at = ?7, kind = ?8, teams = ?9`,
@@ -116,13 +119,16 @@ export async function listNow(env: Env, me: Member) {
     : [];
   const all = [...new Set([...[...results, ...scrimRows, ...gameRows].flatMap((r) => ids(r.members)), ...reqRows.map((r) => r.m)])];
   const face = await faces(env, all);
+  const guestNames = (raw: string | null, k?: string): string[] => {
+    try { const t = JSON.parse(raw ?? '{}'); const g = k ? t?.[k]?.g : t?.g; return Array.isArray(g) ? g.filter((x: unknown): x is string => typeof x === 'string') : []; } catch { return []; }
+  };
   const lobbies: NowLobby[] = results.map((r) => {
     const mem = ids(r.members).map((x) => face.get(x)).filter((x): x is Face => Boolean(x));
     // 방장을 맨 앞에
     mem.sort((a, b) => Number(b.id === r.leader_id) - Number(a.id === r.leader_id));
     return {
       id: r.id, phase: (r.phase as NowLobby['phase']) ?? 'lobby', size: Math.max(r.size, mem.length), since: r.created_at, leader: r.leader_id,
-      members: mem,
+      members: mem, guests: guestNames(r.teams ?? null),
       requests: reqRows.filter((q) => q.l === r.id).map((q) => face.get(q.m)).filter((x): x is Face => Boolean(x)),
     };
   });
@@ -130,7 +136,7 @@ export async function listNow(env: Env, me: Member) {
   for (const r of scrimRows) {
     let t: Record<string, { m: string[]; n: number }> = {};
     try { t = JSON.parse(r.teams ?? '{}'); } catch { /* 빈 팀 */ }
-    const team = (k: string): Team => { const m = (t[k]?.m ?? []).map((x) => face.get(x)).filter((x): x is Face => Boolean(x)); return { members: m, size: Math.max(m.length, Number(t[k]?.n) || 0) }; };
+    const team = (k: string): Team => { const m = (t[k]?.m ?? []).map((x) => face.get(x)).filter((x): x is Face => Boolean(x)); return { members: m, size: Math.max(m.length, Number(t[k]?.n) || 0), guests: guestNames(r.teams ?? null, k) }; };
     scrims.push({
       id: r.id, phase: (r.phase as NowLobby['phase']) ?? 'lobby', size: r.size, since: r.created_at, leader: r.leader_id,
       blue: team('100'), red: team('200'),

@@ -61,8 +61,9 @@ export class ApiError extends Error {
 export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; level?: number; rates?: Rates; presence?: import('./presence').Presence; rankingGate?: { have: number; need: number }; about?: import("./about").About | null; pending?: boolean; newsUnread?: number; /** 운영진만: 운영 화면에서 아직 못 본 처리할 멤버 수 (v3.125) */ staffUnread?: number; /** 로비를 NOW에 자동으로 올리기 (v3.126) */ nowAuto?: boolean; /** NOW 에 돌아가는 팟·내전·함께 게임 중 수 — 멤버 메뉴 LIVE (v3.137) */ nowLive?: number };
 /** NOW (v3.126): 지금 모이는 팟 */
 export type NowFace = { id: string; nick: string; skin: number | null; main: number | null };
-export type NowLobby = { id: string; phase: 'lobby' | 'queue' | 'game'; size: number; since: number; leader: string | null; members: NowFace[]; requests: NowFace[] };
-export type NowTeam = { members: NowFace[]; size: number };
+/** guests: 비회원 이름(태그 없이) — 첫 글자 얼굴 (v3.140). 예전 앱이 알린 로비는 없을 수 있다 */
+export type NowLobby = { id: string; phase: 'lobby' | 'queue' | 'game'; size: number; since: number; leader: string | null; members: NowFace[]; requests: NowFace[]; guests?: string[] };
+export type NowTeam = { members: NowFace[]; size: number; guests?: string[] };
 /** 내전 중 (v3.127): 사용자 설정 로비 · 오늘의 점수(지난 6시간 기록된 사용자 설정 판, 게임 진영 기준) */
 export type NowScrim = { id: string; phase: NowLobby['phase']; size: number; since: number; leader: string | null; blue: NowTeam; red: NowTeam; requests: NowFace[]; series: { blue: number; red: number; games: number } };
 /** 함께 게임 중 (v3.130): 로비 없이도, 같은 판에 회원이 2명 이상이면. champ = 그 판의 챔프 */

@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from 'react';
 import { shortNick } from '@prism/core';
 import type { Api, NowDrawRes, NowFace, NowGame, NowGameSide, NowList, NowLobby, NowScrim, NowTeam } from '@prism/core';
 import { useLoad } from './crew';
-import { ChampImg, MemberFace, Toggle } from './basics';
+import { ChampImg, GuestFace, MemberFace, Toggle } from './basics';
 import { Bone, Swap, fadeCls, useReveal } from './skeleton';
 import { PrismSplit, SplitStarter, drawLength, useDraw } from './split';
 
@@ -97,14 +97,8 @@ export function NowCard({ api, meId, canDraw, onMember, onAutoChange }: { api: A
 }
 
 /** 로비에 들어와 있는 비회원 자리 (v3.137): 빈자리와 헷갈리지 않게 사람 모양 + '손님'. 누구인지는 남기지 않는다 */
-function Guest() {
-  return (
-    <span className="now-face other" title="Prism 회원이 아닌 분이 들어와 있어요">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true"><circle cx="12" cy="8" r="3.6" /><path d="M5 20a7 7 0 0 1 14 0" /></svg>
-      <b>손님</b>
-    </span>
-  );
-}
+/** 비회원 자리: 알려진 이름은 첫 글자 얼굴로, 나머지는 사람 모양 */
+const guestSlots = (names: string[] | undefined, n: number) => Array.from({ length: n }, (_, i) => <GuestFace key={`s${i}`} name={names?.[i]} />);
 
 /** 기다리는 사람: 한 명이면 이름, 여럿이면 '첫 사람 외 N명' (긴 이름 줄을 만들지 않는다) */
 const waitNames = (ws: NowFace[]) => (ws.length > 1 ? `${shortNick(ws[0].nick)}님 외 ${ws.length - 1}명` : shortNick(ws[0]?.nick ?? ''));
@@ -138,7 +132,7 @@ function ScrimPanel({ api, x, meId, canDraw, asked, onAsk, onMember }: { api: Ap
             <MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={44} />{m.id === x.leader && x.phase !== 'game' && <i className="now-star" aria-label="방장">★</i>}
           </button>
         ))}
-        {Array.from({ length: Math.max(0, t.size - t.members.length) }, (_, i) => <Guest key={`s${i}`} />)}
+        {guestSlots(t.guests, Math.max(0, t.size - t.members.length))}
         {Array.from({ length: Math.max(0, 5 - t.size) }, (_, i) => x.phase === 'lobby'
           ? <button key={`f${i}`} type="button" className="now-plus" disabled={!canAsk} aria-label={canAsk ? '방장에게 들어가고 싶다고 알리기' : '빈자리'} onClick={onAsk}>+</button>
           : <span key={`f${i}`} className="now-face gone" />)}
@@ -181,14 +175,14 @@ function LobbyRow({ n, l, meId, asked, onAsk, onMember }: { n: string; l: NowLob
             <MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={48} />{m.id === l.leader && l.phase !== 'game' && <i className="now-star" aria-label="방장">★</i>}
           </button>
         ))}
-        {Array.from({ length: strangers }, (_, i) => <Guest key={`s${i}`} />)}
+        {guestSlots(l.guests, strangers)}
         {waiting.map((r) => <span key={r.id} className="now-face wait" title={`${r.nick}님이 기다려요`}><MemberFace nick={r.nick} skin={r.skin} champion={r.main} size={48} /></span>)}
         {l.phase === 'lobby' && Array.from({ length: free }, (_, i) => (
           <button key={`f${i}`} type="button" className="now-plus" disabled={!canAsk} aria-label={canAsk ? '방장에게 들어가고 싶다고 알리기' : '빈자리'} onClick={onAsk}>+</button>
         ))}
       </div>
       <span className="now-meta">
-        <span>{host ? `${shortNick(host.nick)}님 로비` : '로비'} · {l.size} / 5{strangers > 0 ? ` · 손님 ${strangers}명` : ''}</span>
+        <span>{host ? `${shortNick(host.nick)}님 로비` : '로비'} · {l.size} / 5{strangers > 0 ? ` · ${l.guests?.length ? `${l.guests[0]}${strangers > 1 ? ` 외 ${strangers - 1}명` : ''}` : `손님 ${strangers}명`}` : ''}</span>
         <small>{l.phase === 'game' ? '끝나면 저절로 내려가요' : l.phase === 'queue' ? '큐를 돌리는 중이에요' : `${ago(l.since)} 올라왔어요`}</small>
       </span>
       {isHost && waiting.length > 0 && l.phase === 'lobby' && (
