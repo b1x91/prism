@@ -55,6 +55,13 @@ struct Ready {
 static READY: Mutex<Option<Ready>> = Mutex::new(None);
 /// 같은 파일을 두 번 받지 않게
 static FETCHING: Mutex<bool> = Mutex::new(false);
+/// 받는 중인 새 버전의 진행 (받은 바이트, 전체 바이트) — 사이드바 업데이트 단추의 진행 막대
+static PROGRESS: Mutex<(u64, u64)> = Mutex::new((0, 0));
+
+/// 받는 진행 (받은 바이트, 전체 바이트). 전체를 모르면 0
+pub fn progress() -> (u64, u64) {
+    *PROGRESS.lock().unwrap()
+}
 
 fn client(secs: u64) -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
@@ -206,18 +213,25 @@ async fn fetch(info: &Info) -> Result<PathBuf, String> {
     // 지난번에 받아 둔 파일이 온전하면 그대로 쓴다
     if let Ok(old) = std::fs::read(&path) {
         if verify(&old, info) {
+            let n = old.len() as u64;
+            *PROGRESS.lock().unwrap() = (n, n);
             return Ok(path);
         }
     }
-    let bytes = client(600)?
+    let mut res = client(600)?
         .get(&info.url)
         .send()
         .await
         .and_then(|r| r.error_for_status())
-        .map_err(|_| "새 버전을 받지 못했습니다. 잠시 뒤 다시 시도할게요.".to_string())?
-        .bytes()
-        .await
-        .map_err(|_| "새 버전을 받는 중 끊겼습니다. 잠시 뒤 다시 시도할게요.".to_string())?;
+        .map_err(|_| "새 버전을 받지 못했습니다. 잠시 뒤 다시 시도할게요.".to_string())?;
+    // 조금씩 받으며 진행을 남긴다 (화면의 진행 막대)
+    let total = res.content_length().filter(|n| *n > 0).unwrap_or(info.size);
+    *PROGRESS.lock().unwrap() = (0, total);
+    let mut bytes: Vec<u8> = Vec::with_capacity(total.min(64 << 20) as usize);
+    while let Some(c) = res.chunk().await.map_err(|_| "새 버전을 받는 중 끊겼습니다. 잠시 뒤 다시 시도할게요.".to_string())? {
+        bytes.extend_from_slice(&c);
+        PROGRESS.lock().unwrap().0 = bytes.len() as u64;
+    }
     if !verify(&bytes, info) {
         return Err("받은 파일이 올바르지 않습니다. 다시 받을게요.".into());
     }

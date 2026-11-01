@@ -39,6 +39,8 @@ export const bridge = {
   updateCheck: () => call<UpdateInfo>('update_check').catch((e) => { throw err(e); }),
   updateInstall: () => call<void>('update_install').catch((e) => { throw err(e); }),
   updatePrepare: () => call<UpdateInfo>('update_prepare').catch((e) => { throw err(e); }),
+  /** 새 버전을 받는 진행 [받은 바이트, 전체 바이트] */
+  updateProgress: () => call<[number, number]>('update_progress').catch(() => [0, 0] as [number, number]),
   /** 스토어 판: 스토어의 받기·설치 창 (못 띄우면 스토어의 Prism 페이지). 설치가 시작되면 true */
   storeUpdate: () => call<boolean>('store_update').catch((e) => { throw err(e); }),
   updateApply: (background = false) => call<void>('update_apply', { background }).catch((e) => { throw err(e); }),

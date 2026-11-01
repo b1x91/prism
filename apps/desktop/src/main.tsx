@@ -10,8 +10,8 @@ import { checkNow, clearAttend, getState, refreshSession, start, subscribe, type
 import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
 import { api, bridge } from './bridge';
-import { applyUpdate, storeUpdate, checkUpdate, startUpdates, useUpdate } from './update';
-import { VERSION } from './version';
+import { storeUpdate, checkUpdate, startUpdates, useUpdate } from './update';
+import { UpdateButton } from './UpdateButton';
 import { GamePage } from './pages/Game';
 import { AugmentsPage } from './pages/Augments';
 import { DexPage } from './pages/Dex';
@@ -169,9 +169,9 @@ function App() {
           <NavArrows />
         </div>
         <span className="brand-line" aria-hidden="true" />
-        {/* 새 버전을 받아 두었을 때만. 게임·챔프 선택 중에는 숨긴다 (끝나면 다시) */}
-        {up.info?.ready && !up.info.managed && !playing && <button type="button" className="side-update" disabled={up.applying} onClick={() => void applyUpdate()} title={up.error ?? `지금 v${VERSION} · 누르면 몇 초 뒤 다시 켜져요`}><span className="dot" />{up.applying ? '적용하는 중…' : `새 버전 ${up.info.latest} · 적용`}</button>}
-        {up.error && up.info?.ready && !playing && <span className="side-err l">{up.error}</span>}
+        {/* 새 버전: 받는 동안 진행 막대 → 다 받으면 '재시작' (v3.140). 게임·챔프 선택 중에는 숨긴다 (끝나면 다시) */}
+        <UpdateButton className="upd-side" />
+        {up.error && up.info?.available && !up.info.managed && !playing && <span className="side-err l">{up.error}</span>}
         <nav className="side-nav">{groupNav([...NAV, ...(s.me ? [['/news', '소식', 'megaphone'] as [string, string, IconName], ['/inquiry', '문의', 'mail'] as [string, string, IconName]] : []), ...(s.me?.perms?.manage ? [['/staff', '운영', 'shield'] as [string, string, IconName]] : [])]).map((g) => (
           <div key={g.key} className="side-group" role="group" aria-label={g.label}>
             <span className="side-glabel">{g.label}</span>

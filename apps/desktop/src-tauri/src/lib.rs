@@ -167,6 +167,12 @@ async fn update_check() -> Result<update::Info, String> {
     update::check().await
 }
 
+/// 새 버전을 받는 진행 [받은 바이트, 전체 바이트] (사이드바 업데이트 단추의 진행 막대)
+#[tauri::command]
+fn update_progress() -> (u64, u64) {
+    update::progress()
+}
+
 /// 새 버전을 뒤에서 미리 받아 둔다 (설치는 하지 않는다)
 #[tauri::command]
 async fn update_prepare() -> Result<update::Info, String> {
@@ -504,7 +510,7 @@ pub fn run() {
                 _ => {}
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_show, toast_close, lcu_get, lcu_item_set, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, store_update, update_prepare, update_apply, vision_get, vision_set, overlay_close, vision_allow, vision_test])
+        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_show, toast_close, lcu_get, lcu_item_set, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, store_update, update_prepare, update_progress, update_apply, vision_get, vision_set, overlay_close, vision_allow, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }

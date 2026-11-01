@@ -16,8 +16,9 @@ const EVERY = 30 * 60_000;
 const STALE = 10 * 60_000;
 let lastCheck = 0;
 const IDLE_CHECK = 60_000;
-type U = { info: UpdateInfo | null; checking: boolean; preparing: boolean; applying: boolean; error: string | null };
-let u: U = { info: null, checking: false, preparing: false, applying: false, error: null };
+/** progress: 새 버전을 받는 진행 0~1 (전체 크기를 모르면 null) */
+type U = { info: UpdateInfo | null; checking: boolean; preparing: boolean; applying: boolean; progress: number | null; error: string | null };
+let u: U = { info: null, checking: false, preparing: false, applying: false, progress: null, error: null };
 const subs = new Set<() => void>();
 const set = (p: Partial<U>) => { u = { ...u, ...p }; subs.forEach((f) => f()); };
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -41,12 +42,17 @@ export async function checkUpdate() {
 }
 
 /** 새 버전을 뒤에서 받아 둔다 */
-async function prepare() {
+export async function prepare() {
   if (u.preparing) return;
-  set({ preparing: true, error: null });
-  try { set({ info: keepReady(await bridge.updatePrepare()) }); }
+  set({ preparing: true, progress: 0, error: null });
+  // 받는 동안 진행 막대를 채운다 (사이드바·설정의 업데이트 단추)
+  const t = setInterval(async () => {
+    const [done, total] = await bridge.updateProgress();
+    if (u.preparing) set({ progress: total > 0 ? Math.min(1, done / total) : null });
+  }, 250);
+  try { set({ info: keepReady(await bridge.updatePrepare()), progress: 1 }); }
   catch (e) { set({ error: msg(e) }); }
-  finally { set({ preparing: false }); }
+  finally { clearInterval(t); set({ preparing: false }); }
 }
 
 /** 받아 둔 새 버전을 적용 (앱이 몇 초 꺼졌다 다시 켜진다) */
