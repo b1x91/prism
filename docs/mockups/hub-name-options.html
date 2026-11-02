@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>멤버 허브 이름</title>
+<style>
+:root {
+  --bg: #f5f5f2; --surface: #fff; --surface-2: #f3f3ef; --surface-3: #e7e7e1;
+  --line: rgba(18,22,38,.08); --line-2: rgba(18,22,38,.15);
+  --text: #11141f; --text-2: #4d5469; --text-3: #8a8fa2;
+  --accent: #3a63f0; --on-accent: #fff; --lose: #e0484d; --ok: #18925c;
+  --shadow: 0 1px 2px rgba(16,20,36,.05), 0 12px 32px rgba(16,20,36,.07);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #07090f; --surface: #0f1322; --surface-2: #151a2c; --surface-3: #1d2339;
+  --line: rgba(170,182,230,.08); --line-2: rgba(170,182,230,.16);
+  --text: #eef1f8; --text-2: #a7aec4; --text-3: #69708c;
+  --accent: #7c9cff; --on-accent: #07090f; --lose: #ff6a6f; --ok: #3fd08f;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.35);
+} }
+:root[data-theme="dark"] {
+  --bg: #07090f; --surface: #0f1322; --surface-2: #151a2c; --surface-3: #1d2339;
+  --line: rgba(170,182,230,.08); --line-2: rgba(170,182,230,.16);
+  --text: #eef1f8; --text-2: #a7aec4; --text-3: #69708c;
+  --accent: #7c9cff; --on-accent: #07090f; --lose: #ff6a6f; --ok: #3fd08f;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.35);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 14px/1.5 "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif; word-break: keep-all; }
+button { font: inherit; color: inherit; }
+svg { display: block; }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 32px 16px 48px; }
+h1 { margin: 0 0 4px; font-size: 28px; }
+.lead { margin: 0 0 20px; color: var(--text-2); max-width: 760px; }
+.bar { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+.seg { display: inline-flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.seg button { border: 0; background: none; padding: 0 12px; height: 32px; border-radius: 8px; font-weight: 650; color: var(--text-2); cursor: pointer; }
+.seg button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.opt { display: grid; gap: 12px; align-content: start; }
+.opt h2 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.rec { font-size: 12px; font-weight: 750; color: var(--on-accent); background: var(--accent); padding: 2px 8px; border-radius: 999px; }
+.opt p { margin: 0; font-size: 13px; color: var(--text-2); min-height: 60px; }
+.frame { display: grid; grid-template-columns: 132px minmax(0, 1fr); height: 360px; border-radius: 16px; overflow: hidden; border: 1px solid var(--line-2); background: var(--bg); box-shadow: var(--shadow); }
+.side { padding: 14px 8px; border-right: 1px solid var(--line); display: grid; align-content: start; gap: 2px; }
+.glabel { padding: 0 8px; margin: 8px 0 4px; font-size: 12px; font-weight: 750; color: var(--text-3); }
+.item { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 8px; border-radius: 10px; color: var(--text-2); font-weight: 650; font-size: 13px; }
+.item svg { width: 16px; height: 16px; flex: none; }
+.item.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.item.on svg { color: var(--accent); }
+.item .chev { width: 13px; height: 13px; margin-left: auto; color: var(--text-3); }
+.item.on .chev { transform: rotate(90deg); }
+.sub { position: relative; padding-left: 15px; margin-bottom: 4px; }
+.sub::before { content: ''; position: absolute; left: 15px; top: 4px; bottom: 4px; width: 1px; background: var(--line-2); }
+.sub button { position: relative; display: flex; width: 100%; height: 28px; align-items: center; padding: 0 8px 0 15px; border: 0; background: none; border-radius: 6px; font-size: 13px; font-weight: 600; color: var(--text-3); cursor: pointer; text-align: left; }
+.sub button.on { color: var(--text); font-weight: 700; }
+.sub button.on::before { content: ''; position: absolute; left: -1px; top: 7px; bottom: 7px; width: 3px; border-radius: 2px; background: var(--accent); }
+.main { padding: 18px; min-width: 0; }
+.kick { font-size: 12px; font-weight: 650; color: var(--text-3); margin-bottom: 2px; min-height: 18px; }
+.title { margin: 0 0 12px; font-size: 22px; font-weight: 800; letter-spacing: -.015em; }
+.tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--line-2); margin-bottom: 14px; }
+.tabs button { position: relative; height: 32px; padding: 0; border: 0; background: none; font-size: 14px; font-weight: 650; color: var(--text-3); cursor: pointer; white-space: nowrap; }
+.tabs button.on { color: var(--text); }
+.tabs button.on::after { content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; border-radius: 2px; background: var(--text); }
+.card { height: 64px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line); margin-bottom: 10px; padding: 12px; display: grid; gap: 6px; }
+.card i { display: block; height: 8px; border-radius: 5px; background: var(--surface-3); }
+.card i:first-child { width: 40%; background: color-mix(in srgb, var(--text) 20%, transparent); }
+.card i:last-child { width: 70%; }
+.desc { font-size: 12px; color: var(--text-3); margin: -6px 0 10px; }
+.vs { margin-top: 4px; font-size: 13px; }
+.vs b { color: var(--ok); } .vs em { font-style: normal; color: var(--lose); font-weight: 700; }
+@media (max-width: 980px) { .grid { grid-template-columns: 1fr; } .opt p { min-height: 0; } }
+@media (max-width: 420px) { .frame { grid-template-columns: 1fr; height: auto; } .side { display: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>'멤버' 허브 이름 시안</h1>
+  <p class="lead">큰 제목 '멤버' 아래에 '멤버' 탭이 또 있는 것을 고치는 세 가지 방법입니다. 사이드바의 펼친 줄과 화면 위 탭을 눌러 보세요.</p>
+  <div class="bar"><div class="seg" id="theme"><button data-t="" class="on">시스템</button><button data-t="light">라이트</button><button data-t="dark">다크</button></div></div>
+  <div class="grid" id="grid"></div>
+</div>
+<script>
+const I = {
+  game: '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/>',
+  sprout: '<path d="M12 21v-8.5"/><path d="M12 12.5C12 8.6 9.2 6.5 5 6.5c0 3.9 2.8 6 7 6zM12 10.5c0-3.9 2.8-6 7-6 0 3.9-2.8 6-7 6z"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
+  home: '<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+  gem: '<path d="M12 3l8 5v8l-8 5-8-5V8z"/><path d="M4 8l8 5 8-5M12 13v8"/>',
+  chev: '<path d="M9 5l7 7-7 7"/>',
+};
+const ic = (n, c = '') => `<svg class="${c}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
+const OPTS = [
+  { k: 'A', name: '모임', icon: 'home', tabs: ['멤버', '소식', '초대'], rec: true,
+    why: "허브 이름을 '모임'으로 바꾸고 탭은 그대로 둡니다. '성장 · 모임'처럼 두 허브가 같은 결이 되고, 예전 메뉴 묶음 이름이라 회원들에게도 익숙해요.",
+    good: '허브 이름 하나만 바꾸면 돼요', bad: "예전에 메뉴 '모임'을 '멤버'로 바꾼 적이 있어 그 결정을 되돌리는 셈이에요" },
+  { k: 'B', name: '멤버', icon: 'users', tabs: ['라운지', '소식', '초대'],
+    why: "허브 이름 '멤버'는 두고 첫 탭을 '라운지'로 바꿉니다. 그 화면은 디스코드·NOW·아카이브 — 지금 누가 모여 있는지 보는 곳이라 '라운지'가 내용에 맞아요.",
+    good: "메뉴 이름 '멤버'가 그대로", bad: '새 낱말이라 처음엔 무엇인지 낯설 수 있어요' },
+  { k: 'C', name: 'Prism', icon: 'gem', tabs: ['멤버', '소식', '초대'],
+    why: "허브 이름을 모임 이름 'Prism'으로 합니다. 지금 멤버 화면의 큰 제목도 'Prism'이었어요. '우리 모임'이라는 느낌이 가장 강해요.",
+    good: '브랜드가 메뉴에 보임', bad: '사이드바 맨 위 로고 PRISM 과 이름이 겹쳐요' },
+];
+const st = OPTS.map(() => 0);
+function render() {
+  document.getElementById('grid').innerHTML = OPTS.map((o, i) => {
+    const t = o.tabs[st[i]];
+    const same = t === o.name;
+    return `<section class="opt"><h2>${o.k} · ${o.name} › ${o.tabs.join(' · ')}${o.rec ? '<span class="rec">추천</span>' : ''}</h2><p>${o.why}</p>
+    <div class="frame"><aside class="side">
+      <div class="glabel">게임</div><div class="item">${ic('game')}<span>분석</span></div><div class="item">${ic('grid')}<span>챔프</span></div>
+      <div class="glabel">성장 · 모임</div><div class="item">${ic('sprout')}<span>성장</span>${ic('chev', 'chev')}</div>
+      <div class="item on">${ic(o.icon)}<span>${o.name}</span>${ic('chev', 'chev')}</div>
+      <div class="sub">${o.tabs.map((x, j) => `<button class="${j === st[i] ? 'on' : ''}" data-o="${i}" data-j="${j}">${x}</button>`).join('')}</div>
+    </aside><main class="main">
+      <div class="kick">${same ? '' : o.name}</div><h3 class="title">${t}</h3>
+      <div class="tabs">${o.tabs.map((x, j) => `<button class="${j === st[i] ? 'on' : ''}" data-o="${i}" data-j="${j}">${x}</button>`).join('')}</div>
+      <div class="card"><i></i><i></i></div><div class="card"><i></i><i></i></div><div class="card"><i></i><i></i></div>
+    </main></div>
+    <div class="vs"><b>좋은 점</b> · ${o.good}<br><em>아쉬운 점</em> · ${o.bad}</div></section>`;
+  }).join('');
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.o !== undefined) { st[+b.dataset.o] = +b.dataset.j; render(); return; }
+  if (b.closest('#theme')) {
+    if (b.dataset.t) document.documentElement.dataset.theme = b.dataset.t; else delete document.documentElement.dataset.theme;
+    document.querySelectorAll('#theme button').forEach((x) => x.classList.toggle('on', x === b));
+  }
+});
+render();
+</script>
+</body>
+</html>
