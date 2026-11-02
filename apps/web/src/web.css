@@ -1,11 +1,14 @@
 /* 웹 전용 틀 (상단 바·모바일 메뉴·첫 화면) */
-.topbar { position: sticky; top: 0; z-index: 30; padding-top: env(safe-area-inset-top, 0px); background: var(--glass-bg); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); border-bottom: 1px solid var(--glass-line); box-shadow: 0 1px 0 var(--glass-edge), 0 6px 20px rgba(16, 20, 36, .05); }
+.topbar { position: sticky; top: 0; z-index: 30; padding-top: env(safe-area-inset-top, 0px); background: var(--glass-bg); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); border-bottom: 1px solid var(--glass-line); box-shadow: 0 1px 0 var(--glass-edge); }
+/* 상단 바 아래 그늘: 흐림 그림자 대신 좌우 끝까지 같은 세기의 띠 — 그림자는 끝에서 옅어져 바깥 띠(html)와 이어지는 곳에 이음매가 생겼다 */
+.topbar::after { content: ""; position: absolute; left: 0; right: 0; top: calc(100% + 1px); height: 20px; background: linear-gradient(180deg, var(--tb-shade), transparent); pointer-events: none; }
 /* 상단 바가 화면 오른쪽 끝(아이폰 사파리 옆 칸 등 페이지 폭 밖)까지 이어지게: 페이지 맨 바깥 바탕(캔버스)의 맨 위 띠를 상단 바와 같은 색으로, 가로로 끝없이 반복 (v3.151).
    몸통(body) 바탕이 페이지 폭 안을 덮으므로 페이지 안에서는 보이지 않고, 그 밖으로만 드러난다. 색은 실제 상단 바를 찍어 잰 값 */
-html { --tb-h: calc(64px + env(safe-area-inset-top, 0px)); --tb-top: #fbfbfa; --tb-bot: #f9f9f7; --tb-line: #fffffe; --tb-edge: #eeeeec;
-  background: linear-gradient(180deg, var(--tb-top), var(--tb-bot) var(--tb-h), var(--tb-line) var(--tb-h), var(--tb-line) calc(var(--tb-h) + 1px), var(--tb-edge) calc(var(--tb-h) + 1px), var(--tb-edge) calc(var(--tb-h) + 2px)) 0 0 / 100% calc(var(--tb-h) + 2px) repeat-x, var(--bg); }
-@media (prefers-color-scheme: dark) { html:not([data-theme="light"]) { --tb-top: #171c2e; --tb-bot: #0c101e; --tb-line: #373b4b; --tb-edge: #05060a; } }
-html[data-theme="dark"] { --tb-top: #171c2e; --tb-bot: #0c101e; --tb-line: #373b4b; --tb-edge: #05060a; }
+html { --tb-h: calc(64px + env(safe-area-inset-top, 0px)); --tb-top: #fbfbfa; --tb-bot: #f9f9f7; --tb-line: #fffffe; --tb-edge: #eeeeec; --tb-shade: rgba(16, 20, 36, .035);
+  background: linear-gradient(180deg, var(--tb-top), var(--tb-bot) var(--tb-h), var(--tb-line) var(--tb-h), var(--tb-line) calc(var(--tb-h) + 1px), var(--tb-edge) calc(var(--tb-h) + 1px), var(--tb-edge) calc(var(--tb-h) + 2px)) 0 0 / 100% calc(var(--tb-h) + 2px) repeat-x,
+    linear-gradient(180deg, var(--tb-shade), transparent) 0 calc(var(--tb-h) + 1px) / 100% 20px repeat-x, var(--bg); }
+@media (prefers-color-scheme: dark) { html:not([data-theme="light"]) { --tb-top: #171c2e; --tb-bot: #0c101e; --tb-line: #373b4b; --tb-edge: #05060a; --tb-shade: rgba(0, 0, 0, .14); } }
+html[data-theme="dark"] { --tb-top: #171c2e; --tb-bot: #0c101e; --tb-line: #373b4b; --tb-edge: #05060a; --tb-shade: rgba(0, 0, 0, .14); }
 @media (max-width: 860px) { html { --tb-h: calc(56px + env(safe-area-inset-top, 0px)); } }
 .topbar .wrap { display: flex; align-items: center; gap: var(--s4); height: 64px; }
 /* 워드마크는 대문자 PRISM — 대문자 높이(약 12px)에 맞춰 보석은 22px, 글자 사이는 넓게 */
