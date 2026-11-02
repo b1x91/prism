@@ -84,7 +84,7 @@ export function Layout() {
       </div></header>
       <MobileMenu open={menu} onClose={() => setMenu(false)} />
       {welcome && me && <WelcomeFlow api={api} nick={me.nick} needFace={!me.skin} onClose={closeWelcome} />}
-      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <>{curHub && (me || curHub.key === 'grow') && <div className="wrap hub-wrap"><HubTabs hub={curHub} path={pathname} onGo={(to) => nav(to)} hide={(to) => !allowOf(me)(to)} dots={{ '/news': (me?.newsUnread ?? 0) > 0 }} /></div>}<div key={`${pathname}-${k}`} className="route"><Outlet /></div></>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
+      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <>{curHub && (me || curHub.key === 'grow') && <div className="wrap hub-wrap"><HubTabs key={curHub.key} hub={curHub} path={pathname} onGo={(to) => nav(to)} hide={(to) => !allowOf(me)(to)} dots={{ '/news': (me?.newsUnread ?? 0) > 0 }} /></div>}<div key={`${pathname}-${k}`} className="route"><Outlet /></div></>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>
         <span className="row" style={{ gap: 16 }}>
@@ -165,8 +165,8 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           const allow = allowOf(me);
           const on = hubOf(pathname) === hub;
           return <div key={to} className={`mmenu-hub ${on ? 'on' : ''}`}>
-            <NavLink to={hubHref(hub, allow)} className={() => (on ? 'active' : '')} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{badge}</NavLink>
-            <span className="mmenu-sub">{hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} tabIndex={open ? 0 : -1}>{t.label}{t.to === '/news' && (me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</span>
+            <NavLink to={hubHref(hub, allow)} className={() => (on ? 'active' : '')} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{badge}<Icon name="chevR" className="hub-chev" /></NavLink>
+            <div className={`mmenu-sub ${on ? 'open' : ''}`}><div>{hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} tabIndex={open && on ? 0 : -1}>{t.label}{t.to === '/news' && (me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
           </div>;
         })}</div>)}</nav>
         <span className="sp" />

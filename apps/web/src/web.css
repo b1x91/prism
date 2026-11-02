@@ -227,12 +227,19 @@ button.me-btn:hover, button.me-btn.on { background: var(--surface-3, var(--line)
 .hd-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lose); }
 .hub-wrap { padding-top: var(--s6); }
 .hub-wrap + .route > .section.tight { padding-top: 0; }
-.hub-wrap .hubtabs { margin-bottom: var(--s5); }
-/* 휴대폰 메뉴: 허브 이름 아래 작은 줄에 탭 */
-.mmenu-hub { display: grid; gap: 2px; }
-.mmenu-sub { display: flex; flex-wrap: wrap; gap: var(--s1); padding: 0 0 var(--s1) 44px; }
-.mmenu-nav .mmenu-sub a { position: relative; height: 32px; padding: 0 var(--s3); gap: 0; border-radius: var(--r-pill); background: var(--surface-2); color: var(--text-2); font-size: var(--fs-sm); font-weight: 650; box-shadow: none; }
-.mmenu-nav .mmenu-sub a.active { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
-.mmenu-sub .sub-dot { width: 6px; height: 6px; margin-left: 4px; border-radius: 50%; background: var(--lose); }
+.hub-wrap .hubhead { margin-bottom: var(--s6); }
+/* 휴대폰 메뉴: 지금 허브만 아래로 펼친다 (앱 사이드바와 같은 모양, v3.143) */
+.mmenu-hub { display: grid; }
+.mmenu-nav .hub-chev { width: 18px; height: 18px; margin-left: auto; color: var(--text-3); transition: transform .3s cubic-bezier(.16, 1, .3, 1); }
+.mmenu-nav .nav-live ~ .hub-chev, .mmenu-nav .news-dot ~ .hub-chev { margin-left: var(--s2); }
+.mmenu-hub.on .hub-chev { transform: rotate(90deg); }
+.mmenu-sub { display: grid; grid-template-rows: 0fr; overflow: hidden; transition: grid-template-rows .36s cubic-bezier(.16, 1, .3, 1); }
+.mmenu-sub.open { grid-template-rows: 1fr; }
+.mmenu-sub > div { position: relative; min-height: 0; padding-left: 22px; }
+.mmenu-sub > div::before { content: ''; position: absolute; left: 22px; top: 6px; bottom: 6px; width: 1px; background: var(--line-2); }
+.mmenu-nav .mmenu-sub a { position: relative; height: 44px; padding: 0 var(--s3) 0 22px; gap: var(--s2); font-size: var(--fs-lg); font-weight: 600; color: var(--text-3); background: none; box-shadow: none; }
+.mmenu-nav .mmenu-sub a.active { color: var(--text); font-weight: 700; background: none; box-shadow: none; }
+.mmenu-nav .mmenu-sub a.active::before { content: ''; position: absolute; left: -1px; top: 12px; bottom: 12px; width: 3px; border-radius: 2px; background: var(--accent); }
+.mmenu-sub .sub-dot { width: 6px; height: 6px; margin-left: auto; border-radius: 50%; background: var(--lose); }
 .mmenu-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s1); }
 @media (prefers-reduced-motion: reduce) { .hub-drop, .tab-chev { transition: none; } }

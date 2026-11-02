@@ -190,8 +190,9 @@ function App() {
               const tabs = hub.tabs.filter((t) => hubAllow(t.to));
               return (
                 <div key={to} className={`side-hub ${on ? 'on' : ''}`}>
-                  <NavLink to={hubHref(hub, hubAllow)} className={() => (on ? 'active' : '')}><Icon name={i} />{l}{badge}</NavLink>
-                  <span className="side-sub">{tabs.map((t) => <NavLink key={t.to} to={t.to} title={t.hint}>{t.label}{t.to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</span>
+                  <NavLink to={hubHref(hub, hubAllow)} className={() => (on ? 'active' : '')} aria-expanded={on}><Icon name={i} />{l}{badge}<Icon name="chevR" className="hub-chev" /></NavLink>
+                  {/* 지금 허브만 아래로 펼친다: 세로선 + 고른 줄에 파란 막대 (시안 B) */}
+                  <div className={`side-sub ${on ? 'open' : ''}`} aria-hidden={!on}><div>{tabs.map((t) => <NavLink key={t.to} to={t.to} tabIndex={on ? 0 : -1}>{t.label}{t.to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
                 </div>
               );
             })}
@@ -219,7 +220,7 @@ function App() {
             : <button type="button" className="btn sm primary" disabled={up.applying} onClick={() => void storeUpdate()}>{up.applying ? 'Microsoft Store 여는 중…' : '업데이트'}</button>}
         </div>}
         {s.me && !s.me.rolesKnown && <div className="relogin"><span>디스코드 역할(정회원·운영진 등)에 맞는 기능을 열려면 <b>한 번만 다시 로그인</b>해 주세요.</span><button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />다시 로그인</button></div>}
-        {curHub && <HubTabs hub={curHub} path={loc.pathname} onGo={(to) => nav(to)} hide={(to) => !hubAllow(to)} dots={{ '/news': (s.me?.newsUnread ?? 0) > 0 }} />}
+        {curHub && <HubTabs key={curHub.key} hub={curHub} path={loc.pathname} onGo={(to) => nav(to)} hide={(to) => !hubAllow(to)} dots={{ '/news': (s.me?.newsUnread ?? 0) > 0 }} />}
         <AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><MatchNote.Provider value="롤을 켜 두면 열 명 모두 볼 수 있어요."><PullRefresh scroller={mainEl} onRefresh={pullRefresh}>{(k) => <Page main={main} k={k}><Routes>
           <Route index element={<GamePage s={s} />} />
           <Route path="champions" element={<ChampionsPage member={!!s.me} record={s.personal.champions} />} />

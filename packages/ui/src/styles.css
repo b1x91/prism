@@ -4331,34 +4331,23 @@ span.inq-pic { cursor: default; animation: inq-in .3s cubic-bezier(.16, 1, .3, 1
 .inq-view-x svg { width: 20px; height: 20px; }
 @media (prefers-reduced-motion: reduce) { span.inq-pic, .inq-view, .inq-view img, .inq-spin { animation: none; } }
 
-/* 허브 탭 (v3.142): 성장(도감·미션·랭킹) · 멤버(멤버·소식·초대) 화면 맨 위 */
-.hubtabs { container-type: inline-size; display: grid; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); gap: var(--s2); margin-bottom: var(--s5); }
-.ht { position: relative; display: flex; align-items: center; gap: var(--s3); min-width: 0; padding: var(--s3); border: 1px solid var(--line); border-radius: var(--r-m); background: var(--surface); color: var(--text-2); font: inherit; text-align: left; cursor: pointer; transition: border-color .18s, background-color .18s, transform .18s, box-shadow .18s; }
-.ht:hover { border-color: var(--line-2); color: var(--text); transform: translateY(-1px); box-shadow: var(--shadow); }
-.ht.on { border-color: color-mix(in srgb, var(--accent) 55%, transparent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); color: var(--text); box-shadow: 0 0 0 3px var(--accent-soft); transform: none; cursor: default; }
-.ht-ic { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border-radius: var(--r-m); background: var(--surface-2); color: var(--text-2); transition: background-color .18s, color .18s; }
-.ht-ic svg { width: 20px; height: 20px; }
-.ht:hover .ht-ic { color: var(--text); }
-.ht.on .ht-ic { background: var(--accent); color: var(--on-accent); }
-.ht-t { display: grid; min-width: 0; gap: 2px; }
-.ht-t b { font-size: var(--fs-lg); font-weight: 750; line-height: 1.25; white-space: nowrap; }
-.ht-t small { font-size: var(--fs-xs); color: var(--text-3); line-height: 1.35; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ht.on .ht-t small { color: var(--text-2); }
-.ht-dot { position: absolute; top: var(--s3); right: var(--s3); width: 8px; height: 8px; border-radius: 50%; background: var(--lose); }
-@container (max-width: 560px) {
-  .hubtabs .ht { flex-direction: column; justify-content: center; gap: var(--s1); padding: var(--s2) var(--s1); text-align: center; }
-  .hubtabs .ht-ic { width: 32px; height: 32px; border-radius: var(--r-s); }
-  .hubtabs .ht-ic svg { width: 18px; height: 18px; }
-  .hubtabs .ht-t small { display: none; }
-  .hubtabs .ht-t b { font-size: var(--fs-md); }
-  .hubtabs .ht-dot { top: var(--s2); right: var(--s2); }
-}
-@media (prefers-reduced-motion: reduce) { .ht, .ht-ic { transition: none; } .ht:hover { transform: none; } }
-.inv-how { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); }
-.inv-how li { display: flex; gap: var(--s3); align-items: flex-start; }
-.inv-how li > span:last-child { display: grid; gap: var(--s1); }
-.inv-how b { font-size: var(--fs-md); }
-.inv-n { display: grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 50%; background: var(--accent-soft); color: var(--accent); font-weight: 800; font-size: var(--fs-sm); }
-@media (max-width: 760px) { .inv-how { grid-template-columns: minmax(0, 1fr); } }
+/* 허브 머리 (v3.143, 시안 A): 작은 허브 이름 · 큰 제목 · 글자 탭 + 미끄러지는 밑줄 */
+.hubhead { margin-bottom: var(--s6); }
+.hh-kick { display: block; margin-bottom: var(--s1); font-size: var(--fs-sm); font-weight: 650; color: var(--text-3); }
+.hh-title { margin: 0 0 var(--s4); font-size: var(--fs-2xl); font-weight: 800; letter-spacing: -.015em; line-height: 1.2; }
+.hh-tabs { position: relative; display: flex; gap: var(--s7); border-bottom: 1px solid var(--line-2); overflow-x: auto; scrollbar-width: none; }
+.hh-tabs::-webkit-scrollbar { display: none; }
+.hh-tabs button { position: relative; display: inline-flex; align-items: center; gap: 6px; flex: none; height: 40px; padding: 0; border: 0; background: none; color: var(--text-3); font: inherit; font-size: var(--fs-lg); font-weight: 650; white-space: nowrap; cursor: pointer; transition: color .2s; }
+.hh-tabs button:hover { color: var(--text-2); }
+.hh-tabs button.on { color: var(--text); cursor: default; }
+.hh-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+.hh-cnt { font-size: var(--fs-xs); font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; }
+.hh-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lose); }
+.hh-ink { position: absolute; left: 0; bottom: -1px; width: 0; height: 2px; border-radius: 2px; background: var(--text); transition: transform .38s cubic-bezier(.16, 1, .3, 1), width .38s cubic-bezier(.16, 1, .3, 1); }
+@media (max-width: 560px) { .hh-tabs { gap: var(--s6); } .hh-title { font-size: var(--fs-xl); margin-bottom: var(--s3); } }
+@media (prefers-reduced-motion: reduce) { .hh-ink, .hh-tabs button { transition: none; } }
 /* 허브 탭이 있는 화면에서는 탭이 제목을 대신한다 (같은 글자 두 번 금지, v3.32) */
-body:has(.hubtabs) .hub-h { display: none; }
+body:has(.hubhead) .hub-h { display: none; }
+/* 허브 머리 아래 멤버 화면: 제목 대신 디스코드·카카오톡 단추만 오른쪽에 */
+body:has(.hubhead) .crew-head { justify-content: flex-end; }
+body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }

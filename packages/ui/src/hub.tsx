@@ -1,30 +1,57 @@
 /**
- * 허브 탭 (CLAUDE.md v3.142): 메뉴 하나로 묶은 화면들(성장 = 도감·미션·랭킹, 멤버 = 멤버·소식·초대)의
- * 맨 위에 늘 같은 자리·같은 모양으로 놓는 큰 탭. 그림 + 이름 + 한 줄 설명이라 무엇이 어디 있는지 바로 보인다.
+ * 허브 탭 (CLAUDE.md v3.142 → v3.143, 시안 A): 메뉴 하나로 묶은 화면(성장 = 도감·미션·랭킹, 멤버 = 멤버·소식·초대)의
+ * 맨 위 머리 — 작은 허브 이름 · 큰 제목(지금 탭) · 글자 탭 한 줄. 고른 탭 밑의 선이 옆으로 미끄러져 간다.
+ * 탭이 제목을 대신하므로 그 화면 자체의 제목(`hub-h`)은 숨긴다.
  */
+import { useLayoutEffect, useRef } from 'react';
 import type { Hub } from './navgroups';
-import { Icon } from './icons';
 
-export function HubTabs({ hub, path, onGo, dots, hide }: {
+/** 탭을 옮겨도 밑줄이 이전 자리에서 미끄러지도록 마지막 위치를 허브마다 기억 */
+const lastInk = new Map<string, [number, number]>();
+
+export function HubTabs({ hub, path, onGo, dots, counts, hide }: {
   hub: Hub; path: string; onGo: (to: string) => void;
   /** 새 소식처럼 점을 붙일 탭 */ dots?: Record<string, boolean>;
+  /** 받을 보상처럼 숫자를 붙일 탭 */ counts?: Record<string, number>;
   /** 이 사람에게 보이지 않는 탭 */ hide?: (to: string) => boolean;
 }) {
   const tabs = hub.tabs.filter((t) => !hide?.(t.to));
-  if (tabs.length < 2) return null;
-  const cur = tabs.find((t) => path === t.to || path.startsWith(`${t.to}/`))?.to;
+  const cur = tabs.find((t) => path === t.to || path.startsWith(`${t.to}/`));
+  const box = useRef<HTMLDivElement>(null);
+  const ink = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const el = box.current?.querySelector<HTMLElement>('button.on');
+    const bar = ink.current;
+    if (!el || !bar) return;
+    const prev = lastInk.get(hub.key);
+    const next: [number, number] = [el.offsetLeft, el.offsetWidth];
+    if (prev && (prev[0] !== next[0] || prev[1] !== next[1])) {
+      bar.style.transition = 'none';
+      bar.style.transform = `translateX(${prev[0]}px)`; bar.style.width = `${prev[1]}px`;
+      void bar.offsetWidth;
+      bar.style.transition = '';
+    }
+    bar.style.transform = `translateX(${next[0]}px)`; bar.style.width = `${next[1]}px`;
+    lastInk.set(hub.key, next);
+  }, [cur?.to, hub.key, tabs.length]);
+  if (tabs.length < 2 || !cur) return null;
   return (
-    <nav className="hubtabs" aria-label={hub.label} style={{ ['--n' as string]: tabs.length }}>
-      {tabs.map((t) => {
-        const on = t.to === cur;
-        return (
-          <button key={t.to} type="button" className={`ht ${on ? 'on' : ''}`} aria-current={on ? 'page' : undefined} onClick={() => { if (!on || path !== t.to) onGo(t.to); }}>
-            <span className="ht-ic"><Icon name={t.icon} /></span>
-            <span className="ht-t"><b>{t.label}</b><small>{t.hint}</small></span>
-            {dots?.[t.to] && <i className="ht-dot" aria-label="새 소식" />}
-          </button>
-        );
-      })}
-    </nav>
+    <header className="hubhead">
+      {cur.label !== hub.label && <span className="hh-kick">{hub.label}</span>}
+      <h1 className="hh-title">{cur.label}</h1>
+      <div className="hh-tabs" role="tablist" aria-label={hub.label} ref={box}>
+        {tabs.map((t) => {
+          const on = t.to === cur.to;
+          const n = counts?.[t.to] ?? 0;
+          return (
+            <button key={t.to} type="button" role="tab" aria-selected={on} title={t.hint} className={on ? 'on' : ''} onClick={() => { if (path !== t.to) onGo(t.to); }}>
+              {t.label}
+              {n > 0 ? <span className="hh-cnt">{n}</span> : dots?.[t.to] ? <i className="hh-dot" aria-label="새 소식" /> : null}
+            </button>
+          );
+        })}
+        <span className="hh-ink" ref={ink} aria-hidden="true" />
+      </div>
+    </header>
   );
 }
