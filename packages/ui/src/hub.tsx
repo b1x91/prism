@@ -39,8 +39,9 @@ export function HubTabs({ hub, path, onGo, dots, counts, live, hide }: {
   if (tabs.length < 2 || !cur) return null;
   return (
     <header className="hubhead">
-      {cur.label !== hub.label && <span className="hh-kick">{hub.label}</span>}
-      <h1 className="hh-title">{cur.label}</h1>
+      <span className="hh-kick">{hub.label}</span>
+      {/* 제목과 탭을 한 줄로 (v3.146): 고른 탭이 곧 제목. 읽기 프로그램용 제목만 따로 */}
+      <h1 className="sr-only">{cur.label}</h1>
       <div className="hh-tabs" role="tablist" aria-label={hub.label} ref={box}>
         {tabs.map((t) => {
           const on = t.to === cur.to;
