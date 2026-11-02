@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>메뉴 정리 시안</title>
+<style>
+:root {
+  --bg: #f5f5f2; --surface: #fff; --surface-2: #f3f3ef; --surface-3: #e7e7e1;
+  --line: rgba(18,22,38,.08); --line-2: rgba(18,22,38,.15);
+  --text: #11141f; --text-2: #4d5469; --text-3: #8a8fa2;
+  --accent: #3a63f0; --accent-soft: rgba(58,99,240,.10); --on-accent: #fff;
+  --ok: #18925c; --lose: #e0484d; --gold: #c3951d;
+  --shadow: 0 1px 2px rgba(16,20,36,.05), 0 12px 32px rgba(16,20,36,.07);
+  --pop: 0 16px 40px rgba(16,20,36,.16), 0 1px 2px rgba(16,20,36,.08);
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #07090f; --surface: #0f1322; --surface-2: #151a2c; --surface-3: #1d2339;
+  --line: rgba(170,182,230,.08); --line-2: rgba(170,182,230,.16);
+  --text: #eef1f8; --text-2: #a7aec4; --text-3: #69708c;
+  --accent: #7c9cff; --accent-soft: rgba(124,156,255,.14); --on-accent: #07090f;
+  --ok: #3fd08f; --lose: #ff6a6f; --gold: #f2c14c;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.35);
+  --pop: 0 18px 44px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.4);
+} }
+:root[data-theme="dark"] {
+  --bg: #07090f; --surface: #0f1322; --surface-2: #151a2c; --surface-3: #1d2339;
+  --line: rgba(170,182,230,.08); --line-2: rgba(170,182,230,.16);
+  --text: #eef1f8; --text-2: #a7aec4; --text-3: #69708c;
+  --accent: #7c9cff; --accent-soft: rgba(124,156,255,.14); --on-accent: #07090f;
+  --ok: #3fd08f; --lose: #ff6a6f; --gold: #f2c14c;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 16px 40px rgba(0,0,0,.35);
+  --pop: 0 18px 44px rgba(0,0,0,.55), 0 1px 2px rgba(0,0,0,.4);
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--text); font: 14px/1.5 "Pretendard Variable", Pretendard, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", system-ui, sans-serif; word-break: keep-all; overflow-wrap: break-word; }
+button { font: inherit; color: inherit; }
+svg { display: block; }
+.wrap { max-width: 1200px; margin: 0 auto; padding: 32px 16px 48px; }
+h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -.01em; }
+.lead { margin: 0 0 24px; color: var(--text-2); }
+.bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+.seg { display: inline-flex; padding: 4px; gap: 4px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); }
+.seg button { border: 0; background: none; padding: 0 12px; height: 32px; border-radius: 8px; font-weight: 650; color: var(--text-2); cursor: pointer; white-space: nowrap; }
+.seg button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.bar .sp { flex: 1; }
+
+/* 시안 설명 */
+.pitch { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 16px; margin-bottom: 16px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
+.pitch h2 { margin: 0 0 4px; font-size: 20px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.rec { font-size: 12px; font-weight: 750; color: var(--on-accent); background: var(--accent); padding: 2px 8px; border-radius: 999px; }
+.pitch p { margin: 0 0 12px; color: var(--text-2); }
+.pitch ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; }
+.nums { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.num { padding: 12px; border-radius: 12px; background: var(--surface-2); }
+.num b { display: block; font-size: 28px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.num span { font-size: 12px; color: var(--text-3); }
+.num.bad b { color: var(--text-3); text-decoration: line-through; text-decoration-thickness: 2px; font-size: 20px; }
+.good, .cost { margin-top: 12px; font-size: 13px; }
+.good b { color: var(--ok); } .cost b { color: var(--lose); }
+
+/* 화면 틀 */
+.stage { display: flex; justify-content: center; }
+.frame { width: 100%; border-radius: 16px; overflow: hidden; border: 1px solid var(--line-2); background: var(--bg); box-shadow: var(--shadow); }
+.app { display: grid; grid-template-columns: 232px minmax(0, 1fr); height: 640px; }
+.side { display: flex; flex-direction: column; gap: 16px; padding: 16px 12px; border-right: 1px solid var(--line); background: var(--bg); min-height: 0; }
+.brand { display: flex; align-items: center; gap: 8px; padding: 0 8px; font-weight: 800; letter-spacing: .1em; font-size: 16px; }
+.nav { display: grid; gap: 20px; }
+.group { display: grid; gap: 2px; }
+.glabel { padding: 0 12px; margin-bottom: 4px; font-size: 12px; font-weight: 750; letter-spacing: .06em; color: var(--text-3); }
+.item { position: relative; display: flex; align-items: center; gap: 12px; height: 38px; padding: 0 12px; border: 0; border-radius: 12px; background: none; color: var(--text-2); font-weight: 650; text-align: left; cursor: pointer; width: 100%; }
+.item svg { width: 20px; height: 20px; flex: none; }
+.item:hover { background: var(--surface-2); color: var(--text); }
+.item.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.item.on svg { color: var(--accent); }
+.item .sub { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--text-3); }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--lose); margin-left: auto; flex: none; }
+.dot.live { background: var(--ok); }
+.new { outline: 2px dashed color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: -2px; }
+.side .fill { flex: 1; }
+.foot { display: grid; gap: 8px; }
+.foot .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
+.foot .row2 .item { justify-content: center; gap: 8px; height: 36px; font-size: 13px; }
+.me { position: relative; display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; text-align: left; width: 100%; }
+.me:hover { border-color: var(--line-2); }
+.face { width: 36px; height: 36px; border-radius: 50%; flex: none; background: linear-gradient(135deg, #7c9cff, #b042ff); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: 14px; }
+.me .nm { display: grid; min-width: 0; flex: 1; }
+.me .nm b { font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.me .nm span { font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 4px; }
+.pc { width: 9px; height: 9px; transform: rotate(45deg) scaleX(.72); background: linear-gradient(135deg, #ffe08a, #c3951d); border-radius: 2px; display: inline-block; }
+.me .chev { color: var(--text-3); width: 16px; height: 16px; }
+.bell { position: relative; flex: none; width: 36px; height: 36px; border-radius: 10px; border: 0; background: none; display: grid; place-items: center; color: var(--text-2); cursor: pointer; }
+.bell:hover { background: var(--surface-2); color: var(--text); }
+.bell svg { width: 20px; height: 20px; }
+.bell .dot { position: absolute; top: 6px; right: 7px; margin: 0; box-shadow: 0 0 0 2px var(--bg); }
+
+/* 내 카드 메뉴 */
+.menu { position: absolute; z-index: 5; min-width: 220px; padding: 6px; border-radius: 12px; background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--pop); display: grid; gap: 2px; }
+.menu[hidden] { display: none; }
+.menu.new { outline-offset: 2px; }
+.side .menu { left: 12px; right: 12px; bottom: 72px; }
+.menu .mi { display: flex; align-items: center; gap: 12px; height: 38px; padding: 0 10px; border: 0; border-radius: 8px; background: none; cursor: pointer; text-align: left; font-weight: 600; color: var(--text); width: 100%; }
+.menu .mi svg { width: 18px; height: 18px; color: var(--text-2); flex: none; }
+.menu .mi:hover { background: var(--surface-2); }
+.menu .mi em { margin-left: auto; font-style: normal; font-size: 12px; font-weight: 750; color: var(--gold); display: inline-flex; align-items: center; gap: 4px; }
+.menu .mi.hl { background: color-mix(in srgb, var(--gold) 12%, transparent); }
+.menu .mi.hl svg { color: var(--gold); }
+.menu hr { border: 0; border-top: 1px solid var(--line); margin: 4px 6px; }
+.anchor { position: relative; }
+
+/* 본문 */
+.main { min-width: 0; overflow: auto; padding: 24px 32px; }
+.ph { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+.ph h3 { margin: 0; font-size: 28px; letter-spacing: -.01em; }
+.crumb { font-size: 13px; color: var(--text-3); margin-bottom: 4px; }
+.tabs { display: flex; gap: 4px; padding: 4px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); width: max-content; max-width: 100%; overflow-x: auto; margin-bottom: 20px; }
+.tabs button { border: 0; background: none; height: 32px; padding: 0 14px; border-radius: 8px; font-weight: 650; color: var(--text-2); cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.tabs button.on { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+.tabs .dot { margin: 0; }
+.ghost { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.gcard { height: 132px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); padding: 16px; display: grid; align-content: start; gap: 8px; }
+.gcard i { display: block; height: 10px; border-radius: 6px; background: var(--surface-3); }
+.gcard i:nth-child(1) { width: 40%; height: 12px; background: color-mix(in srgb, var(--text) 18%, transparent); }
+.gcard i:nth-child(2) { width: 80%; } .gcard i:nth-child(3) { width: 64%; }
+.gcard.wide { grid-column: span 2; }
+.gcard.tall { height: 280px; grid-row: span 2; }
+.invite { grid-column: 1 / -1; height: auto; display: flex; align-items: center; gap: 16px; background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 16%, var(--surface)), var(--surface)); border-color: color-mix(in srgb, var(--gold) 40%, transparent); }
+.invite .ic { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: color-mix(in srgb, var(--gold) 22%, transparent); color: var(--gold); flex: none; }
+.invite .ic svg { width: 24px; height: 24px; }
+.invite b { font-size: 16px; display: block; }
+.invite span { color: var(--text-2); font-size: 13px; }
+.invite .btn { margin-left: auto; }
+.btn { border: 0; height: 36px; padding: 0 16px; border-radius: 8px; background: var(--accent); color: var(--on-accent); font-weight: 700; cursor: pointer; white-space: nowrap; }
+.toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 16px); opacity: 0; transition: .25s; pointer-events: none; background: var(--text); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 650; font-size: 13px; z-index: 20; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* 웹 상단 바 */
+.web { height: 640px; display: grid; grid-template-rows: auto minmax(0, 1fr); }
+.top { display: flex; align-items: center; gap: 16px; height: 60px; padding: 0 24px; border-bottom: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 70%, transparent); }
+.top .brand { padding: 0; }
+.tnav { display: flex; align-items: center; gap: 2px; min-width: 0; overflow: hidden; }
+.tnav .vr { width: 1px; height: 16px; background: var(--line-2); margin: 0 6px; flex: none; }
+.tl { position: relative; height: 36px; padding: 0 10px; border: 0; border-radius: 8px; background: none; color: var(--text-2); font-weight: 650; cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
+.tl:hover { background: var(--surface-2); color: var(--text); }
+.tl.on { color: var(--text); background: var(--surface-2); }
+.tl .dot { margin: 0; }
+.top .sp { flex: 1; }
+.tme { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 8px 0 4px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
+.tme .face { width: 32px; height: 32px; font-size: 13px; }
+.tme b { font-size: 13px; }
+.tme small { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-3); }
+.ticon { position: relative; width: 36px; height: 36px; border: 0; border-radius: 10px; background: none; display: grid; place-items: center; color: var(--text-2); cursor: pointer; }
+.ticon:hover { background: var(--surface-2); color: var(--text); }
+.ticon svg { width: 20px; height: 20px; }
+.ticon .dot { position: absolute; top: 6px; right: 7px; margin: 0; box-shadow: 0 0 0 2px var(--surface); }
+.top .menu { right: 0; top: 46px; }
+.web .main { padding: 24px; }
+
+/* 휴대폰 */
+.phone { width: 360px; height: 720px; border-radius: 32px; border: 1px solid var(--line-2); background: var(--bg); overflow: hidden; position: relative; box-shadow: var(--shadow); }
+.mtop { display: flex; align-items: center; gap: 8px; height: 56px; padding: 0 12px 0 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
+.mtop .sp { flex: 1; }
+.mtop .face { width: 32px; height: 32px; font-size: 13px; }
+.mbody { padding: 16px; }
+.mbody .ph h3 { font-size: 20px; }
+.mbody .ghost { grid-template-columns: 1fr; gap: 12px; }
+.mbody .gcard { height: 96px; }
+.mbody .gcard.wide, .mbody .gcard.tall { grid-column: auto; grid-row: auto; height: 96px; }
+.mbody .invite { height: auto; flex-wrap: wrap; }
+.mbody .invite .btn { margin-left: 0; width: 100%; }
+.mbody .tabs { margin-bottom: 12px; }
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: .25s; }
+.drawer { position: absolute; top: 0; right: 0; bottom: 0; width: 280px; background: var(--surface); border-left: 1px solid var(--line); transform: translateX(100%); transition: transform .3s cubic-bezier(.16,1,.3,1); display: flex; flex-direction: column; padding: 16px 12px; gap: 16px; overflow: auto; }
+.phone.open .scrim { opacity: 1; pointer-events: auto; }
+.phone.open .drawer { transform: none; }
+.drawer .me { border: 0; background: var(--surface-2); }
+.drawer .nav { gap: 16px; }
+.drawer .item.on { background: var(--surface-2); box-shadow: none; }
+.mfoot { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; border-top: 1px solid var(--line); padding-top: 12px; }
+.mfoot button { display: grid; justify-items: center; gap: 4px; border: 0; background: none; padding: 8px 0; border-radius: 8px; font-size: 12px; font-weight: 650; color: var(--text-2); cursor: pointer; }
+.mfoot button svg { width: 20px; height: 20px; }
+.mfoot button:hover { background: var(--surface-2); }
+.mfoot button.hl { color: var(--gold); }
+.drawer .msub { display: grid; gap: 2px; }
+
+/* 비교 표 */
+.cmp { margin-top: 24px; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13px; }
+th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 12px; color: var(--text-3); font-weight: 700; }
+td:first-child { color: var(--text-2); font-weight: 650; white-space: nowrap; }
+tr.pick td { background: var(--accent-soft); }
+.legend { margin-top: 12px; font-size: 12px; color: var(--text-3); display: flex; align-items: center; gap: 8px; }
+.legend i { width: 28px; height: 16px; border-radius: 6px; outline: 2px dashed color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: -2px; }
+
+@media (max-width: 900px) {
+  .pitch { grid-template-columns: 1fr; }
+  .app { grid-template-columns: 64px minmax(0, 1fr); }
+  .app .glabel, .app .brand span, .app .item span, .app .item .sub, .app .me .nm, .app .me .chev, .app .foot .row2 .item span { display: none; }
+  .app .item, .app .foot .row2 .item { justify-content: center; padding: 0; }
+  .app .group + .group { border-top: 1px solid var(--line); padding-top: 12px; }
+  .app .nav { gap: 12px; }
+  .app .item .dot { position: absolute; top: 6px; right: 6px; margin: 0; }
+  .app .foot .row2 { grid-template-columns: 1fr; }
+  .app .me { justify-content: center; padding: 6px; border: 0; background: none; }
+  .app .side .menu { left: 8px; right: auto; bottom: 64px; }
+  .app .bellwrap { display: none; }
+  .main { padding: 16px; }
+  .ghost { grid-template-columns: 1fr 1fr; }
+  .tnav .tl span.lbl { display: none; }
+  .tme b, .tme small { display: none; }
+}
+@media (max-width: 560px) {
+  #optSeg { width: 100%; } #optSeg button { flex: 1; padding: 0 6px; font-size: 13px; } #optSeg button .long { display: none; }
+  .nums { grid-template-columns: 1fr 1fr 1fr; }
+  .ghost { grid-template-columns: 1fr; }
+  .gcard.wide, .gcard.tall { grid-column: auto; grid-row: auto; height: 132px; }
+  .invite { flex-wrap: wrap; } .invite .btn { margin-left: 0; width: 100%; }
+  .phone { width: 100%; max-width: 360px; }
+}
+@media (prefers-reduced-motion: reduce) { .drawer, .scrim, .toast { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>메뉴 정리 시안</h1>
+  <p class="lead">지금 사이드바에는 메뉴 13개가 있고, 초대를 더하면 14개가 됩니다. 세 시안 모두 초대를 맨 위 메뉴로 두지 않고, 위에 보이는 메뉴 수를 줄였습니다. 메뉴·내 카드·종·햄버거를 직접 눌러 보세요.</p>
+
+  <div class="bar">
+    <div class="seg" id="optSeg" role="tablist" aria-label="시안">
+      <button data-opt="A">A<span class="long"> · 같은 계열은 탭으로</span></button>
+      <button data-opt="B" class="on">B<span class="long"> · 자주 가는 곳만 위에</span></button>
+      <button data-opt="C">C<span class="long"> · 허브 셋</span></button>
+    </div>
+    <div class="sp"></div>
+    <div class="seg" id="viewSeg" aria-label="화면">
+      <button data-view="app" class="on">앱</button>
+      <button data-view="web">웹 PC</button>
+      <button data-view="phone">휴대폰</button>
+    </div>
+    <div class="seg" id="themeSeg" aria-label="테마">
+      <button data-theme="">시스템</button>
+      <button data-theme="light">라이트</button>
+      <button data-theme="dark">다크</button>
+    </div>
+  </div>
+
+  <div class="pitch">
+    <div class="card" id="pitchText"></div>
+    <div class="card">
+      <div class="nums" id="pitchNums"></div>
+      <div class="good" id="pitchGood"></div>
+      <div class="cost" id="pitchCost"></div>
+    </div>
+  </div>
+
+  <div class="stage" id="stage"></div>
+
+  <div class="card cmp">
+    <table>
+      <thead><tr><th></th><th>지금</th><th>A · 같은 계열은 탭으로</th><th>B · 자주 가는 곳만 위에 (추천)</th><th>C · 허브 셋</th></tr></thead>
+      <tbody>
+        <tr><td>위에 늘 보이는 메뉴</td><td>13개 (초대 넣으면 14)</td><td>7개 + 상점·설정</td><td>7개 + 종 + 내 카드</td><td>3개 + 상점·설정</td></tr>
+        <tr><td>초대</td><td>멤버 화면 안 카드</td><td>멤버 › 초대 탭</td><td>내 카드 메뉴 맨 위 (+300 표시) · 멤버 화면 카드 그대로</td><td>모임 › 초대 탭</td></tr>
+        <tr><td>소식</td><td>메뉴 (1번)</td><td>멤버 › 소식 탭 (2번)</td><td>종 아이콘 (1번, 새 소식 점)</td><td>모임 › 소식 탭 (2번)</td></tr>
+        <tr><td>문의</td><td>메뉴 (1번)</td><td>설정 안 (2번)</td><td>내 카드 메뉴 (2번)</td><td>모임 › 문의 탭 (2번)</td></tr>
+        <tr><td>랭킹 · 미션 · 도감</td><td>각 1번</td><td>성장 › 탭 (2번, 마지막 탭 기억)</td><td>각 1번</td><td>성장 › 탭 (2번, 마지막 탭 기억)</td></tr>
+        <tr><td>챔프 · 증강</td><td>각 1번</td><td>각 1번</td><td>각 1번</td><td>게임 › 탭 (2번)</td></tr>
+        <tr><td>바뀌는 양</td><td>—</td><td>중간 (화면 두 개를 탭 화면으로)</td><td>작음 (네 개를 내 카드로, 소식을 종으로)</td><td>큼 (모든 화면 위에 탭 줄)</td></tr>
+      </tbody>
+    </table>
+    <div class="legend"><i></i> 점선 테두리 = 새로 생기거나 자리를 옮긴 곳</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const I = {
+  game: '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>',
+  spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 1.8L21.5 18.5l-1.8.7L19 21l-.7-1.8L16.5 18.5l1.8-.7z"/>',
+  book: '<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 19V5"/><path d="M8 7h7"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
+  trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4"/><path d="M12 13v4M8 21h8M9 17h6"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0 1 13 0"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6"/>',
+  mega: '<path d="M3 10v4a1 1 0 0 0 1 1h3l6 4V5L7 9H4a1 1 0 0 0-1 1z"/><path d="M17 8a5 5 0 0 1 0 8"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+  shop: '<path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.6 1.6 0 0 0-1-1.5 1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.5-1 1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>',
+  gift: '<rect x="3" y="8" width="18" height="4" rx="1"/><path d="M5 12v8h14v-8M12 8v12"/><path d="M12 8c-1.5-3-5-3.5-5-1s3 1 5 1c2 0 5 1.5 5-1s-3.5-2-5 1z"/>',
+  bell: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+  out: '<path d="M15 4h4v16h-4"/><path d="M10 8l-4 4 4 4M6 12h10"/>',
+  chev: '<path d="M8 10l4 4 4-4"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
+  play: '<path d="M7 4l13 8-13 8z"/>',
+  sprout: '<path d="M12 21v-9"/><path d="M12 12c0-4-3-6-7-6 0 4 3 6 7 6zM12 10c0-4 3-6 7-6 0 4-3 6-7 6z"/>',
+  home: '<path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/>',
+};
+const ic = (n) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${I[n]}</svg>`;
+const gem = `<svg width="24" height="26" viewBox="0 0 24 26"><defs><linearGradient id="gm" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1fc8ff"/><stop offset=".5" stop-color="#3d6bff"/><stop offset="1" stop-color="#b042ff"/></linearGradient></defs><path d="M12 1l10 6v12l-10 6L2 19V7z" fill="url(#gm)"/><path d="M12 1l10 6-10 6L2 7z" fill="#fff" opacity=".35"/><path d="M12 13v12" stroke="#fff" stroke-opacity=".35"/></svg>`;
+const piece = '<i class="pc"></i>';
+
+/* 화면마다 속 내용 (자리표시) */
+const PAGES = {
+  '분석': ['wide','','tall','',''], '챔프': ['','','','','',''], '증강': ['','','','','',''],
+  '도감': ['wide','','',''], '미션': ['wide','',''], '랭킹': ['wide','','','',''],
+  '멤버': ['wide','','tall','','invite'], '소식': ['wide','wide',''], '초대': ['invite','wide',''], '친구 초대': ['invite','wide',''],
+  '문의': ['wide','',''], '운영': ['','','','wide'], '상점': ['','','','','',''], '설정': ['wide','',''], '내 페이지': ['wide','','',''],
+};
+
+/* 시안 정의 */
+const OPTS = {
+  A: {
+    title: '같은 계열은 탭으로',
+    lead: '함께 쓰는 화면을 한 메뉴로 묶고, 그 안에서 탭으로 오갑니다. 도감·미션·랭킹은 \'성장\' 하나로, 멤버·소식·초대는 \'멤버\' 하나로 합칩니다.',
+    bullets: ['게임 3개(분석·챔프·증강)는 그대로', '성장 = 도감 · 미션 · 랭킹 탭 (마지막에 본 탭을 기억)', '멤버 = 멤버 · 소식 · 초대 탭, 새 소식 점은 \'멤버\' 메뉴와 \'소식\' 탭에', '문의는 설정 안 \'도움 · 문의\'로'],
+    nums: [['13', '지금 메뉴', 1], ['9', '시안 메뉴'], ['1', '초대까지 (탭)']],
+    good: '<b>좋은 점</b> · 화면 수가 그대로라 익숙하고, 성장 계열을 한곳에서 비교하기 좋아요.',
+    cost: '<b>아쉬운 점</b> · 랭킹·소식은 한 번 더 눌러야 해요. 멤버 화면 안에 소식이 들어가 성격이 섞여요.',
+    groups: [
+      { label: '게임', items: [['분석','game'],['챔프','grid'],['증강','spark']] },
+      { label: '성장 · 모임', items: [['성장','sprout',{tabs:['도감','미션','랭킹'], sub:'3', isNew:1}],['멤버','users',{tabs:['멤버','소식','초대'], sub:'3', dot:1, isNew:1, live:1}],['운영','shield',{dot:1}]] },
+    ],
+    foot: 'row2', // 상점 · 설정
+    meMenu: [['내 페이지','user'],['프로필 꾸미기','spark'],['로그아웃','out']],
+    settingsHas: '문의',
+  },
+  B: {
+    title: '자주 가는 곳만 위에',
+    rec: true,
+    lead: '매일 쓰는 7개만 위에 둡니다. 가끔 쓰는 초대·상점·문의·설정은 내 카드를 누르면 나오는 메뉴 한 곳에, 소식은 종 아이콘으로 옮깁니다.',
+    bullets: ['게임 · 성장 · 멤버 7개는 지금과 같은 자리 · 한 번에', '소식 → 내 카드 옆 종 (새 소식이 있으면 빨간 점)', '내 카드 메뉴 = 친구 초대(+300) · 상점 · 문의 · 설정 · 내 페이지 · 로그아웃', '멤버 화면의 친구 초대 카드는 그대로 (두 곳에서 같은 화면으로)'],
+    nums: [['13', '지금 메뉴', 1], ['7', '시안 메뉴'], ['2', '초대까지']],
+    good: '<b>좋은 점</b> · 자주 가는 곳은 그대로 한 번이라 바뀐 걸 거의 못 느껴요. 웹·휴대폰도 같은 규칙으로 정리돼요.',
+    cost: '<b>아쉬운 점</b> · 상점이 사이드바에서 빠져 눈에 덜 띄어요. 내 카드에 피스를 늘 보여 주고 상점을 메뉴 둘째 줄에 둬서 보완합니다.',
+    groups: [
+      { label: '게임', items: [['분석','game'],['챔프','grid'],['증강','spark']] },
+      { label: '성장', items: [['도감','book'],['미션','target'],['랭킹','trophy']] },
+      { label: '모임', items: [['멤버','users',{live:1}],['운영','shield',{dot:1}]] },
+    ],
+    foot: 'card', // 내 카드 + 종
+    meMenu: [['친구 초대','gift',{hl:1, gold:'+300'}],['상점','shop'],['문의','mail'],['설정','gear'],'-',['내 페이지','user'],['로그아웃','out']],
+  },
+  C: {
+    title: '허브 셋',
+    lead: '맨 위에는 큰 문 세 개(게임 · 성장 · 모임)만 두고, 각 화면 위의 탭 줄로 오갑니다. 메뉴가 가장 적지만 대부분 두 번 눌러야 해요.',
+    bullets: ['게임 = 분석 · 챔프 · 증강', '성장 = 도감 · 미션 · 랭킹', '모임 = 멤버 · 소식 · 초대 · 문의', '각 허브는 마지막에 본 탭을 기억, 챔프 선택이 시작되면 게임 › 분석으로'],
+    nums: [['13', '지금 메뉴', 1], ['5', '시안 메뉴'], ['2', '초대까지']],
+    good: '<b>좋은 점</b> · 앞으로 메뉴가 늘어도 탭만 늘면 돼요. 가장 단순해 보여요.',
+    cost: '<b>아쉬운 점</b> · 챔프·증강·랭킹 같은 자주 가는 곳도 두 번이에요. 모든 화면 위에 탭 줄이 생겨 화면이 조금 내려가요.',
+    groups: [
+      { label: '', items: [['게임','play',{tabs:['분석','챔프','증강'], sub:'3', isNew:1}],['성장','sprout',{tabs:['도감','미션','랭킹'], sub:'3', isNew:1}],['모임','users',{tabs:['멤버','소식','초대','문의'], sub:'4', dot:1, isNew:1, live:1}],['운영','shield',{dot:1}]] },
+    ],
+    foot: 'row2',
+    meMenu: [['내 페이지','user'],['프로필 꾸미기','spark'],['로그아웃','out']],
+  },
+};
+
+let opt = 'B', view = 'app';
+const st = { A: {}, B: {}, C: {} }; // 선택한 메뉴·탭
+
+function current() {
+  const o = OPTS[opt], s = st[opt];
+  if (!s.page) { const first = o.groups[0].items[0]; s.page = first[0]; }
+  return [o, s];
+}
+function itemOf(o, name) { for (const g of o.groups) for (const it of g.items) if (it[0] === name) return it; return null; }
+
+function toast(t) { const el = document.getElementById('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('on'), 1600); }
+
+function navItem(it, s, cls = 'item') {
+  const [name, icon, x = {}] = it;
+  const on = s.page === name;
+  const dot = x.live ? '<span class="dot live" title="NOW 진행 중"></span>' : (x.dot ? '<span class="dot"></span>' : '');
+  return `<button class="${cls}${on ? ' on' : ''}${x.isNew ? ' new' : ''}" data-go="${name}">${ic(icon)}<span>${name}</span>${x.sub && !dot ? `<span class="sub">${x.sub}</span>` : ''}${dot}</button>`;
+}
+
+function meMenuHtml(o) {
+  return o.meMenu.map((m) => m === '-' ? '<hr>' : `<button class="mi${m[2]?.hl ? ' hl' : ''}" data-go="${m[0]}">${ic(m[1])}<span>${m[0]}</span>${m[2]?.gold ? `<em>${m[2].gold} ${piece}</em>` : ''}</button>`).join('');
+}
+
+function body(o, s, phone) {
+  const it = itemOf(o, s.page);
+  const tabs = it?.[2]?.tabs;
+  let tab = s.page;
+  let crumb = '';
+  let tabsHtml = '';
+  if (tabs) {
+    s.tab = s.tab && tabs.includes(s.tab) ? s.tab : tabs[0];
+    tab = s.tab;
+    tabsHtml = `<div class="tabs">${tabs.map((t) => `<button class="${t === tab ? 'on' : ''}${t === '초대' || (t === '소식' && opt === 'A') || opt === 'C' ? '' : ''}" data-tab="${t}">${t}${t === '소식' ? '<span class="dot"></span>' : ''}</button>`).join('')}</div>`;
+    crumb = `<div class="crumb">${s.page}</div>`;
+  }
+  if (s.page === '설정' && o.settingsHas) {
+    tabsHtml = `<div class="tabs"><button class="${!s.tab || s.tab === '설정' ? 'on' : ''}" data-tab="설정">일반</button><button class="${s.tab === '문의' ? 'on' : ''}" data-tab="문의">도움 · 문의</button></div>`;
+    tab = s.tab === '문의' ? '문의' : '설정';
+  }
+  const title = (s.page === '설정' && tab === '문의') ? '도움 · 문의' : tab;
+  const cards = (PAGES[tab] || ['', '', '']).map((c) => c === 'invite'
+    ? `<div class="gcard invite"><div class="ic">${ic('gift')}</div><div><b>친구 초대</b><span>초대한 친구가 승인되면 300 피스</span></div><button class="btn" data-copy>초대 링크 복사</button></div>`
+    : `<div class="gcard ${c}"><i></i><i></i><i></i></div>`).join('');
+  return `${crumb}<div class="ph"><h3>${title}</h3></div>${tabsHtml}<div class="ghost">${cards}</div>`;
+}
+
+function renderApp(o, s) {
+  const groups = o.groups.map((g) => `<div class="group">${g.label ? `<div class="glabel">${g.label}</div>` : ''}${g.items.map((it) => navItem(it, s)).join('')}</div>`).join('');
+  let foot = '';
+  const me = `<button class="me" data-me>${'<span class="face">하</span>'}<span class="nm"><b>Haze</b><span>2,480 ${piece}</span></span>${ic('chev').replace('<svg', '<svg class="chev"')}</button>`;
+  if (o.foot === 'row2') {
+    foot = `<div class="row2">${navItem(['상점', 'shop'], s)}${navItem(['설정', 'gear'], s)}</div><div class="anchor">${me}<div class="menu" hidden>${meMenuHtml(o)}</div></div>`;
+  } else {
+    foot = `<div class="anchor" style="display:flex;gap:4px;align-items:center"><div style="flex:1;min-width:0">${me}</div><span class="bellwrap"><button class="bell new" data-go="소식" title="소식">${ic('bell')}<span class="dot"></span></button></span><div class="menu new" hidden>${meMenuHtml(o)}</div></div>`;
+  }
+  return `<div class="frame app"><aside class="side"><div class="brand">${gem}<span>PRISM</span></div><nav class="nav">${groups}</nav><div class="fill"></div><div class="foot">${foot}</div></aside><main class="main">${body(o, s)}</main></div>`;
+}
+
+function renderWeb(o, s) {
+  const parts = o.groups.map((g) => g.items.filter((it) => !(opt === 'B' && false)).map((it) => {
+    const [name, icon, x = {}] = it;
+    const dot = x.live ? '<span class="dot live"></span>' : (x.dot ? '<span class="dot"></span>' : '');
+    return `<button class="tl${s.page === name ? ' on' : ''}${x.isNew ? ' new' : ''}" data-go="${name}"><span class="lbl">${name}</span>${dot}</button>`;
+  }).join('')).join('<span class="vr"></span>');
+  const right = opt === 'B'
+    ? `<button class="ticon new" data-go="소식" title="소식">${ic('bell')}<span class="dot"></span></button>`
+    : `<button class="ticon" data-go="상점" title="상점">${ic('shop')}</button>`;
+  return `<div class="frame web"><header class="top"><div class="brand">${gem}<span>PRISM</span></div><nav class="tnav">${parts}</nav><div class="sp"></div>${right}<div class="anchor"><button class="tme" data-me><span class="face">하</span><b>Haze</b><small>2,480 ${piece}</small></button><div class="menu" hidden>${meMenuHtml(o)}</div></div></header><main class="main">${body(o, s)}</main></div>`;
+}
+
+function renderPhone(o, s) {
+  const groups = o.groups.map((g) => `<div class="group">${g.label ? `<div class="glabel">${g.label}</div>` : ''}${g.items.map((it) => navItem(it, s)).join('')}</div>`).join('');
+  let foot;
+  if (opt === 'B') {
+    foot = `<div class="msub new" style="border-radius:12px;padding:4px">${o.meMenu.filter((m) => m !== '-' && m[0] !== '로그아웃' && m[0] !== '내 페이지').map((m) => `<button class="item" data-go="${m[0]}">${ic(m[1])}<span>${m[0]}</span>${m[2]?.gold ? `<span class="sub" style="color:var(--gold)">${m[2].gold}</span>` : ''}</button>`).join('')}</div>`;
+  } else {
+    foot = `<div class="mfoot"><button data-go="상점">${ic('shop')}상점</button><button data-go="설정">${ic('gear')}설정</button><button data-go="내 페이지">${ic('user')}내 페이지</button></div>`;
+  }
+  const bell = opt === 'B' ? `<button class="ticon new" data-go="소식" title="소식">${ic('bell')}<span class="dot"></span></button>` : '';
+  return `<div class="phone${s.open ? ' open' : ''}"><div class="mtop"><div class="brand" style="padding:0">${gem}<span style="font-weight:800;letter-spacing:.1em">PRISM</span></div><div class="sp"></div>${bell}<span class="face">하</span><button class="ticon" data-burger title="메뉴">${ic('menu')}</button></div><div class="mbody">${body(o, s, true)}</div><div class="scrim" data-burger></div><div class="drawer"><button class="me" data-go="내 페이지"><span class="face">하</span><span class="nm"><b>Haze</b><span>2,480 ${piece}</span></span></button><nav class="nav">${groups}</nav>${foot}</div></div>`;
+}
+
+function render() {
+  const [o, s] = current();
+  document.querySelectorAll('#optSeg button').forEach((b) => b.classList.toggle('on', b.dataset.opt === opt));
+  document.querySelectorAll('#viewSeg button').forEach((b) => b.classList.toggle('on', b.dataset.view === view));
+  document.getElementById('pitchText').innerHTML = `<h2>${opt} · ${o.title}${o.rec ? '<span class="rec">추천</span>' : ''}</h2><p>${o.lead}</p><ul>${o.bullets.map((b) => `<li>${b}</li>`).join('')}</ul>`;
+  document.getElementById('pitchNums').innerHTML = o.nums.map(([n, l, bad]) => `<div class="num${bad ? ' bad' : ''}"><b>${n}</b><span>${l}</span></div>`).join('');
+  document.getElementById('pitchGood').innerHTML = o.good;
+  document.getElementById('pitchCost').innerHTML = o.cost;
+  const stage = document.getElementById('stage');
+  stage.innerHTML = view === 'app' ? renderApp(o, s) : view === 'web' ? renderWeb(o, s) : renderPhone(o, s);
+}
+
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('button, .scrim');
+  const menus = document.querySelectorAll('.menu');
+  if (!t || !t.closest('.anchor') || t.matches('[data-go]')) menus.forEach((m) => m.hidden = true);
+  if (!t) return;
+  const [o, s] = current();
+  if (t.dataset.opt) { opt = t.dataset.opt; render(); return; }
+  if (t.dataset.view) { view = t.dataset.view; render(); return; }
+  if (t.dataset.theme !== undefined && t.closest('#themeSeg')) {
+    if (t.dataset.theme) document.documentElement.dataset.theme = t.dataset.theme; else delete document.documentElement.dataset.theme;
+    document.querySelectorAll('#themeSeg button').forEach((b) => b.classList.toggle('on', b === t));
+    return;
+  }
+  if (t.hasAttribute('data-me')) { const m = t.closest('.anchor').querySelector('.menu'); m.hidden = !m.hidden; return; }
+  if (t.hasAttribute('data-burger')) { s.open = !s.open; render(); return; }
+  if (t.hasAttribute('data-copy')) { toast('초대 링크를 복사했어요'); return; }
+  if (t.dataset.tab) { s.tab = t.dataset.tab; render(); return; }
+  if (t.dataset.go) {
+    let go = t.dataset.go;
+    // 탭 안에 있는 화면을 메뉴 밖에서 부르면 그 허브의 탭으로
+    if (!itemOf(o, go) && !['상점', '설정', '내 페이지', '로그아웃', '프로필 꾸미기'].includes(go)) {
+      const hub = o.groups.flatMap((g) => g.items).find((it) => it[2]?.tabs?.includes(go));
+      if (hub) { s.page = hub[0]; s.tab = go; s.open = false; render(); return; }
+      if (go === '문의' && o.settingsHas) { s.page = '설정'; s.tab = '문의'; s.open = false; render(); return; }
+    }
+    if (go === '로그아웃') { toast('로그아웃 (시안)'); return; }
+    if (go === '프로필 꾸미기') { toast('프로필 꾸미기 창이 열려요'); return; }
+    s.page = go; if (go !== '설정') s.tab = null; s.open = false; render();
+  }
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { document.querySelectorAll('.menu').forEach((m) => m.hidden = true); const [, s] = current(); if (s.open) { s.open = false; render(); } } });
+document.querySelector('#themeSeg button').classList.add('on');
+render();
+</script>
+</body>
+</html>
