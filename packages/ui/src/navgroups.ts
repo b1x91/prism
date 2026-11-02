@@ -34,21 +34,10 @@ export function hubOf(path: string): Hub | null {
 /** 메뉴 항목 주소가 허브의 첫 탭이면 그 허브 */
 export const hubAt = (to: string): Hub | null => HUBS.find((h) => h.tabs[0].to === to) ?? null;
 
-const KEY = (h: Hub) => `prism-hub-${h.key}`;
-/** 허브 메뉴를 누르면 그 허브에서 마지막으로 본 탭으로 */
+/** 허브 메뉴(대제목)를 누르면 늘 첫 번째 탭으로 (v3.147 — 예전엔 마지막에 본 탭) */
 export function hubHref(h: Hub, allowed?: (to: string) => boolean): string {
-  try {
-    const v = localStorage.getItem(KEY(h));
-    if (v && h.tabs.some((t) => t.to === v) && (!allowed || allowed(v))) return v;
-  } catch { /* 저장 막힘 */ }
-  return h.tabs[0].to;
+  return h.tabs.find((t) => !allowed || allowed(t.to))?.to ?? h.tabs[0].to;
 }
-export function rememberHub(path: string): void {
-  const h = hubOf(path);
-  const t = h?.tabs.find((x) => path === x.to || path.startsWith(`${x.to}/`));
-  if (h && t) { try { localStorage.setItem(KEY(h), t.to); } catch { /* 저장 막힘 */ } }
-}
-
 /** [주소, …] 목록을 묶음 순서대로 나눈다 (묶음에 없는 주소는 마지막 묶음 뒤에) */
 export function groupNav<T extends [string, ...unknown[]]>(items: T[]): { key: string; label: string; items: T[] }[] {
   const out = NAV_GROUPS.map((g) => ({ key: g.key, label: g.label, items: items.filter((x) => g.paths.includes(x[0])) }));

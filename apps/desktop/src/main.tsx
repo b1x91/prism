@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, rememberHub, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, SITE_URL, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { pollWhileShown } from './poll';
 import { checkNow, clearAttend, getState, refreshSession, start, subscribe, type State } from './controller';
@@ -104,9 +104,7 @@ function App() {
   const s = useSyncExternalStore(subscribe, getState);
   const up = useUpdate();
   const nav = useNavigate();
-  // 허브(성장·멤버): 마지막에 본 탭을 기억해 메뉴를 누르면 거기로 (v3.142)
   const loc = useLocation();
-  useEffect(() => { rememberHub(loc.pathname); }, [loc.pathname]);
   const hubAllow = (to: string) => Boolean(s.me) || (to !== '/news' && to !== '/invite');
   const curHub = hubOf(loc.pathname);
   const login = async () => { try { await bridge.login(); } finally { await refreshSession(); } };
@@ -185,7 +183,7 @@ function App() {
               const hub = hubAt(to);
               const badge = <>{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}{to === '/crew' && (s.me?.nowLive ?? 0) > 0 && <LiveDot n={s.me!.nowLive!} />}{to === '/crew' && !(s.me?.nowLive) && (s.me?.newsUnread ?? 0) > 0 && <i className="news-dot" aria-label="새 소식" />}{to === '/staff' && (s.me?.staffUnread ?? 0) > 0 && <i className="news-dot" aria-label="승인할 멤버" />}</>;
               if (!hub) return <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{badge}</NavLink>;
-              // 허브: 누르면 마지막에 본 탭으로, 아래 작은 줄에서 탭으로 바로 (도감 · 미션 · 랭킹)
+              // 허브: 누르면 늘 첫 탭으로 (v3.147), 펼친 줄에서 탭으로 바로 (도감 · 미션 · 랭킹)
               const on = hubOf(loc.pathname) === hub;
               const tabs = hub.tabs.filter((t) => hubAllow(t.to));
               return (
