@@ -32,7 +32,7 @@ async function memberRow(env: Env, id: string) {
 }
 
 /** 운영진(운영진 역할·관리자) ID 목록 */
-async function staffIds(env: Env): Promise<string[]> {
+export async function staffIds(env: Env): Promise<string[]> {
   const { results } = await env.DB.prepare('SELECT id, tier, discord_roles FROM members').all<Pick<Member, 'id' | 'tier' | 'discord_roles'>>();
   return results.filter((m) => levelOf(m) >= 5).map((m) => m.id);
 }
@@ -63,11 +63,17 @@ async function todoIds(env: Env): Promise<string[]> {
   const need = PROMOTION.regularReview.withStaff;
   return results.filter((m) => isPending(m) || (Math.min(levelOf(m), 5) === 1 && (withStaff.get(m.id) ?? 0) >= need)).map((m) => m.id);
 }
+/** 처리할 가입 신청 (v3.148: 신청 · 확정되어 초대를 보내야 하는 것) — 'a:번호' */
+async function joinTodoIds(env: Env): Promise<string[]> {
+  const r = await env.DB.prepare(`SELECT id FROM applications WHERE status IN ('new', 'confirmed')`).all<{ id: number }>().catch(() => null);
+  return (r?.results ?? []).map((x) => `a:${x.id}`);
+}
 const seenOf = (me: Member) => { try { const v = JSON.parse(me.staff_seen ?? '[]'); return new Set<string>(Array.isArray(v) ? v : []); } catch { return new Set<string>(); } };
 export async function staffUnread(env: Env, me: Member): Promise<number | undefined> {
   if (!can(me, 'manage')) return undefined;
   const seen = seenOf(me);
-  return (await todoIds(env).catch(() => [])).filter((id) => !seen.has(id)).length;
+  const [mem, apps] = await Promise.all([todoIds(env).catch(() => [] as string[]), joinTodoIds(env)]);
+  return [...mem, ...apps].filter((id) => !seen.has(id)).length;
 }
 
 /** GET /api/staff/members — 멤버 목록 (승인 대기 · 정회원 심사 · 전체) */
@@ -112,8 +118,11 @@ export async function staffMembers(env: Env, me: Member) {
   });
   // 지금 처리할 멤버를 '본 것'으로 (메뉴의 빨간 점이 꺼진다)
   const todo = members.filter((x) => x.pending || x.review).map((x) => (x as unknown as { id: string }).id);
-  await env.DB.prepare('UPDATE members SET staff_seen = ? WHERE id = ?').bind(JSON.stringify(todo), me.id).run().catch(() => {});
-  return json({ members, reviewNeed: need, inviteBonus: INVITE_BONUS, overview: overviewOf(members as unknown as Row[], recentRows.results) });
+  const keepApps = [...seenOf(me)].filter((x) => x.startsWith('a:'));
+  await env.DB.prepare('UPDATE members SET staff_seen = ? WHERE id = ?').bind(JSON.stringify([...todo, ...keepApps]), me.id).run().catch(() => {});
+  const apps = await env.DB.prepare(`SELECT status, COUNT(*) AS n FROM applications WHERE status IN ('new', 'interview', 'confirmed') GROUP BY status`).all<{ status: string; n: number }>().catch(() => null);
+  const ac = Object.fromEntries((apps?.results ?? []).map((r) => [r.status, r.n]));
+  return json({ members, reviewNeed: need, inviteBonus: INVITE_BONUS, applications: { new: ac.new ?? 0, interview: ac.interview ?? 0, confirmed: ac.confirmed ?? 0 }, overview: overviewOf(members as unknown as Row[], recentRows.results) });
 }
 
 const DAY = 86_400_000, WEEK = 7 * DAY;
@@ -193,7 +202,7 @@ function overviewOf(members: Row[], rows: { id: string; g: number; t: number; w:
  * 단계를 정한다 (0 승인 대기 · 1 준회원 · 2 정회원 · 3 우수회원). 디스코드의 지금 역할을 다시 읽고 바뀌는 역할만 붙이고 뗀다.
  * 1 이상이 되면 승인으로 보고, 초대한 회원이 있으면 초대 보너스를 확정한다.
  */
-async function applyLevel(env: Env, me: Member, target: Member, level: number): Promise<{ from: number; to: number }> {
+export async function applyLevel(env: Env, me: Pick<Member, 'id' | 'nick'>, target: Member, level: number): Promise<{ from: number; to: number }> {
   if (target.tier === 'admin' || levelOf(target) >= 5) throw new HttpError(400, '운영진의 역할은 디스코드에서 직접 바꿔 주세요.');
   if (!env.DISCORD_BOT_TOKEN) throw new HttpError(503, '디스코드 봇이 연결되어 있지 않아요.');
   const live = await liveRoles(env, target.id);
@@ -218,7 +227,7 @@ async function applyLevel(env: Env, me: Member, target: Member, level: number): 
 }
 
 /** 채널에 알린다 (실패해도 운영 처리는 그대로) */
-async function cheer(env: Env, content: string, users: string[]) {
+export async function cheer(env: Env, content: string, users: string[]) {
   if (!env.BOT_CHANNEL_ID || !env.DISCORD_BOT_TOKEN) return;
   await sendToChannel(env, env.BOT_CHANNEL_ID, { content, allowed_mentions: { users } }).catch(() => false);
 }

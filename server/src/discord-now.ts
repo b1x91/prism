@@ -51,7 +51,7 @@ async function fetchWidget(env: Env): Promise<Widget | 'off' | null> {
   }
 }
 
-async function widget(env: Env): Promise<Widget | 'off' | null> {
+export async function widget(env: Env): Promise<Widget | 'off' | null> {
   const got = await fetchWidget(env);
   const now = Date.now();
   if (got && got !== 'off') {

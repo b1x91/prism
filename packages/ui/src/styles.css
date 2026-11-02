@@ -4367,3 +4367,43 @@ body:has(.hubhead) .crew-head { justify-content: flex-end; }
 body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 
 .hh-tabs button .nav-live { margin-left: 2px; }
+
+/* ── 운영 › 가입 신청 (v3.148, StaffJoinView) ── */
+.sj { display: grid; gap: var(--s6); }
+.sj-err { display: flex; align-items: center; gap: var(--s2); padding: var(--s3) var(--s4); border-radius: var(--r-m); background: color-mix(in srgb, var(--warn) 12%, transparent); color: var(--warn); font-size: var(--fs-sm); font-weight: 650; }
+.sj-err svg { width: 16px; height: 16px; flex: none; }
+.sj-board { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s4); align-items: start; }
+.sj-col { display: grid; gap: var(--s3); padding: var(--s3); border-radius: var(--r-l); background: var(--surface-2); min-width: 0; }
+.sj-col > header { display: flex; align-items: center; justify-content: space-between; padding: 0 var(--s1); font-size: var(--fs-md); font-weight: 800; }
+.sj-col > header b { font-size: var(--fs-xs); color: var(--text-3); font-variant-numeric: tabular-nums; }
+.sj-empty { padding: var(--s4) var(--s2); text-align: center; font-size: var(--fs-sm); color: var(--text-3); }
+.sj-card { display: grid; gap: var(--s3); padding: var(--s4); border-radius: var(--r-m); background: var(--surface); border: 1px solid var(--line); min-width: 0; }
+.sj-card.hold { border-style: dashed; }
+.sj-top { display: flex; align-items: center; gap: var(--s3); min-width: 0; }
+.sj-init { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: 50%; background: var(--surface-3); color: var(--text-2); font-weight: 800; font-size: var(--fs-sm); }
+.sj-name { display: grid; min-width: 0; flex: 1; }
+.sj-name b { font-size: var(--fs-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sj-name span { font-size: var(--fs-xs); color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sj-no { font-size: var(--fs-sm); font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; flex: none; }
+.sj-dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s1) var(--s3); font-size: var(--fs-xs); }
+.sj-dl dt { color: var(--text-3); }
+.sj-dl dd { margin: 0; color: var(--text-2); }
+.sj-dl em { font-style: normal; color: var(--warn); }
+.sj-hold { color: var(--warn) !important; font-weight: 700; }
+.sj-link { padding: 0; border: 0; background: none; color: var(--accent); font: inherit; font-size: var(--fs-xs); font-weight: 650; cursor: pointer; text-align: left; }
+.sj-warn { font-size: var(--fs-xs); font-weight: 700; color: var(--warn); }
+.sj-signs { display: flex; align-items: center; gap: 6px; font-size: var(--fs-xs); color: var(--text-3); }
+.sj-signs i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-style: normal; font-size: var(--fs-xs); font-weight: 800; border: 1px dashed var(--line-2); }
+.sj-signs i.ok { border: 0; background: var(--ok); color: #fff; }
+.sj-memo input { width: 100%; }
+.sj-act { display: flex; flex-wrap: wrap; gap: var(--s2); align-items: center; }
+.sj-tg { display: inline-flex; align-items: center; gap: var(--s2); font-size: var(--fs-xs); font-weight: 650; color: var(--text-2); }
+.sj-linkrow { display: grid; gap: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--line); font-size: var(--fs-xs); color: var(--text-3); }
+.sj-log { font-size: var(--fs-xs); color: var(--text-3); }
+.sj-room { display: grid; gap: var(--s3); }
+.sj-room-row { display: grid; grid-template-columns: minmax(0, 1fr) 160px auto; gap: var(--s3); align-items: end; }
+.sj-room-row .field span { font-size: var(--fs-sm); font-weight: 700; }
+.sj-room-row .field em { font-style: normal; color: var(--text-3); font-weight: 600; }
+.sj-err-t { font-size: var(--fs-sm); color: var(--lose); }
+@media (max-width: 1180px) { .sj-board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .sj-board { grid-template-columns: minmax(0, 1fr); } .sj-room-row { grid-template-columns: minmax(0, 1fr); } }

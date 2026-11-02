@@ -34,7 +34,7 @@ function useSeen(data: unknown, onSeen?: () => void) {
   useEffect(() => { if (data && !done.current) { done.current = true; onSeen?.(); } }, [data, onSeen]);
 }
 
-export function StaffView({ api, onOpen, onMembers, onSeen }: { api: Api; onOpen?: (id: string) => void; onMembers?: () => void; /** 처리할 멤버를 본 것으로 적었을 때 (메뉴의 빨간 점을 끈다) */ onSeen?: () => void }) {
+export function StaffView({ api, onOpen, onMembers, onJoin, onSeen }: { api: Api; onOpen?: (id: string) => void; onMembers?: () => void; /** 가입 신청 보드로 (v3.148) */ onJoin?: () => void; /** 처리할 멤버를 본 것으로 적었을 때 (메뉴의 빨간 점을 끈다) */ onSeen?: () => void }) {
   const { data, error, reload } = useLoad<StaffMembers>(api, '/api/staff/members');
   useSeen(data, onSeen);
   const rv = useReveal(Boolean(data));
@@ -45,6 +45,7 @@ export function StaffView({ api, onOpen, onMembers, onSeen }: { api: Api; onOpen
     <Swap on={rv} skeleton={<StaffSkeleton />}>
       <div className={`stf ${fadeCls(rv)}`}>
         <TopBar pending={pending} review={review} onMembers={onMembers} />
+        {onJoin && data.applications && <JoinBar a={data.applications} onJoin={onJoin} />}
         {data.overview && <Dashboard api={api} o={data.overview} need={data.reviewNeed} onOpen={onOpen} onDone={reload} onMembers={onMembers} />}
       </div>
     </Swap>
@@ -52,6 +53,17 @@ export function StaffView({ api, onOpen, onMembers, onSeen }: { api: Api; onOpen
 }
 
 /** 대시보드 맨 위: 처리할 일 + 멤버 관리로 가는 단추 */
+function JoinBar({ a, onJoin }: { a: NonNullable<StaffMembers['applications']>; onJoin: () => void }) {
+  const todo = a.new + a.confirmed;
+  const parts = [a.new ? `새 신청 ${a.new}건` : '', a.interview ? `면접 중 ${a.interview}건` : '', a.confirmed ? `초대 보낼 ${a.confirmed}건` : ''].filter(Boolean);
+  return (
+    <div className={`stf-bar ${todo ? 'todo' : ''}`}>
+      <span className="stf-bar-t"><Icon name={todo ? 'bell' : 'check'} /><span>{parts.length ? `가입 신청 · ${parts.join(' · ')}` : '지금 처리할 가입 신청이 없어요'}</span></span>
+      <button type="button" className={`btn sm ${todo ? 'primary' : ''}`} onClick={onJoin}><Icon name="gift" />가입 신청</button>
+    </div>
+  );
+}
+
 function TopBar({ pending, review, onMembers }: { pending: number; review: number; onMembers?: () => void }) {
   const todo = pending + review;
   return (

@@ -38,3 +38,4 @@ export * from './motion';
 export * from './offline';
 export * from './catalog';
 export * from './now';
+export * from './staffjoin';

@@ -31,6 +31,7 @@ import { assertRanking } from './roles.js';
 import { diagShots, listDiag, saveDiag } from './diag.js';
 import { inquiryFiles, inquiryWorklist, myInquiries, postInquiry, setInquiryStatus } from './inquiry.js';
 import { createNews, deleteNews, editNews, ensureAuto, heartNews, listNews, readNews } from './news.js';
+import { apply, joinLanding, joinSweep, myApplication, setRoom, staffApplicationAction, staffApplications } from './join.js';
 import { claimInvite, lookupMembers, myInvite, publicInvite, staffAction, staffMembers } from './staff.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 import { LAUNCH, SHOP, SHOP_REV, type ShopCatalog } from '../../packages/core/src/shop.js';
@@ -56,6 +57,11 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   const dl = pathname.match(/^\/app\/download\/([0-9A-Za-z._-]{1,40})\/([0-9A-Za-z._-]{1,60})$/);
   if (m === 'GET' && dl) return download(req, env, decodeURIComponent(dl[1]), dl[2]);
 
+  // 가입 신청 (v3.148, 로그인 없이)
+  if (m === 'GET' && pathname === '/public/join') return joinLanding(env, new URL(req.url).searchParams.get('code'));
+  if (m === 'POST' && pathname === '/public/apply') return apply(req, env, ctx);
+  const ap = pathname.match(/^\/public\/apply\/([0-9a-f]{32})$/);
+  if (m === 'GET' && ap) return myApplication(env, ap[1]);
   const pub = pathname.match(/^\/public\/([0-9A-Za-z_-]{1,40})$/);
   if (m === 'GET' && pub) return publicProfile(env, pub[1]);
   // 친구 초대 링크의 초대한 사람 (이름·얼굴만, v3.107)
@@ -113,6 +119,9 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'GET' && pathname === '/api/staff/members') return staffMembers(env, me);
   const st = pathname.match(/^\/api\/staff\/members\/([0-9A-Za-z_-]{1,40})\/(approve|promote|level|special|inviter)$/);
   if (m === 'POST' && st) return staffAction(req, env, me, st[1], st[2]);
+  if (m === 'GET' && pathname === '/api/staff/applications') return staffApplications(env, me);
+  if (m === 'POST' && pathname === '/api/staff/applications/room') return setRoom(req, env, me);
+  { const a = m === 'POST' ? /^\/api\/staff\/applications\/(\d{1,9})$/.exec(pathname) : null; if (a) return staffApplicationAction(req, env, me, Number(a[1])); }
   if (m === 'GET' && pathname === '/api/me/invite') return myInvite(env, me);
   if (m === 'POST' && pathname === '/api/me/invited') return claimInvite(req, env, me);
   if (m === 'GET' && pathname === '/api/members/lookup') return lookupMembers(env, me, new URL(req.url).searchParams.get('q'));
@@ -224,6 +233,7 @@ export default {
       return dailyPost(env).catch((e) => console.error('매일 공지 실패', e));
     }
     await promoteSweep(env).catch((e) => console.error('역할 자동 승급 실패', e));
+    await joinSweep(env).catch((e) => console.error('가입 신청 정리 실패', e));
     await nickSweep(env).catch((e) => console.error('디스코드 별명 맞추기 실패', e));
     const now = Date.now();
     await env.DB.batch([

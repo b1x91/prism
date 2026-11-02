@@ -16,7 +16,7 @@ import { GamePage } from './pages/Game';
 import { AugmentsPage } from './pages/Augments';
 import { DexPage } from './pages/Dex';
 import { ChampionsPage } from './pages/Champions';
-import { MemberPage, MissionsPage, NewsPage, InquiryPage, RankingPage, ShopPage, StaffMembersPage, StaffPage } from './pages/Members';
+import { MemberPage, MissionsPage, NewsPage, InquiryPage, RankingPage, ShopPage, StaffJoinPage, StaffMembersPage, StaffPage } from './pages/Members';
 import { CrewPage, InvitePage } from './pages/Crew';
 import { SettingsPage } from './pages/Settings';
 import { lockdown } from './lockdown';
@@ -238,6 +238,7 @@ function App() {
           <Route path="inquiry" element={<InquiryPage s={s} onLogin={login} />} />
           <Route path="staff" element={<StaffPage s={s} onLogin={login} />} />
           <Route path="staff/members" element={<StaffMembersPage s={s} onLogin={login} />} />
+          <Route path="staff/join" element={<StaffJoinPage s={s} onLogin={login} />} />
           <Route path="*" element={<GamePage s={s} />} />
         </Routes></Page>}</PullRefresh></MatchNote.Provider></MatchSource.Provider></AugmentOpen.Provider>
       </main>

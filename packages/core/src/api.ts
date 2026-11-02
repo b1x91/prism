@@ -161,7 +161,7 @@ export type StaffOverview = {
   care: (StaffFace & { kind: 'pending' | 'review' | 'quiet' | 'away'; days: number; n?: number })[];
   careTotal: number;
 };
-export type StaffMembers = { members: StaffMember[]; reviewNeed: number; inviteBonus: number; overview?: StaffOverview };
+export type StaffMembers = { members: StaffMember[]; reviewNeed: number; inviteBonus: number; overview?: StaffOverview; /** 가입 신청 (v3.148) */ applications?: { new: number; interview: number; confirmed: number } };
 /** 친구 초대 (v3.107) */
 export type MyInvite = { code: string; bonus: number; rewarded: number; friends: { id: string; nick: string; skin: number | null; main: number | null; joined: number; approved: boolean; pending?: boolean; rewardedAt: number | null }[] };
 export type LookupMember = { id: string; nick: string; skin: number | null; main: number | null };
