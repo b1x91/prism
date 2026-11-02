@@ -319,6 +319,27 @@ td { color: var(--text-2); }
 .d-pc-r .d-prog { padding: 0; }
 .d-note { display: grid; gap: var(--s2); padding: var(--s4); border-radius: var(--r-m); border: 1px solid var(--line); background: var(--surface); font-size: 13px; color: var(--text-2); }
 .d-note b { color: var(--text); }
+
+.d-ticket { display: flex; align-items: center; justify-content: space-between; padding: var(--s3) var(--s4); border-radius: var(--r-m); background: linear-gradient(120deg, rgba(91,124,255,.22), rgba(168,85,247,.16)); border: 1px solid rgba(139,149,255,.35); }
+.d-ticket span { font-size: 12px; font-weight: 700; color: #c7cdff; }
+.d-ticket b { font-size: 28px; font-weight: 800; letter-spacing: .06em; font-variant-numeric: tabular-nums; }
+.d-how { display: grid; gap: var(--s3); padding: var(--s4); border-radius: var(--r-l); background: var(--stage-2); border: 1px solid #23273a; }
+.d-how-s { display: grid; grid-template-columns: 24px minmax(0,1fr); gap: var(--s3); align-items: start; }
+.d-how-s i { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: #2f3552; color: #c7cdff; font-style: normal; font-weight: 800; font-size: 12px; }
+.d-how-s b { display: block; font-size: 14px; }
+.d-how-s span { font-size: 12px; color: var(--stage-3); }
+.d-pin { display: grid; grid-template-columns: repeat(4, 48px) minmax(0,1fr); gap: var(--s2); align-items: center; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; text-align: left; }
+.d-pin span { display: grid; place-items: center; height: 56px; border-radius: var(--r-m); background: var(--stage); border: 1px solid #31364a; font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; box-shadow: inset 0 1px 0 rgba(255,255,255,.04); }
+.d-pin em { justify-self: end; white-space: nowrap; font-style: normal; font-size: 13px; font-weight: 700; color: #a5b0ff; padding: 6px 10px; border-radius: 999px; background: rgba(111,124,255,.12); transition: background .2s, color .2s; }
+.d-pin.done em { background: rgba(52,211,153,.16); color: #34d399; }
+.d-pin.done span { border-color: rgba(52,211,153,.5); }
+.d-bubble { justify-self: end; max-width: 92%; display: grid; gap: 4px; }
+.d-bub-who { justify-self: end; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--stage-3); }
+.d-bub-who .gem { width: 12px; height: 12px; }
+.d-bubble p { padding: var(--s3) var(--s4); border-radius: 16px 4px 16px 16px; background: var(--kakao); color: var(--kakao-ink); font-size: 14px; line-height: 1.5; }
+.d-copy { background: transparent; border-color: #31364a; color: var(--stage-text); }
+.d-copy.done { border-color: rgba(52,211,153,.5); color: #34d399; }
+.d-dock-note { text-align: center; font-size: 12px; color: var(--stage-3); }
 .d-pc-h { font-size: 56px; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
 .d-pc-kpi { grid-template-columns: repeat(4, minmax(0,1fr)); }
 @media (max-width: 760px) { .d-pc-h { font-size: 40px; } .d-pc-kpi { grid-template-columns: repeat(2, minmax(0,1fr)); } .d-pc { grid-template-columns: minmax(0,1fr); } .d-pc-r { border-left: 0; border-top: 1px solid #23273a; } .d-pc-l { padding: var(--s5); } }
@@ -544,12 +565,20 @@ td { color: var(--text-2); }
           <div class="d-step" data-d="6" hidden><span class="d-glow"></span>
             <small style="color:#34d399">신청 완료</small>
             <h2>면접방에서<br>기다릴게요</h2>
-            <div class="code" style="background:var(--stage-2)"><span style="color:var(--stage-3);font-size:12px">면접 번호</span><b>P-427</b></div>
-            <div class="say" style="border-color:#31364a;color:var(--stage-3)"><span>첫 인사</span><span style="color:var(--stage-text)">P-427 · 은하수산책#KR1 · Haze님 초대로 왔어요!</span><button class="btn sm" type="button" data-copy="P-427 · 은하수산책#KR1 · Haze님 초대로 왔어요!">복사</button></div>
-            <p class="lede" style="font-size:13px">운영진 두 명이 이야기해 보고 톡방과 디스코드로 초대해 드려요. 보통 하루 안에 답해요.</p>
+            <p class="lede">운영진 두 명이 이야기해 보고 톡방과 디스코드로 초대해 드려요. 보통 하루 안에 답해요.</p>
+            <div class="d-ticket"><span>내 면접 번호</span><b>P-427</b></div>
+            <div class="d-how">
+              <div class="d-how-s"><i>1</i><div><b>입장 비밀번호</b><span>면접방에 들어갈 때 물어봐요</span></div></div>
+              <button type="button" class="d-pin" data-pin="0921" aria-label="비밀번호 0921 복사"><span>0</span><span>9</span><span>2</span><span>1</span><em data-pinl>복사</em></button>
+            </div>
+            <div class="d-how">
+              <div class="d-how-s"><i>2</i><div><b>들어가서 첫 인사</b><span>운영진이 번호로 바로 알아봐요</span></div></div>
+              <div class="d-bubble"><span class="d-bub-who"><svg class="gem"><use href="#gem"/></svg>은하수 · 나</span><p>안녕하세요! <b>P-427</b> 은하수산책#KR1 입니다.<br>Haze님 초대로 왔어요 🙂</p></div>
+              <button type="button" class="btn block d-copy" data-hello="안녕하세요! P-427 은하수산책#KR1 입니다. Haze님 초대로 왔어요 🙂"><span data-hl>첫 인사 복사</span></button>
+            </div>
           </div>
         </div>
-        <div class="dock"><div class="d-nav"><button class="btn ghost" type="button" data-dprev hidden>이전</button><button class="btn primary block" type="button" data-dnext>둘러보기</button></div><span data-dpw hidden style="text-align:center;font-size:12px;color:var(--stage-3)">비밀번호 <b style="color:var(--stage-text)">0921</b></span></div>
+        <div class="dock"><div class="d-nav"><button class="btn ghost" type="button" data-dprev hidden>이전</button><button class="btn primary block" type="button" data-dnext>둘러보기</button></div><span data-dpw hidden class="d-dock-note">들어가면 1번 비밀번호 → 2번 첫 인사 순서로</span></div>
         <div class="toast" role="status">복사했어요</div>
       </div>
     </div>
@@ -960,11 +989,11 @@ td { color: var(--text-2); }
     prog.forEach((p, k) => p.classList.toggle('on', k < i));
     count.textContent = `${i} / 4`; prev.hidden = i === 1; next.textContent = label[i];
     next.disabled = i === 3 && [...rules].some((r) => !r.classList.contains('on'));
-    tour.querySelector('.scroll').scrollTop = 0;
   };
+  const top = () => { tour.querySelector('.scroll').scrollTop = 0; };
   rules.forEach((r) => r.addEventListener('click', () => { r.classList.toggle('on'); sync(); }));
-  next.addEventListener('click', () => { if (i < 4) { i++; sync(); } else { i = 1; rules.forEach((r) => r.classList.remove('on')); sync(); } });
-  prev.addEventListener('click', () => { if (i > 1) { i--; sync(); } });
+  next.addEventListener('click', () => { if (i < 4) { i++; } else { i = 1; rules.forEach((r) => r.classList.remove('on')); } sync(); top(); });
+  prev.addEventListener('click', () => { if (i > 1) { i--; sync(); top(); } });
   sync();
 
 
@@ -986,12 +1015,22 @@ td { color: var(--text-2); }
       pw.hidden = k !== 6;
       const n = [...rs].filter((r) => r.classList.contains('on')).length; cnt.textContent = n;
       nx.disabled = k === 4 && n < rs.length;
-      t.querySelector('.scroll').scrollTop = 0;
     };
+    const top = () => { t.querySelector('.scroll').scrollTop = 0; };
     rs.forEach((r) => r.addEventListener('click', () => { r.classList.toggle('on'); go(); }));
-    nx.addEventListener('click', () => { if (k < 6) k++; else { k = 1; rs.forEach((r) => r.classList.remove('on')); } go(); });
-    pv.addEventListener('click', () => { if (k > 1) { k--; go(); } });
+    nx.addEventListener('click', () => { if (k < 6) k++; else { k = 1; rs.forEach((r) => r.classList.remove('on')); } go(); top(); });
+    pv.addEventListener('click', () => { if (k > 1) { k--; go(); top(); } });
     go();
+  }
+
+
+  // 시안 D 완료 장: 비밀번호·첫 인사 복사
+  {
+    const done = (el, lab, txt, back) => { el.classList.add('done'); lab.textContent = txt; setTimeout(() => { el.classList.remove('done'); lab.textContent = back; }, 1600); };
+    const pin = document.querySelector('[data-pin]');
+    pin.addEventListener('click', async () => { try { await navigator.clipboard.writeText(pin.dataset.pin); done(pin, pin.querySelector('[data-pinl]'), '복사됨 ✓', '복사'); } catch { done(pin, pin.querySelector('[data-pinl]'), '0921', '복사'); } });
+    const hb = document.querySelector('[data-hello]');
+    hb.addEventListener('click', async () => { try { await navigator.clipboard.writeText(hb.dataset.hello); done(hb, hb.querySelector('[data-hl]'), '복사했어요 ✓', '첫 인사 복사'); } catch { done(hb, hb.querySelector('[data-hl]'), '글자를 길게 눌러 복사해 주세요', '첫 인사 복사'); } });
   }
 
   // 시안 C: 규칙 펼치기, 신청 시트
