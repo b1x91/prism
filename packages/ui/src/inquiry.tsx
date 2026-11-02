@@ -20,15 +20,24 @@ const msgOf = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 /** 첨부 사진 (v3.141): 최대 5장. 보내기 전에 긴 변 1600px 로 줄여 가볍게 (서버는 장당 1.2MB 까지) */
 export const INQ_FILES = { max: 5, side: 1600, bytes: 1_200_000 } as const;
+/** 파일을 그림으로: 임시 주소(blob:) 없이 바로 — 앱의 보안 설정(CSP)이 blob: 그림을 막는다 (v3.141).
+ *  createImageBitmap 을 먼저, 못 쓰면 data: 주소로 읽어 Image 로 */
+async function decode(f: File): Promise<{ src: CanvasImageSource; w: number; h: number; done: () => void }> {
+  if (typeof createImageBitmap === 'function') {
+    try { const b = await createImageBitmap(f); return { src: b, w: b.width, h: b.height, done: () => b.close() }; } catch { /* 아래로 */ }
+  }
+  const url = await new Promise<string>((ok, no) => { const r = new FileReader(); r.onload = () => ok(String(r.result)); r.onerror = () => no(new Error('사진을 읽지 못했어요.')); r.readAsDataURL(f); });
+  const img = await new Promise<HTMLImageElement>((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('사진을 읽지 못했어요.')); i.src = url; });
+  return { src: img, w: img.naturalWidth, h: img.naturalHeight, done: () => {} };
+}
 async function shrink(f: File): Promise<string> {
   if (!/^image\/(png|jpeg|webp|gif)$/.test(f.type)) throw new Error('사진(PNG·JPG·WEBP·GIF)만 붙일 수 있어요.');
-  const url = URL.createObjectURL(f);
+  const pic = await decode(f);
   try {
-    const img = await new Promise<HTMLImageElement>((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = () => no(new Error('사진을 읽지 못했어요.')); i.src = url; });
-    const k = Math.min(1, INQ_FILES.side / Math.max(img.naturalWidth, img.naturalHeight));
+    const k = Math.min(1, INQ_FILES.side / Math.max(pic.w, pic.h));
     const c = document.createElement('canvas');
-    c.width = Math.max(1, Math.round(img.naturalWidth * k)); c.height = Math.max(1, Math.round(img.naturalHeight * k));
-    c.getContext('2d')!.drawImage(img, 0, 0, c.width, c.height);
+    c.width = Math.max(1, Math.round(pic.w * k)); c.height = Math.max(1, Math.round(pic.h * k));
+    c.getContext('2d')!.drawImage(pic.src, 0, 0, c.width, c.height);
     // 글자가 많은 스크린샷은 webp 가 또렷하고 가볍다. 너무 크면 품질을 낮춰 다시
     for (const q of [0.86, 0.75, 0.6]) {
       const d = c.toDataURL('image/webp', q);
@@ -36,7 +45,7 @@ async function shrink(f: File): Promise<string> {
       if (out.length * 0.75 <= INQ_FILES.bytes) return out;
     }
     throw new Error('사진이 너무 커요.');
-  } finally { URL.revokeObjectURL(url); }
+  } finally { pic.done(); }
 }
 
 /** 사진 크게 보기 (화살표·Esc·바깥 누르면 닫힘) */
