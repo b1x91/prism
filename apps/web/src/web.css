@@ -1,11 +1,5 @@
 /* 웹 전용 틀 (상단 바·모바일 메뉴·첫 화면) */
 .topbar { position: sticky; top: 0; z-index: 30; padding-top: env(safe-area-inset-top, 0px); background: var(--glass-bg); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); border-bottom: 1px solid var(--glass-line); box-shadow: 0 1px 0 var(--glass-edge), 0 6px 20px rgba(16, 20, 36, .05); }
-/* 터치 기기(아이폰·아이패드): 상단 바를 바탕색과 같은 불투명 색으로 — 사파리가 옆 영역·상태 막대를 같은 색으로 칠해 끊기지 않고 이어진다 (v3.151) */
-@media (hover: none) and (pointer: coarse) {
-  .topbar { background: var(--bg); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: none; border-bottom-color: transparent; transition: border-color .2s; }
-  /* 아래 선은 페이지를 내렸을 때만 — 맨 위에서는 상단 바가 사파리 옆 영역과 한 장으로 이어진다 */
-  html.scrolled .topbar { border-bottom-color: var(--line); }
-}
 .topbar .wrap { display: flex; align-items: center; gap: var(--s4); height: 64px; }
 /* 워드마크는 대문자 PRISM — 대문자 높이(약 12px)에 맞춰 보석은 22px, 글자 사이는 넓게 */
 .brand { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg); font-weight: 800; letter-spacing: .1em; line-height: 1; }
