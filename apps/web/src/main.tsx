@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './web.css';
+import { restoreTheme } from '@prism/ui';
 import { Layout } from './layout';
 import { SessionProvider } from './session';
 import { Home } from './pages/Home';
@@ -18,6 +19,9 @@ import { StaffJoinPage, StaffMembersPage, StaffPage } from './pages/Staff';
 import { ApplyPage, InvitePage } from './pages/Join';
 import { NewsPage } from './pages/News';
 import { InquiryPage } from './pages/Inquiry';
+
+// 브라우저 막대 색을 지금 테마 바탕색과 맞추고, 시스템 테마가 바뀌면 따라간다
+restoreTheme();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

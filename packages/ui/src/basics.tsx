@@ -225,10 +225,23 @@ export type ThemeMode = 'system' | 'light' | 'dark';
 export function getThemeMode(): ThemeMode {
   try { const t = localStorage.getItem('prism-theme'); return t === 'light' || t === 'dark' ? t : 'system'; } catch { return 'system'; }
 }
+/** 브라우저 막대 색(theme-color)을 지금 바탕색과 같게 — iOS 사파리가 주소 막대·옆 영역을 이 색으로 칠한다 (웹만, 앱에는 meta 가 없다) */
+export function syncThemeColor() {
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (!meta) return;
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim();
+  if (bg) meta.setAttribute('content', bg);
+}
+let themeWatch = false;
+function watchSystemTheme() {
+  if (themeWatch) return; themeWatch = true;
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncThemeColor); } catch { /* 옛 브라우저 */ }
+}
 export function setThemeMode(m: ThemeMode) {
   if (m === 'system') document.documentElement.removeAttribute('data-theme');
   else document.documentElement.setAttribute('data-theme', m);
   try { if (m === 'system') localStorage.removeItem('prism-theme'); else localStorage.setItem('prism-theme', m); } catch { /* 저장소 없음 */ }
+  syncThemeColor();
 }
 /** 테마 전환 (시스템 따라감 → 직접 고르면 기억) */
 export function toggleTheme() {
@@ -236,9 +249,11 @@ export function toggleTheme() {
   const next = cur === 'dark' ? 'light' : 'dark';
   document.documentElement.setAttribute('data-theme', next);
   try { localStorage.setItem('prism-theme', next); } catch { /* 저장소 없음 */ }
+  syncThemeColor();
 }
 export function restoreTheme() {
   try { const t = localStorage.getItem('prism-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch { /* 저장소 없음 */ }
+  syncThemeColor(); watchSystemTheme();
 }
 
 /** 스킨 목록 (처음 필요할 때 한 번만 불러온다. 여러 곳에서 불러도 실제로는 한 번) */
