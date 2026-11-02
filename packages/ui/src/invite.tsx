@@ -46,8 +46,8 @@ export function InviteCard({ api, origin = WEB_ORIGIN }: { api: Api; origin?: st
 export function InviteHow() {
   const steps: [string, string][] = [
     ['링크 보내기', '위 링크를 친구에게 보내요. 디스코드·카카오톡 어디든 괜찮아요.'],
-    ['친구가 가입', '친구가 링크로 들어와 디스코드 서버에 들어오고 Prism에 로그인해요. 추천인 칸에 내 이름이 미리 채워져요.'],
-    ['승인되면 피스', '운영진이 친구를 멤버로 승인하는 순간 피스가 들어와요. 한 번 들어온 피스는 줄지 않아요.'],
+    ['친구가 신청', '친구가 링크로 Prism을 둘러보고 가입 신청을 해요. 운영진이 면접방에서 이야기한 뒤 톡방·디스코드로 초대해요.'],
+    ['가입하면 피스', '친구가 로그인해 멤버가 되는 순간 피스가 들어와요. 한 번 들어온 피스는 줄지 않아요.'],
   ];
   return (
     <section className="card pad">
