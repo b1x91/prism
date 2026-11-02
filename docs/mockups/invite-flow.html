@@ -248,6 +248,81 @@ td { color: var(--text-2); }
 .dm .bts i { font-style: normal; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 4px; background: #4e5058; color: #fff; }
 .dm .bts i.g { background: #248046; } .dm .bts i.b { background: #5865f2; }
 
+
+/* 시안 D: B + C — 어두운 무대 위 한 장씩 넘기는 투어, 장마다 모임 숫자 */
+.d-phone { background: var(--stage); color: var(--stage-text); border-color: #2a2e44; }
+.d-phone .bar { border-color: #23273a; color: var(--stage-text); }
+.d-phone .dock { background: rgba(16,18,28,.94); border-color: #23273a; }
+.d-prog { display: flex; gap: 4px; padding: var(--s3) var(--s4) 0; }
+.d-prog i { flex: 1; height: 3px; border-radius: 3px; background: #2a2e44; overflow: hidden; position: relative; }
+.d-prog i.on::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #5b7cff, #a855f7); }
+.d-step { position: relative; padding: var(--s5) var(--s4) var(--s6); display: grid; gap: var(--s4); align-content: start; }
+.d-step > small { color: #a5b0ff; font-weight: 800; font-size: 12px; letter-spacing: .04em; }
+.d-step h2 { font-size: 28px; font-weight: 800; line-height: 1.22; letter-spacing: -.02em; }
+.d-step h2.big { font-size: 40px; line-height: 1.12; }
+.d-step .lede { color: var(--stage-3); font-size: 14px; }
+.d-glow { position: absolute; inset: 0 0 auto; height: 320px; pointer-events: none; background: conic-gradient(from 210deg at 80% 0%, rgba(79,91,234,0), rgba(79,91,234,.42), rgba(224,87,127,.24), rgba(31,163,163,.22), rgba(79,91,234,0)); filter: blur(40px); opacity: .75; }
+.d-step > * { position: relative; }
+.d-step > .d-glow, .d-pc-l > .d-glow { position: absolute; }
+.d-nav:has([data-dprev][hidden]) { grid-template-columns: minmax(0,1fr); }
+.d-live { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 1px; border-radius: var(--r-m); overflow: hidden; background: #23273a; }
+.d-live div { background: var(--stage-2); padding: var(--s3); display: grid; gap: 2px; }
+.d-live b { font-size: 20px; font-variant-numeric: tabular-nums; }
+.d-live span { font-size: 12px; color: var(--stage-3); }
+.d-live .now b::after { content: ""; display: inline-block; width: 6px; height: 6px; margin-left: 6px; vertical-align: 4px; border-radius: 50%; background: #34d399; box-shadow: 0 0 0 3px rgba(52,211,153,.18); }
+.d-by { display: flex; align-items: center; gap: var(--s3); padding: var(--s3) var(--s4); border-radius: var(--r-m); background: rgba(255,255,255,.04); border: 1px solid #23273a; }
+.d-by .face { width: 40px; height: 40px; font-size: 15px; }
+.d-by b { font-size: 14px; display: block; }
+.d-by span { font-size: 12px; color: var(--stage-3); }
+.d-kpi { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: var(--s2); }
+.d-kpi div { padding: var(--s3) var(--s4); border-radius: var(--r-m); background: var(--stage-2); border: 1px solid #23273a; display: grid; gap: 2px; }
+.d-kpi b { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.d-kpi b em { font-style: normal; font-size: 14px; color: var(--stage-3); font-weight: 700; margin-left: 2px; }
+.d-kpi span { font-size: 12px; color: var(--stage-3); }
+.d-chart { padding: var(--s3) var(--s4) var(--s4); border-radius: var(--r-m); background: var(--stage-2); border: 1px solid #23273a; display: grid; gap: var(--s3); }
+.d-chart header { display: flex; justify-content: space-between; font-size: 13px; font-weight: 700; }
+.d-chart header span { color: var(--stage-3); font-weight: 600; font-size: 12px; }
+.d-bars { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 4px; align-items: end; height: 72px; }
+.d-bars i { display: block; border-radius: 3px 3px 0 0; background: #2f3552; }
+.d-bars i.hot { background: linear-gradient(180deg, #8b95ff, #5b6cff); }
+.d-axis { display: grid; grid-template-columns: repeat(12, minmax(0,1fr)); gap: 4px; font-size: 12px; color: var(--stage-3); font-variant-numeric: tabular-nums; }
+.d-axis span { text-align: center; }
+.d-axis span:nth-child(even) { visibility: hidden; }
+.d-split { display: grid; gap: 6px; font-size: 12px; color: var(--stage-3); }
+.d-split .bar2 { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: #2f3552; }
+.d-split .bar2 i { display: block; background: linear-gradient(90deg, #5b7cff, #a855f7); }
+.d-split div:first-child { display: flex; justify-content: space-between; }
+.d-split b { color: var(--stage-text); }
+.d-place { display: grid; gap: var(--s2); }
+.d-place div { display: grid; grid-template-columns: 36px minmax(0,1fr) auto; gap: var(--s3); align-items: center; padding: var(--s3); border-radius: var(--r-m); background: var(--stage-2); border: 1px solid #23273a; }
+.d-place i { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 10px; font-style: normal; font-weight: 800; font-size: 13px; }
+.d-place b { display: block; font-size: 14px; }
+.d-place span { font-size: 12px; color: var(--stage-3); }
+.d-place em { font-style: normal; font-size: 12px; font-weight: 700; color: #a5b0ff; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.d-night { display: grid; gap: 0; }
+.d-night div { display: grid; grid-template-columns: 44px minmax(0,1fr); gap: var(--s3); padding: 6px 0; font-size: 13px; color: var(--stage-3); }
+.d-night b { color: var(--stage-text); font-variant-numeric: tabular-nums; font-weight: 700; }
+.d-rule { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--s3); align-items: center; padding: var(--s3) var(--s4); border-radius: var(--r-m); border: 1px solid #2a2e44; background: var(--stage-2); color: var(--stage-3); font-size: 13px; text-align: left; cursor: pointer; }
+.d-rule b { display: block; color: var(--stage-text); font-size: 14px; }
+.d-rule .tick { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #3a4060; display: grid; place-items: center; color: transparent; font-weight: 900; font-size: 12px; transition: background .2s, border-color .2s; }
+.d-rule.on { border-color: #6f7cff; background: rgba(111,124,255,.12); }
+.d-rule.on .tick { background: #6f7cff; border-color: #6f7cff; color: #fff; }
+.d-count { font-size: 12px; color: var(--stage-3); }
+.d-count b { color: var(--stage-text); font-variant-numeric: tabular-nums; }
+.d-form { display: grid; gap: var(--s4); padding: var(--s4); border-radius: var(--r-l); background: var(--surface); color: var(--text); }
+.d-nav { display: grid; grid-template-columns: auto minmax(0,1fr); gap: var(--s2); }
+.d-nav .btn.ghost { background: transparent; border-color: #2f3552; color: var(--stage-text); }
+.d-pc { border: 1px solid var(--line-2); border-radius: var(--r-l); overflow: hidden; background: var(--stage); color: var(--stage-text); display: grid; grid-template-columns: minmax(0,1.2fr) minmax(0,1fr); min-height: 420px; }
+.d-pc-l { position: relative; padding: var(--s7); display: grid; gap: var(--s4); align-content: start; overflow: hidden; }
+.d-pc-l > * { position: relative; }
+.d-pc-r { padding: var(--s6); display: grid; gap: var(--s4); align-content: start; background: var(--stage-2); border-left: 1px solid #23273a; }
+.d-pc-r .d-prog { padding: 0; }
+.d-note { display: grid; gap: var(--s2); padding: var(--s4); border-radius: var(--r-m); border: 1px solid var(--line); background: var(--surface); font-size: 13px; color: var(--text-2); }
+.d-note b { color: var(--text); }
+.d-pc-h { font-size: 56px; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
+.d-pc-kpi { grid-template-columns: repeat(4, minmax(0,1fr)); }
+@media (max-width: 760px) { .d-pc-h { font-size: 40px; } .d-pc-kpi { grid-template-columns: repeat(2, minmax(0,1fr)); } .d-pc { grid-template-columns: minmax(0,1fr); } .d-pc-r { border-left: 0; border-top: 1px solid #23273a; } .d-pc-l { padding: var(--s5); } }
+
 @media (max-width: 1080px) {
   .doc { grid-template-columns: minmax(0,1fr); }
   .side { position: static; }
@@ -278,6 +353,7 @@ td { color: var(--text-2); }
 
 <nav class="tabs" aria-label="보기"><div class="wrap">
   <a href="#plan" data-tab="plan">기획</a>
+  <a href="#d" data-tab="d">시안 D<span>B + C</span></a>
   <a href="#a" data-tab="a">시안 A<span>초대장</span></a>
   <a href="#b" data-tab="b">시안 B<span>둘러보기</span></a>
   <a href="#c" data-tab="c">시안 C<span>무대</span></a>
@@ -389,6 +465,154 @@ td { color: var(--text-2); }
         <ul><li>예전: 링크 → 바로 디스코드 가입 → 로그인 → 승인 대기</li><li>바뀐 뒤: 링크 → 소개·규칙 → 신청 → 면접 → 확정 → 로그인하면 바로 준회원</li></ul>
       </div>
     </aside>
+  </div>
+</section>
+
+
+<!-- ───────── 시안 D (B + C) ───────── -->
+<section data-view="d" hidden>
+  <div class="opt-head">
+    <h2>시안 D · 무대 위 둘러보기 (B + C)</h2>
+    <p>C의 어두운 무대와 '지금 Prism' 숫자를 첫 장에 두고, B처럼 한 장씩 넘기며 알아 간다. ① 초대 + 지금 Prism ② 숫자로 보는 Prism ③ 어디서·어떻게 노는지 ④ 규칙 — 하나씩 눌러 확인해야 다음으로 ⑤ 신청서. 숫자는 장마다 그 장의 이야기를 받쳐 준다. 왼쪽 휴대폰은 실제로 넘겨 볼 수 있어요.</p>
+    <div class="opt-tags"><span>살아 있는 모임이 숫자로 보임</span><span>규칙을 반드시 거침</span><span>휴대폰 · PC 같은 흐름</span><span class="con">숫자가 작을 땐 '이번 주'보다 '이번 달'로 (아래 메모)</span></div>
+  </div>
+  <div class="screens">
+    <div class="cap"><h4>투어 (눌러서 넘겨 보세요)</h4>
+      <div class="phone d-phone" id="dtour">
+        <div class="bar"><svg class="gem"><use href="#gem"/></svg>PRISM<span style="margin-left:auto;letter-spacing:0;font-weight:700;color:var(--stage-3);font-size:12px" data-dcount>1 / 5</span></div>
+        <div class="d-prog" data-dprog><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="scroll">
+          <div class="d-step" data-d="1"><span class="d-glow"></span>
+            <small>INVITATION</small>
+            <h2 class="big">밤마다<br>빛이 모이는 곳</h2>
+            <p class="lede">30대 이상이 모여 매일 밤 아수라장 칼바람을 함께하는 모임, Prism이에요.</p>
+            <div class="d-by"><span class="face">H</span><div><b>Haze 님이 초대했어요</b><span>"퇴근하고 한두 판 편하게 하는 모임이에요. 같이 해요!"</span></div></div>
+            <div class="d-live"><div class="now"><b>14</b><span>지금 접속</span></div><div><b>418</b><span>이번 주 판</span></div><div><b>62</b><span>멤버</span></div></div>
+          </div>
+          <div class="d-step" data-d="2" hidden>
+            <small>숫자로 보는 PRISM</small>
+            <h2>매일 밤,<br>실제로 모여요</h2>
+            <div class="d-kpi">
+              <div><b>62<em>명</em></b><span>함께하는 멤버</span></div>
+              <div><b>418<em>판</em></b><span>이번 주 기록된 판</span></div>
+              <div><b>71<em>%</em></b><span>멤버끼리 같이 한 판</span></div>
+              <div><b>23<em>/ 30일</em></b><span>이번 달 모인 날</span></div>
+            </div>
+            <div class="d-chart"><header>주로 모이는 시간<span>최근 4주</span></header>
+              <div class="d-bars"><i style="height:10%"></i><i style="height:14%"></i><i style="height:12%"></i><i style="height:18%"></i><i style="height:26%"></i><i style="height:34%"></i><i style="height:52%"></i><i class="hot" style="height:86%"></i><i class="hot" style="height:100%"></i><i class="hot" style="height:78%"></i><i style="height:44%"></i><i style="height:20%"></i></div>
+              <div class="d-axis"><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>0</span><span>1</span></div>
+            </div>
+            <div class="d-split"><div><span>멤버 나이대</span><b>30대 이상 100%</b></div><div class="bar2"><i style="width:100%"></i></div></div>
+          </div>
+          <div class="d-step" data-d="3" hidden>
+            <small>어디서 · 어떻게</small>
+            <h2>세 곳에서<br>만나요</h2>
+            <div class="d-place">
+              <div><i class="ic-d">D</i><p><b>디스코드</b><span>음성 채널에서 같이 게임</span></p><em>지금 5명</em></div>
+              <div><i class="ic-k">K</i><p><b>카카오톡 오픈채팅</b><span>약속 · 소식 · 수다</span></p><em>62명</em></div>
+              <div><i class="ic-p"><svg class="gem"><use href="#gem"/></svg></i><p><b>Prism 앱 · 웹</b><span>도감 · 랭킹 · 증강 가이드</span></p><em>앱 38명</em></div>
+            </div>
+            <div class="d-chart"><header>어느 날 밤의 Prism<span>어제</span></header>
+              <div class="d-night"><div><b>20:40</b>음성 #1에 하나둘 모여요</div><div><b>21:00</b>봇이 오늘의 증강 셋을 올려요</div><div><b>21:10</b>5명 팟 두 개 출발</div><div><b>23:30</b>오늘의 하이라이트 · 펜타킬</div></div>
+            </div>
+          </div>
+          <div class="d-step" data-d="4" hidden>
+            <small>함께 지키는 것</small>
+            <h2>하나씩 눌러<br>확인해 주세요</h2>
+            <span class="d-count" data-dcnt>확인 <b>0</b> / 7</span>
+            <div style="display:grid;gap:var(--s2)" data-drules>
+              <button type="button" class="d-rule"><span><b>지인 추천으로 가입</b>아는 멤버가 불러 준 분만</span><span class="tick">✓</span></button>
+              <button type="button" class="d-rule"><span><b>디스코드 + 카카오톡</b>둘 다 함께 참여해요</span><span class="tick">✓</span></button>
+              <button type="button" class="d-rule"><span><b>Prism 앱 설치</b>Windows PC에</span><span class="tick">✓</span></button>
+              <button type="button" class="d-rule"><span><b>오픈프로필은 본인 사진</b></span><span class="tick">✓</span></button>
+              <button type="button" class="d-rule"><span><b>연 2회 멤버 정리</b>함께한 판이 없으면 정리돼요</span><span class="tick">✓</span></button>
+              <button type="button" class="d-rule"><span><b>반복 민원은 경고</b></span><span class="tick">✓</span></button>
+              <button type="button" class="d-rule"><span><b>전적은 회원에게만 보여요</b>앱이 모은 아수라장 기록</span><span class="tick">✓</span></button>
+            </div>
+          </div>
+          <div class="d-step" data-d="5" hidden>
+            <small>마지막이에요</small>
+            <h2>운영진이<br>알아볼 수 있게</h2>
+            <div class="d-form">
+              <div class="field"><label for="d-riot">롤 이름</label><input id="d-riot" value="은하수산책#KR1"><span class="ok">✓ 확인된 롤 계정이에요</span></div>
+              <div class="field"><label for="d-kakao">카카오톡 오픈프로필 이름</label><input id="d-kakao" value="은하수"><span class="hint">면접방에서 이 이름으로 찾아요</span></div>
+              <div class="field"><label>주로 접속하는 시간</label><div class="chips" data-chips><button type="button">낮</button><button type="button" class="on">저녁</button><button type="button" class="on">밤</button><button type="button">새벽</button></div></div>
+              <div class="field"><label for="d-say">한마디<em>선택</em></label><textarea id="d-say">Haze님 회사 동료예요!</textarea></div>
+              <label class="chk"><input type="checkbox" checked>30대 이상이에요</label>
+            </div>
+          </div>
+          <div class="d-step" data-d="6" hidden><span class="d-glow"></span>
+            <small style="color:#34d399">신청 완료</small>
+            <h2>면접방에서<br>기다릴게요</h2>
+            <div class="code" style="background:var(--stage-2)"><span style="color:var(--stage-3);font-size:12px">면접 번호</span><b>P-427</b></div>
+            <div class="say" style="border-color:#31364a;color:var(--stage-3)"><span>첫 인사</span><span style="color:var(--stage-text)">P-427 · 은하수산책#KR1 · Haze님 초대로 왔어요!</span><button class="btn sm" type="button" data-copy="P-427 · 은하수산책#KR1 · Haze님 초대로 왔어요!">복사</button></div>
+            <p class="lede" style="font-size:13px">운영진 두 명이 이야기해 보고 톡방과 디스코드로 초대해 드려요. 보통 하루 안에 답해요.</p>
+          </div>
+        </div>
+        <div class="dock"><div class="d-nav"><button class="btn ghost" type="button" data-dprev hidden>이전</button><button class="btn primary block" type="button" data-dnext>둘러보기</button></div><span data-dpw hidden style="text-align:center;font-size:12px;color:var(--stage-3)">비밀번호 <b style="color:var(--stage-text)">0921</b></span></div>
+        <div class="toast" role="status">복사했어요</div>
+      </div>
+    </div>
+
+    <div class="cap"><h4>내 신청 상태 (다시 열었을 때)</h4>
+      <div class="phone d-phone">
+        <div class="bar"><svg class="gem"><use href="#gem"/></svg>PRISM</div>
+        <div class="scroll"><div class="d-step">
+          <small style="color:#34d399">확정됐어요</small>
+          <h2>환영해요,<br>은하수산책 님!</h2>
+          <p class="lede">운영진이 톡방과 디스코드 초대를 보냈어요. 아래 순서대로 하면 바로 멤버가 돼요.</p>
+          <div class="d-chart"><div class="steps-v" style="--line:#2a2e44">
+            <div class="done"><p><b style="color:var(--stage-text)">신청하기</b></p></div>
+            <div class="done"><p><b style="color:var(--stage-text)">면접방에서 인사</b></p></div>
+            <div class="done"><p><b style="color:var(--stage-text)">톡방 · 디스코드 초대</b><span style="color:var(--stage-3)">카카오톡을 확인해 주세요</span></p></div>
+            <div class="now"><p><b style="color:var(--stage-text)">디스코드로 로그인</b><span style="color:var(--stage-3)">롤 계정을 연결하면 신청서와 자동으로 이어져요</span></p></div>
+          </div></div>
+          <div class="d-live"><div class="now"><b>14</b><span>지금 접속</span></div><div><b>418</b><span>이번 주 판</span></div><div><b>63</b><span>곧 멤버</span></div></div>
+        </div></div>
+        <div class="dock"><a class="btn block" href="#d" data-fake style="background:var(--discord);border-color:var(--discord);color:#fff">1. 디스코드 서버 들어가기</a><a class="btn primary block" href="#d" data-fake>2. 디스코드로 로그인</a></div>
+      </div>
+    </div>
+
+    <div class="cap"><h4>숫자 정하는 기준</h4>
+      <div class="d-note">
+        <b>보여 주는 숫자 (모두 모임 전체 합계, 사람 이름·얼굴 없음)</b>
+        <span>지금 접속 · 이번 주 판 · 멤버 수 · 멤버끼리 같이 한 판 비율 · 이번 달 모인 날 · 주로 모이는 시간(최근 4주) · 디스코드 음성 지금 인원 · 앱 쓰는 멤버 수</span>
+        <b>숫자가 작을 때</b>
+        <span>이번 주 판이 50판 아래면 '이번 달'로, 지금 접속이 3명 아래면 그 칸 대신 '어제 모인 멤버 수'로 바꿔 보여 줘요. 빈약해 보이지 않게.</span>
+        <b>바로 바뀌는 것</b>
+        <span>지금 접속·음성 인원은 열 때마다, 나머지는 하루 한 번 계산해 둔 값. 공개 페이지라 1분 담아 둬요.</span>
+        <b>지키는 것</b>
+        <span>회원 개인의 판·승률·이름은 하나도 내지 않아요. 초대한 멤버 얼굴·한마디만 (그 멤버가 링크를 만들었으니까).</span>
+      </div>
+      <div class="d-note">
+        <b>각 장이 하는 일</b>
+        <span>① 누가 불렀고 지금 살아 있는 모임 → ② 숫자로 믿음 → ③ 어디서 어떻게 노는지 → ④ 규칙 동의(7개 모두) → ⑤ 신청서 → 면접 번호</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cap"><h4>PC에서 열었을 때 — 왼쪽 무대(숫자)는 그대로, 오른쪽에서 장을 넘긴다</h4>
+    <div class="d-pc">
+      <div class="d-pc-l"><span class="d-glow" style="height:100%"></span>
+        <small style="color:#a5b0ff;font-weight:800;font-size:12px;letter-spacing:.04em">INVITATION · Haze 님의 초대</small>
+        <h2 class="d-pc-h">밤마다<br>빛이 모이는 곳</h2>
+        <p style="color:var(--stage-3);max-width:46ch">30대 이상이 모여 매일 밤 아수라장 칼바람을 함께하는 모임, Prism이에요.</p>
+        <div class="d-kpi d-pc-kpi">
+          <div><b>14</b><span>지금 접속</span></div><div><b>62<em>명</em></b><span>멤버</span></div><div><b>418<em>판</em></b><span>이번 주</span></div><div><b>71<em>%</em></b><span>같이 한 판</span></div>
+        </div>
+      </div>
+      <div class="d-pc-r">
+        <div class="d-prog"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+        <small style="color:#a5b0ff;font-weight:800;font-size:12px">4 / 5 · 함께 지키는 것</small>
+        <h3 style="font-size:20px;font-weight:800">하나씩 눌러 확인해 주세요</h3>
+        <div style="display:grid;gap:var(--s2)">
+          <div class="d-rule on"><span><b>지인 추천으로 가입</b></span><span class="tick">✓</span></div>
+          <div class="d-rule on"><span><b>디스코드 + 카카오톡</b></span><span class="tick">✓</span></div>
+          <div class="d-rule"><span><b>Prism 앱 설치</b></span><span class="tick">✓</span></div>
+        </div>
+        <div class="d-nav"><span class="btn ghost" style="background:transparent;border-color:#2f3552;color:var(--stage-text)">이전</span><span class="btn primary" style="opacity:.45">모두 확인했어요</span></div>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -692,7 +916,7 @@ td { color: var(--text-2); }
 
 <script>
 (() => {
-  const views = ['plan', 'a', 'b', 'c', 'staff'];
+  const views = ['plan', 'd', 'a', 'b', 'c', 'staff'];
   const show = () => {
     const h = (location.hash || '#plan').slice(1);
     const v = views.includes(h) ? h : 'plan';
@@ -742,6 +966,33 @@ td { color: var(--text-2); }
   next.addEventListener('click', () => { if (i < 4) { i++; sync(); } else { i = 1; rules.forEach((r) => r.classList.remove('on')); sync(); } });
   prev.addEventListener('click', () => { if (i > 1) { i--; sync(); } });
   sync();
+
+
+  // 시안 D: 무대 위 투어
+  {
+    const t = document.getElementById('dtour');
+    const st = t.querySelectorAll('[data-d]'), pr = t.querySelectorAll('[data-dprog] i');
+    const nx = t.querySelector('[data-dnext]'), pv = t.querySelector('[data-dprev]'), ct = t.querySelector('[data-dcount]'), pw = t.querySelector('[data-dpw]');
+    const rs = t.querySelectorAll('.d-rule'), cnt = t.querySelector('[data-dcnt] b');
+    const lab = ['', '둘러보기', '다음', '다음', '모두 확인했어요', '신청하기', '면접방 들어가기'];
+    let k = 1;
+    const go = () => {
+      st.forEach((s) => { s.hidden = Number(s.dataset.d) !== k; });
+      pr.forEach((p, i) => p.classList.toggle('on', i < Math.min(k, 5)));
+      t.querySelector('[data-dprog]').hidden = k === 6;
+      ct.textContent = k === 6 ? '완료' : `${k} / 5`;
+      pv.hidden = k === 1 || k === 6; nx.textContent = lab[k];
+      nx.className = k === 6 ? 'btn kakao block' : 'btn primary block';
+      pw.hidden = k !== 6;
+      const n = [...rs].filter((r) => r.classList.contains('on')).length; cnt.textContent = n;
+      nx.disabled = k === 4 && n < rs.length;
+      t.querySelector('.scroll').scrollTop = 0;
+    };
+    rs.forEach((r) => r.addEventListener('click', () => { r.classList.toggle('on'); go(); }));
+    nx.addEventListener('click', () => { if (k < 6) k++; else { k = 1; rs.forEach((r) => r.classList.remove('on')); } go(); });
+    pv.addEventListener('click', () => { if (k > 1) { k--; go(); } });
+    go();
+  }
 
   // 시안 C: 규칙 펼치기, 신청 시트
   document.querySelectorAll('[data-acc]').forEach((b) => b.addEventListener('click', () => { const a = b.parentElement; a.dataset.open = a.dataset.open === '1' ? '0' : '1'; }));
