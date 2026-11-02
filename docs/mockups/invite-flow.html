@@ -340,6 +340,19 @@ td { color: var(--text-2); }
 .d-copy { background: transparent; border-color: #31364a; color: var(--stage-text); }
 .d-copy.done { border-color: rgba(52,211,153,.5); color: #34d399; }
 .d-dock-note { text-align: center; font-size: 12px; color: var(--stage-3); }
+
+.d-phone .scroll { scrollbar-width: none; }
+.d-phone .scroll::-webkit-scrollbar { display: none; }
+.d-bar, .d-dock, .d-pc-r { position: relative; }
+.d-bar { border-bottom-color: transparent !important; }
+.d-dock { border-top-color: transparent !important; }
+.d-line { position: absolute; left: 0; right: 0; height: 2px; background: #23273a; overflow: hidden; }
+.d-bar .d-line { bottom: -1px; }
+.d-dock .d-line, .d-line.top { top: 0; }
+.d-line i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #5b7cff, #a855f7); transition: width .38s cubic-bezier(.16,1,.3,1); }
+.d-dock .d-line i { background: #6f7cff; transition: width .08s linear; }
+.d-dock .d-line.none { opacity: 0; }
+@media (prefers-reduced-motion: reduce) { .d-line i { transition: none; } }
 .d-pc-h { font-size: 56px; font-weight: 800; line-height: 1.05; letter-spacing: -.02em; }
 .d-pc-kpi { grid-template-columns: repeat(4, minmax(0,1fr)); }
 @media (max-width: 760px) { .d-pc-h { font-size: 40px; } .d-pc-kpi { grid-template-columns: repeat(2, minmax(0,1fr)); } .d-pc { grid-template-columns: minmax(0,1fr); } .d-pc-r { border-left: 0; border-top: 1px solid #23273a; } .d-pc-l { padding: var(--s5); } }
@@ -404,7 +417,7 @@ td { color: var(--text-2); }
         <div class="flow">
           <div class="st"><div><span class="who">멤버</span><b>초대 › 링크 복사</b><p>przm.web.app/i/코드. 지금 그대로. 누구에게 보내든, 어디에 올리든 상관없다.</p></div></div>
           <div class="st"><div><span class="who">신청자</span><b>초대 페이지</b><p>누가 불렀는지 → 어떤 모임(30대 이상 · 매일 밤 증바람 · 지인 추천제) → 어떤 공간(디스코드 · 카카오톡 · Prism 앱/웹) → 규칙 7개 → 가입 과정 4단계. 끝에 '가입하고 싶어요'.</p></div></div>
-          <div class="st"><div><span class="who">신청자</span><b>규칙 동의 + 신청서 (1분)</b><p>롤 이름#태그 · 카카오톡 오픈프로필 이름 · 30대 이상 확인 · 주로 접속하는 시간 · 한마디(선택). 전화번호·실명은 받지 않는다.</p></div></div>
+          <div class="st"><div><span class="who">신청자</span><b>규칙 동의 + 신청서 (1분)</b><p>롤 이름#태그 · 카카오톡 오픈프로필 이름 · 주로 접속하는 시간 · 한마디(선택). 전화번호·실명은 받지 않는다.</p></div></div>
           <div class="st who-sys"><div><span class="who">Prism</span><b>대기 목록에 등록 + 면접 번호 발급</b><p>예: <b style="display:inline">P-427</b>. 같은 롤 이름의 신청이 이미 있으면 그 신청으로 안내. 봇이 운영진 두 명에게 DM, 운영 메뉴에 빨간 점.</p></div></div>
           <div class="st"><div><span class="who">신청자</span><b>면접방 오픈카톡 들어가기</b><p>완료 화면에서만 면접방 주소(와 비밀번호)를 보여 준다. 첫 인사 문구 'P-427 · 롤닉 · ○○님 초대'를 한 번에 복사. 이 기기에는 내 신청 상태 페이지가 남는다.</p></div></div>
           <div class="st who-staff"><div><span class="who">운영진 2명</span><b>면접 · 2인 확인</b><p>운영 › 가입 신청에서 '면접 시작' → 이야기 → 두 사람이 각각 '확정'을 눌러야 확정. 보류·거절은 한 명이 해도 되고 메모를 남긴다.</p></div></div>
@@ -450,7 +463,7 @@ td { color: var(--text-2); }
         <h2>저장하는 것</h2>
         <ul>
           <li>신청서: 롤 이름#태그 · 카톡 오픈프로필 이름 · 시간대 · 한마디 · 초대 코드 · 면접 번호 · 상태와 바꾼 기록 · 운영진 메모</li>
-          <li>받지 않는 것: 전화번호 · 실명 · 생년월일 (30대 이상은 체크 하나)</li>
+          <li>받지 않는 것: 전화번호 · 실명 · 나이</li>
           <li>지우는 때: 거절·정리 30일 뒤, 가입 완료되면 신청서는 회원 기록으로 옮기고 지움. 개인정보 처리방침에 함께 적는다.</li>
         </ul>
       </div>
@@ -476,7 +489,6 @@ td { color: var(--text-2); }
         <ol>
           <li>면접방 오픈카톡 주소 (비밀번호를 걸지)</li>
           <li>확정에 두 명이 꼭 필요한지 (기본: 둘 다)</li>
-          <li>나이: 체크 하나로 충분한지</li>
           <li>확정 뒤 초대 순서: 톡방 먼저 / 디스코드 먼저</li>
           <li>시안 A·B·C 중 하나 (섞어도 좋아요)</li>
         </ol>
@@ -500,8 +512,7 @@ td { color: var(--text-2); }
   <div class="screens">
     <div class="cap"><h4>투어 (눌러서 넘겨 보세요)</h4>
       <div class="phone d-phone" id="dtour">
-        <div class="bar"><svg class="gem"><use href="#gem"/></svg>PRISM<span style="margin-left:auto;letter-spacing:0;font-weight:700;color:var(--stage-3);font-size:12px" data-dcount>1 / 5</span></div>
-        <div class="d-prog" data-dprog><i class="on"></i><i></i><i></i><i></i><i></i></div>
+        <div class="bar d-bar"><svg class="gem"><use href="#gem"/></svg>PRISM<span class="d-line" aria-hidden="true"><i data-dpage></i></span></div>
         <div class="scroll">
           <div class="d-step" data-d="1"><span class="d-glow"></span>
             <small>INVITATION</small>
@@ -523,8 +534,7 @@ td { color: var(--text-2); }
               <div class="d-bars"><i style="height:10%"></i><i style="height:14%"></i><i style="height:12%"></i><i style="height:18%"></i><i style="height:26%"></i><i style="height:34%"></i><i style="height:52%"></i><i class="hot" style="height:86%"></i><i class="hot" style="height:100%"></i><i class="hot" style="height:78%"></i><i style="height:44%"></i><i style="height:20%"></i></div>
               <div class="d-axis"><span>14</span><span>15</span><span>16</span><span>17</span><span>18</span><span>19</span><span>20</span><span>21</span><span>22</span><span>23</span><span>0</span><span>1</span></div>
             </div>
-            <div class="d-split"><div><span>멤버 나이대</span><b>30대 이상 100%</b></div><div class="bar2"><i style="width:100%"></i></div></div>
-          </div>
+                      </div>
           <div class="d-step" data-d="3" hidden>
             <small>어디서 · 어떻게</small>
             <h2>세 곳에서<br>만나요</h2>
@@ -559,7 +569,6 @@ td { color: var(--text-2); }
               <div class="field"><label for="d-kakao">카카오톡 오픈프로필 이름</label><input id="d-kakao" value="은하수"><span class="hint">면접방에서 이 이름으로 찾아요</span></div>
               <div class="field"><label>주로 접속하는 시간</label><div class="chips" data-chips><button type="button">낮</button><button type="button" class="on">저녁</button><button type="button" class="on">밤</button><button type="button">새벽</button></div></div>
               <div class="field"><label for="d-say">한마디<em>선택</em></label><textarea id="d-say">Haze님 회사 동료예요!</textarea></div>
-              <label class="chk"><input type="checkbox" checked>30대 이상이에요</label>
             </div>
           </div>
           <div class="d-step" data-d="6" hidden><span class="d-glow"></span>
@@ -578,7 +587,7 @@ td { color: var(--text-2); }
             </div>
           </div>
         </div>
-        <div class="dock"><div class="d-nav"><button class="btn ghost" type="button" data-dprev hidden>이전</button><button class="btn primary block" type="button" data-dnext>둘러보기</button></div><span data-dpw hidden class="d-dock-note">들어가면 1번 비밀번호 → 2번 첫 인사 순서로</span></div>
+        <div class="dock d-dock"><span class="d-line" aria-hidden="true"><i data-dscroll></i></span><div class="d-nav"><button class="btn ghost" type="button" data-dprev hidden>이전</button><button class="btn primary block" type="button" data-dnext>둘러보기</button></div><span data-dpw hidden class="d-dock-note">들어가면 1번 비밀번호 → 2번 첫 인사 순서로</span></div>
         <div class="toast" role="status">복사했어요</div>
       </div>
     </div>
@@ -589,16 +598,16 @@ td { color: var(--text-2); }
         <div class="scroll"><div class="d-step">
           <small style="color:#34d399">확정됐어요</small>
           <h2>환영해요,<br>은하수산책 님!</h2>
-          <p class="lede">운영진이 톡방과 디스코드 초대를 보냈어요. 아래 순서대로 하면 바로 멤버가 돼요.</p>
+          <p class="lede">운영진이 톡방과 디스코드 초대를 보냈어요. 이제 하나만 남았어요.</p>
           <div class="d-chart"><div class="steps-v" style="--line:#2a2e44">
             <div class="done"><p><b style="color:var(--stage-text)">신청하기</b></p></div>
             <div class="done"><p><b style="color:var(--stage-text)">면접방에서 인사</b></p></div>
             <div class="done"><p><b style="color:var(--stage-text)">톡방 · 디스코드 초대</b><span style="color:var(--stage-3)">카카오톡을 확인해 주세요</span></p></div>
-            <div class="now"><p><b style="color:var(--stage-text)">디스코드로 로그인</b><span style="color:var(--stage-3)">롤 계정을 연결하면 신청서와 자동으로 이어져요</span></p></div>
+            <div class="now"><p><b style="color:var(--stage-text)">Prism 디스코드 들어가기</b><span style="color:var(--stage-3)">디스코드로 로그인하고 롤 계정을 연결하면 멤버가 돼요</span></p></div>
           </div></div>
           <div class="d-live"><div class="now"><b>14</b><span>지금 접속</span></div><div><b>418</b><span>이번 주 판</span></div><div><b>63</b><span>곧 멤버</span></div></div>
         </div></div>
-        <div class="dock"><a class="btn block" href="#d" data-fake style="background:var(--discord);border-color:var(--discord);color:#fff">1. 디스코드 서버 들어가기</a><a class="btn primary block" href="#d" data-fake>2. 디스코드로 로그인</a></div>
+        <div class="dock"><a class="btn block" href="#d" data-fake style="background:var(--discord);border-color:var(--discord);color:#fff"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M20.3 4.4A19.8 19.8 0 0 0 15.4 3l-.6 1.3a18.4 18.4 0 0 0-5.6 0L8.6 3a19.7 19.7 0 0 0-4.9 1.4C.6 9.1-.3 13.6.1 18.1a19.9 19.9 0 0 0 6 3l1.3-2a12.9 12.9 0 0 1-2-1l.5-.4a14.2 14.2 0 0 0 12.2 0l.5.4c-.6.4-1.3.7-2 1l1.3 2a19.8 19.8 0 0 0 6-3c.5-5.2-.8-9.7-3.6-13.7ZM8 15.4c-1.2 0-2.2-1.1-2.2-2.4S6.8 10.6 8 10.6s2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Zm8 0c-1.2 0-2.2-1.1-2.2-2.4s1-2.4 2.2-2.4 2.2 1.1 2.2 2.4-1 2.4-2.2 2.4Z"/></svg>Prism 디스코드</a></div>
       </div>
     </div>
 
@@ -630,9 +639,8 @@ td { color: var(--text-2); }
           <div><b>14</b><span>지금 접속</span></div><div><b>62<em>명</em></b><span>멤버</span></div><div><b>418<em>판</em></b><span>이번 주</span></div><div><b>71<em>%</em></b><span>같이 한 판</span></div>
         </div>
       </div>
-      <div class="d-pc-r">
-        <div class="d-prog"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
-        <small style="color:#a5b0ff;font-weight:800;font-size:12px">4 / 5 · 함께 지키는 것</small>
+      <div class="d-pc-r"><span class="d-line top" aria-hidden="true"><i style="width:80%"></i></span>
+        <small style="color:#a5b0ff;font-weight:800;font-size:12px">함께 지키는 것</small>
         <h3 style="font-size:20px;font-weight:800">하나씩 눌러 확인해 주세요</h3>
         <div style="display:grid;gap:var(--s2)">
           <div class="d-rule on"><span><b>지인 추천으로 가입</b></span><span class="tick">✓</span></div>
@@ -702,7 +710,6 @@ td { color: var(--text-2); }
           <div class="field"><label for="a-kakao">카카오톡 오픈프로필 이름</label><input id="a-kakao" value="은하수"><span class="hint">면접방에서 이 이름으로 찾아요</span></div>
           <div class="field"><label>주로 접속하는 시간<em>여러 개</em></label><div class="chips" data-chips><button type="button">낮</button><button type="button" class="on">저녁</button><button type="button" class="on">밤</button><button type="button">새벽</button></div></div>
           <div class="field"><label for="a-say">한마디<em>선택</em></label><textarea id="a-say">Haze님 회사 동료예요. 칼바람만 300판 넘게 했어요!</textarea></div>
-          <label class="chk"><input type="checkbox" id="a-c1" checked>30대 이상이에요</label>
           <label class="chk"><input type="checkbox" id="a-c2" data-need>규칙 7개를 읽었고 동의해요</label>
         </form></div>
         <div class="dock"><button class="btn primary block" type="button" data-submit="a" disabled>신청하기</button><span class="meta" style="text-align:center">초대한 멤버: Haze</span></div>
@@ -775,7 +782,6 @@ td { color: var(--text-2); }
             <div class="field"><label for="b-riot">롤 이름</label><input id="b-riot" value="은하수산책#KR1"><span class="ok">✓ 확인된 롤 계정이에요</span></div>
             <div class="field"><label for="b-kakao">카카오톡 오픈프로필 이름</label><input id="b-kakao" value="은하수"></div>
             <div class="field"><label>주로 접속하는 시간</label><div class="chips" data-chips><button type="button">낮</button><button type="button" class="on">저녁</button><button type="button" class="on">밤</button><button type="button">새벽</button></div></div>
-            <label class="chk"><input type="checkbox" checked>30대 이상이에요</label>
           </div>
         </div>
         <div class="dock"><div class="b-nav"><button class="btn" type="button" data-bprev hidden>이전</button><button class="btn primary block" type="button" data-bnext>둘러보기</button></div></div>
@@ -849,7 +855,6 @@ td { color: var(--text-2); }
             <div class="field"><label for="c-riot">롤 이름</label><input id="c-riot" value="은하수산책#KR1"><span class="ok">✓ 확인된 롤 계정이에요</span></div>
             <div class="field"><label for="c-kakao">카카오톡 오픈프로필 이름</label><input id="c-kakao" value="은하수"></div>
             <div class="field"><label>주로 접속하는 시간</label><div class="chips" data-chips><button type="button">낮</button><button type="button" class="on">저녁</button><button type="button" class="on">밤</button><button type="button">새벽</button></div></div>
-            <label class="chk"><input type="checkbox" checked>30대 이상이에요</label>
             <label class="chk"><input type="checkbox" id="c-c2">규칙 7개에 동의해요</label>
             <button class="btn primary block" type="button" data-csub disabled>신청하기</button>
           </div>
@@ -1000,27 +1005,28 @@ td { color: var(--text-2); }
   // 시안 D: 무대 위 투어
   {
     const t = document.getElementById('dtour');
-    const st = t.querySelectorAll('[data-d]'), pr = t.querySelectorAll('[data-dprog] i');
-    const nx = t.querySelector('[data-dnext]'), pv = t.querySelector('[data-dprev]'), ct = t.querySelector('[data-dcount]'), pw = t.querySelector('[data-dpw]');
+    const st = t.querySelectorAll('[data-d]');
+    const nx = t.querySelector('[data-dnext]'), pv = t.querySelector('[data-dprev]'), pw = t.querySelector('[data-dpw]');
+    const page = t.querySelector('[data-dpage]'), bar = t.querySelector('[data-dscroll]'), sc = t.querySelector('.scroll');
+    const pos = () => { const max = sc.scrollHeight - sc.clientHeight; bar.parentElement.classList.toggle('none', max < 4); bar.style.width = max < 4 ? '0' : `${Math.round((sc.scrollTop / max) * 100)}%`; };
+    sc.addEventListener('scroll', pos, { passive: true });
     const rs = t.querySelectorAll('.d-rule'), cnt = t.querySelector('[data-dcnt] b');
     const lab = ['', '둘러보기', '다음', '다음', '모두 확인했어요', '신청하기', '면접방 들어가기'];
     let k = 1;
     const go = () => {
       st.forEach((s) => { s.hidden = Number(s.dataset.d) !== k; });
-      pr.forEach((p, i) => p.classList.toggle('on', i < Math.min(k, 5)));
-      t.querySelector('[data-dprog]').hidden = k === 6;
-      ct.textContent = k === 6 ? '완료' : `${k} / 5`;
+      page.style.width = `${Math.min(k, 5) / 5 * 100}%`;
       pv.hidden = k === 1 || k === 6; nx.textContent = lab[k];
       nx.className = k === 6 ? 'btn kakao block' : 'btn primary block';
       pw.hidden = k !== 6;
       const n = [...rs].filter((r) => r.classList.contains('on')).length; cnt.textContent = n;
       nx.disabled = k === 4 && n < rs.length;
     };
-    const top = () => { t.querySelector('.scroll').scrollTop = 0; };
+    const top = () => { sc.scrollTop = 0; pos(); };
     rs.forEach((r) => r.addEventListener('click', () => { r.classList.toggle('on'); go(); }));
     nx.addEventListener('click', () => { if (k < 6) k++; else { k = 1; rs.forEach((r) => r.classList.remove('on')); } go(); top(); });
     pv.addEventListener('click', () => { if (k > 1) { k--; go(); top(); } });
-    go();
+    go(); pos();
   }
 
 
