@@ -72,7 +72,7 @@
 * { box-sizing: border-box; }
 html, body { margin: 0; }
 /* iPhone: 가로로 돌려도 글자가 저절로 커지지 않게 */
-html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; background: var(--bg); }
 body { background: var(--bg); color: var(--text); font: 400 var(--fs-md)/1.55 "Pretendard Variable", Pretendard, system-ui, sans-serif; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; min-height: 100vh; }
 /* 한국어 줄바꿈 (v3.81): 단어(띄어쓰기 단위)를 쪼개지 않는다 — '2개'가 '2 / 개'로 갈라지지 않게.
    너무 긴 단어(주소·영문)는 칸을 넘치지 않게만 끊는다. 문단은 마지막 줄에 한두 글자만 남지 않게(pretty), 제목은 줄 길이를 고르게(balance) */

@@ -32,8 +32,10 @@ main { min-height: calc(100vh - 64px); }
   .me-btn { padding: 0; background: none; }
   .top-wide { display: none; }
   .menu-btn { display: grid !important; }
-  .mmenu { display: block; position: fixed; inset: 0; z-index: 60; pointer-events: none; }
-  .mmenu.open { pointer-events: auto; }
+  /* 닫혀 있을 때는 보이지 않게 — 아이폰 사파리(iOS 26)는 화면에 걸친 고정 요소의 바탕으로 아래 주소 막대·옆 영역을 칠해,
+     닫힌 메뉴가 늘 깔려 있으면 페이지가 그 뒤로 이어지지 않고 잘려 보였다. 닫히는 움직임(0.24초)이 끝난 뒤 숨긴다 */
+  .mmenu { display: block; position: fixed; inset: 0; z-index: 60; pointer-events: none; visibility: hidden; transition: visibility 0s .24s; }
+  .mmenu.open { pointer-events: auto; visibility: visible; transition: none; }
   .mmenu-scrim { position: absolute; inset: 0; border: 0; background: rgba(0, 0, 0, .45); opacity: 0; transition: opacity .2s ease; }
   .mmenu.open .mmenu-scrim { opacity: 1; }
   .mmenu-panel { position: absolute; top: 0; right: 0; bottom: 0; width: min(320px, 86vw); display: flex; flex-direction: column; gap: var(--s4); padding: var(--s3) var(--s4) calc(var(--s4) + env(safe-area-inset-bottom)); background: var(--bg); border-left: 1px solid var(--line); box-shadow: -16px 0 40px rgba(0, 0, 0, .25); transform: translateX(105%); transition: transform .24s cubic-bezier(.2, .8, .2, 1); overflow-y: auto; }
