@@ -1,6 +1,6 @@
 [package]
 name = "prism-desktop"
-version = "1.0.24"
+version = "1.0.25"
 description = "Prism — 아수라장 동반 앱"
 edition = "2021"
 publish = false

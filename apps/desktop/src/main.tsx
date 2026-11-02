@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { NavLive, LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, rememberHub, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, rememberHub, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, SITE_URL, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { pollWhileShown } from './poll';
 import { checkNow, clearAttend, getState, refreshSession, start, subscribe, type State } from './controller';
@@ -192,7 +192,7 @@ function App() {
                 <div key={to} className={`side-hub ${on ? 'on' : ''}`}>
                   <NavLink to={hubHref(hub, hubAllow)} className={() => (on ? 'active' : '')} aria-expanded={on}><Icon name={i} />{l}{badge}<Icon name="chevR" className="hub-chev" /></NavLink>
                   {/* 지금 허브만 아래로 펼친다: 세로선 + 고른 줄에 파란 막대 (시안 B) */}
-                  <div className={`side-sub ${on ? 'open' : ''}`} aria-hidden={!on}><div>{tabs.map((t) => <NavLink key={t.to} to={t.to} tabIndex={on ? 0 : -1}>{t.label}{t.to === '/crew' && (s.me?.nowLive ?? 0) > 0 && <NavLive n={s.me!.nowLive!} />}{t.to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
+                  <div className={`side-sub ${on ? 'open' : ''}`} aria-hidden={!on}><div>{tabs.map((t) => <NavLink key={t.to} to={t.to} tabIndex={on ? 0 : -1}>{t.to === '/crew' && (s.me?.nowLive ?? 0) > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={s.me!.nowLive!} /></> : t.label}{t.to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
                 </div>
               );
             })}

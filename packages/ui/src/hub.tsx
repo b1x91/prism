@@ -5,7 +5,7 @@
  */
 import { useLayoutEffect, useRef } from 'react';
 import type { Hub } from './navgroups';
-import { NavLive } from './basics';
+import { LiveDot } from './basics';
 
 /** 탭을 옮겨도 밑줄이 이전 자리에서 미끄러지도록 마지막 위치를 허브마다 기억 */
 const lastInk = new Map<string, [number, number]>();
@@ -47,8 +47,8 @@ export function HubTabs({ hub, path, onGo, dots, counts, live, hide }: {
           const n = counts?.[t.to] ?? 0;
           return (
             <button key={t.to} type="button" role="tab" aria-selected={on} title={t.hint} className={on ? 'on' : ''} onClick={() => { if (path !== t.to) onGo(t.to); }}>
-              {t.label}
-              {(live?.[t.to] ?? 0) > 0 ? <NavLive n={live![t.to]} /> : n > 0 ? <span className="hh-cnt">{n}</span> : dots?.[t.to] ? <i className="hh-dot" aria-label="새 소식" /> : null}
+              {(live?.[t.to] ?? 0) > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={live![t.to]} /></> : t.label}
+              {(live?.[t.to] ?? 0) > 0 ? null : n > 0 ? <span className="hh-cnt">{n}</span> : dots?.[t.to] ? <i className="hh-dot" aria-label="새 소식" /> : null}
             </button>
           );
         })}

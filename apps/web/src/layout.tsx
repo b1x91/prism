@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { NavLive, LiveDot, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, hubAt, hubHref, hubOf, rememberHub, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, hubAt, hubHref, hubOf, rememberHub, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -27,7 +27,7 @@ function TopItem({ to, label }: { to: string; label: string }) {
     <span className="tab-hub">
       <NavLink to={hubHref(hub, allow)} className={() => [on ? 'active' : '', live ? '' : dotOf(me, to) ?? ''].join(' ').trim()} aria-haspopup="true">{label}{live}<Icon name="chevD" className="tab-chev" /></NavLink>
       <span className="hub-drop" role="menu" aria-label={label}>
-        {hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} role="menuitem"><span className="hd-ic"><Icon name={t.icon} /></span><span className="hd-t"><b>{t.label}{t.to === '/crew' && nl > 0 && <NavLive n={nl} />}{dotOf(me, t.to) && t.to === '/news' && <i className="hd-dot" aria-label="새 소식" />}</b><small>{t.hint}</small></span></NavLink>)}
+        {hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} role="menuitem"><span className="hd-ic"><Icon name={t.icon} /></span><span className="hd-t"><b>{t.to === '/crew' && nl > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={nl} /></> : t.label}{dotOf(me, t.to) && t.to === '/news' && <i className="hd-dot" aria-label="새 소식" />}</b><small>{t.hint}</small></span></NavLink>)}
       </span>
     </span>
   );
@@ -167,7 +167,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           const on = hubOf(pathname) === hub;
           return <div key={to} className={`mmenu-hub ${on ? 'on' : ''}`}>
             <NavLink to={hubHref(hub, allow)} className={() => (on ? 'active' : '')} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{badge}<Icon name="chevR" className="hub-chev" /></NavLink>
-            <div className={`mmenu-sub ${on ? 'open' : ''}`}><div>{hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} tabIndex={open && on ? 0 : -1}>{t.label}{t.to === '/crew' && (me?.nowLive ?? 0) > 0 && <NavLive n={me!.nowLive!} />}{t.to === '/news' && (me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
+            <div className={`mmenu-sub ${on ? 'open' : ''}`}><div>{hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} tabIndex={open && on ? 0 : -1}>{t.to === '/crew' && (me?.nowLive ?? 0) > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={me!.nowLive!} /></> : t.label}{t.to === '/news' && (me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
           </div>;
         })}</div>)}</nav>
         <span className="sp" />
