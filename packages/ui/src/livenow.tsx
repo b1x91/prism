@@ -3,8 +3,10 @@
  * 앱이 알린 단계·챔프 + 같은 판의 NOW 줄에서 같은 팀·상대 팀 회원. 30초마다(화면이 보일 때만) 다시 본다.
  */
 import { useEffect, useState } from 'react';
-import { CHAMPIONS, cdragon, type Api, type MemberLive } from '@prism/core';
+import { AUGMENT, CHAMPIONS, cdragon, shortNick, type Api, type LiveBoardPlayer, type MemberLive } from '@prism/core';
 import { ChampImg, MemberFace } from './basics';
+import { AugRing, AugmentLink } from './augment';
+import { ItemIcon } from './game';
 import { imgIn } from './skeleton';
 
 const POLL = 30_000;
@@ -55,7 +57,9 @@ export function LiveNow({ live, meId, over, onMember }: { live: MemberLive; meId
       </div>
     );
   };
-  const teams = game && (live.allies.length > 0 || live.foes.length > 0);
+  const board = game ? live.board : null;
+  const teams = !board && game && (live.allies.length > 0 || live.foes.length > 0);
+  const gameMin = board && board.time > 0 ? Math.max(1, Math.floor(board.time / 60)) : minsOf(live.since);
   return (
     <section className={`card live-now ${game ? 'game' : 'select'} ${over ? 'over' : ''}`} aria-live="polite">
       {c?.splash && <img className="ln-bg fi" src={cdragon(c.splash)} alt="" {...imgIn} />}
@@ -63,7 +67,7 @@ export function LiveNow({ live, meId, over, onMember }: { live: MemberLive; meId
         <div className="ln-main">
           {live.champ ? <ChampImg id={live.champ} size={56} className="ln-icon" /> : <span className="ln-icon ln-wait" />}
           <div className="ln-t">
-            <span className="ln-state"><i className="ln-dot" />{game ? `게임 중 · ${minsOf(live.since)}분째` : '챔프 고르는 중'}{game && live.custom ? <em>사용자 설정</em> : null}</span>
+            <span className="ln-state"><i className="ln-dot" />{game ? `게임 중 · ${gameMin}분째` : '챔프 고르는 중'}{game && live.custom ? <em>사용자 설정</em> : null}</span>
             <b className="ln-champ">{c?.name ?? (game ? '게임 중' : '챔프를 고르고 있어요')}</b>
             {(withMe || vsMe) && <span className={`ln-me ${vsMe ? 'vs' : ''}`}>{vsMe ? '나와 맞대결 중' : '나와 같은 팀'}</span>}
           </div>
@@ -73,6 +77,35 @@ export function LiveNow({ live, meId, over, onMember }: { live: MemberLive; meId
           {(live.foes.length > 0) && side(live.foes, live.foeSize, true)}
         </div>}
       </div>
+      {board && (board.mine.length > 0 || board.theirs.length > 0) && <div className="ln-board">
+        <BoardTeam title="우리 팀" list={board.mine} meId={meId} onMember={onMember} />
+        <BoardTeam title="상대 팀" foe list={board.theirs} meId={meId} onMember={onMember} />
+        <p className="ln-note">{board.mine.concat(board.theirs).some((p) => p.augments.length) ? '' : '증강은 게임이 알려 주는 만큼만 보여요. '}1분마다 새로 받아요 · {Math.max(0, Math.round((Date.now() - board.at) / 60_000))}분 전</p>
+      </div>}
     </section>
+  );
+}
+
+/** 한 팀 줄: 챔프 · 이름(회원이면 얼굴·누르면 회원 페이지) · 레벨 · KDA · 증강 · 아이템 */
+function BoardTeam({ title, list, foe, meId, onMember }: { title: string; list: LiveBoardPlayer[]; foe?: boolean; meId?: string; onMember?: (id: string) => void }) {
+  const kills = list.reduce((n, p) => n + p.k, 0);
+  return (
+    <div className={`lvb-team ${foe ? 'foe' : ''}`}>
+      <header><b>{title}</b><span>{kills} 킬</span></header>
+      {list.map((p, i) => (
+        <div key={i} className={`lvb-row ${p.me ? 'me' : ''} ${p.member?.id === meId ? 'viewer' : ''}`}>
+          <span className="lvb-champ">{p.champ ? <ChampImg id={p.champ} size={36} /> : <i className="lvb-blank" />}{p.level > 0 && <em>{p.level}</em>}</span>
+          <span className="lvb-who">
+            {p.member ? <button type="button" className="lvb-name" onClick={() => onMember?.(p.member!.id)}><MemberFace nick={p.member.nick} skin={p.member.skin} champion={p.member.main} size={20} />{shortNick(p.member.nick)}</button>
+              : <span className="lvb-name guest">{p.name}</span>}
+            <small>{CHAMPIONS[p.champ]?.name ?? ''}</small>
+          </span>
+          <span className="lvb-kda"><b>{p.k}</b>/<b className="d">{p.d}</b>/<b>{p.a}</b></span>
+          <span className="lvb-augs">{p.augments.length ? p.augments.slice(0, 6).map((a, j) => AUGMENT[a]
+            ? <AugmentLink key={`${a}-${j}`} id={a} champion={p.champ} className="lvb-aug"><AugRing id={a} size={26} /></AugmentLink> : null) : <span className="lvb-none">증강 정보 없음</span>}</span>
+          <span className="lvb-items">{p.items.slice(0, 7).map((x, j) => <ItemIcon key={`${x}-${j}`} id={x} size={22} />)}</span>
+        </div>
+      ))}
+    </div>
   );
 }

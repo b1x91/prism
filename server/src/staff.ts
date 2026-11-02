@@ -348,6 +348,19 @@ export async function lookupMembers(env: Env, me: Member, q: string | null) {
   return json({ members });
 }
 
+/** GET /api/members/search?q= — 멤버 화면 '멤버 검색' (v3.149): 롤 이름·디스코드 이름으로 모든 회원 (최대 8명, 승인 대기 표시) */
+export async function searchMembers(env: Env, q: string | null) {
+  const t = (q ?? '').trim().replace(/[%_]/g, '').slice(0, 30);
+  if (!t) return json({ members: [] });
+  const like = `%${t}%`;
+  const { results } = await env.DB.prepare(
+    `SELECT m.id, m.nick, ${FACE('m')}, m.tier, m.discord_roles, m.app_first_at FROM members m
+     WHERE m.nick LIKE ?1 OR m.riot_id LIKE ?1 OR m.discord_name LIKE ?1
+     ORDER BY CASE WHEN m.nick LIKE ?2 THEN 0 ELSE 1 END, MAX(COALESCE(m.app_seen_at, 0), COALESCE(m.web_seen_at, 0), COALESCE(m.last_seen_at, 0)) DESC LIMIT 8`,
+  ).bind(like, `${t}%`).all<Record<string, any>>();
+  return json({ members: results.map(({ tier, discord_roles, app_first_at, ...r }) => ({ ...r, pending: isPending({ tier, discord_roles, app_first_at }) })) });
+}
+
 /** GET /public/invite/:code — 초대 받은 사람에게 보여 줄 초대한 사람 (이름·얼굴만, 로그인 없이) */
 export async function publicInvite(env: Env, code: string) {
   const m = await env.DB.prepare(`SELECT m.nick, ${FACE('m')} FROM members m WHERE m.invite_code = ?`).bind(code).first<{ nick: string; skin: number | null; main: number | null }>();

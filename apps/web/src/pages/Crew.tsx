@@ -1,4 +1,4 @@
-import { Empty, InviteHow, AppMembers, NowCard, InviteCard, BoardView, ChannelButtons, CrewPulse, Gem, Icon, DiscordNowCard, Lines, PageSkeleton, ProspectBoard } from '@prism/ui';
+import { Empty, InviteHow, AppMembers, NowCard, InviteCard, BoardView, MemberSearch, ChannelButtons, CrewPulse, Gem, Icon, DiscordNowCard, Lines, PageSkeleton, ProspectBoard } from '@prism/ui';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session';
 import { shortNick } from '@prism/core';
@@ -45,7 +45,7 @@ export function Crew() {
   if (!me) return <Intro />;
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <div className="page-head crew-head"><div><h1 className="hub-h">Prism</h1><p>{shortNick(me.nick)}님, 오늘 밤도 한 판.</p></div><ChannelButtons links={links} /></div>
+      <div className="page-head crew-head"><div><h1 className="hub-h">Prism</h1><p>{shortNick(me.nick)}님, 오늘 밤도 한 판.</p></div><MemberSearch api={api} onOpen={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} /><ChannelButtons links={links} /></div>
       <DiscordNowCard api={api} admin={me.tier === 'admin'} />
       <NowCard api={api} meId={me.id} canDraw={Boolean(me.canScrim)} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />
       <CrewPulse api={api} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />

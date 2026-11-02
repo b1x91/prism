@@ -4407,3 +4407,54 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .sj-err-t { font-size: var(--fs-sm); color: var(--lose); }
 @media (max-width: 1180px) { .sj-board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .sj-board { grid-template-columns: minmax(0, 1fr); } .sj-room-row { grid-template-columns: minmax(0, 1fr); } }
+.rmore { justify-self: center; margin-top: var(--s3); }
+.recent .rmore { display: flex; margin-left: auto; margin-right: auto; }
+.rmore svg { width: 14px; height: 14px; }
+
+/* ── 멤버 검색 (v3.149, MemberSearch) ── */
+.msearch { position: relative; flex: 0 1 320px; min-width: 200px; }
+.msearch-in { display: flex; align-items: center; gap: var(--s2); height: 40px; padding: 0 var(--s3); border-radius: var(--r-pill); border: 1px solid var(--line-2); background: var(--surface); color: var(--text-3); }
+.msearch-in:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.msearch-in > svg { width: 16px; height: 16px; flex: none; }
+.msearch-in input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; color: var(--text); font: inherit; font-size: var(--fs-md); outline: none; }
+.msearch-x { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--text-3); cursor: pointer; }
+.msearch-x svg { width: 12px; height: 12px; }
+.msearch-pop { position: absolute; left: 0; right: 0; top: calc(100% + var(--s2)); z-index: 30; display: grid; gap: 2px; padding: var(--s2); border-radius: var(--r-l); background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow); max-height: 360px; overflow-y: auto; }
+.msearch-row { display: flex; align-items: center; gap: var(--s3); padding: var(--s2); border: 0; border-radius: var(--r-m); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.msearch-row.on { background: var(--surface-2); }
+.msearch-row > svg { width: 14px; height: 14px; margin-left: auto; color: var(--text-3); flex: none; }
+.msearch-nick { min-width: 0; font-size: var(--fs-md); font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.msearch-nick small { margin-left: 2px; font-size: var(--fs-xs); font-weight: 600; color: var(--text-3); }
+.msearch-msg { padding: var(--s3); font-size: var(--fs-sm); color: var(--text-3); }
+@media (max-width: 640px) { .msearch { flex: 1 1 100%; order: 3; } }
+
+/* ── 회원 페이지 '지금 게임 중' 양 팀 표 (v3.149, LiveNow BoardTeam) — 랭킹 무대 .lb-* 와 겹치지 않게 lvb- ── */
+.ln-board { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); padding: 0 var(--s5) var(--s4); }
+.ln-note { grid-column: 1 / -1; font-size: var(--fs-xs); color: rgba(255, 255, 255, .5); }
+.lvb-team { display: grid; gap: 2px; align-content: start; padding: var(--s3); border-radius: var(--r-m); background: rgba(255, 255, 255, .05); box-shadow: inset 0 2px 0 #5b8cff; min-width: 0; }
+.lvb-team.foe { box-shadow: inset 0 2px 0 #ff5d6c; }
+.lvb-team > header { display: flex; justify-content: space-between; align-items: baseline; padding: 0 var(--s1) var(--s2); font-size: var(--fs-sm); }
+.lvb-team > header span { font-size: var(--fs-xs); color: rgba(255, 255, 255, .6); font-variant-numeric: tabular-nums; }
+.lvb-row { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; grid-template-areas: 'c w k' 'c a i'; gap: 2px var(--s3); align-items: center; padding: var(--s2) var(--s1); border-radius: var(--r-s); }
+.lvb-row.me { background: rgba(134, 239, 172, .1); }
+.lvb-row.viewer { background: rgba(165, 176, 255, .12); }
+.lvb-champ { grid-area: c; position: relative; line-height: 0; align-self: start; }
+.lvb-champ img { border-radius: var(--r-s); }
+.lvb-champ em { position: absolute; right: -4px; bottom: -4px; min-width: 18px; height: 16px; padding: 0 3px; border-radius: 8px; background: #0d1017; color: #f3f3f7; font-style: normal; font-size: 11px; font-weight: 800; line-height: 16px; text-align: center; box-shadow: 0 0 0 1px rgba(255, 255, 255, .2); }
+.lvb-blank { display: block; width: 36px; height: 36px; border-radius: var(--r-s); background: rgba(255, 255, 255, .08); }
+.lvb-who { grid-area: w; display: flex; align-items: baseline; gap: var(--s2); min-width: 0; }
+.lvb-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; padding: 0; border: 0; background: none; color: #f3f3f7; font: inherit; font-size: var(--fs-sm); font-weight: 750; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+button.lvb-name:hover { text-decoration: underline; }
+.lvb-name.guest { cursor: default; color: rgba(255, 255, 255, .78); font-weight: 650; }
+.lvb-who small { font-size: var(--fs-xs); color: rgba(255, 255, 255, .5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lvb-kda { grid-area: k; font-size: var(--fs-sm); color: rgba(255, 255, 255, .5); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lvb-kda b { color: #f3f3f7; font-weight: 750; }
+.lvb-kda b.d { color: #ffadb5; }
+.lvb-augs { grid-area: a; display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
+.lvb-aug { line-height: 0; }
+.lvb-none { font-size: var(--fs-xs); color: rgba(255, 255, 255, .35); }
+.lvb-items { grid-area: i; display: flex; gap: 2px; justify-content: flex-end; }
+.lvb-items img { border-radius: 4px; }
+@media (max-width: 900px) { .ln-board { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 520px) { .ln-board { padding: 0 var(--s3) var(--s3); } .lvb-row { grid-template-areas: 'c w k' 'c a a' 'c i i'; } .lvb-items { justify-content: flex-start; } }
+.crew-head > h1 + .msearch { margin-right: auto; }

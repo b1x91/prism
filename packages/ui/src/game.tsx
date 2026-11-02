@@ -102,8 +102,12 @@ function GameTip({ g }: { g: CardGame }) {
   );
 }
 
-export function RecentGames({ games, onChampion, limit = 12, title = '최근 판' }: { games: CardGame[]; onChampion?: (id: number) => void; limit?: number; title?: string }) {
+export function RecentGames({ games, onChampion, limit = 12, max, title = '최근 판' }: { games: CardGame[]; onChampion?: (id: number) => void; limit?: number; /** '더 보기'로 여기까지 (v3.149: 회원 페이지 20판) */ max?: number; title?: string }) {
   const [open, setOpen] = useState(readOpen);
+  const [all, setAll] = useState(false);
+  const cap = max ?? limit;
+  const shown = Math.min(games.length, all ? cap : open ? limit : 10);
+  const more = !all && games.length > shown && cap > shown;
   const [match, setMatch] = useState<CardGame | null>(null);
   const toggle = () => { const v = !open; setOpen(v); try { localStorage.setItem(KEY, v ? '1' : '0'); } catch { /* 저장소 없음 */ } };
   const ten = games.slice(0, 10), w = ten.filter((g) => g.win).length;
@@ -116,8 +120,8 @@ export function RecentGames({ games, onChampion, limit = 12, title = '최근 판
         {games.length > 0 && <button type="button" className={`btn ghost sm rtoggle ${open ? 'on' : ''}`} onClick={toggle} aria-expanded={open}>{open ? '접기' : '자세히 보기'}<Icon name="arrow" /></button>}
       </div>
       {!games.length ? <Empty>아직 기록된 판이 없습니다. 첫 판이 끝나면 여기에 나타납니다.</Empty> : open
-        ? <div className="rbody" key="open"><GameList games={games} onOpen={setMatch} limit={limit} /></div>
-        : <div className="rstrip rbody" key="strip">{ten.map((g) => {
+        ? <div className="rbody" key="open"><GameList games={games} onOpen={setMatch} limit={shown} /></div>
+        : <div className="rstrip rbody" key="strip">{games.slice(0, shown).map((g) => {
           const c = CHAMPIONS[g.championId];
           return (
             <Hover key={g.gameId} tip={<GameTip g={g} />} className={`rcard ${g.win ? 'is-w' : 'is-l'}`}>
@@ -129,6 +133,7 @@ export function RecentGames({ games, onChampion, limit = 12, title = '최근 판
             </Hover>
           );
         })}</div>}
+      {more && <button type="button" className="btn ghost sm rmore" onClick={() => setAll(true)}>더 보기 · 최근 {Math.min(games.length, cap)}판까지<Icon name="chevD" /></button>}
       {match && <MatchDialog g={match} onClose={() => setMatch(null)} onChampion={onChampion} />}
     </section>
   );

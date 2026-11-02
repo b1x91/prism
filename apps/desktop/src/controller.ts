@@ -323,6 +323,10 @@ async function reportGameStart() {
   const players = [...side(g.teamOne, 100), ...side(g.teamTwo, 200)];
   if (!players.length) return;
   gameKey = id;
+  liveQueue = Number(g.queue?.id ?? 0);
+  // 회원 페이지 상세: 로딩 화면 동안에도 양 팀 챔프가 보이게 한 번 (v3.149)
+  liveSent = true;
+  void api.post('/api/me/live', { key: id, queue: liveQueue, time: 0, players }).catch(() => {});
   await api.post('/api/now/game', { key: id, queue: Number(g.queue?.id ?? 0), players }).catch(() => { gameKey = ''; });
 }
 async function reportGameLive(raw: any) {
@@ -346,6 +350,37 @@ function endGame() {
   void api.post('/api/now/game', { end: k }).catch(() => {});
 }
 
+/**
+ * 회원 페이지 '지금 게임 중' 상세 (v3.149): 게임 중 1분마다 그 판의 10명(챔프·레벨·KDA·아이템·증강)을 서버에 알린다.
+ * 게임 시작 순간엔 롤 클라이언트의 게임 정보(챔프만), 로딩이 끝나면 라이브 클라이언트 데이터(게임이 내 PC 안에 여는 읽기 전용 점수판).
+ * 롤 클라이언트(LCU)는 게임 중 요청 0 그대로. 'NOW에 자동으로 올리기'를 끈 회원은 보내지 않는다. 게임이 끝나면 지운다.
+ */
+let liveAt = 0, liveSent = false, liveQueue = 2400;
+const liveKeyOf = (players: { riotId?: string }[]) => {
+  const names = players.map((p) => (p.riotId ?? '').toLowerCase()).sort().join('|');
+  let h = 5381;
+  for (let i = 0; i < names.length; i++) h = ((h << 5) + h + names.charCodeAt(i)) >>> 0;
+  return `l${h.toString(36)}`;
+};
+async function liveReport() {
+  if (!canReportGame() || Date.now() - liveAt < 60_000) return;
+  liveAt = Date.now();
+  const raw = await bridge.liveGame().catch(() => null) as any;
+  if (!Array.isArray(raw?.players) || raw.players.length < 2) { liveAt = Date.now() - 45_000; return; } // 아직 로딩 화면: 15초 뒤 다시
+  const players = raw.players.map((p: any) => {
+    const lp = parseLive({ players: [p], me: '' })?.players[0];
+    const riotId = typeof p?.riotId === 'string' ? p.riotId : p?.riotIdGameName ? `${p.riotIdGameName}#${p.riotIdTagLine ?? ''}` : typeof p?.summonerName === 'string' ? p.summonerName : undefined;
+    return { riotId, team: String(p?.team) === 'CHAOS' ? 200 : 100, champ: lp?.championId ?? 0, level: Number(p?.level) || 0, k: lp?.k ?? 0, d: lp?.d ?? 0, a: lp?.a ?? 0, items: lp?.items ?? [], augments: lp?.augments ?? [] };
+  });
+  liveSent = true;
+  await api.post('/api/me/live', { key: gameKey || liveKeyOf(players), queue: liveQueue, time: Number(raw.time) || 0, players }).catch(() => {});
+}
+function liveEnd() {
+  if (!liveSent) return;
+  liveSent = false; liveAt = 0;
+  void api.post('/api/me/live', { end: true }).catch(() => {});
+}
+
 /** 3개 비교 화면에서 직접 고친 조합 */
 export function editMatchup(m: { allies: number[]; enemies: number[] }) {
   setMatchup({ ...m, source: 'manual', at: Date.now() });
@@ -357,6 +392,7 @@ async function tick(): Promise<number> {
     wasInGame = true;
     set({ status: 'in-game', message: '게임 중', champSelect: null });
     void liveFill();
+    void liveReport();
     return INTERVAL.inGame;
   }
   if (!st.client) {
@@ -377,6 +413,7 @@ async function tick(): Promise<number> {
     if (starting && state.matchup?.source !== 'game') await loadMatchup().catch(() => {});
     if (starting && !gameKey) await reportGameStart().catch(() => {});
     if (!starting && gameKey) endGame();
+    if (!starting) liveEnd();
     if (phase === 'ChampSelect') await loadChampSelect();
     else { if (state.champSelect) set({ champSelect: null }); crewKey = ''; }
     // 챔프 선택이 끝나고 게임 창이 뜨기 전(GameStart·InProgress·Reconnect)도 '게임 중'으로 본다 —

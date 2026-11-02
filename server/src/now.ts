@@ -248,14 +248,20 @@ export type MemberLive = {
   phase: 'game' | 'select'; champ: number | null; since: number; custom: boolean;
   allies: (Face & { champ: number | null })[]; foes: (Face & { champ: number | null })[];
   allySize: number; foeSize: number;
+  /** 양 팀 10명 (v3.149, 앱이 1분마다 알린 것) */
+  board?: LiveBoard | null;
 };
 export async function memberLive(env: Env, id: string) {
   const now = Date.now();
   const m = await env.DB.prepare('SELECT app_phase AS phase, app_champ AS champ, app_phase_at AS at, app_seen_at AS seen, app_lol AS lol FROM members WHERE id = ?')
     .bind(id).first<{ phase: string | null; champ: number | null; at: number | null; seen: number | null; lol: number | null }>();
-  if (!m || !m.lol || now - (m.seen ?? 0) > 150_000 || (m.phase !== 'game' && m.phase !== 'select')) return json({ live: null });
-  const live: MemberLive = { phase: m.phase, champ: m.champ || null, since: m.at || now, custom: false, allies: [], foes: [], allySize: 0, foeSize: 0 };
-  if (m.phase === 'game') {
+  const lb = await liveBoard(env, id, now);
+  const own = m && m.lol && now - (m.seen ?? 0) <= 150_000 && (m.phase === 'game' || m.phase === 'select');
+  if (!own && !lb) return json({ live: null });
+  const phase: 'game' | 'select' = own && m!.phase === 'select' && !lb ? 'select' : 'game';
+  const live: MemberLive = { phase, champ: (own && m!.champ) || lb?.board.mine.find((p) => p.me)?.champ || null, since: (own && m!.at) || lb?.started || now, custom: false, allies: [], foes: [], allySize: 0, foeSize: 0, board: lb?.board ?? null };
+  if (lb) { live.since = Math.min(live.since, lb.started); live.custom = lb.board.custom; }
+  if (phase === 'game') {
     await prune(env, now);
     const row = await env.DB.prepare(
       `SELECT * FROM now_lobbies WHERE phase = 'game' AND EXISTS (SELECT 1 FROM json_each(members) WHERE value = ?1)
@@ -282,11 +288,78 @@ export async function memberLive(env: Env, id: string) {
       if (me?.c) live.champ = me.c;
       live.allies = conv(mine); live.foes = conv(theirs);
       live.allySize = Math.max(0, mineN - 1); live.foeSize = theirN;
-      live.custom = row.kind === 'scrim' || (row.kind === 'game' && row.size === 0);
+      live.custom = live.custom || row.kind === 'scrim' || (row.kind === 'game' && row.size === 0);
       live.since = Math.min(live.since, row.created_at);
     }
   }
   return json({ live });
+}
+
+// ───────── 회원 페이지 '지금 게임 중' 상세 (v3.149) ─────────
+
+const LIVE_FRESH = 5 * 60_000;      // 1분마다 오므로 5분 소식이 없으면 끝난 것으로
+type LiveP = { n: string; id?: string; c: number; t: '100' | '200'; lv: number; k: number; d: number; a: number; it: number[]; au: number[] };
+const nums = (v: unknown, max: number) => (Array.isArray(v) ? v.map(Number).filter((x) => Number.isInteger(x) && x > 0 && x < 1e7).slice(0, max) : []);
+
+/**
+ * POST /api/me/live — 게임 중 회원 앱이 1분마다 (게임 시작 순간엔 롤 클라이언트, 그 뒤엔 라이브 클라이언트 데이터).
+ * body: { key, queue, time, players: [{ puuid?, riotId?, team, champ, level?, k?, d?, a?, items?, augments? }] } · 끝나면 { end: true }.
+ * 회원은 ID 로, 비회원은 이름(태그 없이)만 남긴다.
+ */
+export async function reportLive(env: Env, me: Member, body: Record<string, unknown>) {
+  const now = Date.now();
+  if (body.end) { await env.DB.prepare('DELETE FROM live_games WHERE member_id = ?').bind(me.id).run(); return json({ ok: true }); }
+  const key = str(body.key, 100);
+  if (!key) throw new HttpError(400, 'key');
+  const raw = (Array.isArray(body.players) ? body.players : []).slice(0, 10) as any[];
+  if (raw.length < 2) return json({ ok: true });
+  const riots = raw.map((x) => str(x?.riotId, 60)?.toLowerCase()).filter(Boolean);
+  const puuids = raw.map((x) => str(x?.puuid, 100)).filter(Boolean);
+  const { results } = await env.DB.prepare(
+    `SELECT id, riot_puuid AS p, lower(riot_id) AS r, now_auto AS a FROM members WHERE riot_puuid IN (SELECT value FROM json_each(?1)) OR lower(riot_id) IN (SELECT value FROM json_each(?2))`,
+  ).bind(JSON.stringify(puuids), JSON.stringify(riots)).all<{ id: string; p: string | null; r: string | null; a: number }>();
+  const players: LiveP[] = raw.map((x) => {
+    const riot = str(x?.riotId, 60);
+    // 알린 회원 자신은 내 롤 이름으로 먼저 (같은 이름이 둘이어도 나로)
+    const mine = (x?.puuid && x.puuid === me.riot_puuid) || (riot && me.riot_id && riot.toLowerCase() === me.riot_id.toLowerCase());
+    const m = mine ? { id: me.id, a: me.now_auto ?? 1 } : results.find((r) => (x?.puuid && r.p === x.puuid) || (riot && r.r === riot.toLowerCase()));
+    return {
+      n: (riot ?? '').split('#')[0].slice(0, 24) || '?', ...(m && m.a !== 0 ? { id: m.id } : {}),
+      c: Number(x?.champ) || 0, t: Number(x?.team) === 200 ? '200' : '100', lv: Math.min(30, Math.max(0, Number(x?.level) || 0)),
+      k: Math.min(99, Number(x?.k) || 0), d: Math.min(99, Number(x?.d) || 0), a: Math.min(99, Number(x?.a) || 0),
+      it: nums(x?.items, 7), au: nums(x?.augments, 6),
+    };
+  });
+  const members = [...new Set(players.map((p) => p.id).filter(Boolean))];
+  const old = await env.DB.prepare('SELECT game_key AS k, started_at AS s FROM live_games WHERE member_id = ?').bind(me.id).first<{ k: string; s: number }>();
+  const started = old && old.k === key ? old.s : now;
+  await env.DB.prepare(
+    `INSERT INTO live_games (member_id, game_key, queue, players, members, game_time, started_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+     ON CONFLICT(member_id) DO UPDATE SET game_key = ?2, queue = ?3, players = ?4, members = ?5, game_time = ?6, started_at = ?7, updated_at = ?8`,
+  ).bind(me.id, key, Number(body.queue) || 0, JSON.stringify(players), JSON.stringify(members), Math.max(0, Math.round(Number(body.time) || 0)), started, now).run();
+  return json({ ok: true });
+}
+
+export type LiveBoardPlayer = { name: string; member: Face | null; champ: number; level: number; k: number; d: number; a: number; items: number[]; augments: number[]; me: boolean };
+export type LiveBoard = { time: number; at: number; custom: boolean; mine: LiveBoardPlayer[]; theirs: LiveBoardPlayer[] };
+
+/** 이 회원이 들어 있는 가장 최근 판 (본인 앱이 알렸거나, 같은 판 다른 회원 앱이 알린 것) */
+async function liveBoard(env: Env, id: string, now: number): Promise<{ board: LiveBoard; started: number } | null> {
+  const row = await env.DB.prepare(
+    `SELECT * FROM live_games WHERE updated_at > ?2 AND (member_id = ?1 OR EXISTS (SELECT 1 FROM json_each(members) WHERE value = ?1)) ORDER BY (member_id = ?1) DESC, updated_at DESC LIMIT 1`,
+  ).bind(id, now - LIVE_FRESH).first<{ players: string; game_time: number; started_at: number; updated_at: number; queue: number; member_id: string }>().catch(() => null);
+  if (!row) return null;
+  let ps: LiveP[] = [];
+  try { ps = JSON.parse(row.players); } catch { return null; }
+  const me = ps.find((p) => p.id === id);
+  const side = me?.t ?? '100';
+  const face = await faces(env, ps.map((p) => p.id).filter((x): x is string => Boolean(x)));
+  const conv = (p: LiveP): LiveBoardPlayer => ({ name: p.n, member: p.id ? face.get(p.id) ?? null : null, champ: p.c, level: p.lv, k: p.k, d: p.d, a: p.a, items: p.it ?? [], augments: p.au ?? [], me: p.id === id });
+  const elapsed = row.game_time > 0 ? row.game_time + Math.round((now - row.updated_at) / 1000) : 0;
+  return {
+    board: { time: elapsed, at: row.updated_at, custom: row.queue !== MAYHEM, mine: ps.filter((p) => p.t === side).map(conv), theirs: ps.filter((p) => p.t !== side).map(conv) },
+    started: row.started_at,
+  };
 }
 
 /** NOW 에 지금 돌아가는 것(팟·내전·함께 게임 중)이 있는지 — 메뉴의 LIVE 표시용 (v3.137). 지우지 않고 세기만 */

@@ -314,7 +314,7 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
       {m.self && total.n > 0 && <ImproveCard data={data} onChampion={onChampion} />}
       {m.self && total.n > 0 && shop?.uses && <InsightPanel api={api} data={shop} focus={insight} onShop={onShop} onChange={setShopNow} />}
       {!m.self && <SynergyCard data={data} />}
-      <RecentGames games={games} limit={8} onChampion={onChampion} />
+      <RecentGames games={games} limit={10} max={20} onChampion={onChampion} />
       {total.n > 0 && <div className="grid2">
         <section className="card pad">
           <div className="card-head"><h2>주 챔프</h2><span className="sp" /><span className="meta">만난 챔프 {data.champions.length} / {Object.keys(CHAMPIONS).length}</span></div>

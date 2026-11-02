@@ -8,7 +8,7 @@ import { saveAbout } from './about.js';
 import { dailyPayload, dailyPost, interactions } from './bot.js';
 import { pulse } from './pulse.js';
 import { nickSweep, nickSyncNow } from './discordnick.js';
-import { listNow, reportGame, reportLobby, requestJoin, setNowAuto, memberLive } from './now.js';
+import { listNow, reportGame, reportLive, reportLobby, requestJoin, setNowAuto, memberLive } from './now.js';
 import { confirmDraw, getDraw, startDraw } from './draw.js';
 import { appMembers } from './appmembers.js';
 import { promoteSweep } from './promote.js';
@@ -32,7 +32,7 @@ import { diagShots, listDiag, saveDiag } from './diag.js';
 import { inquiryFiles, inquiryWorklist, myInquiries, postInquiry, setInquiryStatus } from './inquiry.js';
 import { createNews, deleteNews, editNews, ensureAuto, heartNews, listNews, readNews } from './news.js';
 import { apply, joinLanding, joinSweep, myApplication, setRoom, staffApplicationAction, staffApplications } from './join.js';
-import { claimInvite, lookupMembers, myInvite, publicInvite, staffAction, staffMembers } from './staff.js';
+import { claimInvite, lookupMembers, searchMembers, myInvite, publicInvite, staffAction, staffMembers } from './staff.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 import { LAUNCH, SHOP, SHOP_REV, type ShopCatalog } from '../../packages/core/src/shop.js';
 
@@ -124,6 +124,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   { const a = m === 'POST' ? /^\/api\/staff\/applications\/(\d{1,9})$/.exec(pathname) : null; if (a) return staffApplicationAction(req, env, me, Number(a[1])); }
   if (m === 'GET' && pathname === '/api/me/invite') return myInvite(env, me);
   if (m === 'POST' && pathname === '/api/me/invited') return claimInvite(req, env, me);
+  if (m === 'GET' && pathname === '/api/members/search') return searchMembers(env, new URL(req.url).searchParams.get('q'));
   if (m === 'GET' && pathname === '/api/members/lookup') return lookupMembers(env, me, new URL(req.url).searchParams.get('q'));
   // 매일 밤 공지 미리 보기 (올리지 않는다). ?day=YYYY-MM-DD 로 다른 날
   if (m === 'GET' && pathname === '/api/admin/daily') {
@@ -139,6 +140,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'GET' && pathname === '/api/crew/pulse') return pulse(env);
   if (m === 'GET' && pathname === '/api/now') return listNow(env, me);
   if (m === 'POST' && pathname === '/api/now/game') return reportGame(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
+  if (m === 'POST' && pathname === '/api/me/live') return reportLive(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'POST' && pathname === '/api/now/lobby') return reportLobby(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'POST' && pathname === '/api/me/now-auto') return setNowAuto(env, me, (await req.json<{ on?: boolean }>().catch(() => ({} as { on?: boolean }))).on);
   { const n = pathname.match(/^\/api\/now\/member\/([^/]{1,40})$/); if (m === 'GET' && n) return memberLive(env, decodeURIComponent(n[1])); }
