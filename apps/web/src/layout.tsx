@@ -1,11 +1,11 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { NavLive, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, hubAt, hubHref, hubOf, rememberHub, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { NavLive, LiveDot, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, hubAt, hubHref, hubOf, rememberHub, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
 /** 메뉴 (v3.142): 성장(도감·미션·랭킹) · 멤버(멤버·소식·초대)는 허브 — 메뉴 하나에 탭 여러 개. 문의는 내 메뉴로 */
-const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '성장', 'sprout'], ['/crew', '멤버', 'users']];
+const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '성장', 'sprout'], ['/crew', '모임', 'users']];
 
 /** 운영 메뉴는 운영진에게만 (v3.107) */
 const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => [...NAV, ...(me?.perms?.manage ? [['/staff', '운영', 'shield'] as const] : [])] as typeof NAV;
@@ -18,7 +18,8 @@ function TopItem({ to, label }: { to: string; label: string }) {
   const { me } = useSession();
   const { pathname } = useLocation();
   const hub = hubAt(to);
-  const live = to === '/crew' && (me?.nowLive ?? 0) > 0 ? <NavLive n={me!.nowLive!} /> : null;
+  const nl = to === '/crew' ? me?.nowLive ?? 0 : 0;
+  const live = nl > 0 ? <LiveDot n={nl} /> : null;
   if (!hub) return <NavLink to={to} className={dotOf(me, to)}>{label}{live}</NavLink>;
   const allow = allowOf(me);
   const on = hubOf(pathname) === hub;
@@ -26,7 +27,7 @@ function TopItem({ to, label }: { to: string; label: string }) {
     <span className="tab-hub">
       <NavLink to={hubHref(hub, allow)} className={() => [on ? 'active' : '', live ? '' : dotOf(me, to) ?? ''].join(' ').trim()} aria-haspopup="true">{label}{live}<Icon name="chevD" className="tab-chev" /></NavLink>
       <span className="hub-drop" role="menu" aria-label={label}>
-        {hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} role="menuitem"><span className="hd-ic"><Icon name={t.icon} /></span><span className="hd-t"><b>{t.label}{dotOf(me, t.to) && t.to === '/news' && <i className="hd-dot" aria-label="새 소식" />}</b><small>{t.hint}</small></span></NavLink>)}
+        {hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} role="menuitem"><span className="hd-ic"><Icon name={t.icon} /></span><span className="hd-t"><b>{t.label}{t.to === '/crew' && nl > 0 && <NavLive n={nl} />}{dotOf(me, t.to) && t.to === '/news' && <i className="hd-dot" aria-label="새 소식" />}</b><small>{t.hint}</small></span></NavLink>)}
       </span>
     </span>
   );
@@ -84,7 +85,7 @@ export function Layout() {
       </div></header>
       <MobileMenu open={menu} onClose={() => setMenu(false)} />
       {welcome && me && <WelcomeFlow api={api} nick={me.nick} needFace={!me.skin} onClose={closeWelcome} />}
-      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <>{curHub && (me || curHub.key === 'grow') && <div className="wrap hub-wrap"><HubTabs key={curHub.key} hub={curHub} path={pathname} onGo={(to) => nav(to)} hide={(to) => !allowOf(me)(to)} dots={{ '/news': (me?.newsUnread ?? 0) > 0 }} /></div>}<div key={`${pathname}-${k}`} className="route"><Outlet /></div></>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
+      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <>{curHub && (me || curHub.key === 'grow') && <div className="wrap hub-wrap"><HubTabs key={curHub.key} hub={curHub} path={pathname} onGo={(to) => nav(to)} hide={(to) => !allowOf(me)(to)} dots={{ '/news': (me?.newsUnread ?? 0) > 0 }} live={{ '/crew': me?.nowLive ?? 0 }} /></div>}<div key={`${pathname}-${k}`} className="route"><Outlet /></div></>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>
         <span className="row" style={{ gap: 16 }}>
@@ -160,13 +161,13 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         </div>}
         <nav className="mmenu-nav">{groupNav(navOf(me)).map((g) => <div key={g.key} className="mmenu-group" role="group" aria-label={g.label}><span className="mmenu-glabel">{g.label}</span>{g.items.map(([to, label, icon]) => {
           const hub = hubAt(to);
-          const badge = <>{to === '/crew' && (me?.nowLive ?? 0) > 0 && <NavLive n={me!.nowLive!} />}{dotOf(me, to) && !(to === '/crew' && (me?.nowLive ?? 0) > 0) && <i className="news-dot" aria-label={to === "/staff" ? "승인할 멤버" : "새 소식"} />}</>;
+          const badge = <>{to === '/crew' && (me?.nowLive ?? 0) > 0 && <LiveDot n={me!.nowLive!} />}{dotOf(me, to) && !(to === '/crew' && (me?.nowLive ?? 0) > 0) && <i className="news-dot" aria-label={to === "/staff" ? "승인할 멤버" : "새 소식"} />}</>;
           if (!hub) return <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{badge}</NavLink>;
           const allow = allowOf(me);
           const on = hubOf(pathname) === hub;
           return <div key={to} className={`mmenu-hub ${on ? 'on' : ''}`}>
             <NavLink to={hubHref(hub, allow)} className={() => (on ? 'active' : '')} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{badge}<Icon name="chevR" className="hub-chev" /></NavLink>
-            <div className={`mmenu-sub ${on ? 'open' : ''}`}><div>{hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} tabIndex={open && on ? 0 : -1}>{t.label}{t.to === '/news' && (me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
+            <div className={`mmenu-sub ${on ? 'open' : ''}`}><div>{hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} tabIndex={open && on ? 0 : -1}>{t.label}{t.to === '/crew' && (me?.nowLive ?? 0) > 0 && <NavLive n={me!.nowLive!} />}{t.to === '/news' && (me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
           </div>;
         })}</div>)}</nav>
         <span className="sp" />

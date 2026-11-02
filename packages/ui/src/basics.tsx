@@ -337,6 +337,11 @@ export function NavLive({ n }: { n: number }) {
   return <i className="nav-live" title={`지금 NOW ${n}개 진행 중`} aria-label="NOW 진행 중"><i className="nl-dot" /><b>LIVE</b></i>;
 }
 
+/** 메뉴 묶음(모임)에는 점 하나만 (v3.144). 어디서 돌아가는지는 펼친 줄의 LIVE 가 말한다 */
+export function LiveDot({ n }: { n: number }) {
+  return <i className="live-pip" title={`지금 NOW ${n}개 진행 중`} aria-label="NOW 진행 중" />;
+}
+
 /** 비회원 얼굴: 이름 첫 글자 (v3.140). 색은 이름마다 정해진 차분한 한 가지. 이름을 모르면(예전 앱) 사람 모양 */
 const GUEST_HUES = [214, 262, 330, 18, 42, 152, 188, 236];
 export function guestHue(name: string) {

@@ -4171,19 +4171,21 @@ button.stf-person:hover { background: var(--surface-2); }
 @media (prefers-reduced-motion: reduce) { .live-now, .ln-dot::after { animation: none; } .ln-face { transition: none; } }
 
 /* ── 메뉴 LIVE 표시 (v3.137·v3.138) — 초록 빛 두 줄기가 테두리를 돌고, 바깥으로 숨 쉬듯 빛나고, 글자에 빛이 스친다 ── */
-.nav-live { position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: var(--s1); height: 20px; margin-left: auto; padding: 0 var(--s2) 0 6px; border-radius: var(--r-pill); overflow: hidden; font-style: normal; flex: none; animation: nav-live-glow 2s ease-in-out infinite; }
-.nav-live b { position: relative; font-size: var(--fs-xs); font-weight: 850; letter-spacing: .08em; line-height: 1; color: transparent; background: linear-gradient(100deg, #16a34a 0 35%, #bbf7d0 48%, #16a34a 62% 100%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; animation: nav-live-text 2.4s linear infinite; }
-.nav-live .nl-dot { position: relative; width: 6px; height: 6px; border-radius: 50%; background: #22c55e; flex: none; }
-.nav-live .nl-dot::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #22c55e; animation: nav-live-ping 1.4s ease-out infinite; }
-.nav-live::before { content: ''; position: absolute; inset: -80% -30%; z-index: -2; background: conic-gradient(from 0deg, transparent 0 30%, #22c55e 42%, #dcfce7 46%, transparent 56% 80%, #4ade80 92%, transparent 100%); animation: nav-live-spin 1.4s linear infinite; }
-.nav-live::after { content: ''; position: absolute; inset: 1.5px; z-index: -1; border-radius: inherit; background: color-mix(in srgb, #22c55e 14%, var(--surface)); }
+.nav-live { position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: var(--s1); height: 20px; margin-left: auto; padding: 0 var(--s2) 0 6px; border-radius: var(--r-pill); overflow: hidden; font-style: normal; flex: none; animation: nav-live-glow 2.4s ease-in-out infinite; }
+/* LIVE (v3.144): 프리즘의 남빛 → 보랏빛. 테두리를 빛 한 줄기가 돌고, 글자에 빛이 스친다 */
+.nav-live b { position: relative; font-size: var(--fs-xs); font-weight: 850; letter-spacing: .08em; line-height: 1; color: transparent; background: linear-gradient(100deg, #3d5cf0 0 32%, #c7d2ff 46%, #8b5cf6 60% 100%) 0 0 / 250% 100%; -webkit-background-clip: text; background-clip: text; animation: nav-live-text 2.8s linear infinite; }
+.nav-live .nl-dot, .live-pip { position: relative; width: 6px; height: 6px; border-radius: 50%; background: linear-gradient(135deg, #5b7cff, #a855f7); flex: none; }
+.nav-live .nl-dot::after, .live-pip::after { content: ''; position: absolute; inset: 0; border-radius: 50%; background: #7c6cff; animation: nav-live-ping 1.6s ease-out infinite; }
+.nav-live::before { content: ''; position: absolute; inset: -80% -30%; z-index: -2; background: conic-gradient(from 0deg, transparent 0 30%, #5b7cff 42%, #e0e7ff 46%, transparent 56% 80%, #a855f7 92%, transparent 100%); animation: nav-live-spin 1.8s linear infinite; }
+.nav-live::after { content: ''; position: absolute; inset: 1.5px; z-index: -1; border-radius: inherit; background: color-mix(in srgb, #6d6cff 12%, var(--surface)); }
+.live-pip { display: inline-block; width: 8px; height: 8px; margin-left: auto; font-style: normal; box-shadow: 0 0 8px rgba(124, 108, 255, .55); }
 @keyframes nav-live-spin { to { transform: rotate(1turn); } }
-@keyframes nav-live-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } 50% { box-shadow: 0 0 10px 1px rgba(34, 197, 94, .45); } }
+@keyframes nav-live-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(109, 108, 255, 0); } 50% { box-shadow: 0 0 10px 1px rgba(109, 108, 255, .4); } }
 @keyframes nav-live-text { from { background-position: 100% 0; } to { background-position: -150% 0; } }
 @keyframes nav-live-ping { 0% { transform: scale(1); opacity: .8; } 100% { transform: scale(2.8); opacity: 0; } }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nav-live b { background-image: linear-gradient(100deg, #4ade80 0 35%, #f0fdf4 48%, #4ade80 62% 100%); } }
-:root[data-theme="dark"] .nav-live b { background-image: linear-gradient(100deg, #4ade80 0 35%, #f0fdf4 48%, #4ade80 62% 100%); }
-@media (prefers-reduced-motion: reduce) { .nav-live, .nav-live b, .nav-live .nl-dot::after { animation: none; } .nav-live::before { animation: none; background: #22c55e; } .nav-live b { color: #16a34a; background: none; } }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .nav-live b { background-image: linear-gradient(100deg, #8ea2ff 0 32%, #f5f3ff 46%, #c4a5ff 60% 100%); } }
+:root[data-theme="dark"] .nav-live b { background-image: linear-gradient(100deg, #8ea2ff 0 32%, #f5f3ff 46%, #c4a5ff 60% 100%); }
+@media (prefers-reduced-motion: reduce) { .nav-live, .nav-live b, .nav-live .nl-dot::after, .live-pip::after { animation: none; } .nav-live::before { animation: none; background: #6d6cff; } .nav-live b { color: #4f46e5; background: none; } }
 
 /* ── 문의 메뉴 · 작업 목록 (v3.137) ── */
 .inq-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); }
@@ -4351,3 +4353,5 @@ body:has(.hubhead) .hub-h { display: none; }
 /* 허브 머리 아래 멤버 화면: 제목 대신 디스코드·카카오톡 단추만 오른쪽에 */
 body:has(.hubhead) .crew-head { justify-content: flex-end; }
 body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
+
+.hh-tabs button .nav-live { margin-left: 2px; }

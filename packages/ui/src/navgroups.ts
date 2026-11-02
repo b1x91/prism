@@ -1,6 +1,6 @@
 /**
  * 메뉴 묶음 (CLAUDE.md v3.115 → v3.142). 앱 사이드바·웹 상단·휴대폰 메뉴 공용.
- *  게임 = 분석·챔프·증강 · 성장 · 모임 = 성장(도감·미션·랭킹) · 멤버(멤버·소식·초대) · 운영
+ *  게임 = 분석·챔프·증강 · 성장 · 모임 = 성장(도감·미션·랭킹) · 모임(멤버·소식·초대) · 운영
  * 같은 계열 화면은 메뉴 하나(허브)로 묶고, 그 안에서 탭으로 오간다. 문의는 내 메뉴·설정으로.
  */
 import type { IconName } from './icons';
@@ -15,7 +15,7 @@ export const HUBS: Hub[] = [
     { to: '/missions', label: '미션', icon: 'target', hint: '이번 주 미션·도전 보상' },
     { to: '/ranking', label: '랭킹', icon: 'trophy', hint: 'Prism 점수 순위·장인' },
   ] },
-  { key: 'crew', label: '멤버', icon: 'users', tabs: [
+  { key: 'crew', label: '모임', icon: 'users', tabs: [
     { to: '/crew', label: '멤버', icon: 'users', hint: '지금 접속·NOW·아카이브' },
     { to: '/news', label: '소식', icon: 'megaphone', hint: '공지·이벤트·업데이트' },
     { to: '/invite', label: '초대', icon: 'gift', hint: '친구를 부르면 300 피스' },
