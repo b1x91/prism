@@ -41,3 +41,18 @@ export function InviteCard({ api, origin = WEB_ORIGIN }: { api: Api; origin?: st
     </section>
   );
 }
+
+/** 초대 탭 아래: 피스를 받기까지 세 걸음 */
+export function InviteHow() {
+  const steps: [string, string][] = [
+    ['링크 보내기', '위 링크를 친구에게 보내요. 디스코드·카카오톡 어디든 괜찮아요.'],
+    ['친구가 가입', '친구가 링크로 들어와 디스코드 서버에 들어오고 Prism에 로그인해요. 추천인 칸에 내 이름이 미리 채워져요.'],
+    ['승인되면 피스', '운영진이 친구를 멤버로 승인하는 순간 피스가 들어와요. 한 번 들어온 피스는 줄지 않아요.'],
+  ];
+  return (
+    <section className="card pad">
+      <div className="card-head"><h2>피스를 받기까지</h2></div>
+      <ol className="inv-how">{steps.map(([t, d], i) => <li key={t}><span className="inv-n">{i + 1}</span><span><b>{t}</b><span className="meta">{d}</span></span></li>)}</ol>
+    </section>
+  );
+}

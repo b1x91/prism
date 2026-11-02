@@ -207,3 +207,32 @@ button.me-btn:hover, button.me-btn.on { background: var(--surface-3, var(--line)
 .inv-land-go { display: grid; gap: var(--s2); width: 100%; margin-top: var(--s2); }
 .inv-land-go .btn { justify-content: center; }
 .tabs a .nav-live { margin-left: var(--s2); }
+
+/* 허브 메뉴 (v3.142): 성장 · 멤버 — 마우스를 올리면 아래로 탭 목록 */
+.tab-hub { position: relative; display: inline-flex; }
+.tabs .tab-hub > a { gap: var(--s1); }
+.tab-chev { width: 14px; height: 14px; color: var(--text-3); transition: transform .18s; }
+.tab-hub:hover .tab-chev, .tab-hub:focus-within .tab-chev { transform: rotate(180deg); }
+.hub-drop { position: absolute; top: 100%; left: 50%; z-index: 60; display: grid; gap: 2px; width: 280px; padding: var(--s2); margin-top: var(--s1); border: 1px solid var(--line-2); border-radius: var(--r-m); background: var(--surface); box-shadow: 0 16px 40px rgba(16, 20, 36, .16), 0 1px 2px rgba(16, 20, 36, .08); opacity: 0; visibility: hidden; transform: translate(-50%, -4px); transition: opacity .16s, transform .16s, visibility 0s .16s; }
+.hub-drop::before { content: ''; position: absolute; left: 0; right: 0; top: -12px; height: 12px; }
+.tab-hub:hover .hub-drop, .tab-hub:focus-within .hub-drop { opacity: 1; visibility: visible; transform: translate(-50%, 0); transition: opacity .16s .08s, transform .16s .08s, visibility 0s .08s; }
+.tabs .hub-drop a { height: auto; display: flex; align-items: center; gap: var(--s3); padding: var(--s2); border-radius: var(--r-s); }
+.tabs .hub-drop a.active { background: var(--accent-soft); }
+.hd-ic { display: grid; place-items: center; width: 36px; height: 36px; flex: none; border-radius: var(--r-s); background: var(--surface-2); color: var(--text-2); }
+.hd-ic .icon, .hd-ic svg { width: 18px; height: 18px; }
+.tabs .hub-drop a.active .hd-ic { background: var(--accent); color: var(--on-accent); }
+.hd-t { display: grid; gap: 2px; min-width: 0; }
+.hd-t b { display: inline-flex; align-items: center; gap: var(--s1); font-size: var(--fs-md); color: var(--text); }
+.hd-t small { font-size: var(--fs-xs); color: var(--text-3); font-weight: 500; }
+.hd-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lose); }
+.hub-wrap { padding-top: var(--s6); }
+.hub-wrap + .route > .section.tight { padding-top: 0; }
+.hub-wrap .hubtabs { margin-bottom: var(--s5); }
+/* 휴대폰 메뉴: 허브 이름 아래 작은 줄에 탭 */
+.mmenu-hub { display: grid; gap: 2px; }
+.mmenu-sub { display: flex; flex-wrap: wrap; gap: var(--s1); padding: 0 0 var(--s1) 44px; }
+.mmenu-nav .mmenu-sub a { position: relative; height: 32px; padding: 0 var(--s3); gap: 0; border-radius: var(--r-pill); background: var(--surface-2); color: var(--text-2); font-size: var(--fs-sm); font-weight: 650; box-shadow: none; }
+.mmenu-nav .mmenu-sub a.active { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
+.mmenu-sub .sub-dot { width: 6px; height: 6px; margin-left: 4px; border-radius: 50%; background: var(--lose); }
+.mmenu-pair { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s1); }
+@media (prefers-reduced-motion: reduce) { .hub-drop, .tab-chev { transition: none; } }

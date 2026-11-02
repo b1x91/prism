@@ -8,7 +8,7 @@ import { SessionProvider } from './session';
 import { Home } from './pages/Home';
 import { Compare, Guide } from './pages/Guide';
 import { Augments } from './pages/Augments';
-import { Crew } from './pages/Crew';
+import { Crew, InviteTab } from './pages/Crew';
 import { MemberPage, MissionsPage, RankingPage, ShopPage, PublicPage } from './pages/Members';
 import { AuthDone } from './pages/AuthDone';
 import { DexPage } from './pages/Dex';
@@ -32,6 +32,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="augments" element={<Augments />} />
             <Route path="augments/:id" element={<Augments />} />
             <Route path="crew" element={<Crew />} />
+            <Route path="invite" element={<InviteTab />} />
             <Route path="me" element={<MemberPage />} />
             <Route path="members/:id" element={<MemberPage />} />
             <Route path="dex" element={<DexPage />} />

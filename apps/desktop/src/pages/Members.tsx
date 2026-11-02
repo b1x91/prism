@@ -15,7 +15,7 @@ export function RankingPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="랭킹" />;
   return (
     <div className="stack" style={{ gap: 16 }}>
-      <h1 className="h1">랭킹</h1>
+      <h1 className="h1 hub-h">랭킹</h1>
       <RankingView api={api} meId={s.me.id} open={s.me.perms?.ranking !== false} gate={s.me.rankingGate} onOpen={(id) => nav(`/members/${id}`)} />
     </div>
   );
@@ -53,7 +53,7 @@ export function NewsPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="소식" />;
   return (
     <div className="stack" style={{ gap: 16 }}>
-      <h1 className="h1">소식</h1>
+      <h1 className="h1 hub-h">소식</h1>
       <NewsView api={api} onRead={() => void refreshSession()} onNewAugments={() => { setKept('aug.fresh', true); nav('/augments'); }} />
     </div>
   );

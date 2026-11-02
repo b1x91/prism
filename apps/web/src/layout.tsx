@@ -1,15 +1,36 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { NavLive, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { NavLive, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, hubAt, hubHref, hubOf, rememberHub, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
-const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '도감', 'book'], ['/missions', '미션', 'target'], ['/ranking', '랭킹', 'trophy'], ['/crew', '멤버', 'users']];
+/** 메뉴 (v3.142): 성장(도감·미션·랭킹) · 멤버(멤버·소식·초대)는 허브 — 메뉴 하나에 탭 여러 개. 문의는 내 메뉴로 */
+const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '성장', 'sprout'], ['/crew', '멤버', 'users']];
 
 /** 운영 메뉴는 운영진에게만 (v3.107) */
-/** 소식은 회원에게만 (v3.111), 운영은 운영진에게만 */
-const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => [...NAV, ...(me ? [['/news', '소식', 'megaphone'] as const, ['/inquiry', '문의', 'mail'] as const] : []), ...(me?.perms?.manage ? [['/staff', '운영', 'shield'] as const] : [])] as typeof NAV;
-const dotOf = (me: { newsUnread?: number; staffUnread?: number } | null, to: string) => ((to === '/news' && (me?.newsUnread ?? 0) > 0) || (to === '/staff' && (me?.staffUnread ?? 0) > 0) ? 'nav-dot' : undefined);
+const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => [...NAV, ...(me?.perms?.manage ? [['/staff', '운영', 'shield'] as const] : [])] as typeof NAV;
+/** 소식·초대는 회원에게만 */
+const allowOf = (me: unknown) => (to: string) => Boolean(me) || (to !== '/news' && to !== '/invite');
+const dotOf = (me: { newsUnread?: number; staffUnread?: number } | null, to: string) => (((to === '/news' || to === '/crew') && (me?.newsUnread ?? 0) > 0) || (to === '/staff' && (me?.staffUnread ?? 0) > 0) ? 'nav-dot' : undefined);
+
+/** 상단 메뉴 한 칸. 허브는 마우스를 올리면 아래로 탭 목록 (그림 · 이름 · 한 줄 설명) */
+function TopItem({ to, label }: { to: string; label: string }) {
+  const { me } = useSession();
+  const { pathname } = useLocation();
+  const hub = hubAt(to);
+  const live = to === '/crew' && (me?.nowLive ?? 0) > 0 ? <NavLive n={me!.nowLive!} /> : null;
+  if (!hub) return <NavLink to={to} className={dotOf(me, to)}>{label}{live}</NavLink>;
+  const allow = allowOf(me);
+  const on = hubOf(pathname) === hub;
+  return (
+    <span className="tab-hub">
+      <NavLink to={hubHref(hub, allow)} className={() => [on ? 'active' : '', live ? '' : dotOf(me, to) ?? ''].join(' ').trim()} aria-haspopup="true">{label}{live}<Icon name="chevD" className="tab-chev" /></NavLink>
+      <span className="hub-drop" role="menu" aria-label={label}>
+        {hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} role="menuitem"><span className="hd-ic"><Icon name={t.icon} /></span><span className="hd-t"><b>{t.label}{dotOf(me, t.to) && t.to === '/news' && <i className="hd-dot" aria-label="새 소식" />}</b><small>{t.hint}</small></span></NavLink>)}
+      </span>
+    </span>
+  );
+}
 
 export function Layout() {
   const { me, login, links, api, refresh, member, attend, clearAttend } = useSession();
@@ -26,8 +47,9 @@ export function Layout() {
   const navType = useNavigationType();
   const winScroller = useCallback(() => window, []);
   useScrollKeeper(pathname, navType === 'POP', winScroller);
-  useEffect(() => { setMenu(false); }, [pathname]);
+  useEffect(() => { setMenu(false); rememberHub(pathname); }, [pathname]);
   const nav = useNavigate();
+  const curHub = hubOf(pathname);
   const pieces = usePieces(me ? api : null);
   // 상단 내 얼굴·이름·피스: 지난 접속 때 것을 기억해 두었다가 로그인 확인 전에 바로 그린다
   // (로그인 단추 → 내 이름으로, 이름 옆에 피스가 늦게 붙으며 상단 아이콘이 옆으로 밀리지 않게, v3.93)
@@ -50,7 +72,7 @@ export function Layout() {
       <OfflineScreen api={api} onBack={refresh} />
       <header className="topbar"><div className="wrap">
         <NavLink to="/" className="brand"><Gem size={22} />PRISM</NavLink>
-        <nav className="tabs">{groupNav(navOf(me)).map((g, gi) => <span key={g.key} className="tab-group" role="group" aria-label={g.label}>{gi > 0 && <i className="tab-sep" aria-hidden="true" />}{g.items.map(([to, label]) => <NavLink key={to} to={to} className={dotOf(me, to)}>{label}{to === '/crew' && (me?.nowLive ?? 0) > 0 && <NavLive n={me!.nowLive!} />}</NavLink>)}</span>)}</nav>
+        <nav className="tabs">{groupNav(navOf(me)).map((g, gi) => <span key={g.key} className="tab-group" role="group" aria-label={g.label}>{gi > 0 && <i className="tab-sep" aria-hidden="true" />}{g.items.map(([to, label]) => <TopItem key={to} to={to} label={label} />)}</span>)}</nav>
         <span className="sp" />
         <span className="top-wide"><NavLink to="/shop" className="icon-btn top-shop" title="상점" aria-label="상점"><Icon name="bag" /></NavLink>
           <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>
@@ -62,7 +84,7 @@ export function Layout() {
       </div></header>
       <MobileMenu open={menu} onClose={() => setMenu(false)} />
       {welcome && me && <WelcomeFlow api={api} nick={me.nick} needFace={!me.skin} onClose={closeWelcome} />}
-      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <div key={`${pathname}-${k}`} className="route"><Outlet /></div>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
+      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <>{curHub && (me || curHub.key === 'grow') && <div className="wrap hub-wrap"><HubTabs hub={curHub} path={pathname} onGo={(to) => nav(to)} hide={(to) => !allowOf(me)(to)} dots={{ '/news': (me?.newsUnread ?? 0) > 0 }} /></div>}<div key={`${pathname}-${k}`} className="route"><Outlet /></div></>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>
         <span className="row" style={{ gap: 16 }}>
@@ -101,6 +123,7 @@ function MeMenu({ pieces }: { pieces: number | null }) {
           <span><b><NickName nick={me.nick} /></b>{pieces !== null && <small>{pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></div>
         <button type="button" role="menuitem" onClick={() => go('/me')}><Icon name="home" />내 페이지</button>
         <button type="button" role="menuitem" onClick={() => go('/me?studio=1')}><Icon name="spark" />프로필 꾸미기</button>
+        <button type="button" role="menuitem" onClick={() => go('/inquiry')}><Icon name="mail" />문의</button>
         <span className="me-pop-sep" />
         <button type="button" role="menuitem" className="danger" onClick={() => { setOpen(false); logout().then(() => nav('/')); }}><Icon name="logout" />로그아웃</button>
       </div>}
@@ -111,6 +134,7 @@ function MeMenu({ pieces }: { pieces: number | null }) {
 /** 휴대폰: 햄버거를 누르면 옆에서 밀려 나오는 메뉴. 아래쪽에 디스코드·카카오톡·테마 */
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { me, login, logout } = useSession();
+  const { pathname } = useLocation();
   const nav = useNavigate();
   const [theme, setTheme] = useState<ThemeMode>(getThemeMode);
   useEffect(() => {
@@ -134,10 +158,21 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); nav('/me?studio=1'); }}><Icon name="spark" />프로필 꾸미기</button>
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); logout().then(() => nav('/')); }}><Icon name="logout" />로그아웃</button>
         </div>}
-        <nav className="mmenu-nav">{groupNav(navOf(me)).map((g) => <div key={g.key} className="mmenu-group" role="group" aria-label={g.label}><span className="mmenu-glabel">{g.label}</span>{g.items.map(([to, label, icon]) => <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{to === '/crew' && (me?.nowLive ?? 0) > 0 && <NavLive n={me!.nowLive!} />}{dotOf(me, to) && <i className="news-dot" aria-label={to === "/staff" ? "승인할 멤버" : "새 소식"} />}</NavLink>)}</div>)}</nav>
+        <nav className="mmenu-nav">{groupNav(navOf(me)).map((g) => <div key={g.key} className="mmenu-group" role="group" aria-label={g.label}><span className="mmenu-glabel">{g.label}</span>{g.items.map(([to, label, icon]) => {
+          const hub = hubAt(to);
+          const badge = <>{to === '/crew' && (me?.nowLive ?? 0) > 0 && <NavLive n={me!.nowLive!} />}{dotOf(me, to) && !(to === '/crew' && (me?.nowLive ?? 0) > 0) && <i className="news-dot" aria-label={to === "/staff" ? "승인할 멤버" : "새 소식"} />}</>;
+          if (!hub) return <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{badge}</NavLink>;
+          const allow = allowOf(me);
+          const on = hubOf(pathname) === hub;
+          return <div key={to} className={`mmenu-hub ${on ? 'on' : ''}`}>
+            <NavLink to={hubHref(hub, allow)} className={() => (on ? 'active' : '')} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{badge}</NavLink>
+            <span className="mmenu-sub">{hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} tabIndex={open ? 0 : -1}>{t.label}{t.to === '/news' && (me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</span>
+          </div>;
+        })}</div>)}</nav>
         <span className="sp" />
         <div className="mmenu-foot">
-          <NavLink to="/shop" className="mmenu-shop" tabIndex={open ? 0 : -1}><Icon name="bag" />상점</NavLink>
+          <div className="mmenu-pair"><NavLink to="/shop" className="mmenu-shop" tabIndex={open ? 0 : -1}><Icon name="bag" />상점</NavLink>
+            {me && <NavLink to="/inquiry" className="mmenu-shop" tabIndex={open ? 0 : -1}><Icon name="mail" />문의</NavLink>}</div>
           <div className="mmenu-row"><span className="k">화면</span><Seg value={theme} options={[['system', '시스템'], ['light', '라이트'], ['dark', '다크']]} onChange={(m) => { setThemeMode(m); setTheme(m); }} /></div>
         </div>
       </aside>

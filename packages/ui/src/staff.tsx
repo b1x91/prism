@@ -177,7 +177,7 @@ function Care({ api, o, need, onOpen, onDone, onMembers }: { api: Api; o: StaffO
   if (o.care.length) had.current = true;
   const box = useFlip<HTMLUListElement>(list.map((c) => c.id).join());
   const go = (id: string, action: string) => { act.run(id, () => api.post(`/api/staff/members/${id}/${action}`, {})).catch(() => { /* 아래 목록에서 다시 */ }); };
-  const why = (c: StaffOverview['care'][number]) => c.kind === 'pending' ? `가입 ${c.days}일째` : c.kind === 'review' ? `운영진과 ${c.n ?? need}판 함께했어요` : c.kind === 'quiet' ? `가입 ${c.days}일, 아직 판이 없어요` : `${c.days}일째 소식이 없어요`;
+  const why = (c: StaffOverview['care'][number]) => c.kind === 'pending' ? (c.days <= 0 ? '오늘 가입했어요!' : c.days === 1 ? '어제 가입했어요' : `가입한 지 ${c.days}일`) : c.kind === 'review' ? `운영진과 ${c.n ?? need}판 함께했어요` : c.kind === 'quiet' ? `가입 ${c.days}일, 아직 판이 없어요` : `${c.days}일째 소식이 없어요`;
   return (
     <section className="card pad stf-card">
       <div className="stf-head"><h2>챙겨야 할 멤버</h2>{onMembers ? <button type="button" className="stf-more" onClick={onMembers}>{o.careTotal ? `${o.careTotal}명 모두 보기` : '멤버 관리'}<Icon name="chevR" /></button> : <span className="meta">{o.careTotal ? `${o.careTotal}명` : ''}</span>}</div>
@@ -303,7 +303,7 @@ function TodoCard({ api, m, need, bonus, referrers, state, run, onOpen }: { api:
         <span className="stf-pt"><b>{shortNick(m.nick)}</b><span className="meta">{m.discordName ? `@${m.discordName}` : ''}</span></span>
       </button>
       <dl className="stf-tc-f">
-        <div><dt>가입</dt><dd>{days}일째</dd></div>
+        <div><dt>가입</dt><dd>{days <= 0 ? '오늘' : days === 1 ? '어제' : `${days}일 전`}</dd></div>
         <div><dt>판수</dt><dd>{m.games}</dd></div>
         <div><dt>운영진과</dt><dd>{m.staffGames}{!m.pending && <span className="stf-of">/{need}</span>}</dd></div>
       </dl>

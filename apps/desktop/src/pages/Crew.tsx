@@ -1,4 +1,4 @@
-import { AppMembers, NowCard, InviteCard, BoardView, ChannelButtons, CrewPulse, Empty, Icon, DiscordNowCard, ProspectBoard, useLoad } from '@prism/ui';
+import { InviteHow, AppMembers, NowCard, InviteCard, BoardView, ChannelButtons, CrewPulse, Empty, Icon, DiscordNowCard, ProspectBoard, useLoad } from '@prism/ui';
 import { useNavigate } from 'react-router-dom';
 import { withDefaults, type Links } from '@prism/core';
 import type { State } from '../controller';
@@ -18,8 +18,13 @@ export function CrewPage({ s, onLogin }: { s: State; onLogin: () => void }) {
       <CrewPulse api={api} onMember={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} />
       <AppMembers api={api} onMember={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} />
       {<ProspectBoard api={api} invite={links.discord} admin={Boolean(s.me.perms?.moderate)} />}
-      <InviteCard api={api} />
       <BoardView api={api} />
     </div>
   );
+}
+
+/** 친구 초대 (멤버 › 초대 탭, v3.142) */
+export function InvitePage({ s, onLogin }: { s: State; onLogin: () => void }) {
+  if (!s.me) return <section className="card pad"><Empty action={<button type="button" className="btn primary" onClick={onLogin}><Icon name="discord" />디스코드로 로그인</button>}>친구 초대는 Prism 회원에게 열립니다.</Empty></section>;
+  return <div className="stack" style={{ gap: 16 }}><InviteCard api={api} /><InviteHow /></div>;
 }

@@ -1,4 +1,4 @@
-import { AppMembers, NowCard, InviteCard, BoardView, ChannelButtons, CrewPulse, Gem, Icon, DiscordNowCard, Lines, PageSkeleton, ProspectBoard } from '@prism/ui';
+import { Empty, InviteHow, AppMembers, NowCard, InviteCard, BoardView, ChannelButtons, CrewPulse, Gem, Icon, DiscordNowCard, Lines, PageSkeleton, ProspectBoard } from '@prism/ui';
 import { useNavigate } from 'react-router-dom';
 import { useSession } from '../session';
 import { shortNick } from '@prism/core';
@@ -51,8 +51,15 @@ export function Crew() {
       <CrewPulse api={api} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />
       <AppMembers api={api} onMember={(id) => navigate(id === me.id ? '/me' : `/members/${id}`)} />
       {<ProspectBoard api={api} invite={links.discord} admin={Boolean(me.perms?.moderate)} />}
-      <InviteCard api={api} origin={location.origin} />
       <BoardView api={api} />
     </div></section>
   );
+}
+
+/** 친구 초대 (멤버 › 초대 탭, v3.142) */
+export function InviteTab() {
+  const { me, ready, api, login } = useSession();
+  if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="crew" /></div></section>;
+  if (!me) return <section className="section tight"><div className="wrap"><section className="card pad"><Empty action={<button type="button" className="btn primary" onClick={login}><Icon name="discord" />디스코드로 로그인</button>}>친구 초대는 Prism 회원에게 열립니다.</Empty></section></div></section>;
+  return <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}><InviteCard api={api} origin={location.origin} /><InviteHow /></div></section>;
 }

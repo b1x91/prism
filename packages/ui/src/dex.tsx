@@ -144,7 +144,7 @@ export function DexView({ dex, onChampion, onAugment, loading, xpRate = 1, api }
       <header className="dex-device">
         <span className="dex-lens" aria-hidden="true"><Gem size={44} /></span>
         <div className="dex-title">
-          <h1>도감</h1>
+          <h1 className="hub-h">도감</h1>
           <Seg value={kind} options={[['champions', '챔프'], ['augments', '증강'], ['items', '아이템']]} onChange={(k) => { setKind(k); setGroup('all'); setQ(''); setShow('all'); }} />
           <div className="dex-xp" title={`판 +${DEX_XP.game} · 승리 +${DEX_XP.win} · 이룬 목표 +${DEX_XP.goal} · 마스터 +${DEX_XP.master}`}>
             <span className="lv">Lv.{xp.level}</span>

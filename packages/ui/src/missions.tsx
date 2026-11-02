@@ -156,7 +156,7 @@ export function MissionsView({ api, onChampion }: { api: Api; onChampion?: (id: 
       <header className="msn-head">
         <div className="msn-title">
           <span className="msn-kicker">{md(w.start)} – {md(w.end - 1)} · {left(w.end)}</span>
-          <h1>미션</h1>
+          <h1 className="hub-h">미션</h1>
         </div>
       </header>
 
