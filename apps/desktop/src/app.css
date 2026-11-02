@@ -591,5 +591,5 @@ body { overflow: hidden; background: var(--bg); }
 .side-nav .side-sub .sub-dot { width: 6px; height: 6px; margin-left: auto; border-radius: 50%; background: var(--lose); }
 @media (max-width: 900px) { .side-nav .side-sub, .side-nav .hub-chev { display: none; } }
 /* 펼친 허브는 점을 아래 탭으로 넘긴다 (모임 ● 와 멤버 ● 가 함께 빛나지 않게, v3.147). 좁은 사이드바는 펼침이 없어 허브에 그대로 */
-@media (min-width: 901px) { .side-hub.on > a .live-pip, .side-hub.on > a .news-dot { display: none; } }
+@media (min-width: 901px) { .side-hub.on > a .live-pip, .side-hub.on > a .news-dot { display: none; } .side-hub.on > a .hub-chev { margin-left: auto; } }
 @media (prefers-reduced-motion: reduce) { .side-nav .side-sub, .side-nav .hub-chev { transition: none; } }

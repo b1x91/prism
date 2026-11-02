@@ -238,6 +238,8 @@ button.me-btn:hover, button.me-btn.on { background: var(--surface-3, var(--line)
 .mmenu-sub { display: grid; grid-template-rows: 0fr; overflow: hidden; transition: grid-template-rows .36s cubic-bezier(.16, 1, .3, 1); }
 .mmenu-sub.open { grid-template-rows: 1fr; }
 .mmenu-hub.on > a .live-pip, .mmenu-hub.on > a .news-dot { display: none; }
+/* 점을 숨겼으면 화살표는 다시 오른쪽 끝으로 (성장·모임 같은 자리) */
+.mmenu-hub.on > a .hub-chev { margin-left: auto; }
 .mmenu-sub > div { position: relative; min-height: 0; padding-left: 22px; }
 .mmenu-sub > div::before { content: ''; position: absolute; left: 22px; top: 6px; bottom: 6px; width: 1px; background: var(--line-2); }
 .mmenu-nav .mmenu-sub a { position: relative; height: 44px; padding: 0 var(--s3) 0 22px; gap: var(--s2); font-size: var(--fs-lg); font-weight: 600; color: var(--text-3); background: none; box-shadow: none; }
