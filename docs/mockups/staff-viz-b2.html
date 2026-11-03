@@ -1,7 +1,7 @@
 <title>Prism 운영 무대</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <style>
-/* 레이아웃: B안 밝은 무대 — 위 비율 고리 → 주별 판(+활동 멤버) | 날짜 열지도 → 잘하는 멤버(기준 풀이) → 새 멤버 정착(목표·현실·할 일). Prism 토큰 */
+/* 레이아웃: B안 밝은 무대 — 위 비율 고리 → 주별 판(+활동 멤버) | 날짜 열지도 → 잘하는 멤버(기준 풀이) → 온보딩 현황(물 채움 카드: 목표·현실·할 일). Prism 토큰 */
 :root{
   --bg:#f3f4f8; --panel:#ffffff; --panel2:#f7f8fc; --line:#e6e8f0; --grid:#eceef4; --line2:#d6d9e4;
   --fg:#12141c; --fg2:#4a4f61; --mut:#848a9c;
@@ -69,12 +69,11 @@ svg text{font-family:var(--font)}
 @keyframes vzRing{from{stroke-dasharray:0 999}}
 .ring svg circle + circle{animation:vzRing 1.1s cubic-bezier(.16,1,.3,1) both .15s}
 @keyframes vzWide{from{width:0}}
-.st .meter i{animation:vzWide 1s cubic-bezier(.16,1,.3,1) both .2s}
 @keyframes vzScaleX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 .mr .sb svg g{transform-origin:0 50%;animation:vzScaleX 1s cubic-bezier(.16,1,.3,1) both .15s}
 .card{animation:vzFade .6s cubic-bezier(.16,1,.3,1) both}
 .row .card:nth-child(2){animation-delay:.06s}
-@media (prefers-reduced-motion: reduce){.vz-grow,.vz-fade,.card,.st .meter i,.mr .sb svg g,.ring svg circle + circle{animation:none}}
+@media (prefers-reduced-motion: reduce){.vz-grow,.vz-fade,.card,.st .water,.st .wave,.mr .sb svg g,.ring svg circle + circle{animation:none}}
 .ax{font-size:12px;fill:var(--mut)}
 .ax.now{fill:var(--fg);font-weight:700}
 .lbl{font-size:12px;fill:var(--fg);font-weight:700}
@@ -122,17 +121,29 @@ svg text{font-family:var(--font)}
 /* 정착 */
 .steps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:16px}
 .st{position:relative;border:1px solid var(--line);border-radius:12px;padding:16px 12px 12px;display:grid;gap:8px;align-content:start;background:var(--panel);min-width:0}
-.st.bad{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));background:linear-gradient(var(--warn-soft),var(--panel) 70%)}
+.st.bad{border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
 .st .no{font-size:12px;color:var(--mut);font-weight:700}
 .st h4{font-size:14px}
 .st .num{display:flex;align-items:baseline;gap:4px}
 .st .num b{font-size:28px;font-weight:800;line-height:1}
 .st .num span{font-size:12px;color:var(--mut)}
-.st .meter{position:relative;height:8px;border-radius:999px;background:var(--ring-track)}
-.st .meter i{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--acc)}
-.st.bad .meter i{background:var(--warn)}
-.st .meter.ok i{background:var(--up)}
-.st .meter u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--fg);border-radius:1px}
+/* 물 채움: 카드 안 탱크에 비율만큼 물이 차고, 물결이 일렁인다. 달성 = 초록 물, 미달 = 파란 물 + 주황 목표 선 */
+.st > :not(.tank){position:relative;z-index:1}
+.st .tank{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;z-index:0}
+.st .water{--w:var(--acc);position:absolute;left:0;right:0;bottom:0;background:linear-gradient(color-mix(in srgb,var(--w) 20%,transparent),color-mix(in srgb,var(--w) 30%,transparent));animation:vzFill 1.6s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(.25s + var(--i) * .12s)}
+.st.ok .water{--w:var(--up)}
+.st .wave{position:absolute;left:0;bottom:calc(100% - 1px);width:200%;height:12px;display:block;animation:vzWave 6s linear infinite}
+.st .wave.back{height:14px;opacity:.5;animation-duration:9s;animation-direction:reverse}
+.st .wave path{fill:color-mix(in srgb,var(--w) 20%,transparent)}
+.st .wave.front path{stroke:color-mix(in srgb,var(--w) 55%,transparent);stroke-width:1.5;vector-effect:non-scaling-stroke}
+.st .goal{position:absolute;right:0;width:20px;border-top:2px solid var(--warn)}
+.st .goal b{position:absolute;right:24px;top:-10px;font-size:11px;font-weight:700;color:var(--warn);background:var(--panel);border:1px solid color-mix(in srgb,var(--warn) 35%,transparent);padding:0 6px;border-radius:8px;line-height:16px;white-space:nowrap}
+.st .goal.lo b{top:4px}
+.st .goal.lo{border-top-width:0}
+.st.ok .goal{border-top-color:var(--up)}
+.st.ok .goal b{color:var(--up);border-color:color-mix(in srgb,var(--up) 35%,transparent)}
+@keyframes vzFill{from{transform:translateY(100%)}to{transform:none}}
+@keyframes vzWave{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 .st .tg{font-size:12px;color:var(--fg2);display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap}
 .st .tg em{font-style:normal;font-weight:700}
 .st .tg em.ok{color:var(--up)} .st .tg em.no{color:var(--warn)}
@@ -203,7 +214,7 @@ svg text{font-family:var(--font)}
   </section>
 
   <section class="card">
-    <div class="ch"><h2>새 멤버 정착</h2><span class="meta">최근 4주 가입 31명 · 목표는 운영 설정에서 바꿔요</span></div>
+    <div class="ch"><h2>온보딩 현황</h2><span class="meta">최근 4주 가입 31명 · 목표는 운영 설정에서 바꿔요</span></div>
     <div class="steps" id="steps"></div>
     <div class="ai" id="ai"></div>
   </section>
@@ -351,12 +362,13 @@ function members(){
     b.replaceChildren(s)});
 }
 
-// ───── 새 멤버 정착: 목표 vs 현실 + 할 일 ─────
+// ───── 온보딩 현황: 카드마다 물이 비율만큼 차오름 + 목표 선 + 할 일 ─────
+// 물결 한 마디를 두 번 이어 그려 반만큼 밀면 끊김 없이 흐른다
+const WAVE=k=>{const seg=x=>`Q${x+25},0 ${x+50},6 T${x+100},6`;return `<svg class="wave ${k}" viewBox="0 0 400 12" preserveAspectRatio="none"><path d="M0,6 ${seg(0)} ${seg(100)} ${seg(200)} ${seg(300)} V12 H0 Z"/></svg>`};
 function funnel(){
   $('#steps').innerHTML=FUN.map((f,i)=>{const pct=Math.round(f.v/31*100),ok=pct>=f.goal,prev=i?FUN[i-1].v:null,conv=prev?Math.round(f.v/prev*100):null;
-    return `<div class="st ${ok?'':'bad'}"><span class="no">${i+1}단계</span><h4>${f.n}</h4><span class="num"><b class="tn">${f.v}</b><span>명 · ${pct}%</span></span>
-      <span class="meter ${ok?'ok':''}" title="목표 ${f.goal}%"><i style="width:${pct}%"></i>${ok?'':`<u style="left:${f.goal}%"></u>`}</span>
-      <span class="tg"><span>목표 ${f.goal}%</span><em class="${ok?'ok':'no'}">${ok?'✓ 달성':'목표까지 '+(f.goal-pct)+'%p'}</em></span>
+    return `<div class="st ${ok?'ok':'bad'}" style="--i:${i}"><span class="tank" aria-hidden="true"><span class="water" style="height:${pct}%">${WAVE('back')}${WAVE('front')}</span><span class="goal ${f.goal>=94?'lo':''}" style="bottom:${f.goal}%"><b>목표 ${f.goal}%</b></span></span><span class="no">${i+1}단계</span><h4>${f.n}</h4><span class="num"><b class="tn">${f.v}</b><span>명 · ${pct}%</span></span>
+      <span class="tg"><em class="${ok?'ok':'no'}">${ok?'✓ 목표 달성':'목표까지 '+(f.goal-pct)+'%p'}</em></span>
       ${conv!=null?`<span class="time">앞 단계에서 ${conv}% 넘어옴${f.time?' · '+f.time:''}</span>`:'<span class="time">기준 31명</span>'}
       <span class="ins">${f.ins}</span></div>`}).join('');
   $('#ai').innerHTML=`<span class="ic">AI</span><div><h4>이번 주 할 일 <span class="ex">AI 요약 예시</span></h4><ol>
