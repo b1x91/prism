@@ -12,6 +12,7 @@ import { useLoad } from './crew';
 import { useKept } from './kept';
 import { ActBtn, actCls, useFlip, useResolve, type ActState } from './motion';
 import { Bone, SkeletonFrame, Swap, fadeCls, useReveal } from './skeleton';
+import { ReportDash, TodoStrip } from './staffdash';
 
 const LEVELS: ['0' | '1' | '2' | '3', string][] = [['0', '역할 없음'], ['1', '준회원'], ['2', '정회원'], ['3', '우수회원']];
 /** 멤버 구성 막대: 디스코드 역할과 같은 색 (승인 대기는 금빛, 역할 없음은 회색) */
@@ -34,112 +35,26 @@ function useSeen(data: unknown, onSeen?: () => void) {
   useEffect(() => { if (data && !done.current) { done.current = true; onSeen?.(); } }, [data, onSeen]);
 }
 
-export function StaffView({ api, onOpen, onMembers, onJoin, onSeen }: { api: Api; onOpen?: (id: string) => void; onMembers?: () => void; /** 가입 신청 보드로 (v3.148) */ onJoin?: () => void; /** 처리할 멤버를 본 것으로 적었을 때 (메뉴의 빨간 점을 끈다) */ onSeen?: () => void }) {
+export function StaffView({ api, onOpen, onMembers, onJoin, onInquiry, onSeen }: { api: Api; onOpen?: (id: string) => void; onMembers?: () => void; /** 가입 신청 보드로 (v3.148) */ onJoin?: () => void; /** 문의 작업 목록으로 (v3.159) */ onInquiry?: () => void; /** 처리할 멤버를 본 것으로 적었을 때 (메뉴의 빨간 점을 끈다) */ onSeen?: () => void }) {
   const { data, error, reload } = useLoad<StaffMembers>(api, '/api/staff/members');
   useSeen(data, onSeen);
   const rv = useReveal(Boolean(data));
   if (error) return <Empty>{error}</Empty>;
   if (!data) return <StaffSkeleton />;
-  const pending = data.members.filter((m) => m.pending).length, review = data.members.filter((m) => m.review).length;
+  const o = data.overview;
   return (
     <Swap on={rv} skeleton={<StaffSkeleton />}>
       <div className={`stf ${fadeCls(rv)}`}>
-        <TopBar pending={pending} review={review} onMembers={onMembers} />
-        {onJoin && data.applications && <JoinBar a={data.applications} onJoin={onJoin} />}
-        {data.overview && <Dashboard api={api} o={data.overview} need={data.reviewNeed} onOpen={onOpen} onDone={reload} onMembers={onMembers} />}
+        <TodoStrip data={data} onMembers={onMembers} onJoin={onJoin} onInquiry={onInquiry} />
+        {o && <ReportDash o={o} online={o.kpi.online} onOpen={onOpen}
+          care={<Care api={api} o={o} need={data.reviewNeed} onOpen={onOpen} onDone={reload} onMembers={onMembers} />}
+          mix={<LevelMix levels={o.levels} app={o.kpi.app} linked={o.kpi.linked} total={o.kpi.members} />} />}
       </div>
     </Swap>
   );
 }
 
-/** 대시보드 맨 위: 처리할 일 + 멤버 관리로 가는 단추 */
-function JoinBar({ a, onJoin }: { a: NonNullable<StaffMembers['applications']>; onJoin: () => void }) {
-  const todo = a.new + a.confirmed;
-  const parts = [a.new ? `새 신청 ${a.new}건` : '', a.interview ? `면접 중 ${a.interview}건` : '', a.confirmed ? `초대 보낼 ${a.confirmed}건` : ''].filter(Boolean);
-  return (
-    <div className={`stf-bar ${todo ? 'todo' : ''}`}>
-      <span className="stf-bar-t"><Icon name={todo ? 'bell' : 'check'} /><span>{parts.length ? `가입 신청 · ${parts.join(' · ')}` : '지금 처리할 가입 신청이 없어요'}</span></span>
-      <button type="button" className={`btn sm ${todo ? 'primary' : ''}`} onClick={onJoin}><Icon name="gift" />가입 신청</button>
-    </div>
-  );
-}
-
-function TopBar({ pending, review, onMembers }: { pending: number; review: number; onMembers?: () => void }) {
-  const todo = pending + review;
-  return (
-    <div className={`stf-bar ${todo ? 'todo' : ''}`}>
-      <span className="stf-bar-t">
-        <Icon name={todo ? 'bell' : 'check'} />
-        {todo ? <span>{[pending ? `승인을 기다리는 멤버 ${pending}명` : '', review ? `정회원 심사 ${review}명` : ''].filter(Boolean).join(' · ')}</span> : <span>지금 처리할 승인이 없어요</span>}
-      </span>
-      {onMembers && <button type="button" className={`btn sm ${todo ? 'primary' : ''}`} onClick={onMembers}><Icon name="users" />멤버 관리</button>}
-    </div>
-  );
-}
-
-// ───────── 대시보드 ─────────
-
-function Delta({ now, prev }: { now: number; prev: number }) {
-  const d = now - prev;
-  if (!d) return <span className="stf-delta">지난주와 같아요</span>;
-  return <span className={`stf-delta ${d > 0 ? 'up' : 'down'}`}>{d > 0 ? '▲' : '▼'} {Math.abs(d)} <span>지난주 대비</span></span>;
-}
-
-function Dashboard({ api, o, need, onOpen, onDone, onMembers }: { api: Api; o: StaffOverview; need: number; onOpen?: (id: string) => void; onDone: () => unknown; onMembers?: () => void }) {
-  const k = o.kpi;
-  return (
-    <>
-      <section className="stf-kpis" aria-label="지금 Prism">
-        <div className="stf-kpi"><span className="stf-kl"><Icon name="users" />멤버</span><b>{k.members}</b><span className="stf-delta">{k.joinedWeek ? <>이번 주 <em className="up">+{k.joinedWeek}</em> 명 가입</> : '이번 주 가입 없음'}</span></div>
-        <div className="stf-kpi"><span className="stf-kl"><Icon name="spark" />이번 주 활동 멤버</span><b>{k.active}</b><Delta now={k.active} prev={k.activePrev} /></div>
-        <div className="stf-kpi"><span className="stf-kl"><Icon name="swords" />이번 주 모임 판</span><b>{k.crew}</b><Delta now={k.crew} prev={k.crewPrev} /></div>
-        <div className="stf-kpi"><span className="stf-kl"><i className="stf-live" aria-hidden="true" />지금 접속</span><b>{k.online}</b><span className="stf-delta">앱·웹 합쳐서</span></div>
-      </section>
-      <div className="stf-grid">
-        <WeekChart weeks={o.weeks} />
-        <LevelMix levels={o.levels} app={k.app} linked={k.linked} total={k.members} />
-      </div>
-      <div className="stf-grid">
-        <Stars stars={o.stars} onOpen={onOpen} />
-        <Care api={api} o={o} need={need} onOpen={onOpen} onDone={onDone} onMembers={onMembers} />
-      </div>
-    </>
-  );
-}
-
-/** 주별 활동: 판 수 막대 (모임 판 + 그 밖의 판), 마우스를 올리면 그 주의 숫자 */
-function WeekChart({ weeks }: { weeks: StaffOverview['weeks'] }) {
-  const max = Math.max(4, ...weeks.map((w) => w.games));
-  const top = Math.ceil(max / 4) * 4;
-  const md = (t: number) => { const d = new Date(t); return `${d.getMonth() + 1}/${d.getDate()}`; };
-  const total = weeks.reduce((a, w) => a + w.games, 0);
-  return (
-    <section className="card pad stf-card">
-      <div className="stf-head"><h2>주별 활동</h2><span className="meta">최근 8주 · {total}판</span></div>
-      <div className="stf-legend"><span><i style={{ background: 'var(--accent)' }} />모임 판</span><span><i style={{ background: 'color-mix(in srgb, var(--accent) 32%, var(--surface-3))' }} />그 밖의 판</span></div>
-      <div className="stf-chart" role="img" aria-label={`최근 8주 판 수 ${weeks.map((w) => `${md(w.start)} 주 ${w.games}판`).join(', ')}`}>
-        <div className="stf-axis" aria-hidden="true">{[top, top / 2, 0].map((v) => <span key={v}>{v}</span>)}</div>
-        <div className="stf-bars">
-          {[0, 1, 2].map((i) => <i key={i} className="stf-gl" style={{ bottom: `${i * 50}%` }} aria-hidden="true" />)}
-          {weeks.map((w, i) => {
-            const last = i === weeks.length - 1;
-            return (
-              <div key={w.start} className={`stf-col ${last ? 'now' : ''} ${(weeks.length - 1 - i) % 2 ? 'alt' : ''}`} tabIndex={0}>
-                <div className="stf-stack" style={{ height: `${(w.games / top) * 100}%` }}>
-                  {w.games > w.crew && <i className="solo" style={{ flex: w.games - w.crew }} />}
-                  {w.crew > 0 && <i className="crew" style={{ flex: w.crew }} />}
-                </div>
-                {last && w.games > 0 && <span className="stf-val" style={{ bottom: `${(w.games / top) * 100}%` }}>{w.games}</span>}
-                <span className="stf-x">{last ? '이번 주' : md(w.start)}</span>
-                <span className="stf-tip" role="tooltip"><b>{last ? '이번 주' : `${md(w.start)} 주`}</b>판 {w.games} · 모임 판 {w.crew}<br />활동 멤버 {w.active}명</span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
+// ───────── 대시보드 조각 (본문은 staffdash.tsx) ─────────
 
 function LevelMix({ levels, app, linked, total }: { levels: StaffOverview['levels']; app: number; linked: number; total: number }) {
   const rows = LEVEL_BAR.map((l) => ({ ...l, n: levels[l.key] })).filter((l) => l.n > 0 || l.key !== 'none');
@@ -160,24 +75,6 @@ function LevelMix({ levels, app, linked, total }: { levels: StaffOverview['level
   );
 }
 
-function Stars({ stars, onOpen }: { stars: StaffOverview['stars']; onOpen?: (id: string) => void }) {
-  const skins = useSkins();
-  return (
-    <section className="card pad stf-card">
-      <div className="stf-head"><h2>잘하고 있는 멤버</h2><span className="meta">최근 2주 · Prism 점수</span></div>
-      {stars.length ? <ol className="stf-people">
-        {stars.map((m, i) => (
-          <li key={m.id}><button type="button" className="stf-person" onClick={() => onOpen?.(m.id)}>
-            <span className={`stf-rank r${i + 1}`}>{i + 1}</span>
-            <MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={36} skins={skins} />
-            <span className="stf-pt"><b>{shortNick(m.nick)}</b><span className="meta">{m.n}판 · 승률 {pct(m.w, m.n)} · 모임 판 {m.crew}</span></span>
-            <span className="stf-score">{m.score}<span>점</span></span>
-          </button></li>
-        ))}
-      </ol> : <Empty>최근 2주에 5판 넘게 한 멤버가 아직 없어요.</Empty>}
-    </section>
-  );
-}
 
 function Care({ api, o, need, onOpen, onDone, onMembers }: { api: Api; o: StaffOverview; need: number; onOpen?: (id: string) => void; onDone: () => unknown; onMembers?: () => void }) {
   const skins = useSkins();
@@ -393,17 +290,24 @@ function StaffRow({ api, m, sort, need, onDone, onOpen }: { api: Api; m: StaffMe
 }
 
 function StaffSkeleton() {
+  const head = (t: string, w = 96) => <div className="sd-head"><h2>{t}</h2><Bone w={w} h={12} /></div>;
   return (
     <SkeletonFrame className="stf">
-      <div className="stf-bar"><span className="stf-bar-t"><Bone w={220} h={14} /></span><Bone w={104} h={32} r="m" /></div>
-      <section className="stf-kpis">{[0, 1, 2, 3].map((i) => <div key={i} className="stf-kpi"><Bone w={96} h={12} /><Bone w={56} h={28} /><Bone w={120} h={12} /></div>)}</section>
-      <div className="stf-grid">
-        <section className="card pad stf-card"><div className="stf-head"><h2>주별 활동</h2><Bone w={88} h={12} /></div><Bone w="100%" h={196} r="m" /></section>
-        <section className="card pad stf-card"><div className="stf-head"><h2>멤버 구성</h2><Bone w={32} h={12} /></div><Bone w="100%" h={12} r="pill" /><div className="stf-mixl">{[0, 1, 2, 3, 4].map((i) => <Bone key={i} w="100%" h={16} />)}</div><div className="stf-foot">{[0, 1].map((i) => <div key={i}><Bone w={88} h={12} /><Bone w={48} h={20} /><Bone w="100%" h={4} r="pill" /></div>)}</div></section>
+      <div className="sd-todo"><span className="sd-todo-t"><Bone w={104} h={16} /></span><span className="sd-todo-l">{[0, 1, 2, 3].map((i) => <span key={i} className="sd-ti"><Bone w={24} h={24} r="pill" /><Bone w={56} h={12} /></span>)}</span><span className="sd-todo-a"><Bone w={96} h={32} r="m" /><Bone w={104} h={32} r="m" /></span></div>
+      <div className="sd-bar"><div className="sd-range"><Bone w={180} h={12} /><Bone w={88} h={12} /></div><Bone w={152} h={40} r="m" /></div>
+      <section className="sd-kpis">{[0, 1, 2, 3].map((i) => <div key={i} className="sd-kpi"><Bone w={80} h={14} /><Bone w={56} h={28} /><Bone w={140} h={12} /><div className="sd-spark"><Bone w="100%" h={36} r="m" /></div></div>)}</section>
+      <div className="sd-row">
+        <section className="card pad sd-card">{head('주별 판과 활동 멤버', 112)}<div className="sd-legend"><Bone w={240} h={12} /></div><Bone w="100%" h={248} r="m" /></section>
+        <section className="card pad sd-card">{head('언제 모이나요')}<Bone w="100%" h={228} r="m" /><Bone w={220} h={14} /></section>
       </div>
-      <div className="stf-grid">
-        {['잘하고 있는 멤버', '챙겨야 할 멤버'].map((t) => <section key={t} className="card pad stf-card"><div className="stf-head"><h2>{t}</h2><Bone w={96} h={12} /></div>
-          <div className="stf-people">{[0, 1, 2, 3].map((i) => <div key={i} className="stf-person"><Bone w={36} h={36} r="pill" /><span className="stf-pt"><Bone w={100} h={14} /><Bone w={160} h={12} /></span></div>)}</div></section>)}
+      <div className="sd-row">
+        <section className="card pad sd-card">{head('잘하고 있는 멤버', 180)}<div className="sd-tbl">{[0, 1, 2, 3, 4].map((i) => <div key={i} className="sd-tr"><span className="sd-who"><Bone w={20} h={14} /><Bone w={32} h={32} r="pill" /><Bone w={96} h={14} /></span><Bone w={24} h={14} /><Bone w="100%" h={8} r="pill" /><Bone w={24} h={14} /><Bone w="100%" h={8} r="pill" /></div>)}</div></section>
+        <section className="card pad sd-card">{head('새 멤버 정착', 104)}<ol className="sd-funnel">{[0, 1, 2, 3, 4, 5].map((i) => <li key={i}><Bone w={72} h={12} /><Bone w={`${100 - i * 12}%`} h={24} r="s" /><Bone w={48} h={12} /></li>)}</ol></section>
+      </div>
+      <div className="sd-row even">
+        <section className="card pad stf-card"><div className="stf-head"><h2>챙겨야 할 멤버</h2><Bone w={96} h={12} /></div>
+          <div className="stf-people">{[0, 1, 2].map((i) => <div key={i} className="stf-person"><Bone w={36} h={36} r="pill" /><span className="stf-pt"><Bone w={100} h={14} /><Bone w={160} h={12} /></span></div>)}</div></section>
+        <section className="card pad stf-card"><div className="stf-head"><h2>멤버 구성</h2><Bone w={32} h={12} /></div><Bone w="100%" h={12} r="pill" /><div className="stf-mixl">{[0, 1, 2, 3, 4].map((i) => <Bone key={i} w="100%" h={16} />)}</div></section>
       </div>
     </SkeletonFrame>
   );

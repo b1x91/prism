@@ -176,8 +176,17 @@ export type StaffOverview = {
   stars: (StaffFace & { n: number; w: number; crew: number; score: number })[];
   care: (StaffFace & { kind: 'pending' | 'review' | 'quiet' | 'away'; days: number; n?: number })[];
   careTotal: number;
+  /** v3.159 — 없을 수 있다 (예전 서버) */
+  periods?: Record<'week' | 'w4' | 'w8', { now: StaffSpan; prev: StaffSpan }>;
+  /** 최근 4주 · [시간대 5][요일 7] 서로 다른 판 */
+  heat?: number[][];
+  funnel?: { joined: number; linked: number; app: number; played: number; crew3: number; regular: number };
+  memberWeeks?: number[];
+  /** 이번 주 지난 시간(ms) */
+  weekInto?: number;
 };
-export type StaffMembers = { members: StaffMember[]; reviewNeed: number; inviteBonus: number; overview?: StaffOverview; /** 가입 신청 (v3.148) */ applications?: { new: number; interview: number; confirmed: number } };
+export type StaffSpan = { active: number; games: number; crew: number; joined: number };
+export type StaffMembers = { members: StaffMember[]; reviewNeed: number; inviteBonus: number; overview?: StaffOverview; /** 가입 신청 (v3.148) */ applications?: { new: number; interview: number; confirmed: number }; /** 답을 기다리는 문의 (v3.159) */ inquiries?: number };
 /** 친구 초대 (v3.107) */
 export type MyInvite = { code: string; bonus: number; rewarded: number; friends: { id: string; nick: string; skin: number | null; main: number | null; joined: number; approved: boolean; pending?: boolean; rewardedAt: number | null }[] };
 export type LookupMember = { id: string; nick: string; skin: number | null; main: number | null };

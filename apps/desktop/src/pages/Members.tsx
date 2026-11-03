@@ -67,7 +67,7 @@ export function StaffPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   return (
     <div className="stack" style={{ gap: 16 }}>
       <h1 className="h1">운영</h1>
-      <StaffView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} onMembers={() => nav('/staff/members')} onJoin={() => nav('/staff/join')} onSeen={() => void refreshSession()} />
+      <StaffView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} onMembers={() => nav('/staff/members')} onJoin={() => nav('/staff/join')} onInquiry={() => nav('/inquiry')} onSeen={() => void refreshSession()} />
     </div>
   );
 }

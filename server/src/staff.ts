@@ -92,7 +92,7 @@ export async function staffMembers(env: Env, me: Member) {
     gamesWithStaff(env),
     env.DB.prepare('SELECT inviter, COUNT(*) AS n FROM invite_rewards GROUP BY inviter').all<{ inviter: string; n: number }>(),
     env.DB.prepare('SELECT member_id AS id, game_id AS g, played_at AS t, win AS w, crew_count AS c FROM participants WHERE played_at >= ?')
-      .bind(weekStart(Date.now()) - (OVERVIEW_WEEKS - 1) * WEEK).all<{ id: string; g: number; t: number; w: number; c: number }>(),
+      .bind(weekStart(Date.now()) - (OVERVIEW_WEEKS * 2 - 1) * WEEK).all<{ id: string; g: number; t: number; w: number; c: number }>(),
   ]);
   const nick = new Map(results.map((r) => [r.id as string, r.nick as string]));
   const invited = new Map(rewards.results.map((r) => [r.inviter, r.n]));
@@ -122,7 +122,8 @@ export async function staffMembers(env: Env, me: Member) {
   await env.DB.prepare('UPDATE members SET staff_seen = ? WHERE id = ?').bind(JSON.stringify([...todo, ...keepApps]), me.id).run().catch(() => {});
   const apps = await env.DB.prepare(`SELECT status, COUNT(*) AS n FROM applications WHERE status IN ('new', 'interview', 'confirmed') GROUP BY status`).all<{ status: string; n: number }>().catch(() => null);
   const ac = Object.fromEntries((apps?.results ?? []).map((r) => [r.status, r.n]));
-  return json({ members, reviewNeed: need, inviteBonus: INVITE_BONUS, applications: { new: ac.new ?? 0, interview: ac.interview ?? 0, confirmed: ac.confirmed ?? 0 }, overview: overviewOf(members as unknown as Row[], recentRows.results) });
+  const inq = await env.DB.prepare("SELECT COUNT(*) AS n FROM inquiries WHERE status IN ('open', 'working')").first<{ n: number }>().catch(() => null);
+  return json({ members, reviewNeed: need, inviteBonus: INVITE_BONUS, applications: { new: ac.new ?? 0, interview: ac.interview ?? 0, confirmed: ac.confirmed ?? 0 }, inquiries: inq?.n ?? 0, overview: overviewOf(members as unknown as Row[], recentRows.results) });
 }
 
 const DAY = 86_400_000, WEEK = 7 * DAY;
@@ -180,8 +181,45 @@ function overviewOf(members: Row[], rows: { id: string; g: number; t: number; w:
   care.sort((a, b) => order[a.kind] - order[b.kind] || b.days - a.days);
   const lv = (k: number) => members.filter((m) => !m.pending && Math.min(m.level, 5) === k).length;
   const cur = weeks[OVERVIEW_WEEKS - 1], prev = weeks[OVERVIEW_WEEKS - 2];
+  // 기간 숫자 (v3.159): 이번 주는 지난주 '같은 때까지'와, 4주·8주는 바로 앞 같은 길이와 비교한다
+  const span = (from: number, to: number) => {
+    const ids = new Set<string>(), gs = new Set<number>(), cs = new Set<number>();
+    for (const r of rows) if (r.t >= from && r.t < to) { ids.add(r.id); gs.add(r.g); if (r.c >= 2) cs.add(r.g); }
+    return { active: ids.size, games: gs.size, crew: cs.size, joined: members.filter((m) => m.joined >= from && m.joined < to).length };
+  };
+  const into = now - ws;
+  const periods = {
+    week: { now: span(ws, now + 1), prev: span(ws - WEEK, ws - WEEK + into) },
+    w4: { now: span(ws - 3 * WEEK, now + 1), prev: span(ws - 7 * WEEK, ws - 4 * WEEK + into) },
+    w8: { now: span(ws - 7 * WEEK, now + 1), prev: span(ws - 15 * WEEK, ws - 8 * WEEK + into) },
+  };
+  // 언제 모이나요: 최근 4주, 요일(월~일) × 시간대(오전 6~12 · 낮 12~18 · 저녁 18~21 · 밤 21~24 · 새벽 0~6), 서로 다른 판 (한국 시간)
+  const heat = Array.from({ length: 5 }, () => Array(7).fill(0) as number[]);
+  const heatSeen = new Set<number>();
+  for (const r of rows) {
+    if (r.t < now - 28 * DAY || heatSeen.has(r.g)) continue;
+    heatSeen.add(r.g);
+    const k = new Date(r.t + 9 * 3_600_000), h = k.getUTCHours(), dow = (k.getUTCDay() + 6) % 7;
+    const slot = h >= 6 && h < 12 ? 0 : h >= 12 && h < 18 ? 1 : h >= 18 && h < 21 ? 2 : h >= 21 ? 3 : 4;
+    heat[slot][dow]++;
+  }
+  // 새 멤버 정착: 최근 4주 가입 → 롤 연결 → 앱 → 첫 판 → 모임 판 3판 → 정회원 이상
+  const crewOf = new Map<string, number>();
+  for (const r of rows) if (r.c >= 2) crewOf.set(r.id, (crewOf.get(r.id) ?? 0) + 1);
+  const fresh = members.filter((m) => !m.admin && m.joined >= now - 28 * DAY);
+  const funnel = {
+    joined: fresh.length,
+    linked: fresh.filter((m) => m.riotId).length,
+    app: fresh.filter((m) => m.app).length,
+    played: fresh.filter((m) => m.games > 0).length,
+    crew3: fresh.filter((m) => (crewOf.get(m.id) ?? 0) >= 3).length,
+    regular: fresh.filter((m) => !m.pending && m.level >= 2).length,
+  };
+  // 멤버 수 흐름 (주마다 그 주 끝까지 가입한 멤버)
+  const memberWeeks = weeks.map((w) => members.filter((m) => m.joined < w.start + WEEK).length);
   return {
     weeks,
+    periods, heat, funnel, memberWeeks, weekInto: into,
     kpi: {
       members: members.length,
       joinedWeek: members.filter((m) => m.joined >= ws).length,

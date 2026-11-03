@@ -11,7 +11,7 @@ export function StaffPage() {
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
       <div className="page-head"><div><h1>운영</h1><p>Prism 현황을 한눈에 보고, 멤버 관리로 승인·단계를 바꿔요.</p></div></div>
-      <StaffView api={api} onOpen={(id) => nav(id === me.id ? '/me' : `/members/${id}`)} onMembers={() => nav('/staff/members')} onJoin={() => nav('/staff/join')} onSeen={refresh} />
+      <StaffView api={api} onOpen={(id) => nav(id === me.id ? '/me' : `/members/${id}`)} onMembers={() => nav('/staff/members')} onJoin={() => nav('/staff/join')} onInquiry={() => nav('/inquiry')} onSeen={refresh} />
     </div></section>
   );
 }
