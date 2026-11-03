@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ACTIVE_AUGMENTS, CHAMPIONS, CHAMPION_LIST, cdragon } from '@prism/core';
-import { ChampImg, ChampSearch, ChannelButtons, Gem, Icon, LightRefraction, imgIn } from '@prism/ui';
+import { ChampImg, ChannelButtons, Gem, Icon, LightRefraction, OmniSearch, imgIn } from '@prism/ui';
 import { APP_URL, useSession } from '../session';
 
 const QUICK = ['아리', '징크스', '가렌', '럭스', '야스오', '말파이트', '세라핀', '이즈리얼'];
@@ -9,7 +9,7 @@ const art = (name: string) => cdragon(CHAMPION_LIST.find((c) => c.name === name)
 
 export function Home() {
   const nav = useNavigate();
-  const { links } = useSession();
+  const { links, api, member, me, login } = useSession();
   const hero = useRef<HTMLElement>(null), search = useRef<HTMLDivElement>(null), gem = useRef<HTMLDivElement>(null);
   const picks = QUICK.map((n) => CHAMPION_LIST.find((c) => c.name === n)).filter(Boolean) as typeof CHAMPION_LIST;
   return (
@@ -19,7 +19,9 @@ export function Home() {
           <span className="eyebrow"><Gem size={16} src="/brand/prism-32.png" />칼바람 아수라장 · 증바람 모임</span>
           <h1>세 개 중에 뭘 고를지,<br />내 챔프가 알려줍니다</h1>
           <p className="sub">챔프를 고르면 프리즘·골드·실버별로 어울리는 증강과 그 이유를 보여드려요. 게임 중엔 뜬 증강 3개를 바로 비교하세요.</p>
-          <div ref={search} className="lit"><ChampSearch onPick={(id) => nav(`/champions/${id}`)} /></div>
+          <div ref={search} className="lit"><OmniSearch variant="hero" hotkey scopes={['member', 'champ', 'augment']} api={member ? api : null} onLogin={login} quick={picks.map((c) => c.id)}
+            placeholder="멤버 전적 · 챔프 · 증강 검색"
+            onOpen={(k, id) => nav(k === 'member' ? (id === me?.id ? '/me' : `/members/${id}`) : k === 'champ' ? `/champions/${id}` : `/augments/${id}`)} /></div>
           <div className="quick">{picks.map((c) => <Link key={c.id} to={`/champions/${c.id}`}><ChampImg id={c.id} size={28} />{c.name}</Link>)}</div>
         </div>
         <div className="art"><div className="gem-stage" ref={gem}><Gem size={168} float src="/brand/prism-256.png" /></div></div>

@@ -354,8 +354,10 @@ export async function searchMembers(env: Env, q: string | null) {
   if (!t) return json({ members: [] });
   const like = `%${t}%`;
   const { results } = await env.DB.prepare(
-    `SELECT m.id, m.nick, ${FACE('m')}, m.tier, m.discord_roles, m.app_first_at FROM members m
-     WHERE m.nick LIKE ?1 OR m.riot_id LIKE ?1 OR m.discord_name LIKE ?1
+    `SELECT m.id, m.nick, ${FACE('m')}, m.tier, m.discord_roles, m.app_first_at,
+       (SELECT COUNT(*) FROM participants p WHERE p.member_id = m.id) AS n, (SELECT COALESCE(SUM(p.win), 0) FROM participants p WHERE p.member_id = m.id) AS w
+     FROM members m
+     WHERE m.nick LIKE ?1 OR m.riot_id LIKE ?1 OR m.discord_name LIKE ?1 OR m.id IN (SELECT member_id FROM member_accounts WHERE riot_id LIKE ?1)
      ORDER BY CASE WHEN m.nick LIKE ?2 THEN 0 ELSE 1 END, MAX(COALESCE(m.app_seen_at, 0), COALESCE(m.web_seen_at, 0), COALESCE(m.last_seen_at, 0)) DESC LIMIT 8`,
   ).bind(like, `${t}%`).all<Record<string, any>>();
   return json({ members: results.map(({ tier, discord_roles, app_first_at, ...r }) => ({ ...r, pending: isPending({ tier, discord_roles, app_first_at }) })) });

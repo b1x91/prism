@@ -150,7 +150,7 @@ main { min-height: calc(100vh - 64px); }
 .hero .art { display: grid; place-items: center; min-height: 360px; }
 .gem-stage { line-height: 0; }
 .gem-stage .gem img { filter: drop-shadow(0 0 28px rgba(140, 180, 255, .55)) drop-shadow(0 8px 40px rgba(90, 140, 255, .35)); }
-.lit .csearch .input { border-color: color-mix(in srgb, var(--beam) 35%, var(--line-2)); box-shadow: var(--shadow), 6px 0 24px -8px color-mix(in srgb, var(--beam) 60%, transparent); }
+.lit .csearch .input, .lit .omni .os-in { border-color: color-mix(in srgb, var(--beam) 35%, var(--line-2)); box-shadow: var(--shadow), 6px 0 24px -8px color-mix(in srgb, var(--beam) 60%, transparent); }
 @media (max-width: 900px) { .hero .art { min-height: 240px; } .gem-stage .gem { --size: 128px !important; } }
 
 /* 개인정보 처리방침 같은 긴 글 */

@@ -39,4 +39,4 @@ export * from './offline';
 export * from './catalog';
 export * from './now';
 export * from './staffjoin';
-export * from './membersearch';
+export * from './omnisearch';
