@@ -473,6 +473,22 @@ svg text{font-family:var(--font)}
 @media (max-width:1100px){.jboard{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:760px){.jboard{grid-template-columns:minmax(0,1fr)}.jcol .jempty{min-height:48px}.iqi{grid-template-columns:auto minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){.jc,.jc.arrive,.jchk.shake,.pulse-dot{animation:none;transition:none}}
+
+/* 문의 동작 묶음: 한 높이(36)·한 바탕의 알약 안에 답장 | 작업 | 해결, 사이는 머리카락 선 */
+.abar{display:inline-flex;align-items:stretch;height:36px;border-radius:10px;background:var(--panel);box-shadow:0 0 0 1px color-mix(in srgb,var(--fg) 6%,transparent),0 1px 2px rgba(18,20,28,.06);overflow:hidden}
+.abar > button{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 14px;border:0;background:none;font-size:13px;font-weight:650;color:var(--fg2);white-space:nowrap;transition:background .2s,color .2s}
+.abar > button + button::before{content:'';position:absolute;left:0;top:9px;bottom:9px;width:1px;background:var(--line)}
+.abar > button svg{width:15px;height:15px;flex:none}
+.abar > button:hover{background:color-mix(in srgb,var(--fg) 5%,transparent);color:var(--fg)}
+.abar > button.on{color:var(--acc);background:color-mix(in srgb,var(--acc) 9%,transparent)}
+.abar [data-w]{min-width:112px}
+.abar .ok-act{display:inline-grid;color:var(--up);font-weight:750;min-width:96px}
+.abar .ok-act > span{grid-area:1/1;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:opacity .2s,transform .3s cubic-bezier(.16,1,.3,1)}
+.abar .ok-act .s2 svg{width:14px;height:14px}
+.abar .ok-act:hover{background:color-mix(in srgb,var(--up) 10%,transparent);color:var(--up)}
+.abar .ok-act.done{background:var(--up);color:#fff}
+.abar .ok-act.done::before{display:none}
+@media (max-width:760px){.abar{width:100%}.abar > button{flex:1;padding:0 8px}}
 </style>
 
 <div id="tip" role="tooltip"></div>
@@ -819,11 +835,11 @@ function todoTop(){const left=todoCount();TOTAL=Math.max(TOTAL,left);const done=
   const hc=document.querySelector('.hh-tabs [data-pg="todo"] .hh-cnt');if(hc)hc.textContent=left||''}
 function itemHtml(t){return `<div class="ti collapse" data-id="${t.id}">${face(t.m,false)}<div><h4>${t.m.n}${t.h?`<span class="meta" style="font-weight:600">${t.h}</span>`:''}</h4>
     <div class="sub">${t.sub.map(([c,x])=>`<span class="${c}">${c==='ok'?'✓ ':c==='no'?'· ':''}${x}</span>`).join('')}${t.pips?`<span class="pips3" title="운영진과 같은 판">${[0,1,2].map(()=>`<i class="on"></i>`).join('')}</span>`:''}</div></div>
-    <div class="acts">${t.k==='approve'?'<button type="button" class="btn ghost sm">보류</button>':''}${actBtn(t.act)}</div></div>`}
+    <div class="acts">${t.k==='approve'?'<button type="button" class="btn ghost">보류</button>':''}${actBtn(t.act)}</div></div>`}
 function appCard(a){const tm=a.time.map(x=>`<span class="jtag">${x}</span>`).join('');const by=MEM.find(m=>m.n===a.by);
   let foot='';
-  if(a.st==='apply')foot=`<div class="jact"><button type="button" class="btn ghost sm">보류</button>${actBtn('면접 시작',true,'grow')}</div>`;
-  if(a.st==='interview'){const signed=a.signs||[];foot=`<div class="jsign"><div class="jsig-faces">${STAFF.map(s=>`<span class="face ${signed.includes(s.n)?'':'off'}" style="background:${s.c}" title="${s.n}">${s.n[0]}${signed.includes(s.n)?'<i>✓</i>':''}</span>`).join('')}</div><span>확정 서명 <b>${signed.length} / 2</b></span></div><div class="jact"><button type="button" class="btn ghost sm">보류</button>${actBtn('내 서명',true,'grow')}</div>`}
+  if(a.st==='apply')foot=`<div class="jact"><button type="button" class="btn ghost">보류</button>${actBtn('면접 시작',true,'grow')}</div>`;
+  if(a.st==='interview'){const signed=a.signs||[];foot=`<div class="jsign"><div class="jsig-faces">${STAFF.map(s=>`<span class="face ${signed.includes(s.n)?'':'off'}" style="background:${s.c}" title="${s.n}">${s.n[0]}${signed.includes(s.n)?'<i>✓</i>':''}</span>`).join('')}</div><span>확정 서명 <b>${signed.length} / 2</b></span></div><div class="jact"><button type="button" class="btn ghost">보류</button>${actBtn('내 서명',true,'grow')}</div>`}
   if(a.st==='ok')foot=`<div class="jchk"><button type="button" class="jck ${a.kt?'on':''}" data-t="kt"><i></i>톡방 초대</button><button type="button" class="jck ${a.dc?'on':''}" data-t="dc"><i></i>디스코드 초대</button></div><div class="jact">${actBtn('초대함으로',true,'grow')}</div>`;
   if(a.st==='invited')foot=`<div class="jwait"><span class="ok">✓ 톡방</span><span class="ok">✓ 디스코드</span><span class="pulse-dot"></span>로그인 기다리는 중</div>`;
   return `<article class="jc" data-id="${a.id}"><div class="jc-h">${face(a,false)}<div><b>${a.n}</b><small>${a.riot}</small></div><time>${a.ago}</time></div>
@@ -873,7 +889,7 @@ function inqItem(q){const m=MEM.find(x=>x.n===q.who),ty=ITYPE[q.t],st=ISTAT[q.st
   return `<div class="ti iqi collapse" data-id="${q.id}">${face(m,false)}<div><h4>${q.who}<span class="stp" style="--kc:${st[1]}"><i></i>${st[0]}</span><span class="meta" style="font-weight:600">${q.ago}</span></h4>
     <p class="iq-text">${q.text}</p>${q.pics?`<div class="thumbs">${'<i></i>'.repeat(q.pics)}</div>`:''}<div class="sub">${q.meta.map(x=>`<span>${x}</span>`).join('')}</div>
     ${q.reply?`<div class="iq-reply"><b>내 답장</b>${q.reply}</div>`:''}</div>
-    <div class="acts">${q.st==='done'?'<button type="button" class="btn sm">다시 열기</button>':`<button type="button" class="btn sm">답장하기</button>${q.st==='new'?'<button type="button" class="btn ghost sm" data-w>작업 중</button>':''}${actBtn('해결')}`}</div></div>`}
+    <div class="acts">${q.st==='done'?`<div class="abar"><button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>다시 열기</button></div>`:`<div class="abar"><button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v6"/></svg>답장</button><button type="button" data-w class="${q.st==='working'?'on':''}" aria-pressed="${q.st==='working'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>${q.st==='working'?'작업 중':'작업 시작'}</button><button type="button" class="act ok-act"><span class="s0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/></svg>해결</span><span class="s1"><i class="spin"></i>처리 중</span><span class="s2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>해결함</span></button></div>`}</div></div>`}
 function inqList(anim){const host=$('#inqlist'),G=inqGroups();
   if(!G.length){host.innerHTML=`<section class="card"><div class="tdone"><span class="big"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><h3>여기는 비었어요</h3><p>다른 상태를 골라 보세요.</p></div></section>`;return}
   host.innerHTML=G.map((g,i)=>{const ty=ITYPE[g.t],ppl=new Set(g.items.map(x=>x.who)).size;
@@ -881,7 +897,7 @@ function inqList(anim){const host=$('#inqlist'),G=inqGroups();
       <div class="titems" style="margin-top:12px">${g.items.map(inqItem).join('')}</div></section>`}).join('');
   if(anim)host.querySelectorAll('.tsec').forEach((x,i)=>{x.style.animation='none';x.offsetHeight;x.style.animation=`vzFade .5s cubic-bezier(.16,1,.3,1) ${i*40}ms both`});
   host.querySelectorAll('.iqi .act').forEach(b=>b.onclick=()=>runAct(b,()=>{const row=b.closest('.ti');collapseRow(row,()=>{INQ.find(q=>q.id===row.dataset.id).st='done';inqTop();inqList(false)})}));
-  host.querySelectorAll('.iqi [data-w]').forEach(b=>b.onclick=()=>{INQ.find(q=>q.id===b.closest('.ti').dataset.id).st='working';inqTop();inqList(false)})}
+  host.querySelectorAll('.iqi [data-w]').forEach(b=>b.onclick=()=>{const q=INQ.find(x=>x.id===b.closest('.ti').dataset.id);q.st=q.st==='working'?'new':'working';inqTop();inqList(false)})}
 function inqAll(anim){inqTop();inqList(anim)}
 
 // ═════════ 탭 전환 ═════════
