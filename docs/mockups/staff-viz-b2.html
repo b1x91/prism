@@ -59,8 +59,22 @@ svg text{font-family:var(--font)}
 .card.grow{display:flex;flex-direction:column}
 .plot.fill{flex:1;min-height:280px}
 .plot.fill > svg{position:absolute;inset:0}
-.cline{opacity:0;transition:opacity .2s}
-#combo:hover .cline,#combo:focus-within .cline{opacity:1}
+.cline{opacity:0}
+.vz-dot{opacity:0}
+/* 처음 열 때 한 번: 막대가 아래에서 자라고, 면·칩은 살짝 떠오르며 */
+@keyframes vzGrow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.vz-grow{transform-box:fill-box;transform-origin:50% 100%;animation:vzGrow .9s cubic-bezier(.16,1,.3,1) both}
+@keyframes vzFade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.vz-fade{animation:vzFade .9s cubic-bezier(.16,1,.3,1) both}
+@keyframes vzRing{from{stroke-dasharray:0 999}}
+.ring svg circle + circle{animation:vzRing 1.1s cubic-bezier(.16,1,.3,1) both .15s}
+@keyframes vzWide{from{width:0}}
+.st .meter i{animation:vzWide 1s cubic-bezier(.16,1,.3,1) both .2s}
+@keyframes vzScaleX{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.mr .sb svg g{transform-origin:0 50%;animation:vzScaleX 1s cubic-bezier(.16,1,.3,1) both .15s}
+.card{animation:vzFade .6s cubic-bezier(.16,1,.3,1) both}
+.row .card:nth-child(2){animation-delay:.06s}
+@media (prefers-reduced-motion: reduce){.vz-grow,.vz-fade,.card,.st .meter i,.mr .sb svg g,.ring svg circle + circle{animation:none}}
 .ax{font-size:12px;fill:var(--mut)}
 .ax.now{fill:var(--fg);font-weight:700}
 .lbl{font-size:12px;fill:var(--fg);font-weight:700}
@@ -250,26 +264,33 @@ function combo(){const w=W('#combo'),H=Math.max(280,$('#combo').clientHeight),L=
   const y=v=>T+ih-v/g.top*ih,col=iw/8,bw=Math.min(20,col*.32),cx=i=>L+col*i+col/2,acc=css('--acc'),pan=css('--panel'),soft=`color-mix(in srgb, ${acc} 32%, ${pan})`;
   const id=Math.random().toString(36).slice(2,7),df=el(s,'defs',{});
   const ag=el(df,'linearGradient',{id:'a'+id,x1:0,y1:0,x2:0,y2:1});[[0,.20],[.7,.04],[1,0]].forEach(([o,a])=>el(ag,'stop',{offset:o,'stop-color':acc,'stop-opacity':a}));
+  // 이번 주(진행 중) 무늬: 옅은 바탕 위 45° 가는 빗금
+  const pt=el(df,'pattern',{id:'p'+id,width:6,height:6,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'});el(pt,'rect',{width:6,height:6,fill:`color-mix(in srgb, ${acc} 14%, ${pan})`});el(pt,'rect',{width:2.5,height:6,fill:`color-mix(in srgb, ${acc} 55%, ${pan})`});
   for(let i=0;i<=Math.round(g.top/g.step);i++){const v=g.step*i;el(s,'line',{x1:L,x2:w-R,y1:y(v),y2:y(v),stroke:i?css('--grid'):css('--line2')});el(s,'text',{x:L-8,y:y(v)+4,'text-anchor':'end',class:'ax tn'},fmt(v))}
-  const hl=el(s,'rect',{x:0,y:T-36,width:col-4,height:ih+36,rx:12,fill:css('--panel2'),opacity:0});
-  // 물결 = 막대 꼭대기(전체 판)를 그대로 잇는다 — 막대와 물결이 같은 높이
+  const hl=el(s,'rect',{x:0,y:T-36,width:col-4,height:ih+36,rx:12,fill:css('--panel2'),opacity:0,style:'transition:opacity .35s ease, x .35s cubic-bezier(.16,1,.3,1)'});
+  // 물결 = 막대 꼭대기(전체 판)를 잇는다
   const pts=W8.map((d,i)=>[cx(i),y(d.g)]),line=smooth(pts);
   const area=`${line} L${pts[7][0]},${y(0)} L${pts[0][0]},${y(0)} Z`;
-  el(s,'path',{d:area,fill:`url(#a${id})`});
-  // 막대 = 전체 판 (아래 모임 판 · 위 그 밖의 판). 물결 모양으로 잘라 물결 밖으로 나오지 않게
+  el(s,'path',{d:area,fill:`url(#a${id})`,class:'vz-fade'});
+  // 막대 = 전체 판. 지난 주들은 물결 모양으로 잘라 물결 밖으로 나오지 않게, 이번 주는 진행 중이라 온전한 막대 + 빗금
   const cpa=el(df,'clipPath',{id:'k'+id});el(cpa,'path',{d:area});const bars=el(s,'g',{'clip-path':`url(#k${id})`});
-  W8.forEach((d,i)=>{const x=cx(i)-bw/2,top=y(d.g)-24;
-    if(d.c>0)el(bars,'rect',{x,y:y(d.c),width:bw,height:y(0)-y(d.c),fill:acc});
-    if(d.g>d.c)el(bars,'rect',{x,y:top,width:bw,height:y(d.c)-top-(d.c?2:0),fill:soft})});
-  // 선·점선·점은 마우스를 올렸을 때만 (.cline)
+  W8.forEach((d,i)=>{const x=cx(i)-bw/2,last=i===7,gg=el(last?s:bars,'g',{class:'vz-grow',style:`animation-delay:${120+i*55}ms`});
+    if(last){
+      if(d.c>0)el(gg,'path',{d:topBar(x,y(d.c),bw,y(0)-y(d.c),d.g>d.c?0:5),fill:`color-mix(in srgb, ${acc} 60%, ${pan})`});
+      if(d.g>d.c)el(gg,'path',{d:topBar(x,y(d.g),bw,y(d.c)-y(d.g)-(d.c?2:0),5),fill:`url(#p${id})`});
+      el(s,'text',{x:cx(i),y:y(d.g)-18,'text-anchor':'middle',class:'ax',style:'font-size:11px;font-weight:700'},'진행 중');
+    }else{const top=y(d.g)-24;
+      if(d.c>0)el(gg,'rect',{x,y:y(d.c),width:bw,height:y(0)-y(d.c),fill:acc});
+      if(d.g>d.c)el(gg,'rect',{x,y:top,width:bw,height:y(d.c)-top-(d.c?2:0),fill:soft})}});
+  // 선·점선·점은 마우스를 올렸을 때 그려지듯 나타나고, 떼면 천천히 사라진다
   const lineG=el(s,'g',{class:'cline'});
-  el(lineG,'path',{d:smooth(pts.slice(0,7)),fill:'none',stroke:acc,'stroke-width':2,'stroke-linecap':'round',opacity:.85});
-  const p6=pts[6],p7=pts[7],h3=(p7[0]-p6[0])/3;el(lineG,'path',{d:`M${p6[0]},${p6[1]} C${p6[0]+h3},${p6[1]} ${p7[0]-h3},${p7[1]} ${p7[0]},${p7[1]}`,fill:'none',stroke:acc,'stroke-width':2,'stroke-dasharray':'4 4','stroke-linecap':'round',opacity:.6});
-  // 활동 멤버: 가장 많은 주·가장 적은 주만 늘 보이고, 나머지는 마우스를 올리면
+  const mainLine=el(lineG,'path',{d:smooth(pts.slice(0,7)),fill:'none',stroke:acc,'stroke-width':2,'stroke-linecap':'round',opacity:.9});
+  const p6=pts[6],p7=pts[7],h3=(p7[0]-p6[0])/3;const dashLine=el(lineG,'path',{d:`M${p6[0]},${p6[1]} C${p6[0]+h3},${p6[1]} ${p7[0]-h3},${p7[1]} ${p7[0]},${p7[1]}`,fill:'none',stroke:acc,'stroke-width':2,'stroke-dasharray':'4 4','stroke-linecap':'round',opacity:0});
   const act=W8.map((d,i)=>[d.a,i]).filter(([a])=>a>0),hi=act.reduce((m,x)=>x[0]>m[0]?x:m)[1],lo=act.reduce((m,x)=>x[0]<m[0]?x:m)[1];
-  const pills=W8.map((d,i)=>{const [px,py]=pts[i];if(d.g>0)el(lineG,'circle',{cx:px,cy:py,r:i===7?4.5:3.5,fill:i===7?pan:acc,stroke:i===7?acc:pan,'stroke-width':2});
-    if(!d.a)return null;const tag=i===hi?'최고':i===lo?'최저':null,num=d.a+'명',bw2=tag?34:0,pw=bw2+String(d.a).length*8+(tag?36:30),ph=30,qy=py-ph-12,x0=Math.min(Math.max(px-pw/2,L),w-R-pw);
-    const gp=el(s,'g',{opacity:tag?1:0,style:'transition:opacity .15s'});
+  const dots=[];
+  const pills=W8.map((d,i)=>{const [px,py]=pts[i];if(d.g>0)dots.push([i,el(lineG,'circle',{cx:px,cy:py,r:i===7?4.5:3.5,fill:i===7?pan:acc,stroke:i===7?acc:pan,'stroke-width':2,class:'vz-dot'})]);
+    if(!d.a)return null;const tag=i===hi?'최고':i===lo?'최저':null,num=d.a+'명',bw2=tag?34:0,pw=bw2+String(d.a).length*8+(tag?36:30),ph=30,qy=py-ph-12-(i===7?14:0),x0=Math.min(Math.max(px-pw/2,L),w-R-pw);
+    const gp=el(s,'g',{opacity:tag?1:0,class:tag?'vz-fade':'',style:`transition:opacity .3s ease;${tag?'animation-delay:700ms':''}`});
     el(gp,'rect',{x:x0,y:qy,width:pw,height:ph,rx:15,fill:pan,stroke:tag?acc:css('--line2'),'stroke-width':tag?1.5:1,style:'filter:drop-shadow(0 2px 6px rgba(20,24,40,.10))'});
     if(tag){el(gp,'rect',{x:x0+4,y:qy+4,width:bw2,height:ph-8,rx:11,fill:i===hi?acc:css('--fg2')});el(gp,'text',{x:x0+4+bw2/2,y:qy+19,'text-anchor':'middle',style:'font-size:12px;font-weight:700',fill:'#fff'},tag)}
     else el(gp,'circle',{cx:x0+12,cy:qy+ph/2,r:3.5,fill:acc});
@@ -277,7 +298,19 @@ function combo(){const w=W('#combo'),H=Math.max(280,$('#combo').clientHeight),L=
   W8.forEach((d,i)=>{const last=i===7;if(last||col>=52||(7-i)%2===0)el(s,'text',{x:cx(i),y:H-8,'text-anchor':'middle',class:'ax'+(last?' now':'')},d.l);
     const hit=el(s,'rect',{x:L+col*i,y:0,width:col,height:H,class:'hit'});
     hover(hit,last?'이번 주 (진행 중)':d.l+' 주',[[acc,'모임 판',fmt(d.c)],[soft,'그 밖의 판',fmt(d.g-d.c)],[css('--fg2'),'활동 멤버',d.a+'명']],()=>{hl.setAttribute('x',L+col*i+2);hl.setAttribute('opacity',1);if(pills[i]&&i!==hi&&i!==lo)pills[i].setAttribute('opacity',1)},()=>{hl.setAttribute('opacity',0);if(pills[i]&&i!==hi&&i!==lo)pills[i].setAttribute('opacity',0)})});
-  $('#combo').replaceChildren(s)}
+  $('#combo').replaceChildren(s);
+  // 그려지는 선: 길이를 재서 dashoffset 으로 왼쪽부터 그린다
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,len=mainLine.getTotalLength();
+  mainLine.style.strokeDasharray=len;mainLine.style.strokeDashoffset=len;
+  let out;const box=$('#combo');
+  box.onpointerenter=()=>{clearTimeout(out);lineG.style.transition='opacity .25s ease';lineG.style.opacity=1;
+    if(reduce){mainLine.style.strokeDashoffset=0;dashLine.style.opacity=.6;dots.forEach(([,c])=>c.style.opacity=1);return}
+    mainLine.style.transition='stroke-dashoffset .9s cubic-bezier(.65,0,.35,1)';mainLine.style.strokeDashoffset=0;
+    dots.forEach(([i,c])=>{c.style.transition=`opacity .3s ease ${i*90}ms, r .3s ease`;c.style.opacity=1});
+    dashLine.style.transition='opacity .4s ease .8s';dashLine.style.opacity=.6};
+  box.onpointerleave=()=>{lineG.style.transition='opacity .6s ease';lineG.style.opacity=0;
+    out=setTimeout(()=>{mainLine.style.transition='none';mainLine.style.strokeDashoffset=len;dashLine.style.transition='none';dashLine.style.opacity=0;dots.forEach(([,c])=>{c.style.transition='none';c.style.opacity=0})},650)};
+}
 
 // ───── GitHub 식 날짜 열지도 + 시간대 줄 ─────
 function cal(){const w=W('#cal'),lab=24,gap=4,N=9,WK=CAL.slice(-N),cw=Math.max(10,(w-lab-gap*(N-1))/N),ch=Math.min(cw,24),H=22+7*(ch+gap)+32,s=svg(w,H);
