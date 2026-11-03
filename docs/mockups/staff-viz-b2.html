@@ -489,6 +489,34 @@ svg text{font-family:var(--font)}
 .abar .ok-act.done{background:var(--up);color:#fff}
 .abar .ok-act.done::before{display:none}
 @media (max-width:760px){.abar{width:100%}.abar > button{flex:1;padding:0 8px}}
+
+/* 답장 작성: 줄 아래로 부드럽게 펼쳐진다 */
+.iqi .rbox{grid-column:1/-1;display:grid;grid-template-rows:0fr;transition:grid-template-rows .42s cubic-bezier(.16,1,.3,1),opacity .3s;opacity:0}
+.iqi .rbox > div{min-height:0;overflow:hidden}
+.iqi .rbox.open{grid-template-rows:1fr;opacity:1}
+.rb-in{margin-top:4px;padding:16px;border-radius:14px;background:var(--panel);box-shadow:0 0 0 1px color-mix(in srgb,var(--fg) 5%,transparent),0 8px 24px -12px rgba(18,20,28,.18);display:grid;gap:12px}
+.rb-to{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;color:var(--fg2)}
+.rb-to b{color:var(--fg)}
+.rb-to .face{width:24px;height:24px;font-size:11px}
+.rb-tpl{display:flex;flex-wrap:wrap;gap:6px}
+.rb-tpl button{height:28px;padding:0 10px;border:0;border-radius:999px;background:var(--panel2);font-size:12px;font-weight:600;color:var(--fg2);transition:background .2s,color .2s}
+.rb-tpl button:hover{background:color-mix(in srgb,var(--acc) 12%,var(--panel));color:var(--acc)}
+.rb-in textarea{width:100%;min-height:84px;resize:none;border:0;border-radius:12px;padding:12px 14px;background:var(--panel2);font:inherit;font-size:14px;line-height:1.55;color:var(--fg);outline:none;transition:box-shadow .2s}
+.rb-in textarea:focus{box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 45%,transparent)}
+.rb-foot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rb-foot .sp{flex:1}
+.rb-n{font-size:12px;color:var(--mut)}
+.rb-chk{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:650;color:var(--fg2);cursor:pointer}
+.rb-chk input{position:absolute;opacity:0;pointer-events:none}
+.rb-chk i{width:16px;height:16px;border-radius:5px;background:var(--panel2);box-shadow:inset 0 0 0 1.5px var(--line2);display:grid;place-items:center;transition:background .2s,box-shadow .2s}
+.rb-chk input:checked + i{background:var(--up);box-shadow:none}
+.rb-chk input:checked + i::after{content:'';width:7px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.rb-send{min-width:108px}
+.rb-send:disabled{opacity:.4;cursor:default}
+.iq-reply.fresh{animation:fresh 1.4s cubic-bezier(.16,1,.3,1)}
+@keyframes fresh{0%{opacity:0;transform:translateY(-4px);box-shadow:0 0 0 2px color-mix(in srgb,var(--up) 50%,transparent)}40%{opacity:1;transform:none}100%{box-shadow:0 0 0 0 transparent}}
+@media (max-width:760px){.rb-foot .sp{flex-basis:100%;height:0}.rb-foot .btn{flex:1}}
+@media (prefers-reduced-motion:reduce){.iqi .rbox,.iq-reply.fresh{transition:none;animation:none}}
 </style>
 
 <div id="tip" role="tooltip"></div>
@@ -888,8 +916,27 @@ function inqTop(){const c=k=>INQ.filter(q=>q.st===k).length,open=INQ.filter(q=>q
 function inqItem(q){const m=MEM.find(x=>x.n===q.who),ty=ITYPE[q.t],st=ISTAT[q.st];
   return `<div class="ti iqi collapse" data-id="${q.id}">${face(m,false)}<div><h4>${q.who}<span class="stp" style="--kc:${st[1]}"><i></i>${st[0]}</span><span class="meta" style="font-weight:600">${q.ago}</span></h4>
     <p class="iq-text">${q.text}</p>${q.pics?`<div class="thumbs">${'<i></i>'.repeat(q.pics)}</div>`:''}<div class="sub">${q.meta.map(x=>`<span>${x}</span>`).join('')}</div>
-    ${q.reply?`<div class="iq-reply"><b>내 답장</b>${q.reply}</div>`:''}</div>
-    <div class="acts">${q.st==='done'?`<div class="abar"><button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>다시 열기</button></div>`:`<div class="abar"><button type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v6"/></svg>답장</button><button type="button" data-w class="${q.st==='working'?'on':''}" aria-pressed="${q.st==='working'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>${q.st==='working'?'작업 중':'작업 시작'}</button><button type="button" class="act ok-act"><span class="s0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/></svg>해결</span><span class="s1"><i class="spin"></i>처리 중</span><span class="s2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>해결함</span></button></div>`}</div></div>`}
+    ${q.reply?`<div class="iq-reply"><b>내 답장 · 디스코드 DM으로 보냈어요</b>${q.reply}</div>`:''}</div>
+    <div class="acts">${q.st==='done'?`<div class="abar"><button type="button" data-o><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>다시 열기</button></div>`:`<div class="abar"><button type="button" data-r aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 5 5v6"/></svg>답장</button><button type="button" data-w class="${q.st==='working'?'on':''}" aria-pressed="${q.st==='working'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/></svg>${q.st==='working'?'작업 중':'작업 시작'}</button><button type="button" class="act ok-act"><span class="s0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/></svg>해결</span><span class="s1"><i class="spin"></i>처리 중</span><span class="s2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>해결함</span></button></div>`}</div>${q.st!=='done'?replyBox(q):''}</div>`}
+
+const REPLY_LBL=['확인했어요','다음 업데이트에서','고쳤어요','더 알려 주세요'];
+const REPLY_TPL=['확인했어요. 살펴보고 다시 알려 드릴게요.','다음 업데이트에서 고칠게요. 알려 주셔서 고마워요!','고쳤어요. 앱을 업데이트한 뒤 다시 확인해 주세요.','조금 더 알려 주실 수 있을까요? 언제, 어느 화면에서였는지요.'];
+function replyBox(q){return `<div class="rbox" aria-hidden="true"><div><div class="rb-in">
+  <div class="rb-to"><span class="face" style="background:${MEM.find(m=>m.n===q.who).c}">${q.who[0]}</span><b>${q.who}</b>님께 답장 <span class="meta">· 디스코드 DM과 '내 문의'로 가요</span></div>
+  <div class="rb-tpl">${REPLY_TPL.map((t,i)=>`<button type="button" data-t="${i}" title="${t}">${REPLY_LBL[i]}</button>`).join('')}</div>
+  <textarea rows="3" maxlength="1000" placeholder="답장을 써 주세요"></textarea>
+  <div class="rb-foot"><label class="rb-chk"><input type="checkbox" checked><i></i>보내고 해결로 표시</label><span class="rb-n tn">0 / 1000</span><span class="sp"></span><button type="button" class="btn ghost" data-x>취소</button><button type="button" class="btn pri act rb-send" disabled><span class="s0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg>보내기</span><span class="s1"><i class="spin"></i>보내는 중</span><span class="s2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>보냈어요</span></button></div>
+</div></div></div>`}
+function bindReply(row){const q=INQ.find(x=>x.id===row.dataset.id),box=row.querySelector('.rbox'),btn=row.querySelector('[data-r]');if(!box||!btn)return;
+  const ta=box.querySelector('textarea'),send=box.querySelector('.rb-send'),n=box.querySelector('.rb-n');
+  const open=v=>{box.classList.toggle('open',v);box.setAttribute('aria-hidden',!v);btn.classList.toggle('on',v);btn.setAttribute('aria-expanded',v);if(v)setTimeout(()=>ta.focus({preventScroll:true}),260)};
+  const sync=()=>{n.textContent=`${ta.value.length} / 1000`;send.disabled=!ta.value.trim();ta.style.height='auto';ta.style.height=Math.min(220,ta.scrollHeight)+'px'};
+  btn.onclick=()=>open(!box.classList.contains('open'));
+  box.querySelector('[data-x]').onclick=()=>open(false);
+  box.querySelectorAll('.rb-tpl button').forEach(b=>b.onclick=()=>{ta.value=REPLY_TPL[+b.dataset.t];sync();ta.focus()});
+  ta.oninput=sync;ta.onkeydown=e=>{if(e.key==='Enter'&&(e.metaKey||e.ctrlKey)&&!send.disabled)send.click()};
+  send.onclick=()=>{if(send.disabled)return;const resolve=box.querySelector('.rb-chk input').checked,text=ta.value.trim();
+    runAct(send,()=>{q.reply=text;if(resolve){collapseRow(row,()=>{q.st='done';inqTop();inqList(false)})}else{q.st='replied';inqTop();inqList(false);const r=$(`.iqi[data-id="${q.id}"] .iq-reply`);if(r)r.classList.add('fresh')}})}}
 function inqList(anim){const host=$('#inqlist'),G=inqGroups();
   if(!G.length){host.innerHTML=`<section class="card"><div class="tdone"><span class="big"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><h3>여기는 비었어요</h3><p>다른 상태를 골라 보세요.</p></div></section>`;return}
   host.innerHTML=G.map((g,i)=>{const ty=ITYPE[g.t],ppl=new Set(g.items.map(x=>x.who)).size;
@@ -897,6 +944,7 @@ function inqList(anim){const host=$('#inqlist'),G=inqGroups();
       <div class="titems" style="margin-top:12px">${g.items.map(inqItem).join('')}</div></section>`}).join('');
   if(anim)host.querySelectorAll('.tsec').forEach((x,i)=>{x.style.animation='none';x.offsetHeight;x.style.animation=`vzFade .5s cubic-bezier(.16,1,.3,1) ${i*40}ms both`});
   host.querySelectorAll('.iqi .act').forEach(b=>b.onclick=()=>runAct(b,()=>{const row=b.closest('.ti');collapseRow(row,()=>{INQ.find(q=>q.id===row.dataset.id).st='done';inqTop();inqList(false)})}));
+  host.querySelectorAll('.iqi').forEach(bindReply);
   host.querySelectorAll('.iqi [data-w]').forEach(b=>b.onclick=()=>{const q=INQ.find(x=>x.id===b.closest('.ti').dataset.id);q.st=q.st==='working'?'new':'working';inqTop();inqList(false)})}
 function inqAll(anim){inqTop();inqList(anim)}
 
