@@ -1,0 +1,353 @@
+<title>롤 계정 연결 시안</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* 레이아웃: 위에 짧은 설명 + 화면 바꾸기, 아래로 시안 셋 — 각각 앱 설정 화면의 '롤 계정' 칸만 실제 크기로. 모두 눌러 볼 수 있다 */
+:root {
+  --bg: #f5f5f2; --stage: #ecece7; --surface: #ffffff; --surface-2: #f3f3ef; --surface-3: #e9e9e3;
+  --line: rgba(18,22,38,.08); --line-2: rgba(18,22,38,.15);
+  --text: #11141f; --text-2: #4d5469; --text-3: #8a8fa2;
+  --accent: #3a63f0; --accent-ink: #ffffff; --accent-soft: rgba(58,99,240,.09); --accent-line: rgba(58,99,240,.35);
+  --gold: #b8860b; --gold-soft: rgba(196,150,30,.13);
+  --live: #16a34a; --live-soft: rgba(22,163,74,.11);
+  --lose: #dc2626; --lose-soft: rgba(220,38,38,.08);
+  --shadow: 0 1px 2px rgba(16,20,36,.05), 0 8px 24px rgba(16,20,36,.06);
+  --hero-a: #1a2350; --hero-b: #0e1430; --hero-ink: #f3f5ff;
+  --sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --r-s: 8px; --r-m: 12px; --r-l: 16px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #07090f; --stage: #0b0e18; --surface: #0f1322; --surface-2: #151a2c; --surface-3: #1d2339;
+  --line: rgba(170,182,230,.08); --line-2: rgba(170,182,230,.17);
+  --text: #eef1f8; --text-2: #a7aec4; --text-3: #69708c;
+  --accent: #7c9cff; --accent-ink: #0b1030; --accent-soft: rgba(124,156,255,.12); --accent-line: rgba(124,156,255,.42);
+  --gold: #e2b84a; --gold-soft: rgba(226,184,74,.14);
+  --live: #4ade80; --live-soft: rgba(74,222,128,.12);
+  --lose: #f87171; --lose-soft: rgba(248,113,113,.1);
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.35);
+  --hero-a: #1c2556; --hero-b: #0a0f26; --hero-ink: #f3f5ff;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #07090f; --stage: #0b0e18; --surface: #0f1322; --surface-2: #151a2c; --surface-3: #1d2339;
+  --line: rgba(170,182,230,.08); --line-2: rgba(170,182,230,.17);
+  --text: #eef1f8; --text-2: #a7aec4; --text-3: #69708c;
+  --accent: #7c9cff; --accent-ink: #0b1030; --accent-soft: rgba(124,156,255,.12); --accent-line: rgba(124,156,255,.42);
+  --gold: #e2b84a; --gold-soft: rgba(226,184,74,.14);
+  --live: #4ade80; --live-soft: rgba(74,222,128,.12);
+  --lose: #f87171; --lose-soft: rgba(248,113,113,.1);
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 28px rgba(0,0,0,.35);
+  --hero-a: #1c2556; --hero-b: #0a0f26; --hero-ink: #f3f5ff;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 14px; line-height: 1.5; word-break: keep-all; -webkit-font-smoothing: antialiased; }
+.page { max-width: 1040px; margin: 0 auto; padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 32px; }
+header.intro { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; }
+header.intro > div:first-child { flex: 1 1 420px; min-width: 0; }
+h1 { margin: 0 0 4px; font-size: 28px; letter-spacing: -.02em; text-wrap: balance; }
+.lede { margin: 0; color: var(--text-2); max-width: 62ch; }
+.theme { flex: none; display: inline-flex; padding: 4px; gap: 4px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
+.theme button { border: 0; background: none; color: var(--text-2); font: inherit; font-size: 13px; font-weight: 600; padding: 4px 12px; border-radius: 999px; cursor: pointer; }
+.theme button[aria-pressed="true"] { background: var(--surface); color: var(--text); box-shadow: var(--shadow); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* 시안 한 벌 */
+.opt { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 24px; align-items: start; }
+.opt-note { display: grid; gap: 8px; position: sticky; top: 16px; }
+.opt-note .tag { width: fit-content; font-size: 12px; font-weight: 800; letter-spacing: .08em; color: var(--accent); }
+.opt-note h2 { margin: 0; font-size: 20px; letter-spacing: -.01em; }
+.opt-note p { margin: 0; color: var(--text-2); font-size: 13px; }
+.opt-note ul { margin: 0; padding-left: 16px; color: var(--text-2); font-size: 13px; display: grid; gap: 4px; }
+.stage { background: var(--stage); border-radius: var(--r-l); padding: 24px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-l); box-shadow: var(--shadow); padding: 20px; display: grid; gap: 16px; min-width: 0; }
+.card-h { display: flex; align-items: center; gap: 8px; }
+.card-h h3 { margin: 0; font-size: 16px; }
+.card-h .count { margin-left: auto; font-size: 12px; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.hint { margin: 0; font-size: 12px; color: var(--text-3); }
+
+/* 공용 조각 */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 4px; height: 32px; padding: 0 12px; border-radius: var(--r-s); border: 1px solid var(--line-2); background: var(--surface); color: var(--text); font: inherit; font-size: 13px; font-weight: 650; cursor: pointer; white-space: nowrap; transition: background .15s, border-color .15s, transform .15s; }
+.btn:hover { background: var(--surface-2); }
+.btn.primary { background: var(--accent); border-color: transparent; color: var(--accent-ink); }
+.btn.primary:hover { filter: brightness(1.06); }
+.btn.ghost { border-color: transparent; background: none; color: var(--text-2); }
+.btn.ghost:hover { background: var(--surface-2); color: var(--text); }
+.btn.danger { color: var(--lose); border-color: color-mix(in srgb, var(--lose) 45%, transparent); background: var(--lose-soft); }
+.av { flex: none; width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; font-weight: 800; font-size: 15px; color: #fff; }
+.av.c0 { background: #5b6bd6; } .av.c1 { background: #2f8f83; } .av.c2 { background: #b0603a; } .av.c3 { background: #7a5bb8; } .av.c4 { background: #4b7a33; }
+.nm { min-width: 0; display: flex; align-items: baseline; gap: 2px; }
+.nm b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nm small { color: var(--text-3); font-size: 12px; flex: none; }
+.pill { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.pill.live { color: var(--live); background: var(--live-soft); }
+.pill.live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 22%, transparent); }
+.crown { width: 14px; height: 14px; flex: none; }
+.fade-in { animation: fin .28s cubic-bezier(.16,1,.3,1); }
+@keyframes fin { from { opacity: 0; transform: translateY(4px); } }
+@media (prefers-reduced-motion: reduce) { .fade-in { animation: none; } * { transition: none !important; } }
+
+/* ───── 시안 A: 계정 슬롯 ───── */
+.slots { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.slot { position: relative; min-width: 0; min-height: 156px; border-radius: var(--r-m); border: 1px solid var(--line); background: var(--surface-2); padding: 32px 12px 12px; display: grid; justify-items: center; align-content: start; gap: 8px; text-align: center; transition: border-color .15s, background .15s, transform .15s; }
+.slot .av { width: 48px; height: 48px; border-radius: 14px; font-size: 20px; }
+.slot .nm { flex-direction: column; align-items: center; gap: 0; max-width: 100%; }
+.slot .nm b { max-width: 100%; font-size: 14px; }
+.slot.main { background: linear-gradient(180deg, var(--accent-soft), transparent 70%), var(--surface); border-color: var(--accent-line); }
+.slot .badge { position: absolute; top: 8px; left: 8px; display: inline-flex; align-items: center; gap: 2px; font-size: 11px; font-weight: 800; color: var(--accent); }
+.slot .live-dot { position: absolute; top: 10px; right: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--live); box-shadow: 0 0 0 3px var(--live-soft); }
+.slot .more { position: absolute; top: 4px; right: 4px; width: 28px; height: 28px; border: 0; border-radius: 8px; background: none; color: var(--text-3); cursor: pointer; opacity: 0; transition: opacity .15s; display: grid; place-items: center; }
+.slot:hover .more, .slot .more:focus-visible, .slot .more[aria-expanded="true"] { opacity: 1; }
+.slot:hover .live-dot { opacity: 0; }
+.slot .more:hover { background: var(--surface-3); color: var(--text); }
+.slot .menu { position: absolute; top: 34px; right: 6px; z-index: 5; min-width: 132px; background: var(--surface); border: 1px solid var(--line-2); border-radius: var(--r-m); box-shadow: var(--shadow); padding: 4px; display: grid; text-align: left; }
+.slot .menu button { border: 0; background: none; font: inherit; font-size: 13px; color: var(--text); padding: 8px 12px; border-radius: 8px; text-align: left; cursor: pointer; }
+.slot .menu button:hover { background: var(--surface-2); }
+.slot .menu button.danger { color: var(--lose); }
+.slot .sub { font-size: 12px; color: var(--text-3); }
+.slot.empty { background: none; border-style: dashed; color: var(--text-3); align-content: center; padding-top: 12px; }
+.slot.empty .plus { width: 48px; height: 48px; border-radius: 14px; border: 1px dashed var(--line-2); display: grid; place-items: center; font-size: 22px; }
+.slot.ready { border: 1px dashed var(--accent-line); background: var(--accent-soft); color: var(--text); cursor: default; padding-top: 16px; }
+.slot.ready .plus { border-color: var(--accent-line); color: var(--accent); }
+.slot.ready .acts { display: grid; gap: 4px; width: 100%; }
+.slot.ready .acts .btn { height: 28px; font-size: 12px; padding: 0 8px; }
+
+/* ───── 시안 B: 메인 무대 + 목록 ───── */
+.detect { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 12px 12px 16px; border-radius: var(--r-m); background: var(--live-soft); border: 1px solid color-mix(in srgb, var(--live) 28%, transparent); }
+.detect .txt { flex: 1 1 220px; min-width: 0; display: grid; gap: 0; }
+.detect .txt span { font-size: 12px; color: var(--text-2); }
+.detect .txt b { font-size: 15px; }
+.detect .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.hero { position: relative; overflow: hidden; border-radius: var(--r-l); padding: 20px; color: var(--hero-ink); background: radial-gradient(120% 140% at 0% 0%, var(--hero-a), var(--hero-b)); display: flex; align-items: center; gap: 16px; min-height: 104px; }
+.hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.07) 50%, transparent 60%); pointer-events: none; }
+.hero .face { width: 64px; height: 64px; border-radius: 16px; object-fit: cover; flex: none; box-shadow: 0 0 0 2px rgba(255,255,255,.18), 0 8px 20px rgba(0,0,0,.35); }
+.hero .h-txt { min-width: 0; display: grid; gap: 4px; flex: 1; }
+.hero .k { font-size: 12px; font-weight: 800; letter-spacing: .08em; color: rgba(243,245,255,.62); display: flex; align-items: center; gap: 4px; }
+.hero .nm b { font-size: 22px; letter-spacing: -.01em; }
+.hero .nm small { color: rgba(243,245,255,.55); font-size: 14px; }
+.hero .why { font-size: 12px; color: rgba(243,245,255,.62); }
+.hero .gem { position: absolute; right: -10px; bottom: -18px; width: 120px; opacity: .14; transform: rotate(-12deg); pointer-events: none; }
+.hero .pill.live { color: #86efac; background: rgba(74,222,128,.16); }
+.subs-h { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 700; color: var(--text-2); }
+.subs-h .count { margin-left: auto; font-weight: 500; color: var(--text-3); font-size: 12px; }
+.subs { display: grid; gap: 8px; }
+.sub-row { display: flex; align-items: center; gap: 12px; padding: 8px 8px 8px 12px; border-radius: var(--r-m); background: var(--surface-2); min-width: 0; flex-wrap: wrap; }
+.sub-row .nm { flex: 1 1 140px; }
+.sub-row .acts { display: flex; gap: 4px; margin-left: auto; }
+.slotbar { display: flex; gap: 4px; }
+.slotbar i { width: 18px; height: 4px; border-radius: 2px; background: var(--surface-3); }
+.slotbar i.on { background: var(--accent); }
+
+/* ───── 시안 C: 고르는 목록 ───── */
+.group { border: 1px solid var(--line); border-radius: var(--r-m); overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 16px; min-height: 60px; border-top: 1px solid var(--line); background: var(--surface); min-width: 0; cursor: pointer; transition: background .15s; position: relative; }
+.row:first-child { border-top: 0; }
+.row:hover { background: var(--surface-2); }
+.row .radio { flex: none; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line-2); display: grid; place-items: center; transition: border-color .15s; }
+.row .radio::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); transform: scale(0); transition: transform .2s cubic-bezier(.34,1.56,.64,1); }
+.row.main .radio { border-color: var(--accent); }
+.row.main .radio::after { transform: scale(1); }
+.row .body { flex: 1; min-width: 0; display: grid; gap: 0; }
+.row .body .meta { font-size: 12px; color: var(--text-3); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row .body .meta .m { color: var(--accent); font-weight: 700; }
+.row .x { flex: none; width: 32px; height: 32px; border: 0; border-radius: 8px; background: none; color: var(--text-3); cursor: pointer; display: grid; place-items: center; }
+.row .x:hover { background: var(--lose-soft); color: var(--lose); }
+.row .confirm { display: flex; gap: 4px; }
+.row.add { cursor: default; background: var(--accent-soft); }
+.row.add:hover { background: var(--accent-soft); }
+.row.add .plus { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-weight: 800; font-size: 14px; line-height: 1; }
+.row.add { flex-wrap: wrap; }
+.row.add .acts { display: flex; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+.row.off { cursor: default; color: var(--text-3); background: var(--surface); }
+.row.off:hover { background: var(--surface); }
+.foot { display: flex; gap: 8px; align-items: flex-start; font-size: 12px; color: var(--text-3); }
+.foot svg { flex: none; margin-top: 2px; }
+
+@media (max-width: 860px) {
+  .opt { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .opt-note { position: static; }
+  .slots { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .stage { padding: 12px; }
+  .card { padding: 16px; }
+  .slots { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hero { padding: 16px; }
+  .hero .face { width: 52px; height: 52px; }
+  .hero .nm b { font-size: 18px; }
+  .row.add .acts { width: 100%; padding-left: 32px; }
+  .row.add .acts .btn { flex: 1; }
+  .sub-row .acts { width: 100%; justify-content: flex-end; }
+}
+</style>
+
+<div class="page">
+  <header class="intro">
+    <div>
+      <h1>롤 계정 연결 시안</h1>
+      <p class="lede">앱 설정의 '롤 계정' 칸 세 가지입니다. 상황은 같습니다 — 메인 Haze#KR18 에 부계정 하나가 연결돼 있고, 지금 롤에는 연결 안 된 세 번째 계정으로 로그인돼 있어요. 모두 눌러서 메인 바꾸기 · 빼기 · 추가를 해 볼 수 있습니다.</p>
+    </div>
+    <div class="theme" role="group" aria-label="화면">
+      <button type="button" data-t="" aria-pressed="true">시스템</button>
+      <button type="button" data-t="light" aria-pressed="false">라이트</button>
+      <button type="button" data-t="dark" aria-pressed="false">다크</button>
+    </div>
+  </header>
+
+  <section class="opt" aria-labelledby="ha">
+    <div class="opt-note">
+      <span class="tag">시안 A</span>
+      <h2 id="ha">계정 슬롯</h2>
+      <p>다섯 칸을 늘 보여 줘서 '몇 개까지, 몇 개 찼는지'가 그림으로 읽힙니다. 지금 롤에 로그인한 계정은 빈 칸에 미리 들어와 있어 누르기만 하면 돼요.</p>
+      <ul><li>메인 칸만 파란 테두리 · 왕관</li><li>칸에 마우스를 올리면 ⋯ 메뉴 (메인으로 · 빼기)</li><li>장점: 수집하는 느낌, 남은 자리가 바로 보임</li></ul>
+    </div>
+    <div class="stage"><div class="card" id="A"></div></div>
+  </section>
+
+  <section class="opt" aria-labelledby="hb">
+    <div class="opt-note">
+      <span class="tag">시안 B</span>
+      <h2 id="hb">메인 무대</h2>
+      <p>메인 계정을 어두운 무대 위에 크게 — 'Prism 이름이 이 계정을 따른다'는 게 한눈에. 부계정은 아래 가벼운 줄, 지금 로그인한 새 계정은 맨 위 초록 알림으로 먼저 물어봅니다.</p>
+      <ul><li>무대 위 내 얼굴 = 회원 페이지와 같은 결</li><li>부계정 줄: 메인으로 · 빼기</li><li>장점: 메인과 부계정의 차이가 가장 분명함</li></ul>
+    </div>
+    <div class="stage"><div class="card" id="B"></div></div>
+  </section>
+
+  <section class="opt" aria-labelledby="hc">
+    <div class="opt-note">
+      <span class="tag">시안 C</span>
+      <h2 id="hc">고르는 목록</h2>
+      <p>설정 앱처럼 한 묶음의 목록. 줄을 누르면 그 계정이 메인 — 동그라미 하나로 메인을 고르니 따로 배울 게 없습니다. 빼기는 오른쪽 ×, 한 번 더 확인.</p>
+      <ul><li>추가할 계정은 목록 맨 아래 파란 줄</li><li>가장 조용하고 촘촘함 — 다른 설정 칸과 잘 어울림</li><li>장점: 누르는 곳이 적고 실수가 적음</li></ul>
+    </div>
+    <div class="stage"><div class="card" id="C"></div></div>
+  </section>
+</div>
+
+<script>
+const FACE = 'data:image/webp;base64,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';
+const GEM = 'data:image/webp;base64,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';
+const MAX = 5;
+const CROWN = '<svg class="crown" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M2 5.5l3 2.5 3-5 3 5 3-2.5-1.2 7H3.2z"/></svg>';
+const DOTS = '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="3.5" cy="8" r="1.5" fill="currentColor"/><circle cx="8" cy="8" r="1.5" fill="currentColor"/><circle cx="12.5" cy="8" r="1.5" fill="currentColor"/></svg>';
+const X = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const INFO = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M7 6v4M7 4v.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>';
+const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const start = () => ({
+  accounts: [ { id: 'a', name: 'Haze', tag: 'KR18', c: 0 }, { id: 'b', name: '블랙은밤에', tag: 'KR1', c: 1 } ],
+  main: 'a', here: { id: 'c', name: '새벽칼바람', tag: 'KR2', c: 2 }, menu: null, confirm: null, flash: null,
+});
+const S = { A: start(), B: start(), C: start() };
+const linkedHere = (s) => s.accounts.some((a) => a.id === s.here.id);
+const nm = (a) => `<span class="nm"><b>${esc(a.name)}</b><small>#${esc(a.tag)}</small></span>`;
+const av = (a) => `<span class="av c${a.c}" aria-hidden="true">${esc(a.name[0])}</span>`;
+function act(k, type, id) {
+  const s = S[k];
+  if (type === 'main') { s.main = id; s.menu = null; }
+  if (type === 'menu') { s.menu = s.menu === id ? null : id; s.confirm = null; }
+  if (type === 'ask') { s.confirm = id; }
+  if (type === 'cancel') { s.confirm = null; }
+  if (type === 'remove') {
+    s.accounts = s.accounts.filter((a) => a.id !== id);
+    if (s.main === id) s.main = s.accounts[0].id;
+    s.menu = null; s.confirm = null;
+  }
+  if (type === 'add' || type === 'addMain') { s.accounts.push({ ...s.here }); if (type === 'addMain') s.main = s.here.id; s.flash = s.here.id; }
+  if (type === 'reset') S[k] = start();
+  render(k);
+}
+
+function renderA(s) {
+  const main = s.accounts.find((a) => a.id === s.main);
+  const order = [main, ...s.accounts.filter((a) => a.id !== s.main)];
+  let html = `<div class="card-h"><h3>롤 계정</h3><span class="count">${s.accounts.length} / ${MAX}</span></div><div class="slots">`;
+  for (const a of order) {
+    const isMain = a.id === s.main, here = a.id === s.here.id;
+    html += `<div class="slot${isMain ? ' main' : ''}${s.flash === a.id ? ' fade-in' : ''}">
+      ${isMain ? `<span class="badge">${CROWN}메인</span>` : ''}
+      ${here ? '<span class="live-dot" title="지금 롤에 로그인"></span>' : ''}
+      ${s.accounts.length > 1 ? `<button type="button" class="more" aria-label="${esc(a.name)} 메뉴" aria-expanded="${s.menu === a.id}" data-k="A" data-a="menu" data-id="${a.id}">${DOTS}</button>` : ''}
+      ${av(a)}${nm(a)}
+      <span class="sub">${isMain ? 'Prism 이름' : here ? '지금 로그인' : '부계정'}</span>
+      ${s.menu === a.id ? `<div class="menu fade-in" role="menu">
+        ${isMain ? '' : `<button type="button" role="menuitem" data-k="A" data-a="main" data-id="${a.id}">메인으로</button>`}
+        ${s.confirm === a.id ? `<button type="button" role="menuitem" class="danger" data-k="A" data-a="remove" data-id="${a.id}">정말 빼기</button>` : `<button type="button" role="menuitem" class="danger" data-k="A" data-a="ask" data-id="${a.id}">빼기</button>`}
+      </div>` : ''}
+    </div>`;
+  }
+  let empties = MAX - s.accounts.length;
+  if (!linkedHere(s) && empties > 0) {
+    html += `<div class="slot ready fade-in"><span class="plus">+</span>${nm(s.here)}<span class="sub">지금 롤에 로그인</span>
+      <span class="acts"><button type="button" class="btn primary" data-k="A" data-a="add" data-id="c">부계정으로 추가</button><button type="button" class="btn" data-k="A" data-a="addMain" data-id="c">메인으로 추가</button></span></div>`;
+    empties--;
+  }
+  for (let i = 0; i < empties; i++) html += `<div class="slot empty" aria-hidden="true"><span class="plus">+</span><span class="sub">빈 자리</span></div>`;
+  html += `</div><p class="hint">어느 계정으로 해도 판이 내 기록으로 모여요. 다른 계정을 더하려면 그 계정으로 롤에 로그인하세요.</p>`;
+  return html;
+}
+
+function renderB(s) {
+  const main = s.accounts.find((a) => a.id === s.main);
+  const subs = s.accounts.filter((a) => a.id !== s.main);
+  let html = `<div class="card-h"><h3>롤 계정</h3><span class="count"><span class="slotbar" aria-label="${s.accounts.length} / ${MAX}">${Array.from({ length: MAX }, (_, i) => `<i class="${i < s.accounts.length ? 'on' : ''}"></i>`).join('')}</span></span></div>`;
+  if (!linkedHere(s)) {
+    html += `<div class="detect fade-in"><span class="txt"><span>지금 롤에 로그인된 계정</span><b>${esc(s.here.name)}<small style="color:var(--text-3);font-weight:500">#${esc(s.here.tag)}</small></b></span>
+      <span class="acts">${s.accounts.length < MAX ? `<button type="button" class="btn" data-k="B" data-a="add" data-id="c">부계정으로 추가</button><button type="button" class="btn primary" data-k="B" data-a="addMain" data-id="c">메인으로</button>` : '<span class="hint">5개까지 연결할 수 있어요</span>'}</span></div>`;
+  }
+  html += `<div class="hero${s.flash === main.id ? ' fade-in' : ''}"><img class="face" src="${FACE}" alt=""><span class="h-txt">
+      <span class="k">${CROWN}메인 계정 ${main.id === s.here.id ? '<span class="pill live">지금 로그인</span>' : ''}</span>${nm(main)}<span class="why">Prism 이름과 디스코드 별명이 이 계정을 따라요</span></span><img class="gem" src="${GEM}" alt=""></div>`;
+  html += `<div class="subs-h">부계정<span class="count">${subs.length ? `${subs.length}개` : ''}</span></div><div class="subs">`;
+  if (!subs.length) html += `<p class="hint">부계정이 없어요. 부계정으로 롤에 로그인하면 여기에 더할 수 있어요.</p>`;
+  for (const a of subs) {
+    html += `<div class="sub-row${s.flash === a.id ? ' fade-in' : ''}">${av(a)}${nm(a)}${a.id === s.here.id ? '<span class="pill live">지금 로그인</span>' : ''}
+      <span class="acts">${s.confirm === a.id ? `<button type="button" class="btn ghost" data-k="B" data-a="cancel">취소</button><button type="button" class="btn danger" data-k="B" data-a="remove" data-id="${a.id}">빼기</button>` : `<button type="button" class="btn ghost" data-k="B" data-a="main" data-id="${a.id}">메인으로</button><button type="button" class="btn ghost" data-k="B" data-a="ask" data-id="${a.id}" aria-label="${esc(a.name)} 빼기">${X}</button>`}</span></div>`;
+  }
+  html += `</div><p class="hint">어느 계정으로 해도 판이 내 기록으로 모여요.</p>`;
+  return html;
+}
+
+function renderC(s) {
+  const order = [...s.accounts];
+  let html = `<div class="card-h"><h3>롤 계정</h3><span class="count">${s.accounts.length} / ${MAX}</span></div><div class="group" role="radiogroup" aria-label="메인 계정">`;
+  for (const a of order) {
+    const isMain = a.id === s.main, here = a.id === s.here.id;
+    html += `<div class="row${isMain ? ' main' : ''}${s.flash === a.id ? ' fade-in' : ''}" role="radio" aria-checked="${isMain}" tabindex="0" data-k="C" data-a="main" data-id="${a.id}">
+      <span class="radio" aria-hidden="true"></span>${av(a)}
+      <span class="body">${nm(a)}<span class="meta">${isMain ? '<span class="m">메인 · Prism 이름</span>' : '<span>부계정</span>'}${here ? '<span class="pill live">지금 로그인</span>' : ''}</span></span>
+      ${s.accounts.length > 1 ? (s.confirm === a.id
+        ? `<span class="confirm"><button type="button" class="btn ghost" data-k="C" data-a="cancel">취소</button><button type="button" class="btn danger" data-k="C" data-a="remove" data-id="${a.id}">빼기</button></span>`
+        : `<button type="button" class="x" aria-label="${esc(a.name)} 빼기" data-k="C" data-a="ask" data-id="${a.id}">${X}</button>`) : ''}
+    </div>`;
+  }
+  if (!linkedHere(s)) {
+    html += s.accounts.length < MAX
+      ? `<div class="row add fade-in"><span class="plus" aria-hidden="true">+</span>${av(s.here)}<span class="body">${nm(s.here)}<span class="meta"><span class="pill live">지금 로그인</span><span>아직 연결 안 됨</span></span></span>
+          <span class="acts"><button type="button" class="btn" data-k="C" data-a="add" data-id="c">추가</button><button type="button" class="btn primary" data-k="C" data-a="addMain" data-id="c">메인으로 추가</button></span></div>`
+      : `<div class="row off">5개까지 연결할 수 있어요. 하나를 빼면 지금 계정을 더할 수 있어요.</div>`;
+  }
+  html += `</div><div class="foot">${INFO}<span>줄을 누르면 그 계정이 메인이 돼요. 어느 계정으로 해도 판이 내 기록으로 모이고, 빼도 이미 모인 판은 남아요.</span></div>`;
+  return html;
+}
+
+function render(k) {
+  const el = document.getElementById(k);
+  el.innerHTML = ({ A: renderA, B: renderB, C: renderC })[k](S[k]) + `<div><button type="button" class="btn ghost" data-k="${k}" data-a="reset">처음으로</button></div>`;
+  S[k].flash = null;
+}
+document.addEventListener('click', (e) => {
+  const t = e.target.closest('[data-a]');
+  if (!t) { for (const k of ['A', 'B', 'C']) if (S[k].menu) { S[k].menu = null; S[k].confirm = null; render(k); } return; }
+  e.stopPropagation();
+  act(t.dataset.k, t.dataset.a, t.dataset.id);
+});
+document.addEventListener('keydown', (e) => {
+  const t = e.target.closest && e.target.closest('.row[data-a]');
+  if (t && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); act('C', 'main', t.dataset.id); }
+  if (e.key === 'Escape') for (const k of ['A', 'B', 'C']) if (S[k].menu || S[k].confirm) { S[k].menu = null; S[k].confirm = null; render(k); }
+});
+document.querySelectorAll('.theme button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('.theme button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+  if (b.dataset.t) document.documentElement.setAttribute('data-theme', b.dataset.t); else document.documentElement.removeAttribute('data-theme');
+}));
+['A', 'B', 'C'].forEach(render);
+</script>
