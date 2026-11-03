@@ -909,9 +909,8 @@ function inqGroups(){const L=INQ.filter(q=>iq.st==='open'?q.st!=='done':q.st===i
 function inqTop(){const c=k=>INQ.filter(q=>q.st===k).length,open=INQ.filter(q=>q.st!=='done').length;
   const segs=[['open','열린 문의',open,'#e5484d'],['new',...ISTAT.new.slice(0,1),c('new'),ISTAT.new[1]],['working','작업 중',c('working'),ISTAT.working[1]],['replied','답장함',c('replied'),ISTAT.replied[1]],['done','해결',c('done'),ISTAT.done[1]]];
   $('#inqtop').innerHTML=`<div class="iq-l"><h2>${c('new')?`새 문의 ${c('new')}개`:'새 문의가 없어요'}</h2><p>같은 부분·같은 종류는 한 묶음으로 · 버그 · 여러 명 · 최근일수록 위에</p></div>
-    <div class="iq-r"><div class="tt-kinds">${segs.map(([k,l,n,col])=>`<button type="button" class="tk ${iq.st===k?'on':''} ${n?'':'zero'}" style="--kc:${col}" data-s="${k}"><i></i>${l} <b>${n}</b></button>`).join('')}</div><button type="button" class="btn sm copy-md" id="iqcopy"><span class="c0">작업 목록 복사</span><span class="c1">✓ 복사했어요</span></button></div>`;
+    <div class="iq-r"><div class="tt-kinds">${segs.map(([k,l,n,col])=>`<button type="button" class="tk ${iq.st===k?'on':''} ${n?'':'zero'}" style="--kc:${col}" data-s="${k}"><i></i>${l} <b>${n}</b></button>`).join('')}</div></div>`;
   $('#inqtop').querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{iq.st=b.dataset.s;inqTop();inqList(true)});
-  $('#iqcopy').onclick=e=>{const b=e.currentTarget;b.classList.add('ok');setTimeout(()=>b.classList.remove('ok'),1600)};
   const hc=document.querySelector('.hh-tabs [data-pg="inq"] .hh-cnt');if(hc)hc.textContent=c('new')||''}
 function inqItem(q){const m=MEM.find(x=>x.n===q.who),ty=ITYPE[q.t],st=ISTAT[q.st];
   return `<div class="ti iqi collapse" data-id="${q.id}">${face(m,false)}<div><h4>${q.who}<span class="stp" style="--kc:${st[1]}"><i></i>${st[0]}</span><span class="meta" style="font-weight:600">${q.ago}</span></h4>
