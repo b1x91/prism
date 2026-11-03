@@ -1,0 +1,432 @@
+<title>Prism 운영 화면</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* 레이아웃: 위 시안 고르기 → 아래 앱 창 하나(사이드바 생략)에 시안을 그대로. 간격 4·8·12·16·20·24·32·48, 글자 12·13·14·16·20·28, 모서리 8·12·16 (Prism 토큰) */
+:root{
+  --bg:#f5f5f2; --panel:#ffffff; --sub:#f0f0ec; --line:#e4e4de; --line2:#d6d6ce;
+  --fg:#15171c; --mut:#6b6f78; --faint:#9a9ea6;
+  --acc:#3b5bfd; --acc-soft:#e8edff; --acc-2:#a9b6ff;
+  --good:#15803d; --good-soft:#e3f4e8; --bad:#d93a3a; --bad-soft:#fde8e8; --warn:#b7791f; --warn-soft:#fbf1dc;
+  --gold:#c99a2e; --shadow:0 1px 2px rgba(20,22,30,.05),0 4px 16px rgba(20,22,30,.04);
+  --stage:#0c0f1a; --stage-2:#141a2b; --stage-line:#232b42; --stage-fg:#e9ecf5; --stage-mut:#8a93ab;
+  --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#07090f; --panel:#10141f; --sub:#161b28; --line:#222839; --line2:#2c3347;
+  --fg:#eef0f6; --mut:#9198aa; --faint:#666e82;
+  --acc:#6d86ff; --acc-soft:#1b2348; --acc-2:#36457f;
+  --good:#3ccf74; --good-soft:#12301f; --bad:#ff6b6b; --bad-soft:#3a1719; --warn:#f0b54a; --warn-soft:#352812;
+  --gold:#e4b84e; --shadow:0 1px 2px rgba(0,0,0,.4);
+  --stage:#05070d; --stage-2:#0d1220; --stage-line:#1c2338; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#07090f; --panel:#10141f; --sub:#161b28; --line:#222839; --line2:#2c3347;
+  --fg:#eef0f6; --mut:#9198aa; --faint:#666e82;
+  --acc:#6d86ff; --acc-soft:#1b2348; --acc-2:#36457f;
+  --good:#3ccf74; --good-soft:#12301f; --bad:#ff6b6b; --bad-soft:#3a1719; --warn:#f0b54a; --warn-soft:#352812;
+  --gold:#e4b84e; --shadow:0 1px 2px rgba(0,0,0,.4);
+  --stage:#05070d; --stage-2:#0d1220; --stage-line:#1c2338; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;word-break:keep-all;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.num{font-variant-numeric:tabular-nums}
+h1,h2,h3{margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,a:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:24px}
+
+/* 시안 고르기 */
+.pick{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.pick h1{font-size:20px}
+.pick p{margin:4px 0 0;color:var(--mut);font-size:13px}
+.seg{display:flex;gap:4px;padding:4px;background:var(--sub);border:1px solid var(--line);border-radius:12px}
+.seg button{border:0;background:none;padding:8px 16px;border-radius:8px;font-weight:700;color:var(--mut);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--fg);box-shadow:var(--shadow)}
+.theme{display:flex;gap:4px}
+.theme button{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:4px 12px;font-size:12px;color:var(--mut)}
+.theme button[aria-pressed="true"]{color:var(--fg);border-color:var(--line2);font-weight:700}
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.why div{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:13px;color:var(--mut)}
+.why b{display:block;color:var(--fg);font-size:14px;margin-bottom:4px}
+
+/* 공용 조각 */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);min-width:0}
+.ch{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:20px 20px 0}
+.ch h3{font-size:16px}
+.ch small{color:var(--faint);font-size:12px}
+.cb{padding:16px 20px 20px}
+.face{width:32px;height:32px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:12px;font-weight:800;color:#fff}
+.chip{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}
+.chip.warn{background:var(--warn-soft);color:var(--warn)}
+.chip.acc{background:var(--acc-soft);color:var(--acc)}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.mut{background:var(--sub);color:var(--mut)}
+.btn{border:1px solid var(--line2);background:var(--panel);border-radius:8px;height:32px;padding:0 12px;font-size:13px;font-weight:700;white-space:nowrap}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff}
+.btn.ghost{border-color:transparent;background:none;color:var(--mut)}
+.up{color:var(--good)} .dn{color:var(--bad)}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--mut)}
+.legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:1px}
+svg text{font-family:var(--font)}
+.opt[hidden]{display:none}
+.note{font-size:12px;color:var(--faint);text-align:right}
+
+/* ───── 시안 A · 관제실 ───── */
+.A{background:var(--stage);color:var(--stage-fg);border-radius:16px;padding:24px;display:grid;gap:16px;border:1px solid var(--stage-line)}
+.A .top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.A .top h2{font-size:20px;margin-right:auto}
+.A .stat{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--stage-mut)}
+.A .stat b{color:var(--stage-fg)}
+.pulse{width:8px;height:8px;border-radius:50%;background:#3ccf74;box-shadow:0 0 0 0 rgba(60,207,116,.6);animation:pl 2s infinite}
+@keyframes pl{70%{box-shadow:0 0 0 8px rgba(60,207,116,0)}100%{box-shadow:0 0 0 0 rgba(60,207,116,0)}}
+.A .grid{display:grid;grid-template-columns:320px minmax(0,1fr);gap:16px}
+.A .pn{background:var(--stage-2);border:1px solid var(--stage-line);border-radius:12px;min-width:0}
+.A .pn h3{font-size:13px;color:var(--stage-mut);font-weight:700;letter-spacing:.04em;padding:16px 16px 0;display:flex;justify-content:space-between}
+.A .queue{display:grid;padding:8px}
+.A .q{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 8px;border-radius:8px}
+.A .q+.q{border-top:1px solid var(--stage-line)}
+.A .qn{font-size:20px;font-weight:800;width:40px;text-align:center}
+.A .q.hot .qn{color:#ffcf5a}
+.A .q.zero{opacity:.45}
+.A .q small{display:block;color:var(--stage-mut);font-size:12px}
+.A .q .btn{background:#1d2540;border-color:#2c3658;color:var(--stage-fg)}
+.A .q.hot .btn{background:#5b7cff;border-color:#5b7cff;color:#fff}
+.A .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--stage-line);border-radius:12px;overflow:hidden;border:1px solid var(--stage-line)}
+.A .k{background:var(--stage-2);padding:16px;display:grid;gap:4px;min-width:0}
+.A .k span{font-size:12px;color:var(--stage-mut)}
+.A .k b{font-size:28px;line-height:1.1}
+.A .k em{font-style:normal;font-size:12px;color:var(--stage-mut)}
+.A .k em .up{color:#3ccf74} .A .k em .dn{color:#ff7a7a}
+.A .k svg{width:100%;height:28px}
+.A .two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+.A .legend{color:var(--stage-mut)}
+.A .roster{display:grid;gap:4px;padding:8px 16px 16px}
+.A .rr{display:grid;grid-template-columns:20px 32px minmax(0,1fr) auto;gap:12px;align-items:center;padding:8px 0}
+.A .rr i{font-style:normal;color:var(--stage-mut);font-size:12px;text-align:center}
+.A .rr small{display:block;color:var(--stage-mut);font-size:12px}
+.A .rr b.num{font-size:16px}
+.A .live{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px 16px}
+.A .lv{display:flex;align-items:center;gap:8px;background:#0a0e19;border:1px solid var(--stage-line);border-radius:999px;padding:4px 12px 4px 4px;font-size:12px}
+.A .lv .face{width:24px;height:24px;font-size:12px}
+.A .lv em{font-style:normal;color:#3ccf74}
+
+/* ───── 시안 B · 주간 리포트 ───── */
+.B{display:grid;gap:16px}
+.B .head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between}
+.B .head h2{font-size:28px}
+.B .head p{margin:4px 0 0;color:var(--mut);font-size:13px}
+.B .period{display:flex;gap:4px;padding:4px;background:var(--sub);border-radius:8px}
+.B .period button{border:0;background:none;padding:4px 12px;border-radius:8px;font-size:13px;color:var(--mut);font-weight:700}
+.B .period button.on{background:var(--panel);color:var(--fg);box-shadow:var(--shadow)}
+.B .todo{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 16px;border:1px solid var(--line);background:var(--panel);border-radius:12px}
+.B .todo b{font-size:13px;margin-right:4px}
+.B .todo a{color:var(--fg);text-decoration:none;font-size:13px;display:inline-flex;gap:8px;align-items:center}
+.B .todo a .n{min-width:20px;height:20px;border-radius:999px;display:inline-grid;place-items:center;font-size:12px;font-weight:800;background:var(--sub);color:var(--mut);padding:0 4px}
+.B .todo a.hot .n{background:var(--acc);color:#fff}
+.B .todo .sp{flex:1}
+.B .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.B .k{padding:16px 20px;display:grid;gap:8px}
+.B .k .t{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mut)}
+.B .k b{font-size:28px;line-height:1}
+.B .k .d{font-size:12px;color:var(--mut)}
+.B .k svg{width:100%;height:36px;display:block}
+.B .row{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px}
+.B .heat{display:grid;grid-template-columns:28px repeat(7,minmax(0,1fr));gap:4px;font-size:12px;color:var(--faint)}
+.B .heat span{text-align:center}
+.B .heat i{display:block;aspect-ratio:1.6;border-radius:4px;background:var(--acc);max-width:100%}
+.B .funnel{display:grid;gap:12px}
+.B .fs{display:grid;grid-template-columns:96px minmax(0,1fr) 72px;gap:12px;align-items:center;font-size:13px}
+.B .fs .bar{height:24px;border-radius:4px;background:var(--sub);position:relative;overflow:hidden}
+.B .fs .bar i{position:absolute;inset:0 auto 0 0;background:var(--acc);border-radius:4px}
+.B .fs .bar em{position:absolute;left:8px;top:2px;font-style:normal;font-size:12px;font-weight:700;color:#fff}
+.B .fs span:last-child{text-align:right;color:var(--mut);font-size:12px}
+.B table{width:100%;border-collapse:collapse;font-size:13px}
+.B th{font-size:12px;color:var(--faint);font-weight:600;text-align:right;padding:0 8px 8px;white-space:nowrap}
+.B th:first-child,.B td:first-child{text-align:left}
+.B td{padding:8px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+.B td .who{display:flex;gap:8px;align-items:center}
+.B td .face{width:24px;height:24px;font-size:12px}
+.B .scroll{overflow-x:auto}
+
+/* ───── 시안 C · 할 일 먼저 ───── */
+.C{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:16px;align-items:start}
+.C .inbox{overflow:hidden}
+.C .ih{display:flex;align-items:center;gap:12px;padding:20px 20px 16px;border-bottom:1px solid var(--line)}
+.C .ih h2{font-size:20px;margin-right:auto}
+.C .tabs{display:flex;gap:4px;padding:0 20px;border-bottom:1px solid var(--line);overflow-x:auto}
+.C .tabs button{border:0;background:none;padding:12px 8px;font-size:13px;font-weight:700;color:var(--mut);border-bottom:2px solid transparent;white-space:nowrap;display:flex;gap:4px;align-items:center}
+.C .tabs button.on{color:var(--fg);border-bottom-color:var(--acc)}
+.C .tabs i{font-style:normal;font-size:12px;color:var(--faint)}
+.C .it{display:grid;grid-template-columns:4px 32px minmax(0,1fr) auto;gap:12px;align-items:center;padding:16px 20px 16px 0;border-bottom:1px solid var(--line)}
+.C .it .sev{align-self:stretch;border-radius:0 4px 4px 0}
+.C .it .sev.hi{background:var(--warn)} .C .it .sev.md{background:var(--acc)} .C .it .sev.lo{background:var(--line2)}
+.C .it b{font-size:14px}
+.C .it p{margin:2px 0 0;font-size:12px;color:var(--mut)}
+.C .it .acts{display:flex;gap:8px}
+.C .done{padding:16px 20px;font-size:13px;color:var(--faint);display:flex;gap:8px;align-items:center}
+.C .side{display:grid;gap:16px}
+.C .health{display:grid;grid-template-columns:120px minmax(0,1fr);gap:20px;align-items:center;padding:20px}
+.C .health svg{width:120px;height:120px}
+.C .hl{display:grid;gap:8px}
+.C .hr{display:grid;grid-template-columns:96px minmax(0,1fr) 40px;gap:8px;align-items:center;font-size:12px;color:var(--mut)}
+.C .hr .bar{height:6px;border-radius:999px;background:var(--sub);overflow:hidden}
+.C .hr .bar i{display:block;height:100%;border-radius:999px}
+.C .hr b{text-align:right;color:var(--fg)}
+.C .mini{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1px;background:var(--line);border-top:1px solid var(--line)}
+.C .mini div{background:var(--panel);padding:12px 20px}
+.C .mini span{font-size:12px;color:var(--mut);display:block}
+.C .mini b{font-size:20px}
+.C .mini em{font-style:normal;font-size:12px;margin-left:4px}
+.C .wk svg{width:100%;height:120px;display:block}
+.C .st{display:grid;gap:8px}
+.C .sr{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:12px;align-items:center}
+.C .sr small{display:block;font-size:12px;color:var(--mut)}
+
+@media (max-width:1000px){
+  .A .grid,.A .two,.B .row,.C{grid-template-columns:minmax(0,1fr)}
+  .why{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:640px){
+  .A{padding:16px}
+  .A .kpis,.B .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .C .health{grid-template-columns:minmax(0,1fr);justify-items:center}
+  .C .it{grid-template-columns:4px 32px minmax(0,1fr)}
+  .C .it .acts{grid-column:3}
+  .B .fs{grid-template-columns:80px minmax(0,1fr) 56px}
+}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}}
+</style>
+
+<div class="wrap">
+  <header class="pick">
+    <div>
+      <h1>운영 화면 시안 3가지</h1>
+      <p>지금 화면의 숫자(멤버 32 · 활동 27 · 모임 판 69 · 접속 7)를 그대로 쓰고, 나머지는 보기용 예시예요.</p>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <div class="seg" role="group" aria-label="시안">
+        <button type="button" data-opt="A" aria-pressed="true">A · 관제실</button>
+        <button type="button" data-opt="B" aria-pressed="false">B · 주간 리포트</button>
+        <button type="button" data-opt="C" aria-pressed="false">C · 할 일 먼저</button>
+      </div>
+      <div class="theme" role="group" aria-label="화면">
+        <button type="button" data-th="" aria-pressed="true">시스템</button>
+        <button type="button" data-th="light" aria-pressed="false">라이트</button>
+        <button type="button" data-th="dark" aria-pressed="false">다크</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="why">
+    <div><b>지금 화면에서 고칠 것</b>배너 두 줄(승인·가입 신청)이 화면 위를 차지하고, 처리할 일이 0일 때도 같은 크기예요.</div>
+    <div><b>숫자가 오해를 만들어요</b>'모임 판 69 ▼119'는 이번 주가 이틀째라 생기는 차이예요. 시안은 <em>지난주 같은 때</em>와 비교해요.</div>
+    <div><b>빈 자리</b>'챙겨야 할 멤버'가 1명이면 카드 아래가 비어요. 시안은 할 일의 양만큼만 자리를 써요.</div>
+  </div>
+
+  <!-- ───────── A ───────── -->
+  <section class="opt" id="opt-A" aria-label="시안 A 관제실">
+    <div class="A">
+      <div class="top">
+        <h2>운영</h2>
+        <span class="stat"><i class="pulse"></i>지금 접속 <b class="num">7</b></span>
+        <span class="stat">게임 중 <b class="num">3</b></span>
+        <span class="stat">디스코드 음성 <b class="num">5</b></span>
+        <span class="stat">수집 <b>정상</b> · 2분 전</span>
+      </div>
+      <div class="grid">
+        <div class="pn">
+          <h3>처리할 일 <span class="num">2</span></h3>
+          <div class="queue">
+            <div class="q hot"><span class="qn num">1</span><div><b>승인 대기</b><small>10 쿤 · 가입한 지 2일</small></div><button class="btn" type="button">승인</button></div>
+            <div class="q hot"><span class="qn num">1</span><div><b>문의</b><small>버그 · 작은 창이 안 사라져요</small></div><button class="btn" type="button">보기</button></div>
+            <div class="q zero"><span class="qn num">0</span><div><b>가입 신청</b><small>새 신청 없음</small></div><button class="btn" type="button">열기</button></div>
+            <div class="q zero"><span class="qn num">0</span><div><b>정회원 심사</b><small>기준을 채운 멤버 없음</small></div><button class="btn" type="button">열기</button></div>
+          </div>
+          <h3>지금 게임 중</h3>
+          <div class="live">
+            <span class="lv"><span class="face" style="background:#c2410c">톰</span>톰과란제리 <em>18분</em></span>
+            <span class="lv"><span class="face" style="background:#7c3aed">나</span>나코치 <em>18분</em></span>
+            <span class="lv"><span class="face" style="background:#0e7490">그</span>그남자와잔나 <em>6분</em></span>
+          </div>
+        </div>
+        <div style="display:grid;gap:16px;min-width:0">
+          <div class="kpis" id="a-kpis"></div>
+          <div class="two">
+            <div class="pn">
+              <h3>하루 판 · 최근 8주 <span class="legend"><span><i style="background:#5b7cff"></i>모임 판</span><span><i style="background:#2a3558"></i>그 밖</span></span></h3>
+              <div style="padding:8px 16px 16px" id="a-chart"></div>
+            </div>
+            <div class="pn">
+              <h3>잘하고 있는 멤버 <span style="font-weight:400">2주 · 점수</span></h3>
+              <div class="roster" id="a-stars"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="note">어두운 관제실 한 장. 처리할 일은 왼쪽 줄에서 바로, 숫자는 작은 흐름선과 함께.</p>
+  </section>
+
+  <!-- ───────── B ───────── -->
+  <section class="opt" id="opt-B" aria-label="시안 B 주간 리포트" hidden>
+    <div class="B">
+      <div class="head">
+        <div><h2>운영</h2><p>11월 2일(월) ~ 오늘 · 지난주 같은 때와 비교</p></div>
+        <div class="period" role="group" aria-label="기간"><button type="button" class="on">이번 주</button><button type="button">4주</button><button type="button">8주</button></div>
+      </div>
+      <div class="todo">
+        <b>처리할 일</b>
+        <a href="#" class="hot"><span class="n num">1</span>승인 대기</a>
+        <a href="#" class="hot"><span class="n num">1</span>문의</a>
+        <a href="#"><span class="n num">0</span>가입 신청</a>
+        <a href="#"><span class="n num">0</span>정회원 심사</a>
+        <span class="sp"></span>
+        <button class="btn" type="button">멤버 관리</button>
+      </div>
+      <div class="kpis" id="b-kpis"></div>
+      <div class="row">
+        <div class="card">
+          <div class="ch"><h3>주별 판과 활동 멤버</h3><small class="num">최근 8주 · 1,003판</small></div>
+          <div class="cb"><div class="legend" style="margin-bottom:12px"><span><i style="background:var(--acc)"></i>모임 판</span><span><i style="background:var(--acc-2)"></i>그 밖의 판</span><span><i style="background:var(--warn);border-radius:50%"></i>활동 멤버(선)</span></div><div id="b-chart"></div></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>언제 모이나요</h3><small>최근 4주 · 판 수</small></div>
+          <div class="cb"><div class="heat" id="b-heat"></div><p style="margin:12px 0 0;font-size:12px;color:var(--mut)">금·토 밤 9시~자정에 가장 많이 모여요.</p></div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="card">
+          <div class="ch"><h3>멤버 표</h3><small>최근 2주 · 점수 순</small></div>
+          <div class="cb scroll"><table id="b-table"></table></div>
+        </div>
+        <div class="card">
+          <div class="ch"><h3>새 멤버 정착</h3><small>지난 4주 가입 12명</small></div>
+          <div class="cb funnel" id="b-funnel"></div>
+        </div>
+      </div>
+    </div>
+    <p class="note">숫자를 읽는 사람을 위한 밝은 보고서. 기간을 바꿔 흐름을 보고, 모이는 시간과 새 멤버 정착을 봐요.</p>
+  </section>
+
+  <!-- ───────── C ───────── -->
+  <section class="opt" id="opt-C" aria-label="시안 C 할 일 먼저" hidden>
+    <div class="C">
+      <div class="card inbox">
+        <div class="ih"><h2>운영</h2><button class="btn" type="button">멤버 관리</button><button class="btn" type="button">가입 신청</button></div>
+        <div class="tabs" role="tablist"><button class="on" type="button">처리할 일 <i class="num">2</i></button><button type="button">챙길 멤버 <i class="num">3</i></button><button type="button">최근 처리 <i class="num">5</i></button></div>
+        <div class="it"><span class="sev hi"></span><span class="face" style="background:#9d174d">10</span><div><b>10 쿤 <span class="chip warn">승인 대기</span></b><p>가입한 지 2일 · 롤 연결됨 · 추천인 없음 · 판 4</p></div><div class="acts"><button class="btn ghost" type="button">보류</button><button class="btn pri" type="button">승인</button></div></div>
+        <div class="it"><span class="sev md"></span><span class="face" style="background:#1d4ed8">문</span><div><b>문의 · 버그 <span class="chip acc">새 문의</span></b><p>"게임 위 작은 창이 안 사라져요" · 앱 1.0.29 · 18분 전</p></div><div class="acts"><button class="btn ghost" type="button">해결</button><button class="btn" type="button">답장</button></div></div>
+        <div class="it"><span class="sev lo"></span><span class="face" style="background:#475569">예</span><div><b>예비군 <span class="chip mut">14일째 소식 없음</span></b><p>정회원 · 마지막 판 10월 20일 · 함께한 멤버 나코치</p></div><div class="acts"><button class="btn ghost" type="button">숨기기</button><button class="btn" type="button">DM 보내기</button></div></div>
+        <div class="done"><span class="chip good">✓</span>가입 신청 · 정회원 심사는 처리할 것이 없어요.</div>
+      </div>
+      <div class="side">
+        <div class="card" style="overflow:hidden">
+          <div class="health">
+            <div id="c-ring"></div>
+            <div class="hl">
+              <h3 style="font-size:16px">모임 건강도 <span class="chip good">좋음</span></h3>
+              <div class="hr"><span>이번 주 활동률</span><span class="bar"><i style="width:84%;background:var(--good)"></i></span><b class="num">84%</b></div>
+              <div class="hr"><span>모임 판 비율</span><span class="bar"><i style="width:49%;background:var(--acc)"></i></span><b class="num">49%</b></div>
+              <div class="hr"><span>새 멤버 첫 판</span><span class="bar"><i style="width:75%;background:var(--good)"></i></span><b class="num">75%</b></div>
+              <div class="hr"><span>떠날 기미</span><span class="bar"><i style="width:9%;background:var(--warn)"></i></span><b class="num">3명</b></div>
+            </div>
+          </div>
+          <div class="mini">
+            <div><span>멤버</span><b class="num">32</b><em class="up num">+3 이번 주</em></div>
+            <div><span>지금 접속</span><b class="num">7</b><em class="up">게임 중 3</em></div>
+            <div><span>모임 판</span><b class="num">69</b><em class="up num">▲8 같은 때 대비</em></div>
+            <div><span>활동 멤버</span><b class="num">27</b><em class="up num">▲2 같은 때 대비</em></div>
+          </div>
+        </div>
+        <div class="card wk"><div class="ch"><h3>주별 판</h3><small>8주</small></div><div class="cb" id="c-chart"></div></div>
+        <div class="card"><div class="ch"><h3>잘하고 있는 멤버</h3><small>2주 · 점수</small></div><div class="cb st" id="c-stars"></div></div>
+      </div>
+    </div>
+    <p class="note">들어오면 할 일부터. 처리할 일·챙길 멤버를 한 줄씩 그 자리에서 끝내고, 오른쪽은 모임 건강을 한눈에.</p>
+  </section>
+</div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const weeks = [
+  {l:'9/14',g:0,c:0,a:2},{l:'9/21',g:0,c:0,a:3},{l:'9/28',g:14,c:4,a:6},{l:'10/5',g:22,c:7,a:9},
+  {l:'10/12',g:110,c:26,a:17},{l:'10/19',g:130,c:27,a:21},{l:'10/26',g:560,c:188,a:30},{l:'이번 주',g:142,c:69,a:27}];
+const stars = [['톰과란제리',25,68,2,600,'#c2410c'],['나코치',109,58,87,566,'#7c3aed'],['용팔이네 형',49,59,12,565,'#b91c1c'],['롤처음하니살살요',62,58,46,561,'#ea580c'],['그남자와잔나',63,56,60,542,'#0e7490']];
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function spark(vals, color, fill){
+  const w=120,h=28,max=Math.max(...vals,1);
+  const pts=vals.map((v,i)=>[i*(w/(vals.length-1)),h-2-(v/max)*(h-6)]);
+  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+  const e=pts[pts.length-1];
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><path d="${d} L${w} ${h} L0 ${h}Z" fill="${fill}"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke"/><circle cx="${e[0]}" cy="${e[1]}" r="2.4" fill="${color}"/></svg>`;
+}
+const KPI = [
+  ['멤버','32','<span class="up">+3</span> 이번 주 가입',[22,23,24,26,27,28,29,32]],
+  ['활동 멤버','27','<span class="up">▲2</span> 지난주 같은 때',weeks.map(w=>w.a)],
+  ['모임 판','69','<span class="up">▲8</span> 지난주 같은 때 61',weeks.map(w=>w.c)],
+  ['앱 쓰는 멤버','31','/ 32 · 롤 연결 31',[10,14,18,22,26,28,30,31]]];
+
+function renderA(){
+  $('#a-kpis').innerHTML = KPI.map(k=>`<div class="k"><span>${k[0]}</span><b class="num">${k[1]}</b><em class="num">${k[2]}</em>${spark(k[3],'#5b7cff','rgba(91,124,255,.14)')}</div>`).join('');
+  // 하루 판: 8주 × 7일 (주 합계를 요일 비중으로 나눈 보기용)
+  const wd=[.09,.1,.11,.12,.2,.22,.16]; const days=[];
+  weeks.forEach((w,wi)=>wd.forEach((p,di)=>{ if(wi===7&&di>1) return; const g=Math.round(w.g*p*(wi===7?3.5:1)*(.8+((wi*7+di)%5)*.08)); days.push({g,c:Math.round(g*(w.c/(w.g||1)))}); }));
+  const W=640,H=180,pad=24,bw=(W-pad)/56,max=Math.max(...days.map(d=>d.g));
+  let s=`<svg viewBox="0 0 ${W} ${H+20}" width="100%" role="img" aria-label="하루 판 막대">`;
+  [0,.5,1].forEach(t=>{const y=H-t*(H-8);s+=`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="#1c2338"/><text x="0" y="${y+4}" font-size="11" fill="#8a93ab">${Math.round(max*t)}</text>`;});
+  days.forEach((d,i)=>{const x=pad+i*bw,h=(d.g/max)*(H-8),hc=(d.c/max)*(H-8);s+=`<rect x="${x+1}" y="${H-h}" width="${bw-2}" height="${h}" rx="1.5" fill="#2a3558"/><rect x="${x+1}" y="${H-hc}" width="${bw-2}" height="${hc}" rx="1.5" fill="${i>=days.length-2?'#8aa2ff':'#5b7cff'}"/>`;});
+  weeks.forEach((w,i)=>{s+=`<text x="${pad+i*7*bw+2}" y="${H+16}" font-size="11" fill="${i===7?'#e9ecf5':'#8a93ab'}">${w.l}</text>`;});
+  $('#a-chart').innerHTML=s+'</svg>';
+  $('#a-stars').innerHTML=stars.map((m,i)=>`<div class="rr"><i>${i+1}</i><span class="face" style="background:${m[5]}">${m[0][0]}</span><div><b>${m[0]}</b><small class="num">${m[1]}판 · 승률 ${m[2]}% · 모임 판 ${m[3]}</small></div><b class="num">${m[4]}</b></div>`).join('');
+}
+function renderB(){
+  const acc=css('--acc'),soft=css('--acc-soft');
+  $('#b-kpis').innerHTML = KPI.map(k=>`<div class="card k"><div class="t"><span>${k[0]}</span></div><b class="num">${k[1]}</b><div class="d num">${k[2]}</div>${spark(k[3],acc,soft)}</div>`).join('');
+  const W=640,H=220,pad=32,bw=(W-pad)/8,max=600,amax=32;
+  let s=`<svg viewBox="0 0 ${W} ${H+24}" width="100%" role="img" aria-label="주별 판과 활동 멤버">`;
+  [0,300,600].forEach(v=>{const y=H-(v/max)*(H-12);s+=`<line x1="${pad}" x2="${W}" y1="${y}" y2="${y}" stroke="${css('--line')}" stroke-dasharray="${v?'3 3':''}"/><text x="0" y="${y+4}" font-size="11" fill="${css('--faint')}">${v}</text>`;});
+  const pts=[];
+  weeks.forEach((w,i)=>{const x=pad+i*bw+bw*.22,bwid=bw*.56,h=(w.g/max)*(H-12),hc=(w.c/max)*(H-12);
+    s+=`<rect x="${x}" y="${H-h}" width="${bwid}" height="${h}" rx="4" fill="${css('--acc-2')}"/><rect x="${x}" y="${H-hc}" width="${bwid}" height="${hc}" rx="${hc>8?4:1}" fill="${acc}"/>`;
+    s+=`<text x="${x+bwid/2}" y="${H+18}" text-anchor="middle" font-size="11" font-weight="${i===7?700:400}" fill="${i===7?css('--fg'):css('--faint')}">${w.l}</text>`;
+    pts.push([x+bwid/2,H-(w.a/amax)*(H-12)]);});
+  s+=`<path d="${pts.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' ')}" fill="none" stroke="${css('--warn')}" stroke-width="2"/>`;
+  pts.forEach((p,i)=>s+=`<circle cx="${p[0]}" cy="${p[1]}" r="${i===7?4:2.5}" fill="${css('--panel')}" stroke="${css('--warn')}" stroke-width="2"/>`);
+  s+=`<text x="${pts[7][0]}" y="${pts[7][1]-10}" text-anchor="middle" font-size="11" font-weight="700" fill="${css('--warn')}">27명</text>`;
+  $('#b-chart').innerHTML=s+'</svg>';
+  const days=['월','화','수','목','금','토','일'], slots=['낮','저녁','밤','새벽'];
+  const v=[[1,1,1,2,2,5,4],[2,3,3,3,4,6,5],[5,6,5,6,9,10,7],[1,2,1,2,4,6,2]];
+  let h='<span></span>'+days.map(d=>`<span>${d}</span>`).join('');
+  slots.forEach((sl,r)=>{h+=`<span style="text-align:left">${sl}</span>`+v[r].map((x,c)=>`<i title="${days[c]} ${sl} · ${x*6}판" style="opacity:${(0.08+x/10*0.92).toFixed(2)}"></i>`).join('');});
+  $('#b-heat').innerHTML=h;
+  $('#b-table').innerHTML='<tr><th>멤버</th><th>판</th><th>승률</th><th>모임 판</th><th>점수</th></tr>'+stars.map(m=>`<tr><td><span class="who"><span class="face" style="background:${m[5]}">${m[0][0]}</span>${m[0]}</span></td><td class="num">${m[1]}</td><td class="num">${m[2]}%</td><td class="num">${m[3]}</td><td class="num"><b>${m[4]}</b></td></tr>`).join('');
+  const f=[['가입',12],['롤 연결',12],['앱 설치',11],['첫 판',9],['모임 판 3판',7],['정회원',5]];
+  $('#b-funnel').innerHTML=f.map(x=>`<div class="fs"><span>${x[0]}</span><span class="bar"><i style="width:${x[1]/12*100}%"></i><em class="num">${x[1]}</em></span><span class="num">${Math.round(x[1]/12*100)}%</span></div>`).join('')+'<p style="margin:0;font-size:12px;color:var(--mut)">첫 판까지 와 주면 대부분 남아요. 첫 판이 없는 3명이 \'챙길 멤버\'로 가요.</p>';
+}
+function renderC(){
+  const r=48,c=2*Math.PI*r,score=82;
+  $('#c-ring').innerHTML=`<svg viewBox="0 0 120 120" role="img" aria-label="건강도 82점"><circle cx="60" cy="60" r="${r}" fill="none" stroke="${css('--sub')}" stroke-width="10"/><circle cx="60" cy="60" r="${r}" fill="none" stroke="${css('--good')}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c*score/100} ${c}" transform="rotate(-90 60 60)"/><text x="60" y="64" text-anchor="middle" font-size="28" font-weight="800" fill="${css('--fg')}">${score}</text><text x="60" y="82" text-anchor="middle" font-size="11" fill="${css('--mut')}">/ 100</text></svg>`;
+  const W=400,H=100,bw=W/8,max=560;
+  let s=`<svg viewBox="0 0 ${W} ${H+18}" width="100%" role="img" aria-label="주별 판">`;
+  weeks.forEach((w,i)=>{const h=Math.max(2,(w.g/max)*(H-14)),hc=(w.c/max)*(H-14),x=i*bw+bw*.2;
+    s+=`<rect x="${x}" y="${H-h}" width="${bw*.6}" height="${h}" rx="3" fill="${css('--acc-2')}"/><rect x="${x}" y="${H-hc}" width="${bw*.6}" height="${hc}" rx="2" fill="${css('--acc')}"/><text x="${x+bw*.3}" y="${H+14}" text-anchor="middle" font-size="10" fill="${i===7?css('--fg'):css('--faint')}">${w.l}</text>`;
+    if(i>=6) s+=`<text x="${x+bw*.3}" y="${H-h-4}" text-anchor="middle" font-size="10" font-weight="700" fill="${css('--fg')}">${w.g}</text>`;});
+  $('#c-chart').innerHTML=s+'</svg>';
+  $('#c-stars').innerHTML=stars.slice(0,3).map(m=>`<div class="sr"><span class="face" style="background:${m[5]}">${m[0][0]}</span><div><b>${m[0]}</b><small class="num">${m[1]}판 · 승률 ${m[2]}%</small></div><b class="num">${m[4]}</b></div>`).join('');
+}
+function renderAll(){renderA();renderB();renderC();}
+document.querySelectorAll('[data-opt]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-opt]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  ['A','B','C'].forEach(o=>$('#opt-'+o).hidden=o!==b.dataset.opt);
+  try{localStorage.setItem('staff-opt',b.dataset.opt)}catch(e){}
+}));
+document.querySelectorAll('[data-th]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-th]').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  if(b.dataset.th) document.documentElement.dataset.theme=b.dataset.th; else delete document.documentElement.dataset.theme;
+  renderAll();
+}));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',renderAll);
+renderAll();
+try{const o=localStorage.getItem('staff-opt'); if(o) document.querySelector(`[data-opt="${o}"]`)?.click();}catch(e){}
+</script>

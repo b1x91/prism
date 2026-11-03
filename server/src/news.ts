@@ -14,7 +14,23 @@ import { NEWS_LIMIT, NEWS_MAX, type NewsItem, type NewsKind } from '../../packag
 
 const WRITE_KINDS: NewsKind[] = ['notice', 'event'];
 /** 새 소식마다 붙는 하트 기본 수 1~5 (누가 누른 것으로 치지 않는다) */
-const seedHearts = () => 1 + Math.floor(Math.random() * 5);
+/**
+ * 소식 하트 기본 수 (v3.157): 올리자마자 붙지 않고 2~10시간 간격으로 하나씩 늘어 3~10개에서 멈춘다.
+ * 소식 번호로 정해지는 값이라 언제 열어도 같고, 저장하지 않는다. 예전 소식은 이미 보이던 수(seed_hearts) 아래로 내려가지 않는다.
+ */
+export const HEART_DRIP = { min: 3, max: 10, gapMin: 2 * 3600_000, gapMax: 10 * 3600_000 };
+const mix = (a: number, b: number) => { let h = (a * 2654435761) ^ (b * 40503); h = Math.imul(h ^ (h >>> 16), 2246822507); h = Math.imul(h ^ (h >>> 13), 3266489909); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; };
+export function dripHearts(id: number, at: number, now = Date.now()): number {
+  const goal = HEART_DRIP.min + Math.floor(mix(id, 0) * (HEART_DRIP.max - HEART_DRIP.min + 1));
+  let t = at, n = 0;
+  while (n < goal) {
+    t += HEART_DRIP.gapMin + mix(id, n + 1) * (HEART_DRIP.gapMax - HEART_DRIP.gapMin);
+    if (t > now) break;
+    n++;
+  }
+  return n;
+}
+const seedHearts = () => 0;
 const RANK = { prismatic: 0, gold: 1, silver: 2 } as const;
 
 /** 앱 업데이트 카드에 넣지 않는 개발용 커밋 제목 (운영진이 나중에 고칠 수 있다) */
@@ -67,7 +83,7 @@ export async function listNews(env: Env, me: Member) {
   const { results } = await env.DB.prepare(
     `SELECT n.id, n.kind, n.title, n.body, n.data, n.pinned, n.created_at AS at, n.edited_at AS edited, n.auto_key AS autoKey,
        a.nick AS authorNick,
-       n.seed_hearts + (SELECT COUNT(*) FROM news_hearts h WHERE h.news_id = n.id) AS hearts,
+       n.seed_hearts AS seed, (SELECT COUNT(*) FROM news_hearts h WHERE h.news_id = n.id) AS hearts,
        EXISTS (SELECT 1 FROM news_hearts h WHERE h.news_id = n.id AND h.member_id = ?1) AS mine
      FROM news n LEFT JOIN members a ON a.id = n.author WHERE n.kind != 'hidden'
      ORDER BY (n.auto_key LIKE 'fixed:%') DESC, n.pinned DESC, n.created_at DESC LIMIT ?2`,
@@ -76,7 +92,7 @@ export async function listNews(env: Env, me: Member) {
     const fixed = typeof r.autoKey === 'string' && r.autoKey.startsWith('fixed:');
     let data: Record<string, unknown> | null = null;
     try { data = r.data ? JSON.parse(r.data) : null; } catch { /* 없음 */ }
-    return { id: r.id, kind: r.kind, title: r.title, body: r.body, data, pinned: fixed || Boolean(r.pinned), fixed, at: r.at, edited: r.edited ?? null, auto: Boolean(r.autoKey) && !fixed, author: r.authorNick ?? null, hearts: r.hearts, mine: Boolean(r.mine) };
+    return { id: r.id, kind: r.kind, title: r.title, body: r.body, data, pinned: fixed || Boolean(r.pinned), fixed, at: r.at, edited: r.edited ?? null, auto: Boolean(r.autoKey) && !fixed, author: r.authorNick ?? null, hearts: Math.max(r.seed ?? 0, dripHearts(r.id, r.at)) + r.hearts, mine: Boolean(r.mine) };
   });
   return json({ items, readAt: me.news_read_at ?? 0, canWrite: can(me, 'manage') });
 }
@@ -103,8 +119,8 @@ export async function heartNews(env: Env, me: Member, id: number) {
     if (!ok) throw new HttpError(404, '없는 소식이에요.');
     await env.DB.prepare('INSERT OR IGNORE INTO news_hearts (news_id, member_id, at) VALUES (?, ?, ?)').bind(id, me.id, Date.now()).run();
   }
-  const n = await env.DB.prepare('SELECT n.seed_hearts + (SELECT COUNT(*) FROM news_hearts h WHERE h.news_id = n.id) AS n FROM news n WHERE n.id = ?').bind(id).first<{ n: number }>();
-  return json({ hearts: n?.n ?? 0, mine: !has });
+  const n = await env.DB.prepare('SELECT n.seed_hearts AS seed, n.created_at AS at, (SELECT COUNT(*) FROM news_hearts h WHERE h.news_id = n.id) AS n FROM news n WHERE n.id = ?').bind(id).first<{ seed: number; at: number; n: number }>();
+  return json({ hearts: n ? Math.max(n.seed ?? 0, dripHearts(id, n.at)) + n.n : 0, mine: !has });
 }
 
 function assertWriter(me: Member) {
