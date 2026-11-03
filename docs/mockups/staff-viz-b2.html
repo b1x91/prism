@@ -187,6 +187,219 @@ svg text{font-family:var(--font)}
   .mr.h > :nth-child(3){display:none}
   .ai{grid-template-columns:minmax(0,1fr)}
 }
+
+/* ───── 페이지 전환 ───── */
+.pg{display:grid;gap:16px}
+.pg[hidden]{display:none}
+.pg.in{animation:pgIn .45s cubic-bezier(.16,1,.3,1) both}
+@keyframes pgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;height:36px;padding:0 16px;border:0;border-radius:10px;background:var(--panel2);color:var(--fg);font-size:13px;font-weight:700;white-space:nowrap;transition:background .2s,color .2s,transform .15s}
+.btn:hover{background:color-mix(in srgb,var(--fg) 8%,var(--panel2))}
+.btn:active{transform:scale(.97)}
+.btn.pri{background:var(--acc);color:#fff}
+.btn.pri:hover{background:color-mix(in srgb,#000 10%,var(--acc))}
+.btn.ghost{background:transparent;color:var(--fg2)}
+.btn.ghost:hover{background:var(--panel2);color:var(--fg)}
+.btn.sm{height:30px;padding:0 12px;font-size:12px;border-radius:8px}
+/* 처리 단추: 기본 → 처리 중 → 완료(초록 + 그려지는 체크) 세 글자를 한 칸에 겹쳐 폭이 그대로 */
+.act{position:relative;display:inline-grid}
+.act > span{grid-area:1/1;display:inline-flex;align-items:center;justify-content:center;gap:6px;transition:opacity .2s,transform .3s cubic-bezier(.16,1,.3,1)}
+.act .s1,.act .s2{opacity:0;transform:translateY(6px)}
+.act.busy .s0,.act.done .s0{opacity:0;transform:translateY(-6px)}
+.act.busy .s1{opacity:1;transform:none}
+.act.done{background:var(--up)!important;color:#fff!important}
+.act.done .s2{opacity:1;transform:none}
+.act.done .s1{opacity:0}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.act .s2 path{stroke-dasharray:20;stroke-dashoffset:20}
+.act.done .s2 path{animation:draw .35s .05s cubic-bezier(.16,1,.3,1) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.collapse{overflow:hidden;transition:height .38s cubic-bezier(.16,1,.3,1),opacity .28s ease,margin .38s cubic-bezier(.16,1,.3,1),padding .38s cubic-bezier(.16,1,.3,1)}
+
+/* ───── 멤버 구성 ───── */
+.mix{margin-top:16px;display:grid;gap:12px}
+.mix-bar{display:flex;height:12px;border-radius:6px;overflow:hidden;gap:2px}
+.mix-bar button{border:0;padding:0;min-width:4px;transition:opacity .2s,filter .2s;cursor:pointer}
+.mix-bar.sel button:not(.on){opacity:.28}
+.mix-leg{display:flex;flex-wrap:wrap;gap:8px}
+.mix-leg button{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:0;border-radius:999px;background:var(--panel2);font-size:13px;color:var(--fg2);transition:background .2s,color .2s}
+.mix-leg button b{color:var(--fg);font-variant-numeric:tabular-nums}
+.mix-leg button i{width:8px;height:8px;border-radius:50%}
+.mix-leg button.on{background:var(--fg);color:var(--panel)}
+.mix-leg button.on b{color:var(--panel)}
+.mix-side{display:flex;flex-wrap:wrap;gap:8px 24px;padding-top:12px;border-top:1px solid var(--line);font-size:12px;color:var(--mut)}
+.mix-side b{font-size:16px;color:var(--fg);font-weight:800;margin-right:4px;font-variant-numeric:tabular-nums}
+
+/* ───── 멤버 목록 ───── */
+.mlist{padding-top:0}
+.mtools{position:sticky;top:8px;z-index:5;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;margin:0 -12px;padding:16px 12px 12px;border-radius:14px}
+.glass{background:color-mix(in srgb,var(--panel) 78%,transparent);backdrop-filter:blur(18px) saturate(170%);-webkit-backdrop-filter:blur(18px) saturate(170%)}
+.msearch{display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:12px;background:var(--panel2);color:var(--mut)}
+.msearch svg{width:16px;height:16px;flex:none}
+.msearch input{flex:1;min-width:0;border:0;background:none;outline:none;font:inherit;font-size:14px;color:var(--fg)}
+.msearch:focus-within{box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 45%,transparent)}
+.msort{display:flex;align-items:center;gap:4px;height:40px;padding:4px;border-radius:12px;background:var(--panel2)}
+.msort button{height:32px;padding:0 12px;border:0;border-radius:8px;background:none;font-size:13px;font-weight:650;color:var(--mut);white-space:nowrap;transition:background .2s,color .2s}
+.msort button.on{background:var(--panel);color:var(--fg);box-shadow:0 1px 2px rgba(18,20,28,.08)}
+.mfilters{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mfilters .sep{width:1px;height:16px;background:var(--line2);margin:0 4px}
+.fchip{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:0;border-radius:999px;background:var(--panel2);font-size:12px;font-weight:650;color:var(--fg2);white-space:nowrap;transition:background .2s,color .2s}
+.fchip i{width:6px;height:6px;border-radius:50%}
+.fchip.on{background:color-mix(in srgb,var(--acc) 14%,var(--panel));color:var(--acc)}
+.fchip.clear{background:none;color:var(--mut)}
+.mhead,.mrow{display:grid;grid-template-columns:minmax(200px,1.6fr) 96px 56px 104px 56px 88px 112px;gap:16px;align-items:center;padding:0 12px}
+.mhead{height:40px;font-size:12px;color:var(--mut);border-bottom:1px solid var(--line)}
+.mhead span:nth-child(n+3):not(:last-child),.mrow .nn{text-align:right}
+.mhead .on{color:var(--acc);font-weight:700}
+.mrow{min-height:64px;border-radius:12px;cursor:pointer;transition:background .2s}
+.mrow + .mrow{box-shadow:0 -1px 0 var(--line)}
+.mrow:hover{background:var(--panel2);box-shadow:none}
+.mrow:hover + .mrow{box-shadow:none}
+.mrow .who{display:flex;align-items:center;gap:12px;min-width:0}
+.mrow .who > div{min-width:0}
+.mrow .who b{display:flex;align-items:center;gap:6px;font-size:14px;white-space:nowrap}
+.mrow .who b span{overflow:hidden;text-overflow:ellipsis}
+.mrow .who small{display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar{position:relative;flex:none}
+.avatar .face{width:40px;height:40px;font-size:14px}
+.avatar .dot{position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;box-shadow:0 0 0 2.5px var(--panel)}
+.mrow:hover .avatar .dot{box-shadow:0 0 0 2.5px var(--panel2)}
+.rolec{flex:none;height:18px;padding:0 6px;border-radius:6px;font-size:11px;font-weight:700;line-height:18px;color:var(--rc);background:color-mix(in srgb,var(--rc) 14%,transparent)}
+.rolec.pend{--rc:#b7791f}
+.nn{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.nn.on{color:var(--acc)}
+.nn small{display:block;font-size:11px;font-weight:600;color:var(--mut)}
+.wr{display:grid;gap:4px}
+.wr b{font-size:14px;font-variant-numeric:tabular-nums;text-align:right}
+.wr .t{position:relative;height:4px;border-radius:2px;background:var(--ring-track);overflow:hidden}
+.wr .t i{position:absolute;inset:0 auto 0 0;border-radius:2px;background:var(--fg2)}
+.wr .t u{position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--panel)}
+.wr.hi .t i{background:var(--up)}
+.wr.on b{color:var(--acc)}
+.spark{display:block}
+.ago{font-size:12px;color:var(--fg2);text-align:right;white-space:nowrap}
+.ago.live{color:var(--up);font-weight:700}
+.lvl{position:relative}
+.lvl select{appearance:none;-webkit-appearance:none;width:100%;height:32px;padding:0 28px 0 12px;border:0;border-radius:8px;background:var(--panel2);font:inherit;font-size:12px;font-weight:700;color:var(--fg);cursor:pointer}
+.mrow:hover .lvl select{background:var(--panel)}
+.lvl::after{content:'';position:absolute;right:12px;top:13px;width:6px;height:6px;border-right:1.5px solid var(--mut);border-bottom:1.5px solid var(--mut);transform:rotate(45deg);pointer-events:none}
+.mempty{padding:48px 0;text-align:center;color:var(--mut);font-size:13px}
+.mmore{display:flex;justify-content:center;padding-top:12px}
+
+/* 서랍 */
+.drawer{position:fixed;inset:0;z-index:40;pointer-events:none}
+.drawer .scrim{position:absolute;inset:0;border:0;background:rgba(10,12,20,.32);opacity:0;transition:opacity .3s ease}
+.dpanel{position:absolute;top:8px;right:8px;bottom:8px;width:min(420px,calc(100vw - 16px));overflow-y:auto;border-radius:20px;background:var(--panel);box-shadow:0 24px 64px rgba(10,12,20,.24);transform:translateX(calc(100% + 16px));transition:transform .42s cubic-bezier(.16,1,.3,1);padding:24px;display:grid;gap:20px;align-content:start}
+.drawer.open{pointer-events:auto}
+.drawer.open .scrim{opacity:1}
+.drawer.open .dpanel{transform:none}
+.dp-head{display:flex;gap:16px;align-items:center}
+.dp-head .avatar .face{width:56px;height:56px;font-size:20px}
+.dp-head .avatar .dot{width:14px;height:14px}
+.dp-head h3{font-size:20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dp-head p{margin:2px 0 0;font-size:12px;color:var(--mut)}
+.dp-x{margin-left:auto;align-self:flex-start;width:32px;height:32px;border:0;border-radius:10px;background:var(--panel2);color:var(--fg2);display:grid;place-items:center}
+.dp-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.dp-stats div{padding:12px;border-radius:12px;background:var(--panel2);display:grid;gap:2px}
+.dp-stats span{font-size:11px;color:var(--mut)}
+.dp-stats b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.dp-sec h4{font-size:13px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline}
+.dp-sec h4 small{font-size:12px;color:var(--mut);font-weight:600}
+.dp-goal{padding:16px;border-radius:14px;background:linear-gradient(135deg,var(--acc-soft),var(--panel2) 80%);display:grid;gap:10px}
+.dp-goal p{margin:0;font-size:13px;color:var(--fg2)}
+.dp-goal p b{color:var(--fg)}
+.pips3{display:flex;gap:6px}
+.pips3 i{flex:1;height:8px;border-radius:4px;background:color-mix(in srgb,var(--acc) 16%,var(--panel))}
+.pips3 i.on{background:var(--acc)}
+.dp-mates{display:flex;flex-wrap:wrap;gap:8px}
+.dp-mates span{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 10px 0 4px;border-radius:999px;background:var(--panel2);font-size:12px;font-weight:650}
+.dp-mates .face{width:24px;height:24px;font-size:11px}
+.dp-mates em{font-style:normal;color:var(--mut);font-weight:600}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;border-radius:12px;background:var(--panel2);position:relative}
+.seg button{position:relative;z-index:1;height:34px;border:0;border-radius:8px;background:none;font-size:12px;font-weight:700;color:var(--mut);transition:color .25s}
+.seg button.on{color:var(--fg)}
+.seg .knob{position:absolute;top:4px;bottom:4px;left:4px;border-radius:8px;background:var(--panel);box-shadow:0 1px 3px rgba(18,20,28,.1);transition:transform .38s cubic-bezier(.16,1,.3,1),width .38s cubic-bezier(.16,1,.3,1)}
+.tgl{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-radius:12px;background:var(--panel2);font-size:13px;font-weight:650}
+.tgl small{display:block;font-size:12px;color:var(--mut);font-weight:500}
+.sw{position:relative;width:44px;height:26px;flex:none;border:0;border-radius:13px;background:var(--line2);transition:background .25s}
+.sw::after{content:'';position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .3s cubic-bezier(.16,1,.3,1)}
+.sw.on{background:#9b59b6}
+.sw.on::after{transform:translateX(18px)}
+
+/* ───── 할 일 ───── */
+.todo-top{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:center}
+.tt-ring{position:relative;width:112px;height:112px}
+.tt-ring svg{display:block}
+.tt-ring circle{transition:stroke-dashoffset .7s cubic-bezier(.16,1,.3,1)}
+.tt-ring div{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.tt-ring b{font-size:32px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.tt-ring small{font-size:12px;color:var(--mut);margin-top:2px}
+.tt-body h2{font-size:20px}
+.tt-body p{margin:4px 0 16px;font-size:13px;color:var(--fg2)}
+.tt-kinds{display:flex;flex-wrap:wrap;gap:8px}
+.tk{display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border:0;border-radius:999px;background:var(--panel2);font-size:13px;font-weight:650;color:var(--fg2);transition:background .2s,color .2s,opacity .3s}
+.tk i{width:8px;height:8px;border-radius:50%;background:var(--kc)}
+.tk b{font-variant-numeric:tabular-nums;color:var(--fg)}
+.tk.on{background:color-mix(in srgb,var(--kc) 16%,var(--panel));color:var(--fg)}
+.tk.zero{opacity:.45}
+.todo-list{display:grid;gap:16px}
+.tsec .ch h2{display:flex;align-items:center;gap:8px}
+.tsec .ch h2 i{width:8px;height:8px;border-radius:50%;background:var(--kc)}
+.tsec .ch h2 b{font-size:13px;font-weight:800;color:var(--kc);font-variant-numeric:tabular-nums}
+.tsec .why{margin:6px 0 12px;font-size:12px;color:var(--mut)}
+.titems{display:grid;gap:8px}
+.ti{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px;border-radius:14px;background:var(--panel2)}
+.ti .avatar .face{width:44px;height:44px}
+.ti .avatar .dot{box-shadow:0 0 0 2.5px var(--panel2)}
+.ti h4{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px}
+.ti .sub{margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--fg2)}
+.ti .sub span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.ti .sub .ok{color:var(--up);font-weight:700}
+.ti .sub .no{color:var(--warn);font-weight:700}
+.ti .acts{display:flex;gap:8px;align-items:center}
+.ti .acts .btn{min-width:88px}
+.ti .btn:not(.pri):not(.ghost):not(.done){background:var(--panel)}
+.ti .btn:not(.pri):not(.ghost):not(.done):hover{background:color-mix(in srgb,var(--fg) 6%,var(--panel))}
+.ti .acts .btn.ghost{min-width:0}
+.ti .acts select{appearance:none;-webkit-appearance:none;height:30px;padding:0 26px 0 10px;border:0;border-radius:8px;background:var(--panel);font:inherit;font-size:12px;font-weight:650;color:var(--fg)}
+.ti .pips3{width:96px}
+.ti .pips3 i{height:6px}
+.ti .quote{margin-top:8px;font-size:13px;color:var(--fg);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.kchip{height:20px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:800;line-height:20px;color:var(--kc);background:color-mix(in srgb,var(--kc) 14%,transparent)}
+.thumbs{display:flex;gap:4px;margin-top:8px}
+.thumbs i{width:40px;height:30px;border-radius:6px;background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 30%,var(--panel)),color-mix(in srgb,var(--c3) 25%,var(--panel)))}
+.flow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0 0 12px;position:relative}
+.flow div{position:relative;display:grid;justify-items:center;gap:4px;text-align:center;font-size:12px;color:var(--mut)}
+.flow div::before{content:'';position:absolute;top:13px;left:-50%;right:50%;height:2px;background:var(--line);z-index:0}
+.flow div:first-child::before{display:none}
+.flow b{position:relative;z-index:1;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;background:var(--panel2);color:var(--fg2);font-variant-numeric:tabular-nums}
+.flow div.has b{background:var(--kc);color:#fff}
+.flow div.has{color:var(--fg);font-weight:700}
+.tdone{display:grid;justify-items:center;gap:8px;padding:48px 16px;text-align:center}
+.tdone .big{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:color-mix(in srgb,var(--up) 14%,var(--panel));color:var(--up)}
+.tdone .big path{stroke-dasharray:30;stroke-dashoffset:30;animation:draw .6s .15s cubic-bezier(.16,1,.3,1) forwards}
+.tdone h3{font-size:18px}
+.tdone p{margin:0;font-size:13px;color:var(--mut)}
+.tsec.gone{display:none}
+
+@media (max-width:1100px){.mhead,.mrow{grid-template-columns:minmax(180px,1.6fr) 56px 104px 56px 88px 112px}.mhead .c-spark,.mrow .c-spark{display:none}}
+@media (max-width:760px){
+  .mtools{grid-template-columns:minmax(0,1fr);top:4px}
+  .msort{overflow-x:auto;scrollbar-width:none}
+  .mhead{display:none}
+  .mrow{grid-template-columns:minmax(0,1fr) 104px;grid-template-areas:"who lvl" "st st";row-gap:8px;padding:12px}
+  .mrow .who{grid-area:who}.mrow .lvl{grid-area:lvl}
+  .mrow .c-n,.mrow .c-wr,.mrow .c-sc,.mrow .c-ago{display:none}
+  .mrow .mob{grid-area:st;display:flex!important;gap:12px;padding-left:52px;font-size:12px;color:var(--fg2)}
+  .mrow .mob b{color:var(--fg);font-variant-numeric:tabular-nums}
+  .todo-top{grid-template-columns:minmax(0,1fr);justify-items:start}
+  .ti{grid-template-columns:auto minmax(0,1fr)}
+  .ti .acts{grid-column:1/-1;justify-content:flex-end}
+  .dp-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+.mrow .mob{display:none}
+@media (prefers-reduced-motion:reduce){.pg.in,.dpanel,.drawer .scrim,.collapse,.seg .knob,.act > span,.sw::after{animation:none;transition:none}}
 </style>
 
 <div id="tip" role="tooltip"></div>
@@ -198,6 +411,7 @@ svg text{font-family:var(--font)}
     <nav class="hh-tabs" role="tablist" aria-label="운영"><button type="button" role="tab" class="on" aria-selected="true">대시보드</button><button type="button" role="tab" aria-selected="false">멤버</button><button type="button" role="tab" aria-selected="false">할 일<span class="hh-cnt">7</span></button><i class="hh-ink" aria-hidden="true"></i></nav>
   </header>
 
+  <div class="pg" id="pg-dash">
   <section class="card"><div class="rings" id="rings"></div></section>
 
   <div class="row">
@@ -227,6 +441,33 @@ svg text{font-family:var(--font)}
     <div class="steps" id="steps"></div>
     <div class="ai" id="ai"></div>
   </section>
+  </div>
+
+  <!-- ───── 멤버 ───── -->
+  <div class="pg" id="pg-mem" hidden>
+    <section class="card">
+      <div class="ch"><h2>멤버 구성</h2><span class="meta tn" id="mcount"></span></div>
+      <div class="mix" id="mix"></div>
+    </section>
+    <section class="card mlist">
+      <div class="mtools glass">
+        <label class="msearch"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="mq" placeholder="이름 · 디스코드 이름으로 찾기" autocomplete="off"></label>
+        <div class="msort" id="msort"></div>
+        <div class="mfilters" id="mfilters"></div>
+      </div>
+      <div class="mhead" id="mhead"></div>
+      <div id="mrows"></div>
+    </section>
+  </div>
+
+  <!-- ───── 할 일 ───── -->
+  <div class="pg" id="pg-todo" hidden>
+    <section class="card todo-top" id="todotop"></section>
+    <div id="todolist" class="todo-list"></div>
+  </div>
+
+  <!-- 멤버 상세 서랍 -->
+  <div class="drawer" id="drawer" aria-hidden="true"><button class="scrim" type="button" aria-label="닫기"></button><aside class="dpanel" role="dialog" aria-label="멤버 상세" id="dpanel"></aside></div>
 </div>
 
 <script>
@@ -388,12 +629,135 @@ function funnel(){
     <li>앱을 깔지 않은 1명은 웹으로만 들어와요 — 첫 판이 기록되지 않아 정착 숫자에 안 잡혀요. 설치 안내를 한 번 더.</li></ol>
     <p class="src">위 단계 숫자와 멤버별 진행을 Claude API 로 요약해 하루 한 번 새로 써요. 숫자는 규칙으로 계산하고, AI 는 문장만 만들어요.</p></div>`}
 
-// 운영 머리 밑줄: 고른 탭 아래로 미끄러진다 (시안에서는 눌러도 화면은 대시보드 그대로)
+// 운영 머리 밑줄: 고른 탭 아래로 미끄러진다
 function ink(){const t=$('.hh-tabs'),on=t.querySelector('.on'),k=t.querySelector('.hh-ink');k.style.width=on.offsetWidth+'px';k.style.transform=`translateX(${on.offsetLeft}px)`}
-document.querySelectorAll('.hh-tabs button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.hh-tabs button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-selected',x===b)});ink()}));
-function all(){ink();rings();cal();members();funnel();combo()}
+document.querySelectorAll('.hh-tabs button').forEach((b,i)=>{b.dataset.pg=['dash','mem','todo'][i];b.addEventListener('click',()=>{document.querySelectorAll('.hh-tabs button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-selected',x===b)});ink();show(b.dataset.pg)})});
+// ═════════ 멤버 · 할 일 (시안 데이터) ═════════
+const LV={pend:{n:'승인 대기',c:'#b7791f'},1:{n:'준회원',c:'#3498db'},2:{n:'정회원',c:'#e74c3c'},3:{n:'우수회원',c:'#d4a017'},5:{n:'운영진',c:'#607d8b'}};
+const LV_ORDER=['pend',1,2,3,5];
+const PRES={game:['#16a34a','게임 중'],select:['#3b5bfd','챔프 고르는 중'],app:['#3b82f6','앱 접속'],web:['#9aa1b2','웹 접속']};
+const FACEC=['#7c3aed','#b45309','#0e7490','#9f1239','#c2410c','#4d7c0f','#1d4ed8','#be185d','#0f766e','#7e22ce','#a16207','#334155'];
+let seed=7;const rr=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const NAMES=['나코치','롤처음하니살살요','그남자와잔나','용팔이네 형','톰과란제리','은하수','미드갈게요','칼바람장인','새벽감성','블랙','포로왕','눈사람','바람의검성','달빛소나타','초코우유','라면먹고갈래','도란도란','별헤는밤','한입만','아이언하트','고양이발','파란하늘','망고빙수','라떼한잔','소리없는아우성','붕어빵','여름밤','구름위산책','오늘도출근','밤샘요정','칼바람초보','새싹이'];
+const DN=['nacoach','lolnewbie','jannaguy','yongpal','tomjerry','galaxy_','midgo','aram.king','dawnmood','haze','poroking','snowman','windblade','moonsonata','chocomilk','ramyeon','doran','starnight','onebite','ironheart','catpaw','bluesky','mangobing','latte','silentcry','bungeo','summernight','cloudwalk','work9to6','nightfairy','aramnewbie','sprout'];
+const MEM=NAMES.map((n,i)=>{const st=STARS.find(x=>x.n===n);const lv=i===9?5:i<3?3:i<12?2:i>=30?'pend':i>=22?1:2;const g=st?st.g:Math.max(lv==='pend'?0:lv===1?2:9,Math.round(rr()**1.6*90));const w=Math.round(g*(.38+rr()*.26));
+  const wk=Array.from({length:8},(_,k)=>g?Math.round(rr()*g/5*(k/7+.3)):0);const lastH=i<7?rr()*2:rr()**2*24*20;
+  return {i,n,dn:DN[i],c:FACEC[i%FACEC.length],lv,sp:[1,6,13].includes(i),pres:i===0||i===2||i===6?'game':i===4?'select':i===1||i===9?'app':i===12?'web':null,
+    app:i%5!==3,riot:i!==31,g,w,sc:st?st.score:Math.round(500+(w/(g||1)-.5)*300*Math.min(1,g/20)),rec:st?Math.round(st.g/3):Math.round(g*rr()*.5),staff:Math.round(rr()*5),join:Math.round(5+rr()*50)+(i>=30?-5:0),lastH,wk,
+    mates:st?NAMES.slice(0,5).filter(x=>x!==n).slice(0,4):NAMES.slice(0,3)}});
+MEM[30].join=1;MEM[31].join=3;MEM[30].g=0;MEM[31].g=0;MEM[30].w=0;MEM[31].w=0;MEM[30].wk=MEM[31].wk=[0,0,0,0,0,0,0,0];
+const agoT=h=>h<.1?'방금':h<1?Math.round(h*60)+'분 전':h<24?Math.round(h)+'시간 전':Math.round(h/24)+'일 전';
+const SORTS=[['last','최근 활동'],['g','판수'],['wr','승률'],['sc','점수'],['rec','2주 판'],['join','가입일']];
+const ms={q:'',sort:'last',lv:new Set(),cond:new Set(),more:false};
+const COND=[['now','지금 접속',m=>!!m.pres],['act','2주 활동',m=>m.rec>0],['sp','특별회원',m=>m.sp],['app','앱 사용',m=>m.app],['riot','롤 연결',m=>m.riot]];
+const wrOf=m=>m.g?m.w/m.g:0;
+const face=(m,dot=true)=>`<span class="avatar"><span class="face" style="background:${m.c}">${m.n[0]}</span>${dot&&m.pres?`<i class="dot" style="background:${PRES[m.pres][0]}" title="${PRES[m.pres][1]}"></i>`:''}</span>`;
+const roleChip=m=>m.lv==='pend'?'<span class="rolec pend">승인대기</span>':`<span class="rolec" style="--rc:${LV[m.lv].c}">${LV[m.lv].n}</span>`+(m.sp?'<span class="rolec" style="--rc:#9b59b6">특별</span>':'');
+function sparkSvg(wk,c){const w=88,h=24,mx=Math.max(1,...wk),bw=8,gap=(w-bw*8)/7;return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${wk.map((v,k)=>{const bh=Math.max(2,v/mx*h);return `<rect x="${k*(bw+gap)}" y="${h-bh}" width="${bw}" height="${bh}" rx="2" fill="${k===7?c:`color-mix(in srgb, ${c} ${v?45:18}%, var(--panel))`}"/>`}).join('')}</svg>`}
+function memMix(){const cnt=LV_ORDER.map(k=>[k,MEM.filter(m=>m.lv==k).length]);const tot=MEM.length;
+  $('#mcount').textContent=`${tot}명 · 지금 접속 ${MEM.filter(m=>m.pres).length}명`;
+  const bar=cnt.map(([k,n])=>`<button type="button" data-lv="${k}" class="${ms.lv.has(String(k))?'on':''}" style="flex:${n};background:${LV[k].c}" title="${LV[k].n} ${n}명"></button>`).join('');
+  const leg=cnt.map(([k,n])=>`<button type="button" data-lv="${k}" class="${ms.lv.has(String(k))?'on':''}"><i style="background:${LV[k].c}"></i>${LV[k].n} <b>${n}</b></button>`).join('');
+  const app=MEM.filter(m=>m.app).length,riot=MEM.filter(m=>m.riot).length,sp=MEM.filter(m=>m.sp).length;
+  $('#mix').innerHTML=`<div class="mix-bar ${ms.lv.size?'sel':''}">${bar}</div><div class="mix-leg">${leg}</div><div class="mix-side"><span><b>${sp}</b>특별회원</span><span><b>${Math.round(app/tot*100)}%</b>앱 사용 (${app}명)</span><span><b>${Math.round(riot/tot*100)}%</b>롤 계정 연결 (${riot}명)</span></div>`;
+  $('#mix').querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{const k=b.dataset.lv;ms.lv.has(k)?ms.lv.delete(k):ms.lv.add(k);ms.more=false;memAll()})}
+function memTools(){
+  $('#msort').innerHTML=SORTS.map(([k,l])=>`<button type="button" data-s="${k}" class="${ms.sort===k?'on':''}">${l}</button>`).join('');
+  $('#msort').querySelectorAll('button').forEach(b=>b.onclick=()=>{ms.sort=b.dataset.s;memAll()});
+  const lvChips=LV_ORDER.map(k=>`<button type="button" class="fchip ${ms.lv.has(String(k))?'on':''}" data-lv="${k}"><i style="background:${LV[k].c}"></i>${LV[k].n}</button>`).join('');
+  const cChips=COND.map(([k,l])=>`<button type="button" class="fchip ${ms.cond.has(k)?'on':''}" data-c="${k}">${l}</button>`).join('');
+  const any=ms.lv.size||ms.cond.size||ms.q;
+  $('#mfilters').innerHTML=(ms.lv.size?[...ms.lv].map(k=>`<button type="button" class="fchip on" data-lv="${k}"><i style="background:${LV[k].c}"></i>${LV[k].n} ✕</button>`).join('')+'<i class="sep"></i>':'')+cChips+(any?'<button type="button" class="fchip clear" data-x>모두 풀기</button>':'');
+  $('#mfilters').querySelectorAll('[data-lv]').forEach(b=>b.onclick=()=>{const k=b.dataset.lv;ms.lv.has(k)?ms.lv.delete(k):ms.lv.add(k);ms.more=false;memAll()});
+  $('#mfilters').querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{const k=b.dataset.c;ms.cond.has(k)?ms.cond.delete(k):ms.cond.add(k);ms.more=false;memAll()});
+  const x=$('#mfilters [data-x]');if(x)x.onclick=()=>{ms.lv.clear();ms.cond.clear();ms.q='';$('#mq').value='';memAll()}}
+function memRows(){let L=MEM.filter(m=>(!ms.q||m.n.includes(ms.q)||m.dn.includes(ms.q.toLowerCase()))&&(!ms.lv.size||ms.lv.has(String(m.lv)))&&[...ms.cond].every(k=>COND.find(c=>c[0]===k)[2](m)));
+  const key={last:m=>-m.lastH,g:m=>m.g,wr:m=>m.g>=5?wrOf(m):-1,sc:m=>m.sc,rec:m=>m.rec,join:m=>-m.join}[ms.sort];L.sort((a,b)=>key(b)-key(a));
+  const on=k=>ms.sort===k?'on':'';
+  $('#mhead').innerHTML=`<span>멤버 <span class="tn">${L.length}</span></span><span class="c-spark">최근 8주</span><span class="${on('g')}">판</span><span class="${on('wr')}" style="text-align:right">승률</span><span class="${on('sc')}">점수</span><span class="${on('last')}" style="text-align:right">최근 활동</span><span>단계</span>`;
+  const shown=ms.more?L:L.slice(0,12);
+  $('#mrows').innerHTML=!L.length?'<div class="mempty">조건에 맞는 멤버가 없어요</div>':shown.map(m=>{const wr=wrOf(m),sub=`${m.dn} · 가입 ${m.join}일째${m.lv===1?` · 운영진과 ${Math.min(m.staff,3)}/3판`:''}`;
+    return `<div class="mrow" data-i="${m.i}" tabindex="0"><div class="who">${face(m)}<div><b><span>${m.n}</span>${m.sp?'<span class="rolec" style="--rc:#9b59b6">특별</span>':''}</b><small>${sub}</small></div></div>
+      <div class="c-spark">${sparkSvg(m.wk,m.c)}</div>
+      <div class="nn c-n ${on('g')}">${m.g}${ms.sort==='rec'?`<small>2주 ${m.rec}</small>`:''}</div>
+      <div class="wr c-wr ${wr>=.55&&m.g>=5?'hi':''} ${on('wr')}"><b>${m.g?Math.round(wr*100)+'%':'—'}</b><span class="t"><i style="width:${wr*100}%"></i><u></u></span></div>
+      <div class="nn c-sc ${on('sc')}">${m.g?m.sc:'—'}</div>
+      <div class="ago c-ago ${m.pres?'live':''}" ${m.pres?`style="color:${PRES[m.pres][0]}"`:''}>${m.pres?PRES[m.pres][1]:agoT(m.lastH)}</div>
+      <div class="lvl"><select aria-label="${m.n} 단계">${LV_ORDER.map(k=>`<option value="${k}" ${m.lv==k?'selected':''}>${LV[k].n}</option>`).join('')}</select></div>
+      <div class="mob"><span><b>${m.g}</b>판</span><span><b>${m.g?Math.round(wr*100)+'%':'—'}</b> 승률</span><span>${m.pres?PRES[m.pres][1]:agoT(m.lastH)}</span></div></div>`}).join('')+(L.length>12&&!ms.more?`<div class="mmore"><button type="button" class="btn sm" id="mmore">${L.length-12}명 더 보기</button></div>`:'');
+  $('#mrows').querySelectorAll('.mrow').forEach(r=>{r.onclick=e=>{if(e.target.closest('.lvl'))return;openDrawer(MEM[+r.dataset.i])};r.onkeydown=e=>{if(e.key==='Enter')openDrawer(MEM[+r.dataset.i])}});
+  $('#mrows').querySelectorAll('.lvl select').forEach(sel=>sel.onchange=()=>{const m=MEM[+sel.closest('.mrow').dataset.i];m.lv=sel.value==='pend'?'pend':+sel.value;memMix();memTools()});
+  const mm=$('#mmore');if(mm)mm.onclick=()=>{ms.more=true;memRows()}}
+function memAll(){memMix();memTools();memRows()}
+$('#mq').addEventListener('input',e=>{ms.q=e.target.value.trim();ms.more=false;memTools();memRows()});
+
+// 서랍: 오른쪽에서 밀려 나오는 멤버 상세
+function openDrawer(m){const d=$('#drawer'),wr=wrOf(m),toReg=m.lv===1;
+  const lvBtns=[1,2,3].map(k=>`<button type="button" data-k="${k}" class="${m.lv==k?'on':''}">${LV[k].n}</button>`).join('');
+  $('#dpanel').innerHTML=`<div class="dp-head">${face(m)}<div><h3>${m.n}${m.sp?'<span class="rolec" style="--rc:#9b59b6">특별</span>':''}</h3><p>${m.dn} · 가입 ${m.join}일째 · ${m.pres?PRES[m.pres][1]:agoT(m.lastH)}</p></div><button class="dp-x" type="button" aria-label="닫기"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="dp-stats"><div><span>판</span><b>${m.g}</b></div><div><span>승률</span><b>${m.g?Math.round(wr*100)+'%':'—'}</b></div><div><span>점수</span><b>${m.g?m.sc:'—'}</b></div><div><span>2주 판</span><b>${m.rec}</b></div></div>
+    ${toReg?`<div class="dp-goal"><p><b>정회원까지</b> — 운영진과 같은 판 ${Math.min(m.staff,3)} / 3</p><div class="pips3">${[0,1,2].map(k=>`<i class="${k<m.staff?'on':''}"></i>`).join('')}</div><p>${m.staff>=3?'기준을 채웠어요. 할 일 › 정회원 심사에서 승인할 수 있어요.':`운영진과 ${3-Math.min(m.staff,3)}판만 더 함께하면 심사에 올라가요.`}</p></div>`:''}
+    <div class="dp-sec"><h4>최근 8주 판 <small>주마다</small></h4><div id="dpweek"></div></div>
+    <div class="dp-sec"><h4>자주 함께한 멤버</h4><div class="dp-mates">${m.mates.map(n=>{const x=MEM.find(y=>y.n===n);return [x,3+((x.i*7+m.i)%12)]}).sort((a,b)=>b[1]-a[1]).map(([x,k])=>`<span><span class="face" style="background:${x.c}">${x.n[0]}</span>${x.n}<em>${k}판</em></span>`).join('')}</div></div>
+    <div class="dp-sec"><h4>단계 <small>디스코드 역할도 함께 바뀌어요</small></h4>${m.lv===5?'<p class="meta">운영진은 디스코드에서 정해요.</p>':m.lv==='pend'?'<button type="button" class="btn pri" style="width:100%">승인하고 준회원으로</button>':`<div class="seg" id="dpseg"><i class="knob"></i>${lvBtns}</div>`}</div>
+    <div class="tgl"><div>특별회원<small>상점 50% 할인</small></div><button type="button" class="sw ${m.sp?'on':''}" id="dpsp" aria-pressed="${m.sp}" aria-label="특별회원"></button></div>`;
+  // 8주 막대 (넓게)
+  const wk=$('#dpweek'),w=372,h=72,mx=Math.max(1,...m.wk),bw=Math.min(28,(w-7*8)/8),gap=(w-bw*8)/7,sv=svg(w,h+18);sv.style.maxWidth='100%';
+  m.wk.forEach((v,k)=>{const bh=Math.max(2,v/mx*h);el(sv,'path',{d:topBar(k*(bw+gap),h-bh,bw,bh,4),fill:k===7?css('--c3'):m.c,opacity:k===7?1:.85});el(sv,'text',{x:k*(bw+gap)+bw/2,y:h+14,'text-anchor':'middle',class:'ax'},W8[k].l.replace('이번 주','이번'))});wk.appendChild(sv);
+  const seg=$('#dpseg');if(seg){const knob=seg.querySelector('.knob');const place=()=>{const on=seg.querySelector('button.on');if(on){knob.style.width=on.offsetWidth+'px';knob.style.transform=`translateX(${on.offsetLeft-4}px)`}};
+    seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{seg.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));m.lv=+b.dataset.k;place();memAll()});requestAnimationFrame(place)}
+  $('#dpsp').onclick=e=>{m.sp=!m.sp;e.currentTarget.classList.toggle('on',m.sp);memAll()};
+  const close=()=>{d.classList.remove('open');d.setAttribute('aria-hidden','true')};
+  $('#dpanel .dp-x').onclick=close;d.querySelector('.scrim').onclick=close;document.onkeydown=e=>{if(e.key==='Escape')close()};
+  d.setAttribute('aria-hidden','false');requestAnimationFrame(()=>d.classList.add('open'))}
+
+// ═════════ 할 일 ═════════
+const KINDS=[['approve','승인 대기','#d4a017','디스코드에 들어와 앱에 로그인했지만 아직 역할이 없어요. 승인하면 준회원 역할이 붙어요.'],['review','정회원 심사','#3b5bfd','운영진과 같은 판 3판을 채운 준회원이에요.'],['join','가입 신청','#0e9f6e','초대 링크로 들어온 신청이에요. 다음 할 일만 보여요.'],['inq','문의','#e5484d','답을 기다리는 문의예요.']];
+const TODO=[
+  {k:'approve',id:'a1',m:{n:'새벽감성',c:'#be185d'},h:'어제 가입했어요',sub:[['ok','롤 계정 연결'],['ok','앱 설치'],['','추천인 나코치']],act:'승인'},
+  {k:'approve',id:'a2',m:{n:'칼바람초보',c:'#0f766e'},h:'가입한 지 3일',sub:[['ok','롤 계정 연결'],['no','앱 아직']],ref:true,act:'승인'},
+  {k:'review',id:'r1',m:{n:'미드갈게요',c:'#1d4ed8'},h:'운영진과 4판',sub:[['','모임 판 18'],['','승률 58%'],['','가입 21일째']],pips:4,act:'승인'},
+  {k:'review',id:'r2',m:{n:'포로왕',c:'#a16207'},h:'운영진과 3판',sub:[['','모임 판 11'],['','승률 49%'],['','가입 16일째']],pips:3,act:'승인'},
+  {k:'review',id:'r3',m:{n:'눈사람',c:'#334155'},h:'운영진과 3판',sub:[['','모임 판 9'],['','승률 52%'],['','가입 12일째']],pips:3,act:'승인'},
+  {k:'join',id:'j1',m:{n:'바람의검성',c:'#4d7c0f'},h:'신청 · 2시간 전',sub:[['','바람의검성#KR1'],['','저녁·밤'],['','초대 은하수']],act:'면접 시작'},
+  {k:'join',id:'j2',m:{n:'달빛소나타',c:'#7e22ce'},h:'면접 중 · 확정 서명 1 / 2',sub:[['ok','블랙 서명'],['','달빛소나타#0412']],act:'확정 서명'},
+  {k:'inq',id:'q1',m:{n:'그남자와잔나',c:'#0e7490'},h:'',kind:['버그·오류','#e5484d'],quote:'게임 위 작은 창에 증강이 2개만 떠요. 오른쪽 카드가 계속 비어 있어요. 21:9 모니터 씁니다.',sub:[['','앱 1.0.33'],['','롤 켜짐'],['','2시간 전']],thumbs:2,act:'해결',act2:'답장하기'}];
+const td={done:new Set(),kind:null};
+const TOTAL=TODO.length;
+const actBtn=(label,pri=true)=>`<button type="button" class="btn ${pri?'pri':''} act"><span class="s0">${label}</span><span class="s1"><i class="spin"></i>처리 중</span><span class="s2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>완료</span></button>`;
+function todoCount(){return TODO.filter(t=>!td.done.has(t.id)).length}
+function todoTop(){const left=todoCount(),done=TOTAL-left,r=48,C=2*Math.PI*r;
+  const kinds=KINDS.map(([k,l,c])=>{const n=TODO.filter(t=>t.k===k&&!td.done.has(t.id)).length;return `<button type="button" class="tk ${td.kind===k?'on':''} ${n?'':'zero'}" style="--kc:${c}" data-k="${k}"><i></i>${l} <b>${n}</b></button>`}).join('');
+  $('#todotop').innerHTML=`<div class="tt-ring"><svg width="112" height="112" viewBox="0 0 112 112"><circle cx="56" cy="56" r="${r}" fill="none" stroke="var(--ring-track)" stroke-width="8"/><circle id="ttarc" cx="56" cy="56" r="${r}" fill="none" stroke="var(--up)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-done/TOTAL)}" transform="rotate(-90 56 56)"/></svg><div><b>${left}</b><small>남음</small></div></div>
+    <div class="tt-body"><h2>${left?`처리할 일 ${left}개`:'오늘 할 일을 모두 끝냈어요'}</h2><p>${left?`오늘 ${done}개 처리했어요 · 오래 기다린 것부터 위에 있어요`:'새 일이 생기면 운영 메뉴에 빨간 점이 떠요'}</p><div class="tt-kinds">${kinds}</div></div>`;
+  $('#todotop').querySelectorAll('.tk').forEach(b=>b.onclick=()=>{td.kind=td.kind===b.dataset.k?null:b.dataset.k;todoTop();todoList(true)});
+  const hc=document.querySelector('.hh-tabs .hh-cnt');if(hc){hc.textContent=left||'';}}
+function itemHtml(t){const extra=t.k==='approve'&&t.ref?`<select aria-label="추천인"><option>추천인 고르기</option>${NAMES.slice(0,8).map(n=>`<option>${n}</option>`).join('')}</select>`:'';
+  return `<div class="ti collapse" data-id="${t.id}">${face(t.m,false)}<div><h4>${t.m.n}${t.kind?`<span class="kchip" style="--kc:${t.kind[1]}">${t.kind[0]}</span>`:''}${t.h?`<span class="meta" style="font-weight:600">${t.h}</span>`:''}</h4>
+    ${t.quote?`<p class="quote">${t.quote}</p>`:''}<div class="sub">${t.sub.map(([c,x])=>`<span class="${c}">${c==='ok'?'✓ ':c==='no'?'· ':''}${x}</span>`).join('')}${t.pips?`<span class="pips3" title="운영진과 같은 판">${[0,1,2].map(k=>`<i class="on"></i>`).join('')}</span>`:''}</div>
+    ${t.thumbs?`<div class="thumbs">${'<i></i>'.repeat(t.thumbs)}</div>`:''}</div>
+    <div class="acts">${extra}${t.k==='approve'||t.k==='join'?'<button type="button" class="btn ghost sm">보류</button>':''}${t.act2?'<button type="button" class="btn sm">'+t.act2+'</button>':''}${actBtn(t.act,true)}</div></div>`}
+function todoList(anim){const host=$('#todolist');
+  if(!todoCount()){host.innerHTML=`<section class="card"><div class="tdone"><span class="big"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><h3>모두 처리했어요</h3><p>승인 대기 · 정회원 심사 · 가입 신청 · 문의가 비었어요.</p></div></section>`;return}
+  host.innerHTML=KINDS.filter(([k])=>!td.kind||td.kind===k).map(([k,l,c,why])=>{const items=TODO.filter(t=>t.k===k&&!td.done.has(t.id));if(!items.length)return '';
+    const flow=k==='join'?`<div class="flow" style="--kc:${c}">${[['신청',1],['면접 중',1],['확정',0],['초대함',0]].map(([n,v])=>`<div class="${v?'has':''}"><b>${v}</b>${n}</div>`).join('')}</div>`:'';
+    return `<section class="card tsec" style="--kc:${c}" data-k="${k}"><div class="ch"><h2><i></i>${l} <b>${items.length}</b></h2>${k==='join'?'<span class="meta">전체 보드 ›</span>':k==='inq'?'<span class="meta">작업 목록 복사</span>':''}</div><p class="why">${why}</p>${flow}<div class="titems">${items.map(itemHtml).join('')}</div></section>`}).join('');
+  if(anim)host.querySelectorAll('.tsec').forEach((x,i)=>{x.style.animation='none';x.offsetHeight;x.style.animation=`vzFade .5s cubic-bezier(.16,1,.3,1) ${i*40}ms both`});
+  host.querySelectorAll('.ti .act').forEach(b=>b.onclick=()=>{if(b.classList.contains('busy')||b.classList.contains('done'))return;const row=b.closest('.ti'),id=row.dataset.id;
+    b.classList.add('busy');setTimeout(()=>{b.classList.remove('busy');b.classList.add('done');
+      setTimeout(()=>{row.style.height=row.offsetHeight+'px';row.offsetHeight;row.style.height='0px';row.style.opacity='0';row.style.paddingTop=row.style.paddingBottom='0px';row.style.marginTop='-8px';
+        setTimeout(()=>{td.done.add(id);todoTop();const sec=row.closest('.tsec');row.remove();if(sec&&!sec.querySelector('.ti')){sec.style.transition='opacity .3s';sec.style.opacity='0';setTimeout(()=>todoList(false),300)}else{const n=sec.querySelector('h2 b');n.textContent=sec.querySelectorAll('.ti').length}if(!todoCount())todoList(false)},380)},700)},650)})}
+function todoAll(anim){todoTop();todoList(anim)}
+
+// ═════════ 탭 전환 ═════════
+let page='dash';
+function show(pg){if(pg===page)return;page=pg;['dash','mem','todo'].forEach(k=>{const e=$('#pg-'+k);e.hidden=k!==pg;e.classList.remove('in')});const e=$('#pg-'+pg);e.offsetHeight;e.classList.add('in');
+  if(pg==='dash')all();else if(pg==='mem')memAll();else todoAll(true);scrollTo({top:0})}
+
+function all(){ink();if(page!=='dash'){page==='mem'?memAll():todoAll(false);return}rings();cal();members();funnel();combo()}
 document.querySelectorAll('[data-th]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-th]').forEach(x=>x.setAttribute('aria-pressed',x===b));if(b.dataset.th)document.documentElement.dataset.theme=b.dataset.th;else delete document.documentElement.dataset.theme;all()}));
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',all);
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(all,120)});
-all();
+todoTop();all();
+if(location.hash==='#members')document.querySelectorAll('.hh-tabs button')[1].click();if(location.hash==='#todo')document.querySelectorAll('.hh-tabs button')[2].click();
 </script>
