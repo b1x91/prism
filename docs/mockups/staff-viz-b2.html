@@ -9,7 +9,7 @@
   --up:#15803d; --up-soft:#e6f5ec; --warn:#b45309; --warn-soft:#fdf1e2; --down:#c2410c;
   --h0:#ebedf3; --h1:#cfd8ff; --h2:#9fb0ff; --h3:#6b84ff; --h4:#3b5bfd;
   --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4;
-  --ring-track:#e9ecf5;
+  --ring-track:#e9ecf5; --future:#f3f4f7;
   --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
@@ -19,7 +19,7 @@
   --up:#3ccf74; --up-soft:#12301f; --warn:#f0b54a; --warn-soft:#352812; --down:#ff8a5c;
   --h0:#161b28; --h1:#1f2b5c; --h2:#2f4296; --h3:#4a63d6; --h4:#7d92ff;
   --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181;
-  --ring-track:#1d2335; color-scheme:dark}}
+  --ring-track:#1d2335; --future:#121623; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#07090f; --panel:#10141f; --panel2:#151a27; --line:#222839; --grid:#1b2131; --line2:#2c3347;
   --fg:#eef0f6; --fg2:#b4b9c8; --mut:#7d8497;
@@ -27,7 +27,7 @@
   --up:#3ccf74; --up-soft:#12301f; --warn:#f0b54a; --warn-soft:#352812; --down:#ff8a5c;
   --h0:#161b28; --h1:#1f2b5c; --h2:#2f4296; --h3:#4a63d6; --h4:#7d92ff;
   --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181;
-  --ring-track:#1d2335; color-scheme:dark}
+  --ring-track:#1d2335; --future:#121623; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;word-break:keep-all;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
@@ -165,7 +165,7 @@ svg text{font-family:var(--font)}
     <section class="card">
       <div class="ch"><h2>주별 판과 활동 멤버</h2><span class="meta tn">최근 8주 · 1,024판</span></div>
       <p class="lede"><b>판이 늘면 활동 멤버도 함께 늘었어요.</b> 10/26 주 555판에 30명, 이번 주는 이틀 만에 151판·27명.</p>
-      <div class="legend"><span><i class="k" style="background:var(--acc)"></i>모임 판</span><span><i class="k" style="background:var(--other)"></i>그 밖의 판</span><span><i class="k" style="background:var(--panel2);border:1px solid var(--line2);border-radius:999px;width:22px"></i>막대 위 = 그 주 활동 멤버</span></div>
+      <div class="legend"><span><i class="k" style="background:linear-gradient(var(--acc),transparent);opacity:.6;width:14px"></i>물결 = 전체 판</span><span><i class="k" style="background:var(--acc);width:6px;border-radius:3px"></i>막대 = 모임 판</span><span><i class="k" style="background:var(--panel);border:1px solid var(--line2);border-radius:999px;width:22px"></i>알약 = 그 주 활동 멤버</span><span><i class="k" style="height:2px;width:14px;background:repeating-linear-gradient(90deg,var(--acc) 0 4px,transparent 4px 8px)"></i>이번 주 (진행 중)</span></div>
       <div class="plot" id="combo"></div>
     </section>
     <section class="card">
@@ -241,23 +241,33 @@ function rings(){const R=[['활동률',27/32,'27 / 32명','<em>+11</em> 지난�
   $('#rings').innerHTML=R.map(r=>`<div class="ring">${ring(r[1])}<div style="min-width:0"><div class="l">${r[0]}</div><div class="n">${Math.round(r[1]*100)}%</div><div class="d tn">${r[2]} · ${r[3]}</div></div></div>`).join('')}
 
 // ───── 주별 판 + 활동 멤버 (한 차트, 막대 위에 멤버) ─────
-function combo(){const w=W('#combo'),H=w<520?260:360,L=40,R=8,T=48,B=28,iw=w-L-R,ih=H-T-B,s=svg(w,H),g=niceTop(Math.max(...W8.map(x=>x.g)));
-  const y=v=>T+ih-v/g.top*ih,col=iw/8,bw=Math.min(24,col*.45),cx=i=>L+col*i+col/2,amax=Math.max(...W8.map(x=>x.a));
+function combo(){const w=W('#combo'),H=w<520?260:360,L=40,R=16,T=56,B=28,iw=w-L-R,ih=H-T-B,s=svg(w,H),g=niceTop(Math.max(...W8.map(x=>x.g)));
+  const y=v=>T+ih-v/g.top*ih,col=iw/8,bw=Math.min(14,col*.22),cx=i=>L+col*i+col/2,amax=Math.max(...W8.map(x=>x.a)),acc=css('--acc'),pan=css('--panel');
+  const id=Math.random().toString(36).slice(2,7),df=el(s,'defs',{});
+  const ag=el(df,'linearGradient',{id:'a'+id,x1:0,y1:0,x2:0,y2:1});[[0,.28],[.55,.10],[1,0]].forEach(([o,a])=>el(ag,'stop',{offset:o,'stop-color':acc,'stop-opacity':a}));
+  const lg=el(df,'linearGradient',{id:'l'+id,x1:0,y1:0,x2:1,y2:0});[[0,.45],[.6,1],[1,1]].forEach(([o,a])=>el(lg,'stop',{offset:o,'stop-color':acc,'stop-opacity':a}));
+  const bg=el(df,'linearGradient',{id:'b'+id,x1:0,y1:0,x2:0,y2:1});el(bg,'stop',{offset:0,'stop-color':acc,'stop-opacity':1});el(bg,'stop',{offset:1,'stop-color':acc,'stop-opacity':.55});
+  const gf=el(df,'filter',{id:'g'+id,x:'-10%',y:'-30%',width:'120%',height:'160%'});el(gf,'feGaussianBlur',{stdDeviation:4});
   for(let i=0;i<=4;i++){const v=g.step*i;el(s,'line',{x1:L,x2:w-R,y1:y(v),y2:y(v),stroke:i?css('--grid'):css('--line2')});el(s,'text',{x:L-8,y:y(v)+4,'text-anchor':'end',class:'ax tn'},fmt(v))}
-  // 물결: 막대 꼭대기(전체 판)를 잇는 부드러운 면 — 같은 눈금이라 따로 축이 필요 없다
-  {const gid='wv'+Math.random().toString(36).slice(2,7),df=el(s,'defs',{}),lg=el(df,'linearGradient',{id:gid,x1:0,y1:0,x2:0,y2:1});el(lg,'stop',{offset:0,'stop-color':css('--acc'),'stop-opacity':.22});el(lg,'stop',{offset:1,'stop-color':css('--acc'),'stop-opacity':0});
-   const pts=W8.map((d,i)=>[cx(i),y(d.g)]),line=smooth(pts);el(s,'path',{d:`${line} L${pts[7][0]},${y(0)} L${pts[0][0]},${y(0)} Z`,fill:`url(#${gid})`});el(s,'path',{d:line,fill:'none',stroke:css('--acc'),'stroke-width':2,'stroke-linecap':'round',opacity:.55});}
-  W8.forEach((d,i)=>{const x=cx(i)-bw/2,last=i===7;const hl=el(s,'rect',{x:L+col*i+2,y:4,width:col-4,height:H-8,rx:12,fill:css('--panel2'),opacity:0});
-    if(d.c>0)el(s,'path',{d:topBar(x,y(d.c),bw,y(0)-y(d.c),d.g>d.c?0:4),fill:css('--acc')});
-    if(d.g>d.c)el(s,'path',{d:topBar(x,y(d.g),bw,y(d.c)-y(d.g)-(d.c?2:0),4),fill:css('--other')});
-    // 막대 위: 활동 멤버 알약 (진하기 = 사람 수)
-    if(d.a>0){const py=Math.min(y(d.g)-28,T+ih-28),pw=String(d.a).length*7+38,k=d.a/amax;
-      el(s,'rect',{x:cx(i)-pw/2,y:py,width:pw,height:22,rx:11,fill:`color-mix(in srgb, ${css('--acc')} ${Math.round(8+k*22)}%, ${css('--panel')})`,stroke:`color-mix(in srgb, ${css('--acc')} ${Math.round(20+k*40)}%, ${css('--panel')})`});
-      el(s,'circle',{cx:cx(i)-pw/2+10,cy:py+11,r:3.5,fill:css('--acc'),opacity:.35+k*.65});
-      el(s,'text',{x:cx(i)-pw/2+18,y:py+15,'text-anchor':'start',class:'lbl tn'},d.a+'명')}
+  const hl=el(s,'rect',{x:0,y:T-40,width:col-4,height:ih+40,rx:12,fill:css('--panel2'),opacity:0});
+  // 물결 = 전체 판 (면 · 빛 · 선). 이번 주는 진행 중이라 마지막 구간만 점선
+  const pts=W8.map((d,i)=>[cx(i),y(d.g)]),line=smooth(pts),full=smooth(pts.slice(0,7));
+  el(s,'path',{d:`${line} L${pts[7][0]},${y(0)} L${pts[0][0]},${y(0)} Z`,fill:`url(#a${id})`});
+  el(s,'path',{d:full,fill:'none',stroke:acc,'stroke-width':6,opacity:.18,filter:`url(#g${id})`});
+  // 막대 = 모임 판 (물결 안에 얇게)
+  W8.forEach((d,i)=>{if(d.c>0)el(s,'path',{d:topBar(cx(i)-bw/2,y(d.c),bw,y(0)-y(d.c),bw/2),fill:`url(#b${id})`})});
+  el(s,'path',{d:full,fill:'none',stroke:`url(#l${id})`,'stroke-width':2.25,'stroke-linecap':'round'});
+  const p6=pts[6],p7=pts[7],h3=(p7[0]-p6[0])/3;el(s,'path',{d:`M${p6[0]},${p6[1]} C${p6[0]+h3},${p6[1]} ${p7[0]-h3},${p7[1]} ${p7[0]},${p7[1]}`,fill:'none',stroke:acc,'stroke-width':2,'stroke-dasharray':'4 4','stroke-linecap':'round',opacity:.7});
+  // 점 + 활동 멤버 알약
+  W8.forEach((d,i)=>{const [px,py]=pts[i],last=i===7;
+    if(d.g>0){el(s,'circle',{cx:px,cy:py,r:last?5:4,fill:last?pan:acc,stroke:last?acc:pan,'stroke-width':2})}
+    if(d.a>0){const k=d.a/amax,pw=String(d.a).length*7+38,qy=py-32;
+      el(s,'rect',{x:px-pw/2,y:qy,width:pw,height:22,rx:11,fill:pan,stroke:`color-mix(in srgb, ${acc} ${Math.round(18+k*42)}%, ${pan})`});
+      el(s,'circle',{cx:px-pw/2+10,cy:qy+11,r:3.5,fill:acc,opacity:.3+k*.7});
+      el(s,'text',{x:px-pw/2+18,y:qy+15,class:'lbl tn'},d.a+'명')}
     if(last||col>=52||(7-i)%2===0)el(s,'text',{x:cx(i),y:H-8,'text-anchor':'middle',class:'ax'+(last?' now':'')},d.l);
     const hit=el(s,'rect',{x:L+col*i,y:0,width:col,height:H,class:'hit'});
-    hover(hit,last?'이번 주 (진행 중)':d.l+' 주',[[css('--acc'),'모임 판',fmt(d.c)],[css('--other'),'그 밖의 판',fmt(d.g-d.c)],[css('--fg2'),'활동 멤버',d.a+'명'],[css('--line2'),'멤버 1명당',d.a?(d.g/d.a).toFixed(1)+'판':'-']],()=>hl.setAttribute('opacity',1),()=>hl.setAttribute('opacity',0))});
+    hover(hit,last?'이번 주 (진행 중)':d.l+' 주',[[acc,'전체 판',fmt(d.g)],[acc,'모임 판',fmt(d.c)],[css('--fg2'),'활동 멤버',d.a+'명'],[css('--line2'),'멤버 1명당',d.a?(d.g/d.a).toFixed(1)+'판':'-']],()=>{hl.setAttribute('x',L+col*i+2);hl.setAttribute('opacity',1)},()=>hl.setAttribute('opacity',0))});
   $('#combo').replaceChildren(s)}
 
 // ───── GitHub 식 날짜 열지도 + 시간대 줄 ─────
@@ -265,7 +275,7 @@ function cal(){const w=W('#cal'),lab=24,gap=3,cs=Math.max(10,Math.min(32,Math.fl
   const flat=CAL.flat().filter(v=>v!=null),max=Math.max(...flat),lv=v=>v==null?-1:v===0?0:v<max*.15?1:v<max*.35?2:v<max*.6?3:4,C=['--h0','--h1','--h2','--h3','--h4'];
   const start=new Date(2026,7,17); // 12주 전 월요일 (8/17)
   let lastM=-1;CAL.forEach((wk,wi)=>{const d0=new Date(start);d0.setDate(d0.getDate()+wi*7);const m=d0.getMonth();if(m!==lastM){el(s,'text',{x:lab+wi*(cs+gap),y:12,class:'ax'},(m+1)+'월');lastM=m}
-    wk.forEach((v,di)=>{const x=lab+wi*(cs+gap),yy=20+di*(cs+gap);if(v==null){const f=el(s,'rect',{x:x+.5,y:yy+.5,width:cs-1,height:cs-1,rx:3,fill:css('--panel'),stroke:css('--line2'),'stroke-dasharray':'2 2'});hover(f,'아직 오지 않은 날',[[css('--line2'),'판','-']]);return}const r=el(s,'rect',{x,y:yy,width:cs,height:cs,rx:3,fill:css(C[lv(v)])});const dt=new Date(d0);dt.setDate(dt.getDate()+di);
+    wk.forEach((v,di)=>{const x=lab+wi*(cs+gap),yy=20+di*(cs+gap);if(v==null){const f=el(s,'rect',{x,y:yy,width:cs,height:cs,rx:3,fill:css('--future')});hover(f,'아직 오지 않은 날',[[css('--line2'),'판','-']]);return}const r=el(s,'rect',{x,y:yy,width:cs,height:cs,rx:3,fill:css(C[lv(v)])});const dt=new Date(d0);dt.setDate(dt.getDate()+di);
       if(wi===11&&di===TODAY_DOW)el(s,'rect',{x:x-1.5,y:yy-1.5,width:cs+3,height:cs+3,rx:4,fill:'none',stroke:css('--fg'),'stroke-width':1.5});
       hover(r,`${dt.getMonth()+1}월 ${dt.getDate()}일 (${'월화수목금토일'[di]})`,[[css('--acc'),'판',v+'판']],()=>r.setAttribute('stroke',css('--fg')),()=>r.removeAttribute('stroke'))})});
   ['월','','수','','금','','일'].forEach((d,i)=>d&&el(s,'text',{x:0,y:20+i*(cs+gap)+cs-2,class:'ax',style:'font-size:11px'},d));
@@ -285,7 +295,10 @@ function members(){
   const best=a=>{const s=[...a.parts].sort((x,y)=>y.p/y.c.w-x.p/x.c.w);return s[0].c.name+'·'+s[1].c.name};
   $('#mtbl').innerHTML=`<div class="mr h"><span></span><span>멤버</span><span>기준마다 받은 점수 (100점 만점)</span><span style="text-align:right">합계</span></div>`+rows.map((r,i)=>`<div class="mr"><span class="rk ${i?'':'r1'}">${i+1}</span><span class="who"><span class="face" style="background:${r.m.c}">${r.m.n[0]}</span><span style="min-width:0"><b>${r.m.n}</b><small>강점 · ${best(r)}</small></span></span><span class="stackbar"><span class="sb" data-i="${i}"></span><span class="chips">${r.parts.map(p=>`<span><i class="k" style="background:var(${p.c.c});width:8px;height:8px"></i>${p.c.v(r.m)}</span>`).join('')}</span></span><span class="tot tn">${r.tot}<small>점</small></span></div>`).join('');
   document.querySelectorAll('#mtbl .sb').forEach(b=>{const r=rows[+b.dataset.i],w=b.clientWidth||300,s=svg(w,14);let x=0;el(s,'rect',{x:0,y:2,width:w,height:10,rx:5,fill:css('--ring-track')});
-    r.parts.forEach((p,j)=>{const pw=p.p/100*w;if(pw<1)return;const seg=el(s,'rect',{x,y:2,width:Math.max(0,pw-2),height:10,rx:j===0?5:2,fill:css(p.c.c)});hover(seg,r.m.n+' · '+p.c.name,[[css(p.c.c),p.c.v(r.m),Math.round(p.p)+' / '+p.c.w+'점']]);x+=pw});
+    // 쌓인 막대: 전체의 양 끝만 둥글게, 색이 바뀌는 곳은 직각 (둥근 틀로 잘라 낸다)
+    const tot=r.parts.reduce((a,p)=>a+p.p,0)/100*w,cid='c'+Math.random().toString(36).slice(2,7);const cp=el(el(s,'defs',{}),'clipPath',{id:cid});el(cp,'rect',{x:0,y:2,width:tot,height:10,rx:5});
+    const gr=el(s,'g',{'clip-path':`url(#${cid})`});
+    r.parts.forEach(p=>{const pw=p.p/100*w;if(pw<.5)return;const seg=el(gr,'rect',{x,y:2,width:pw+.5,height:10,fill:css(p.c.c)});hover(seg,r.m.n+' · '+p.c.name,[[css(p.c.c),p.c.v(r.m),Math.round(p.p)+' / '+p.c.w+'점']]);x+=pw});
     b.replaceChildren(s)});
 }
 
