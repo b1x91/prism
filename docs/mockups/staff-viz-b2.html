@@ -249,11 +249,13 @@ function combo(){const w=W('#combo'),H=w<520?260:340,L=40,R=16,T=48,B=28,iw=w-L-
   const hl=el(s,'rect',{x:0,y:T-36,width:col-4,height:ih+36,rx:12,fill:css('--panel2'),opacity:0});
   // 물결 = 막대 꼭대기(전체 판)를 그대로 잇는다 — 막대와 물결이 같은 높이
   const pts=W8.map((d,i)=>[cx(i),y(d.g)]),line=smooth(pts);
-  el(s,'path',{d:`${line} L${pts[7][0]},${y(0)} L${pts[0][0]},${y(0)} Z`,fill:`url(#a${id})`});
-  // 막대 = 전체 판 (아래 모임 판 · 위 그 밖의 판, 같은 파랑의 진하기 두 단계)
-  W8.forEach((d,i)=>{const x=cx(i)-bw/2;
-    if(d.c>0)el(s,'path',{d:topBar(x,y(d.c),bw,y(0)-y(d.c),d.g>d.c?0:6),fill:acc});
-    if(d.g>d.c)el(s,'path',{d:topBar(x,y(d.g),bw,y(d.c)-y(d.g)-(d.c?2:0),6),fill:soft})});
+  const area=`${line} L${pts[7][0]},${y(0)} L${pts[0][0]},${y(0)} Z`;
+  el(s,'path',{d:area,fill:`url(#a${id})`});
+  // 막대 = 전체 판 (아래 모임 판 · 위 그 밖의 판). 물결 모양으로 잘라 물결 밖으로 나오지 않게
+  const cpa=el(df,'clipPath',{id:'k'+id});el(cpa,'path',{d:area});const bars=el(s,'g',{'clip-path':`url(#k${id})`});
+  W8.forEach((d,i)=>{const x=cx(i)-bw/2,top=y(d.g)-24;
+    if(d.c>0)el(bars,'rect',{x,y:y(d.c),width:bw,height:y(0)-y(d.c),fill:acc});
+    if(d.g>d.c)el(bars,'rect',{x,y:top,width:bw,height:y(d.c)-top-(d.c?2:0),fill:soft})});
   el(s,'path',{d:smooth(pts.slice(0,7)),fill:'none',stroke:acc,'stroke-width':2,'stroke-linecap':'round',opacity:.85});
   const p6=pts[6],p7=pts[7],h3=(p7[0]-p6[0])/3;el(s,'path',{d:`M${p6[0]},${p6[1]} C${p6[0]+h3},${p6[1]} ${p7[0]-h3},${p7[1]} ${p7[0]},${p7[1]}`,fill:'none',stroke:acc,'stroke-width':2,'stroke-dasharray':'4 4','stroke-linecap':'round',opacity:.6});
   // 활동 멤버: 가장 많은 주·가장 적은 주만 늘 보이고, 나머지는 마우스를 올리면
