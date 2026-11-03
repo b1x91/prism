@@ -37,6 +37,20 @@ button{font:inherit;color:inherit;cursor:pointer}
 .tn{font-variant-numeric:tabular-nums}
 svg text{font-family:var(--font)}
 .wrap{max-width:1240px;margin:0 auto;display:grid;gap:16px}
+/* 운영 머리 (앱·웹 허브 탭과 같은 모양) */
+.mock-note{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:12px;background:var(--panel2);font-size:12px;color:var(--mut)}
+.mock-note p{margin:0}
+.hubhead{margin:8px 0 8px}
+.hh-kick{display:block;margin-bottom:8px;font-size:13px;font-weight:650;color:var(--mut)}
+.hh-tabs{position:relative;display:flex;align-items:baseline;gap:32px;border-bottom:1px solid var(--line2);overflow-x:auto;scrollbar-width:none}
+.hh-tabs::-webkit-scrollbar{display:none}
+.hh-tabs button{position:relative;display:inline-flex;align-items:center;gap:8px;flex:none;padding:0 0 12px;border:0;background:none;color:var(--mut);font-size:20px;font-weight:700;letter-spacing:-.01em;line-height:1.2;white-space:nowrap;transition:color .2s}
+.hh-tabs button:hover{color:var(--fg2)}
+.hh-tabs button.on{color:var(--fg);font-size:28px;font-weight:800;letter-spacing:-.02em;cursor:default}
+.hh-cnt{font-size:13px;font-weight:800;color:#c08a00;font-variant-numeric:tabular-nums}
+.hh-ink{position:absolute;left:0;bottom:-1px;height:3px;border-radius:3px;background:var(--fg);transition:transform .38s cubic-bezier(.16,1,.3,1),width .38s cubic-bezier(.16,1,.3,1)}
+@media (max-width:560px){.hh-tabs{gap:20px}.hh-tabs button{font-size:16px;padding-bottom:8px}.hh-tabs button.on{font-size:20px}}
+@media (prefers-reduced-motion:reduce){.hh-ink,.hh-tabs button{transition:none}}
 .top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px}
 .top h1{font-size:20px}
 .top p{margin:4px 0 0;font-size:13px;color:var(--mut);max-width:70ch}
@@ -175,9 +189,11 @@ svg text{font-family:var(--font)}
 
 <div id="tip" role="tooltip"></div>
 <div class="wrap">
-  <header class="top">
-    <div><h1>운영 · B안 밝은 무대</h1><p>숫자는 보내 주신 화면 그대로예요. <span class="ex">예시</span> 표시는 지금 서버가 아직 세지 않아 보기용으로 넣은 값이에요 (만들 때 실제로 계산해요).</p></div>
-    <div class="theme" role="group" aria-label="화면"><button type="button" data-th="" aria-pressed="true">시스템</button><button type="button" data-th="light" aria-pressed="false">라이트</button><button type="button" data-th="dark" aria-pressed="false">다크</button></div>
+  <div class="mock-note"><p>시안 메모 — 숫자는 보내 주신 화면 그대로예요. <span class="ex">예시</span> 표시는 서버가 아직 세지 않아 보기용으로 넣은 값이에요.</p>
+    <div class="theme" role="group" aria-label="화면"><button type="button" data-th="" aria-pressed="true">시스템</button><button type="button" data-th="light" aria-pressed="false">라이트</button><button type="button" data-th="dark" aria-pressed="false">다크</button></div></div>
+  <!-- 운영 머리: 다른 허브(성장·모임)와 같은 밑줄 탭. 고른 탭은 크게(28), 나머지는 작게(20), 밑줄이 미끄러진다 -->
+  <header class="hubhead"><span class="hh-kick">운영</span>
+    <nav class="hh-tabs" role="tablist" aria-label="운영"><button type="button" role="tab" class="on" aria-selected="true">대시보드</button><button type="button" role="tab" aria-selected="false">멤버</button><button type="button" role="tab" aria-selected="false">할 일<span class="hh-cnt">7</span></button><i class="hh-ink" aria-hidden="true"></i></nav>
   </header>
 
   <section class="card"><div class="rings" id="rings"></div></section>
@@ -368,7 +384,10 @@ function funnel(){
     <li>앱을 깔지 않은 1명은 웹으로만 들어와요 — 첫 판이 기록되지 않아 정착 숫자에 안 잡혀요. 설치 안내를 한 번 더.</li></ol>
     <p class="src">위 단계 숫자와 멤버별 진행을 Claude API 로 요약해 하루 한 번 새로 써요. 숫자는 규칙으로 계산하고, AI 는 문장만 만들어요.</p></div>`}
 
-function all(){rings();cal();members();funnel();combo()}
+// 운영 머리 밑줄: 고른 탭 아래로 미끄러진다 (시안에서는 눌러도 화면은 대시보드 그대로)
+function ink(){const t=$('.hh-tabs'),on=t.querySelector('.on'),k=t.querySelector('.hh-ink');k.style.width=on.offsetWidth+'px';k.style.transform=`translateX(${on.offsetLeft}px)`}
+document.querySelectorAll('.hh-tabs button').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.hh-tabs button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-selected',x===b)});ink()}));
+function all(){ink();rings();cal();members();funnel();combo()}
 document.querySelectorAll('[data-th]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-th]').forEach(x=>x.setAttribute('aria-pressed',x===b));if(b.dataset.th)document.documentElement.dataset.theme=b.dataset.th;else delete document.documentElement.dataset.theme;all()}));
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',all);
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(all,120)});
