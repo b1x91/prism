@@ -370,5 +370,8 @@ export async function nowLiveCount(env: Env, now = Date.now()): Promise<number> 
   const r = await env.DB.prepare(
     "SELECT COUNT(*) AS n FROM now_lobbies WHERE (phase != 'game' AND updated_at >= ?1) OR (phase = 'game' AND kind != 'game' AND updated_at >= ?2) OR (kind = 'game' AND created_at >= ?3)",
   ).bind(now - LOBBY_STALE, now - GAME_STALE, now - TOGETHER_STALE).first<{ n: number }>().catch(() => null);
-  return r?.n ?? 0;
+  // 혼자 게임 중인 멤버도 '지금 돌아가는 것'으로 센다 (v3.158) — 앱이 2분 반 안에 '게임 중'을 알린 멤버
+  const g = await env.DB.prepare("SELECT COUNT(*) AS n FROM members WHERE app_phase = 'game' AND app_seen_at >= ?")
+    .bind(now - 150_000).first<{ n: number }>().catch(() => null);
+  return (r?.n ?? 0) + (g?.n ?? 0);
 }
