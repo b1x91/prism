@@ -4303,11 +4303,14 @@ button.stf-person:hover { background: var(--surface-2); }
 .pl-who .champ + .pl-chev { margin-left: 0; }
 .pl-row.cr-host:is(:hover, :has(:focus-visible)) .pl-chev { opacity: 1; transform: none; }
 .pl-row.cr-host:not(:has(.cr-cap)) .pl-who-t { padding-right: 0 !important; }
+/* 터치 화면: 태그까지 보이는 캡슐은 좁은 줄에서 이름을 덮는다 → 복사 아이콘 하나만 담은 작은 정사각 단추(32)로.
+   이름은 단추 앞에서 말줄임, 누르면 아이콘이 체크로 바뀐다 */
 @media (hover: none) {
-  .cr-cap.reveal { opacity: 1; pointer-events: auto; translate: 0 -50%; }
+  .cr-cap.reveal { opacity: 1; pointer-events: auto; translate: 0 -50%; width: 32px; height: 32px; padding: 0; gap: 0; justify-content: center; }
+  .cr-cap.reveal .cr-roll, .cr-cap.reveal .cr-sep { display: none; }
+  .cr-cap.reveal::after { left: 7px; right: 7px; }
   .am-wrap .cr-cap.reveal { translate: 0 0; }
-  .pl-row.cr-host:has(.cr-cap) .pl-who-t { padding-right: 84px; }
-  .pl-row.cr-host:has(.cr-cap) .pl-who:has(.champ) .pl-who-t { padding-right: 44px; }
+  .pl-row.cr-host:has(.cr-cap) .pl-who-t, .pl-row.cr-host:has(.cr-cap) .pl-who:has(.champ) .pl-who-t { padding-right: 40px; }
   .pl-row.cr-host:has(.cr-cap) .pl-who .champ { display: none; }
   .pl-chev { opacity: 1; transform: none; }
 }
