@@ -239,13 +239,23 @@ function Composer({ api, onDone }: { api: Api; onDone: () => unknown }) {
   );
 }
 
+/** 소식 자리표시: 실제 피드처럼 고정 소식 한 장 + 날짜 두 묶음, 카드 모양도 여러 가지 (패치 아이콘 줄 · 그림 배너 · 글) */
 function NewsSkeleton() {
+  const top = (w = 120) => <div className="nw-top"><Bone w={44} h={20} r="pill" /><Bone w={w} h={12} /></div>;
+  const foot = <div className="nw-foot"><Bone w={56} h={28} r="pill" /></div>;
   return (
     <SkeletonFrame className="nw">
       <div className="nw-chips">{KINDS.map((k) => <span key={k} className="chip"><i className={`nw-kd k-${k}`} aria-hidden="true" />{NEWS_LABEL[k]}</span>)}</div>
       <div className="nw-feed">
-        <div className="nw-group"><div className="nw-day"><Bone w={40} h={12} /></div>
-          {[0, 1, 2].map((i) => <div key={i} className="card nw-card"><div className="nw-top"><Bone w={56} h={20} r="pill" /><Bone w={120} h={12} /></div><Bone w="60%" h={18} /><div className="nw-skb"><Bone w="96%" h={12} /><Bone w="72%" h={12} /></div><div className="nw-foot"><Bone w={56} h={28} r="pill" /></div></div>)}
+        <div className="nw-day pin"><span>고정</span></div>
+        <div className="card nw-card pinned"><div className="nw-top"><Bone w={36} h={20} r="pill" dark /><Bone w={36} h={20} r="pill" dark /><Bone w={140} h={12} dark /></div><Bone w="42%" h={18} dark /></div>
+        <div className="nw-group"><div className="nw-day"><Bone w={56} h={12} /></div>
+          <div className="card nw-card">{top(96)}<Bone w="38%" h={18} /><div className="nw-skb"><Bone w="88%" h={12} /></div><div className="nw-skaugs">{Array.from({ length: 10 }, (_, i) => <Bone key={i} w={36} h={36} r="round" />)}</div>{foot}</div>
+          <div className="card nw-card">{top(110)}<Bone w="100%" h={96} r="m" /><div className="nw-skb"><Bone w="40%" h={12} /><Bone w="32%" h={12} /></div>{foot}</div>
+        </div>
+        <div className="nw-group"><div className="nw-day"><Bone w={56} h={12} /></div>
+          <div className="card nw-card">{top()}<Bone w="52%" h={18} /><div className="nw-skb"><Bone w="96%" h={12} /><Bone w="72%" h={12} /></div>{foot}</div>
+          <div className="card nw-card">{top(90)}<Bone w="44%" h={18} /><div className="nw-skb"><Bone w="84%" h={12} /></div>{foot}</div>
         </div>
       </div>
     </SkeletonFrame>

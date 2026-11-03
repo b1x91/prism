@@ -58,13 +58,13 @@ function DashSkeleton() {
   const head = (t: string, w = 96) => <div className="sv-head"><h2>{t}</h2><Bone w={w} h={12} /></div>;
   return (
     <SkeletonFrame className="sv">
-      <section className="card sv-card sv-rings">{[0, 1, 2, 3].map((i) => <div key={i} className="sv-ring"><Bone w={64} h={64} r="round" /><div><Bone w={64} h={12} /><Bone w={72} h={28} /><Bone w={120} h={12} /></div></div>)}</section>
+      <section className="card sv-card sv-rings">{[0, 1, 2, 3].map((i) => <div key={i} className="sv-ring"><Bone w={64} h={64} r="round" className="sv-ring-sk" /><div><Bone w="50%" h={12} /><Bone w="60%" h={28} /><Bone w="90%" h={12} /></div></div>)}</section>
       <div className="sv-row">
         <section className="card sv-card">{head('주별 판과 활동 멤버', 120)}<Bone w="80%" h={14} /><Bone w="100%" h={300} r="m" /></section>
         <section className="card sv-card">{head('언제 모이나요', 100)}<Bone w="100%" h={220} r="m" /><Bone w="100%" h={40} r="m" /></section>
       </div>
       <section className="card sv-card">{head('잘하고 있는 멤버', 200)}<div className="sv-crit">{[0, 1, 2, 3, 4].map((i) => <div key={i}><Bone w={80} h={14} /><Bone w="90%" h={12} /></div>)}</div>{[0, 1, 2].map((i) => <div key={i} className="sv-mr"><Bone w={16} h={14} /><span className="who"><Bone w={36} h={36} r="round" /><Bone w={96} h={14} /></span><Bone w="100%" h={10} r="pill" /><Bone w={32} h={20} /></div>)}</section>
-      <section className="card sv-card">{head('온보딩 현황', 120)}<div className="sv-steps sk">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="sv-st sk"><Bone w={40} h={12} /><Bone w={80} h={14} /><Bone w={60} h={28} /><Bone w="80%" h={12} /><Bone w="90%" h={24} /></div>)}</div></section>
+      <section className="card sv-card">{head('온보딩 현황', 120)}<div className="sv-steps skel">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="sv-st skel"><Bone w={40} h={12} /><Bone w={80} h={14} /><Bone w={60} h={28} /><Bone w="80%" h={12} /><Bone w="90%" h={24} /></div>)}</div></section>
     </SkeletonFrame>
   );
 }
@@ -247,7 +247,7 @@ function MembersSkeleton() {
     <SkeletonFrame className="sv">
       <section className="card sv-card"><div className="sv-head"><h2>멤버 구성</h2><Bone w={120} h={12} /></div><div className="sv-mix"><Bone w="100%" h={12} r="pill" /><div className="sv-mixleg">{[0, 1, 2, 3, 4].map((i) => <Bone key={i} w={88} h={32} r="pill" />)}</div><Bone w={320} h={16} /></div></section>
       <section className="card sv-card sv-mlist"><div className="sv-mtools"><Bone w="100%" h={40} r="m" /><Bone w={420} h={40} r="m" /><div className="sv-filters">{[0, 1, 2, 3, 4].map((i) => <Bone key={i} w={72} h={30} r="pill" />)}</div></div>
-        {[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="sv-mrow"><div className="who"><Bone w={40} h={40} r="round" /><div><Bone w={110} h={14} /><Bone w={150} h={12} /></div></div><div className="c-spark"><Bone w={88} h={24} /></div><Bone w={32} h={16} /><Bone w="100%" h={16} /><Bone w={36} h={16} /><Bone w={60} h={12} /><Bone w="100%" h={36} r="m" /></div>)}</section>
+        {[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="sv-mrow"><div className="who"><Bone w={40} h={40} r="round" /><div><Bone w="60%" h={14} /><Bone w="80%" h={12} /></div></div><div className="c-spark"><Bone w={88} h={24} /></div><div className="nn c-n"><Bone w={32} h={16} /></div><div className="c-wr"><Bone w="100%" h={16} /></div><div className="nn c-sc"><Bone w={36} h={16} /></div><div className="c-ago"><Bone w={60} h={12} /></div><div className="sv-lvl"><Bone w="100%" h={36} r="m" /></div><div className="mob"><Bone w={160} h={12} /></div></div>)}</section>
     </SkeletonFrame>
   );
 }
@@ -419,7 +419,7 @@ function TodoSkeleton() {
   return (
     <SkeletonFrame className="sv">
       <section className="card sv-card sv-ttop"><Bone w={112} h={112} r="round" /><div className="sv-tbody"><Bone w={160} h={22} /><Bone w={240} h={14} /><div className="sv-kinds">{[0, 1, 2].map((i) => <Bone key={i} w={104} h={36} r="pill" />)}</div></div></section>
-      {[0, 1].map((s) => <section key={s} className="card sv-card"><Bone w={120} h={18} /><Bone w={320} h={12} /><div className="sv-titems">{[0, 1].map((i) => <div key={i} className="sv-ti"><Bone w={44} h={44} r="round" /><div><Bone w={140} h={14} /><Bone w={220} h={12} /></div><Bone w={88} h={36} r="m" /></div>)}</div></section>)}
+      {[0, 1].map((s) => <section key={s} className="card sv-card"><Bone w={120} h={18} /><Bone w="60%" h={12} /><div className="sv-titems">{[0, 1].map((i) => <div key={i} className="sv-ti"><Bone w={44} h={44} r="round" /><div><Bone w={140} h={14} /><Bone w="70%" h={12} /></div><div className="sv-acts"><Bone w={104} h={36} r="m" /></div></div>)}</div></section>)}
     </SkeletonFrame>
   );
 }

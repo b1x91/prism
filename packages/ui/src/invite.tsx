@@ -30,7 +30,7 @@ export function InviteCard({ api, origin = WEB_ORIGIN }: { api: Api; origin?: st
       {data ? <div className="inv-link">
         <span className="inv-url" title={link}>{link.replace(/^https?:\/\//, '')}</span>
         <button type="button" className={`btn sm ${copied ? 'equip' : 'primary'}`} onClick={copy}><Icon name={copied ? 'check' : 'link'} />{copied ? '복사했어요' : '링크 복사'}</button>
-      </div> : <SkeletonFrame className="inv-link"><Bone w="60%" h={14} /><Bone w={96} h={32} r="m" /></SkeletonFrame>}
+      </div> : <SkeletonFrame className="inv-link"><span className="inv-url"><Bone w={180} h={14} /></span><Bone w={98} h={32} r="m" /></SkeletonFrame>}
       {data && data.friends.length > 0 && <div className="inv-friends">
         {data.friends.map((f) => <span key={f.id} className="inv-f">
           <MemberFace nick={f.nick} skin={f.skin} champion={f.main} size={28} skins={skins} />

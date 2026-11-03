@@ -146,8 +146,8 @@ function ReplyBox({ api, q, open, onClose, onSent }: { api: Api; q: WorkItem; op
 function InqSkeleton() {
   return (
     <SkeletonFrame className="sv">
-      <section className="card sv-card sv-iqtop"><div><Bone w={140} h={22} /><Bone w={280} h={12} /></div><div className="sv-kinds">{[0, 1, 2, 3, 4].map((i) => <Bone key={i} w={96} h={36} r="pill" />)}</div></section>
-      {[0, 1].map((s) => <section key={s} className="card sv-card"><Bone w={180} h={18} /><div className="sv-titems">{[0, 1].map((i) => <div key={i} className="sv-ti"><Bone w={44} h={44} r="round" /><div><Bone w={160} h={14} /><Bone w="80%" h={14} /><Bone w={200} h={12} /></div><Bone w={260} h={36} r="m" /></div>)}</div></section>)}
+      <section className="card sv-card sv-iqtop"><div><Bone w={140} h={22} /><Bone w="90%" h={12} /></div><div className="sv-kinds">{[0, 1, 2, 3, 4].map((i) => <Bone key={i} w={96} h={36} r="pill" />)}</div></section>
+      {[0, 1].map((s) => <section key={s} className="card sv-card"><Bone w="40%" h={18} /><div className="sv-titems">{[0, 1].map((i) => <div key={i} className="sv-ti sv-iqi"><Bone w={44} h={44} r="round" /><div><Bone w="50%" h={14} /><Bone w="90%" h={14} /><Bone w="60%" h={12} /></div><div className="sv-acts"><Bone w={260} h={36} r="m" className="sv-abar-sk" /></div></div>)}</div></section>)}
     </SkeletonFrame>
   );
 }

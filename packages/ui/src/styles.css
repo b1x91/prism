@@ -4487,8 +4487,8 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 /* 온보딩: 카드에 물이 비율만큼, 카드끼리 줄 높이를 함께 써 구분선이 같은 곳 */
 .sv-steps { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: var(--s2); row-gap: 0; margin-top: var(--s4); }
 .sv-st { position: relative; grid-row: span 6; display: grid; grid-template-rows: subgrid; gap: var(--s2); align-content: start; margin-bottom: var(--s2); padding: var(--s5) var(--s5) var(--s4); border-radius: var(--r-m); background: var(--surface); min-width: 0; }
-.sv-steps.sk { grid-template-rows: auto; }
-.sv-st.sk { grid-row: auto; grid-template-rows: none; background: var(--surface-2); }
+.sv-steps.skel { grid-template-rows: auto; }
+.sv-st.skel { grid-row: auto; grid-template-rows: none; background: var(--surface-2); }
 .sv-st > :not(.tank) { position: relative; z-index: 1; }
 .sv-st .tank { position: absolute; inset: 0; border-radius: inherit; overflow: hidden; pointer-events: none; z-index: 0; background: var(--sv-future); }
 .sv-st .water { position: absolute; left: 0; right: 0; bottom: 0; background: linear-gradient(to top, color-mix(in srgb, var(--w) 26%, var(--surface)), color-mix(in srgb, var(--w) 15%, var(--surface))); animation: svFill 1.8s cubic-bezier(.22, 1, .36, 1) both; animation-delay: calc(.2s + var(--i) * .1s); }
@@ -4784,7 +4784,7 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
   .sv-card { padding: var(--s4); }
   .sv-rings { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); }
   .sv-ring { border-left: 0; padding: 0; gap: var(--s3); }
-  .sv-ring svg { width: 48px; height: 48px; }
+  .sv-ring svg, .sv-ring .sv-ring-sk { width: 48px !important; height: 48px !important; flex: none; }
   .sv-crit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sv-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sv-st { padding: var(--s4); }
@@ -4804,6 +4804,8 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
   .sv-ti > .sv-acts { grid-column: 1 / -1; justify-content: flex-end; }
   .sv-iqi > .sv-acts { margin-top: var(--s3); }
   .sv-abar { width: 100%; } .sv-abar > button { flex: 1; padding: 0 var(--s2); }
+  .sv-acts .sv-abar-sk { width: 100% !important; }
+  .skf.sv .sv-iqi > .sv-acts { margin-top: var(--s3); }
   .sv-jboard { grid-template-columns: minmax(0, 1fr); }
   .sv-jempty { min-height: 48px; }
   .dp-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -4813,3 +4815,12 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
   .sv-card, .sv-grow-y, .sv-grow-x, .sv-fade, .sv-ring-arc, .sv-st .water, .dp-week i, .sv-jc.arrive, .sv-jc .jchk.shake, .sv-jc .jwait .pd { animation: none; }
   .sv-drawer .panel, .sv-drawer .scrim, .sv-rbox, .sv-band, .sv-pill, .sv-line, .sv-dot, .sv-dash, .sv-abar > button.ok > span { transition: none; }
 }
+/* 운영 자리표시: 뼈대끼리 붙거나 겹치지 않게 (v3.78 기준 — 실제 칸과 같은 간격) */
+.skf.sv .sv-card:not(.sv-rings):not(.sv-ttop):not(.sv-iqtop) { display: grid; gap: var(--s3); align-content: start; }
+.skf.sv .sv-ring > div { flex: 1; }
+.skf.sv .sv-ring > div, .skf.sv .who > div, .skf.sv .sv-ti > div, .skf.sv .sv-tbody, .skf.sv .sv-iqtop > div:first-child, .skf.sv .sv-crit > div, .skf.sv .sv-st.skel { display: grid; gap: var(--s2); align-content: start; min-width: 0; }
+.skf.sv .sv-tbody .sv-kinds { margin-top: var(--s2); }
+.skf.sv .sv-mix { margin-top: 0; }
+
+/* 소식 자리표시: 패치 소식의 증강 아이콘 줄 */
+.nw-skaugs { display: flex; flex-wrap: wrap; gap: var(--s2); }
