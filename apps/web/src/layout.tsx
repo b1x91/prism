@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, FramedFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
@@ -138,6 +139,22 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { pathname } = useLocation();
   const nav = useNavigate();
   const [theme, setTheme] = useState<ThemeMode>(getThemeMode);
+  // 닫혀 있을 때는 그리지 않는다: 열 때 붙이고 다음 그림에서 'open' 을 켜 밀려 나오게, 닫으면 움직임(0.24초) 뒤 뗀다.
+  // 예전엔 늘 깔아 두고 visibility 로 숨겼는데 아이패드 사파리에서 열어도 보이지 않는 일이 있었다 (v3.150-4 와 같은 쪽).
+  // body 에 바로 붙여(포털) 어떤 조상의 흐림·변형에도 화면 기준 위치가 흔들리지 않게 한다
+  const [mounted, setMounted] = useState(open);
+  const [shown, setShown] = useState(false);
+  useEffect(() => {
+    if (open) {
+      setMounted(true);
+      let b = 0;
+      const a = requestAnimationFrame(() => { b = requestAnimationFrame(() => setShown(true)); });
+      return () => { cancelAnimationFrame(a); cancelAnimationFrame(b); };
+    }
+    setShown(false);
+    const t = setTimeout(() => setMounted(false), 260);
+    return () => clearTimeout(t);
+  }, [open]);
   useEffect(() => {
     if (!open) return;
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -145,8 +162,9 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
     document.body.style.overflow = 'hidden';
     return () => { removeEventListener('keydown', esc); document.body.style.overflow = ''; };
   }, [open, onClose]);
-  return (
-    <div className={`mmenu ${open ? 'open' : ''}`} aria-hidden={!open}>
+  if (!mounted) return null;
+  return createPortal(
+    <div className={`mmenu ${shown ? 'open' : ''}`} aria-hidden={!open}>
       <button type="button" className="mmenu-scrim" aria-label="메뉴 닫기" tabIndex={open ? 0 : -1} onClick={onClose} />
       <aside className="mmenu-panel" role="dialog" aria-label="메뉴">
         <div className="mmenu-head">
@@ -177,6 +195,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           <div className="mmenu-row"><span className="k">화면</span><Seg value={theme} options={[['system', '시스템'], ['light', '라이트'], ['dark', '다크']]} onChange={(m) => { setThemeMode(m); setTheme(m); }} /></div>
         </div>
       </aside>
-    </div>
+    </div>,
+    document.body,
   );
 }
