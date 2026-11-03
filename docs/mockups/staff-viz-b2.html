@@ -400,6 +400,79 @@ svg text{font-family:var(--font)}
 }
 .mrow .mob{display:none}
 @media (prefers-reduced-motion:reduce){.pg.in,.dpanel,.drawer .scrim,.collapse,.seg .knob,.act > span,.sw::after{animation:none;transition:none}}
+
+/* 가입 신청 보드 */
+.jboard{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.jcol{display:grid;gap:10px;align-content:start;padding:12px;border-radius:16px;background:var(--panel2);min-width:0}
+.jcol-h{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:800}
+.jcol-h .jn{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;background:var(--panel);color:var(--mut)}
+.jcol-h b{margin-left:auto;font-size:12px;color:var(--mut);font-variant-numeric:tabular-nums}
+.jcol.apply .jn,.jcol.interview .jn,.jcol.ok .jn{background:color-mix(in srgb,var(--kc) 16%,var(--panel));color:var(--kc)}
+.jhint{margin:-4px 0 2px;font-size:11px;color:var(--mut);line-height:1.45}
+.jempty{display:grid;place-items:center;min-height:96px;border-radius:12px;font-size:12px;color:var(--mut);background:repeating-linear-gradient(135deg,transparent 0 8px,color-mix(in srgb,var(--fg) 3%,transparent) 8px 9px)}
+.jc{display:grid;gap:12px;padding:16px;border-radius:14px;background:var(--panel);box-shadow:0 1px 2px rgba(18,20,28,.05),0 6px 16px -8px rgba(18,20,28,.12);transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .26s,box-shadow .25s}
+.jc:hover{box-shadow:0 2px 4px rgba(18,20,28,.06),0 12px 24px -10px rgba(18,20,28,.18)}
+.jc.leave{opacity:0;transform:translateX(16px) scale(.98)}
+.jc.arrive{animation:arrive .6s cubic-bezier(.16,1,.3,1) both}
+@keyframes arrive{0%{opacity:0;transform:translateX(-16px)}60%{opacity:1;box-shadow:0 0 0 3px color-mix(in srgb,var(--kc) 35%,transparent)}100%{transform:none}}
+.jc-h{display:flex;align-items:center;gap:10px;min-width:0}
+.jc-h .face{width:36px;height:36px;font-size:13px}
+.jc-h > div{min-width:0}
+.jc-h b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jc-h small{display:block;font-size:12px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+.jc-h time{margin-left:auto;flex:none;align-self:flex-start;font-size:11px;color:var(--mut)}
+.jc-tags{display:flex;flex-wrap:wrap;gap:4px}
+.jtag{white-space:nowrap;height:22px;padding:0 8px;border-radius:6px;font-size:11px;font-weight:700;line-height:22px;background:color-mix(in srgb,var(--acc) 10%,var(--panel));color:var(--acc)}
+.jtag.kk{background:color-mix(in srgb,#f5c400 22%,var(--panel));color:color-mix(in srgb,#7a5c00 80%,var(--fg))}
+.jc-msg{margin:0;font-size:13px;color:var(--fg2);line-height:1.5}
+.jc-by{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut)}
+.jc-by .face{width:18px;height:18px;font-size:9px}
+.jact{display:flex;gap:6px;justify-content:flex-end}
+.jact .grow{flex:1}
+.jsign{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:10px;background:var(--panel2);font-size:12px;color:var(--fg2)}
+.jsign b{color:var(--fg);font-variant-numeric:tabular-nums}
+.jsig-faces{display:flex}
+.jsig-faces .face{position:relative;width:26px;height:26px;font-size:11px;box-shadow:0 0 0 2px var(--panel2)}
+.jsig-faces .face + .face{margin-left:-6px}
+.jsig-faces .face.off{filter:grayscale(1);opacity:.4}
+.jsig-faces .face i{position:absolute;right:-3px;bottom:-3px;width:14px;height:14px;border-radius:50%;background:var(--up);color:#fff;font-size:9px;font-style:normal;display:grid;place-items:center;box-shadow:0 0 0 2px var(--panel2)}
+.jchk{display:grid;gap:6px}
+.jchk.shake{animation:shake .4s}
+@keyframes shake{20%,60%{transform:translateX(-4px)}40%,80%{transform:translateX(4px)}}
+.jck{display:flex;align-items:center;gap:8px;height:34px;padding:0 10px;border:0;border-radius:10px;background:var(--panel2);font-size:12px;font-weight:650;color:var(--fg2);transition:background .2s,color .2s}
+.jck i{width:16px;height:16px;border-radius:5px;background:var(--panel);box-shadow:inset 0 0 0 1.5px var(--line2);display:grid;place-items:center;transition:background .2s,box-shadow .2s}
+.jck.on{color:var(--fg)}
+.jck.on i{background:var(--up);box-shadow:none}
+.jck.on i::after{content:'';width:7px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.jwait{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:10px 12px;border-radius:10px;background:var(--panel2);font-size:12px;color:var(--fg2)}
+.jwait .ok{color:var(--up);font-weight:700}
+.pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--acc);margin-left:auto;box-shadow:0 0 0 0 color-mix(in srgb,var(--acc) 50%,transparent);animation:pd 2s infinite}
+@keyframes pd{70%{box-shadow:0 0 0 8px transparent}100%{box-shadow:0 0 0 0 transparent}}
+/* 문의 */
+.hh-cnt.red{color:#e5484d}
+.iq-top{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:center;justify-content:space-between}
+.iq-l h2{font-size:20px}
+.iq-l p{margin:4px 0 0;font-size:13px;color:var(--fg2)}
+.iq-r{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.copy-md{position:relative;display:inline-grid}
+.copy-md span{grid-area:1/1;transition:opacity .2s,transform .3s cubic-bezier(.16,1,.3,1)}
+.copy-md .c1{opacity:0;transform:translateY(6px);color:var(--up)}
+.copy-md.ok .c0{opacity:0;transform:translateY(-6px)}
+.copy-md.ok .c1{opacity:1;transform:none}
+.iqg .ch{align-items:center}
+.prio{flex:none;width:24px;height:24px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;line-height:1;font-size:12px;font-weight:800;background:var(--panel2);color:var(--fg2)}
+.prio.top{background:var(--kc);color:#fff}
+.iqg .ch h2{gap:10px}
+.stp{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:var(--kc)}
+.stp i{width:6px;height:6px;border-radius:50%;background:var(--kc)}
+.iq-text{margin:8px 0 0;font-size:14px;line-height:1.55;color:var(--fg)}
+.iq-reply{margin-top:10px;padding:10px 12px;border-radius:10px;background:var(--panel);font-size:12px;color:var(--fg2);display:grid;gap:2px}
+.iq-reply b{font-size:11px;color:var(--up)}
+.iqi{align-items:start}
+.iqi .acts{align-self:center}
+@media (max-width:1100px){.jboard{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:760px){.jboard{grid-template-columns:minmax(0,1fr)}.jcol .jempty{min-height:48px}.iqi{grid-template-columns:auto minmax(0,1fr)}}
+@media (prefers-reduced-motion:reduce){.jc,.jc.arrive,.jchk.shake,.pulse-dot{animation:none;transition:none}}
 </style>
 
 <div id="tip" role="tooltip"></div>
@@ -408,7 +481,7 @@ svg text{font-family:var(--font)}
     <div class="theme" role="group" aria-label="화면"><button type="button" data-th="" aria-pressed="true">시스템</button><button type="button" data-th="light" aria-pressed="false">라이트</button><button type="button" data-th="dark" aria-pressed="false">다크</button></div></div>
   <!-- 운영 머리: 다른 허브(성장·모임)와 같은 밑줄 탭. 고른 탭은 크게(28), 나머지는 작게(20), 밑줄이 미끄러진다 -->
   <header class="hubhead"><span class="hh-kick">운영</span>
-    <nav class="hh-tabs" role="tablist" aria-label="운영"><button type="button" role="tab" class="on" aria-selected="true">대시보드</button><button type="button" role="tab" aria-selected="false">멤버</button><button type="button" role="tab" aria-selected="false">할 일<span class="hh-cnt">7</span></button><i class="hh-ink" aria-hidden="true"></i></nav>
+    <nav class="hh-tabs" role="tablist" aria-label="운영"><button type="button" role="tab" class="on" aria-selected="true">대시보드</button><button type="button" role="tab" aria-selected="false">멤버</button><button type="button" role="tab" aria-selected="false">할 일<span class="hh-cnt">7</span></button><button type="button" role="tab" aria-selected="false">문의<span class="hh-cnt red"></span></button><i class="hh-ink" aria-hidden="true"></i></nav>
   </header>
 
   <div class="pg" id="pg-dash">
@@ -464,6 +537,12 @@ svg text{font-family:var(--font)}
   <div class="pg" id="pg-todo" hidden>
     <section class="card todo-top" id="todotop"></section>
     <div id="todolist" class="todo-list"></div>
+  </div>
+
+  <!-- ───── 문의 ───── -->
+  <div class="pg" id="pg-inq" hidden>
+    <section class="card iq-top" id="inqtop"></section>
+    <div id="inqlist" class="todo-list"></div>
   </div>
 
   <!-- 멤버 상세 서랍 -->
@@ -631,7 +710,7 @@ function funnel(){
 
 // 운영 머리 밑줄: 고른 탭 아래로 미끄러진다
 function ink(){const t=$('.hh-tabs'),on=t.querySelector('.on'),k=t.querySelector('.hh-ink');k.style.width=on.offsetWidth+'px';k.style.transform=`translateX(${on.offsetLeft}px)`}
-document.querySelectorAll('.hh-tabs button').forEach((b,i)=>{b.dataset.pg=['dash','mem','todo'][i];b.addEventListener('click',()=>{document.querySelectorAll('.hh-tabs button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-selected',x===b)});ink();show(b.dataset.pg)})});
+document.querySelectorAll('.hh-tabs button').forEach((b,i)=>{b.dataset.pg=['dash','mem','todo','inq'][i];b.addEventListener('click',()=>{document.querySelectorAll('.hh-tabs button').forEach(x=>{x.classList.toggle('on',x===b);x.setAttribute('aria-selected',x===b)});ink();show(b.dataset.pg)})});
 // ═════════ 멤버 · 할 일 (시안 데이터) ═════════
 const LV={pend:{n:'승인 대기',c:'#b7791f'},1:{n:'준회원',c:'#3498db'},2:{n:'정회원',c:'#e74c3c'},3:{n:'우수회원',c:'#d4a017'},5:{n:'운영진',c:'#607d8b'}};
 const LV_ORDER=['pend',1,2,3,5];
@@ -712,52 +791,108 @@ function openDrawer(m){const d=$('#drawer'),wr=wrOf(m),toReg=m.lv===1;
   d.setAttribute('aria-hidden','false');requestAnimationFrame(()=>d.classList.add('open'))}
 
 // ═════════ 할 일 ═════════
-const KINDS=[['approve','승인 대기','#d4a017','디스코드에 들어와 앱에 로그인했지만 아직 역할이 없어요. 승인하면 준회원 역할이 붙어요.'],['review','정회원 심사','#3b5bfd','운영진과 같은 판 3판을 채운 준회원이에요.'],['join','가입 신청','#0e9f6e','초대 링크로 들어온 신청이에요. 다음 할 일만 보여요.'],['inq','문의','#e5484d','답을 기다리는 문의예요.']];
+const KINDS=[['approve','승인 대기','#d4a017','디스코드에 들어와 앱에 로그인했지만 아직 역할이 없어요. 승인하면 준회원 역할이 붙어요.'],['review','정회원 심사','#3b5bfd','운영진과 같은 판 3판을 채운 준회원이에요.'],['join','가입 신청','#0e9f6e','초대 링크로 들어온 신청이에요. 칸마다 다음에 할 일이 하나씩 있어요.']];
 const TODO=[
   {k:'approve',id:'a1',m:{n:'새벽감성',c:'#be185d'},h:'어제 가입했어요',sub:[['ok','롤 계정 연결'],['ok','앱 설치'],['','추천인 나코치']],act:'승인'},
-  {k:'approve',id:'a2',m:{n:'칼바람초보',c:'#0f766e'},h:'가입한 지 3일',sub:[['ok','롤 계정 연결'],['no','앱 아직']],ref:true,act:'승인'},
+  {k:'approve',id:'a2',m:{n:'칼바람초보',c:'#0f766e'},h:'가입한 지 3일',sub:[['ok','롤 계정 연결'],['no','앱 아직'],['','추천인 없음']],act:'승인'},
   {k:'review',id:'r1',m:{n:'미드갈게요',c:'#1d4ed8'},h:'운영진과 4판',sub:[['','모임 판 18'],['','승률 58%'],['','가입 21일째']],pips:4,act:'승인'},
   {k:'review',id:'r2',m:{n:'포로왕',c:'#a16207'},h:'운영진과 3판',sub:[['','모임 판 11'],['','승률 49%'],['','가입 16일째']],pips:3,act:'승인'},
-  {k:'review',id:'r3',m:{n:'눈사람',c:'#334155'},h:'운영진과 3판',sub:[['','모임 판 9'],['','승률 52%'],['','가입 12일째']],pips:3,act:'승인'},
-  {k:'join',id:'j1',m:{n:'바람의검성',c:'#4d7c0f'},h:'신청 · 2시간 전',sub:[['','바람의검성#KR1'],['','저녁·밤'],['','초대 은하수']],act:'면접 시작'},
-  {k:'join',id:'j2',m:{n:'달빛소나타',c:'#7e22ce'},h:'면접 중 · 확정 서명 1 / 2',sub:[['ok','블랙 서명'],['','달빛소나타#0412']],act:'확정 서명'},
-  {k:'inq',id:'q1',m:{n:'그남자와잔나',c:'#0e7490'},h:'',kind:['버그·오류','#e5484d'],quote:'게임 위 작은 창에 증강이 2개만 떠요. 오른쪽 카드가 계속 비어 있어요. 21:9 모니터 씁니다.',sub:[['','앱 1.0.33'],['','롤 켜짐'],['','2시간 전']],thumbs:2,act:'해결',act2:'답장하기'}];
+  {k:'review',id:'r3',m:{n:'눈사람',c:'#334155'},h:'운영진과 3판',sub:[['','모임 판 9'],['','승률 52%'],['','가입 12일째']],pips:3,act:'승인'}];
+// 가입 신청: 단계(신청 → 면접 중 → 확정 → 초대함) 칸에 지원자 카드. 초대함은 로그인을 기다리는 칸이라 할 일 수에 넣지 않는다
+const JSTAGES=[['apply','신청','면접을 시작하면 면접방 안내가 신청자 화면에 떠요'],['interview','면접 중','운영진 두 명이 서명하면 확정돼요'],['ok','확정','톡방·디스코드 초대를 보내 주세요'],['invited','초대함','로그인하면 자동으로 준회원이 돼요']];
+const STAFF=[{n:'블랙',c:'#7c3aed'},{n:'나코치',c:'#0e7490'}];
+const APPS=[
+  {id:'j1',st:'apply',n:'바람의검성',riot:'바람의검성#KR1',c:'#4d7c0f',kakao:'검성',time:['저녁','밤'],msg:'퇴근하고 칼바람 한두 판씩 편하게 같이 할 분들 찾고 있었어요!',by:'은하수',ago:'2시간 전'},
+  {id:'j2',st:'interview',n:'달빛소나타',riot:'달빛소나타#0412',c:'#7e22ce',kakao:'소나타',time:['밤','새벽'],msg:'친구 추천으로 왔습니다. 증강 공부 중이에요.',by:'나코치',ago:'어제',signs:['블랙']},
+  {id:'j3',st:'invited',n:'별헤는밤',riot:'별헤는밤#KR2',c:'#be185d',kakao:'별밤',time:['저녁'],msg:'',by:'그남자와잔나',ago:'3일 전',kt:true,dc:true}];
 const td={done:new Set(),kind:null};
-const TOTAL=TODO.length;
-const actBtn=(label,pri=true)=>`<button type="button" class="btn ${pri?'pri':''} act"><span class="s0">${label}</span><span class="s1"><i class="spin"></i>처리 중</span><span class="s2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>완료</span></button>`;
-function todoCount(){return TODO.filter(t=>!td.done.has(t.id)).length}
-function todoTop(){const left=todoCount(),done=TOTAL-left,r=48,C=2*Math.PI*r;
-  const kinds=KINDS.map(([k,l,c])=>{const n=TODO.filter(t=>t.k===k&&!td.done.has(t.id)).length;return `<button type="button" class="tk ${td.kind===k?'on':''} ${n?'':'zero'}" style="--kc:${c}" data-k="${k}"><i></i>${l} <b>${n}</b></button>`}).join('');
-  $('#todotop').innerHTML=`<div class="tt-ring"><svg width="112" height="112" viewBox="0 0 112 112"><circle cx="56" cy="56" r="${r}" fill="none" stroke="var(--ring-track)" stroke-width="8"/><circle id="ttarc" cx="56" cy="56" r="${r}" fill="none" stroke="var(--up)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-done/TOTAL)}" transform="rotate(-90 56 56)"/></svg><div><b>${left}</b><small>남음</small></div></div>
+const joinLeft=()=>APPS.filter(a=>a.st!=='invited').length;
+const todoCount=()=>TODO.filter(t=>!td.done.has(t.id)).length+joinLeft();
+let TOTAL=0;
+const actBtn=(label,pri=true,cls='')=>`<button type="button" class="btn ${pri?'pri':''} act ${cls}"><span class="s0">${label}</span><span class="s1"><i class="spin"></i>처리 중</span><span class="s2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>완료</span></button>`;
+function todoTop(){const left=todoCount();TOTAL=Math.max(TOTAL,left);const done=TOTAL-left,r=48,C=2*Math.PI*r;
+  const n=k=>k==='join'?joinLeft():TODO.filter(t=>t.k===k&&!td.done.has(t.id)).length;
+  const kinds=KINDS.map(([k,l,c])=>`<button type="button" class="tk ${td.kind===k?'on':''} ${n(k)?'':'zero'}" style="--kc:${c}" data-k="${k}"><i></i>${l} <b>${n(k)}</b></button>`).join('');
+  $('#todotop').innerHTML=`<div class="tt-ring"><svg width="112" height="112" viewBox="0 0 112 112"><circle cx="56" cy="56" r="${r}" fill="none" stroke="var(--ring-track)" stroke-width="8"/><circle cx="56" cy="56" r="${r}" fill="none" stroke="var(--up)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${C*(1-(TOTAL?done/TOTAL:0))}" transform="rotate(-90 56 56)"/></svg><div><b>${left}</b><small>남음</small></div></div>
     <div class="tt-body"><h2>${left?`처리할 일 ${left}개`:'오늘 할 일을 모두 끝냈어요'}</h2><p>${left?`오늘 ${done}개 처리했어요 · 오래 기다린 것부터 위에 있어요`:'새 일이 생기면 운영 메뉴에 빨간 점이 떠요'}</p><div class="tt-kinds">${kinds}</div></div>`;
   $('#todotop').querySelectorAll('.tk').forEach(b=>b.onclick=()=>{td.kind=td.kind===b.dataset.k?null:b.dataset.k;todoTop();todoList(true)});
-  const hc=document.querySelector('.hh-tabs .hh-cnt');if(hc){hc.textContent=left||'';}}
-function itemHtml(t){const extra=t.k==='approve'&&t.ref?`<select aria-label="추천인"><option>추천인 고르기</option>${NAMES.slice(0,8).map(n=>`<option>${n}</option>`).join('')}</select>`:'';
-  return `<div class="ti collapse" data-id="${t.id}">${face(t.m,false)}<div><h4>${t.m.n}${t.kind?`<span class="kchip" style="--kc:${t.kind[1]}">${t.kind[0]}</span>`:''}${t.h?`<span class="meta" style="font-weight:600">${t.h}</span>`:''}</h4>
-    ${t.quote?`<p class="quote">${t.quote}</p>`:''}<div class="sub">${t.sub.map(([c,x])=>`<span class="${c}">${c==='ok'?'✓ ':c==='no'?'· ':''}${x}</span>`).join('')}${t.pips?`<span class="pips3" title="운영진과 같은 판">${[0,1,2].map(k=>`<i class="on"></i>`).join('')}</span>`:''}</div>
-    ${t.thumbs?`<div class="thumbs">${'<i></i>'.repeat(t.thumbs)}</div>`:''}</div>
-    <div class="acts">${extra}${t.k==='approve'||t.k==='join'?'<button type="button" class="btn ghost sm">보류</button>':''}${t.act2?'<button type="button" class="btn sm">'+t.act2+'</button>':''}${actBtn(t.act,true)}</div></div>`}
+  const hc=document.querySelector('.hh-tabs [data-pg="todo"] .hh-cnt');if(hc)hc.textContent=left||''}
+function itemHtml(t){return `<div class="ti collapse" data-id="${t.id}">${face(t.m,false)}<div><h4>${t.m.n}${t.h?`<span class="meta" style="font-weight:600">${t.h}</span>`:''}</h4>
+    <div class="sub">${t.sub.map(([c,x])=>`<span class="${c}">${c==='ok'?'✓ ':c==='no'?'· ':''}${x}</span>`).join('')}${t.pips?`<span class="pips3" title="운영진과 같은 판">${[0,1,2].map(()=>`<i class="on"></i>`).join('')}</span>`:''}</div></div>
+    <div class="acts">${t.k==='approve'?'<button type="button" class="btn ghost sm">보류</button>':''}${actBtn(t.act)}</div></div>`}
+function appCard(a){const tm=a.time.map(x=>`<span class="jtag">${x}</span>`).join('');const by=MEM.find(m=>m.n===a.by);
+  let foot='';
+  if(a.st==='apply')foot=`<div class="jact"><button type="button" class="btn ghost sm">보류</button>${actBtn('면접 시작',true,'grow')}</div>`;
+  if(a.st==='interview'){const signed=a.signs||[];foot=`<div class="jsign"><div class="jsig-faces">${STAFF.map(s=>`<span class="face ${signed.includes(s.n)?'':'off'}" style="background:${s.c}" title="${s.n}">${s.n[0]}${signed.includes(s.n)?'<i>✓</i>':''}</span>`).join('')}</div><span>확정 서명 <b>${signed.length} / 2</b></span></div><div class="jact"><button type="button" class="btn ghost sm">보류</button>${actBtn('내 서명',true,'grow')}</div>`}
+  if(a.st==='ok')foot=`<div class="jchk"><button type="button" class="jck ${a.kt?'on':''}" data-t="kt"><i></i>톡방 초대</button><button type="button" class="jck ${a.dc?'on':''}" data-t="dc"><i></i>디스코드 초대</button></div><div class="jact">${actBtn('초대함으로',true,'grow')}</div>`;
+  if(a.st==='invited')foot=`<div class="jwait"><span class="ok">✓ 톡방</span><span class="ok">✓ 디스코드</span><span class="pulse-dot"></span>로그인 기다리는 중</div>`;
+  return `<article class="jc" data-id="${a.id}"><div class="jc-h">${face(a,false)}<div><b>${a.n}</b><small>${a.riot}</small></div><time>${a.ago}</time></div>
+    <div class="jc-tags">${tm}<span class="jtag kk">카톡 ${a.kakao}</span></div>${a.msg?`<p class="jc-msg">“${a.msg}”</p>`:''}
+    <div class="jc-by"><span class="face" style="background:${by?by.c:'#64748b'}">${a.by[0]}</span>${a.by} 님이 초대했어요</div>${foot}</article>`}
+function joinBoard(){return `<div class="jboard">${JSTAGES.map(([k,l,hint],i)=>{const L=APPS.filter(a=>a.st===k);return `<div class="jcol ${k}"><div class="jcol-h"><span class="jn">${i+1}</span>${l}<b>${L.length}</b></div><p class="jhint">${hint}</p>${L.length?L.map(appCard).join(''):'<div class="jempty">비어 있어요</div>'}</div>`}).join('')}</div>`}
 function todoList(anim){const host=$('#todolist');
-  if(!todoCount()){host.innerHTML=`<section class="card"><div class="tdone"><span class="big"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><h3>모두 처리했어요</h3><p>승인 대기 · 정회원 심사 · 가입 신청 · 문의가 비었어요.</p></div></section>`;return}
-  host.innerHTML=KINDS.filter(([k])=>!td.kind||td.kind===k).map(([k,l,c,why])=>{const items=TODO.filter(t=>t.k===k&&!td.done.has(t.id));if(!items.length)return '';
-    const flow=k==='join'?`<div class="flow" style="--kc:${c}">${[['신청',1],['면접 중',1],['확정',0],['초대함',0]].map(([n,v])=>`<div class="${v?'has':''}"><b>${v}</b>${n}</div>`).join('')}</div>`:'';
-    return `<section class="card tsec" style="--kc:${c}" data-k="${k}"><div class="ch"><h2><i></i>${l} <b>${items.length}</b></h2>${k==='join'?'<span class="meta">전체 보드 ›</span>':k==='inq'?'<span class="meta">작업 목록 복사</span>':''}</div><p class="why">${why}</p>${flow}<div class="titems">${items.map(itemHtml).join('')}</div></section>`}).join('');
+  if(!todoCount()){host.innerHTML=`<section class="card"><div class="tdone"><span class="big"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><h3>모두 처리했어요</h3><p>승인 대기 · 정회원 심사 · 가입 신청이 비었어요.</p></div></section>`;return}
+  host.innerHTML=KINDS.filter(([k])=>!td.kind||td.kind===k).map(([k,l,c,why])=>{
+    if(k==='join'){if(!APPS.length)return '';return `<section class="card tsec" style="--kc:${c}" data-k="join"><div class="ch"><h2><i></i>${l} <b>${joinLeft()}</b></h2><span class="meta">면접방 설정 ›</span></div><p class="why">${why}</p>${joinBoard()}</section>`}
+    const items=TODO.filter(t=>t.k===k&&!td.done.has(t.id));if(!items.length)return '';
+    return `<section class="card tsec" style="--kc:${c}" data-k="${k}"><div class="ch"><h2><i></i>${l} <b>${items.length}</b></h2></div><p class="why">${why}</p><div class="titems">${items.map(itemHtml).join('')}</div></section>`}).join('');
   if(anim)host.querySelectorAll('.tsec').forEach((x,i)=>{x.style.animation='none';x.offsetHeight;x.style.animation=`vzFade .5s cubic-bezier(.16,1,.3,1) ${i*40}ms both`});
-  host.querySelectorAll('.ti .act').forEach(b=>b.onclick=()=>{if(b.classList.contains('busy')||b.classList.contains('done'))return;const row=b.closest('.ti'),id=row.dataset.id;
-    b.classList.add('busy');setTimeout(()=>{b.classList.remove('busy');b.classList.add('done');
-      setTimeout(()=>{row.style.height=row.offsetHeight+'px';row.offsetHeight;row.style.height='0px';row.style.opacity='0';row.style.paddingTop=row.style.paddingBottom='0px';row.style.marginTop='-8px';
-        setTimeout(()=>{td.done.add(id);todoTop();const sec=row.closest('.tsec');row.remove();if(sec&&!sec.querySelector('.ti')){sec.style.transition='opacity .3s';sec.style.opacity='0';setTimeout(()=>todoList(false),300)}else{const n=sec.querySelector('h2 b');n.textContent=sec.querySelectorAll('.ti').length}if(!todoCount())todoList(false)},380)},700)},650)})}
+  host.querySelectorAll('.ti .act').forEach(b=>b.onclick=()=>runAct(b,()=>{const row=b.closest('.ti');collapseRow(row,()=>{td.done.add(row.dataset.id);todoTop();todoList(false)})}));
+  host.querySelectorAll('.jc .jck').forEach(x=>x.onclick=()=>{const a=APPS.find(y=>y.id===x.closest('.jc').dataset.id);a[x.dataset.t]=!a[x.dataset.t];x.classList.toggle('on')});
+  host.querySelectorAll('.jc .act').forEach(b=>b.onclick=()=>{const card=b.closest('.jc'),a=APPS.find(y=>y.id===card.dataset.id);
+    if(a.st==='ok'&&!(a.kt&&a.dc)){card.querySelector('.jchk').classList.remove('shake');card.offsetWidth;card.querySelector('.jchk').classList.add('shake');return}
+    runAct(b,()=>{card.classList.add('leave');setTimeout(()=>{if(a.st==='apply')a.st='interview';else if(a.st==='interview'){a.signs=[...(a.signs||[]),'나코치'];if(a.signs.length>=2)a.st='ok'}else if(a.st==='ok')a.st='invited';
+      todoTop();const scroll=scrollY;todoList(false);scrollTo(0,scroll);const nc=$(`.jc[data-id="${a.id}"]`);if(nc){nc.classList.add('arrive')}},260)})})}
+function runAct(b,then){if(b.classList.contains('busy')||b.classList.contains('done'))return;b.classList.add('busy');setTimeout(()=>{b.classList.remove('busy');b.classList.add('done');setTimeout(then,650)},600)}
+function collapseRow(row,then){row.style.height=row.offsetHeight+'px';row.offsetHeight;row.style.height='0px';row.style.opacity='0';row.style.paddingTop=row.style.paddingBottom='0px';row.style.marginTop='-8px';setTimeout(then,380)}
 function todoAll(anim){todoTop();todoList(anim)}
+
+// ═════════ 문의 ═════════
+const ISTAT={new:['새 문의','#e5484d'],working:['작업 중','#3b5bfd'],replied:['답장함','#0e9f6e'],done:['해결','#8a90a2']};
+const ITYPE={bug:['버그·오류','#e5484d'],idea:['제안','#7c3aed'],acct:['계정·기록','#d97706'],etc:['기타','#64748b']};
+const INQ=[
+  {id:'q1',area:'게임 위 작은 창',t:'bug',st:'new',who:'그남자와잔나',text:'게임 위 작은 창에 증강이 2개만 떠요. 오른쪽 카드가 계속 비어 있어요. 21:9 모니터 씁니다.',meta:['앱 1.0.33','롤 켜짐','보던 화면 · 게임'],pics:2,ago:'2시간 전'},
+  {id:'q2',area:'게임 위 작은 창',t:'bug',st:'new',who:'용팔이네 형',text:'듀얼 모니터에서 작은 창이 반대쪽 화면에 떠요.',meta:['앱 1.0.32','롤 켜짐'],pics:1,ago:'어제'},
+  {id:'q3',area:'기록',t:'acct',st:'working',who:'톰과란제리',text:'부계정으로 한 판이 기록에 안 들어왔어요. 어제 밤 11시쯤 두 판.',meta:['앱 1.0.33','롤 꺼짐','보던 화면 · 내 페이지'],pics:0,ago:'어제'},
+  {id:'q4',area:'상점',t:'idea',st:'new',who:'은하수',text:'배경을 미리 보기 할 때 내 페이지 전체 모습으로 보고 싶어요.',meta:['웹','보던 화면 · 상점'],pics:0,ago:'3일 전'},
+  {id:'q5',area:'로그인',t:'bug',st:'replied',who:'라떼한잔',text:'디스코드 로그인 뒤 하얀 화면에서 멈춰요.',meta:['앱 1.0.31'],pics:0,ago:'4일 전',reply:'1.0.32 에서 고쳤어요. 업데이트 뒤 다시 로그인해 주세요!'},
+  {id:'q6',area:'도감',t:'bug',st:'done',who:'포로왕',text:'도감 숙련도 점이 카드 밖으로 나가요.',meta:['웹 · 아이패드'],pics:1,ago:'5일 전'}];
+const iq={st:'open'};
+const W_T={bug:3,acct:2,idea:1,etc:1};
+function inqGroups(){const L=INQ.filter(q=>iq.st==='open'?q.st!=='done':q.st===iq.st);const G={};
+  L.forEach(q=>{const k=q.area+'|'+q.t;(G[k]=G[k]||{area:q.area,t:q.t,items:[]}).items.push(q)});
+  return Object.values(G).map(g=>({...g,score:W_T[g.t]*(new Set(g.items.map(x=>x.who)).size)*(g.items.some(x=>/시간|어제/.test(x.ago))?1.5:1)})).sort((a,b)=>b.score-a.score)}
+function inqTop(){const c=k=>INQ.filter(q=>q.st===k).length,open=INQ.filter(q=>q.st!=='done').length;
+  const segs=[['open','열린 문의',open,'#e5484d'],['new',...ISTAT.new.slice(0,1),c('new'),ISTAT.new[1]],['working','작업 중',c('working'),ISTAT.working[1]],['replied','답장함',c('replied'),ISTAT.replied[1]],['done','해결',c('done'),ISTAT.done[1]]];
+  $('#inqtop').innerHTML=`<div class="iq-l"><h2>${c('new')?`새 문의 ${c('new')}개`:'새 문의가 없어요'}</h2><p>같은 부분·같은 종류는 한 묶음으로 · 버그 · 여러 명 · 최근일수록 위에</p></div>
+    <div class="iq-r"><div class="tt-kinds">${segs.map(([k,l,n,col])=>`<button type="button" class="tk ${iq.st===k?'on':''} ${n?'':'zero'}" style="--kc:${col}" data-s="${k}"><i></i>${l} <b>${n}</b></button>`).join('')}</div><button type="button" class="btn sm copy-md" id="iqcopy"><span class="c0">작업 목록 복사</span><span class="c1">✓ 복사했어요</span></button></div>`;
+  $('#inqtop').querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{iq.st=b.dataset.s;inqTop();inqList(true)});
+  $('#iqcopy').onclick=e=>{const b=e.currentTarget;b.classList.add('ok');setTimeout(()=>b.classList.remove('ok'),1600)};
+  const hc=document.querySelector('.hh-tabs [data-pg="inq"] .hh-cnt');if(hc)hc.textContent=c('new')||''}
+function inqItem(q){const m=MEM.find(x=>x.n===q.who),ty=ITYPE[q.t],st=ISTAT[q.st];
+  return `<div class="ti iqi collapse" data-id="${q.id}">${face(m,false)}<div><h4>${q.who}<span class="stp" style="--kc:${st[1]}"><i></i>${st[0]}</span><span class="meta" style="font-weight:600">${q.ago}</span></h4>
+    <p class="iq-text">${q.text}</p>${q.pics?`<div class="thumbs">${'<i></i>'.repeat(q.pics)}</div>`:''}<div class="sub">${q.meta.map(x=>`<span>${x}</span>`).join('')}</div>
+    ${q.reply?`<div class="iq-reply"><b>내 답장</b>${q.reply}</div>`:''}</div>
+    <div class="acts">${q.st==='done'?'<button type="button" class="btn sm">다시 열기</button>':`<button type="button" class="btn sm">답장하기</button>${q.st==='new'?'<button type="button" class="btn ghost sm" data-w>작업 중</button>':''}${actBtn('해결')}`}</div></div>`}
+function inqList(anim){const host=$('#inqlist'),G=inqGroups();
+  if(!G.length){host.innerHTML=`<section class="card"><div class="tdone"><span class="big"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><h3>여기는 비었어요</h3><p>다른 상태를 골라 보세요.</p></div></section>`;return}
+  host.innerHTML=G.map((g,i)=>{const ty=ITYPE[g.t],ppl=new Set(g.items.map(x=>x.who)).size;
+    return `<section class="card tsec iqg" style="--kc:${ty[1]}"><div class="ch"><h2>${iq.st==='open'||iq.st==='new'?`<span class="prio ${i===0?'top':''}">${i+1}</span>`:''}${g.area}<span class="kchip" style="--kc:${ty[1]}">${ty[0]}</span></h2><span class="meta">${ppl}명 · ${g.items.length}건</span></div>
+      <div class="titems" style="margin-top:12px">${g.items.map(inqItem).join('')}</div></section>`}).join('');
+  if(anim)host.querySelectorAll('.tsec').forEach((x,i)=>{x.style.animation='none';x.offsetHeight;x.style.animation=`vzFade .5s cubic-bezier(.16,1,.3,1) ${i*40}ms both`});
+  host.querySelectorAll('.iqi .act').forEach(b=>b.onclick=()=>runAct(b,()=>{const row=b.closest('.ti');collapseRow(row,()=>{INQ.find(q=>q.id===row.dataset.id).st='done';inqTop();inqList(false)})}));
+  host.querySelectorAll('.iqi [data-w]').forEach(b=>b.onclick=()=>{INQ.find(q=>q.id===b.closest('.ti').dataset.id).st='working';inqTop();inqList(false)})}
+function inqAll(anim){inqTop();inqList(anim)}
 
 // ═════════ 탭 전환 ═════════
 let page='dash';
-function show(pg){if(pg===page)return;page=pg;['dash','mem','todo'].forEach(k=>{const e=$('#pg-'+k);e.hidden=k!==pg;e.classList.remove('in')});const e=$('#pg-'+pg);e.offsetHeight;e.classList.add('in');
-  if(pg==='dash')all();else if(pg==='mem')memAll();else todoAll(true);scrollTo({top:0})}
+function show(pg){if(pg===page)return;page=pg;['dash','mem','todo','inq'].forEach(k=>{const e=$('#pg-'+k);e.hidden=k!==pg;e.classList.remove('in')});const e=$('#pg-'+pg);e.offsetHeight;e.classList.add('in');
+  if(pg==='dash')all();else if(pg==='mem')memAll();else if(pg==='inq')inqAll(true);else todoAll(true);scrollTo({top:0})}
 
-function all(){ink();if(page!=='dash'){page==='mem'?memAll():todoAll(false);return}rings();cal();members();funnel();combo()}
+function all(){ink();if(page!=='dash'){page==='mem'?memAll():page==='inq'?inqAll(false):todoAll(false);return}rings();cal();members();funnel();combo()}
 document.querySelectorAll('[data-th]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-th]').forEach(x=>x.setAttribute('aria-pressed',x===b));if(b.dataset.th)document.documentElement.dataset.theme=b.dataset.th;else delete document.documentElement.dataset.theme;all()}));
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',all);
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(all,120)});
-todoTop();all();
-if(location.hash==='#members')document.querySelectorAll('.hh-tabs button')[1].click();if(location.hash==='#todo')document.querySelectorAll('.hh-tabs button')[2].click();
+todoTop();inqTop();all();
+if(location.hash==='#members')document.querySelectorAll('.hh-tabs button')[1].click();if(location.hash==='#todo')document.querySelectorAll('.hh-tabs button')[2].click();if(location.hash==='#inq')document.querySelectorAll('.hh-tabs button')[3].click();
 </script>
