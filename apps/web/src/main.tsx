@@ -22,6 +22,11 @@ import { InquiryPage } from './pages/Inquiry';
 
 // 브라우저 막대 색을 지금 테마 바탕색과 맞추고, 시스템 테마가 바뀌면 따라간다
 restoreTheme();
+// 맨 위에서 벗어나면 html.scrolled — 터치 기기 상단 바가 떠 있는 캡슐로 바뀐다 (v3.152)
+{
+  const mark = () => document.documentElement.classList.toggle('scrolled', window.scrollY > 4);
+  window.addEventListener('scroll', mark, { passive: true }); mark();
+}
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -2,15 +2,26 @@
 .topbar { position: sticky; top: 0; z-index: 30; padding-top: env(safe-area-inset-top, 0px); background: var(--glass-bg); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); border-bottom: 1px solid var(--glass-line); box-shadow: 0 1px 0 var(--glass-edge); }
 /* 상단 바 아래 그늘: 흐림 그림자 대신 좌우 끝까지 같은 세기의 띠 — 그림자는 끝에서 옅어져 바깥 띠(html)와 이어지는 곳에 이음매가 생겼다 */
 .topbar::after { content: ""; position: absolute; left: 0; right: 0; top: calc(100% + 1px); height: 20px; background: linear-gradient(180deg, var(--tb-shade), transparent); pointer-events: none; }
-/* 상단 바가 화면 오른쪽 끝(아이폰 사파리 옆 칸 등 페이지 폭 밖)까지 이어지게: 페이지 맨 바깥 바탕(캔버스)의 맨 위 띠를 상단 바와 같은 색으로, 가로로 끝없이 반복 (v3.151).
-   몸통(body) 바탕이 페이지 폭 안을 덮으므로 페이지 안에서는 보이지 않고, 그 밖으로만 드러난다. 색은 실제 상단 바를 찍어 잰 값 */
-html { --tb-h: calc(64px + env(safe-area-inset-top, 0px)); --tb-top: #fbfbfa; --tb-bot: #f9f9f7; --tb-line: #fffffe; --tb-edge: #eeeeec; --tb-shade: rgba(16, 20, 36, .035);
-  background: linear-gradient(180deg, var(--tb-top), var(--tb-bot) var(--tb-h), var(--tb-line) var(--tb-h), var(--tb-line) calc(var(--tb-h) + 1px), var(--tb-edge) calc(var(--tb-h) + 1px), var(--tb-edge) calc(var(--tb-h) + 2px)) 0 0 / 100% calc(var(--tb-h) + 2px) repeat-x,
-    linear-gradient(180deg, var(--tb-shade), transparent) 0 calc(var(--tb-h) + 1px) / 100% 20px repeat-x, var(--bg); }
-@media (prefers-color-scheme: dark) { html:not([data-theme="light"]) { --tb-top: #171c2e; --tb-bot: #0c101e; --tb-line: #373b4b; --tb-edge: #05060a; --tb-shade: rgba(0, 0, 0, .14); } }
-html[data-theme="dark"] { --tb-top: #171c2e; --tb-bot: #0c101e; --tb-line: #373b4b; --tb-edge: #05060a; --tb-shade: rgba(0, 0, 0, .14); }
-@media (max-width: 860px) { html { --tb-h: calc(56px + env(safe-area-inset-top, 0px)); } }
+/* 상단 바 아래 그늘 색 */
+html { --tb-shade: rgba(16, 20, 36, .035); }
+@media (prefers-color-scheme: dark) { html:not([data-theme="light"]) { --tb-shade: rgba(0, 0, 0, .14); } }
+html[data-theme="dark"] { --tb-shade: rgba(0, 0, 0, .14); }
 .topbar .wrap { display: flex; align-items: center; gap: var(--s4); height: 64px; }
+/* 터치 기기(휴대폰·태블릿) 상단 바 = 시안 C (v3.152). 맨 위에서는 바 없이 로고·내 정보만 페이지에 얹고,
+   내리면(html.scrolled) 위·양옆에 여백을 둔 둥근 유리 캡슐이 되고, 캡슐 둘레는 바탕색이 위로 갈수록 짙어지며
+   지나가는 글을 덮는다. 아이폰 사파리 옆 칸 앞에서 막대 끝이 잘려 보이던 것. 상단 바 전체 높이는 그대로라 아래 내용이 밀리지 않는다 */
+@media (hover: none) and (pointer: coarse) {
+  .topbar { display: flow-root; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; border-bottom-color: transparent; box-shadow: none; }
+  .topbar::before { content: ""; position: absolute; left: 0; right: 0; top: 0; bottom: -28px; z-index: -1; pointer-events: none; opacity: 0; transition: opacity .28s;
+    background: linear-gradient(180deg, var(--bg) 0%, color-mix(in srgb, var(--bg) 92%, transparent) 30%, color-mix(in srgb, var(--bg) 60%, transparent) 62%, transparent 100%); }
+  .topbar::after { display: none; }
+  .topbar .wrap { border: 1px solid transparent; transition: height .3s cubic-bezier(.2, .8, .2, 1), margin .3s cubic-bezier(.2, .8, .2, 1), padding .3s, border-radius .3s, background-color .3s, border-color .3s, box-shadow .3s; }
+  html.scrolled .topbar::before { opacity: 1; }
+  html.scrolled .topbar .wrap { height: 48px; width: auto; margin: 8px max(8px, env(safe-area-inset-right, 0px)) 8px max(8px, env(safe-area-inset-left, 0px)); padding-inline: var(--s4); border-radius: var(--r-l);
+    background: var(--glass-bg); border-color: var(--glass-line); box-shadow: var(--glass-shine), 0 0 0 1px var(--glass-edge), var(--glass-shadow); -webkit-backdrop-filter: blur(22px) saturate(180%); backdrop-filter: blur(22px) saturate(180%); }
+}
+@media (hover: none) and (pointer: coarse) and (max-width: 860px) { html.scrolled .topbar .wrap { height: 40px; padding-inline: var(--s3); } }
+@media (hover: none) and (pointer: coarse) and (prefers-reduced-motion: reduce) { .topbar::before, .topbar .wrap { transition: none; } }
 /* 워드마크는 대문자 PRISM — 대문자 높이(약 12px)에 맞춰 보석은 22px, 글자 사이는 넓게 */
 .brand { display: flex; align-items: center; gap: var(--s2); font-size: var(--fs-lg); font-weight: 800; letter-spacing: .1em; line-height: 1; }
 .tabs { display: flex; gap: var(--s1); margin-left: var(--s4); }
