@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, FramedFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, SITE_URL, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { pollWhileShown } from './poll';
 import { checkNow, clearAttend, getState, refreshSession, start, subscribe, type State } from './controller';
@@ -203,7 +203,7 @@ function App() {
         </nav>
         {s.me && <div className={`side-me-card ${staff ? 'prism' : ''}`}>
           <NavLink to="/me" className="side-me" title="내 페이지">
-            <span className="fp" title={`${dotLabel} · ${label}${riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}`}><MemberFace nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} /><i className={`sdot ${dot}`} role="img" aria-label={dotLabel} /></span>
+            <span className="fp" title={`${dotLabel} · ${label}${riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}`}><FramedFace frame={s.me.frame} nick={s.me.nick} skin={s.me.skin} size={36} skins={skins} /><i className={`sdot ${dot}`} role="img" aria-label={dotLabel} /></span>
             <span className="who"><b><NickName nick={s.me.nick} /></b><span className="st pc" data-pieces title={`보유 ${PIECE}`}>{pieces === null ? '–' : <><b>{pieces.toLocaleString()}</b><PieceIcon size={12} /></>}</span></span>
           </NavLink>
         </div>}

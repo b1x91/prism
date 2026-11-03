@@ -277,6 +277,13 @@ export function MemberFace({ nick, skin, champion, size = 40, skins }: { nick: s
   return src ? <img className="face fi" {...imgIn} src={src} width={size} height={size} alt="" loading="lazy" style={{ width: size, height: size }} /> : <Initial nick={nick} size={size} />;
 }
 
+/** 장착한 프로필 테두리를 두른 얼굴 (v3.153) — 앱 사이드바·웹 상단 내 얼굴. 테두리 모양은 프로필 머리와 같은 규칙(.phero.frame-… .phero-face)을 그대로 써서
+ *  상점에 새 테두리가 생겨도(looks.css) 저절로 붙는다. 테두리가 없으면 그냥 얼굴 */
+export function FramedFace({ frame, round, size = 40, ...face }: { frame?: string | null; round?: boolean; nick: string; skin?: number | null; champion?: number | null; size?: number; skins?: Record<number, Skin> | null }) {
+  if (!frame) return <MemberFace {...face} size={size} />;
+  return <span className={`phero face-ring ${round ? 'round' : ''} ${frame}`} style={{ ['--fr' as string]: `${size}px` }}><span className="phero-face"><MemberFace {...face} size={size} /></span></span>;
+}
+
 /** 접속 상태 점 하나 (웹 회색 · 앱 파랑 · 게임 주황 · 앱+게임 초록). 접속 안 함이면 그리지 않는다 */
 export function PresenceDot({ p, title }: { p?: Presence | null; title?: string }) {
   if (!p || p === 'off') return null;

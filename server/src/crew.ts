@@ -2,6 +2,7 @@
  * Prism 회원 전용 기능. 모든 응답은 회원 데이터이므로 로그인한 회원에게만 준다 (CLAUDE.md 2절 11).
  * 집계는 저장하지 않고 원본에서 계산한다.
  */
+import { parseDeco } from '../../packages/core/src/shop.js';
 import { onRiotLinked } from './join.js';
 import { syncNick } from './discordnick.js';
 import { can, isPending, levelOf, permsOf, rankingGate, ratesOf, topRole } from './roles.js';
@@ -62,6 +63,8 @@ export async function getMe(env: Env, me: Member) {
     rolesKnown: me.roles_at !== null || me.discord_roles !== null,
     presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }),
     about: aboutOf(me),
+    // 장착한 프로필 테두리 — 앱 사이드바 내 카드 얼굴에도 (v3.153)
+    frame: parseDeco((me as Member & { deco?: string | null }).deco).frame ?? null,
   });
 }
 

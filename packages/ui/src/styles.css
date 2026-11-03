@@ -4473,3 +4473,10 @@ button.lvb-name:hover { text-decoration: underline; }
 @media (hover: none) and (pointer: coarse) {
   input:not([type=checkbox]):not([type=radio]):not([type=range]), textarea, select { font-size: 16px !important; }
 }
+
+/* 장착한 프로필 테두리를 두른 작은 얼굴 (FramedFace, v3.153): 프로필 머리의 판·바닥 띠는 지우고 얼굴 둘레 고리만 */
+.phero.face-ring { all: unset; display: inline-grid; position: relative; flex: none; vertical-align: middle; }
+.phero.face-ring::after { content: none; display: none; }
+.phero.face-ring .phero-face { display: grid; padding: 2px; border-radius: var(--r-l); box-shadow: 0 0 10px rgba(0, 0, 0, .12); }
+.phero.face-ring .phero-face .face, .phero.face-ring .phero-face .initial { width: var(--fr) !important; height: var(--fr) !important; border-radius: var(--r-m); }
+.phero.face-ring.round .phero-face, .phero.face-ring.round .phero-face .face, .phero.face-ring.round .phero-face .initial { border-radius: 50%; }

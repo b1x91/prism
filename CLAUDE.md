@@ -1554,3 +1554,8 @@ DAILY_POST_TITLE =
 1. **터치 기기(`(hover: none) and (pointer: coarse)`)에서 맨 위에는 바 없이 로고·내 정보·햄버거만 페이지에 얹고, 내리면(`html.scrolled`, `apps/web/src/main.tsx`) 위·양옆 8px 여백을 둔 둥근 유리 캡슐**(`.topbar .wrap`, 모서리 16, 높이 휴대폰 40·태블릿 48)이 된다 (`apps/web/src/web.css`, 시안 `docs/mockups/topbar-options.html`). 아이폰 사파리 오른쪽 칸 앞에서 막대 끝이 잘려 보이던 것 — 그 칸은 사파리가 직접 칠해 웹이 이어 그릴 수 없다.
 2. **캡슐 둘레는 바탕색이 위로 갈수록 짙어지는 띠**(`.topbar::before`, 캡슐 아래 28px 까지): 내용이 캡슐 밑으로 올라가며 바탕색 속으로 서서히 사라진다 (사용자 선택).
 3. 상단 바 전체 높이는 맨 위·내렸을 때 같다(`display: flow-root` 로 여백이 밖으로 새지 않게) — 아래 내용이 밀리지 않는다. PC 상단 바는 그대로. 동작 줄이기면 바로 바뀐다.
+
+## v3.153 변경 (2026-11-03, 사용자 결정) — 작은 내 얼굴에도 프로필 테두리 · 블랙 10만 피스
+
+1. **장착한 프로필 테두리는 작은 내 얼굴에도 두른다** (공용 `FramedFace` `packages/ui/src/basics.tsx`, `.phero.face-ring` `styles.css`). 앱 사이드바 아래 내 카드 · 웹 상단 내 얼굴(지난 접속 때 기억한 것 `prism-top` 포함) · 웹 내 프로필 메뉴 머리 · 휴대폰 메뉴 내 카드. 테두리 모양은 프로필 머리와 같은 규칙(`.phero.frame-… .phero-face`)을 그대로 써서 상점의 새 테두리(looks.css)도 저절로 붙는다 — 머리의 판·바닥 띠는 지우고 얼굴 둘레 고리만. 서버 `/api/me` 가 `frame` 을 함께 보낸다.
+2. **블랙(Haze#KR18) 계정에 10만 피스** (`0041_grant_haze.sql`). 운영자가 직접 넣는 피스는 `piece_spend` 에 값이 음수인 `kind = 'grant'` 줄 하나 (다른 기능은 이 종류를 읽지 않는다, 같은 ref 는 한 번만).

@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, FramedFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -54,10 +54,10 @@ export function Layout() {
   const pieces = usePieces(me ? api : null);
   // 상단 내 얼굴·이름·피스: 지난 접속 때 것을 기억해 두었다가 로그인 확인 전에 바로 그린다
   // (로그인 단추 → 내 이름으로, 이름 옆에 피스가 늦게 붙으며 상단 아이콘이 옆으로 밀리지 않게, v3.93)
-  const [top] = useState<{ nick: string; skin: number | null; pieces: number | null } | null>(() => { try { return JSON.parse(localStorage.getItem('prism-top') || 'null'); } catch { return null; } });
+  const [top] = useState<{ nick: string; skin: number | null; frame?: string | null; pieces: number | null } | null>(() => { try { return JSON.parse(localStorage.getItem('prism-top') || 'null'); } catch { return null; } });
   useEffect(() => {
     try {
-      if (me && pieces !== null) localStorage.setItem('prism-top', JSON.stringify({ nick: me.nick, skin: me.skin ?? null, pieces }));
+      if (me && pieces !== null) localStorage.setItem('prism-top', JSON.stringify({ nick: me.nick, skin: me.skin ?? null, frame: me.frame ?? null, pieces }));
       else if (member === false) localStorage.removeItem('prism-top');
     } catch { /* 저장 막힘 */ }
   }, [me?.nick, me?.skin, pieces, member]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -78,7 +78,7 @@ export function Layout() {
         <span className="top-wide"><NavLink to="/shop" className="icon-btn top-shop" title="상점" aria-label="상점"><Icon name="bag" /></NavLink>
           <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>
         {me ? <MeMenu pieces={shownPieces} />
-          : member === null && top ? <NavLink to="/me" className="me-btn" title="내 페이지"><MemberFace nick={top.nick} skin={top.skin} size={30} /><span className="me-txt"><b><NickName nick={top.nick} /></b>{top.pieces !== null && <small data-pieces>{top.pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></NavLink>
+          : member === null && top ? <NavLink to="/me" className="me-btn" title="내 페이지"><FramedFace frame={top.frame} nick={top.nick} skin={top.skin} size={30} /><span className="me-txt"><b><NickName nick={top.nick} /></b>{top.pieces !== null && <small data-pieces>{top.pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></NavLink>
           : member === null ? <span className="me-btn" aria-hidden="true"><Bone w={30} h={30} r="round" /><span className="me-txt"><Bone w={72} h={12} /></span></span>
           : <button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />로그인</button>}
         <button type="button" className="icon-btn menu-btn" aria-label="메뉴 열기" aria-expanded={menu} onClick={() => setMenu(true)}><Icon name="menu" /></button>
@@ -116,11 +116,11 @@ function MeMenu({ pieces }: { pieces: number | null }) {
   return (
     <span className="me-wrap" ref={box}>
       <button type="button" className={`me-btn ${open ? 'on' : ''}`} aria-haspopup="menu" aria-expanded={open} title="내 프로필" onClick={() => setOpen((v) => !v)}>
-        <FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={30} /></FacePresence>
+        <FacePresence p={me.presence}><FramedFace frame={me.frame} nick={me.nick} skin={me.skin} size={30} /></FacePresence>
         <span className="me-txt"><b><NickName nick={me.nick} /></b>{pieces !== null && <small data-pieces>{pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span>
       </button>
       {open && <div className="me-pop" role="menu">
-        <div className="me-pop-head"><FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={40} /></FacePresence>
+        <div className="me-pop-head"><FacePresence p={me.presence}><FramedFace frame={me.frame} round nick={me.nick} skin={me.skin} size={40} /></FacePresence>
           <span><b><NickName nick={me.nick} /></b>{pieces !== null && <small>{pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></div>
         <button type="button" role="menuitem" onClick={() => go('/me')}><Icon name="home" />내 페이지</button>
         <button type="button" role="menuitem" onClick={() => go('/me?studio=1')}><Icon name="spark" />프로필 꾸미기</button>
@@ -153,7 +153,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           <NavLink to="/" className="brand" tabIndex={open ? 0 : -1}><Gem size={22} />PRISM</NavLink>
           <button type="button" className="icon-btn" aria-label="메뉴 닫기" tabIndex={open ? 0 : -1} onClick={onClose}><Icon name="x" /></button>
         </div>
-        {me ? <NavLink to="/me" className="mmenu-me" tabIndex={open ? 0 : -1}><FacePresence p={me.presence}><MemberFace nick={me.nick} skin={me.skin} size={40} /></FacePresence><span><b><NickName nick={me.nick} /></b><small>내 페이지</small></span></NavLink>
+        {me ? <NavLink to="/me" className="mmenu-me" tabIndex={open ? 0 : -1}><FacePresence p={me.presence}><FramedFace frame={me.frame} round nick={me.nick} skin={me.skin} size={40} /></FacePresence><span><b><NickName nick={me.nick} /></b><small>내 페이지</small></span></NavLink>
           : <button type="button" className="btn primary mmenu-login" tabIndex={open ? 0 : -1} onClick={login}><Icon name="discord" />디스코드로 로그인</button>}
         {me && <div className="mmenu-acts">
           <button type="button" className="btn sm" tabIndex={open ? 0 : -1} onClick={() => { onClose(); nav('/me?studio=1'); }}><Icon name="spark" />프로필 꾸미기</button>
