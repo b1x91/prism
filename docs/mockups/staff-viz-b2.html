@@ -164,8 +164,8 @@ svg text{font-family:var(--font)}
   <div class="row">
     <section class="card">
       <div class="ch"><h2>주별 판과 활동 멤버</h2><span class="meta tn">최근 8주 · 1,024판</span></div>
-      <p class="lede"><b>판이 늘면 활동 멤버도 함께 늘었어요.</b> 10/26 주 555판에 30명, 이번 주는 이틀 만에 151판·27명.</p>
-      <div class="legend"><span><i class="k" style="background:linear-gradient(var(--acc),transparent);opacity:.6;width:14px"></i>물결 = 전체 판</span><span><i class="k" style="background:var(--acc);width:6px;border-radius:3px"></i>막대 = 모임 판</span><span><i class="k" style="background:var(--panel);border:1px solid var(--line2);border-radius:999px;width:22px"></i>알약 = 그 주 활동 멤버</span><span><i class="k" style="height:2px;width:14px;background:repeating-linear-gradient(90deg,var(--acc) 0 4px,transparent 4px 8px)"></i>이번 주 (진행 중)</span></div>
+      <p class="lede"><b>판이 늘면 활동 멤버도 함께 늘었어요.</b> 10/26 주 555판에 30명, 이번 주는 이틀 만에 151판·27명 (진행 중이라 점선).</p>
+      <div class="legend"><span><i class="k" style="background:var(--acc)"></i>모임 판</span><span><i class="k" style="background:color-mix(in srgb, var(--acc) 32%, var(--panel))"></i>그 밖의 판</span><span><i class="k" style="background:var(--panel);border:1.5px solid var(--acc);border-radius:50%"></i>활동 멤버 (최고·최저, 나머지는 마우스를 올리면)</span></div>
       <div class="plot" id="combo"></div>
     </section>
     <section class="card">
@@ -241,33 +241,30 @@ function rings(){const R=[['활동률',27/32,'27 / 32명','<em>+11</em> 지난�
   $('#rings').innerHTML=R.map(r=>`<div class="ring">${ring(r[1])}<div style="min-width:0"><div class="l">${r[0]}</div><div class="n">${Math.round(r[1]*100)}%</div><div class="d tn">${r[2]} · ${r[3]}</div></div></div>`).join('')}
 
 // ───── 주별 판 + 활동 멤버 (한 차트, 막대 위에 멤버) ─────
-function combo(){const w=W('#combo'),H=w<520?260:360,L=40,R=16,T=56,B=28,iw=w-L-R,ih=H-T-B,s=svg(w,H),g=niceTop(Math.max(...W8.map(x=>x.g)));
-  const y=v=>T+ih-v/g.top*ih,col=iw/8,bw=Math.min(14,col*.22),cx=i=>L+col*i+col/2,amax=Math.max(...W8.map(x=>x.a)),acc=css('--acc'),pan=css('--panel');
+function combo(){const w=W('#combo'),H=w<520?260:340,L=40,R=16,T=48,B=28,iw=w-L-R,ih=H-T-B,s=svg(w,H),g=niceTop(Math.max(...W8.map(x=>x.g))*1.08);
+  const y=v=>T+ih-v/g.top*ih,col=iw/8,bw=Math.min(20,col*.32),cx=i=>L+col*i+col/2,acc=css('--acc'),pan=css('--panel'),soft=`color-mix(in srgb, ${acc} 32%, ${pan})`;
   const id=Math.random().toString(36).slice(2,7),df=el(s,'defs',{});
-  const ag=el(df,'linearGradient',{id:'a'+id,x1:0,y1:0,x2:0,y2:1});[[0,.28],[.55,.10],[1,0]].forEach(([o,a])=>el(ag,'stop',{offset:o,'stop-color':acc,'stop-opacity':a}));
-  const lg=el(df,'linearGradient',{id:'l'+id,x1:0,y1:0,x2:1,y2:0});[[0,.45],[.6,1],[1,1]].forEach(([o,a])=>el(lg,'stop',{offset:o,'stop-color':acc,'stop-opacity':a}));
-  const bg=el(df,'linearGradient',{id:'b'+id,x1:0,y1:0,x2:0,y2:1});el(bg,'stop',{offset:0,'stop-color':acc,'stop-opacity':1});el(bg,'stop',{offset:1,'stop-color':acc,'stop-opacity':.55});
-  const gf=el(df,'filter',{id:'g'+id,x:'-10%',y:'-30%',width:'120%',height:'160%'});el(gf,'feGaussianBlur',{stdDeviation:4});
+  const ag=el(df,'linearGradient',{id:'a'+id,x1:0,y1:0,x2:0,y2:1});[[0,.20],[.7,.04],[1,0]].forEach(([o,a])=>el(ag,'stop',{offset:o,'stop-color':acc,'stop-opacity':a}));
   for(let i=0;i<=4;i++){const v=g.step*i;el(s,'line',{x1:L,x2:w-R,y1:y(v),y2:y(v),stroke:i?css('--grid'):css('--line2')});el(s,'text',{x:L-8,y:y(v)+4,'text-anchor':'end',class:'ax tn'},fmt(v))}
-  const hl=el(s,'rect',{x:0,y:T-40,width:col-4,height:ih+40,rx:12,fill:css('--panel2'),opacity:0});
-  // 물결 = 전체 판 (면 · 빛 · 선). 이번 주는 진행 중이라 마지막 구간만 점선
-  const pts=W8.map((d,i)=>[cx(i),y(d.g)]),line=smooth(pts),full=smooth(pts.slice(0,7));
+  const hl=el(s,'rect',{x:0,y:T-36,width:col-4,height:ih+36,rx:12,fill:css('--panel2'),opacity:0});
+  // 물결 = 막대 꼭대기(전체 판)를 그대로 잇는다 — 막대와 물결이 같은 높이
+  const pts=W8.map((d,i)=>[cx(i),y(d.g)]),line=smooth(pts);
   el(s,'path',{d:`${line} L${pts[7][0]},${y(0)} L${pts[0][0]},${y(0)} Z`,fill:`url(#a${id})`});
-  el(s,'path',{d:full,fill:'none',stroke:acc,'stroke-width':6,opacity:.18,filter:`url(#g${id})`});
-  // 막대 = 모임 판 (물결 안에 얇게)
-  W8.forEach((d,i)=>{if(d.c>0)el(s,'path',{d:topBar(cx(i)-bw/2,y(d.c),bw,y(0)-y(d.c),bw/2),fill:`url(#b${id})`})});
-  el(s,'path',{d:full,fill:'none',stroke:`url(#l${id})`,'stroke-width':2.25,'stroke-linecap':'round'});
-  const p6=pts[6],p7=pts[7],h3=(p7[0]-p6[0])/3;el(s,'path',{d:`M${p6[0]},${p6[1]} C${p6[0]+h3},${p6[1]} ${p7[0]-h3},${p7[1]} ${p7[0]},${p7[1]}`,fill:'none',stroke:acc,'stroke-width':2,'stroke-dasharray':'4 4','stroke-linecap':'round',opacity:.7});
-  // 점 + 활동 멤버 알약
-  W8.forEach((d,i)=>{const [px,py]=pts[i],last=i===7;
-    if(d.g>0){el(s,'circle',{cx:px,cy:py,r:last?5:4,fill:last?pan:acc,stroke:last?acc:pan,'stroke-width':2})}
-    if(d.a>0){const k=d.a/amax,pw=String(d.a).length*7+38,qy=py-32;
-      el(s,'rect',{x:px-pw/2,y:qy,width:pw,height:22,rx:11,fill:pan,stroke:`color-mix(in srgb, ${acc} ${Math.round(18+k*42)}%, ${pan})`});
-      el(s,'circle',{cx:px-pw/2+10,cy:qy+11,r:3.5,fill:acc,opacity:.3+k*.7});
-      el(s,'text',{x:px-pw/2+18,y:qy+15,class:'lbl tn'},d.a+'명')}
-    if(last||col>=52||(7-i)%2===0)el(s,'text',{x:cx(i),y:H-8,'text-anchor':'middle',class:'ax'+(last?' now':'')},d.l);
+  // 막대 = 전체 판 (아래 모임 판 · 위 그 밖의 판, 같은 파랑의 진하기 두 단계)
+  W8.forEach((d,i)=>{const x=cx(i)-bw/2;
+    if(d.c>0)el(s,'path',{d:topBar(x,y(d.c),bw,y(0)-y(d.c),d.g>d.c?0:6),fill:acc});
+    if(d.g>d.c)el(s,'path',{d:topBar(x,y(d.g),bw,y(d.c)-y(d.g)-(d.c?2:0),6),fill:soft})});
+  el(s,'path',{d:smooth(pts.slice(0,7)),fill:'none',stroke:acc,'stroke-width':2,'stroke-linecap':'round',opacity:.85});
+  const p6=pts[6],p7=pts[7],h3=(p7[0]-p6[0])/3;el(s,'path',{d:`M${p6[0]},${p6[1]} C${p6[0]+h3},${p6[1]} ${p7[0]-h3},${p7[1]} ${p7[0]},${p7[1]}`,fill:'none',stroke:acc,'stroke-width':2,'stroke-dasharray':'4 4','stroke-linecap':'round',opacity:.6});
+  // 활동 멤버: 가장 많은 주·가장 적은 주만 늘 보이고, 나머지는 마우스를 올리면
+  const act=W8.map((d,i)=>[d.a,i]).filter(([a])=>a>0),hi=act.reduce((m,x)=>x[0]>m[0]?x:m)[1],lo=act.reduce((m,x)=>x[0]<m[0]?x:m)[1];
+  const pills=W8.map((d,i)=>{const [px,py]=pts[i];if(d.g>0)el(s,'circle',{cx:px,cy:py,r:i===7?4.5:3.5,fill:i===7?pan:acc,stroke:i===7?acc:pan,'stroke-width':2});
+    if(!d.a)return null;const pw=String(d.a).length*7+38,qy=py-32,gp=el(s,'g',{opacity:i===hi||i===lo?1:0,style:'transition:opacity .15s'});
+    el(gp,'rect',{x:px-pw/2,y:qy,width:pw,height:22,rx:11,fill:pan,stroke:css('--line2')});el(gp,'circle',{cx:px-pw/2+10,cy:qy+11,r:3.5,fill:acc});el(gp,'text',{x:px-pw/2+18,y:qy+15,class:'lbl tn'},d.a+'명');
+    if(i===hi||i===lo)el(gp,'text',{x:px,y:qy-6,'text-anchor':'middle',class:'ax',style:'font-size:11px'},i===hi?'최고':'최저');return gp});
+  W8.forEach((d,i)=>{const last=i===7;if(last||col>=52||(7-i)%2===0)el(s,'text',{x:cx(i),y:H-8,'text-anchor':'middle',class:'ax'+(last?' now':'')},d.l);
     const hit=el(s,'rect',{x:L+col*i,y:0,width:col,height:H,class:'hit'});
-    hover(hit,last?'이번 주 (진행 중)':d.l+' 주',[[acc,'전체 판',fmt(d.g)],[acc,'모임 판',fmt(d.c)],[css('--fg2'),'활동 멤버',d.a+'명'],[css('--line2'),'멤버 1명당',d.a?(d.g/d.a).toFixed(1)+'판':'-']],()=>{hl.setAttribute('x',L+col*i+2);hl.setAttribute('opacity',1)},()=>hl.setAttribute('opacity',0))});
+    hover(hit,last?'이번 주 (진행 중)':d.l+' 주',[[acc,'모임 판',fmt(d.c)],[soft,'그 밖의 판',fmt(d.g-d.c)],[css('--fg2'),'활동 멤버',d.a+'명']],()=>{hl.setAttribute('x',L+col*i+2);hl.setAttribute('opacity',1);if(pills[i]&&i!==hi&&i!==lo)pills[i].setAttribute('opacity',1)},()=>{hl.setAttribute('opacity',0);if(pills[i]&&i!==hi&&i!==lo)pills[i].setAttribute('opacity',0)})});
   $('#combo').replaceChildren(s)}
 
 // ───── GitHub 식 날짜 열지도 + 시간대 줄 ─────
