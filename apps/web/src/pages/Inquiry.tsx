@@ -6,5 +6,5 @@ export function InquiryPage() {
   const { me, ready, api, login } = useSession();
   if (!ready) return <section className="section tight"><div className="wrap"><PageSkeleton kind="crew" /></div></section>;
   if (!me) return <section className="section"><div className="wrap"><Empty action={<button type="button" className="btn primary" onClick={login}><Icon name="discord" />디스코드로 로그인</button>}>문의는 Prism 회원이 보낼 수 있어요.</Empty></div></section>;
-  return <section className="section tight"><div className="wrap"><InquiryView api={api} canManage={Boolean(me.perms?.manage)} /></div></section>;
+  return <section className="section tight"><div className="wrap"><InquiryView api={api} /></div></section>;
 }

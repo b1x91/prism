@@ -673,12 +673,12 @@ function combo(){const w=W('#combo'),H=Math.max(280,$('#combo').clientHeight),L=
   const act=W8.map((d,i)=>[d.a,i]).filter(([a])=>a>0),hi=act.reduce((m,x)=>x[0]>m[0]?x:m)[1],lo=act.reduce((m,x)=>x[0]<m[0]?x:m)[1];
   const dots=[];
   const pills=W8.map((d,i)=>{const [px,py]=pts[i];if(d.g>0)dots.push([i,el(lineG,'circle',{cx:px,cy:py,r:i===7?4.5:3.5,fill:i===7?pan:acc,stroke:i===7?acc:pan,'stroke-width':2,class:'vz-dot'})]);
-    if(!d.a)return null;const tag=i===hi?'최고':i===lo?'최저':null,num=d.a+'명',bw2=tag?34:0,pw=bw2+String(d.a).length*8+(tag?36:30),ph=30,qy=py-ph-12-(i===7?14:0),x0=Math.min(Math.max(px-pw/2,L),w-R-pw);
+    if(!d.a)return null;const tag=i===hi?'최고':i===lo?'최저':null,num=d.a+'명',bw2=tag?34:0,pw=(tag?bw2+12:22)+String(d.a).length*9+16+8,ph=30,qy=py-ph-12-(i===7?14:0),x0=Math.min(Math.max(px-pw/2,L),w-R-pw);
     const gp=el(s,'g',{opacity:tag?1:0,class:tag?'vz-fade':'',style:`transition:opacity .3s ease;${tag?'animation-delay:700ms':''}`});
     el(gp,'rect',{x:x0,y:qy,width:pw,height:ph,rx:15,fill:pan,stroke:tag?acc:css('--line2'),'stroke-width':tag?1.5:1,style:'filter:drop-shadow(0 2px 6px rgba(20,24,40,.10))'});
     if(tag){el(gp,'rect',{x:x0+4,y:qy+4,width:bw2,height:ph-8,rx:11,fill:i===hi?acc:css('--fg2')});el(gp,'text',{x:x0+4+bw2/2,y:qy+19,'text-anchor':'middle',style:'font-size:12px;font-weight:700',fill:'#fff'},tag)}
-    else el(gp,'circle',{cx:x0+12,cy:qy+ph/2,r:3.5,fill:acc});
-    el(gp,'text',{x:x0+(tag?bw2+12:20),y:qy+20,style:'font-size:14px;font-weight:800',fill:css('--fg'),class:'tn'},num);return gp});
+    else el(gp,'circle',{cx:x0+13,cy:qy+ph/2,r:3.5,fill:acc});
+    el(gp,'text',{x:x0+(tag?bw2+12:22),y:qy+20,style:'font-size:14px;font-weight:800',fill:css('--fg'),class:'tn'},num);return gp});
   W8.forEach((d,i)=>{const last=i===7;if(last||col>=52||(7-i)%2===0)el(s,'text',{x:cx(i),y:H-8,'text-anchor':'middle',class:'ax'+(last?' now':'')},d.l);
     const hit=el(s,'rect',{x:L+col*i,y:0,width:col,height:H,class:'hit'});
     hover(hit,last?'이번 주 (진행 중)':d.l+' 주',[[last?now:acc,'모임 판',fmt(d.c)],[last?nowSoft:soft,'그 밖의 판',fmt(d.g-d.c)],[css('--fg2'),'활동 멤버',d.a+'명']],()=>{hl.setAttribute('x',L+col*i+2);hl.setAttribute('opacity',1);if(pills[i]&&i!==hi&&i!==lo)pills[i].setAttribute('opacity',1)},()=>{hl.setAttribute('opacity',0);if(pills[i]&&i!==hi&&i!==lo)pills[i].setAttribute('opacity',0)})});

@@ -28,7 +28,7 @@ function TopItem({ to, label }: { to: string; label: string }) {
     <span className="tab-hub">
       <NavLink to={hubHref(hub, allow)} className={() => [on ? 'active' : '', live ? '' : dotOf(me, to) ?? ''].join(' ').trim()} aria-haspopup="true">{label}{live}<Icon name="chevD" className="tab-chev" /></NavLink>
       <span className="hub-drop" role="menu" aria-label={label}>
-        {hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} role="menuitem"><span className="hd-ic"><Icon name={t.icon} /></span><span className="hd-t"><b>{t.to === '/crew' && nl > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={nl} /></> : t.label}{dotOf(me, t.to) && t.to === '/news' && <i className="hd-dot" aria-label="새 소식" />}</b><small>{t.hint}</small></span></NavLink>)}
+        {hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} end={hub.tabs.some((x) => x.to.startsWith(`${t.to}/`))} role="menuitem"><span className="hd-ic"><Icon name={t.icon} /></span><span className="hd-t"><b>{t.to === '/crew' && nl > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={nl} /></> : t.label}{dotOf(me, t.to) && t.to === '/news' && <i className="hd-dot" aria-label="새 소식" />}</b><small>{t.hint}</small></span></NavLink>)}
       </span>
     </span>
   );
@@ -86,7 +86,7 @@ export function Layout() {
       </div></header>
       <MobileMenu open={menu} onClose={() => setMenu(false)} />
       {welcome && me && <WelcomeFlow api={api} nick={me.nick} needFace={!me.skin} onClose={closeWelcome} />}
-      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <>{curHub && (me || curHub.key === 'grow') && <div className="wrap hub-wrap"><HubTabs key={curHub.key} hub={curHub} path={pathname} onGo={(to) => nav(to)} hide={(to) => !allowOf(me)(to)} dots={{ '/news': (me?.newsUnread ?? 0) > 0 }} live={{ '/crew': me?.nowLive ?? 0 }} /></div>}<div key={`${pathname}-${k}`} className="route"><Outlet /></div></>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
+      <main><AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><PullRefresh scroller={scroller} onRefresh={pullRefresh}>{(k) => <>{curHub && (me || curHub.key === 'grow') && <div className="wrap hub-wrap"><HubTabs key={curHub.key} hub={curHub} path={pathname} onGo={(to) => nav(to)} hide={(to) => !allowOf(me)(to)} dots={{ '/news': (me?.newsUnread ?? 0) > 0 }} counts={{ '/staff/todo': me?.staffTodo ?? 0, '/staff/inquiries': me?.staffInq ?? 0 }} alert={{ '/staff/inquiries': true }} live={{ '/crew': me?.nowLive ?? 0 }} /></div>}<div key={`${pathname}-${k}`} className="route"><Outlet /></div></>}</PullRefresh></MatchSource.Provider></AugmentOpen.Provider></main>
       <footer className="foot"><div className="wrap">
         <span className="row" style={{ gap: 8 }}><Gem size={18} />Prism · 칼바람 아수라장 증바람 모임</span>
         <span className="row" style={{ gap: 16 }}>
@@ -185,7 +185,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
           const on = hubOf(pathname) === hub;
           return <div key={to} className={`mmenu-hub ${on ? 'on' : ''}`}>
             <NavLink to={hubHref(hub, allow)} className={() => (on ? 'active' : '')} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{badge}<Icon name="chevR" className="hub-chev" /></NavLink>
-            <div className={`mmenu-sub ${on ? 'open' : ''}`}><div>{hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} tabIndex={open && on ? 0 : -1}>{t.to === '/crew' && (me?.nowLive ?? 0) > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={me!.nowLive!} /></> : t.label}{t.to === '/news' && (me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
+            <div className={`mmenu-sub ${on ? 'open' : ''}`}><div>{hub.tabs.filter((t) => allow(t.to)).map((t) => <NavLink key={t.to} to={t.to} end={hub.tabs.some((x) => x.to.startsWith(`${t.to}/`))} tabIndex={open && on ? 0 : -1}>{t.to === '/crew' && (me?.nowLive ?? 0) > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={me!.nowLive!} /></> : t.label}{t.to === '/news' && (me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
           </div>;
         })}</div>)}</nav>
         <span className="sp" />

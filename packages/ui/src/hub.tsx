@@ -4,21 +4,22 @@
  * 탭이 제목을 대신하므로 그 화면 자체의 제목(`hub-h`)은 숨긴다.
  */
 import { useLayoutEffect, useRef } from 'react';
-import type { Hub } from './navgroups';
+import { tabOf, type Hub } from './navgroups';
 import { LiveDot } from './basics';
 
 /** 탭을 옮겨도 밑줄이 이전 자리에서 미끄러지도록 마지막 위치를 허브마다 기억 */
 const lastInk = new Map<string, [number, number]>();
 
-export function HubTabs({ hub, path, onGo, dots, counts, live, hide }: {
+export function HubTabs({ hub, path, onGo, dots, counts, live, hide, alert }: {
   hub: Hub; path: string; onGo: (to: string) => void;
   /** 새 소식처럼 점을 붙일 탭 */ dots?: Record<string, boolean>;
   /** 받을 보상처럼 숫자를 붙일 탭 */ counts?: Record<string, number>;
   /** NOW 가 돌아가는 탭 → LIVE (v3.144) */ live?: Record<string, number>;
   /** 이 사람에게 보이지 않는 탭 */ hide?: (to: string) => boolean;
+  /** 숫자를 빨간색으로 (답을 기다리는 문의) */ alert?: Record<string, boolean>;
 }) {
   const tabs = hub.tabs.filter((t) => !hide?.(t.to));
-  const cur = tabs.find((t) => path === t.to || path.startsWith(`${t.to}/`));
+  const cur = tabOf(tabs, path);
   const box = useRef<HTMLDivElement>(null);
   const ink = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
@@ -49,7 +50,7 @@ export function HubTabs({ hub, path, onGo, dots, counts, live, hide }: {
           return (
             <button key={t.to} type="button" role="tab" aria-selected={on} title={t.hint} className={on ? 'on' : ''} onClick={() => { if (path !== t.to) onGo(t.to); }}>
               {(live?.[t.to] ?? 0) > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={live![t.to]} /></> : t.label}
-              {(live?.[t.to] ?? 0) > 0 ? null : n > 0 ? <span className="hh-cnt">{n}</span> : dots?.[t.to] ? <i className="hh-dot" aria-label="새 소식" /> : null}
+              {(live?.[t.to] ?? 0) > 0 ? null : n > 0 ? <span className={`hh-cnt ${alert?.[t.to] ? 'red' : ''}`}>{n}</span> : dots?.[t.to] ? <i className="hh-dot" aria-label="새 소식" /> : null}
             </button>
           );
         })}

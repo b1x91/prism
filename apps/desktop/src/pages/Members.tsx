@@ -1,5 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { Empty, Icon, InquiryView, MemberView, MissionsView, NewsView, RankingView, ShopView, StaffMembersView, StaffJoinView, StaffView, goBack, setKept } from '@prism/ui';
+import type { ReactNode } from 'react';
+import { Empty, Icon, InquiryView, MemberView, MissionsView, NewsView, RankingView, ShopView, StaffInquiryView, StaffMembersView, StaffJoinView, StaffTodoView, StaffView, goBack, setKept } from '@prism/ui';
 import { inquiryExtra, refreshSession, type State } from '../controller';
 import { josa } from '@prism/core';
 import { api } from '../bridge';
@@ -59,47 +60,41 @@ export function NewsPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   );
 }
 
-/** 운영 (v3.107) — 운영진만. 사이드바에도 운영진에게만 보인다 */
+/** 운영 (v3.107 → v3.160) — 운영진만. 위 탭(대시보드 · 멤버 · 할 일 · 문의)이 제목을 대신한다 */
+function StaffGate({ s, onLogin, children }: { s: State; onLogin: () => void; children: (open: (id: string) => void) => ReactNode }) {
+  const nav = useNavigate();
+  if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="운영" />;
+  if (!s.me.perms?.manage) return <section className="card pad"><Empty>운영진만 볼 수 있는 화면이에요.</Empty></section>;
+  return <>{children((id) => nav(id === s.me?.id ? '/me' : `/members/${id}`))}</>;
+}
 export function StaffPage({ s, onLogin }: { s: State; onLogin: () => void }) {
-  const nav = useNavigate();
-  if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="운영" />;
-  if (!s.me.perms?.manage) return <section className="card pad"><Empty>운영진만 볼 수 있는 화면이에요.</Empty></section>;
-  return (
-    <div className="stack" style={{ gap: 16 }}>
-      <h1 className="h1">운영</h1>
-      <StaffView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} onMembers={() => nav('/staff/members')} onJoin={() => nav('/staff/join')} onInquiry={() => nav('/inquiry')} onSeen={() => void refreshSession()} />
-    </div>
-  );
+  return <StaffGate s={s} onLogin={onLogin}>{(open) => <StaffView api={api} onOpen={open} onSeen={() => void refreshSession()} />}</StaffGate>;
 }
-
-/** 운영 › 멤버 관리 (v3.110) */
 export function StaffMembersPage({ s, onLogin }: { s: State; onLogin: () => void }) {
-  const nav = useNavigate();
-  if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="운영" />;
-  if (!s.me.perms?.manage) return <section className="card pad"><Empty>운영진만 볼 수 있는 화면이에요.</Empty></section>;
-  return (
-    <div className="stack" style={{ gap: 16 }}>
-      <div><button type="button" className="crumb" onClick={() => goBack(nav, '/staff')}><Icon name="back" />운영</button><h1 className="h1">멤버 관리</h1></div>
-      <StaffMembersView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} onSeen={() => void refreshSession()} />
-    </div>
-  );
+  return <StaffGate s={s} onLogin={onLogin}>{(open) => <StaffMembersView api={api} onOpen={open} onSeen={() => void refreshSession()} />}</StaffGate>;
 }
-
-/** 운영 › 가입 신청 (v3.148) */
+export function StaffTodoPage({ s, onLogin }: { s: State; onLogin: () => void }) {
+  const nav = useNavigate();
+  return <StaffGate s={s} onLogin={onLogin}>{(open) => <StaffTodoView api={api} onOpen={open} onJoin={() => nav('/staff/join')} onSeen={() => void refreshSession()} />}</StaffGate>;
+}
+export function StaffInquiryPage({ s, onLogin }: { s: State; onLogin: () => void }) {
+  return <StaffGate s={s} onLogin={onLogin}>{(open) => <StaffInquiryView api={api} onOpen={open} />}</StaffGate>;
+}
+/** 운영 › 할 일 › 가입 신청 전체 보드 (v3.148) */
 export function StaffJoinPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   const nav = useNavigate();
-  if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="운영" />;
-  if (!s.me.perms?.manage) return <section className="card pad"><Empty>운영진만 볼 수 있는 화면이에요.</Empty></section>;
   return (
-    <div className="stack" style={{ gap: 16 }}>
-      <div><button type="button" className="crumb" onClick={() => goBack(nav, '/staff')}><Icon name="back" />운영</button><h1 className="h1">가입 신청</h1></div>
-      <StaffJoinView api={api} onOpen={(id) => nav(id === s.me?.id ? '/me' : `/members/${id}`)} onSeen={() => void refreshSession()} />
-    </div>
+    <StaffGate s={s} onLogin={onLogin}>{(open) => (
+      <div className="stack" style={{ gap: 16 }}>
+        <div><button type="button" className="crumb" onClick={() => goBack(nav, '/staff/todo')}><Icon name="back" />할 일</button><h2 className="h2">가입 신청 전체 보드</h2></div>
+        <StaffJoinView api={api} onOpen={open} onSeen={() => void refreshSession()} />
+      </div>
+    )}</StaffGate>
   );
 }
 
 /** 문의 (v3.137) — 회원: 문의 쓰기(앱 상태 함께) · 내 문의 / 운영진: 작업 목록 */
 export function InquiryPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   if (!s.me) return <NeedLogin s={s} onLogin={onLogin} what="문의" />;
-  return <InquiryView api={api} extra={() => inquiryExtra(VERSION)} canManage={Boolean(s.me.perms?.manage)} />;
+  return <InquiryView api={api} extra={() => inquiryExtra(VERSION)} />;
 }

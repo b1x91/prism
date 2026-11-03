@@ -29,7 +29,7 @@ import { buyUse, gift, giftTargets, insight, myHighlights, openBox, pinHighlight
 import { claimWeekly, getWeekly } from './weekly.js';
 import { assertRanking } from './roles.js';
 import { diagShots, listDiag, saveDiag } from './diag.js';
-import { inquiryFiles, inquiryWorklist, myInquiries, postInquiry, setInquiryStatus } from './inquiry.js';
+import { inquiryFiles, inquiryWorklist, myInquiries, postInquiry, setInquiryStatus, staffReplyInquiry } from './inquiry.js';
 import { createNews, deleteNews, editNews, ensureAuto, heartNews, listNews, readNews } from './news.js';
 import { apply, joinLanding, joinSweep, myApplication, setRoom, staffApplicationAction, staffApplications } from './join.js';
 import { claimInvite, lookupMembers, searchMembers, myInvite, publicInvite, staffAction, staffMembers } from './staff.js';
@@ -106,6 +106,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'POST' && pathname === '/api/me/inquiry') return postInquiry(req, env, me, ctx);
   if (m === 'GET' && pathname === '/api/staff/inquiries') return inquiryWorklist(env, me);
   { const f = m === 'GET' ? /^\/api\/inquiry\/(\d+)\/files$/.exec(pathname) : null; if (f) return inquiryFiles(env, me, Number(f[1])); }
+  { const r = m === 'POST' ? /^\/api\/staff\/inquiries\/(\d{1,9})\/reply$/.exec(pathname) : null; if (r) return staffReplyInquiry(env, me, Number(r[1]), await req.json<Record<string, unknown>>().catch(() => ({})), ctx); }
   if (m === 'POST' && pathname === '/api/staff/inquiries/status') return setInquiryStatus(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
   { const d = /^\/api\/admin\/diag\/(\d+)\/shots$/.exec(pathname); if (m === 'GET' && d) return diagShots(env, me, Number(d[1])); }

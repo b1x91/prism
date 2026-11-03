@@ -15,7 +15,7 @@ import { AuthDone } from './pages/AuthDone';
 import { DexPage } from './pages/Dex';
 import { DiagPage } from './pages/Diag';
 import { Privacy } from './pages/Privacy';
-import { StaffJoinPage, StaffMembersPage, StaffPage } from './pages/Staff';
+import { StaffInquiryPage, StaffJoinPage, StaffMembersPage, StaffPage, StaffTodoPage } from './pages/Staff';
 import { ApplyPage, InvitePage } from './pages/Join';
 import { NewsPage } from './pages/News';
 import { InquiryPage } from './pages/Inquiry';
@@ -60,6 +60,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="staff" element={<StaffPage />} />
             <Route path="staff/members" element={<StaffMembersPage />} />
             <Route path="staff/join" element={<StaffJoinPage />} />
+            <Route path="staff/todo" element={<StaffTodoPage />} />
+            <Route path="staff/inquiries" element={<StaffInquiryPage />} />
             <Route path="i/:code" element={<InvitePage />} />
             <Route path="apply" element={<ApplyPage />} />
             <Route path="*" element={<Home />} />

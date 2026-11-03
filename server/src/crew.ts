@@ -22,7 +22,7 @@ import type { DuoGame } from '../../packages/core/src/profile.js';
 import { stakesOf } from '../../packages/core/src/weekly.js';
 import { shortNick } from '../../packages/core/src/text.js';
 import { weeklyOf } from './weekly.js';
-import { staffUnread as staffUnread_ } from './staff.js';
+import { staffBadge } from './staff.js';
 import { checkTagBonus } from './tagbonus.js';
 
 /** 스킨 등급 (없는 스킨이면 null) */
@@ -39,12 +39,12 @@ type NW = { n: number; w: number };
 export async function getMe(env: Env, me: Member) {
   const row = await env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w FROM participants WHERE member_id = ?').bind(me.id).first<NW>();
   const gate = await rankingGate(env, me);
-  const [newsUnread, staffUnread] = await Promise.all([unreadNews(env, me), staffUnread_(env, me)]);
+  const [newsUnread, staffB] = await Promise.all([unreadNews(env, me), staffBadge(env, me)]);
   return json({
     newsUnread,
     nowLive: await nowLiveCount(env),
     nowAuto: Boolean((me as Member & { now_auto?: number }).now_auto ?? 1),
-    ...(staffUnread !== undefined ? { staffUnread } : {}),
+    ...staffB,
     id: me.id,
     nick: me.nick,
     tier: me.tier,
@@ -90,7 +90,7 @@ export async function setPresence(env: Env, me: Member, body: { via?: unknown; l
     me.web_seen_at = now;
   }
   // 안 읽은 소식 수도 함께 — 앱·웹이 1분마다 알릴 때 메뉴의 빨간 점을 맞춘다
-  return json({ presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }, now), newsUnread: await unreadNews(env, me), nowLive: await nowLiveCount(env), ...(await staffUnread_(env, me).then((n) => (n !== undefined ? { staffUnread: n } : {}))), ...(attend ? { attend } : {}) });
+  return json({ presence: presenceOf({ webAt: me.web_seen_at, appAt: me.app_seen_at, lol: Boolean(me.app_lol), open: Boolean(me.app_open) }, now), newsUnread: await unreadNews(env, me), nowLive: await nowLiveCount(env), ...(await staffBadge(env, me)), ...(attend ? { attend } : {}) });
 }
 
 /** 내 판 목록 (최근 100판). 웹·앱의 "내 기록" 화면용. 본인 것만 */

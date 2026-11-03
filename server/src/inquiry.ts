@@ -205,24 +205,43 @@ export async function onInquirySubmit(env: Env, it: Interaction, me: Member, ctx
     const id = Number(arg), answer = fieldOf(it, 'reply').trim();
     const got = id ? await load(env, id) : null;
     if (!got || !answer) return reply({ content: '문의를 찾지 못했어요.' });
-    const now = Date.now();
-    await env.DB.prepare("UPDATE inquiries SET status = 'replied', reply = ?, replied_at = ? WHERE id = ?").bind(answer, now, id).run();
-    Object.assign(got.q, { status: 'replied', reply: answer, replied_at: now });
-    // 회원에게 DM — 3초 안에 답해야 하므로 응답 뒤에 보낸다. DM을 막아 두었으면 운영자 카드에 그렇게 적는다 (앱·웹 문의 창에는 남는다)
-    const q = got.q, who = got.who;
-    const job = sendDM(env, q.member_id, { flags: V2, allowed_mentions: { parse: [] }, components: card([
-      text(`### Prism 문의 답장\n-# 문의 #${id} · ${INQUIRY_KIND_KO[q.kind]} · ${kst(q.at)}`),
-      text(quote(cut(q.body, 300))),
-      line(),
-      text(answer),
-      text('-# 앱 설정 · 웹 아래쪽 \'문의하기\'에서도 다시 볼 수 있어요.'),
-    ], ACCENT[q.kind]) }).then(async (sent) => {
-      if (!sent && q.admin_dm) await editMessage(env, q.admin_dm, { components: adminCard(env, q, who, '회원이 DM을 막아 두어 앱·웹 문의 창에만 남았어요') });
-    }).catch((e) => console.error('문의 답장 DM 실패', e));
-    if (ctx) ctx.waitUntil(job); else await job;
-    return json({ type: 7, data: { components: adminCard(env, q, who, '회원에게 DM으로 보냈어요 · 앱·웹 문의 창에도 남아요') } });
+    const note = await answerInquiry(env, got, answer, false, ctx);
+    return json({ type: 7, data: { components: adminCard(env, got.q, got.who, note) } });
   }
   return json({ type: 4, data: { flags: EPHEMERAL, content: '모르는 요청이에요.' } });
+}
+
+
+/**
+ * 답장을 남기고 회원에게 DM (디스코드 입력 창 · 운영 화면 공용). resolve 면 답장과 함께 해결로.
+ * DM 은 응답 뒤에 보낸다 — 회원이 DM 을 막아 두었으면 운영자 카드에 그렇게 적는다 (앱·웹 문의 창에는 남는다).
+ */
+async function answerInquiry(env: Env, got: { q: Row; who: Who | null }, answer: string, resolve: boolean, ctx?: ExecutionContext): Promise<string> {
+  const now = Date.now(), q = got.q, who = got.who, id = q.id, status = resolve ? 'done' : 'replied';
+  await env.DB.prepare('UPDATE inquiries SET status = ?, reply = ?, replied_at = ? WHERE id = ?').bind(status, answer, now, id).run();
+  Object.assign(q, { status, reply: answer, replied_at: now });
+  const job = sendDM(env, q.member_id, { flags: V2, allowed_mentions: { parse: [] }, components: card([
+    text(`### Prism 문의 답장\n-# 문의 #${id} · ${INQUIRY_KIND_KO[q.kind]} · ${kst(q.at)}`),
+    text(quote(cut(q.body, 300))),
+    line(),
+    text(answer),
+    text('-# 앱 설정 · 웹 내 프로필 메뉴의 \'문의하기\'에서도 다시 볼 수 있어요.'),
+  ], ACCENT[q.kind]) }).then(async (sent) => {
+    if (q.admin_dm) await editMessage(env, q.admin_dm, { components: adminCard(env, q, who, sent ? '회원에게 DM으로 보냈어요 · 앱·웹 문의 창에도 남아요' : '회원이 DM을 막아 두어 앱·웹 문의 창에만 남았어요') });
+  }).catch((e) => console.error('문의 답장 DM 실패', e));
+  if (ctx) ctx.waitUntil(job); else await job;
+  return '회원에게 DM으로 보냈어요 · 앱·웹 문의 창에도 남아요';
+}
+
+/** POST /api/staff/inquiries/:id/reply { text, resolve } — 운영 › 문의에서 바로 답장 (v3.160) */
+export async function staffReplyInquiry(env: Env, me: Member, id: number, b: { text?: unknown; resolve?: unknown }, ctx?: ExecutionContext): Promise<Response> {
+  if (!can(me, 'manage')) throw new HttpError(403, '운영진만 쓸 수 있어요.');
+  const answer = typeof b.text === 'string' ? b.text.trim().slice(0, 1500) : '';
+  if (!answer) throw new HttpError(400, '답장을 써 주세요.');
+  const got = await load(env, id);
+  if (!got) throw new HttpError(404, '문의를 찾지 못했어요.');
+  await answerInquiry(env, got, answer, b.resolve === true, ctx);
+  return json({ ok: true });
 }
 
 // ───────── 문의 작업 목록 (v3.137, 운영진) ─────────

@@ -1,47 +1,47 @@
 /**
- * 운영 대시보드 B안 '주간 리포트' (CLAUDE.md v3.159). 숫자를 읽는 운영진을 위한 밝은 보고서.
- *  - 처리할 일 한 줄 (승인 대기 · 정회원 심사 · 가입 신청 · 문의)
- *  - 기간(이번 주 · 4주 · 8주) 숫자 넷 + 8주 흐름선. 이번 주는 지난주 '같은 때까지'와 비교한다 (이틀째인 이번 주를 지난주 전체와 견주지 않게)
- *  - 주별 판(모임 판·그 밖) 막대 + 활동 멤버 선, 이번 주는 지금 속도로 본 예상을 점선으로
- *  - 언제 모이나요 (최근 4주, 요일 × 시간대) · 새 멤버 정착 (가입 → 정회원)
- * 그래프는 SVG 를 실제 폭으로 그린다(늘이지 않음) — 글자·선 굵기가 폭에 따라 뭉개지지 않게.
+ * 운영 › 대시보드 (CLAUDE.md v3.160, 시안 B2 '밝은 무대'). 앱·웹 공용.
+ *  - 위 고리 넷: 활동률 · 모임 판 비율 · 온보딩 · 앱 쓰는 멤버
+ *  - 주별 판과 활동 멤버: 막대(전체 판 = 모임 판 + 그 밖의 판)를 물결 모양으로 자르고, 이번 주는 같은 크기에 청록.
+ *    마우스를 올리면 활동 멤버 선이 물결 윗변을 따라 그려지고(같은 곡선), 떼면 천천히 사라진다. 최고·최저 칩만 늘 보인다
+ *  - 언제 모이나요: 최근 9주 날짜 열지도(GitHub 식, 오늘 = 안쪽 고리) + 시간대 띠 + 숫자 셋
+ *  - 잘하고 있는 멤버: 다섯 기준(활동량 · 참여도 · 꾸준함 · 어울림 · 성적)이 쌓인 막대, 근거 숫자
+ *  - 온보딩 현황: 단계 카드에 물이 비율만큼 차오른다(양에 따라 색), 카드끼리 줄 높이를 함께 써 설명이 같은 곳에서 시작
+ * 그래프는 SVG 를 실제 크기로 그린다(늘이지 않음). 처음 열 때 한 번 막대가 자라고 칸이 떠오른다. 동작 줄이기 존중.
  */
 import { useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { josa, pct, shortNick, type StaffMembers, type StaffOverview, type StaffSpan } from '@prism/core';
-import { Empty, MemberFace, Seg, useSkins } from './basics';
-import { Icon, type IconName } from './icons';
-import { useKept } from './kept';
+import { ONBOARD_STEPS, PICK_INFO, PICK_POINTS, onboardNote, onboardTips, shortNick, type PickKey, type StaffOverview } from '@prism/core';
+import { Empty, MemberFace, useSkins } from './basics';
+import { motionOff } from './motion';
 
-type Period = 'week' | 'w4' | 'w8';
-const PERIOD_LABEL: Record<Period, string> = { week: '이번 주', w4: '4주', w8: '8주' };
-const PREV_LABEL: Record<Period, string> = { week: '지난주 같은 때', w4: '앞 4주', w8: '앞 8주' };
-const WEEK = 7 * 86_400_000;
 const md = (t: number) => { const d = new Date(t + 9 * 3_600_000); return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`; };
+const fmt = (n: number) => n.toLocaleString('ko-KR');
 
-/** 그릇의 실제 폭 (SVG 를 늘이지 않고 그 폭으로 그린다) */
-function useWidth<T extends HTMLElement>(): [RefObject<T | null>, number] {
+/** 그릇의 실제 크기 (SVG 를 늘이지 않고 그 크기로 그린다) */
+function useSize<T extends HTMLElement>(): [RefObject<T | null>, number, number] {
   const ref = useRef<T>(null);
-  const [w, setW] = useState(0);
+  const [s, setS] = useState<[number, number]>([0, 0]);
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const ro = new ResizeObserver(([e]) => setW(Math.round(e.contentRect.width)));
+    const set = (w: number, h: number) => setS((p) => (p[0] === w && p[1] === h ? p : [w, h]));
+    const ro = new ResizeObserver(([e]) => set(Math.round(e.contentRect.width), Math.round(e.contentRect.height)));
     ro.observe(el);
-    setW(Math.round(el.getBoundingClientRect().width));
+    const r = el.getBoundingClientRect();
+    set(Math.round(r.width), Math.round(r.height));
     return () => ro.disconnect();
   }, []);
-  return [ref, w];
+  return [ref, s[0], s[1]];
 }
 
-/** 눈금이 깔끔하게 떨어지는 최댓값 (1·2·2.5·5 × 10^k 의 4칸) */
-function niceTop(v: number, ticks = 4) {
+/** 눈금이 깔끔하게 떨어지는 최댓값 */
+function niceTop(v: number, ticks = 3) {
   const raw = Math.max(v, ticks) / ticks;
   const p = 10 ** Math.floor(Math.log10(raw));
   const step = [1, 2, 2.5, 5, 10].map((m) => m * p).find((s) => s >= raw) ?? raw;
   return { top: step * ticks, step };
 }
 
-/** 점들을 지나는 부드러운 선 (모노톤 — 값 사이에서 넘치지 않는다) */
+/** 점들을 지나는 부드러운 선 (모노톤 — 값 사이에서 넘치지 않는다). 구간마다 ' C…' 하나 */
 function smooth(pts: [number, number][]) {
   if (pts.length < 2) return '';
   const n = pts.length, d: number[] = [], m: number[] = [];
@@ -56,168 +56,130 @@ function smooth(pts: [number, number][]) {
   return s;
 }
 
-// ───────── 처리할 일 ─────────
+/** **굵게** 표시만 읽는다 */
+const bold = (t: string) => t.split(/\*\*(.+?)\*\*/g).map((x, i) => (i % 2 ? <b key={i}>{x}</b> : x));
 
-export function TodoStrip({ data, onMembers, onJoin, onInquiry }: { data: StaffMembers; onMembers?: () => void; onJoin?: () => void; onInquiry?: () => void }) {
-  const pending = data.members.filter((m) => m.pending).length, review = data.members.filter((m) => m.review).length;
-  const apps = data.applications ? data.applications.new + data.applications.confirmed : 0;
-  const items: { n: number; label: string; go?: () => void }[] = [
-    { n: pending, label: '승인 대기', go: onMembers },
-    { n: review, label: '정회원 심사', go: onMembers },
-    ...(data.applications ? [{ n: apps, label: '가입 신청', go: onJoin }] : []),
-    ...(data.inquiries != null ? [{ n: data.inquiries, label: '문의', go: onInquiry }] : []),
-  ];
-  const total = items.reduce((a, x) => a + x.n, 0);
+// ───────── 고리 넷 ─────────
+
+function Ring({ label, v, sub, note }: { label: string; v: number | null; sub: string; note?: ReactNode }) {
+  const r = 26, C = 2 * Math.PI * r, p = v == null ? 0 : Math.max(0, Math.min(1, v));
   return (
-    <nav className={`sd-todo ${total ? 'hot' : ''}`} aria-label="처리할 일">
-      <b className="sd-todo-t">{total ? <><Icon name="bell" />처리할 일 {total}</> : <><Icon name="check" />처리할 일이 없어요</>}</b>
-      <span className="sd-todo-l">
-        {items.map((x) => (
-          <button key={x.label} type="button" className={`sd-ti ${x.n ? 'on' : ''}`} disabled={!x.go} onClick={x.go}>
-            <span className="sd-tn">{x.n}</span>{x.label}
-          </button>
-        ))}
-      </span>
-      <span className="sd-todo-a">
-        {onJoin && <button type="button" className="btn sm" onClick={onJoin}><Icon name="gift" />가입 신청</button>}
-        {onMembers && <button type="button" className={`btn sm ${pending + review ? 'primary' : ''}`} onClick={onMembers}><Icon name="users" />멤버 관리</button>}
-      </span>
-    </nav>
-  );
-}
-
-// ───────── 숫자 넷 ─────────
-
-function Spark({ vals, color }: { vals: number[]; color: string }) {
-  const id = useId().replace(/:/g, '');
-  const [ref, w] = useWidth<HTMLDivElement>();
-  const h = 40, pad = 4;
-  const max = Math.max(1, ...vals), min = Math.min(...vals, 0);
-  const pts: [number, number][] = vals.map((v, i) => [pad + (i * (w - pad * 2)) / Math.max(1, vals.length - 1), h - 4 - ((v - min) / (max - min || 1)) * (h - 12)]);
-  const line = w ? smooth(pts) : '';
-  const end = pts[pts.length - 1];
-  return (
-    <div className="sd-spark" ref={ref} aria-hidden="true">
-      {w > 0 && <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`}>
-        <defs><linearGradient id={`g${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={color} stopOpacity=".22" /><stop offset="1" stopColor={color} stopOpacity="0" /></linearGradient></defs>
-        <path d={`${line} L${end[0]},${h} L${pts[0][0]},${h} Z`} fill={`url(#g${id})`} />
-        <path d={line} fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" />
-        <circle cx={end[0]} cy={end[1]} r="6" fill={color} opacity=".16" />
-        <circle cx={end[0]} cy={end[1]} r="3" fill={color} stroke="var(--surface)" strokeWidth="1.5" />
-      </svg>}
+    <div className="sv-ring">
+      <svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true">
+        <circle cx="32" cy="32" r={r} fill="none" stroke="var(--sv-track)" strokeWidth="7" />
+        <circle className="sv-ring-arc" cx="32" cy="32" r={r} fill="none" stroke="var(--accent)" strokeWidth="7" strokeLinecap="round" strokeDasharray={`${C * p} ${C}`} transform="rotate(-90 32 32)" />
+      </svg>
+      <div><span className="l">{label}</span><b className="n">{v == null ? '–' : `${Math.round(p * 100)}%`}</b><span className="d">{sub}{note}</span></div>
     </div>
   );
 }
 
-function Change({ now, prev, label }: { now: number; prev: number; label: string }) {
-  const d = now - prev;
-  if (!d) return <span className="sd-chg">{josa(label, '과/와')} 같아요</span>;
-  const rate = prev ? Math.round((d / prev) * 100) : null;
+function Rings({ o }: { o: StaffOverview }) {
+  const r = o.rings;
+  if (!r) return null;
+  const d = r.active - r.activePrev;
   return (
-    <span className="sd-chg">
-      <em className={d > 0 ? 'up' : 'down'}><Icon name={d > 0 ? 'arrowUp' : 'arrowDown'} />{Math.abs(d)}{rate != null && Math.abs(rate) < 1000 ? <small>{Math.abs(rate)}%</small> : null}</em>
-      <span>{label} {prev}</span>
-    </span>
-  );
-}
-
-function Kpis({ o, period }: { o: StaffOverview; period: Period }) {
-  const p = o.periods?.[period];
-  const span: StaffSpan = p?.now ?? { active: o.kpi.active, games: o.weeks[o.weeks.length - 1].games, crew: o.kpi.crew, joined: o.kpi.joinedWeek };
-  const prev: StaffSpan | null = p?.prev ?? null;
-  const tiles: { key: keyof StaffSpan | 'members'; icon: IconName; label: string; value: number; sub: ReactNode; vals: number[]; color: string }[] = [
-    { key: 'active', icon: 'spark', label: '활동 멤버', value: span.active, sub: prev ? <Change now={span.active} prev={prev.active} label={PREV_LABEL[period]} /> : null, vals: o.weeks.map((w) => w.active), color: 'var(--accent)' },
-    { key: 'crew', icon: 'swords', label: '모임 판', value: span.crew, sub: prev ? <Change now={span.crew} prev={prev.crew} label={PREV_LABEL[period]} /> : null, vals: o.weeks.map((w) => w.crew), color: 'var(--accent)' },
-    { key: 'games', icon: 'game', label: '전체 판', value: span.games, sub: prev ? <Change now={span.games} prev={prev.games} label={PREV_LABEL[period]} /> : null, vals: o.weeks.map((w) => w.games), color: 'var(--accent)' },
-    { key: 'members', icon: 'users', label: '멤버', value: o.kpi.members, sub: <span className="sd-chg">{span.joined ? <><em className="up"><Icon name="plus" />{span.joined}</em><span>{PERIOD_LABEL[period]} 가입</span></> : <span>{PERIOD_LABEL[period]} 새 가입 없음</span>}</span>, vals: o.memberWeeks ?? o.weeks.map(() => o.kpi.members), color: 'var(--accent)' },
-  ];
-  return (
-    <section className="sd-kpis" aria-label={`${PERIOD_LABEL[period]} 숫자`}>
-      {tiles.map((t) => (
-        <div key={t.key} className="sd-kpi">
-          <span className="sd-kl"><Icon name={t.icon} />{t.label}</span>
-          <b className="sd-kv">{t.value.toLocaleString()}</b>
-          {t.sub}
-          <Spark vals={t.vals} color={t.color} />
-        </div>
-      ))}
+    <section className="card sv-card sv-rings" aria-label="이번 주 고리">
+      <Ring label="활동률" v={r.base ? r.active / r.base : null} sub={`${r.active} / ${r.base}명`} note={d ? <> · <em className={d > 0 ? 'up' : 'down'}>{d > 0 ? '+' : ''}{d}</em> 지난주 같은 때보다</> : null} />
+      <Ring label="모임 판 비율" v={r.games ? r.crew / r.games : null} sub={`${r.crew} / ${r.games}판`} note={r.crewPrevRate != null ? ` · 지난주 같은 때 ${r.crewPrevRate}%` : null} />
+      <Ring label="온보딩" v={r.joined ? r.settled / r.joined : null} sub={`${r.settled} / ${r.joined}명 · 최근 4주 가입`} />
+      <Ring label="앱 쓰는 멤버" v={r.total ? r.app / r.total : null} sub={`${r.app} / ${r.total}명 · 롤 연결 ${r.linked}`} />
     </section>
   );
 }
 
-// ───────── 주별 판 + 활동 멤버 ─────────
+// ───────── 주별 판과 활동 멤버 ─────────
 
-function WeekCombo({ o }: { o: StaffOverview }) {
+function WaveCombo({ o }: { o: StaffOverview }) {
   const weeks = o.weeks;
-  const [ref, W] = useWidth<HTMLDivElement>();
+  const id = useId().replace(/:/g, '');
+  const [ref, W, Hbox] = useSize<HTMLDivElement>();
   const [hover, setHover] = useState<number | null>(null);
-  const narrow = W > 0 && W < 520;
-  const H = narrow ? 220 : 260, top = 16, bottom = 28, left = narrow ? 28 : 36, right = narrow ? 28 : 36;
-  const into = o.weekInto ?? 0;
-  const last = weeks[weeks.length - 1];
-  // 이번 주가 이틀 넘게 지났으면 지금 속도로 본 예상 (판 수만, 7일 기준). 주 초반의 튀는 예상은 그리지 않는다 — 지난 주들 최고의 1.6배까지만
-  const pastMax = Math.max(1, ...weeks.slice(0, -1).map((w) => w.games));
-  const rawProj = into > 2 * 86_400_000 && last.games > 0 ? Math.round(last.games / (into / WEEK)) : null;
-  const proj = rawProj != null && rawProj <= pastMax * 1.6 ? rawProj : null;
-  const gMax = niceTop(Math.max(...weeks.map((w) => w.games), proj ?? 0));
-  const aMax = niceTop(Math.max(...weeks.map((w) => w.active)));
-  const iw = Math.max(0, W - left - right), ih = H - top - bottom;
-  const col = iw / weeks.length, bw = Math.min(40, col * 0.5);
-  const y = (v: number) => top + ih - (v / gMax.top) * ih;
-  const ya = (v: number) => top + ih - (v / aMax.top) * ih;
-  const cx = (i: number) => left + col * i + col / 2;
-  const linePts: [number, number][] = weeks.map((w, i) => [cx(i), ya(w.active)]);
+  // 선: off(숨김) → on(그려짐) → leave(서서히 사라짐) → off
+  const [phase, setPhase] = useState<'off' | 'on' | 'leave'>('off');
+  const leaveT = useRef(0);
+  const lineRef = useRef<SVGPathElement>(null);
+  const [len, setLen] = useState(0);
+  const H = Math.max(280, Hbox), L = 40, R = 16, T = 64, B = 28;
+  const n = weeks.length, last = n - 1;
+  const g = niceTop(Math.max(1, ...weeks.map((w) => w.games)), 3);
+  const iw = Math.max(0, W - L - R), ih = H - T - B, col = iw / n, bw = Math.min(20, col * 0.32);
+  const y = (v: number) => T + ih - (v / g.top) * ih;
+  const cx = (i: number) => L + col * i + col / 2;
+  const pts: [number, number][] = weeks.map((w, i) => [cx(i), y(w.games)]);
+  // 물결 면은 양 끝 막대 바깥까지 반 칸씩 평평하게 이어 같은 곡선으로 — 가운데에서 끝내면 끝 막대의 절반이 잘린다
+  const ext = col / 2;
+  const wave = W ? smooth([[pts[0][0] - ext, pts[0][1]], ...pts, [pts[last][0] + ext, pts[last][1]]]) : '';
+  const area = W ? `${wave} L${pts[last][0] + ext},${y(0)} L${pts[0][0] - ext},${y(0)} Z` : '';
+  // 선은 물결 윗변과 같은 곡선에서 잘라 쓴다 (구간 0 = 왼쪽 연장, 1…n-1 = 주 사이, n = 오른쪽 연장)
+  const seg = wave.split(' C').slice(1);
+  const mainD = W ? `M${pts[0][0]},${pts[0][1]}${seg.slice(1, last).map((c) => ` C${c}`).join('')}` : '';
+  const dashD = W && n > 1 ? `M${pts[last - 1][0]},${pts[last - 1][1]} C${seg[last]}` : '';
+  useLayoutEffect(() => { if (lineRef.current) setLen(lineRef.current.getTotalLength()); }, [mainD]);
+  const act = weeks.map((w, i) => [w.active, i]).filter(([a]) => a > 0);
+  const hi = act.length ? act.reduce((m, x) => (x[0] > m[0] ? x : m))[1] : -1;
+  const lo = act.length > 1 ? act.reduce((m, x) => (x[0] < m[0] ? x : m))[1] : -1;
   const total = weeks.reduce((a, w) => a + w.games, 0);
-  /** 위 모서리만 둥근 막대 */
-  const bar = (x: number, y0: number, y1: number, r: number) => {
-    const h = y1 - y0;
-    if (h <= 0) return '';
-    const rr = Math.min(r, h, bw / 2);
-    return `M${x},${y1} V${y0 + rr} Q${x},${y0} ${x + rr},${y0} H${x + bw - rr} Q${x + bw},${y0} ${x + bw},${y0 + rr} V${y1} Z`;
-  };
+  const lastW = weeks[last];
+  const enter = () => { clearTimeout(leaveT.current); setPhase('on'); };
+  const leave = () => { setHover(null); setPhase('leave'); leaveT.current = window.setTimeout(() => setPhase('off'), 650); };
+  const reduce = motionOff();
+  const lineStyle = (p: typeof phase) => ({ strokeDasharray: len || undefined, strokeDashoffset: p === 'off' && !reduce ? len : 0, transition: p === 'on' && !reduce ? 'stroke-dashoffset .9s cubic-bezier(.65,0,.35,1)' : 'none' });
   const h = hover != null ? weeks[hover] : null;
   return (
-    <section className="card pad sd-card sd-combo">
-      <div className="sd-head"><h2>주별 판과 활동 멤버</h2><span className="meta">최근 8주 · {total.toLocaleString()}판</span></div>
-      <div className="sd-legend">
-        <span><i className="sw crew" />모임 판</span><span><i className="sw solo" />그 밖의 판</span><span><i className="sw line" />활동 멤버</span>
-        {proj != null && proj > last.games && <span><i className="sw proj" />이번 주 예상</span>}
-      </div>
-      <div className="sd-plot" ref={ref} onMouseLeave={() => setHover(null)}>
-        {W > 0 && <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`최근 8주 ${weeks.map((w, i) => `${i === weeks.length - 1 ? '이번 주' : md(w.start)} ${w.games}판 활동 ${w.active}명`).join(', ')}`}>
+    <section className="card sv-card sv-grow">
+      <div className="sv-head"><h2>주별 판과 활동 멤버</h2><span className="meta">최근 {n}주 · {fmt(total)}판</span></div>
+      {lastW && <p className="sv-lede"><b>이번 주 {fmt(lastW.games)}판 · 활동 멤버 {lastW.active}명</b>{lastW.games ? ` (모임 판 ${Math.round((lastW.crew / lastW.games) * 100)}%)` : ''}, 이번 주는 진행 중이라 청록이에요.</p>}
+      <div className="sv-legend"><span><i className="k" style={{ background: 'var(--accent)' }} />모임 판</span><span><i className="k" style={{ background: 'var(--sv-soft)' }} />그 밖의 판</span><span><i className="k" style={{ background: 'var(--sv-now)' }} />이번 주 (진행 중)</span><span><i className="k ring" />활동 멤버 (최고·최저, 나머지는 마우스를 올리면)</span></div>
+      <div className={`sv-plot fill ${phase}`} ref={ref} onPointerEnter={enter} onPointerLeave={leave}>
+        {W > 0 && <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`최근 ${n}주 ${weeks.map((w, i) => `${i === last ? '이번 주' : md(w.start)} ${w.games}판 활동 ${w.active}명`).join(', ')}`}>
           <defs>
-            <pattern id="sdHatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="var(--sd-solo)" opacity=".35" /><line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" strokeWidth="1.4" opacity=".55" /></pattern>
+            <linearGradient id={`a${id}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="var(--accent)" stopOpacity=".2" /><stop offset=".7" stopColor="var(--accent)" stopOpacity=".04" /><stop offset="1" stopColor="var(--accent)" stopOpacity="0" /></linearGradient>
+            <clipPath id={`k${id}`}><path d={area} /></clipPath>
           </defs>
-          {Array.from({ length: 5 }, (_, i) => {
-            const v = gMax.step * i, yy = y(v);
-            return <g key={i}>
-              <line x1={left} x2={W - right} y1={yy} y2={yy} stroke="var(--line)" strokeDasharray={i ? '2 4' : undefined} />
-              <text x={left - 8} y={yy + 4} textAnchor="end" className="sd-ax">{v}</text>
-              <text x={W - right + 8} y={yy + 4} textAnchor="start" className="sd-ax a">{Math.round(aMax.step * i)}</text>
-            </g>;
+          {Array.from({ length: Math.round(g.top / g.step) + 1 }, (_, i) => {
+            const v = g.step * i;
+            return <g key={i}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke={i ? 'var(--sv-grid)' : 'var(--line-2)'} /><text x={L - 8} y={y(v) + 4} textAnchor="end" className="sv-ax">{fmt(v)}</text></g>;
           })}
-          {hover != null && <rect x={left + col * hover + 2} y={top - 6} width={col - 4} height={ih + 6} rx="8" fill="var(--surface-2)" />}
+          <rect className="sv-band" x={hover != null ? L + col * hover + 2 : 0} y={T - 36} width={Math.max(0, col - 4)} height={ih + 36} rx="12" opacity={hover != null ? 1 : 0} />
+          <path className="sv-fade" d={area} fill={`url(#a${id})`} />
+          <g clipPath={`url(#k${id})`}>
+            {weeks.map((w, i) => {
+              const x = cx(i) - bw / 2, isLast = i === last, top = y(w.games) - 24;
+              return <g key={w.start} className="sv-grow-y" style={{ animationDelay: `${120 + i * 55}ms` }}>
+                {w.crew > 0 && <rect x={x} y={y(w.crew)} width={bw} height={y(0) - y(w.crew)} fill={isLast ? 'var(--sv-now)' : 'var(--accent)'} />}
+                {w.games > w.crew && <rect x={x} y={top} width={bw} height={Math.max(0, y(w.crew) - top - (w.crew ? 2 : 0))} fill={isLast ? 'var(--sv-now-soft)' : 'var(--sv-soft)'} />}
+              </g>;
+            })}
+          </g>
+          {lastW && <text x={cx(last)} y={y(lastW.games) - 18} textAnchor="middle" className="sv-ax b">진행 중</text>}
+          <g className="sv-line">
+            <path ref={lineRef} d={mainD} fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" opacity=".9" style={lineStyle(phase === 'leave' ? 'on' : phase)} />
+            <path d={dashD} fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" className="sv-dash" />
+            {pts.map(([px, py], i) => weeks[i].games > 0 && <circle key={i} className="sv-dot" style={{ transitionDelay: phase === 'on' && !reduce ? `${i * 90}ms` : '0ms' }} cx={px} cy={py} r={i === last ? 4.5 : 3.5} fill={i === last ? 'var(--surface)' : 'var(--accent)'} stroke={i === last ? 'var(--accent)' : 'var(--surface)'} strokeWidth="2" />)}
+          </g>
           {weeks.map((w, i) => {
-            const x = cx(i) - bw / 2, isLast = i === weeks.length - 1;
-            return <g key={w.start}>
-              {isLast && proj != null && proj > w.games && <path d={bar(x, y(proj), y(w.games), 6)} fill="url(#sdHatch)" stroke="var(--accent)" strokeOpacity=".55" strokeDasharray="3 3" />}
-              <path d={bar(x, y(w.games), y(w.crew), w.crew > 0 ? 6 : 6)} fill="var(--sd-solo)" />
-              <path d={bar(x, y(w.crew), y(0), w.games > w.crew ? 0 : 6)} fill="var(--accent)" />
-              {(isLast || col >= 52 || (weeks.length - 1 - i) % 2 === 0) && <text x={cx(i)} y={H - 8} textAnchor="middle" className={`sd-ax x ${isLast ? 'now' : ''}`}>{isLast ? '이번 주' : md(w.start)}</text>}
+            if (!w.active) return null;
+            const tag = i === hi ? '최고' : i === lo ? '최저' : null;
+            // 칩 폭 = 왼쪽(꼬리표 또는 점) + 숫자·'명' 글자 폭 + 오른쪽 여백 (숫자 한 자 9px, '명' 16px — 14px 굵은 글자)
+            const [px, py] = pts[i], bw2 = tag ? 34 : 0, numW = String(w.active).length * 9 + 16, pw = (tag ? bw2 + 12 : 22) + numW + 8, ph = 30;
+            const qy = py - ph - 12 - (i === last ? 14 : 0), x0 = Math.min(Math.max(px - pw / 2, L), W - R - pw);
+            return <g key={w.start} className={`sv-pill ${tag ? 'sv-fade fixed' : ''}`} opacity={tag || hover === i ? 1 : 0}>
+              <rect x={x0} y={qy} width={pw} height={ph} rx="15" fill="var(--surface)" stroke={tag ? 'var(--accent)' : 'var(--line-2)'} strokeWidth={tag ? 1.5 : 1} />
+              {tag ? <><rect x={x0 + 4} y={qy + 4} width={bw2} height={ph - 8} rx="11" fill={i === hi ? 'var(--accent)' : 'var(--text-2)'} /><text x={x0 + 4 + bw2 / 2} y={qy + 19} textAnchor="middle" className="sv-pt" fill="#fff">{tag}</text></>
+                : <circle cx={x0 + 13} cy={qy + ph / 2} r="3.5" fill="var(--accent)" />}
+              <text x={x0 + (tag ? bw2 + 12 : 22)} y={qy + 20} className="sv-pv">{w.active}명</text>
             </g>;
           })}
-          <path d={smooth(linePts)} fill="none" stroke="var(--sd-line)" strokeWidth="2.25" strokeLinecap="round" />
-          {linePts.map(([px, py], i) => <circle key={i} cx={px} cy={py} r={i === hover || i === weeks.length - 1 ? 4.5 : 3} fill="var(--surface)" stroke="var(--sd-line)" strokeWidth="2" />)}
-          {weeks.map((_, i) => <rect key={i} x={left + col * i} y={top - 6} width={col} height={ih + bottom} fill="transparent" onMouseEnter={() => setHover(i)} onFocus={() => setHover(i)} tabIndex={0} aria-label={`${i === weeks.length - 1 ? '이번 주' : md(weeks[i].start)} 주`} />)}
+          {weeks.map((w, i) => (i === last || col >= 52 || (last - i) % 2 === 0) && <text key={w.start} x={cx(i)} y={H - 8} textAnchor="middle" className={`sv-ax ${i === last ? 'now' : ''}`}>{i === last ? '이번 주' : md(w.start)}</text>)}
+          {weeks.map((w, i) => <rect key={w.start} x={L + col * i} y={0} width={col} height={H} fill="transparent" tabIndex={0} aria-label={`${i === last ? '이번 주' : `${md(w.start)} 주`}`} onPointerEnter={() => setHover(i)} onFocus={() => { setHover(i); enter(); }} onBlur={leave} />)}
         </svg>}
         {h && hover != null && (
-          <div className={`sd-tip ${hover > weeks.length / 2 ? 'l' : ''}`} style={{ left: cx(hover) }} role="tooltip">
-            <b>{hover === weeks.length - 1 ? '이번 주' : `${md(h.start)} 주`}</b>
-            <span><i className="sw crew" />모임 판 <em>{h.crew}</em></span>
-            <span><i className="sw solo" />그 밖의 판 <em>{h.games - h.crew}</em></span>
-            <span><i className="sw line" />활동 멤버 <em>{h.active}명</em></span>
-            {hover === weeks.length - 1 && proj != null && proj > h.games && <span className="sub">이 속도면 약 {proj}판</span>}
-            {h.games > 0 && <span className="sub">모임 판 비율 {Math.round((h.crew / h.games) * 100)}%</span>}
+          <div className={`sv-tip ${hover > n / 2 ? 'l' : ''}`} style={{ left: cx(hover), top: Math.min(pts[hover][1] + 18, H - 132) }} role="tooltip">
+            <b>{hover === last ? '이번 주 (진행 중)' : `${md(h.start)} 주`}</b>
+            <span><i style={{ background: hover === last ? 'var(--sv-now)' : 'var(--accent)' }} />모임 판 <em>{fmt(h.crew)}</em></span>
+            <span><i style={{ background: hover === last ? 'var(--sv-now-soft)' : 'var(--sv-soft)' }} />그 밖의 판 <em>{fmt(h.games - h.crew)}</em></span>
+            <span><i style={{ background: 'var(--text-2)' }} />활동 멤버 <em>{h.active}명</em></span>
           </div>
         )}
       </div>
@@ -227,127 +189,165 @@ function WeekCombo({ o }: { o: StaffOverview }) {
 
 // ───────── 언제 모이나요 ─────────
 
-const DAYS = ['월', '화', '수', '목', '금', '토', '일'];
-const SLOTS: [string, string][] = [['오전', '6~12시'], ['낮', '12~18시'], ['저녁', '18~21시'], ['밤', '21~24시'], ['새벽', '0~6시']];
+const DOW = ['월', '화', '수', '목', '금', '토', '일'];
+const dowOf = (d: number) => (d + 3) % 7; // 한국 날짜 번호 → 월 0 … 일 6 (1970-01-01 은 목요일)
 
-function Heat({ heat }: { heat: number[][] }) {
-  const max = Math.max(0, ...heat.flat());
-  const total = heat.flat().reduce((a, b) => a + b, 0);
-  const cells = heat.flatMap((r, s) => r.map((n, d) => ({ n, s, d }))).sort((a, b) => b.n - a.n);
-  const best = cells[0];
-  const second = cells[1];
+function Calendar({ o }: { o: StaffOverview }) {
+  const [ref, W] = useSize<HTMLDivElement>();
+  const [hover, setHover] = useState<{ x: number; y: number; t: string } | null>(null);
+  const daily = o.daily ?? [], today = o.today ?? 0, N = 9;
+  const first = today - (daily.length - 1);
+  const at = (d: number) => (d < first || d > today ? null : daily[d - first]);
+  const mon = today - dowOf(today) - (N - 1) * 7;
+  const max = Math.max(1, ...daily);
+  const lvOf = (v: number) => (v <= 0 ? 0 : v <= max * 0.15 ? 1 : v <= max * 0.4 ? 2 : v <= max * 0.7 ? 3 : 4);
+  const dateOf = (d: number) => { const x = new Date(d * 86_400_000); return { m: x.getUTCMonth() + 1, day: x.getUTCDate() }; };
+  const left = 28, cw = W ? Math.min(28, (W - left - 16 - (N - 1) * 4) / N) : 0, gap = 4, ch = Math.min(cw, 24), top = 20;
+  const H = top + 7 * (ch + gap) + 28;
+  // 숫자 셋: 가장 많이 모인 요일 · 시간대 · 이번 주 모인 날 · 연속으로 모인 날
+  const dowSum = Array(7).fill(0) as number[];
+  for (let d = first; d <= today; d++) dowSum[dowOf(d)] += at(d) ?? 0;
+  const bestDow = dowSum.indexOf(Math.max(...dowSum));
+  const hours = o.hours ?? [];
+  const bestH = hours.length ? hours.indexOf(Math.max(...hours)) : -1;
+  const slotKo = (h: number) => (h < 6 ? '새벽' : h < 12 ? '오전' : h < 18 ? '낮' : '밤');
+  const weekDays = Array.from({ length: dowOf(today) + 1 }, (_, i) => at(today - dowOf(today) + i) ?? 0);
+  let streak = 0;
+  for (let d = (at(today) ?? 0) > 0 ? today : today - 1; d >= first && (at(d) ?? 0) > 0; d--) streak++;
+  const hmax = Math.max(1, ...hours);
   return (
-    <section className="card pad sd-card">
-      <div className="sd-head"><h2>언제 모이나요</h2><span className="meta">최근 4주 · {total}판</span></div>
-      {total ? <>
-        <div className="sd-heat" role="table" aria-label="요일과 시간대별 판 수">
-          <span />
-          {DAYS.map((d, i) => <span key={d} className={`sd-hd ${i >= 5 ? 'we' : ''}`} role="columnheader">{d}</span>)}
-          {heat.map((row, s) => <Row key={s} s={s} row={row} max={max} best={best} />)}
-        </div>
-        <div className="sd-scale" aria-hidden="true"><span>적음</span><i /><span>많음</span></div>
-        <p className="sd-note"><b>{DAYS[best.d]}요일 {SLOTS[best.s][0]}</b>({SLOTS[best.s][1]})에 가장 많이 모여요{second && second.n > 0 ? <> · 다음은 {DAYS[second.d]}요일 {SLOTS[second.s][0]}</> : null}.</p>
-      </> : <Empty>최근 4주에 기록된 판이 없어요.</Empty>}
-    </section>
-  );
-}
-function Row({ s, row, max, best }: { s: number; row: number[]; max: number; best: { n: number; s: number; d: number } }) {
-  return (
-    <>
-      <span className="sd-hr" role="rowheader">{SLOTS[s][0]}<small>{SLOTS[s][1]}</small></span>
-      {row.map((n, d) => {
-        // 0 은 바탕, 그 위는 루트 비율로 (적은 칸도 구분되게)
-        const k = n ? 0.14 + 0.86 * Math.sqrt(n / (max || 1)) : 0;
-        const isBest = n > 0 && s === best.s && d === best.d;
-        return <span key={d} role="cell" className={`sd-hc ${n ? '' : 'z'} ${isBest ? 'best' : ''} ${k > 0.62 ? 'dark' : ''}`} style={n ? { background: `color-mix(in srgb, var(--accent) ${Math.round(k * 100)}%, var(--surface-2))` } : undefined} title={`${DAYS[d]}요일 ${SLOTS[s][0]} (${SLOTS[s][1]}) · ${n}판`}>{n || ''}</span>;
-      })}
-    </>
-  );
-}
-
-// ───────── 새 멤버 정착 ─────────
-
-function Funnel({ f }: { f: NonNullable<StaffOverview['funnel']> }) {
-  const steps: [string, number][] = [['가입', f.joined], ['롤 계정 연결', f.linked], ['앱 설치', f.app], ['첫 판', f.played], ['모임 판 3판', f.crew3], ['정회원', f.regular]];
-  const base = f.joined || 1;
-  let worst = { i: -1, drop: 0 };
-  steps.forEach(([, n], i) => { if (i && steps[i - 1][1] - n > worst.drop) worst = { i, drop: steps[i - 1][1] - n }; });
-  return (
-    <section className="card pad sd-card">
-      <div className="sd-head"><h2>새 멤버 정착</h2><span className="meta">최근 4주 가입 {f.joined}명</span></div>
-      {f.joined ? <>
-        <ol className="sd-funnel">
-          {steps.map(([label, n], i) => {
-            const drop = i ? steps[i - 1][1] - n : 0;
-            return (
-              <li key={label} className={i === worst.i ? 'worst' : ''}>
-                <span className="sd-fl">{label}{drop > 0 && <span className="sd-fd">−{drop}</span>}</span>
-                <span className="sd-fb"><i style={{ width: `${Math.max(n ? 4 : 0, (n / base) * 100)}%` }} /></span>
-                <span className="sd-fn"><b>{n}</b><small>{Math.round((n / base) * 100)}%</small></span>
-              </li>
-            );
+    <section className="card sv-card">
+      <div className="sv-head"><h2>언제 모이나요</h2><span className="meta">최근 {N}주 · 하루 판 수</span></div>
+      <div className="sv-plot" ref={ref} style={{ marginTop: 16 }} onPointerLeave={() => setHover(null)}>
+        {W > 0 && daily.length > 0 && <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img" aria-label="날짜별 판 수 열지도">
+          {[0, 2, 4, 6].map((r) => <text key={r} x={left - 8} y={top + r * (ch + gap) + ch / 2 + 4} textAnchor="end" className="sv-ax">{DOW[r]}</text>)}
+          {Array.from({ length: N }, (_, c) => {
+            const d0 = mon + c * 7, a = dateOf(d0), prev = dateOf(d0 - 7);
+            return (c === 0 || a.m !== prev.m) && <text key={c} x={left + c * (cw + gap)} y={top - 8} className="sv-ax">{a.m}월</text>;
           })}
-        </ol>
-        {worst.i > 0 && <p className="sd-note">가장 많이 멈추는 곳은 <b>{steps[worst.i][0]}</b>이에요 ({steps[worst.i - 1][0]}에서 {worst.drop}명).</p>}
-      </> : <Empty>최근 4주에 새로 가입한 멤버가 없어요.</Empty>}
+          {Array.from({ length: N * 7 }, (_, k) => {
+            const c = Math.floor(k / 7), r = k % 7, d = mon + c * 7 + r, v = at(d), x = left + c * (cw + gap), yy = top + r * (ch + gap);
+            const future = d > today, isToday = d === today, dd = dateOf(d);
+            return <g key={k}>
+              <rect x={x} y={yy} width={cw} height={ch} rx="4" fill={future ? 'var(--sv-future)' : `var(--sv-h${lvOf(v ?? 0)})`}
+                onPointerEnter={() => setHover({ x: x + cw / 2, y: yy, t: `${dd.m}/${dd.day} ${DOW[r]} · ${future ? '아직' : `${v ?? 0}판`}` })} />
+              {isToday && <><rect x={x + 1.5} y={yy + 1.5} width={cw - 3} height={ch - 3} rx="3" fill="none" stroke="var(--surface)" strokeWidth="1.5" pointerEvents="none" /><circle cx={x + cw / 2} cy={yy + ch / 2} r="2" fill="var(--surface)" pointerEvents="none" /></>}
+            </g>;
+          })}
+          {(() => {
+            const ly = top + 7 * (ch + gap) + 8, ls = 12;
+            const sx = W - 28 - 5 * (ls + 3);
+            return <g>
+              <rect x={left} y={ly} width={ls} height={ls} rx="3" fill="var(--sv-h3)" /><rect x={left + 1.5} y={ly + 1.5} width={ls - 3} height={ls - 3} rx="2" fill="none" stroke="var(--surface)" strokeWidth="1.2" />
+              <text x={left + ls + 6} y={ly + 10} className="sv-ax">오늘</text>
+              <text x={sx - 6} y={ly + 10} textAnchor="end" className="sv-ax">적음</text>
+              {[0, 1, 2, 3, 4].map((i) => <rect key={i} x={sx + i * (ls + 3)} y={ly} width={ls} height={ls} rx="3" fill={`var(--sv-h${i})`} />)}
+              <text x={sx + 5 * (ls + 3) + 3} y={ly + 10} className="sv-ax">많음</text>
+            </g>;
+          })()}
+        </svg>}
+        {hover && <div className="sv-tip mini" style={{ left: hover.x, top: hover.y - 8 }} role="tooltip">{hover.t}</div>}
+      </div>
+      {hours.length === 24 && <div className="sv-hours" aria-label="시간대별 판 수 (최근 4주)">
+        <span className="meta">시간대 (최근 4주)</span>
+        <div className="sv-hstrip">{hours.map((v, h) => <i key={h} title={`${h}시 · ${v}판`} style={{ background: `var(--sv-h${v ? Math.max(1, Math.round((v / hmax) * 4)) : 0})` }} />)}</div>
+        <div className="sv-hlab"><span>0시</span><span>6시</span><span>12시</span><span>18시</span></div>
+      </div>}
+      <div className="sv-side">
+        <div><span>가장 많은 날</span><b>{DOW[bestDow]}요일{bestH >= 0 && <small>{slotKo(bestH)} {bestH % 12 || 12}시~</small>}</b></div>
+        <div><span>이번 주 모인 날</span><b>{weekDays.filter((v) => v > 0).length}<small>/ {weekDays.length}일</small></b></div>
+        <div><span>연속으로 모인 날</span><b>{streak}<small>일째</small></b></div>
+      </div>
     </section>
   );
 }
 
 // ───────── 잘하고 있는 멤버 ─────────
 
-function StarTable({ stars, onOpen }: { stars: StaffOverview['stars']; onOpen?: (id: string) => void }) {
+function Picks({ o, onOpen }: { o: StaffOverview; onOpen?: (id: string) => void }) {
   const skins = useSkins();
-  const best = Math.max(1, ...stars.map((m) => m.score));
+  const [tip, setTip] = useState<{ x: number; y: number; t: string } | null>(null);
+  const picks = o.picks ?? [];
+  const ev = (p: (typeof picks)[number], k: PickKey) => (k === 'act' ? `${p.n}판` : k === 'crew' ? `${Math.round((p.crew / Math.max(1, p.n)) * 100)}% (${p.crew}판)` : k === 'days' ? `${p.days} / 14일` : k === 'mates' ? `${p.mates}명` : `${p.score}점`);
   return (
-    <section className="card pad sd-card">
-      <div className="sd-head"><h2>잘하고 있는 멤버</h2><span className="meta">최근 2주 · 5판 이상 · Prism 점수 순</span></div>
-      {stars.length ? <div className="sd-tbl" role="table">
-        <div className="sd-tr head" role="row"><span>멤버</span><span>판</span><span>승률</span><span>모임 판</span><span>점수</span></div>
-        {stars.map((m, i) => {
-          const wr = m.n ? m.w / m.n : 0;
+    <section className="card sv-card" onPointerLeave={() => setTip(null)}>
+      <div className="sv-head"><h2>잘하고 있는 멤버</h2><span className="meta">최근 2주 · 다섯 가지 기준의 합 (100점)</span></div>
+      <div className="sv-crit">{PICK_INFO.map((c) => <div key={c.key}><span className="t"><i className="k" style={{ background: c.color }} />{c.name}<em>{PICK_POINTS[c.key]}점</em></span><p>{c.desc}</p></div>)}</div>
+      {picks.length ? <div className="sv-mtbl" role="table">
+        <div className="sv-mr h" role="row"><span /><span>멤버</span><span>기준마다 받은 점수 (100점 만점)</span><span>합계</span></div>
+        {picks.map((p, i) => {
+          const top2 = [...PICK_INFO].sort((a, b) => p.pts[b.key] / PICK_POINTS[b.key] - p.pts[a.key] / PICK_POINTS[a.key]).slice(0, 2).map((c) => c.name);
           return (
-            <button key={m.id} type="button" className="sd-tr" role="row" onClick={() => onOpen?.(m.id)}>
-              <span className="sd-who"><i className={`sd-rk r${i + 1}`}>{i + 1}</i><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={32} skins={skins} /><b>{shortNick(m.nick)}</b></span>
-              <span className="num">{m.n}</span>
-              <span className="sd-wr"><span className="num">{pct(m.w, m.n)}</span><i aria-hidden="true"><i style={{ width: `${wr * 100}%` }} className={wr >= 0.5 ? 'up' : 'down'} /><em /></i></span>
-              <span className="num">{m.crew}</span>
-              <span className="sd-sc"><b className="num">{m.score}</b><i aria-hidden="true"><i style={{ width: `${(m.score / best) * 100}%` }} /></i></span>
-            </button>
+            <div key={p.id} className="sv-mr" role="row" tabIndex={0} onClick={() => onOpen?.(p.id)} onKeyDown={(e) => { if (e.key === 'Enter') onOpen?.(p.id); }}>
+              <span className={`rk ${i === 0 ? 'r1' : ''}`}>{i + 1}</span>
+              <span className="who"><MemberFace nick={p.nick} skin={p.skin} champion={p.main} size={36} skins={skins} /><span><b>{shortNick(p.nick)}</b><small>강점 · {top2.join('·')}</small></span></span>
+              <span className="sb">
+                <span className="sv-stack" aria-label={PICK_INFO.map((c) => `${c.name} ${p.pts[c.key]}점`).join(', ')}>
+                  {PICK_INFO.map((c, j) => <i key={c.key} className="sv-grow-x" style={{ width: `${p.pts[c.key]}%`, background: c.color, animationDelay: `${150 + j * 40}ms` }}
+                    onPointerEnter={(e) => { const r = (e.currentTarget.closest('.sv-card') as HTMLElement).getBoundingClientRect(), b = e.currentTarget.getBoundingClientRect(); setTip({ x: b.left - r.left + b.width / 2, y: b.top - r.top, t: `${c.name} ${p.pts[c.key]}점 · ${ev(p, c.key)}` }); }} />)}
+                </span>
+                <span className="sv-chips">{PICK_INFO.map((c) => <span key={c.key}><i className="k" style={{ background: c.color }} />{ev(p, c.key)}</span>)}</span>
+              </span>
+              <span className="tot">{p.total}<small>점</small></span>
+            </div>
           );
         })}
       </div> : <Empty>최근 2주에 5판 넘게 한 멤버가 아직 없어요.</Empty>}
+      {tip && <div className="sv-tip mini" style={{ left: tip.x, top: tip.y - 8 }} role="tooltip">{tip.t}</div>}
     </section>
   );
 }
 
-/** B안 대시보드 본문 */
-export function ReportDash({ o, online, care, mix, onOpen }: { o: StaffOverview; online: number; care: ReactNode; mix: ReactNode; onOpen?: (id: string) => void }) {
-  const [period, setPeriod] = useKept<Period>('staff-period', 'week');
-  const ws = o.weeks[o.weeks.length - 1].start;
-  const range = useMemo(() => {
-    const from = period === 'week' ? ws : period === 'w4' ? ws - 3 * WEEK : ws - 7 * WEEK;
-    return `${md(from)} ~ 오늘`;
-  }, [period, ws]);
+// ───────── 온보딩 현황 ─────────
+
+/** 양 → 물 색 (섞으면 탁해져 구간마다 또렷한 한 색): 95% 이상 초록 · 85% 이상 청록 · 75% 이상 남색 · 그 아래 주황 */
+const waterOf = (pct: number) => (pct >= 95 ? 'var(--ok)' : pct >= 85 ? 'var(--sv-teal)' : pct >= 75 ? 'var(--accent)' : 'var(--warn)');
+const WAVE = <svg className="sv-wave" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true"><path d="M0,6 C35,0 65,0 100,5 S165,10 200,4 V10 H0 Z" /></svg>;
+
+function Onboarding({ o, reviewWaiting }: { o: StaffOverview; reviewWaiting: number }) {
+  const f = o.funnel;
+  const tips = useMemo(() => (f ? onboardTips(f, reviewWaiting) : []), [f, reviewWaiting]);
+  if (!f) return null;
+  const base = f.joined || 1;
+  const days: Partial<Record<string, number | null>> = { app: o.funnelDays?.app, played: o.funnelDays?.played };
+  return (
+    <section className="card sv-card">
+      <div className="sv-head"><h2>온보딩 현황</h2><span className="meta">최근 4주 가입 {f.joined}명</span></div>
+      {f.joined ? <>
+        <div className="sv-steps">
+          {ONBOARD_STEPS.map((s, i) => {
+            const v = f[s.key], pct = Math.round((v / base) * 100), ok = pct >= s.goal;
+            const prev = i ? f[ONBOARD_STEPS[i - 1].key] : null, conv = prev ? Math.round((v / prev) * 100) : null, t = days[s.key];
+            return (
+              <div key={s.key} className={`sv-st ${ok ? 'ok' : 'bad'}`} style={{ ['--i' as string]: i }}>
+                <span className="tank" aria-hidden="true"><span className="water" style={{ height: `${pct}%`, ['--w' as string]: waterOf(pct) }}><span className="crest">{WAVE}</span></span></span>
+                <span className="no">{i + 1}단계</span>
+                <h4>{s.name}</h4>
+                <span className="num"><b>{v}</b><span>명 · {pct}%</span></span>
+                <span className="tg"><em className={ok ? 'ok' : 'no'}>{ok ? '✓ 목표 달성' : `목표까지 ${s.goal - pct}%p`}</em>{ok && <span>목표 {s.goal}%</span>}</span>
+                <span className="time">{conv != null ? `앞 단계에서 ${conv}% 넘어옴${t != null ? ` · 가입 후 평균 ${t}일` : ''}` : `기준 ${f.joined}명`}</span>
+                <span className="ins">{onboardNote(s.key, f)}</span>
+              </div>
+            );
+          })}
+        </div>
+        {tips.length > 0 && <div className="sv-todo-box"><span className="ic">!</span><div><h4>이번 주 할 일</h4><ol>{tips.map((t, i) => <li key={i}>{bold(t)}</li>)}</ol><p className="src">위 단계 숫자로 규칙에 따라 만들어요. 목표에 가장 많이 못 미친 단계부터.</p></div></div>}
+      </> : <Empty>최근 4주에 새로 가입한 멤버가 없어요.</Empty>}
+    </section>
+  );
+}
+
+/** 대시보드 본문 */
+export function ReportDash({ o, reviewWaiting, onOpen }: { o: StaffOverview; reviewWaiting: number; onOpen?: (id: string) => void }) {
   return (
     <>
-      <div className="sd-bar">
-        <div className="sd-range"><span className="meta">{range} · {josa(PREV_LABEL[period], '과/와')} 비교</span><span className="sd-on"><i className="stf-live" aria-hidden="true" />지금 접속 <b>{online}</b></span></div>
-        <Seg value={period} options={[['week', '이번 주'], ['w4', '4주'], ['w8', '8주']]} onChange={setPeriod} />
+      <Rings o={o} />
+      <div className="sv-row">
+        <WaveCombo o={o} />
+        {o.daily ? <Calendar o={o} /> : null}
       </div>
-      <Kpis o={o} period={period} />
-      <div className="sd-row">
-        <WeekCombo o={o} />
-        {o.heat ? <Heat heat={o.heat} /> : mix}
-      </div>
-      <div className="sd-row">
-        <StarTable stars={o.stars} onOpen={onOpen} />
-        {o.funnel ? <Funnel f={o.funnel} /> : null}
-      </div>
-      <div className="sd-row even">
-        {care}
-        {o.heat ? mix : null}
-      </div>
+      <Picks o={o} onOpen={onOpen} />
+      <Onboarding o={o} reviewWaiting={reviewWaiting} />
     </>
   );
 }

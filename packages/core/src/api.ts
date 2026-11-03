@@ -69,7 +69,7 @@ export class ApiError extends Error {
   constructor(readonly status: number, message: string) { super(message); }
 }
 
-export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; level?: number; rates?: Rates; presence?: import('./presence').Presence; rankingGate?: { have: number; need: number }; about?: import("./about").About | null; pending?: boolean; newsUnread?: number; /** 운영진만: 운영 화면에서 아직 못 본 처리할 멤버 수 (v3.125) */ staffUnread?: number; /** 로비를 NOW에 자동으로 올리기 (v3.126) */ nowAuto?: boolean; /** NOW 에 돌아가는 팟·내전·함께 게임 중 수 — 멤버 메뉴 LIVE (v3.137) */ nowLive?: number; /** 장착한 프로필 테두리 상품 id (v3.153) */ frame?: string | null; /** 연결한 롤 계정들 (v3.155, 메인이 맨 앞) */ accounts?: RiotAccount[]; accountMax?: number };
+export type Me = { id: string; nick: string; tier: 'guest' | 'member' | 'admin'; riotId: string | null; linked: boolean; consent: boolean; games: NW; skin: number | null; canScrim?: boolean; role?: DiscordRole | null; perms?: Perms; rolesKnown?: boolean; level?: number; rates?: Rates; presence?: import('./presence').Presence; rankingGate?: { have: number; need: number }; about?: import("./about").About | null; pending?: boolean; newsUnread?: number; /** 운영진만: 운영 화면에서 아직 못 본 처리할 멤버 수 (v3.125) */ staffUnread?: number; /** 운영진만: 할 일 · 답을 기다리는 문의 수 (v3.160) */ staffTodo?: number; staffInq?: number; /** 로비를 NOW에 자동으로 올리기 (v3.126) */ nowAuto?: boolean; /** NOW 에 돌아가는 팟·내전·함께 게임 중 수 — 멤버 메뉴 LIVE (v3.137) */ nowLive?: number; /** 장착한 프로필 테두리 상품 id (v3.153) */ frame?: string | null; /** 연결한 롤 계정들 (v3.155, 메인이 맨 앞) */ accounts?: RiotAccount[]; accountMax?: number };
 export type RiotAccount = { puuid: string; riotId: string | null; main: boolean; /** 이 시각 이후 판만 기록 (0 = 처음부터) */ since?: number };
 /** NOW (v3.126): 지금 모이는 팟 */
 export type NowFace = { id: string; nick: string; skin: number | null; main: number | null };
@@ -166,6 +166,8 @@ export type StaffMember = {
   id: string; nick: string; discordName: string; skin: number | null; main: number | null; joined: number; seen: number; riotId: string | null;
   games: number; level: number; special: boolean; pending: boolean; app: boolean; admin: boolean; rolesKnown: boolean; role: DiscordRole | null;
   staffGames: number; review: boolean; wins: number; recent: number; score: number; lastPlayed: number | null; inviter: { id: string; nick: string } | null; invitedCount: number; approvedAt: number | null;
+  /** v3.160 — 최근 8주 주별 판 수 · 자주 함께한 멤버(최근 15주) · 첫 판 시각. 예전 서버는 없음 */
+  wk?: number[]; mates?: (StaffFace & { n: number })[]; firstPlayed?: number | null;
 };
 export type StaffFace = { id: string; nick: string; skin: number | null; main: number | null };
 /** 운영 대시보드 (v3.109) */
@@ -184,6 +186,12 @@ export type StaffOverview = {
   memberWeeks?: number[];
   /** 이번 주 지난 시간(ms) */
   weekInto?: number;
+  /** v3.160 — 날짜별 서로 다른 판 (오늘까지 63일, 한국 날짜) · 오늘(한국 날짜 번호) · 시간대별(0~23시, 최근 4주) */
+  daily?: number[]; today?: number; hours?: number[];
+  rings?: { active: number; base: number; activePrev: number; crew: number; games: number; crewPrevRate: number | null; settled: number; joined: number; app: number; linked: number; total: number };
+  picks?: (StaffFace & { n: number; w: number; crew: number; days: number; mates: number; score: number; pts: Record<import('./staff').PickKey, number>; total: number })[];
+  /** 가입부터 그 단계까지 평균 일 */
+  funnelDays?: { app: number | null; played: number | null };
 };
 export type StaffSpan = { active: number; games: number; crew: number; joined: number };
 export type StaffMembers = { members: StaffMember[]; reviewNeed: number; inviteBonus: number; overview?: StaffOverview; /** 가입 신청 (v3.148) */ applications?: { new: number; interview: number; confirmed: number }; /** 답을 기다리는 문의 (v3.159) */ inquiries?: number };

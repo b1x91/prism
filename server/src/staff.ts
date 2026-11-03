@@ -12,6 +12,7 @@ import { FACE, HttpError, json, type Env, type Member } from './util.js';
 import { INVITE_BONUS } from '../../packages/core/src/shop.js';
 import { weekStart } from '../../packages/core/src/missions.js';
 import { rankScore } from '../../packages/core/src/ranking.js';
+import { PICK_POINTS } from '../../packages/core/src/staff.js';
 
 const roleId = (key: string) => ROLES.find((r) => r.key === key)!.id;
 /** 여기서 바꾸는 회원 역할 (단계 1~3). 승급은 아래 단계 역할을 남긴다 (자동 승급과 같은 규칙) */
@@ -70,10 +71,21 @@ async function joinTodoIds(env: Env): Promise<string[]> {
 }
 const seenOf = (me: Member) => { try { const v = JSON.parse(me.staff_seen ?? '[]'); return new Set<string>(Array.isArray(v) ? v : []); } catch { return new Set<string>(); } };
 export async function staffUnread(env: Env, me: Member): Promise<number | undefined> {
-  if (!can(me, 'manage')) return undefined;
+  return (await staffBadge(env, me)).staffUnread;
+}
+/**
+ * 운영 메뉴의 빨간 점 + 운영 탭 숫자 (v3.160): 할 일(승인 대기 · 정회원 심사 · 처리할 가입 신청) · 문의(답을 기다리는 것).
+ * 운영진이 아니면 빈 객체.
+ */
+export async function staffBadge(env: Env, me: Member): Promise<{ staffUnread?: number; staffTodo?: number; staffInq?: number }> {
+  if (!can(me, 'manage')) return {};
   const seen = seenOf(me);
-  const [mem, apps] = await Promise.all([todoIds(env).catch(() => [] as string[]), joinTodoIds(env)]);
-  return [...mem, ...apps].filter((id) => !seen.has(id)).length;
+  const [mem, apps, interview, inq] = await Promise.all([
+    todoIds(env).catch(() => [] as string[]), joinTodoIds(env),
+    env.DB.prepare(`SELECT COUNT(*) AS n FROM applications WHERE status = 'interview'`).first<{ n: number }>().catch(() => null),
+    env.DB.prepare(`SELECT COUNT(*) AS n FROM inquiries WHERE status = 'open'`).first<{ n: number }>().catch(() => null),
+  ]);
+  return { staffUnread: [...mem, ...apps].filter((id) => !seen.has(id)).length, staffTodo: mem.length + apps.length + (interview?.n ?? 0), staffInq: inq?.n ?? 0 };
 }
 
 /** GET /api/staff/members — 멤버 목록 (승인 대기 · 정회원 심사 · 전체) */
@@ -86,7 +98,8 @@ export async function staffMembers(env: Env, me: Member) {
          m.riot_id AS riotId, m.invited_by AS invitedBy, m.approved_at AS approvedAt,
          (SELECT COUNT(*) FROM participants p WHERE p.member_id = m.id) AS games,
          (SELECT COALESCE(SUM(p.win), 0) FROM participants p WHERE p.member_id = m.id) AS wins,
-         (SELECT MAX(p.played_at) FROM participants p WHERE p.member_id = m.id) AS lastPlayed
+         (SELECT MAX(p.played_at) FROM participants p WHERE p.member_id = m.id) AS lastPlayed,
+         (SELECT MIN(p.played_at) FROM participants p WHERE p.member_id = m.id) AS firstPlayed
        FROM members m ORDER BY m.joined_at DESC`,
     ).all<Record<string, any>>(),
     gamesWithStaff(env),
@@ -100,6 +113,17 @@ export async function staffMembers(env: Env, me: Member) {
   // 최근 2주 판수 (멤버 관리 거르기·내전 인원 고르기용)
   const since14 = Date.now() - 14 * DAY, recent = new Map<string, number>();
   for (const r of recentRows.results) if (r.t >= since14) recent.set(r.id, (recent.get(r.id) ?? 0) + 1);
+  const ws0 = weekStart(Date.now()) - (OVERVIEW_WEEKS - 1) * WEEK;
+  const wk = new Map<string, number[]>(), byGame = new Map<number, string[]>();
+  for (const r of recentRows.results) {
+    const i = Math.floor((r.t - ws0) / WEEK);
+    if (i >= 0 && i < OVERVIEW_WEEKS) { const a = wk.get(r.id) ?? Array(OVERVIEW_WEEKS).fill(0); a[i]++; wk.set(r.id, a); }
+    (byGame.get(r.g) ?? byGame.set(r.g, []).get(r.g)!).push(r.id);
+  }
+  const pairs = new Map<string, Map<string, number>>();
+  for (const ids of byGame.values()) for (const a of ids) for (const b of ids) if (a !== b) { const m = pairs.get(a) ?? new Map<string, number>(); m.set(b, (m.get(b) ?? 0) + 1); pairs.set(a, m); }
+  const faceOf = new Map(results.map((r) => [r.id as string, { id: r.id as string, nick: r.nick as string, skin: (r.skin ?? null) as number | null, main: (r.main ?? null) as number | null }]));
+  const matesOf = (id: string) => [...(pairs.get(id) ?? new Map()).entries()].sort((a, b) => b[1] - a[1]).slice(0, 4).map(([x, n]) => ({ ...faceOf.get(x)!, n })).filter((x) => x.id);
   const members = results.map(({ discord_roles, tier, app_first_at, ...r }) => {
     const m = { tier, discord_roles, app_first_at: Number(app_first_at ?? 0) } as Pick<Member, 'tier' | 'discord_roles'> & { app_first_at: number };
     const level = Math.min(levelOf(m), 5);
@@ -114,6 +138,9 @@ export async function staffMembers(env: Env, me: Member) {
       review: level === 1 && staffGames >= need,
       inviter: r.invitedBy ? { id: r.invitedBy, nick: nick.get(r.invitedBy) ?? '알 수 없음' } : null,
       invitedCount: invited.get(r.id) ?? 0,
+      wk: wk.get(r.id) ?? Array(OVERVIEW_WEEKS).fill(0),
+      mates: matesOf(r.id),
+      appAt: m.app_first_at || null,
     };
   });
   // 지금 처리할 멤버를 '본 것'으로 (메뉴의 빨간 점이 꺼진다)
@@ -128,12 +155,14 @@ export async function staffMembers(env: Env, me: Member) {
 
 const DAY = 86_400_000, WEEK = 7 * DAY;
 const OVERVIEW_WEEKS = 8;
+/** 날짜별 판 칸 (열지도): 9주 */
+const DAILY_DAYS = 63;
 /** 잘하는 멤버: 최근 2주 판수가 이만큼은 돼야 (점수가 판수로 흔들리지 않게) */
 const STAR_MIN = 5;
 /** 챙겨야 하는 멤버: 이만큼 안 보이면 / 가입하고 이만큼 지나도 판이 없으면 */
 const AWAY_DAYS = 14, QUIET_DAYS = 3;
 
-type Row = { id: string; nick: string; app: boolean; riotId: string | null; skin: number | null; main: number | null; joined: number; seen: number; games: number; lastPlayed: number | null; level: number; pending: boolean; review: boolean; staffGames: number; admin: boolean };
+type Row = { id: string; nick: string; app: boolean; appAt: number | null; riotId: string | null; skin: number | null; main: number | null; joined: number; seen: number; games: number; lastPlayed: number | null; firstPlayed: number | null; wins: number; level: number; pending: boolean; review: boolean; staffGames: number; admin: boolean };
 
 /** 운영 대시보드: 주별 흐름 · 단계 분포 · 최근 2주 잘하는 멤버 · 챙겨야 하는 멤버 (판 기록·접속에서 계산) */
 function overviewOf(members: Row[], rows: { id: string; g: number; t: number; w: number; c: number }[]) {
@@ -215,11 +244,54 @@ function overviewOf(members: Row[], rows: { id: string; g: number; t: number; w:
     crew3: fresh.filter((m) => (crewOf.get(m.id) ?? 0) >= 3).length,
     regular: fresh.filter((m) => !m.pending && m.level >= 2).length,
   };
+  // 단계마다 걸린 시간 (가입부터, 일): 앱 설치 · 첫 판 — 기록이 있는 멤버만
+  const avgDays = (vals: number[]) => (vals.length ? Math.round((vals.reduce((a, b) => a + b, 0) / vals.length) * 10) / 10 : null);
+  const funnelDays = {
+    app: avgDays(fresh.filter((m) => m.appAt && m.appAt >= m.joined).map((m) => (m.appAt! - m.joined) / DAY)),
+    played: avgDays(fresh.filter((m) => m.firstPlayed && m.firstPlayed >= m.joined).map((m) => (m.firstPlayed! - m.joined) / DAY)),
+  };
+  // 날짜별 서로 다른 판 (오늘까지 DAILY_DAYS 일, 한국 날짜) · 시간대별(0~23시, 최근 4주)
+  const kday = (t: number) => Math.floor((t + 9 * 3_600_000) / DAY);
+  const today = kday(now), daily = Array(DAILY_DAYS).fill(0) as number[], hours = Array(24).fill(0) as number[];
+  const dSeen = new Set<number>();
+  for (const r of rows) {
+    if (dSeen.has(r.g)) continue;
+    dSeen.add(r.g);
+    const i = DAILY_DAYS - 1 - (today - kday(r.t));
+    if (i >= 0 && i < DAILY_DAYS) daily[i]++;
+    if (r.t >= now - 28 * DAY) hours[new Date(r.t + 9 * 3_600_000).getUTCHours()]++;
+  }
+  // 위 고리 넷: 이번 주 활동률 · 모임 판 비율 · 온보딩(최근 4주 가입 중 모임 판 3판) · 앱 쓰는 멤버
+  const base = members.filter((m) => !m.pending).length;
+  const rings = {
+    active: cur.active, base, activePrev: periods.week.prev.active,
+    crew: cur.crew, games: cur.games, crewPrevRate: periods.week.prev.games ? Math.round((periods.week.prev.crew / periods.week.prev.games) * 100) : null,
+    settled: funnel.crew3, joined: funnel.joined,
+    app: members.filter((m) => m.app).length, linked: members.filter((m) => m.riotId).length, total: members.length,
+  };
+  // 잘하고 있는 멤버 (v3.160): 최근 2주, 다섯 기준의 합 100점 — 활동량 · 참여도(모임 판 비율) · 꾸준함(판을 한 날) · 어울림(함께한 서로 다른 멤버) · 성적(Prism 점수)
+  const recentGames = new Map<number, string[]>();
+  for (const r of rows) if (r.t >= since) (recentGames.get(r.g) ?? recentGames.set(r.g, []).get(r.g)!).push(r.id);
+  const daysOf = new Map<string, Set<number>>(), matesN = new Map<string, Set<string>>();
+  for (const r of rows) if (r.t >= since) (daysOf.get(r.id) ?? daysOf.set(r.id, new Set()).get(r.id)!).add(kday(r.t));
+  for (const ids of recentGames.values()) for (const a of ids) for (const b of ids) if (a !== b) (matesN.get(a) ?? matesN.set(a, new Set()).get(a)!).add(b);
+  const cand = members.filter((m) => !m.pending && (per.get(m.id)?.n ?? 0) >= STAR_MIN);
+  const maxN = Math.max(1, ...cand.map((m) => per.get(m.id)!.n)), maxM = Math.max(1, ...cand.map((m) => matesN.get(m.id)?.size ?? 0));
+  const picks = cand.map((m) => {
+    const s = per.get(m.id)!, days = daysOf.get(m.id)?.size ?? 0, mates = matesN.get(m.id)?.size ?? 0, score = rankScore(s.w, s.n);
+    const pts = {
+      act: PICK_POINTS.act * (s.n / maxN), crew: PICK_POINTS.crew * (s.crew / s.n), days: PICK_POINTS.days * Math.min(1, days / 14),
+      mates: PICK_POINTS.mates * (mates / maxM), perf: PICK_POINTS.perf * Math.max(0, Math.min(1, (score - 400) / 250)),
+    };
+    const r1 = (v: number) => Math.round(v * 10) / 10;
+    return { ...face(m), n: s.n, w: s.w, crew: s.crew, days, mates, score, pts: { act: r1(pts.act), crew: r1(pts.crew), days: r1(pts.days), mates: r1(pts.mates), perf: r1(pts.perf) }, total: Math.round(pts.act + pts.crew + pts.days + pts.mates + pts.perf) };
+  }).sort((a, b) => b.total - a.total || b.n - a.n).slice(0, 5);
   // 멤버 수 흐름 (주마다 그 주 끝까지 가입한 멤버)
   const memberWeeks = weeks.map((w) => members.filter((m) => m.joined < w.start + WEEK).length);
   return {
     weeks,
-    periods, heat, funnel, memberWeeks, weekInto: into,
+    periods, heat, funnel, funnelDays, memberWeeks, weekInto: into,
+    daily, today, hours, rings, picks,
     kpi: {
       members: members.length,
       joinedWeek: members.filter((m) => m.joined >= ws).length,

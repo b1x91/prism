@@ -5,7 +5,7 @@
  */
 import type { IconName } from './icons';
 
-export type HubTab = { to: string; label: string; icon: IconName; hint: string };
+export type HubTab = { to: string; label: string; icon: IconName; hint: string; /** 이 탭으로 보는 다른 주소 (예: 할 일 › 가입 신청 전체 보드) */ also?: string[] };
 export type Hub = { key: string; label: string; icon: IconName; tabs: HubTab[] };
 
 /** 허브: 메뉴 하나 = 화면 여러 개 (탭). 주소는 그대로 둔다 */
@@ -20,6 +20,13 @@ export const HUBS: Hub[] = [
     { to: '/news', label: '소식', icon: 'megaphone', hint: '공지·이벤트·업데이트' },
     { to: '/invite', label: '초대', icon: 'gift', hint: '친구를 부르면 300 피스' },
   ] },
+  // 운영 (v3.160, 운영진만 — 메뉴 자체가 운영진에게만 보인다)
+  { key: 'staff', label: '운영', icon: 'shield', tabs: [
+    { to: '/staff', label: '대시보드', icon: 'chart', hint: '이번 주 Prism 현황' },
+    { to: '/staff/members', label: '멤버', icon: 'users', hint: '전체 멤버 · 단계 · 특별회원' },
+    { to: '/staff/todo', label: '할 일', icon: 'check', hint: '승인 대기 · 정회원 심사 · 가입 신청', also: ['/staff/join'] },
+    { to: '/staff/inquiries', label: '문의', icon: 'talk', hint: '문의 묶음 · 바로 답장' },
+  ] },
 ];
 
 export const NAV_GROUPS: { key: string; label: string; paths: string[] }[] = [
@@ -27,9 +34,14 @@ export const NAV_GROUPS: { key: string; label: string; paths: string[] }[] = [
   { key: 'more', label: '성장 · 모임', paths: ['/dex', '/crew', '/staff'] },
 ];
 
+/** 이 주소의 탭: 가장 길게 맞는 탭 (/staff/members 가 /staff 로 잡히지 않게) */
+export function tabOf<T extends { to: string; also?: string[] }>(tabs: T[], path: string): T | undefined {
+  const len = (t: T) => Math.max(-1, ...[t.to, ...(t.also ?? [])].filter((p) => path === p || path.startsWith(`${p}/`)).map((p) => p.length));
+  return tabs.map((t) => [t, len(t)] as const).filter(([, n]) => n >= 0).sort((a, b) => b[1] - a[1])[0]?.[0];
+}
 /** 이 주소가 속한 허브 (상세 주소 /ranking/… 포함) */
 export function hubOf(path: string): Hub | null {
-  return HUBS.find((h) => h.tabs.some((t) => path === t.to || path.startsWith(`${t.to}/`))) ?? null;
+  return HUBS.find((h) => tabOf(h.tabs, path)) ?? null;
 }
 /** 메뉴 항목 주소가 허브의 첫 탭이면 그 허브 */
 export const hubAt = (to: string): Hub | null => HUBS.find((h) => h.tabs[0].to === to) ?? null;
