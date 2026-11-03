@@ -19,7 +19,7 @@
   --up:#3ccf74; --up-soft:#12301f; --warn:#f0b54a; --warn-soft:#352812; --down:#ff8a5c;
   --h0:#161b28; --h1:#1f2b5c; --h2:#2f4296; --h3:#4a63d6; --h4:#7d92ff;
   --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181;
-  --ring-track:#1d2335; --future:#121623; color-scheme:dark}}
+  --ring-track:#1d2335; --future:#191e2c; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#07090f; --panel:#10141f; --panel2:#151a27; --line:#222839; --grid:#1b2131; --line2:#2c3347;
   --fg:#eef0f6; --fg2:#b4b9c8; --mut:#7d8497;
@@ -27,7 +27,7 @@
   --up:#3ccf74; --up-soft:#12301f; --warn:#f0b54a; --warn-soft:#352812; --down:#ff8a5c;
   --h0:#161b28; --h1:#1f2b5c; --h2:#2f4296; --h3:#4a63d6; --h4:#7d92ff;
   --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181;
-  --ring-track:#1d2335; --future:#121623; color-scheme:dark}
+  --ring-track:#1d2335; --future:#191e2c; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;word-break:keep-all;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
@@ -174,7 +174,7 @@ svg text{font-family:var(--font)}
       <div class="plot fill" id="combo"></div>
     </section>
     <section class="card">
-      <div class="ch"><h2>언제 모이나요</h2><span class="meta">최근 12주 · 하루 판 수 <span class="ex">날짜별은 예시</span></span></div>
+      <div class="ch"><h2>언제 모이나요</h2><span class="meta">최근 2개월 · 하루 판 수 <span class="ex">날짜별은 예시</span></span></div>
       <div class="plot" id="cal" style="margin-top:16px"></div>
       <div class="plot" id="hours" style="margin-top:20px"></div>
       <div class="cal-side" id="calside"></div>
@@ -280,15 +280,22 @@ function combo(){const w=W('#combo'),H=Math.max(280,$('#combo').clientHeight),L=
   $('#combo').replaceChildren(s)}
 
 // ───── GitHub 식 날짜 열지도 + 시간대 줄 ─────
-function cal(){const w=W('#cal'),lab=24,gap=3,cs=Math.max(10,Math.min(32,Math.floor((w-lab-gap*11)/12))),H=20+7*(cs+gap)+28,s=svg(w,H);
-  const flat=CAL.flat().filter(v=>v!=null),max=Math.max(...flat),lv=v=>v==null?-1:v===0?0:v<max*.15?1:v<max*.35?2:v<max*.6?3:4,C=['--h0','--h1','--h2','--h3','--h4'];
-  const start=new Date(2026,7,17); // 12주 전 월요일 (8/17)
-  let lastM=-1;CAL.forEach((wk,wi)=>{const d0=new Date(start);d0.setDate(d0.getDate()+wi*7);const m=d0.getMonth();if(m!==lastM){el(s,'text',{x:lab+wi*(cs+gap),y:12,class:'ax'},(m+1)+'월');lastM=m}
-    wk.forEach((v,di)=>{const x=lab+wi*(cs+gap),yy=20+di*(cs+gap);if(v==null){const f=el(s,'rect',{x,y:yy,width:cs,height:cs,rx:3,fill:css('--future')});hover(f,'아직 오지 않은 날',[[css('--line2'),'판','-']]);return}const r=el(s,'rect',{x,y:yy,width:cs,height:cs,rx:3,fill:css(C[lv(v)])});const dt=new Date(d0);dt.setDate(dt.getDate()+di);
-      if(wi===11&&di===TODAY_DOW)el(s,'rect',{x:x-1.5,y:yy-1.5,width:cs+3,height:cs+3,rx:4,fill:'none',stroke:css('--fg'),'stroke-width':1.5});
-      hover(r,`${dt.getMonth()+1}월 ${dt.getDate()}일 (${'월화수목금토일'[di]})`,[[css('--acc'),'판',v+'판']],()=>r.setAttribute('stroke',css('--fg')),()=>r.removeAttribute('stroke'))})});
-  ['월','','수','','금','','일'].forEach((d,i)=>d&&el(s,'text',{x:0,y:20+i*(cs+gap)+cs-2,class:'ax',style:'font-size:11px'},d));
-  const ly=20+7*(cs+gap)+14;el(s,'text',{x:w-cs*5-gap*4-44,y:ly+cs*.7,'text-anchor':'end',class:'ax',style:'font-size:11px'},'적음');C.forEach((c,i)=>el(s,'rect',{x:w-cs*5-gap*4-38+i*(cs+gap),y:ly,width:cs,height:cs,rx:3,fill:css(c)}));el(s,'text',{x:w,y:ly+cs*.7,'text-anchor':'end',class:'ax',style:'font-size:11px'},'많음');
+function cal(){const w=W('#cal'),lab=24,gap=4,N=9,WK=CAL.slice(-N),cw=Math.max(10,(w-lab-gap*(N-1))/N),ch=Math.min(cw,24),H=22+7*(ch+gap)+32,s=svg(w,H);
+  const flat=WK.flat().filter(v=>v!=null),max=Math.max(...flat),lv=v=>v===0?0:v<max*.15?1:v<max*.35?2:v<max*.6?3:4,C=['--h0','--h1','--h2','--h3','--h4'];
+  const start=new Date(2026,8,7); // 최근 2개월: 9주 전 월요일 (9/7)
+  let lastM=-1;WK.forEach((wk,wi)=>{const d0=new Date(start);d0.setDate(d0.getDate()+wi*7);const m=d0.getMonth();if(m!==lastM){el(s,'text',{x:lab+wi*(cw+gap),y:12,class:'ax'},(m+1)+'월');lastM=m}
+    wk.forEach((v,di)=>{const x=lab+wi*(cw+gap),yy=22+di*(ch+gap),dt=new Date(d0);dt.setDate(dt.getDate()+di);const day=`${dt.getMonth()+1}월 ${dt.getDate()}일 (${'월화수목금토일'[di]})`;
+      if(v==null){const f=el(s,'rect',{x,y:yy,width:cw,height:ch,rx:4,fill:css('--future')});hover(f,day+' · 아직 오지 않은 날',[[css('--line2'),'판','-']]);return}
+      const r=el(s,'rect',{x,y:yy,width:cw,height:ch,rx:4,fill:css(C[lv(v)])});
+      const today=wi===N-1&&di===TODAY_DOW;
+      // 오늘: 칸 바깥으로 넘치지 않게 안쪽 고리 (칸 크기·간격 그대로)
+      if(today){el(s,'rect',{x:x+1.5,y:yy+1.5,width:cw-3,height:ch-3,rx:3,fill:'none',stroke:css('--panel'),'stroke-width':2});el(s,'circle',{cx:x+cw/2,cy:yy+ch/2,r:2.5,fill:css('--panel')})}
+      hover(r,today?day+' · 오늘':day,[[css('--acc'),'판',v+'판']],()=>r.setAttribute('opacity',.8),()=>r.setAttribute('opacity',1))})});
+  ['월','','수','','금','','일'].forEach((d,i)=>d&&el(s,'text',{x:0,y:22+i*(ch+gap)+ch/2+4,class:'ax',style:'font-size:11px'},d));
+  const ly=22+7*(ch+gap)+12,ls=12;
+  // 범례: 왼쪽 오늘 표시 · 오른쪽 적음→많음
+  el(s,'rect',{x:lab,y:ly,width:ls,height:ls,rx:3,fill:css('--h3')});el(s,'rect',{x:lab+1.5,y:ly+1.5,width:ls-3,height:ls-3,rx:2,fill:'none',stroke:css('--panel'),'stroke-width':1.5});el(s,'text',{x:lab+ls+6,y:ly+10,class:'ax',style:'font-size:11px'},'오늘');
+  const sx=w-28-5*(ls+3);el(s,'text',{x:sx-6,y:ly+10,'text-anchor':'end',class:'ax',style:'font-size:11px'},'적음');C.forEach((c,i)=>el(s,'rect',{x:sx+i*(ls+3),y:ly,width:ls,height:ls,rx:3,fill:css(c)}));el(s,'text',{x:w,y:ly+10,'text-anchor':'end',class:'ax',style:'font-size:11px'},'많음');
   $('#cal').replaceChildren(s);
   // 시간대 줄: 같은 칸 모양, 24시간 (시간대 합을 시간마다 나눈 값)
   const slotH=[[6,12,0],[12,18,1],[18,21,2],[21,24,3],[0,6,4]],hourV=Array(24).fill(0);slotH.forEach(([a,b,si])=>{const tot=HEAT[si].reduce((x,y)=>x+y,0);for(let h=a;h<b;h++)hourV[h]=tot/(b-a)});
