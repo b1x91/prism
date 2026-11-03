@@ -134,13 +134,14 @@ async function loadHistory(puuid: string, pages: number) {
 const UPLOADED = 'prism-uploaded-p1';
 const canUpload = () => Boolean(state.me?.consent);
 
-async function sendGames(ids: number[]) {
+async function sendGames(ids: number[], force = false) {
   // 보냈음 = 서버가 받아들인 판만. 거절된 판(봇 섞인 커스텀 등)은 앱 버전마다 한 번만 다시 본다
   // (-f1: 도감 역할 챌린지 기록을 채우려고 예전에 보낸 판도 한 번 다시 보낸다. 서버는 같은 판을 다시 저장하지 않고 빈 기록만 채운다)
   const done = new Set<number>(stored(UPLOADED, []));
   const skipKey = `prism-skipped-${VERSION}`;
   const skipped = new Set<number>(stored(skipKey, []));
-  const todo = ids.filter((id) => !done.has(id) && !skipped.has(id));
+  // force: 다시 연결한 뒤 — 이 계정으로 예전에 올린 판도 다시 보내 내 기록을 채운다 (서버는 같은 판을 다시 저장하지 않고 빠진 회원 기록만 더한다)
+  const todo = ids.filter((id) => (force || !done.has(id)) && !skipped.has(id));
   for (let i = 0; i < todo.length; i += BATCH) {
     const part = todo.slice(i, i + BATCH);
     const games = [];
@@ -582,7 +583,7 @@ export async function relinkRiot() {
   if (!state.summoner) throw new Error('롤 클라이언트를 켜면 다시 연결할 수 있어요.');
   await api.post('/api/me/riot', { puuid: state.summoner.puuid, riotId: state.summoner.riotId });
   await refreshSession();
-  void uploadOwn();
+  if (canUpload()) void sendGames(state.games.map((g) => g.gameId), true).catch(() => undefined);
 }
 
 const PERSONAL_KEYS = new Set(['gameName', 'tagLine', 'summonerName', 'displayName', 'internalName', 'riotIdGameName', 'riotIdTagline', 'summonerId', 'accountId', 'currentAccountId', 'profileIcon', 'matchHistoryUri', 'nameVisibilityType', 'obfuscatedPuuid', 'obfuscatedSummonerId']);
