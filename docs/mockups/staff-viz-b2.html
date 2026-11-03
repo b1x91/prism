@@ -186,7 +186,7 @@ svg text{font-family:var(--font)}
     <section class="card grow">
       <div class="ch"><h2>주별 판과 활동 멤버</h2><span class="meta tn">최근 8주 · 1,024판</span></div>
       <p class="lede"><b>판이 늘면 활동 멤버도 함께 늘었어요.</b> 10/26 주 555판에 30명, 이번 주는 이틀 만에 151판·27명 (진행 중이라 점선).</p>
-      <div class="legend"><span><i class="k" style="background:var(--acc)"></i>모임 판</span><span><i class="k" style="background:color-mix(in srgb, var(--acc) 32%, var(--panel))"></i>그 밖의 판</span><span><i class="k" style="background:var(--panel);border:1.5px solid var(--acc);border-radius:50%"></i>활동 멤버 (최고·최저, 나머지는 마우스를 올리면)</span></div>
+      <div class="legend"><span><i class="k" style="background:var(--acc)"></i>모임 판</span><span><i class="k" style="background:color-mix(in srgb, var(--acc) 32%, var(--panel))"></i>그 밖의 판</span><span><i class="k" style="background:var(--c3)"></i>이번 주 (진행 중)</span><span><i class="k" style="background:var(--panel);border:1.5px solid var(--acc);border-radius:50%"></i>활동 멤버 (최고·최저, 나머지는 마우스를 올리면)</span></div>
       <div class="plot fill" id="combo"></div>
     </section>
     <section class="card">
@@ -266,8 +266,6 @@ function combo(){const w=W('#combo'),H=Math.max(280,$('#combo').clientHeight),L=
   const y=v=>T+ih-v/g.top*ih,col=iw/8,bw=Math.min(20,col*.32),cx=i=>L+col*i+col/2,acc=css('--acc'),pan=css('--panel'),soft=`color-mix(in srgb, ${acc} 32%, ${pan})`;
   const id=Math.random().toString(36).slice(2,7),df=el(s,'defs',{});
   const ag=el(df,'linearGradient',{id:'a'+id,x1:0,y1:0,x2:0,y2:1});[[0,.20],[.7,.04],[1,0]].forEach(([o,a])=>el(ag,'stop',{offset:o,'stop-color':acc,'stop-opacity':a}));
-  // 이번 주(진행 중) 무늬: 옅은 바탕 위 45° 가는 빗금
-  const pt=el(df,'pattern',{id:'p'+id,width:6,height:6,patternUnits:'userSpaceOnUse',patternTransform:'rotate(45)'});el(pt,'rect',{width:6,height:6,fill:`color-mix(in srgb, ${acc} 14%, ${pan})`});el(pt,'rect',{width:2.5,height:6,fill:`color-mix(in srgb, ${acc} 55%, ${pan})`});
   for(let i=0;i<=Math.round(g.top/g.step);i++){const v=g.step*i;el(s,'line',{x1:L,x2:w-R,y1:y(v),y2:y(v),stroke:i?css('--grid'):css('--line2')});el(s,'text',{x:L-8,y:y(v)+4,'text-anchor':'end',class:'ax tn'},fmt(v))}
   const hl=el(s,'rect',{x:0,y:T-36,width:col-4,height:ih+36,rx:12,fill:css('--panel2'),opacity:0,style:'transition:opacity .35s ease, x .35s cubic-bezier(.16,1,.3,1)'});
   // 물결 = 막대 꼭대기(전체 판)를 잇는다
@@ -276,14 +274,12 @@ function combo(){const w=W('#combo'),H=Math.max(280,$('#combo').clientHeight),L=
   el(s,'path',{d:area,fill:`url(#a${id})`,class:'vz-fade'});
   // 막대 = 전체 판. 지난 주들은 물결 모양으로 잘라 물결 밖으로 나오지 않게, 이번 주는 진행 중이라 온전한 막대 + 빗금
   const cpa=el(df,'clipPath',{id:'k'+id});el(cpa,'path',{d:area});const bars=el(s,'g',{'clip-path':`url(#k${id})`});
-  W8.forEach((d,i)=>{const x=cx(i)-bw/2,last=i===7,gg=el(last?s:bars,'g',{class:'vz-grow',style:`animation-delay:${120+i*55}ms`});
-    if(last){
-      if(d.c>0)el(gg,'path',{d:topBar(x,y(d.c),bw,y(0)-y(d.c),d.g>d.c?0:5),fill:`color-mix(in srgb, ${acc} 60%, ${pan})`});
-      if(d.g>d.c)el(gg,'path',{d:topBar(x,y(d.g),bw,y(d.c)-y(d.g)-(d.c?2:0),5),fill:`url(#p${id})`});
-      el(s,'text',{x:cx(i),y:y(d.g)-18,'text-anchor':'middle',class:'ax',style:'font-size:11px;font-weight:700'},'진행 중');
-    }else{const top=y(d.g)-24;
-      if(d.c>0)el(gg,'rect',{x,y:y(d.c),width:bw,height:y(0)-y(d.c),fill:acc});
-      if(d.g>d.c)el(gg,'rect',{x,y:top,width:bw,height:y(d.c)-top-(d.c?2:0),fill:soft})}});
+  // 막대 = 전체 판, 모두 물결 모양으로 잘라 물결 밖으로 나오지 않게. 이번 주(진행 중)는 같은 크기에 청록으로 구분
+  const now=css('--c3'),nowSoft=`color-mix(in srgb, ${now} 34%, ${pan})`;
+  W8.forEach((d,i)=>{const x=cx(i)-bw/2,last=i===7,gg=el(bars,'g',{class:'vz-grow',style:`animation-delay:${120+i*55}ms`}),top=y(d.g)-24;
+    if(d.c>0)el(gg,'rect',{x,y:y(d.c),width:bw,height:y(0)-y(d.c),fill:last?now:acc});
+    if(d.g>d.c)el(gg,'rect',{x,y:top,width:bw,height:y(d.c)-top-(d.c?2:0),fill:last?nowSoft:soft});
+    if(last)el(s,'text',{x:cx(i),y:y(d.g)-18,'text-anchor':'middle',class:'ax',style:'font-size:11px;font-weight:700'},'진행 중')});
   // 선·점선·점은 마우스를 올렸을 때 그려지듯 나타나고, 떼면 천천히 사라진다
   const lineG=el(s,'g',{class:'cline'});
   const mainLine=el(lineG,'path',{d:smooth(pts.slice(0,7)),fill:'none',stroke:acc,'stroke-width':2,'stroke-linecap':'round',opacity:.9});
@@ -299,7 +295,7 @@ function combo(){const w=W('#combo'),H=Math.max(280,$('#combo').clientHeight),L=
     el(gp,'text',{x:x0+(tag?bw2+12:20),y:qy+20,style:'font-size:14px;font-weight:800',fill:css('--fg'),class:'tn'},num);return gp});
   W8.forEach((d,i)=>{const last=i===7;if(last||col>=52||(7-i)%2===0)el(s,'text',{x:cx(i),y:H-8,'text-anchor':'middle',class:'ax'+(last?' now':'')},d.l);
     const hit=el(s,'rect',{x:L+col*i,y:0,width:col,height:H,class:'hit'});
-    hover(hit,last?'이번 주 (진행 중)':d.l+' 주',[[acc,'모임 판',fmt(d.c)],[soft,'그 밖의 판',fmt(d.g-d.c)],[css('--fg2'),'활동 멤버',d.a+'명']],()=>{hl.setAttribute('x',L+col*i+2);hl.setAttribute('opacity',1);if(pills[i]&&i!==hi&&i!==lo)pills[i].setAttribute('opacity',1)},()=>{hl.setAttribute('opacity',0);if(pills[i]&&i!==hi&&i!==lo)pills[i].setAttribute('opacity',0)})});
+    hover(hit,last?'이번 주 (진행 중)':d.l+' 주',[[last?now:acc,'모임 판',fmt(d.c)],[last?nowSoft:soft,'그 밖의 판',fmt(d.g-d.c)],[css('--fg2'),'활동 멤버',d.a+'명']],()=>{hl.setAttribute('x',L+col*i+2);hl.setAttribute('opacity',1);if(pills[i]&&i!==hi&&i!==lo)pills[i].setAttribute('opacity',1)},()=>{hl.setAttribute('opacity',0);if(pills[i]&&i!==hi&&i!==lo)pills[i].setAttribute('opacity',0)})});
   $('#combo').replaceChildren(s);
   // 그려지는 선: 길이를 재서 dashoffset 으로 왼쪽부터 그린다
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches,len=mainLine.getTotalLength();
