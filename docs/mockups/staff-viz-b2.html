@@ -1,0 +1,306 @@
+<title>Prism 운영 무대</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* 레이아웃: B안 밝은 무대 — 위 비율 고리 → 주별 판(+활동 멤버) | 날짜 열지도 → 잘하는 멤버(기준 풀이) → 새 멤버 정착(목표·현실·할 일). Prism 토큰 */
+:root{
+  --bg:#f3f4f8; --panel:#ffffff; --panel2:#f7f8fc; --line:#e6e8f0; --grid:#eceef4; --line2:#d6d9e4;
+  --fg:#12141c; --fg2:#4a4f61; --mut:#848a9c;
+  --acc:#3b5bfd; --acc-soft:#e9edff; --other:#cdd3e4; --wash:rgba(59,91,253,.10);
+  --up:#15803d; --up-soft:#e6f5ec; --warn:#b45309; --warn-soft:#fdf1e2; --down:#c2410c;
+  --h0:#ebedf3; --h1:#cfd8ff; --h2:#9fb0ff; --h3:#6b84ff; --h4:#3b5bfd;
+  --c1:#2a78d6; --c2:#eb6834; --c3:#1baf7a; --c4:#eda100; --c5:#e87ba4;
+  --ring-track:#e9ecf5;
+  --font:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#07090f; --panel:#10141f; --panel2:#151a27; --line:#222839; --grid:#1b2131; --line2:#2c3347;
+  --fg:#eef0f6; --fg2:#b4b9c8; --mut:#7d8497;
+  --acc:#6d86ff; --acc-soft:#1b2348; --other:#39415a; --wash:rgba(109,134,255,.12);
+  --up:#3ccf74; --up-soft:#12301f; --warn:#f0b54a; --warn-soft:#352812; --down:#ff8a5c;
+  --h0:#161b28; --h1:#1f2b5c; --h2:#2f4296; --h3:#4a63d6; --h4:#7d92ff;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181;
+  --ring-track:#1d2335; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#07090f; --panel:#10141f; --panel2:#151a27; --line:#222839; --grid:#1b2131; --line2:#2c3347;
+  --fg:#eef0f6; --fg2:#b4b9c8; --mut:#7d8497;
+  --acc:#6d86ff; --acc-soft:#1b2348; --other:#39415a; --wash:rgba(109,134,255,.12);
+  --up:#3ccf74; --up-soft:#12301f; --warn:#f0b54a; --warn-soft:#352812; --down:#ff8a5c;
+  --h0:#161b28; --h1:#1f2b5c; --h2:#2f4296; --h3:#4a63d6; --h4:#7d92ff;
+  --c1:#3987e5; --c2:#d95926; --c3:#199e70; --c4:#c98500; --c5:#d55181;
+  --ring-track:#1d2335; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:14px;line-height:1.5;word-break:keep-all;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+h1,h2,h3,h4{margin:0;text-wrap:balance}
+button{font:inherit;color:inherit;cursor:pointer}
+[tabindex]:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.tn{font-variant-numeric:tabular-nums}
+svg text{font-family:var(--font)}
+.wrap{max-width:1240px;margin:0 auto;display:grid;gap:16px}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px}
+.top h1{font-size:20px}
+.top p{margin:4px 0 0;font-size:13px;color:var(--mut);max-width:70ch}
+.theme{display:flex;gap:4px}
+.theme button{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:4px 12px;font-size:12px;color:var(--mut)}
+.theme button[aria-pressed="true"]{color:var(--fg);border-color:var(--line2);font-weight:700}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px;min-width:0;box-shadow:0 1px 2px rgba(18,20,28,.04),0 8px 24px rgba(18,20,28,.04)}
+.ch{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+.ch h2{font-size:16px}
+.meta{font-size:12px;color:var(--mut)}
+.lede{margin:8px 0 16px;font-size:13px;color:var(--fg2)}
+.lede b{color:var(--fg)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--fg2);margin-bottom:8px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.k{width:10px;height:10px;border-radius:3px;display:inline-block;flex:none}
+.row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:16px;align-items:stretch}
+.plot{position:relative}
+.plot svg{display:block;overflow:visible}
+.ax{font-size:12px;fill:var(--mut)}
+.ax.now{fill:var(--fg);font-weight:700}
+.lbl{font-size:12px;fill:var(--fg);font-weight:700}
+.hit{fill:transparent}
+.ex{display:inline-block;font-size:12px;font-weight:600;color:var(--warn);background:var(--warn-soft);padding:0 8px;border-radius:999px;margin-left:8px;vertical-align:1px}
+
+/* 고리 */
+.rings{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}
+.ring{display:flex;align-items:center;gap:16px;padding:4px 20px;border-left:1px solid var(--line);min-width:0}
+.ring:first-child{border-left:0;padding-left:0}
+.ring .l{font-size:13px;color:var(--fg2)}
+.ring .n{font-size:28px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.ring .d{font-size:12px;color:var(--mut);white-space:nowrap}
+.ring .d em{font-style:normal;color:var(--up);font-weight:700}
+
+/* 열지도 (GitHub 식) */
+.cal-side{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line)}
+.cal-side div{display:grid;gap:2px}
+.cal-side span{font-size:12px;color:var(--mut)}
+.cal-side b{font-size:20px;font-weight:800}
+.cal-side b small{font-size:13px;font-weight:600;color:var(--fg2);margin-left:2px}
+
+/* 잘하는 멤버 */
+.crit{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:16px 0}
+.crit div{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:4px;min-width:0}
+.crit .t{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+.crit .t em{margin-left:auto;font-style:normal;font-size:12px;color:var(--mut);font-weight:600}
+.crit p{margin:0;font-size:12px;color:var(--fg2)}
+.mtbl{display:grid}
+.mr{display:grid;grid-template-columns:28px minmax(150px,1.1fr) minmax(220px,2fr) 56px;gap:16px;align-items:center;padding:12px 8px;border-top:1px solid var(--line);border-radius:0}
+.mr.h{border-top:0;padding-top:0;font-size:12px;color:var(--mut)}
+.mr:not(.h):hover{background:var(--panel2);border-radius:12px}
+.mr .rk{font-weight:800;color:var(--mut);text-align:center}
+.mr .rk.r1{color:#d4a017}
+.mr .who{display:flex;align-items:center;gap:12px;min-width:0}
+.mr .who b{display:block;font-size:14px}
+.mr .who small{display:block;font-size:12px;color:var(--mut)}
+.face{width:36px;height:36px;border-radius:50%;flex:none;display:grid;place-items:center;font-size:13px;font-weight:800;color:#fff}
+.mr .tot{text-align:right;font-size:20px;font-weight:800}
+.mr .tot small{display:block;font-size:12px;font-weight:600;color:var(--mut)}
+.stackbar{display:grid;gap:6px}
+.chips{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12px;color:var(--fg2)}
+.chips span{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+
+/* 정착 */
+.steps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;margin-top:16px}
+.st{position:relative;border:1px solid var(--line);border-radius:12px;padding:16px 12px 12px;display:grid;gap:8px;align-content:start;background:var(--panel);min-width:0}
+.st.bad{border-color:color-mix(in srgb,var(--warn) 45%,var(--line));background:linear-gradient(var(--warn-soft),var(--panel) 70%)}
+.st .no{font-size:12px;color:var(--mut);font-weight:700}
+.st h4{font-size:14px}
+.st .num{display:flex;align-items:baseline;gap:4px}
+.st .num b{font-size:28px;font-weight:800;line-height:1}
+.st .num span{font-size:12px;color:var(--mut)}
+.st .meter{position:relative;height:8px;border-radius:999px;background:var(--ring-track)}
+.st .meter i{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--acc)}
+.st.bad .meter i{background:var(--warn)}
+.st .meter u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--fg);border-radius:1px}
+.st .tg{font-size:12px;color:var(--fg2);display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap}
+.st .tg em{font-style:normal;font-weight:700}
+.st .tg em.ok{color:var(--up)} .st .tg em.no{color:var(--warn)}
+.st .time{font-size:12px;color:var(--mut)}
+.st .ins{font-size:12px;color:var(--fg2);border-top:1px solid var(--line);padding-top:8px}
+.st .ins b{color:var(--fg)}
+.st::after{content:'';position:absolute;right:-7px;top:28px;width:6px;height:10px;background:var(--line2);clip-path:polygon(0 0,100% 50%,0 100%)}
+.st:last-child::after{display:none}
+.ai{margin-top:16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;padding:16px 20px;border-radius:12px;background:linear-gradient(135deg,var(--acc-soft),var(--panel) 75%);border:1px solid color-mix(in srgb,var(--acc) 25%,var(--line))}
+.ai .ic{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--acc);color:#fff;font-weight:800;font-size:13px}
+.ai h4{font-size:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ai ol{margin:8px 0 0;padding-left:20px;display:grid;gap:4px;font-size:13px;color:var(--fg2)}
+.ai ol b{color:var(--fg)}
+.ai .src{font-size:12px;color:var(--mut);margin-top:8px}
+
+#tip{position:fixed;z-index:50;pointer-events:none;min-width:160px;padding:12px;border-radius:12px;background:var(--panel);border:1px solid var(--line2);box-shadow:0 12px 32px rgba(0,0,0,.16);font-size:12px;color:var(--fg2);display:none}
+#tip .t{color:var(--mut);margin-bottom:4px}
+#tip .r{display:flex;align-items:center;gap:8px;margin-top:4px}
+#tip .r i{width:12px;height:2px;border-radius:1px;flex:none}
+#tip .r b{margin-left:auto;padding-left:16px;font-size:14px;color:var(--fg);font-variant-numeric:tabular-nums}
+
+@media (max-width:1100px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}.st:nth-child(3)::after{display:none}.crit{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:1000px){.row{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){
+  .card{padding:16px}
+  .rings{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .ring{border-left:0;padding:0;gap:12px}
+  .ring .d{white-space:normal}
+  .ring svg{width:48px;height:48px;flex:none}
+  .crit{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}.st::after{display:none}
+  .mr{grid-template-columns:24px minmax(0,1fr) 48px;row-gap:8px}
+  .mr .stackbar{grid-column:2/4;grid-row:2}
+  .mr.h > :nth-child(3){display:none}
+  .ai{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+
+<div id="tip" role="tooltip"></div>
+<div class="wrap">
+  <header class="top">
+    <div><h1>운영 · B안 밝은 무대</h1><p>숫자는 보내 주신 화면 그대로예요. <span class="ex">예시</span> 표시는 지금 서버가 아직 세지 않아 보기용으로 넣은 값이에요 (만들 때 실제로 계산해요).</p></div>
+    <div class="theme" role="group" aria-label="화면"><button type="button" data-th="" aria-pressed="true">시스템</button><button type="button" data-th="light" aria-pressed="false">라이트</button><button type="button" data-th="dark" aria-pressed="false">다크</button></div>
+  </header>
+
+  <section class="card"><div class="rings" id="rings"></div></section>
+
+  <div class="row">
+    <section class="card">
+      <div class="ch"><h2>주별 판과 활동 멤버</h2><span class="meta tn">최근 8주 · 1,024판</span></div>
+      <p class="lede"><b>판이 늘면 활동 멤버도 함께 늘었어요.</b> 10/26 주 555판에 30명, 이번 주는 이틀 만에 151판·27명.</p>
+      <div class="legend"><span><i class="k" style="background:var(--acc)"></i>모임 판</span><span><i class="k" style="background:var(--other)"></i>그 밖의 판</span><span><i class="k" style="background:var(--panel2);border:1px solid var(--line2);border-radius:999px;width:22px"></i>막대 위 = 그 주 활동 멤버</span></div>
+      <div class="plot" id="combo"></div>
+    </section>
+    <section class="card">
+      <div class="ch"><h2>언제 모이나요</h2><span class="meta">최근 12주 · 하루 판 수 <span class="ex">날짜별은 예시</span></span></div>
+      <div class="plot" id="cal" style="margin-top:16px"></div>
+      <div class="plot" id="hours" style="margin-top:20px"></div>
+      <div class="cal-side" id="calside"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="ch"><h2>잘하고 있는 멤버</h2><span class="meta">최근 2주 · 다섯 가지 기준의 합 (100점)</span></div>
+    <div class="crit" id="crit"></div>
+    <div class="legend" style="margin-bottom:4px"><span>막대 = 기준마다 받은 점수가 쌓인 모양 · 마우스를 올리면 근거 숫자</span></div>
+    <div class="mtbl" id="mtbl"></div>
+  </section>
+
+  <section class="card">
+    <div class="ch"><h2>새 멤버 정착</h2><span class="meta">최근 4주 가입 31명 · 목표는 운영 설정에서 바꿔요</span></div>
+    <div class="steps" id="steps"></div>
+    <div class="ai" id="ai"></div>
+  </section>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const NS='http://www.w3.org/2000/svg';
+const svg=(w,h)=>{const s=document.createElementNS(NS,'svg');s.setAttribute('width',w);s.setAttribute('height',h);s.setAttribute('viewBox',`0 0 ${w} ${h}`);return s};
+function el(p,t,a,x){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(x!=null)e.textContent=x;p.appendChild(e);return e}
+const fmt=n=>n.toLocaleString('ko-KR');
+function niceTop(v,t=4){const raw=Math.max(v,t)/t,p=10**Math.floor(Math.log10(raw));const st=[1,2,2.5,5,10].map(m=>m*p).find(s=>s>=raw);return{top:st*t,step:st}}
+function topBar(x,y,w,h,r=4){if(h<=0)return'';r=Math.min(r,h,w/2);return`M${x},${y+h} V${y+r} Q${x},${y} ${x+r},${y} H${x+w-r} Q${x+w},${y} ${x+w},${y+r} V${y+h} Z`}
+const tip=$('#tip');
+function showTip(e,title,rows){tip.replaceChildren();const t=document.createElement('div');t.className='t';t.textContent=title;tip.appendChild(t);for(const[c,n,v]of rows){const r=document.createElement('div');r.className='r';const i=document.createElement('i');i.style.background=c;const s=document.createElement('span');s.textContent=n;const b=document.createElement('b');b.textContent=v;r.append(i,s,b);tip.appendChild(r)}tip.style.display='block';move(e)}
+function move(e){const r=tip.getBoundingClientRect();let x=e.clientX+16,y=e.clientY+16;if(x+r.width>innerWidth-8)x=e.clientX-r.width-16;if(y+r.height>innerHeight-8)y=e.clientY-r.height-16;tip.style.left=x+'px';tip.style.top=y+'px'}
+function hover(n,title,rows,a,b){n.setAttribute('tabindex','0');n.addEventListener('pointerenter',e=>{showTip(e,title,rows);a&&a()});n.addEventListener('pointermove',move);n.addEventListener('pointerleave',()=>{tip.style.display='none';b&&b()});n.addEventListener('focus',()=>{const r=n.getBoundingClientRect();showTip({clientX:r.right,clientY:r.top},title,rows);a&&a()});n.addEventListener('blur',()=>{tip.style.display='none';b&&b()})}
+const W=id=>Math.max(260,$(id).clientWidth);
+
+// ───── 데이터 ─────
+const W8=[{l:'9/14',g:0,c:0,a:0},{l:'9/21',g:0,c:0,a:0},{l:'9/28',g:8,c:2,a:4},{l:'10/5',g:25,c:5,a:9},{l:'10/12',g:120,c:30,a:20},{l:'10/19',g:165,c:30,a:24},{l:'10/26',g:555,c:185,a:30},{l:'이번 주',g:151,c:75,a:27}];
+const HEAT=[[3,5,6,4,5,2,15],[10,10,3,7,7,40,50],[19,4,9,4,13,22,30],[57,42,41,54,39,45,82],[58,66,38,34,61,42,71]];
+// 날짜별 판 (예시): 주별 합을 요일 비중대로 나눔 — 실제로는 서버가 날짜마다 센다
+const dayW=[0,1,2,3,4,5,6].map(d=>HEAT.reduce((a,r)=>a+r[d],0)),dSum=dayW.reduce((a,b)=>a+b,0);
+const WEEKS12=[0,0,0,0,...W8.map(w=>w.g)];
+function rnd(i){const x=Math.sin(i*99.13)*43758.5453;return x-Math.floor(x)}
+const TODAY_DOW=1; // 화요일 (월=0)
+const CAL=WEEKS12.map((g,w)=>dayW.map((p,d)=>{if(w===11&&d>TODAY_DOW)return null;const share=w===11?(d<=TODAY_DOW?p/(dayW[0]+dayW[1]):0):p/dSum;return Math.round(g*share*(.75+rnd(w*7+d)*.5))}));
+const STARS=[
+  {n:'나코치',c:'#7c3aed',g:116,crew:93,days:13,mates:15,score:581},
+  {n:'롤처음하니살살요',c:'#b45309',g:67,crew:51,days:11,mates:12,score:586},
+  {n:'그남자와잔나',c:'#0e7490',g:63,crew:60,days:10,mates:11,score:542},
+  {n:'용팔이네 형',c:'#9f1239',g:49,crew:12,days:8,mates:5,score:565},
+  {n:'톰과란제리',c:'#c2410c',g:25,crew:2,days:6,mates:2,score:600}];
+const CRIT=[
+  {k:'g',name:'활동량',w:25,c:'--c1',desc:'2주 판 수 (모임에서 가장 많이 한 멤버 대비)',f:m=>Math.min(1,Math.log1p(m.g)/Math.log1p(116)),v:m=>m.g+'판'},
+  {k:'crew',name:'참여도',w:20,c:'--c2',desc:'멤버와 함께한 판의 비율',f:m=>m.crew/m.g,v:m=>Math.round(m.crew/m.g*100)+'% ('+m.crew+'판)'},
+  {k:'days',name:'꾸준함',w:20,c:'--c3',desc:'14일 중 판을 한 날',f:m=>m.days/14,v:m=>m.days+' / 14일'},
+  {k:'mates',name:'어울림',w:20,c:'--c4',desc:'함께한 서로 다른 멤버 수',f:m=>Math.min(1,m.mates/15),v:m=>m.mates+'명'},
+  {k:'score',name:'성적',w:15,c:'--c5',desc:'Prism 점수 (500 = 보통)',f:m=>Math.max(0,Math.min(1,(m.score-500)/100)),v:m=>m.score+'점'}];
+const FUN=[
+  {n:'가입',v:31,goal:100,time:null,ins:'최근 4주 31명이 가입했어요.'},
+  {n:'롤 계정 연결',v:30,goal:95,time:'가입 후 평균 2시간',ins:'목표보다 높아요. 1명은 앱을 설치하지 않았어요.'},
+  {n:'앱 설치',v:30,goal:90,time:'가입 후 평균 5시간',ins:'목표보다 높아요.'},
+  {n:'첫 판',v:30,goal:90,time:'가입 후 평균 1.6일',ins:'3일 안에 첫 판 — 좋아요.'},
+  {n:'모임 판 3판',v:26,goal:90,time:'가입 후 평균 6.5일',ins:'<b>4명</b>이 멤버와 함께한 판이 3판이 안 돼요. 같이 할 사람을 이어 주면 가장 효과가 커요.'},
+  {n:'정회원',v:23,goal:80,time:'가입 후 평균 12일',ins:'<b>3명</b>은 운영진과 3판 기준을 못 채웠어요.'}];
+
+// ───── 고리 ─────
+function rings(){const R=[['활동률',27/32,'27 / 32명','<em>+11</em> 지난주 같은 때보다'],['모임 판 비율',75/151,'75 / 151판','지난주 같은 때 63%'],['새 멤버 정착',23/31,'23 / 31명','최근 4주 가입'],['앱 쓰는 멤버',31/32,'31 / 32명','롤 연결 31']];
+  const ring=p=>{const r=26,C=2*Math.PI*r;return `<svg width="64" height="64" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--ring-track)" stroke-width="8"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="var(--acc)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${C*p} ${C}" transform="rotate(-90 32 32)"/></svg>`};
+  $('#rings').innerHTML=R.map(r=>`<div class="ring">${ring(r[1])}<div style="min-width:0"><div class="l">${r[0]}</div><div class="n">${Math.round(r[1]*100)}%</div><div class="d tn">${r[2]} · ${r[3]}</div></div></div>`).join('')}
+
+// ───── 주별 판 + 활동 멤버 (한 차트, 막대 위에 멤버) ─────
+function combo(){const w=W('#combo'),H=w<520?260:360,L=40,R=8,T=48,B=28,iw=w-L-R,ih=H-T-B,s=svg(w,H),g=niceTop(Math.max(...W8.map(x=>x.g)));
+  const y=v=>T+ih-v/g.top*ih,col=iw/8,bw=Math.min(24,col*.45),cx=i=>L+col*i+col/2,amax=Math.max(...W8.map(x=>x.a));
+  for(let i=0;i<=4;i++){const v=g.step*i;el(s,'line',{x1:L,x2:w-R,y1:y(v),y2:y(v),stroke:i?css('--grid'):css('--line2')});el(s,'text',{x:L-8,y:y(v)+4,'text-anchor':'end',class:'ax tn'},fmt(v))}
+  W8.forEach((d,i)=>{const x=cx(i)-bw/2,last=i===7;const hl=el(s,'rect',{x:L+col*i+2,y:4,width:col-4,height:H-8,rx:12,fill:css('--panel2'),opacity:0});
+    if(d.c>0)el(s,'path',{d:topBar(x,y(d.c),bw,y(0)-y(d.c),d.g>d.c?0:4),fill:css('--acc')});
+    if(d.g>d.c)el(s,'path',{d:topBar(x,y(d.g),bw,y(d.c)-y(d.g)-(d.c?2:0),4),fill:css('--other')});
+    // 막대 위: 활동 멤버 알약 (진하기 = 사람 수)
+    if(d.a>0){const py=Math.min(y(d.g)-28,T+ih-28),pw=String(d.a).length*7+38,k=d.a/amax;
+      el(s,'rect',{x:cx(i)-pw/2,y:py,width:pw,height:22,rx:11,fill:`color-mix(in srgb, ${css('--acc')} ${Math.round(8+k*22)}%, ${css('--panel')})`,stroke:`color-mix(in srgb, ${css('--acc')} ${Math.round(20+k*40)}%, ${css('--panel')})`});
+      el(s,'circle',{cx:cx(i)-pw/2+10,cy:py+11,r:3.5,fill:css('--acc'),opacity:.35+k*.65});
+      el(s,'text',{x:cx(i)-pw/2+18,y:py+15,'text-anchor':'start',class:'lbl tn'},d.a+'명')}
+    if(last||col>=52||(7-i)%2===0)el(s,'text',{x:cx(i),y:H-8,'text-anchor':'middle',class:'ax'+(last?' now':'')},d.l);
+    const hit=el(s,'rect',{x:L+col*i,y:0,width:col,height:H,class:'hit'});
+    hover(hit,last?'이번 주 (진행 중)':d.l+' 주',[[css('--acc'),'모임 판',fmt(d.c)],[css('--other'),'그 밖의 판',fmt(d.g-d.c)],[css('--fg2'),'활동 멤버',d.a+'명'],[css('--line2'),'멤버 1명당',d.a?(d.g/d.a).toFixed(1)+'판':'-']],()=>hl.setAttribute('opacity',1),()=>hl.setAttribute('opacity',0))});
+  $('#combo').replaceChildren(s)}
+
+// ───── GitHub 식 날짜 열지도 + 시간대 줄 ─────
+function cal(){const w=W('#cal'),lab=24,gap=3,cs=Math.max(10,Math.min(32,Math.floor((w-lab-gap*11)/12))),H=20+7*(cs+gap)+28,s=svg(w,H);
+  const flat=CAL.flat().filter(v=>v!=null),max=Math.max(...flat),lv=v=>v==null?-1:v===0?0:v<max*.15?1:v<max*.35?2:v<max*.6?3:4,C=['--h0','--h1','--h2','--h3','--h4'];
+  const start=new Date(2026,7,17); // 12주 전 월요일 (8/17)
+  let lastM=-1;CAL.forEach((wk,wi)=>{const d0=new Date(start);d0.setDate(d0.getDate()+wi*7);const m=d0.getMonth();if(m!==lastM){el(s,'text',{x:lab+wi*(cs+gap),y:12,class:'ax'},(m+1)+'월');lastM=m}
+    wk.forEach((v,di)=>{if(v==null)return;const x=lab+wi*(cs+gap),yy=20+di*(cs+gap),r=el(s,'rect',{x,y:yy,width:cs,height:cs,rx:3,fill:css(C[lv(v)])});const dt=new Date(d0);dt.setDate(dt.getDate()+di);
+      if(wi===11&&di===TODAY_DOW)el(s,'rect',{x:x-1.5,y:yy-1.5,width:cs+3,height:cs+3,rx:4,fill:'none',stroke:css('--fg'),'stroke-width':1.5});
+      hover(r,`${dt.getMonth()+1}월 ${dt.getDate()}일 (${'월화수목금토일'[di]})`,[[css('--acc'),'판',v+'판']],()=>r.setAttribute('stroke',css('--fg')),()=>r.removeAttribute('stroke'))})});
+  ['월','','수','','금','','일'].forEach((d,i)=>d&&el(s,'text',{x:0,y:20+i*(cs+gap)+cs-2,class:'ax',style:'font-size:11px'},d));
+  const ly=20+7*(cs+gap)+14;el(s,'text',{x:w-cs*5-gap*4-44,y:ly+cs*.7,'text-anchor':'end',class:'ax',style:'font-size:11px'},'적음');C.forEach((c,i)=>el(s,'rect',{x:w-cs*5-gap*4-38+i*(cs+gap),y:ly,width:cs,height:cs,rx:3,fill:css(c)}));el(s,'text',{x:w,y:ly+cs*.7,'text-anchor':'end',class:'ax',style:'font-size:11px'},'많음');
+  $('#cal').replaceChildren(s);
+  // 시간대 줄: 같은 칸 모양, 24시간 (시간대 합을 시간마다 나눈 값)
+  const slotH=[[6,12,0],[12,18,1],[18,21,2],[21,24,3],[0,6,4]],hourV=Array(24).fill(0);slotH.forEach(([a,b,si])=>{const tot=HEAT[si].reduce((x,y)=>x+y,0);for(let h=a;h<b;h++)hourV[h]=tot/(b-a)});
+  const hs=svg(w,52),hc=(w-lab-gap*23)/24,hm=Math.max(...hourV);el(hs,'text',{x:0,y:12,class:'ax'},'시간대 (최근 4주)');
+  hourV.forEach((v,h)=>{const k=v/hm,c=k<.15?C[1]:k<.35?C[2]:k<.6?C[3]:C[4];const r=el(hs,'rect',{x:lab+h*(hc+gap),y:20,width:hc,height:14,rx:3,fill:css(c)});hover(r,`${h}시`,[[css('--acc'),'판 (시간 평균)',Math.round(v)+'판']]);if(h%6===0)el(hs,'text',{x:lab+h*(hc+gap),y:50,class:'ax',style:'font-size:11px'},h+'시')});
+  $('#hours').replaceChildren(hs);
+  $('#calside').innerHTML=`<div><span>가장 많은 날</span><b>일요일<small>밤 9시~</small></b></div><div><span>이번 달 모인 날</span><b class="tn">3<small>/ 3일</small></b></div><div><span>연속으로 모인 날</span><b class="tn">23<small>일째</small></b></div>`}
+
+// ───── 잘하는 멤버: 기준 풀이 + 쌓인 막대 ─────
+function members(){
+  $('#crit').innerHTML=CRIT.map(c=>`<div><span class="t"><i class="k" style="background:var(${c.c})"></i>${c.name}<em>${c.w}점</em></span><p>${c.desc}</p></div>`).join('');
+  const rows=STARS.map(m=>{const parts=CRIT.map(c=>({c,p:c.f(m)*c.w}));return{m,parts,tot:Math.round(parts.reduce((a,b)=>a+b.p,0))}}).sort((a,b)=>b.tot-a.tot);
+  const best=a=>{const s=[...a.parts].sort((x,y)=>y.p/y.c.w-x.p/x.c.w);return s[0].c.name+'·'+s[1].c.name};
+  $('#mtbl').innerHTML=`<div class="mr h"><span></span><span>멤버</span><span>기준마다 받은 점수 (100점 만점)</span><span style="text-align:right">합계</span></div>`+rows.map((r,i)=>`<div class="mr"><span class="rk ${i?'':'r1'}">${i+1}</span><span class="who"><span class="face" style="background:${r.m.c}">${r.m.n[0]}</span><span style="min-width:0"><b>${r.m.n}</b><small>강점 · ${best(r)}</small></span></span><span class="stackbar"><span class="sb" data-i="${i}"></span><span class="chips">${r.parts.map(p=>`<span><i class="k" style="background:var(${p.c.c});width:8px;height:8px"></i>${p.c.v(r.m)}</span>`).join('')}</span></span><span class="tot tn">${r.tot}<small>점</small></span></div>`).join('');
+  document.querySelectorAll('#mtbl .sb').forEach(b=>{const r=rows[+b.dataset.i],w=b.clientWidth||300,s=svg(w,14);let x=0;el(s,'rect',{x:0,y:2,width:w,height:10,rx:5,fill:css('--ring-track')});
+    r.parts.forEach((p,j)=>{const pw=p.p/100*w;if(pw<1)return;const seg=el(s,'rect',{x,y:2,width:Math.max(0,pw-2),height:10,rx:j===0?5:2,fill:css(p.c.c)});hover(seg,r.m.n+' · '+p.c.name,[[css(p.c.c),p.c.v(r.m),Math.round(p.p)+' / '+p.c.w+'점']]);x+=pw});
+    b.replaceChildren(s)});
+}
+
+// ───── 새 멤버 정착: 목표 vs 현실 + 할 일 ─────
+function funnel(){
+  $('#steps').innerHTML=FUN.map((f,i)=>{const pct=Math.round(f.v/31*100),ok=pct>=f.goal,prev=i?FUN[i-1].v:null,conv=prev?Math.round(f.v/prev*100):null;
+    return `<div class="st ${ok?'':'bad'}"><span class="no">${i+1}단계</span><h4>${f.n}</h4><span class="num"><b class="tn">${f.v}</b><span>명 · ${pct}%</span></span>
+      <span class="meter" title="목표 ${f.goal}%"><i style="width:${pct}%"></i><u style="left:${f.goal}%"></u></span>
+      <span class="tg"><span>목표 ${f.goal}%</span><em class="${ok?'ok':'no'}">${ok?'달성':(pct-f.goal)+'%p'}</em></span>
+      ${conv!=null?`<span class="time">앞 단계에서 ${conv}% 넘어옴${f.time?' · '+f.time:''}</span>`:'<span class="time">기준 31명</span>'}
+      <span class="ins">${f.ins}</span></div>`}).join('');
+  $('#ai').innerHTML=`<span class="ic">AI</span><div><h4>이번 주 할 일 <span class="ex">AI 요약 예시</span></h4><ol>
+    <li><b>모임 판 3판을 못 채운 4명</b>에게 오늘 밤 9시 팟을 같이 열어 주세요 — 한 명당 2판이면 정회원 기준까지 닿아요.</li>
+    <li><b>정회원 심사 대기 3명</b> 중 2명은 운영진과 2판이에요. 운영진이 한 판씩만 함께하면 이번 주에 정회원이 돼요.</li>
+    <li>앱을 깔지 않은 1명은 웹으로만 들어와요 — 첫 판이 기록되지 않아 정착 숫자에 안 잡혀요. 설치 안내를 한 번 더.</li></ol>
+    <p class="src">위 단계 숫자와 멤버별 진행을 Claude API 로 요약해 하루 한 번 새로 써요. 숫자는 규칙으로 계산하고, AI 는 문장만 만들어요.</p></div>`}
+
+function all(){rings();combo();cal();members();funnel()}
+document.querySelectorAll('[data-th]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-th]').forEach(x=>x.setAttribute('aria-pressed',x===b));if(b.dataset.th)document.documentElement.dataset.theme=b.dataset.th;else delete document.documentElement.dataset.theme;all()}));
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',all);
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(all,120)});
+all();
+</script>
