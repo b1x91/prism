@@ -15,7 +15,7 @@ import { promoteSweep } from './promote.js';
 import { download, latest } from './release.js';
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
 import { artisanRanking, augmentArtisans, championArtisans, itemArtisans } from './artisans.js';
-import { addTip, augmentStats, board, gameDetail, myDex, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setPresence, setConsent, setProfile, toggleLike } from './crew.js';
+import { addTip, augmentStats, board, gameDetail, myDex, myGames, champSelect, crewTargets, deleteTip, getChampion, getMe, linkRiot, setMainAccount, removeAccount, setPresence, setConsent, setProfile, toggleLike } from './crew.js';
 import { ingest } from './ingest.js';
 import { memberPage, ranking } from './members.js';
 import { addNote, deleteNote, links, listNotes } from './notes.js';
@@ -96,6 +96,8 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'POST' && pathname === '/api/me/favs') return setFav(req, env, me);
   if (m === 'GET' && pathname === '/api/favs/count') { const q = new URL(req.url).searchParams; return favCount(env, q.get('kind'), Number(q.get('id'))); }
   if (m === 'POST' && pathname === '/api/me/riot') return linkRiot(req, env, me);
+  if (m === 'POST' && pathname === '/api/me/riot/main') return setMainAccount(req, env, me);
+  if (m === 'POST' && pathname === '/api/me/riot/remove') return removeAccount(req, env, me);
   if (m === 'POST' && pathname === '/api/me/consent') return setConsent(req, env, me);
   if (m === 'POST' && pathname === '/api/me/profile') return setProfile(req, env, me);
   if (m === 'POST' && pathname === '/api/me/about') return saveAbout(req, env, me);

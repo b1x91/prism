@@ -50,6 +50,8 @@ export async function getMe(env: Env, me: Member) {
     tier: me.tier,
     riotId: me.riot_id,
     linked: Boolean(me.riot_puuid),
+    accounts: await accountsOf(env, me),
+    accountMax: ACCOUNT_MAX,
     consent: Boolean(me.opt_in_at),
     games: row ?? { n: 0, w: 0 },
     skin: me.profile_skin,
@@ -142,22 +144,68 @@ export async function dexRows(env: Env, id: string) {
   return { champions: champs.results, augments: augs.results, pairs: pairs.results, items: items.results, itemPairs: itemPairs.results, challenges } as unknown as import('../../packages/core/src/history.js').DexRows;
 }
 
-/** 앱이 로그인된 롤 계정을 연결한다. 클라이언트에 로그인된 계정이라 아이콘 인증을 대신한다 */
-export async function linkRiot(req: Request, env: Env, me: Member) {
-  const { puuid, riotId } = (await req.json().catch(() => ({}))) as { puuid?: string; riotId?: string };
-  if (!puuid || typeof puuid !== 'string') throw new HttpError(400, 'puuid 가 없습니다.');
-  const owner = await env.DB.prepare('SELECT id FROM members WHERE riot_puuid = ?').bind(puuid).first<{ id: string }>();
-  if (owner && owner.id !== me.id) throw new HttpError(409, '이 롤 계정은 이미 다른 회원에게 연결되어 있습니다.');
-  const rid = typeof riotId === 'string' && riotId.includes('#') ? riotId.trim().slice(0, 40) : null;
-  // 표시 이름 = 롤 계정 이름 (이름#태그)
-  await env.DB.prepare('UPDATE members SET riot_puuid = ?1, riot_id = ?2, nick = COALESCE(?3, nick) WHERE id = ?4').bind(puuid, rid, rid, me.id).run();
+/** 롤 계정은 회원마다 이만큼까지 (v3.155) */
+export const ACCOUNT_MAX = 5;
+
+type Account = { puuid: string; riotId: string | null; main: boolean };
+async function accountsOf(env: Env, me: Member): Promise<Account[]> {
+  const { results } = await env.DB.prepare('SELECT puuid, riot_id AS riotId FROM member_accounts WHERE member_id = ? ORDER BY added_at').bind(me.id).all<{ puuid: string; riotId: string | null }>();
+  return results.map((r) => ({ ...r, main: r.puuid === me.riot_puuid })).sort((a, b) => Number(b.main) - Number(a.main));
+}
+
+/** 메인 계정 = 이름(롤 이름#태그)·디스코드 별명이 따른다 */
+async function setMain(env: Env, me: Member, puuid: string, rid: string | null) {
+  await env.DB.prepare('UPDATE members SET riot_puuid = ?1, riot_id = ?2, nick = COALESCE(?2, nick) WHERE id = ?3').bind(puuid, rid, me.id).run();
   await checkTagBonus(env, me.id, rid).catch(() => false);
   await syncNick(env, me.id, rid, (me as Member & { discord_nick?: string | null }).discord_nick).catch(() => false);
-  // 부계정으로 다시 연결했을 때: 그 계정이 비회원으로 모인 판(함께한 친구들)이 있으면 내 기록으로 (v3.154)
-  if (me.opt_in_at && puuid !== me.riot_puuid) await adoptProspect(env, me.id, puuid).catch(() => false);
+}
+
+/**
+ * 앱이 로그인된 롤 계정을 연결한다. 클라이언트에 로그인된 계정이라 아이콘 인증을 대신한다.
+ * 여러 개(최대 ACCOUNT_MAX) 연결할 수 있고, 처음 연결한 계정이나 main: true 면 메인 (v3.155).
+ */
+export async function linkRiot(req: Request, env: Env, me: Member) {
+  const { puuid, riotId, main } = (await req.json().catch(() => ({}))) as { puuid?: string; riotId?: string; main?: boolean };
+  if (!puuid || typeof puuid !== 'string' || puuid.length > 100) throw new HttpError(400, 'puuid 가 없습니다.');
+  const owner = await env.DB.prepare('SELECT member_id AS id FROM member_accounts WHERE puuid = ?1 UNION SELECT id FROM members WHERE riot_puuid = ?1 LIMIT 1').bind(puuid).first<{ id: string }>();
+  if (owner && owner.id !== me.id) throw new HttpError(409, '이 롤 계정은 이미 다른 회원에게 연결되어 있습니다.');
+  const rid = typeof riotId === 'string' && riotId.includes('#') ? riotId.trim().slice(0, 40) : null;
+  const mine = await accountsOf(env, me);
+  const known = mine.some((a) => a.puuid === puuid);
+  if (!known && mine.length >= ACCOUNT_MAX) throw new HttpError(400, `롤 계정은 ${ACCOUNT_MAX}개까지 연결할 수 있어요. 안 쓰는 계정을 먼저 빼 주세요.`);
+  await env.DB.prepare('INSERT INTO member_accounts (puuid, member_id, riot_id, added_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(puuid) DO UPDATE SET riot_id = COALESCE(?3, riot_id)')
+    .bind(puuid, me.id, rid, Date.now()).run();
+  if (main === true || !me.riot_puuid || me.riot_puuid === puuid) await setMain(env, me, puuid, rid);
+  // 새로 연결한 계정이 비회원으로 모인 판(함께한 친구들)이 있으면 내 기록으로 (v3.154)
+  if (me.opt_in_at && !known) await adoptProspect(env, me.id, puuid).catch(() => false);
   // 확정된 가입 신청과 롤 이름이 맞으면 바로 준회원 (v3.148)
   await onRiotLinked(env, me.id, rid).catch((e) => console.error('가입 신청 잇기 실패', e));
-  return json({ ok: true });
+  return json({ ok: true, accounts: await accountsOf(env, { ...me, riot_puuid: main === true || !me.riot_puuid ? puuid : me.riot_puuid }) });
+}
+
+/** 메인 계정 바꾸기 (연결된 계정 중에서) */
+export async function setMainAccount(req: Request, env: Env, me: Member) {
+  const { puuid } = (await req.json().catch(() => ({}))) as { puuid?: string };
+  const a = (await accountsOf(env, me)).find((x) => x.puuid === puuid);
+  if (!a) throw new HttpError(404, '연결된 계정이 아니에요.');
+  await setMain(env, me, a.puuid, a.riotId);
+  return json({ ok: true, accounts: await accountsOf(env, { ...me, riot_puuid: a.puuid }) });
+}
+
+/** 계정 빼기: 지난 판은 내 기록에 그대로 남고, 이 계정으로 하는 새 판만 더 모이지 않는다. 메인을 빼면 다음 계정이 메인 */
+export async function removeAccount(req: Request, env: Env, me: Member) {
+  const { puuid } = (await req.json().catch(() => ({}))) as { puuid?: string };
+  const all = await accountsOf(env, me);
+  if (!all.some((x) => x.puuid === puuid)) throw new HttpError(404, '연결된 계정이 아니에요.');
+  if (all.length <= 1) throw new HttpError(400, '계정이 하나뿐이라 뺄 수 없어요.');
+  await env.DB.prepare('DELETE FROM member_accounts WHERE puuid = ? AND member_id = ?').bind(puuid, me.id).run();
+  let main = me.riot_puuid;
+  if (puuid === me.riot_puuid) {
+    const next = all.find((x) => x.puuid !== puuid)!;
+    await setMain(env, me, next.puuid, next.riotId);
+    main = next.puuid;
+  }
+  return json({ ok: true, accounts: await accountsOf(env, { ...me, riot_puuid: main }) });
 }
 
 export async function setConsent(req: Request, env: Env, me: Member) {
@@ -189,7 +237,7 @@ export async function setProfile(req: Request, env: Env, me: Member) {
 
 /** 앱이 대신 수집할 회원 목록 (동의 + 계정 연결된 회원만) */
 export async function crewTargets(env: Env) {
-  const { results } = await env.DB.prepare('SELECT riot_puuid AS puuid, last_played_at AS lastPlayedAt FROM members WHERE opt_in_at IS NOT NULL AND riot_puuid IS NOT NULL').all();
+  const { results } = await env.DB.prepare('SELECT ma.puuid AS puuid, m.last_played_at AS lastPlayedAt FROM member_accounts ma JOIN members m ON m.id = ma.member_id WHERE m.opt_in_at IS NOT NULL').all();
   return json({ targets: results });
 }
 
@@ -277,7 +325,7 @@ export async function champSelect(req: Request, env: Env, me: Member) {
   const teammates = [];
   for (const puuid of mates) {
     // 수집에 동의한 회원만 Prism 회원으로 표시한다
-    const m = await env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')} FROM members m WHERE m.riot_puuid = ? AND m.opt_in_at IS NOT NULL`).bind(puuid).first<{ id: string; nick: string; skin: number | null; main: number | null }>();
+    const m = await env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')} FROM member_accounts ma JOIN members m ON m.id = ma.member_id WHERE ma.puuid = ? AND m.opt_in_at IS NOT NULL`).bind(puuid).first<{ id: string; nick: string; skin: number | null; main: number | null }>();
     if (!m || m.id === me.id) continue;
     // 함께한 판(같은 팀) · 그 회원의 최근 판 (지금 이어지는 연승)
     const [tg, rec] = await env.DB.batch([

@@ -112,7 +112,8 @@ export async function ingest(req: Request, env: Env, me: Member) {
   const linked = new Set<string>(); // 롤 계정을 연결한 회원 전체 (동의를 철회했어도 함께한 친구들로 모으지 않는다)
   for (let i = 0; i < puuids.length; i += 90) {
     const chunk = puuids.slice(i, i + 90);
-    const { results } = await env.DB.prepare(`SELECT id, riot_puuid, opt_in_at FROM members WHERE riot_puuid IN (${chunk.map(() => '?').join(',')})`)
+    // 메인·부계정 모두 (v3.155)
+    const { results } = await env.DB.prepare(`SELECT m.id, ma.puuid AS riot_puuid, m.opt_in_at FROM member_accounts ma JOIN members m ON m.id = ma.member_id WHERE ma.puuid IN (${chunk.map(() => '?').join(',')})`)
       .bind(...chunk)
       .all<{ id: string; riot_puuid: string; opt_in_at: number | null }>();
     for (const r of results) {
@@ -225,13 +226,16 @@ export async function ingest(req: Request, env: Env, me: Member) {
           ),
         );
       }
+      // 롤 이름이 바뀌었으면 따라간다. 이름(nick)은 메인 계정으로 한 판일 때만 — 부계정 판이 이름을 바꾸지 않게 (v3.155)
+      const rid = typeof p.riotId === 'string' && p.riotId.includes('#') ? p.riotId.slice(0, 40) : null;
       stmts.push(
-        env.DB.prepare('UPDATE members SET last_played_at = MAX(COALESCE(last_played_at, 0), ?1), riot_id = COALESCE(?2, riot_id), nick = COALESCE(?2, nick) WHERE id = ?3').bind(
-          g.playedAt,
-          typeof p.riotId === 'string' && p.riotId.includes('#') ? p.riotId : null,
-          memberId,
-        ),
+        env.DB.prepare(
+          `UPDATE members SET last_played_at = MAX(COALESCE(last_played_at, 0), ?1),
+             riot_id = CASE WHEN riot_puuid = ?4 THEN COALESCE(?2, riot_id) ELSE riot_id END,
+             nick = CASE WHEN riot_puuid = ?4 THEN COALESCE(?2, nick) ELSE nick END WHERE id = ?3`,
+        ).bind(g.playedAt, rid, memberId, p.puuid),
       );
+      if (rid) stmts.push(env.DB.prepare('UPDATE member_accounts SET riot_id = ? WHERE puuid = ?').bind(rid, p.puuid));
     }
     // 함께한 친구들 후보: 회원이 1명 이상 있는 판에서, 회원과 같은 팀이었거나 사용자 설정(내전) 판에 함께한 비회원
     if (crew.length > 0) {

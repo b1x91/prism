@@ -594,7 +594,19 @@ body { overflow: hidden; background: var(--bg); }
 @media (min-width: 901px) { .side-hub.on > a .live-pip, .side-hub.on > a .news-dot { display: none; } .side-hub.on > a .hub-chev { margin-left: auto; } }
 @media (prefers-reduced-motion: reduce) { .side-nav .side-sub, .side-nav .hub-chev { transition: none; } }
 
-/* 설정 › 롤 계정 줄 (부계정 다시 연결) */
-.riot-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); min-width: 0; }
-.riot-now { display: grid; gap: 2px; flex: 1 1 220px; min-width: 0; }
-.riot-now small { font-size: var(--fs-xs); }
+/* 설정 › 롤 계정 목록 (v3.155) */
+.kv .k .acc-count { display: block; margin-top: 2px; font-weight: 500; }
+.acc-list { display: grid; gap: var(--s2); min-width: 0; }
+.acc-row, .acc-add { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); min-height: 40px; padding: var(--s2) var(--s3); border-radius: var(--r-m); background: var(--surface-2, var(--line)); }
+.acc-row.main { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
+.acc-add { background: none; border: 1px dashed var(--line); }
+.acc-name { display: flex; align-items: baseline; gap: 2px; min-width: 0; flex: 0 1 auto; }
+.acc-add .acc-name { display: grid; gap: 2px; }
+.acc-name b { font-size: var(--fs-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-name small { color: var(--text-3); font-size: var(--fs-xs); }
+.acc-tag { flex: none; padding: 0 var(--s2); height: 20px; display: inline-flex; align-items: center; border-radius: 999px; font-size: var(--fs-xs); font-weight: 700; }
+.acc-tag.main { background: var(--accent); color: #fff; }
+.acc-tag.here { background: color-mix(in srgb, #22c55e 18%, transparent); color: color-mix(in srgb, #16a34a 80%, var(--text)); }
+.acc-row .sp, .acc-add .sp { flex: 1 1 0; }
+.acc-row .btn.danger { color: var(--lose); border-color: color-mix(in srgb, var(--lose) 60%, transparent); }
+.acc-acts { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--s2); flex: 0 1 auto; min-width: 0; margin-left: auto; }

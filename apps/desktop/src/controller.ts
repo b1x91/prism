@@ -578,12 +578,23 @@ export async function setConsent(agree: boolean) {
   if (agree) void uploadOwn();
 }
 
-/** 부계정과 번갈아 할 때: 지금 클라이언트에 로그인된 롤 계정으로 다시 연결 (설정). 그동안 쌓인 판은 그대로 내 기록에 남는다 */
-export async function relinkRiot() {
-  if (!state.summoner) throw new Error('롤 클라이언트를 켜면 다시 연결할 수 있어요.');
-  await api.post('/api/me/riot', { puuid: state.summoner.puuid, riotId: state.summoner.riotId });
+/**
+ * 롤 계정 여러 개 (v3.155): 지금 클라이언트에 로그인된 계정을 더한다 (main 이면 메인으로).
+ * 더한 계정으로 예전에 올린 판도 다시 보내 내 기록을 채운다 (서버는 빠진 회원 기록만 더한다)
+ */
+export async function addRiotAccount(main = false) {
+  if (!state.summoner) throw new Error('롤 클라이언트를 켜면 지금 로그인한 계정을 연결할 수 있어요.');
+  await api.post('/api/me/riot', { puuid: state.summoner.puuid, riotId: state.summoner.riotId, main });
   await refreshSession();
   if (canUpload()) void sendGames(state.games.map((g) => g.gameId), true).catch(() => undefined);
+}
+export async function setMainRiotAccount(puuid: string) {
+  await api.post('/api/me/riot/main', { puuid });
+  await refreshSession();
+}
+export async function removeRiotAccount(puuid: string) {
+  await api.post('/api/me/riot/remove', { puuid });
+  await refreshSession();
 }
 
 const PERSONAL_KEYS = new Set(['gameName', 'tagLine', 'summonerName', 'displayName', 'internalName', 'riotIdGameName', 'riotIdTagline', 'summonerId', 'accountId', 'currentAccountId', 'profileIcon', 'matchHistoryUri', 'nameVisibilityType', 'obfuscatedPuuid', 'obfuscatedSummonerId']);

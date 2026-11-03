@@ -118,7 +118,9 @@ export async function apply(req: Request, env: Env, ctx?: ExecutionContext) {
   const rm = await room(env);
 
   // 이미 멤버 · 이미 신청
-  const member = await env.DB.prepare('SELECT id FROM members WHERE lower(replace(riot_id, \' \', \'\')) = ?').bind(key).first();
+  // 부계정으로 연결된 롤 계정도 이미 멤버 (v3.155)
+  const member = await env.DB.prepare(`SELECT id FROM members WHERE lower(replace(riot_id, ' ', '')) = ?1
+    UNION SELECT member_id FROM member_accounts WHERE lower(replace(riot_id, ' ', '')) = ?1 LIMIT 1`).bind(key).first();
   if (member) throw new HttpError(409, '이미 Prism 멤버인 롤 계정이에요. 디스코드로 로그인해 주세요.');
   const dup = await env.DB.prepare('SELECT * FROM applications WHERE riot_key = ?').bind(key).first<Row>();
   if (dup) {

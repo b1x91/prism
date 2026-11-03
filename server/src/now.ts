@@ -61,7 +61,7 @@ export async function reportLobby(env: Env, me: Member, body: Record<string, unk
   await env.DB.prepare("DELETE FROM now_lobbies WHERE reporter_id = ? AND id != ? AND kind != 'game'").bind(me.id, id).run();
   const allP = [...new Set([...puuids, ...t100, ...t200])];
   const { results } = allP.length
-    ? await env.DB.prepare('SELECT id, riot_puuid AS p FROM members WHERE riot_puuid IN (SELECT value FROM json_each(?))').bind(JSON.stringify(allP)).all<{ id: string; p: string }>()
+    ? await env.DB.prepare('SELECT member_id AS id, puuid AS p FROM member_accounts WHERE puuid IN (SELECT value FROM json_each(?))').bind(JSON.stringify(allP)).all<{ id: string; p: string }>()
     : { results: [] as { id: string; p: string }[] };
   const byPuuid = new Map(results.map((r) => [r.p, r.id]));
   const members = [...new Set(puuids.map((p) => byPuuid.get(p)).filter((x): x is string => Boolean(x)))];
@@ -176,8 +176,8 @@ export async function reportGame(env: Env, me: Member, body: Record<string, unkn
   }));
   if (!players.length) return json({ ok: true });
   const { results } = await env.DB.prepare(
-    `SELECT id, riot_puuid AS p, lower(riot_id) AS r, now_auto AS a FROM members
-      WHERE riot_puuid IN (SELECT value FROM json_each(?1)) OR lower(riot_id) IN (SELECT value FROM json_each(?2))`,
+    `SELECT m.id, ma.puuid AS p, lower(ma.riot_id) AS r, m.now_auto AS a FROM member_accounts ma JOIN members m ON m.id = ma.member_id
+      WHERE ma.puuid IN (SELECT value FROM json_each(?1)) OR lower(ma.riot_id) IN (SELECT value FROM json_each(?2))`,
   ).bind(JSON.stringify(players.map((x) => x.puuid).filter(Boolean)), JSON.stringify(players.map((x) => x.riot?.toLowerCase()).filter(Boolean))).all<{ id: string; p: string | null; r: string | null; a: number }>();
   const who = (x: P) => results.find((m) => (x.puuid && m.p === x.puuid) || (x.riot && m.r === x.riot.toLowerCase()));
   const teams: Record<'100' | '200', { m: { id: string; c: number }[]; n: number }> = { '100': { m: [], n: 0 }, '200': { m: [], n: 0 } };
@@ -316,13 +316,16 @@ export async function reportLive(env: Env, me: Member, body: Record<string, unkn
   const riots = raw.map((x) => str(x?.riotId, 60)?.toLowerCase()).filter(Boolean);
   const puuids = raw.map((x) => str(x?.puuid, 100)).filter(Boolean);
   const { results } = await env.DB.prepare(
-    `SELECT id, riot_puuid AS p, lower(riot_id) AS r, now_auto AS a FROM members WHERE riot_puuid IN (SELECT value FROM json_each(?1)) OR lower(riot_id) IN (SELECT value FROM json_each(?2))`,
+    `SELECT m.id, ma.puuid AS p, lower(ma.riot_id) AS r, m.now_auto AS a FROM member_accounts ma JOIN members m ON m.id = ma.member_id
+      WHERE ma.puuid IN (SELECT value FROM json_each(?1)) OR lower(ma.riot_id) IN (SELECT value FROM json_each(?2))`,
   ).bind(JSON.stringify(puuids), JSON.stringify(riots)).all<{ id: string; p: string | null; r: string | null; a: number }>();
   const players: LiveP[] = raw.map((x) => {
     const riot = str(x?.riotId, 60);
     // 알린 회원 자신은 내 롤 이름으로 먼저 (같은 이름이 둘이어도 나로)
-    const mine = (x?.puuid && x.puuid === me.riot_puuid) || (riot && me.riot_id && riot.toLowerCase() === me.riot_id.toLowerCase());
-    const m = mine ? { id: me.id, a: me.now_auto ?? 1 } : results.find((r) => (x?.puuid && r.p === x.puuid) || (riot && r.r === riot.toLowerCase()));
+    const hit = results.find((r) => (x?.puuid && r.p === x.puuid) || (riot && r.r === riot.toLowerCase()));
+    // 부계정으로 한 판도 나로 (v3.155)
+    const mine = hit?.id === me.id || (x?.puuid && x.puuid === me.riot_puuid) || (riot && me.riot_id && riot.toLowerCase() === me.riot_id.toLowerCase());
+    const m = mine ? { id: me.id, a: me.now_auto ?? 1 } : hit;
     return {
       n: (riot ?? '').split('#')[0].slice(0, 24) || '?', ...(m && m.a !== 0 ? { id: m.id } : {}),
       c: Number(x?.champ) || 0, t: Number(x?.team) === 200 ? '200' : '100', lv: Math.min(30, Math.max(0, Number(x?.level) || 0)),
