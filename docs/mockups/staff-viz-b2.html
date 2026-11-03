@@ -302,8 +302,10 @@ function combo(){const w=W('#combo'),H=Math.max(280,$('#combo').clientHeight),L=
     if(last)el(s,'text',{x:cx(i),y:y(d.g)-18,'text-anchor':'middle',class:'ax',style:'font-size:11px;font-weight:700'},'진행 중')});
   // 선·점선·점은 마우스를 올렸을 때 그려지듯 나타나고, 떼면 천천히 사라진다
   const lineG=el(s,'g',{class:'cline'});
-  const mainLine=el(lineG,'path',{d:smooth(pts.slice(0,7)),fill:'none',stroke:acc,'stroke-width':2,'stroke-linecap':'round',opacity:.9});
-  const p6=pts[6],p7=pts[7],h3=(p7[0]-p6[0])/3;const dashLine=el(lineG,'path',{d:`M${p6[0]},${p6[1]} C${p6[0]+h3},${p6[1]} ${p7[0]-h3},${p7[1]} ${p7[0]},${p7[1]}`,fill:'none',stroke:acc,'stroke-width':2,'stroke-dasharray':'4 4','stroke-linecap':'round',opacity:0});
+  // 선은 물결 윗변과 같은 곡선에서 잘라 쓴다 — 따로 계산하면 끝 기울기가 달라 물결과 어긋난다 (구간 0 = 왼쪽 연장, 1~7 = 주 사이, 8 = 오른쪽 연장)
+  const seg=wave.split(' C').slice(1),cur=k=>' C'+seg[k];
+  const mainLine=el(lineG,'path',{d:`M${pts[0][0]},${pts[0][1]}`+[1,2,3,4,5,6].map(cur).join(''),fill:'none',stroke:acc,'stroke-width':2,'stroke-linecap':'round',opacity:.9});
+  const dashLine=el(lineG,'path',{d:`M${pts[6][0]},${pts[6][1]}`+cur(7),fill:'none',stroke:acc,'stroke-width':2,'stroke-dasharray':'4 4','stroke-linecap':'round',opacity:0});
   const act=W8.map((d,i)=>[d.a,i]).filter(([a])=>a>0),hi=act.reduce((m,x)=>x[0]>m[0]?x:m)[1],lo=act.reduce((m,x)=>x[0]<m[0]?x:m)[1];
   const dots=[];
   const pills=W8.map((d,i)=>{const [px,py]=pts[i];if(d.g>0)dots.push([i,el(lineG,'circle',{cx:px,cy:py,r:i===7?4.5:3.5,fill:i===7?pan:acc,stroke:i===7?acc:pan,'stroke-width':2,class:'vz-dot'})]);
