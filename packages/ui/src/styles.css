@@ -881,6 +881,19 @@ button.aug-link:focus-visible { outline: 2px solid var(--accent); outline-offset
 .pip.r.on { background: var(--ok); }
 .pip.g { width: 8px; height: 8px; border-radius: 1px; transform: rotate(45deg); margin-left: 2px; }
 .pip.g.on { background: linear-gradient(135deg, var(--spectrum-1), var(--spectrum-3), var(--spectrum-5), var(--spectrum-7)); }
+/* 좁은 칸(태블릿 4열·휴대폰)에서 여정 점이 칸 밖으로 나가지 않게 칸 폭에 맞춰 점·간격을 줄인다 (최대 11개 기준) */
+.dx { container-type: inline-size; }
+@container (max-width: 112px) {
+  .pips { gap: 2px; }
+  .pip { width: 5px; height: 5px; }
+  .pip.s { width: 6px; height: 6px; margin-right: 1px; }
+  .pip.g { width: 6px; height: 6px; margin-left: 1px; }
+}
+@container (max-width: 90px) {
+  .pips { gap: 1.5px; }
+  .pip { width: 4px; height: 4px; }
+  .pip.s, .pip.g { width: 5px; height: 5px; }
+}
 .dx.master .pip.on { background: linear-gradient(135deg, var(--spectrum-2), var(--spectrum-6)); }
 .dx .pic { display: grid; place-items: center; width: 56px; height: 56px; }
 .dx .pic .champ { border-radius: 50%; }
