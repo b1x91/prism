@@ -9,6 +9,7 @@ import { cdragon } from '../../packages/core/src/assets.js';
 import skinData from '../../packages/core/data/skins.json';
 import { stateOf } from './missions.js';
 import { byScore, rankScore, seasonOf } from '../../packages/core/src/ranking.js';
+import { accountRows } from './members.js';
 import { assertRanking } from './roles.js';
 import { RARITY_KO, tonightOf, type AugStat } from '../../packages/core/src/tonight.js';
 import { challengeRole, parseFeat, type ChallengeRole } from '../../packages/core/src/challenges.js';
@@ -209,11 +210,8 @@ async function rankTop(env: Env, me: Member) {
   await assertRanking(env, me); // 랭킹이 아직 열리지 않았으면 그 안내가 그대로 답이 된다
   // 이번 시즌 점수 순 (승률을 판수만큼 믿은 값, 화면 랭킹과 같은 규칙)
   const season = seasonOf();
-  const r = await env.DB.prepare(`SELECT m.nick AS nick, m.profile_skin AS skin, COUNT(*) AS n, SUM(p.win) AS w,
-      (SELECT champion_id FROM participants q WHERE q.member_id = p.member_id GROUP BY champion_id ORDER BY COUNT(*) DESC LIMIT 1) AS main
-    FROM participants p JOIN members m ON m.id = p.member_id WHERE p.played_at >= ? GROUP BY p.member_id`)
-    .bind(season.start).all<{ nick: string; skin: number | null; n: number; w: number; main: number | null }>();
-  const rows = r.results.sort(byScore).slice(0, 5);
+  // 계정마다 한 줄 (화면 랭킹과 같다, v3.161)
+  const rows = (await accountRows(env, season.start)).sort(byScore).slice(0, 5).map((x) => ({ ...x, main: x.mainChampion }));
   if (!rows.length) return { content: `${season.label}에 기록된 판이 아직 없어요.` };
   const top = rows[0];
   const medal = ['🥇', '🥈', '🥉', '`4`', '`5`'];

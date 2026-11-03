@@ -40,10 +40,37 @@ export function ProfileStudio({ api, page, skins, onClose, onSaved, start = 'ski
   const [intro, setIntro] = useState(m.intro);
   const [about, setAbout] = useState<About | null>(m.about ?? null);
   const [skin, setSkin] = useState<number | null>(m.skin);
-  const [deco, setDeco] = useState<Deco>(m.deco ?? {});
+  // 꾸밈은 롤 계정마다 (v3.161): 계정 → 고른 꾸밈. 계정이 하나뿐이면(또는 예전 서버) '' 하나로
+  const [decos, setDecos] = useState<Record<string, Deco>>({ '': m.deco ?? {} });
+  const [acct, setAcct] = useState('');
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
-  useEffect(() => { api.get<Shop>('/api/shop').then((s) => { setShop(s); setDeco(s.deco); }).catch(() => {}); }, [api]);
+  useEffect(() => {
+    api.get<Shop>('/api/shop').then((s) => {
+      setShop(s);
+      const accs = s.accounts ?? [];
+      if (accs.length > 1) { setDecos(Object.fromEntries(accs.map((a) => [a.puuid, a.deco]))); setAcct(accs.find((a) => a.main)?.puuid ?? accs[0].puuid); }
+      else setDecos({ '': s.deco });
+    }).catch(() => {});
+  }, [api]);
+  const accounts = shop?.accounts && shop.accounts.length > 1 ? shop.accounts : null;
+  const deco = decos[acct] ?? {};
+  const cur = accounts?.find((a) => a.puuid === acct);
+  const decoTab = tab !== 'skin' && tab !== 'intro';
+  // 꾸밈 탭에서 부계정을 고르면 미리 보기 이름도 그 계정 것으로
+  const shownNick = decoTab && cur && !cur.main && cur.riotId ? cur.riotId : m.nick;
+  /** 다른 계정에 장착돼 있는 꾸밈 → 그 계정 이름 (한 꾸밈은 한 계정에만) */
+  const elsewhere = (id: string) => accounts?.find((a) => a.puuid !== acct && decos[a.puuid]?.[tab as ShopSlot] === id);
+  const pickDeco = (slot: ShopSlot, id: string | null) => setDecos((all) => {
+    const next: Record<string, Deco> = {};
+    for (const [k, d] of Object.entries(all)) {
+      const x = { ...d };
+      if (k === acct) { if (id) x[slot] = id; else delete x[slot]; }
+      else if (id && x[slot] === id) delete x[slot];
+      next[k] = x;
+    }
+    return next;
+  });
   useEffect(() => {
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     addEventListener('keydown', esc);
@@ -57,8 +84,19 @@ export function ProfileStudio({ api, page, skins, onClose, onSaved, start = 'ski
     try {
       await api.post('/api/me/profile', { intro, skin });
       if (about && JSON.stringify(about) !== JSON.stringify(m.about ?? null)) await api.post('/api/me/about', { about });
-      const was = shop?.deco ?? m.deco ?? {};
-      for (const sl of SLOTS) if ((was[sl] ?? null) !== (deco[sl] ?? null)) await api.post('/api/me/equip', { slot: sl, id: deco[sl] ?? null });
+      if (accounts) {
+        // 옮긴 꾸밈은 서버가 원래 계정에서 빼 준다 — 새로 다는 것부터, 빼는 것은 나중에
+        const jobs: { account: string; slot: ShopSlot; id: string | null }[] = [];
+        for (const a of accounts) for (const sl of SLOTS) {
+          const want = decos[a.puuid]?.[sl] ?? null;
+          if ((a.deco[sl] ?? null) !== want) jobs.push({ account: a.puuid, slot: sl, id: want });
+        }
+        jobs.sort((x, y) => Number(!x.id) - Number(!y.id));
+        for (const j of jobs) await api.post('/api/me/equip', j);
+      } else {
+        const was = shop?.deco ?? m.deco ?? {};
+        for (const sl of SLOTS) if ((was[sl] ?? null) !== (deco[sl] ?? null)) await api.post('/api/me/equip', { slot: sl, id: deco[sl] ?? null });
+      }
       onSaved();
     } catch (e) { setMsg(e instanceof Error ? e.message : String(e)); }
     finally { setBusy(false); }
@@ -70,7 +108,7 @@ export function ProfileStudio({ api, page, skins, onClose, onSaved, start = 'ski
       <button type="button" className="md-scrim" aria-label="닫기" onClick={onClose} />
       <div className="pst">
         <div className="pst-prev">
-          <ProfileHero nick={m.nick} intro={intro} skin={skin} champion={main} deco={deco} />
+          <ProfileHero nick={shownNick} intro={intro} skin={skin} champion={main} deco={deco} />
           <button type="button" className="pst-x" aria-label="닫기" onClick={onClose}><Icon name="x" /></button>
           <span className="pst-live">미리 보기</span>
         </div>
@@ -82,12 +120,20 @@ export function ProfileStudio({ api, page, skins, onClose, onSaved, start = 'ski
         <div className="pst-body">
           {tab === 'skin' && <SkinPanel page={page} skins={skins} pick={skin} onPick={setSkin} n={n} />}
           {tab === 'intro' && <IntroPanel api={api} nick={m.nick} intro={intro} onIntro={setIntro} about={m.about ?? null} onAbout={setAbout} />}
-          {tab !== 'skin' && tab !== 'intro' && (shop
-            ? <DecoPanel slot={tab} shop={shop} deco={deco} me={{ nick: m.nick, skin, champion: main }} onPick={(id) => setDeco((d) => { const x = { ...d }; if (id) x[tab] = id; else delete x[tab]; return x; })} />
+          {decoTab && accounts && <div className="pst-acct" role="radiogroup" aria-label="꾸밀 계정">
+            <span className="k">꾸밀 계정</span>
+            {accounts.map((a) => (
+              <button key={a.puuid} type="button" role="radio" aria-checked={acct === a.puuid} className={`pst-acc ${acct === a.puuid ? 'on' : ''}`} onClick={() => setAcct(a.puuid)}>
+                <span className="nm">{(a.riotId ?? '롤 계정').split('#')[0]}</span>{a.main && <small>메인</small>}
+              </button>
+            ))}
+          </div>}
+          {decoTab && (shop
+            ? <DecoPanel slot={tab as ShopSlot} shop={shop} deco={deco} elsewhere={accounts ? (id) => { const a = elsewhere(id); return a ? (a.riotId ?? '다른 계정').split('#')[0] : null; } : undefined} me={{ nick: shownNick, skin, champion: main }} onPick={(id) => pickDeco(tab as ShopSlot, id)} />
             : <div className="pst-load" role="status" aria-label="불러오는 중">{Array.from({ length: 6 }, (_, i) => <i key={i} className="sk" />)}</div>)}
         </div>
         <footer className="pst-foot">
-          {msg ? <span className="l">{msg}</span> : <span className="meta">저장하면 내 페이지·랭킹에 바로 보여요.</span>}
+          {msg ? <span className="l">{msg}</span> : <span className="meta">{accounts ? '메인 계정 꾸밈은 내 페이지에, 계정마다 꾸밈은 랭킹의 그 계정 줄에 보여요.' : '저장하면 내 페이지·랭킹에 바로 보여요.'}</span>}
           <span className="sp" />
           <button type="button" className="btn ghost" onClick={onClose}>취소</button>
           <button type="button" className="btn primary" disabled={busy} onClick={save}>{busy ? '저장 중…' : '저장'}</button>
@@ -156,7 +202,9 @@ function SkinPanel({ page, skins, pick, onPick, n }: { page: MemberPage; skins: 
   );
 }
 
-function DecoPanel({ slot, shop, deco, me, onPick }: { slot: ShopSlot; shop: Shop; deco: Deco; me: { nick: string; skin: number | null; champion: number | null }; onPick: (id: string | null) => void }) {
+function DecoPanel({ slot, shop, deco, me, onPick, elsewhere }: { slot: ShopSlot; shop: Shop; deco: Deco; me: { nick: string; skin: number | null; champion: number | null }; onPick: (id: string | null) => void;
+  /** 다른 계정에 장착돼 있으면 그 계정 이름 — 고르면 이 계정으로 옮겨진다 */
+  elsewhere?: (id: string) => string | null }) {
   useShopRev();
   // 칭호는 상점에서 팔지 않고 얻는다 (v3.99): 산 적 있거나 조건을 채운 것
   const hasIt = (id: string) => shop.owned.includes(id) || (slot === 'title' && Boolean(shop.uses?.titles.includes(id)));
@@ -179,12 +227,13 @@ function DecoPanel({ slot, shop, deco, me, onPick }: { slot: ShopSlot; shop: Sho
             : <><span className="pst-art"><span className="pst-none"><Icon name="x" /></span></span><span className="pst-nm">없음</span><span className="pst-sub">기본 모습</span></>}
         </button>
         {items.map((x) => {
-          const has = hasIt(x.id), lk = lockOf(x);
+          const has = hasIt(x.id), lk = lockOf(x), other = has && cur !== x.id ? elsewhere?.(x.id) ?? null : null;
           return (
-            <button key={x.id} type="button" className={`pst-tile r-${x.rarity} ${cur === x.id ? 'on' : ''} ${has ? '' : 'locked'}`} disabled={!has} onClick={() => onPick(x.id)} title={has ? x.desc : lk.tip}>
+            <button key={x.id} type="button" className={`pst-tile r-${x.rarity} ${cur === x.id ? 'on' : ''} ${has ? '' : 'locked'}`} disabled={!has} onClick={() => onPick(x.id)} title={has ? (other ? `${other}에 장착 중 · 고르면 이 계정으로 옮겨요` : x.desc) : lk.tip}>
               <span className="pst-art">
                 {slot === 'bg' ? <BgScene id={x.id} /> : <ProfileHero stage nick={me.nick} skin={me.skin} champion={me.champion} deco={{ [slot]: x.id }} />}
                 {!has && <span className="pst-lock"><Icon name="lock" />{lk.tag}</span>}
+                {other && <span className="pst-else">{other}</span>}
               </span>
               <span className="pst-nm">{x.name}</span>
               <span className={`pst-sub r-${x.rarity}`}>{RARITY_SHOP_KO[x.rarity]}</span>

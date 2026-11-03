@@ -144,7 +144,8 @@ export async function state(env: Env, id: string, m: Pick<Member, 'tier' | 'disc
 
 export async function getShop(env: Env, me: Member) {
   // 출석은 접속 소식(presence)에서만 남긴다 — 그 답으로 출석 연출을 띄우므로
-  return json(await state(env, me.id, me));
+  const s = await state(env, me.id, me);
+  return json({ ...s, accounts: await decoAccounts(env, me.id, s.deco) });
 }
 
 export async function buy(req: Request, env: Env, me: Member) {
@@ -163,24 +164,60 @@ export async function buy(req: Request, env: Env, me: Member) {
   await env.DB.prepare('INSERT OR IGNORE INTO shop_owned (member_id, item_id, price, bought_at) VALUES (?, ?, ?, ?)').bind(me.id, item.id, price, Date.now()).run();
   if (wear !== false) {
     const deco: Deco = { ...s.deco, [item.slot]: item.id };
-    await env.DB.prepare('UPDATE members SET deco = ? WHERE id = ?').bind(JSON.stringify(deco), me.id).run();
+    await saveMainDeco(env, me.id, deco);
   }
   return json(await state(env, me.id, me));
 }
 
-/** 장착·해제 (가진 것만) */
+/** 메인 계정 꾸밈 = members.deco, 메인 계정 줄(member_accounts)에도 같은 값을 둔다 (메인을 바꿀 때 서로 바꿔 넣는다, v3.161) */
+async function saveMainDeco(env: Env, id: string, deco: Deco) {
+  const v = JSON.stringify(deco);
+  await env.DB.batch([
+    env.DB.prepare('UPDATE members SET deco = ? WHERE id = ?').bind(v, id),
+    env.DB.prepare('UPDATE member_accounts SET deco = ?1 WHERE puuid = (SELECT riot_puuid FROM members WHERE id = ?2) AND member_id = ?2').bind(v, id),
+  ]);
+}
+
+/** 계정마다 장착한 꾸밈 (메인이 맨 앞). 꾸미기 창에서 꾸밀 계정을 고른다 */
+export async function decoAccounts(env: Env, id: string, mainDeco: Deco) {
+  const main = await env.DB.prepare('SELECT riot_puuid AS p FROM members WHERE id = ?').bind(id).first<{ p: string | null }>();
+  const { results } = await env.DB.prepare('SELECT puuid, riot_id AS riotId, deco FROM member_accounts WHERE member_id = ? ORDER BY added_at').bind(id).all<{ puuid: string; riotId: string | null; deco: string | null }>();
+  return results
+    .map((a) => ({ puuid: a.puuid, riotId: a.riotId, main: a.puuid === main?.p, deco: a.puuid === main?.p ? mainDeco : parseDeco(a.deco) }))
+    .sort((a, b) => Number(b.main) - Number(a.main));
+}
+
+/**
+ * 장착·해제 (가진 것만). account(내 롤 계정 puuid)를 주면 그 계정에, 없으면 메인 계정에 (v3.161).
+ * 한 꾸밈은 한 계정에만 — 다른 계정에 장착돼 있으면 거기서는 빠진다.
+ */
 export async function equip(req: Request, env: Env, me: Member) {
   if (!can(me, 'shop')) throw new HttpError(403, SHOP_CLOSED);
-  const { slot, id } = (await req.json().catch(() => ({}))) as { slot?: ShopSlot; id?: string | null };
+  const { slot, id, account } = (await req.json().catch(() => ({}))) as { slot?: ShopSlot; id?: string | null; account?: string | null };
   const s = await state(env, me.id, me);
   if (!slot || !['bg', 'frame', 'fx', 'name', 'title'].includes(slot)) throw new HttpError(400, '잘못된 칸입니다.');
-  const deco: Deco = { ...s.deco };
-  if (id) {
-    if (SHOP_ITEM[id]?.slot !== slot || !(s.owned.includes(id) || s.uses.titles.includes(id))) throw new HttpError(400, '가지고 있지 않은 꾸밈입니다.');
-    deco[slot] = id;
-  } else delete deco[slot];
-  await env.DB.prepare('UPDATE members SET deco = ? WHERE id = ?').bind(JSON.stringify(deco), me.id).run();
-  return json(await state(env, me.id, me));
+  if (id && (SHOP_ITEM[id]?.slot !== slot || !(s.owned.includes(id) || s.uses.titles.includes(id)))) throw new HttpError(400, '가지고 있지 않은 꾸밈입니다.');
+  const accs = await decoAccounts(env, me.id, s.deco);
+  const target = account ? accs.find((a) => a.puuid === account) : accs.find((a) => a.main);
+  if (account && !target) throw new HttpError(404, '연결된 계정이 아니에요.');
+  // 계정을 아직 연결하지 않은 회원: 예전처럼 members.deco 하나
+  if (!target) {
+    const deco: Deco = { ...s.deco };
+    if (id) deco[slot] = id; else delete deco[slot];
+    await env.DB.prepare('UPDATE members SET deco = ? WHERE id = ?').bind(JSON.stringify(deco), me.id).run();
+    return json({ ...(await state(env, me.id, me)), accounts: [] });
+  }
+  for (const a of accs) {
+    const before = JSON.stringify(a.deco);
+    const deco: Deco = { ...a.deco };
+    if (a === target) { if (id) deco[slot] = id; else delete deco[slot]; }
+    else if (id && deco[slot] === id) delete deco[slot];
+    if (JSON.stringify(deco) === before) continue;
+    if (a.main) await saveMainDeco(env, me.id, deco);
+    else await env.DB.prepare('UPDATE member_accounts SET deco = ? WHERE puuid = ? AND member_id = ?').bind(JSON.stringify(deco), a.puuid, me.id).run();
+  }
+  const next = await state(env, me.id, me);
+  return json({ ...next, accounts: await decoAccounts(env, me.id, next.deco) });
 }
 
 /** 공유 링크 번호: 없으면 100~999 중 비어 있는 것 하나 (한 번 받으면 바뀌지 않는다) */

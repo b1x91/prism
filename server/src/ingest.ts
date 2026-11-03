@@ -191,8 +191,8 @@ export async function ingest(req: Request, env: Env, me: Member) {
       stmts.push(
         env.DB.prepare(
           `INSERT OR IGNORE INTO participants (game_id, member_id, champion_id, team_id, win, kills, deaths, assists, dmg_champ, dmg_taken, gold,
-             items, augments, share_deal, share_tank, share_growth, kp, played_at, crew_count)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+             items, augments, share_deal, share_tank, share_growth, kp, played_at, crew_count, puuid)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         ).bind(
           g.gameId,
           memberId,
@@ -213,8 +213,11 @@ export async function ingest(req: Request, env: Env, me: Member) {
           tt.kills > 0 ? (p.kills + p.assists) / tt.kills : null,
           g.playedAt,
           crew.length,
+          p.puuid,
         ),
       );
+      // 예전에 들어온 판은 어느 계정으로 했는지 채운다 (계정마다 랭킹 줄, v3.161)
+      stmts.push(env.DB.prepare('UPDATE participants SET puuid = ? WHERE game_id = ? AND member_id = ? AND puuid IS NULL').bind(p.puuid, g.gameId, memberId));
       // 활약 기록: 새 판이든, 기록 없이 먼저 들어온 판이든 비어 있으면 채운다
       stmts.push(env.DB.prepare('UPDATE participants SET feats = ? WHERE game_id = ? AND member_id = ? AND feats IS NULL').bind(JSON.stringify(featOf(featSrc(p), allSrc)), g.gameId, memberId));
       for (const a of new Set(augments ?? [])) {

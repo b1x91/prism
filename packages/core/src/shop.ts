@@ -220,7 +220,10 @@ export type Shop = {
   balance: number; earned: Earned; spent: number; owned: string[]; deco: Deco; shared: boolean; rates?: import('./api').Rates;
   /** 꾸밈 밖 상품 (v3.99) — 예전 서버는 보내지 않는다 */
   uses?: ShopUses;
+  /** 롤 계정마다 장착한 꾸밈 (메인이 맨 앞, v3.161). 한 꾸밈은 한 계정에만. 예전 서버는 보내지 않는다 */
+  accounts?: DecoAccount[];
 };
+export type DecoAccount = { puuid: string; riotId: string | null; main: boolean; deco: Deco };
 export type ShopUses = {
   /** 인사이트권: 종류 → 끝나는 시각 (없거나 지났으면 닫힘) */
   insight: Partial<Record<import('./goods').InsightKind, number>>;

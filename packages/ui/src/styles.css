@@ -4301,7 +4301,7 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 
 /* 장착한 프로필 테두리를 두른 작은 얼굴 (FramedFace, v3.153): 프로필 머리의 판·바닥 띠는 지우고 얼굴 둘레 고리만 */
 .phero.face-ring { all: unset; display: inline-grid; position: relative; flex: none; vertical-align: middle; }
-.phero.face-ring::after { content: none; display: none; }
+.phero.face-ring::before, .phero.face-ring::after { content: none; display: none; }
 .phero.face-ring .phero-face { display: grid; padding: 2px; border-radius: var(--r-l); box-shadow: 0 0 10px rgba(0, 0, 0, .12); }
 .phero.face-ring .phero-face .face, .phero.face-ring .phero-face .initial { width: var(--fr) !important; height: var(--fr) !important; border-radius: var(--r-m); }
 .phero.face-ring.round .phero-face, .phero.face-ring.round .phero-face .face, .phero.face-ring.round .phero-face .initial { border-radius: 50%; }
@@ -4824,3 +4824,35 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 
 /* 소식 자리표시: 패치 소식의 증강 아이콘 줄 */
 .nw-skaugs { display: flex; flex-wrap: wrap; gap: var(--s2); }
+
+/* ── 랭킹: 계정마다 장착한 꾸밈 (v3.161) ── */
+/* 이름 효과: 프로필 머리의 .phero-name.name-* 를 그대로 쓰되 글자 크기·굵기는 그 자리 것으로 */
+.lb-nm .phero-name.nmfx, .rank-row .who .phero-name.nmfx { font-size: inherit; font-weight: inherit; letter-spacing: inherit; line-height: inherit; display: inline; overflow-wrap: normal; }
+.rank-row .who b { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
+.rank-row .who b > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 칭호 칩: 밝은 줄은 차분한 회색, 어두운 줄·무대는 프로필 머리와 같은 유리 */
+.rk-tt { flex: none; display: inline-flex; align-items: center; height: 20px; padding: 0 var(--s2); border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 750; letter-spacing: .01em; line-height: 1; white-space: nowrap;
+  color: var(--text-2); background: var(--surface-3); }
+.rk-tt.r-rare { color: color-mix(in srgb, #4a8cff 72%, var(--text)); background: rgba(74, 140, 255, .14); }
+.rk-tt.r-epic { color: color-mix(in srgb, #a46bff 72%, var(--text)); background: rgba(164, 107, 255, .15); }
+.rk-tt.r-legendary { color: color-mix(in srgb, #e0901c 74%, var(--text)); background: rgba(242, 169, 59, .18); }
+.rk-tt.r-mythic { color: color-mix(in srgb, #ff4d6d 74%, var(--text)); background: rgba(255, 77, 109, .15); }
+.rk-tt.dark { color: rgba(255, 255, 255, .88); background: rgba(255, 255, 255, .14); }
+.rk-tt.dark.r-rare { color: #cfe0ff; background: rgba(74, 140, 255, .28); }
+.rk-tt.dark.r-epic { color: #e6d8ff; background: rgba(164, 107, 255, .3); }
+.rk-tt.dark.r-legendary { color: #fff1c8; background: linear-gradient(90deg, rgba(242, 169, 59, .4), rgba(255, 224, 138, .26)); }
+.rk-tt.dark.r-mythic { color: #ffe3e8; background: rgba(255, 77, 109, .32); }
+.lb-card .rk-tt { margin-bottom: var(--s1); }
+/* 무대 얼굴에 테두리를 둘렀으면 받침 고리 대신 그 테두리 */
+.lb-face:has(.face-ring) { padding: 0; background: none !important; box-shadow: none !important; }
+.lb-face .face-ring .phero-face .face, .lb-face .face-ring .phero-face .initial { box-shadow: none; }
+@media (max-width: 640px) { .lb-face .phero.face-ring { --fr: 48px !important; } .lb-slot.p1 .lb-face .phero.face-ring { --fr: 60px !important; } }
+/* 프로필 꾸미기: 꾸밀 계정 고르기 (계정이 둘 이상일 때, v3.161) */
+.pst-acct { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); margin-bottom: var(--s3); }
+.pst-acct .k { font-size: var(--fs-sm); font-weight: 750; color: var(--text-2); margin-right: var(--s1); }
+.pst-acc { display: inline-flex; align-items: center; gap: var(--s2); height: 32px; padding: 0 var(--s3); border-radius: var(--r-pill); border: 0; background: var(--surface-3); color: var(--text-2); font: inherit; font-size: var(--fs-sm); font-weight: 700; cursor: pointer; transition: background .16s, color .16s; }
+.pst-acc:hover { color: var(--text); }
+.pst-acc.on { background: var(--accent); color: var(--on-accent); }
+.pst-acc small { font-size: var(--fs-xs); font-weight: 750; opacity: .72; }
+.pst-acc .nm { max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pst-else { position: absolute; inset: auto auto var(--s2) var(--s2); z-index: 2; max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; height: 24px; line-height: 24px; padding: 0 var(--s2); border-radius: var(--r-pill); background: rgba(7, 9, 15, .78); color: #fff; font-size: var(--fs-xs); font-weight: 700; }

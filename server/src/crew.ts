@@ -155,6 +155,13 @@ async function accountsOf(env: Env, me: Member): Promise<Account[]> {
 
 /** 메인 계정 = 이름(롤 이름#태그)·디스코드 별명이 따른다 */
 async function setMain(env: Env, me: Member, puuid: string, rid: string | null) {
+  // 꾸밈은 계정마다 (v3.161): 지금 메인의 꾸밈을 그 계정 줄에 남기고, 새 메인의 꾸밈을 members.deco 로
+  if (me.riot_puuid && me.riot_puuid !== puuid) {
+    await env.DB.batch([
+      env.DB.prepare('UPDATE member_accounts SET deco = (SELECT deco FROM members WHERE id = ?1) WHERE puuid = ?2 AND member_id = ?1').bind(me.id, me.riot_puuid),
+      env.DB.prepare('UPDATE members SET deco = (SELECT deco FROM member_accounts WHERE puuid = ?2 AND member_id = ?1) WHERE id = ?1').bind(me.id, puuid),
+    ]);
+  }
   await env.DB.prepare('UPDATE members SET riot_puuid = ?1, riot_id = ?2, nick = COALESCE(?2, nick) WHERE id = ?3').bind(puuid, rid, me.id).run();
   await checkTagBonus(env, me.id, rid).catch(() => false);
   await syncNick(env, me.id, rid, (me as Member & { discord_nick?: string | null }).discord_nick).catch(() => false);

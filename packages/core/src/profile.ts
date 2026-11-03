@@ -11,7 +11,9 @@ export type RankingRow = { id: string; nick: string; skin: number | null; n: num
   /** 산 배경 (그 사람의 줄에 깔린다) */
   bg?: string | null;
   /** 승인 대기 (v3.107) */
-  pending?: boolean };
+  pending?: boolean;
+  /** 롤 계정마다 한 줄 (v3.161): 줄 열쇠(회원 id:계정 순서) · 메인 계정인지 · 그 계정에 장착한 테두리·이름 효과·칭호. 예전 서버는 보내지 않는다 */
+  key?: string; main?: boolean; frame?: string | null; nameFx?: string | null; title?: string | null };
 export type Ranking = { period: 'all' | 'month' | 'season'; season?: { key: string; label: string; start: number; end: number }; minWinrate: number; rows: RankingRow[]; limited?: { total: number; mine: (RankingRow & { rank: number }) | null } };
 export type MemberGame = { gameId: number; playedAt: number; duration: number; championId: number; win: boolean; kills: number; deaths: number; assists: number; augments: number[]; items: number[]; damageToChampions: number | null; goldEarned: number | null; crewCount: number; custom?: boolean };
 export type MemberPage = {

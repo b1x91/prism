@@ -8,9 +8,9 @@ import { useKept } from './kept';
 import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, aboutWhen, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
   type Api, type Game, type InsightKind, type MemberPage, type Ranking, type Shop, type RankingRow, type Skin,
-  rankScore, byScore, seasonOf, improveOf, type WinTip,
+  rankScore, byScore, seasonOf, improveOf, type WinTip, SHOP_ITEM,
 } from '@prism/core';
-import { AugImg, ChampImg, Empty, Gem, LockedMore, MemberFace, PendingChip, PresenceTag, faceSrc, RoleBadge, Seg, useSkins } from './basics';
+import { AugImg, ChampImg, Empty, FramedFace, Gem, LockedMore, MemberFace, PendingChip, PresenceTag, faceSrc, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
 import { ArtisanRankingView } from './artisan';
 import { Icon } from './icons';
@@ -168,7 +168,7 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
       {!rows.length && <Empty>{by === 'season' ? '이번 시즌에 기록된 판이 아직 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
       {rows.length > 0 && <Leaderboard key={`lb-${by}`} play={play} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
       {rows.length > 3 && <div key={`rl-${by}`} className={`card rank-list ${play ? 'lb-in' : ''}`}>
-        {rows.slice(3).map((r, i) => <RankRow key={r.id} r={r} rank={i + 4} i={i} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
+        {rows.slice(3).map((r, i) => <RankRow key={r.key ?? r.id} r={r} rank={i + 4} i={i} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
       </div>}
       {data?.limited && <LockedMore more={data.limited.total - rows.length}>
         {data.limited.mine && <div className="card rank-list"><RankRow r={data.limited.mine} rank={data.limited.mine.rank} by={by as RankBy} me skins={skins} onOpen={onOpen} /></div>}
@@ -200,11 +200,19 @@ function Podium({ r, rank, by, me, skins, onOpen, play }: { r: RankingRow; rank:
       {/* 산 배경이 있으면 그 장면, 없으면 회원마다 정해진 기본 색 (프로필 머리와 같은 규칙) */}
       {r.bg ? <BgScene id={r.bg} /> : <span className="phero-tint" style={{ ['--tint' as string]: baseTint(r.nick) }} aria-hidden="true" />}
       {rank === 1 && <span className="lb-crown" aria-hidden="true"><Gem size={28} src="/brand/prism-32.png" /></span>}
-      <span className="lb-face"><MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={rank === 1 ? 88 : 72} /></span>
-      <span className="lb-nm"><NickName nick={r.nick} />{r.pending && <PendingChip dark />}</span>
+      <span className="lb-face"><FramedFace frame={r.frame} round nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={rank === 1 ? 88 : 72} /></span>
+      {r.title && <TitleChip id={r.title} dark />}
+      <span className="lb-nm"><span className={r.nameFx ? `phero-name nmfx ${r.nameFx}` : ''}><NickName nick={r.nick} /></span>{r.pending && <PendingChip dark />}</span>
       <span className="lb-st"><b><CountUp text={scoreTab(by) ? `${rankScore(r.w, r.n)}점` : `${r.n}판`} delay={[0, 1150, 950, 800][rank]} play={play} /></b><small>{scoreTab(by) ? `${r.n}판 · ${pct(r.w, r.n)}` : `승률 ${pct(r.w, r.n)}`}</small></span>
     </button>
   );
+}
+
+/** 그 계정에 장착한 칭호 (랭킹 줄·무대) */
+function TitleChip({ id, dark }: { id: string; dark?: boolean }) {
+  const it = SHOP_ITEM[id];
+  if (!it) return null;
+  return <span className={`rk-tt r-${it.rarity ?? 'common'} ${dark ? 'dark' : ''}`}>{it.name}</span>;
 }
 
 /** 숫자가 0에서 차오른다 (카드가 다 올라온 뒤, 0.9초). 글자 속 첫 숫자만 바꾼다 — '123판', '56%' */
@@ -235,8 +243,9 @@ function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: n
     <button type="button" className={`rank-row ${me ? 'me' : ''} ${rank === 1 ? 'first' : ''} ${r.bg ? 'has-bg' : ''}`} style={i !== undefined ? { ['--i' as string]: Math.min(i, 12) } : undefined} onClick={() => onOpen(r.id)}>
       {r.bg && <BgScene id={r.bg} row />}
       <span className="rk">{rank}</span>
-      <MemberFace nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={40} />
-      <span className="who"><b><NickName nick={r.nick} />{r.pending && <PendingChip dark={Boolean(r.bg)} />}</b><span className="meta">{[r.mainChampion ? `주 챔프 ${CHAMPIONS[r.mainChampion]?.name}` : '', scoreTab(by) ? `${r.n}판` : ''].filter(Boolean).join(' · ')}</span></span>
+      <FramedFace frame={r.frame} nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={r.frame ? 36 : 40} />
+      {/* 이름 효과는 어두운 배경이 깔린 줄에서만 (밝은 줄에선 글자가 묻힌다) */}
+      <span className="who"><b><span className={r.nameFx && r.bg ? `phero-name nmfx ${r.nameFx}` : ''}><NickName nick={r.nick} /></span>{r.title && <TitleChip id={r.title} dark={Boolean(r.bg)} />}{r.pending && <PendingChip dark={Boolean(r.bg)} />}</b><span className="meta">{[r.mainChampion ? `주 챔프 ${CHAMPIONS[r.mainChampion]?.name}` : '', scoreTab(by) ? `${r.n}판` : ''].filter(Boolean).join(' · ')}</span></span>
       {scoreTab(by) ? <span className="num key">{rankScore(r.w, r.n)}<small>점</small></span> : <span className="num key">{r.n}<small>판</small></span>}
       <span className="num">{pct(r.w, r.n)}</span>
     </button>
