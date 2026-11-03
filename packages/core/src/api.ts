@@ -25,12 +25,23 @@ export const CACHE_TTL = 3600_000;
 const LIVE_EXACT = new Set(['/api/me', '/api/me/games', '/api/crew/targets', '/links']);
 const LIVE_PREFIX = ['/api/now', '/api/news', '/api/discord', '/api/staff', '/api/me/invite', '/api/members/lookup', '/api/members/search', '/api/me/inquiry', '/api/inquiry/', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
 const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag', '/api/now'];
+/** 내 얼굴·테두리·이름·피스가 바뀔 수 있는 쓰기 — 끝나면 사이드바·상단의 내 정보를 다시 받는다 */
+const ME_WRITES = ['/api/me/equip', '/api/me/profile', '/api/me/skin', '/api/me/about', '/api/me/riot', '/api/shop/', '/api/me/missions/claim', '/api/me/weekly/claim'];
+const meSubs = new Set<() => void>();
+export function onMeChanged(f: () => void): () => void { meSubs.add(f); return () => { meSubs.delete(f); }; }
+let meTimer: ReturnType<typeof setTimeout> | null = null;
+/** 꾸미기 저장처럼 쓰기가 여러 번 이어져도 한 번만 다시 받는다 */
+export function emitMeChanged(): void { if (meTimer) clearTimeout(meTimer); meTimer = setTimeout(() => { meTimer = null; meSubs.forEach((f) => f()); }, 200); }
 export function withCache(api: Api, ttl = CACHE_TTL): Api {
   const memo = new Map<string, { at: number; data: unknown }>();
   const flying = new Map<string, Promise<unknown>>();
   const live = (p: string) => LIVE_EXACT.has(p) || LIVE_PREFIX.some((x) => p.startsWith(x));
   const fresh = (p: string) => { const m = memo.get(p); return m && Date.now() - m.at < ttl ? m : undefined; };
-  const write = <T>(path: string, r: Promise<T>) => r.then((v) => { if (!KEEP_ON_WRITE.some((x) => path.startsWith(x))) memo.clear(); return v; });
+  const write = <T>(path: string, r: Promise<T>) => r.then((v) => {
+    if (!KEEP_ON_WRITE.some((x) => path.startsWith(x))) memo.clear();
+    if (ME_WRITES.some((x) => path.startsWith(x))) emitMeChanged();
+    return v;
+  });
   return {
     get<T>(path: string): Promise<T> {
       if (live(path)) return api.get<T>(path);

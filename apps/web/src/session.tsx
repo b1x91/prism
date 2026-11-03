@@ -3,7 +3,7 @@
  * 디스코드 로그인 → 서버가 1회용 code 와 함께 /auth/done 으로 돌려보냄 → 토큰으로 교환 → 이 브라우저에 저장.
  */
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { ApiError, withCache, withDefaults, withNet, type Api, type Links, type Me, type Presence } from '@prism/core';
+import { ApiError, onMeChanged, withCache, withDefaults, withNet, type Api, type Links, type Me, type Presence } from '@prism/core';
 import { connectFavs } from '@prism/ui';
 import type { Attend } from '@prism/ui';
 
@@ -57,6 +57,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (!getToken() || !SERVER) { setMe(null); setReady(true); return; }
     api.get<Me>('/api/me').then(setMe, () => setMe(null)).finally(() => setReady(true));
   }, [api]);
+  // 꾸밈 장착·스킨·소개를 바꾸면 상단·메뉴의 내 얼굴·테두리도 바로 맞춘다
+  useEffect(() => onMeChanged(refresh), [refresh]);
   useEffect(() => {
     refresh();
     if (SERVER) fetch(`${SERVER}/links`).then((r) => r.json()).then((l: Links) => setLinks({ discord: l.discord ?? FALLBACK_LINKS.discord, kakao: l.kakao ?? FALLBACK_LINKS.kakao })).catch(() => {});

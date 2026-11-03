@@ -3,7 +3,7 @@
  * 원칙 (CLAUDE.md v3.1-4·5): 게임 중에는 롤에 요청 0, 확인 간격은 상황별.
  */
 import type { Attend } from '@prism/ui';
-import { AUGMENT, isMayhemGame, myKillsOf, liveMatchup, parseLive, mayhemGames, personalStats, toIngestGame, type Game, type InquiryContext, type Me, type Personal } from '@prism/core';
+import { AUGMENT, isMayhemGame, myKillsOf, liveMatchup, onMeChanged, parseLive, mayhemGames, personalStats, toIngestGame, type Game, type InquiryContext, type Me, type Personal } from '@prism/core';
 import { api, bridge } from './bridge';
 import { VERSION } from './version';
 
@@ -538,6 +538,8 @@ export function start() {
   if (started) return;
   started = true;
   void refreshSession().then(pingPresence);
+  // 꾸밈 장착·스킨·소개를 바꾸면 사이드바의 내 얼굴·테두리·피스도 바로 맞춘다
+  onMeChanged(() => void refreshSession());
   setInterval(() => void pingPresence(), 10_000);
   document.addEventListener('visibilitychange', () => void pingPresence());
   void loop();
