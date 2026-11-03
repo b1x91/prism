@@ -1,13 +1,38 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { FullscreenNote, useFullscreen } from '../fullscreen';
-import { Icon, MemberFace, RoleBadge, Seg, Toggle, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
+import { ActBtn, Icon, MemberFace, RoleBadge, type ActState, Seg, Toggle, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
 import { api, bridge, type VisionState } from '../bridge';
-import { refreshSession, type State } from '../controller';
+import { refreshSession, relinkRiot, type State } from '../controller';
 import { checkUpdate, useUpdate } from '../update';
 import { UpdateButton } from '../UpdateButton';
 
 import { VERSION } from '../version';
+
+/** 롤 계정 줄: 지금 클라이언트 계정이 연결된 계정과 다르면 '이 계정으로 다시 연결' (부계정과 번갈아 할 때) */
+function RiotRow({ s, onError }: { s: State; onError: (m: string) => void }) {
+  const [st, setSt] = useState<ActState>(undefined);
+  const cur = s.summoner;
+  const differs = Boolean(cur && cur.riotId && cur.riotId !== s.me?.riotId);
+  const inGame = ['ChampSelect', 'GameStart', 'InProgress', 'Reconnect'].includes(s.phase);
+  const go = async () => {
+    setSt('busy'); onError('');
+    try { await relinkRiot(); setSt('done'); setTimeout(() => setSt(undefined), 1400); }
+    catch (e) { setSt(undefined); onError(e instanceof Error ? e.message : String(e)); }
+  };
+  return (
+    <div>
+      <span className="k">롤 계정</span>
+      <span className="riot-row">
+        <span className="riot-now">
+          <b>{s.me?.riotId ?? '연결 안 됨'}</b>
+          <small className="meta">{!cur ? '롤 클라이언트를 켜면 다른 계정으로 바꿀 수 있어요' : differs ? `지금 롤에 로그인된 계정: ${cur.riotId}` : '지금 롤에 로그인된 계정과 같아요'}</small>
+        </span>
+        {(differs || st) && !inGame && <ActBtn state={st} className="btn sm" label="이 계정으로 다시 연결" busy="연결 중" done="연결됨" onClick={go} />}
+      </span>
+    </div>
+  );
+}
 
 export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   const [auto, setAuto] = useState<boolean | null>(null);
@@ -30,7 +55,7 @@ export function SettingsPage({ s, onLogin }: { s: State; onLogin: () => void }) 
           <div className="kv">
             <div><span className="k">계정</span><span className="row" style={{ gap: 8 }}><MemberFace nick={s.me.nick} skin={s.me.skin} size={24} skins={skins} />{s.me.nick}<button type="button" className="btn ghost sm" onClick={() => run(async () => { await bridge.logout(); await refreshSession(); })}>로그아웃</button></span></div>
             <div><span className="k">등급</span><span className="row" style={{ gap: 8 }}>{s.me.role ? <RoleBadge role={s.me.role} /> : <span className="muted">{s.me.rolesKnown ? '등급 없음' : '다시 로그인하면 불러와요'}</span>}</span></div>
-            <div><span className="k">롤 계정</span><span>{s.me.riotId ?? '연결 안 됨'}{s.summoner && s.summoner.riotId !== s.me.riotId && <span className="meta"> (지금 클라이언트: {s.summoner.riotId})</span>}</span></div>
+            <RiotRow s={s} onError={setMsg} />
           </div>
         )}
       </section>

@@ -593,3 +593,8 @@ body { overflow: hidden; background: var(--bg); }
 /* 펼친 허브는 점을 아래 탭으로 넘긴다 (모임 ● 와 멤버 ● 가 함께 빛나지 않게, v3.147). 좁은 사이드바는 펼침이 없어 허브에 그대로 */
 @media (min-width: 901px) { .side-hub.on > a .live-pip, .side-hub.on > a .news-dot { display: none; } .side-hub.on > a .hub-chev { margin-left: auto; } }
 @media (prefers-reduced-motion: reduce) { .side-nav .side-sub, .side-nav .hub-chev { transition: none; } }
+
+/* 설정 › 롤 계정 줄 (부계정 다시 연결) */
+.riot-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s3); min-width: 0; }
+.riot-now { display: grid; gap: 2px; flex: 1 1 220px; min-width: 0; }
+.riot-now small { font-size: var(--fs-xs); }

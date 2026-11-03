@@ -153,6 +153,8 @@ export async function linkRiot(req: Request, env: Env, me: Member) {
   await env.DB.prepare('UPDATE members SET riot_puuid = ?1, riot_id = ?2, nick = COALESCE(?3, nick) WHERE id = ?4').bind(puuid, rid, rid, me.id).run();
   await checkTagBonus(env, me.id, rid).catch(() => false);
   await syncNick(env, me.id, rid, (me as Member & { discord_nick?: string | null }).discord_nick).catch(() => false);
+  // 부계정으로 다시 연결했을 때: 그 계정이 비회원으로 모인 판(함께한 친구들)이 있으면 내 기록으로 (v3.154)
+  if (me.opt_in_at && puuid !== me.riot_puuid) await adoptProspect(env, me.id, puuid).catch(() => false);
   // 확정된 가입 신청과 롤 이름이 맞으면 바로 준회원 (v3.148)
   await onRiotLinked(env, me.id, rid).catch((e) => console.error('가입 신청 잇기 실패', e));
   return json({ ok: true });

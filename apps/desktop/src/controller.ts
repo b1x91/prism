@@ -577,6 +577,14 @@ export async function setConsent(agree: boolean) {
   if (agree) void uploadOwn();
 }
 
+/** 부계정과 번갈아 할 때: 지금 클라이언트에 로그인된 롤 계정으로 다시 연결 (설정). 그동안 쌓인 판은 그대로 내 기록에 남는다 */
+export async function relinkRiot() {
+  if (!state.summoner) throw new Error('롤 클라이언트를 켜면 다시 연결할 수 있어요.');
+  await api.post('/api/me/riot', { puuid: state.summoner.puuid, riotId: state.summoner.riotId });
+  await refreshSession();
+  void uploadOwn();
+}
+
 const PERSONAL_KEYS = new Set(['gameName', 'tagLine', 'summonerName', 'displayName', 'internalName', 'riotIdGameName', 'riotIdTagline', 'summonerId', 'accountId', 'currentAccountId', 'profileIcon', 'matchHistoryUri', 'nameVisibilityType', 'obfuscatedPuuid', 'obfuscatedSummonerId']);
 
 /** 다른 플레이어 식별 정보를 지운다. 내 PUUID 는 ME, 다른 PUUID 는 P1, P2 … */
