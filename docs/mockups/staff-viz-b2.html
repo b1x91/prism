@@ -281,8 +281,21 @@ svg text{font-family:var(--font)}
 .ago{font-size:12px;color:var(--fg2);text-align:right;white-space:nowrap}
 .ago.live{color:var(--up);font-weight:700}
 .lvl{position:relative}
-.lvl select{appearance:none;-webkit-appearance:none;width:100%;height:32px;padding:0 28px 0 12px;border:0;border-radius:8px;background:var(--panel2);font:inherit;font-size:12px;font-weight:700;color:var(--fg);cursor:pointer}
-.mrow:hover .lvl select{background:var(--panel)}
+.lvl{position:relative}
+/* 앱·웹 공용 드롭다운(Select)과 같은 모양: 단추 + 아래로 펼쳐지는 목록, 고른 칸에 체크 */
+.dd-btn{width:100%;height:34px;display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 10px 0 12px;border:0;border-radius:10px;background:var(--panel2);font:inherit;font-size:12px;font-weight:700;color:var(--fg);transition:background .2s,box-shadow .2s}
+.mrow:hover .dd-btn{background:var(--panel)}
+.dd-btn svg{width:14px;height:14px;color:var(--mut);transition:transform .2s}
+.lvl.open .dd-btn{background:var(--panel);box-shadow:0 0 0 2px color-mix(in srgb,var(--acc) 45%,transparent)}
+.lvl.open .dd-btn svg{transform:rotate(180deg)}
+.dd-pop{position:absolute;z-index:20;top:calc(100% + 6px);right:0;min-width:100%;padding:4px;display:grid;gap:2px;border-radius:12px;background:var(--panel);box-shadow:0 0 0 1px color-mix(in srgb,var(--fg) 7%,transparent),0 14px 32px rgba(18,20,28,.18);animation:ddIn .16s cubic-bezier(.16,1,.3,1)}
+.dd-pop.up{top:auto;bottom:calc(100% + 6px)}
+.dd-pop button{display:flex;align-items:center;gap:8px;height:32px;padding:0 10px;border:0;border-radius:8px;background:none;font:inherit;font-size:12px;font-weight:650;color:var(--fg2);white-space:nowrap;text-align:left}
+.dd-pop button i{width:6px;height:6px;border-radius:50%;flex:none}
+.dd-pop button:hover{background:var(--panel2);color:var(--fg)}
+.dd-pop button.on{color:var(--fg);font-weight:800}
+.dd-pop button.on::after{content:'';margin-left:auto;width:8px;height:4px;border-left:2px solid var(--acc);border-bottom:2px solid var(--acc);transform:rotate(-45deg) translateY(-2px)}
+@keyframes ddIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
 .lvl::after{content:'';position:absolute;right:12px;top:13px;width:6px;height:6px;border-right:1.5px solid var(--mut);border-bottom:1.5px solid var(--mut);transform:rotate(45deg);pointer-events:none}
 .mempty{padding:48px 0;text-align:center;color:var(--mut);font-size:13px}
 .mmore{display:flex;justify-content:center;padding-top:12px}
@@ -806,10 +819,17 @@ function memRows(){let L=MEM.filter(m=>(!ms.q||m.n.includes(ms.q)||m.dn.includes
       <div class="wr c-wr ${wr>=.55&&m.g>=5?'hi':''} ${on('wr')}"><b>${m.g?Math.round(wr*100)+'%':'—'}</b><span class="t"><i style="width:${wr*100}%"></i><u></u></span></div>
       <div class="nn c-sc ${on('sc')}">${m.g?m.sc:'—'}</div>
       <div class="ago c-ago ${m.pres?'live':''}" ${m.pres?`style="color:${PRES[m.pres][0]}"`:''}>${m.pres?PRES[m.pres][1]:agoT(m.lastH)}</div>
-      <div class="lvl"><select aria-label="${m.n} 단계">${LV_ORDER.map(k=>`<option value="${k}" ${m.lv==k?'selected':''}>${LV[k].n}</option>`).join('')}</select></div>
+      <div class="lvl">${m.lv===5?'<span class="meta">운영진</span>':`<button type="button" class="dd-btn" aria-haspopup="listbox" aria-label="${m.n} 단계"><span>${LV[m.lv].n}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg></button>`}</div>
       <div class="mob"><span><b>${m.g}</b>판</span><span><b>${m.g?Math.round(wr*100)+'%':'—'}</b> 승률</span><span>${m.pres?PRES[m.pres][1]:agoT(m.lastH)}</span></div></div>`}).join('')+(L.length>12&&!ms.more?`<div class="mmore"><button type="button" class="btn sm" id="mmore">${L.length-12}명 더 보기</button></div>`:'');
+  document.onclick=()=>document.querySelectorAll('.lvl.open').forEach(x=>{x.classList.remove('open');x.querySelector('.dd-pop')?.remove()});
   $('#mrows').querySelectorAll('.mrow').forEach(r=>{r.onclick=e=>{if(e.target.closest('.lvl'))return;openDrawer(MEM[+r.dataset.i])};r.onkeydown=e=>{if(e.key==='Enter')openDrawer(MEM[+r.dataset.i])}});
-  $('#mrows').querySelectorAll('.lvl select').forEach(sel=>sel.onchange=()=>{const m=MEM[+sel.closest('.mrow').dataset.i];m.lv=sel.value==='pend'?'pend':+sel.value;memMix();memTools()});
+  // 단계 드롭다운: 운영진은 디스코드에서 정하므로 목록은 승인 대기 · 준회원 · 정회원 · 우수회원. 아래 자리가 모자라면 위로 펼친다
+  $('#mrows').querySelectorAll('.dd-btn').forEach(btn=>btn.onclick=e=>{e.stopPropagation();const box=btn.parentElement,m=MEM[+btn.closest('.mrow').dataset.i];
+    const was=box.classList.contains('open');document.querySelectorAll('.lvl.open').forEach(x=>{x.classList.remove('open');x.querySelector('.dd-pop')?.remove()});if(was)return;
+    box.classList.add('open');const pop=document.createElement('div');pop.className='dd-pop';pop.setAttribute('role','listbox');
+    pop.innerHTML=['pend',1,2,3].map(k=>`<button type="button" role="option" data-k="${k}" class="${m.lv==k?'on':''}"><i style="background:${LV[k].c}"></i>${LV[k].n}</button>`).join('');box.appendChild(pop);
+    if(pop.getBoundingClientRect().bottom>innerHeight-8)pop.classList.add('up');
+    pop.querySelectorAll('button').forEach(o=>o.onclick=ev=>{ev.stopPropagation();m.lv=o.dataset.k==='pend'?'pend':+o.dataset.k;box.classList.remove('open');memAll()})});
   const mm=$('#mmore');if(mm)mm.onclick=()=>{ms.more=true;memRows()}}
 function memAll(){memMix();memTools();memRows()}
 $('#mq').addEventListener('input',e=>{ms.q=e.target.value.trim();ms.more=false;memTools();memRows()});

@@ -72,6 +72,15 @@ export function LiveNow({ live, meId, over, onMember }: { live: MemberLive; meId
             {(withMe || vsMe) && <span className={`ln-me ${vsMe ? 'vs' : ''}`}>{vsMe ? '나와 맞대결 중' : '나와 같은 팀'}</span>}
           </div>
         </div>
+        {board && (board.mine.length > 0 || board.theirs.length > 0) && (() => {
+          // 킬 스코어 (우리 : 상대) — 라이브 데이터로 1분마다
+          const a = board.mine.reduce((n, p) => n + p.k, 0), b = board.theirs.reduce((n, p) => n + p.k, 0);
+          return <div className="ln-score" aria-label={`킬 스코어 우리 ${a} 상대 ${b}`}>
+            <span className="ln-sl">킬 스코어</span>
+            <span className="ln-sv"><b className="us">{a}</b><i>:</i><b className="them">{b}</b></span>
+            <span className="ln-sn">{a > b ? `${a - b}킬 앞서요` : a < b ? `${b - a}킬 뒤져요` : '동점이에요'}</span>
+          </div>;
+        })()}
         {teams && <div className="ln-teams">
           {side(live.allies, live.allySize)}
           {(live.foes.length > 0) && side(live.foes, live.foeSize, true)}
@@ -80,7 +89,7 @@ export function LiveNow({ live, meId, over, onMember }: { live: MemberLive; meId
       {board && (board.mine.length > 0 || board.theirs.length > 0) && <div className="ln-board">
         <BoardTeam title="우리 팀" list={board.mine} meId={meId} onMember={onMember} />
         <BoardTeam title="상대 팀" foe list={board.theirs} meId={meId} onMember={onMember} />
-        <p className="ln-note">{board.mine.concat(board.theirs).some((p) => p.augments.length) ? '' : '증강은 게임이 알려 주는 만큼만 보여요. '}1분마다 새로 받아요 · {Math.max(0, Math.round((Date.now() - board.at) / 60_000))}분 전</p>
+        <p className="ln-note">1분마다 새로 받아요 · {Math.max(0, Math.round((Date.now() - board.at) / 60_000))}분 전</p>
       </div>}
     </section>
   );
@@ -93,16 +102,20 @@ function BoardTeam({ title, list, foe, meId, onMember }: { title: string; list: 
     <div className={`lvb-team ${foe ? 'foe' : ''}`}>
       <header><b>{title}</b><span>{kills} 킬</span></header>
       {list.map((p, i) => (
-        <div key={i} className={`lvb-row ${p.me ? 'me' : ''} ${p.member?.id === meId ? 'viewer' : ''}`}>
+        // 우리 멤버면 줄 어디를 눌러도 회원 페이지 (증강·아이템 아이콘은 제 설명·상세로)
+        <div key={i} className={`lvb-row ${p.me ? 'me' : ''} ${p.member?.id === meId ? 'viewer' : ''} ${p.member && onMember ? 'tap' : ''}`}
+          {...(p.member && onMember ? { role: 'link', tabIndex: 0, 'aria-label': `${shortNick(p.member.nick)} 회원 페이지`,
+            onClick: (e: React.MouseEvent) => { if (!(e.target as HTMLElement).closest('.lvb-aug, .lvb-items')) onMember(p.member!.id); },
+            onKeyDown: (e: React.KeyboardEvent) => { if (e.key === 'Enter' && e.target === e.currentTarget) onMember(p.member!.id); } } : {})}>
           <span className="lvb-champ">{p.champ ? <ChampImg id={p.champ} size={36} /> : <i className="lvb-blank" />}{p.level > 0 && <em>{p.level}</em>}</span>
           <span className="lvb-who">
-            {p.member ? <button type="button" className="lvb-name" onClick={() => onMember?.(p.member!.id)}><MemberFace nick={p.member.nick} skin={p.member.skin} champion={p.member.main} size={20} />{shortNick(p.member.nick)}</button>
+            {p.member ? <span className="lvb-name"><MemberFace nick={p.member.nick} skin={p.member.skin} champion={p.member.main} size={20} />{shortNick(p.member.nick)}</span>
               : <span className="lvb-name guest">{p.name}</span>}
             <small>{CHAMPIONS[p.champ]?.name ?? ''}</small>
           </span>
           <span className="lvb-kda"><b>{p.k}</b>/<b className="d">{p.d}</b>/<b>{p.a}</b></span>
           <span className="lvb-augs">{p.augments.length ? p.augments.slice(0, 6).map((a, j) => AUGMENT[a]
-            ? <AugmentLink key={`${a}-${j}`} id={a} champion={p.champ} className="lvb-aug"><AugRing id={a} size={26} /></AugmentLink> : null) : <span className="lvb-none">증강 정보 없음</span>}</span>
+            ? <AugmentLink key={`${a}-${j}`} id={a} champion={p.champ} className="lvb-aug"><AugRing id={a} size={26} /></AugmentLink> : null) : null}</span>
           <span className="lvb-items">{p.items.slice(0, 7).map((x, j) => <ItemIcon key={`${x}-${j}`} id={x} size={22} />)}</span>
         </div>
       ))}

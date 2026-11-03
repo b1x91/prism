@@ -3995,6 +3995,14 @@ img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-im
 .ln-me { justify-self: start; margin-top: 2px; padding: 0 var(--s2); border-radius: var(--r-pill); background: rgba(34, 197, 94, .18); color: #86efac; font-size: var(--fs-xs); font-weight: 750; }
 .ln-me.vs { background: rgba(255, 93, 108, .18); color: #ffadb5; }
 .ln-teams { display: flex; flex-wrap: wrap; gap: var(--s4) var(--s6); }
+/* 킬 스코어 (v3.160): 카드 오른쪽 위, 우리(파랑) : 상대(빨강) */
+.ln-score { display: grid; justify-items: end; gap: 2px; margin-left: auto; text-align: right; }
+.ln-sl { font-size: var(--fs-xs); font-weight: 700; color: rgba(255, 255, 255, .55); letter-spacing: .02em; }
+.ln-sv { display: inline-flex; align-items: baseline; gap: var(--s2); font-size: 32px; font-weight: 800; line-height: 1.05; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.ln-sv .us { color: #8fb0ff; } .ln-sv .them { color: #ff8a95; }
+.ln-sv i { font-style: normal; font-size: 22px; color: rgba(255, 255, 255, .4); transform: translateY(-3px); }
+.ln-sn { font-size: var(--fs-xs); color: rgba(255, 255, 255, .62); }
+@media (max-width: 520px) { .ln-score { justify-items: start; margin-left: 0; text-align: left; } .ln-sv { font-size: 26px; } }
 .ln-side { display: grid; gap: var(--s1); }
 .ln-k { font-size: var(--fs-xs); font-weight: 750; color: rgba(255, 255, 255, .6); }
 .ln-side.foe .ln-k { color: #ffadb5; }
@@ -4261,15 +4269,18 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .lvb-blank { display: block; width: 36px; height: 36px; border-radius: var(--r-s); background: rgba(255, 255, 255, .08); }
 .lvb-who { grid-area: w; display: flex; align-items: baseline; gap: var(--s2); min-width: 0; }
 .lvb-name { display: inline-flex; align-items: center; gap: 6px; min-width: 0; padding: 0; border: 0; background: none; color: #f3f3f7; font: inherit; font-size: var(--fs-sm); font-weight: 750; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-button.lvb-name:hover { text-decoration: underline; }
+.lvb-row.tap { cursor: pointer; transition: background .2s; }
+.lvb-row.tap:hover, .lvb-row.tap:focus-visible { background: rgba(255, 255, 255, .07); outline: none; }
+.lvb-row.tap:hover .lvb-name { text-decoration: underline; text-underline-offset: 3px; }
+.lvb-row.me.tap:hover { background: rgba(134, 239, 172, .16); }
+.lvb-row.viewer.tap:hover { background: rgba(165, 176, 255, .18); }
 .lvb-name.guest { cursor: default; color: rgba(255, 255, 255, .78); font-weight: 650; }
 .lvb-who small { font-size: var(--fs-xs); color: rgba(255, 255, 255, .5); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.lvb-kda { grid-area: k; font-size: var(--fs-sm); color: rgba(255, 255, 255, .5); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lvb-kda { grid-area: k; justify-self: end; font-size: var(--fs-sm); color: rgba(255, 255, 255, .5); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .lvb-kda b { color: #f3f3f7; font-weight: 750; }
 .lvb-kda b.d { color: #ffadb5; }
 .lvb-augs { grid-area: a; display: flex; flex-wrap: wrap; gap: 4px; min-width: 0; }
 .lvb-aug { line-height: 0; }
-.lvb-none { font-size: var(--fs-xs); color: rgba(255, 255, 255, .35); }
 .lvb-items { grid-area: i; display: flex; gap: 2px; justify-content: flex-end; }
 .lvb-items img { border-radius: 4px; }
 @media (max-width: 900px) { .ln-board { grid-template-columns: minmax(0, 1fr); } }
