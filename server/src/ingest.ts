@@ -109,15 +109,17 @@ export async function ingest(req: Request, env: Env, me: Member) {
   // 이번 요청에 등장한 puuid 중 동의한 회원만
   const puuids = [...new Set(games.flatMap((g) => g.participants.map((p) => p.puuid)))];
   const memberByPuuid = new Map<string, string>(); // 수집에 동의한 회원
+  const sinceOf = new Map<string, number>(); // 부계정은 등록한 날 이후 판만 (v3.155)
   const linked = new Set<string>(); // 롤 계정을 연결한 회원 전체 (동의를 철회했어도 함께한 친구들로 모으지 않는다)
   for (let i = 0; i < puuids.length; i += 90) {
     const chunk = puuids.slice(i, i + 90);
     // 메인·부계정 모두 (v3.155)
-    const { results } = await env.DB.prepare(`SELECT m.id, ma.puuid AS riot_puuid, m.opt_in_at FROM member_accounts ma JOIN members m ON m.id = ma.member_id WHERE ma.puuid IN (${chunk.map(() => '?').join(',')})`)
+    const { results } = await env.DB.prepare(`SELECT m.id, ma.puuid AS riot_puuid, ma.since, m.opt_in_at FROM member_accounts ma JOIN members m ON m.id = ma.member_id WHERE ma.puuid IN (${chunk.map(() => '?').join(',')})`)
       .bind(...chunk)
-      .all<{ id: string; riot_puuid: string; opt_in_at: number | null }>();
+      .all<{ id: string; riot_puuid: string; since: number; opt_in_at: number | null }>();
     for (const r of results) {
       linked.add(r.riot_puuid);
+      sinceOf.set(r.riot_puuid, r.since || 0);
       if (r.opt_in_at !== null) memberByPuuid.set(r.riot_puuid, r.id);
     }
   }
@@ -155,7 +157,7 @@ export async function ingest(req: Request, env: Env, me: Member) {
       goldEarned: finite(p.goldEarned), items: ids(p.items) ?? [], augments: ids(p.augments) ?? [],
     })));
 
-    const crew = g.participants.filter((p) => memberByPuuid.has(p.puuid));
+    const crew = g.participants.filter((p) => memberByPuuid.has(p.puuid) && g.playedAt >= (sinceOf.get(p.puuid) ?? 0));
     if (crew.length >= 2 && !dup) result.crewGames++;
     const stmts: D1PreparedStatement[] = [];
     perGame.push(stmts);

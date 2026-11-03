@@ -53,7 +53,7 @@ function RiotRow({ s, onError }: { s: State; onError: (m: string) => void }) {
                 <span className="acc-radio" aria-hidden="true" />
                 {av(a.riotId)}
                 <span className="acc-body">{nm(a.riotId)}
-                  <span className="acc-meta">{a.main ? <span className="m">메인 · Prism 이름</span> : <span>부계정</span>}{here && <span className="acc-live">지금 로그인</span>}</span>
+                  <span className="acc-meta">{a.main ? <span className="m">메인 · Prism 이름</span> : <span>부계정{a.since ? ` · ${new Date(a.since).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })}부터` : ''}</span>}{here && <span className="acc-live">지금 로그인</span>}</span>
                 </span>
                 {list.length > 1 && a.puuid && !locked && (confirm === a.puuid
                   ? <span className="acc-confirm" onClick={(e) => e.stopPropagation()}>
@@ -70,7 +70,7 @@ function RiotRow({ s, onError }: { s: State; onError: (m: string) => void }) {
             <div className="acc-row add">
               <span className="acc-plus" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg></span>
               {av(cur.riotId)}
-              <span className="acc-body">{nm(cur.riotId)}<span className="acc-meta"><span className="acc-live">지금 로그인</span><span>아직 연결 안 됨</span></span></span>
+              <span className="acc-body">{nm(cur.riotId)}<span className="acc-meta"><span className="acc-live">지금 로그인</span><span>추가한 날부터 기록돼요</span></span></span>
               <span className="acc-acts">
                 <ActBtn state={st.add} className="btn sm" label="추가" busy="추가 중" done="추가됨" onClick={() => add('add', false)} />
                 <ActBtn state={st.addMain} className="btn primary sm" label="메인으로 추가" busy="추가 중" done="추가됨" onClick={() => add('addMain', true)} />
@@ -78,7 +78,7 @@ function RiotRow({ s, onError }: { s: State; onError: (m: string) => void }) {
             </div>
           ) : <div className="acc-row off">{max}개까지 연결할 수 있어요. 하나를 빼면 지금 계정을 더할 수 있어요.</div>)}
         </div>
-        <p className="acc-foot">{list.length > 1 ? '줄을 누르면 그 계정이 메인이 돼요. ' : ''}어느 계정으로 해도 판이 내 기록으로 모이고, 빼도 이미 모인 판은 남아요.{!cur ? ' 다른 계정을 더하려면 그 계정으로 롤에 로그인하세요.' : ''}</p>
+        <p className="acc-foot">{list.length > 1 ? '줄을 누르면 그 계정이 메인이 돼요. ' : ''}어느 계정으로 해도 판이 내 기록으로 모여요 (부계정은 추가한 날부터). 빼도 이미 모인 판은 남아요.{!cur ? ' 다른 계정을 더하려면 그 계정으로 롤에 로그인하세요.' : ''}</p>
       </div>
     </div>
   );

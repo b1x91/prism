@@ -147,9 +147,9 @@ export async function dexRows(env: Env, id: string) {
 /** 롤 계정은 회원마다 이만큼까지 (v3.155) */
 export const ACCOUNT_MAX = 5;
 
-type Account = { puuid: string; riotId: string | null; main: boolean };
+type Account = { puuid: string; riotId: string | null; main: boolean; since: number };
 async function accountsOf(env: Env, me: Member): Promise<Account[]> {
-  const { results } = await env.DB.prepare('SELECT puuid, riot_id AS riotId FROM member_accounts WHERE member_id = ? ORDER BY added_at').bind(me.id).all<{ puuid: string; riotId: string | null }>();
+  const { results } = await env.DB.prepare('SELECT puuid, riot_id AS riotId, since FROM member_accounts WHERE member_id = ? ORDER BY added_at').bind(me.id).all<{ puuid: string; riotId: string | null; since: number }>();
   return results.map((r) => ({ ...r, main: r.puuid === me.riot_puuid })).sort((a, b) => Number(b.main) - Number(a.main));
 }
 
@@ -173,11 +173,13 @@ export async function linkRiot(req: Request, env: Env, me: Member) {
   const mine = await accountsOf(env, me);
   const known = mine.some((a) => a.puuid === puuid);
   if (!known && mine.length >= ACCOUNT_MAX) throw new HttpError(400, `롤 계정은 ${ACCOUNT_MAX}개까지 연결할 수 있어요. 안 쓰는 계정을 먼저 빼 주세요.`);
-  await env.DB.prepare('INSERT INTO member_accounts (puuid, member_id, riot_id, added_at) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(puuid) DO UPDATE SET riot_id = COALESCE(?3, riot_id)')
-    .bind(puuid, me.id, rid, Date.now()).run();
+  // 처음 연결한 계정은 처음부터, 더하는 계정(부계정)은 등록한 날부터의 판만 내 기록으로 (v3.155)
+  const now = Date.now();
+  await env.DB.prepare('INSERT INTO member_accounts (puuid, member_id, riot_id, added_at, since) VALUES (?1, ?2, ?3, ?4, ?5) ON CONFLICT(puuid) DO UPDATE SET riot_id = COALESCE(?3, riot_id)')
+    .bind(puuid, me.id, rid, now, mine.length === 0 ? 0 : now).run();
   if (main === true || !me.riot_puuid || me.riot_puuid === puuid) await setMain(env, me, puuid, rid);
-  // 새로 연결한 계정이 비회원으로 모인 판(함께한 친구들)이 있으면 내 기록으로 (v3.154)
-  if (me.opt_in_at && !known) await adoptProspect(env, me.id, puuid).catch(() => false);
+  // 처음 연결한 계정만: 비회원으로 모인 판(함께한 친구들)을 내 기록으로. 부계정은 등록한 날부터라 옮기지 않는다
+  if (me.opt_in_at && mine.length === 0) await adoptProspect(env, me.id, puuid).catch(() => false);
   // 확정된 가입 신청과 롤 이름이 맞으면 바로 준회원 (v3.148)
   await onRiotLinked(env, me.id, rid).catch((e) => console.error('가입 신청 잇기 실패', e));
   return json({ ok: true, accounts: await accountsOf(env, { ...me, riot_puuid: main === true || !me.riot_puuid ? puuid : me.riot_puuid }) });
