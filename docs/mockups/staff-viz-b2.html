@@ -270,7 +270,9 @@ function combo(){const w=W('#combo'),H=Math.max(280,$('#combo').clientHeight),L=
   const hl=el(s,'rect',{x:0,y:T-36,width:col-4,height:ih+36,rx:12,fill:css('--panel2'),opacity:0,style:'transition:opacity .35s ease, x .35s cubic-bezier(.16,1,.3,1)'});
   // 물결 = 막대 꼭대기(전체 판)를 잇는다
   const pts=W8.map((d,i)=>[cx(i),y(d.g)]),line=smooth(pts);
-  const area=`${line} L${pts[7][0]},${y(0)} L${pts[0][0]},${y(0)} Z`;
+  // 물결 면은 양 끝 막대 바깥까지 반 칸씩 평평하게 이어 같은 곡선으로 그린다 — 가운데에서 끝내면 첫·마지막 막대의 절반이 잘리고,
+  // 곡선이 끝점에 수평으로 닿아 마지막 막대 윗면에 계단이 생기지 않는다
+  const ext=col/2,wave=smooth([[pts[0][0]-ext,pts[0][1]],...pts,[pts[7][0]+ext,pts[7][1]]]),area=`${wave} L${pts[7][0]+ext},${y(0)} L${pts[0][0]-ext},${y(0)} Z`;
   el(s,'path',{d:area,fill:`url(#a${id})`,class:'vz-fade'});
   // 막대 = 전체 판. 지난 주들은 물결 모양으로 잘라 물결 밖으로 나오지 않게, 이번 주는 진행 중이라 온전한 막대 + 빗금
   const cpa=el(df,'clipPath',{id:'k'+id});el(cpa,'path',{d:area});const bars=el(s,'g',{'clip-path':`url(#k${id})`});
