@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { FullscreenNote, useFullscreen } from '../fullscreen';
-import { ActBtn, Icon, MemberFace, RoleBadge, type ActState, Seg, Toggle, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
+import { ActBtn, Icon, MemberFace, RoleBadge, guestHue, type ActState, Seg, Toggle, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
 import { api, bridge, type VisionState } from '../bridge';
 import { addRiotAccount, refreshSession, removeRiotAccount, setMainRiotAccount, type State } from '../controller';
 import { checkUpdate, useUpdate } from '../update';
@@ -10,61 +10,75 @@ import { UpdateButton } from '../UpdateButton';
 import { VERSION } from '../version';
 
 /**
- * 롤 계정 줄 (v3.155): 연결한 계정 목록(메인 표시 · 메인으로 · 빼기) + 지금 롤에 로그인된 계정이 목록에 없으면 '이 계정 추가'.
- * 부계정과 번갈아 해도 모든 계정의 판이 내 기록으로 모인다. 이름은 메인 계정을 따른다
+ * 롤 계정 (v3.155, 시안 C '고르는 목록'): 한 묶음의 목록. 줄을 누르면 그 계정이 메인(동그라미),
+ * 빼기(×)는 마우스를 올렸을 때만 보이고 한 번 더 확인. 지금 롤에 로그인된 새 계정은 맨 아래 파란 줄로 추가.
+ * 어느 계정으로 해도 판이 내 기록으로 모이고, 이름은 메인 계정을 따른다
  */
 function RiotRow({ s, onError }: { s: State; onError: (m: string) => void }) {
-  const [st, setSt] = useState<Record<string, ActState>>({});
+  const [busy, setBusy] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<string | null>(null);
+  const [st, setSt] = useState<Record<string, ActState>>({});
   const me = s.me;
   const list = me?.accounts ?? (me?.riotId ? [{ puuid: '', riotId: me.riotId, main: true }] : []);
   const max = me?.accountMax ?? 5;
   const cur = s.summoner;
   const known = Boolean(cur && list.some((a) => a.puuid === cur.puuid));
-  const busy = ['ChampSelect', 'GameStart', 'InProgress', 'Reconnect'].includes(s.phase);
-  const act = async (key: string, f: () => Promise<unknown>) => {
-    setSt((x) => ({ ...x, [key]: 'busy' })); onError('');
-    try { await f(); setSt((x) => ({ ...x, [key]: 'done' })); setTimeout(() => setSt((x) => ({ ...x, [key]: undefined })), 1400); }
-    catch (e) { setSt((x) => ({ ...x, [key]: undefined })); onError(e instanceof Error ? e.message : String(e)); }
+  const locked = ['ChampSelect', 'GameStart', 'InProgress', 'Reconnect'].includes(s.phase);
+  const run = async (key: string, f: () => Promise<unknown>) => {
+    if (busy) return;
+    setBusy(key); onError('');
+    try { await f(); } catch (e) { onError(e instanceof Error ? e.message : String(e)); } finally { setBusy(null); }
   };
+  const add = (key: 'add' | 'addMain', main: boolean) => {
+    setSt((x) => ({ ...x, [key]: 'busy' })); onError('');
+    addRiotAccount(main).then(() => setSt((x) => ({ ...x, [key]: undefined })))
+      .catch((e) => { setSt((x) => ({ ...x, [key]: undefined })); onError(e instanceof Error ? e.message : String(e)); });
+  };
+  const nm = (riotId: string | null) => { const [n, t] = (riotId ?? '?').split('#'); return <span className="acc-nm"><b>{n}</b>{t && <small>#{t}</small>}</span>; };
+  const av = (riotId: string | null) => { const n = (riotId ?? '?').split('#')[0]; return <span className="acc-av" aria-hidden="true" style={{ ['--gh' as string]: guestHue(n) }}>{[...n][0]}</span>; };
   return (
-    <div>
+    <div className="acc-wrap">
       <span className="k">롤 계정<small className="meta acc-count">{list.length} / {max}</small></span>
-      <div className="acc-list">
-        {list.length === 0 && <span className="muted">연결 안 됨</span>}
-        {list.map((a) => {
-          const [name, tag] = (a.riotId ?? '?').split('#');
-          const here = cur?.puuid === a.puuid;
-          return (
-            <div key={a.puuid || a.riotId} className={`acc-row${a.main ? ' main' : ''}`}>
-              <span className="acc-name"><b>{name}</b>{tag && <small>#{tag}</small>}</span>
-              {a.main && <span className="acc-tag main">메인</span>}
-              {here && <span className="acc-tag here">지금 로그인</span>}
-              <span className="sp" />
-              {!a.main && a.puuid && !busy && (
-                <span className="acc-acts">
-                  <ActBtn state={st[`m:${a.puuid}`]} className="btn ghost sm" label="메인으로" busy="바꾸는 중" done="메인" onClick={() => act(`m:${a.puuid}`, () => setMainRiotAccount(a.puuid))} />
-                  {confirm === a.puuid
-                    ? <button type="button" className="btn sm danger" onClick={() => { setConfirm(null); void act(`r:${a.puuid}`, () => removeRiotAccount(a.puuid)); }}>정말 빼기</button>
-                    : <button type="button" className="btn ghost sm" disabled={Boolean(st[`r:${a.puuid}`])} onClick={() => setConfirm(a.puuid)}>빼기</button>}
+      <div className="acc-box">
+        <div className="acc-group" role="radiogroup" aria-label="메인 계정">
+          {list.length === 0 && <div className="acc-row off">연결 안 됨</div>}
+          {list.map((a) => {
+            const here = cur?.puuid === a.puuid;
+            const canMain = !a.main && Boolean(a.puuid) && !locked;
+            return (
+              <div key={a.puuid || a.riotId} className={`acc-row${a.main ? ' main' : ''}${canMain ? ' pick' : ''}${busy === `m:${a.puuid}` ? ' busy' : ''}`}
+                role="radio" aria-checked={a.main} tabIndex={canMain ? 0 : -1}
+                onClick={() => canMain && run(`m:${a.puuid}`, () => setMainRiotAccount(a.puuid))}
+                onKeyDown={(e) => { if (canMain && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); void run(`m:${a.puuid}`, () => setMainRiotAccount(a.puuid)); } }}>
+                <span className="acc-radio" aria-hidden="true" />
+                {av(a.riotId)}
+                <span className="acc-body">{nm(a.riotId)}
+                  <span className="acc-meta">{a.main ? <span className="m">메인 · Prism 이름</span> : <span>부계정</span>}{here && <span className="acc-live">지금 로그인</span>}</span>
                 </span>
-              )}
+                {list.length > 1 && a.puuid && !locked && (confirm === a.puuid
+                  ? <span className="acc-confirm" onClick={(e) => e.stopPropagation()}>
+                      <button type="button" className="btn ghost sm" onClick={() => setConfirm(null)}>취소</button>
+                      <button type="button" className="btn sm danger" disabled={Boolean(busy)} onClick={() => { setConfirm(null); void run(`r:${a.puuid}`, () => removeRiotAccount(a.puuid)); }}>빼기</button>
+                    </span>
+                  : <button type="button" className="acc-x" aria-label={`${a.riotId ?? ''} 빼기`} title="빼기" onClick={(e) => { e.stopPropagation(); setConfirm(a.puuid); }}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
+                    </button>)}
+              </div>
+            );
+          })}
+          {cur && !known && !locked && (list.length < max ? (
+            <div className="acc-row add">
+              <span className="acc-plus" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M5 1v8M1 5h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg></span>
+              {av(cur.riotId)}
+              <span className="acc-body">{nm(cur.riotId)}<span className="acc-meta"><span className="acc-live">지금 로그인</span><span>아직 연결 안 됨</span></span></span>
+              <span className="acc-acts">
+                <ActBtn state={st.add} className="btn sm" label="추가" busy="추가 중" done="추가됨" onClick={() => add('add', false)} />
+                <ActBtn state={st.addMain} className="btn primary sm" label="메인으로 추가" busy="추가 중" done="추가됨" onClick={() => add('addMain', true)} />
+              </span>
             </div>
-          );
-        })}
-        {cur && !known && !busy && (
-          <div className="acc-add">
-            <span className="acc-name"><small className="meta">지금 롤에 로그인된 계정</small><b>{cur.riotId}</b></span>
-            <span className="sp" />
-            {list.length < max
-              ? <span className="acc-acts">
-                  <ActBtn state={st.add} className="btn sm" label="부계정으로 추가" busy="추가 중" done="추가됨" onClick={() => act('add', () => addRiotAccount(false))} />
-                  <ActBtn state={st.addMain} className="btn primary sm" label="메인으로 추가" busy="추가 중" done="추가됨" onClick={() => act('addMain', () => addRiotAccount(true))} />
-                </span>
-              : <span className="meta">{max}개까지 연결할 수 있어요</span>}
-          </div>
-        )}
-        {!cur && <small className="meta">롤 클라이언트를 켜면 지금 로그인한 계정을 더할 수 있어요</small>}
+          ) : <div className="acc-row off">{max}개까지 연결할 수 있어요. 하나를 빼면 지금 계정을 더할 수 있어요.</div>)}
+        </div>
+        <p className="acc-foot">{list.length > 1 ? '줄을 누르면 그 계정이 메인이 돼요. ' : ''}어느 계정으로 해도 판이 내 기록으로 모이고, 빼도 이미 모인 판은 남아요.{!cur ? ' 다른 계정을 더하려면 그 계정으로 롤에 로그인하세요.' : ''}</p>
       </div>
     </div>
   );

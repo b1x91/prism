@@ -594,19 +594,42 @@ body { overflow: hidden; background: var(--bg); }
 @media (min-width: 901px) { .side-hub.on > a .live-pip, .side-hub.on > a .news-dot { display: none; } .side-hub.on > a .hub-chev { margin-left: auto; } }
 @media (prefers-reduced-motion: reduce) { .side-nav .side-sub, .side-nav .hub-chev { transition: none; } }
 
-/* 설정 › 롤 계정 목록 (v3.155) */
-.kv .k .acc-count { display: block; margin-top: 2px; font-weight: 500; }
-.acc-list { display: grid; gap: var(--s2); min-width: 0; }
-.acc-row, .acc-add { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); min-height: 40px; padding: var(--s2) var(--s3); border-radius: var(--r-m); background: var(--surface-2, var(--line)); }
-.acc-row.main { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 45%, transparent); }
-.acc-add { background: none; border: 1px dashed var(--line); }
-.acc-name { display: flex; align-items: baseline; gap: 2px; min-width: 0; flex: 0 1 auto; }
-.acc-add .acc-name { display: grid; gap: 2px; }
-.acc-name b { font-size: var(--fs-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.acc-name small { color: var(--text-3); font-size: var(--fs-xs); }
-.acc-tag { flex: none; padding: 0 var(--s2); height: 20px; display: inline-flex; align-items: center; border-radius: 999px; font-size: var(--fs-xs); font-weight: 700; }
-.acc-tag.main { background: var(--accent); color: #fff; }
-.acc-tag.here { background: color-mix(in srgb, #22c55e 18%, transparent); color: color-mix(in srgb, #16a34a 80%, var(--text)); }
-.acc-row .sp, .acc-add .sp { flex: 1 1 0; }
-.acc-row .btn.danger { color: var(--lose); border-color: color-mix(in srgb, var(--lose) 60%, transparent); }
-.acc-acts { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: var(--s2); flex: 0 1 auto; min-width: 0; margin-left: auto; }
+/* 설정 › 롤 계정 (v3.155, 시안 C 고르는 목록) */
+.kv > div.acc-wrap { align-items: start; }
+.kv .k .acc-count { display: block; margin-top: 2px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.acc-box { display: grid; gap: var(--s2); min-width: 0; }
+.acc-group { border: 1px solid var(--line); border-radius: var(--r-m); overflow: hidden; }
+.acc-row { position: relative; display: flex; align-items: center; gap: var(--s3); min-height: 60px; padding: var(--s3) var(--s3) var(--s3) var(--s4); border-top: 1px solid var(--line); background: var(--surface); min-width: 0; transition: background .15s; }
+.acc-row:first-child { border-top: 0; }
+.acc-row.pick { cursor: pointer; }
+.acc-row.pick:hover, .acc-row:focus-within { background: var(--surface-2); }
+.acc-row.busy { opacity: .6; pointer-events: none; }
+.acc-row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+/* 동그라미: 바깥 20 · 안쪽 점 10, 둘 다 정확히 가운데 */
+.acc-radio { flex: none; box-sizing: border-box; width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--line-2, var(--text-3)); display: grid; place-items: center; transition: border-color .15s; }
+.acc-radio::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); transform: scale(0); transition: transform .2s cubic-bezier(.34, 1.56, .64, 1); }
+.acc-row.main .acc-radio { border-color: var(--accent); }
+.acc-row.main .acc-radio::after { transform: scale(1); }
+.acc-plus { flex: none; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; }
+.acc-plus svg { display: block; }
+.acc-av { flex: none; width: 36px; height: 36px; border-radius: var(--r-s); display: grid; place-items: center; background: hsl(var(--gh) 38% 42%); color: #fff; font-weight: 800; font-size: var(--fs-md); line-height: 1; }
+.acc-body { flex: 1; min-width: 0; display: grid; }
+.acc-nm { display: flex; align-items: baseline; gap: 2px; min-width: 0; }
+.acc-nm b { font-size: var(--fs-md); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acc-nm small { flex: none; color: var(--text-3); font-size: var(--fs-xs); }
+.acc-meta { display: flex; flex-wrap: wrap; align-items: center; gap: var(--s2); font-size: var(--fs-xs); color: var(--text-3); }
+.acc-meta .m { color: var(--accent); font-weight: 700; }
+.acc-live { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 var(--s2); border-radius: 999px; font-weight: 700; color: #16a34a; background: rgba(22, 163, 74, .11); }
+.acc-live::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+/* 빼기(×)는 마우스를 올렸을 때·키보드로 왔을 때만 */
+.acc-x { flex: none; width: 32px; height: 32px; border: 0; border-radius: var(--r-s); background: none; color: var(--text-3); cursor: pointer; display: grid; place-items: center; opacity: 0; transition: opacity .15s, background .15s, color .15s; }
+.acc-row:hover .acc-x, .acc-x:focus-visible { opacity: 1; }
+.acc-x:hover { background: color-mix(in srgb, var(--lose) 10%, transparent); color: var(--lose); }
+.acc-confirm { display: flex; gap: 4px; flex: none; }
+.acc-confirm .btn.danger { color: var(--lose); border-color: color-mix(in srgb, var(--lose) 50%, transparent); background: color-mix(in srgb, var(--lose) 8%, transparent); }
+.acc-row.add { background: var(--accent-soft, color-mix(in srgb, var(--accent) 9%, transparent)); flex-wrap: wrap; }
+.acc-acts { display: flex; flex-wrap: wrap; gap: var(--s2); margin-left: auto; }
+.acc-row.off { color: var(--text-3); font-size: var(--fs-sm); min-height: 48px; }
+.acc-foot { margin: 0; font-size: var(--fs-xs); color: var(--text-3); }
+@media (hover: none) { .acc-x { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .acc-radio::after, .acc-x, .acc-row { transition: none; } }
