@@ -73,7 +73,7 @@ svg text{font-family:var(--font)}
 .mr .sb svg g{transform-origin:0 50%;animation:vzScaleX 1s cubic-bezier(.16,1,.3,1) both .15s}
 .card{animation:vzFade .6s cubic-bezier(.16,1,.3,1) both}
 .row .card:nth-child(2){animation-delay:.06s}
-@media (prefers-reduced-motion: reduce){.st .crest{display:none}.vz-grow,.vz-fade,.card,.st .water,.st .wave,.st .crest,.mr .sb svg g,.ring svg circle + circle{animation:none}}
+@media (prefers-reduced-motion: reduce){.vz-grow,.vz-fade,.card,.st .water,.mr .sb svg g,.ring svg circle + circle{animation:none}}
 .ax{font-size:12px;fill:var(--mut)}
 .ax.now{fill:var(--fg);font-weight:700}
 .lbl{font-size:12px;fill:var(--fg);font-weight:700}
@@ -126,30 +126,23 @@ svg text{font-family:var(--font)}
 .st .num{display:flex;align-items:baseline;gap:4px}
 .st .num b{font-size:28px;font-weight:800;line-height:1}
 .st .num span{font-size:12px;color:var(--mut)}
-/* 물 채움: 바탕은 그대로 두고 아주 옅은 물이 비율만큼 차오른다. 차오르는 동안만 물결이 일고 다 차면 잔잔한 수면.
-   마우스를 올리면 수면이 살짝 일렁인다. 윤곽선·눈금 없음 — 미달 카드만 목표 높이에 머리카락 같은 점선 하나 */
+/* 물 채움: 바탕은 그대로 두고 아주 옅은 물이 비율만큼 차오른다. 수면은 완만한 물결 한 번.
+윤곽선·눈금 없음 — 미달 카드만 목표 높이에 머리카락 같은 점선 하나 */
 .st > :not(.tank){position:relative;z-index:1}
 .st .tank{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;z-index:0;background:var(--future)}
 .st .water{position:absolute;left:0;right:0;bottom:0;
   background:linear-gradient(to top,color-mix(in srgb,var(--w) 26%,var(--panel)),color-mix(in srgb,var(--w) 15%,var(--panel)));
   animation:vzFill 1.8s cubic-bezier(.22,1,.36,1) both;animation-delay:calc(.2s + var(--i) * .1s)}
-.st .crest{position:absolute;left:0;right:0;bottom:100%;height:10px;overflow:hidden;transform-origin:50% 100%;
-  animation:vzCalm 1.1s cubic-bezier(.4,0,.2,1) forwards;animation-delay:calc(1.3s + var(--i) * .1s);transition:transform .7s cubic-bezier(.22,1,.36,1),opacity .7s ease}
-.st .wave{position:absolute;left:0;bottom:0;width:200%;height:100%;display:block;animation:vzWave 4.5s linear infinite}
-.st .wave.back{opacity:.5;animation-duration:7s;animation-direction:reverse}
+.st .crest{position:absolute;left:0;right:0;bottom:calc(100% - 1px);height:10px;overflow:hidden}
+.st .wave{position:absolute;left:0;bottom:0;width:100%;height:100%;display:block}
 .st .wave path{fill:color-mix(in srgb,var(--w) 15%,var(--panel))}
-.st:hover .crest{animation:none;transform:scaleY(.8);opacity:1}
 @keyframes vzFill{from{transform:translateY(100%)}to{transform:none}}
-@keyframes vzWave{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-@keyframes vzCalm{to{transform:scaleY(0);opacity:0}}
 .st .tg{font-size:12px;color:var(--fg2);display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap}
 .st .tg em{font-style:normal;font-weight:700}
 .st .tg em.ok{color:var(--up)} .st .tg em.no{color:var(--warn)}
 .st .time{font-size:12px;color:var(--mut)}
 .st .ins{font-size:12px;color:var(--fg2);border-top:1px solid var(--line);padding-top:8px}
 .st .ins b{color:var(--fg)}
-.st::after{content:'';position:absolute;right:-7px;top:28px;width:6px;height:10px;background:var(--line2);clip-path:polygon(0 0,100% 50%,0 100%)}
-.st:last-child::after{display:none}
 .ai{margin-top:16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;padding:16px 20px;border-radius:12px;background:linear-gradient(135deg,var(--acc-soft),var(--panel) 75%);border:1px solid color-mix(in srgb,var(--acc) 25%,var(--line))}
 .ai .ic{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:var(--acc);color:#fff;font-weight:800;font-size:13px}
 .ai h4{font-size:14px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -163,7 +156,7 @@ svg text{font-family:var(--font)}
 #tip .r i{width:12px;height:2px;border-radius:1px;flex:none}
 #tip .r b{margin-left:auto;padding-left:16px;font-size:14px;color:var(--fg);font-variant-numeric:tabular-nums}
 
-@media (max-width:1100px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}.st:nth-child(3)::after{display:none}.crit{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:1100px){.steps{grid-template-columns:repeat(3,minmax(0,1fr))}.crit{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media (max-width:1000px){.row{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:760px){
   .card{padding:16px}
@@ -172,7 +165,7 @@ svg text{font-family:var(--font)}
   .ring .d{white-space:normal}
   .ring svg{width:48px;height:48px;flex:none}
   .crit{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}.st::after{display:none}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
   .mr{grid-template-columns:24px minmax(0,1fr) 48px;row-gap:8px}
   .mr .stackbar{grid-column:2/4;grid-row:2}
   .mr.h > :nth-child(3){display:none}
@@ -361,13 +354,13 @@ function members(){
 }
 
 // ───── 온보딩 현황: 카드마다 물이 비율만큼 차오름 + 목표 선 + 할 일 ─────
-// 물결 한 마디를 두 번 이어 그려 반만큼 밀면 끊김 없이 흐른다
-const WAVE=k=>{const seg=x=>`Q${x+25},0 ${x+50},6 T${x+100},6`;return `<svg class="wave ${k}" viewBox="0 0 400 12" preserveAspectRatio="none"><path d="M0,6 ${seg(0)} ${seg(100)} ${seg(200)} ${seg(300)} V12 H0 Z"/></svg>`};
+// 수면 = 완만한 물결 한 번 (윤곽선 없이 물 윗면과 같은 색, 멈춰 있음)
+const WAVE=()=>`<svg class="wave" viewBox="0 0 200 10" preserveAspectRatio="none"><path d="M0,6 C35,0 65,0 100,5 S165,10 200,4 V10 H0 Z"/></svg>`;
 // 양 → 색 (섞으면 탁해져 구간마다 또렷한 한 색): 95% 이상 초록 · 85% 이상 청록 · 75% 이상 남색 · 그 아래 주황
 const waterOf=pct=>pct>=95?'var(--up)':pct>=85?'var(--c3)':pct>=75?'var(--acc)':'var(--warn)';
 function funnel(){
   $('#steps').innerHTML=FUN.map((f,i)=>{const pct=Math.round(f.v/31*100),ok=pct>=f.goal,prev=i?FUN[i-1].v:null,conv=prev?Math.round(f.v/prev*100):null;
-    return `<div class="st ${ok?'ok':'bad'}" style="--i:${i}"><span class="tank" aria-hidden="true"><span class="water" style="height:${pct}%;--w:${waterOf(pct)}"><span class="crest">${WAVE('back')}${WAVE('front')}</span></span></span><span class="no">${i+1}단계</span><h4>${f.n}</h4><span class="num"><b class="tn">${f.v}</b><span>명 · ${pct}%</span></span>
+    return `<div class="st ${ok?'ok':'bad'}" style="--i:${i}"><span class="tank" aria-hidden="true"><span class="water" style="height:${pct}%;--w:${waterOf(pct)}"><span class="crest">${WAVE()}</span></span></span><span class="no">${i+1}단계</span><h4>${f.n}</h4><span class="num"><b class="tn">${f.v}</b><span>명 · ${pct}%</span></span>
       <span class="tg"><em class="${ok?'ok':'no'}">${ok?'✓ 목표 달성':'목표까지 '+(f.goal-pct)+'%p'}</em>${ok?`<span>목표 ${f.goal}%</span>`:''}</span>
       ${conv!=null?`<span class="time">앞 단계에서 ${conv}% 넘어옴${f.time?' · '+f.time:''}</span>`:'<span class="time">기준 31명</span>'}
       <span class="ins">${f.ins}</span></div>`}).join('');
