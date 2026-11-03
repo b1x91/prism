@@ -112,6 +112,7 @@ svg text{font-family:var(--font)}
 .st .meter{position:relative;height:8px;border-radius:999px;background:var(--ring-track)}
 .st .meter i{position:absolute;inset:0 auto 0 0;border-radius:999px;background:var(--acc)}
 .st.bad .meter i{background:var(--warn)}
+.st .meter.ok i{background:var(--up)}
 .st .meter u{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--fg);border-radius:1px}
 .st .tg{font-size:12px;color:var(--fg2);display:flex;justify-content:space-between;gap:4px;flex-wrap:wrap}
 .st .tg em{font-style:normal;font-weight:700}
@@ -197,6 +198,7 @@ const svg=(w,h)=>{const s=document.createElementNS(NS,'svg');s.setAttribute('wid
 function el(p,t,a,x){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(x!=null)e.textContent=x;p.appendChild(e);return e}
 const fmt=n=>n.toLocaleString('ko-KR');
 function niceTop(v,t=4){const raw=Math.max(v,t)/t,p=10**Math.floor(Math.log10(raw));const st=[1,2,2.5,5,10].map(m=>m*p).find(s=>s>=raw);return{top:st*t,step:st}}
+function smooth(pts){if(pts.length<2)return'';const n=pts.length,d=[],m=[];for(let i=0;i<n-1;i++)d.push((pts[i+1][1]-pts[i][1])/(pts[i+1][0]-pts[i][0]));m[0]=d[0];m[n-1]=d[n-2];for(let i=1;i<n-1;i++)m[i]=d[i-1]*d[i]<=0?0:(d[i-1]+d[i])/2;let s=`M${pts[0][0]},${pts[0][1]}`;for(let i=0;i<n-1;i++){const[x0,y0]=pts[i],[x1,y1]=pts[i+1],h=(x1-x0)/3;s+=` C${x0+h},${y0+m[i]*h} ${x1-h},${y1-m[i+1]*h} ${x1},${y1}`}return s}
 function topBar(x,y,w,h,r=4){if(h<=0)return'';r=Math.min(r,h,w/2);return`M${x},${y+h} V${y+r} Q${x},${y} ${x+r},${y} H${x+w-r} Q${x+w},${y} ${x+w},${y+r} V${y+h} Z`}
 const tip=$('#tip');
 function showTip(e,title,rows){tip.replaceChildren();const t=document.createElement('div');t.className='t';t.textContent=title;tip.appendChild(t);for(const[c,n,v]of rows){const r=document.createElement('div');r.className='r';const i=document.createElement('i');i.style.background=c;const s=document.createElement('span');s.textContent=n;const b=document.createElement('b');b.textContent=v;r.append(i,s,b);tip.appendChild(r)}tip.style.display='block';move(e)}
@@ -242,6 +244,9 @@ function rings(){const R=[['활동률',27/32,'27 / 32명','<em>+11</em> 지난�
 function combo(){const w=W('#combo'),H=w<520?260:360,L=40,R=8,T=48,B=28,iw=w-L-R,ih=H-T-B,s=svg(w,H),g=niceTop(Math.max(...W8.map(x=>x.g)));
   const y=v=>T+ih-v/g.top*ih,col=iw/8,bw=Math.min(24,col*.45),cx=i=>L+col*i+col/2,amax=Math.max(...W8.map(x=>x.a));
   for(let i=0;i<=4;i++){const v=g.step*i;el(s,'line',{x1:L,x2:w-R,y1:y(v),y2:y(v),stroke:i?css('--grid'):css('--line2')});el(s,'text',{x:L-8,y:y(v)+4,'text-anchor':'end',class:'ax tn'},fmt(v))}
+  // 물결: 막대 꼭대기(전체 판)를 잇는 부드러운 면 — 같은 눈금이라 따로 축이 필요 없다
+  {const gid='wv'+Math.random().toString(36).slice(2,7),df=el(s,'defs',{}),lg=el(df,'linearGradient',{id:gid,x1:0,y1:0,x2:0,y2:1});el(lg,'stop',{offset:0,'stop-color':css('--acc'),'stop-opacity':.22});el(lg,'stop',{offset:1,'stop-color':css('--acc'),'stop-opacity':0});
+   const pts=W8.map((d,i)=>[cx(i),y(d.g)]),line=smooth(pts);el(s,'path',{d:`${line} L${pts[7][0]},${y(0)} L${pts[0][0]},${y(0)} Z`,fill:`url(#${gid})`});el(s,'path',{d:line,fill:'none',stroke:css('--acc'),'stroke-width':2,'stroke-linecap':'round',opacity:.55});}
   W8.forEach((d,i)=>{const x=cx(i)-bw/2,last=i===7;const hl=el(s,'rect',{x:L+col*i+2,y:4,width:col-4,height:H-8,rx:12,fill:css('--panel2'),opacity:0});
     if(d.c>0)el(s,'path',{d:topBar(x,y(d.c),bw,y(0)-y(d.c),d.g>d.c?0:4),fill:css('--acc')});
     if(d.g>d.c)el(s,'path',{d:topBar(x,y(d.g),bw,y(d.c)-y(d.g)-(d.c?2:0),4),fill:css('--other')});
@@ -260,7 +265,7 @@ function cal(){const w=W('#cal'),lab=24,gap=3,cs=Math.max(10,Math.min(32,Math.fl
   const flat=CAL.flat().filter(v=>v!=null),max=Math.max(...flat),lv=v=>v==null?-1:v===0?0:v<max*.15?1:v<max*.35?2:v<max*.6?3:4,C=['--h0','--h1','--h2','--h3','--h4'];
   const start=new Date(2026,7,17); // 12주 전 월요일 (8/17)
   let lastM=-1;CAL.forEach((wk,wi)=>{const d0=new Date(start);d0.setDate(d0.getDate()+wi*7);const m=d0.getMonth();if(m!==lastM){el(s,'text',{x:lab+wi*(cs+gap),y:12,class:'ax'},(m+1)+'월');lastM=m}
-    wk.forEach((v,di)=>{if(v==null)return;const x=lab+wi*(cs+gap),yy=20+di*(cs+gap),r=el(s,'rect',{x,y:yy,width:cs,height:cs,rx:3,fill:css(C[lv(v)])});const dt=new Date(d0);dt.setDate(dt.getDate()+di);
+    wk.forEach((v,di)=>{const x=lab+wi*(cs+gap),yy=20+di*(cs+gap);if(v==null){const f=el(s,'rect',{x:x+.5,y:yy+.5,width:cs-1,height:cs-1,rx:3,fill:css('--panel'),stroke:css('--line2'),'stroke-dasharray':'2 2'});hover(f,'아직 오지 않은 날',[[css('--line2'),'판','-']]);return}const r=el(s,'rect',{x,y:yy,width:cs,height:cs,rx:3,fill:css(C[lv(v)])});const dt=new Date(d0);dt.setDate(dt.getDate()+di);
       if(wi===11&&di===TODAY_DOW)el(s,'rect',{x:x-1.5,y:yy-1.5,width:cs+3,height:cs+3,rx:4,fill:'none',stroke:css('--fg'),'stroke-width':1.5});
       hover(r,`${dt.getMonth()+1}월 ${dt.getDate()}일 (${'월화수목금토일'[di]})`,[[css('--acc'),'판',v+'판']],()=>r.setAttribute('stroke',css('--fg')),()=>r.removeAttribute('stroke'))})});
   ['월','','수','','금','','일'].forEach((d,i)=>d&&el(s,'text',{x:0,y:20+i*(cs+gap)+cs-2,class:'ax',style:'font-size:11px'},d));
@@ -288,8 +293,8 @@ function members(){
 function funnel(){
   $('#steps').innerHTML=FUN.map((f,i)=>{const pct=Math.round(f.v/31*100),ok=pct>=f.goal,prev=i?FUN[i-1].v:null,conv=prev?Math.round(f.v/prev*100):null;
     return `<div class="st ${ok?'':'bad'}"><span class="no">${i+1}단계</span><h4>${f.n}</h4><span class="num"><b class="tn">${f.v}</b><span>명 · ${pct}%</span></span>
-      <span class="meter" title="목표 ${f.goal}%"><i style="width:${pct}%"></i><u style="left:${f.goal}%"></u></span>
-      <span class="tg"><span>목표 ${f.goal}%</span><em class="${ok?'ok':'no'}">${ok?'달성':(pct-f.goal)+'%p'}</em></span>
+      <span class="meter ${ok?'ok':''}" title="목표 ${f.goal}%"><i style="width:${pct}%"></i>${ok?'':`<u style="left:${f.goal}%"></u>`}</span>
+      <span class="tg"><span>목표 ${f.goal}%</span><em class="${ok?'ok':'no'}">${ok?'✓ 달성':'목표까지 '+(f.goal-pct)+'%p'}</em></span>
       ${conv!=null?`<span class="time">앞 단계에서 ${conv}% 넘어옴${f.time?' · '+f.time:''}</span>`:'<span class="time">기준 31명</span>'}
       <span class="ins">${f.ins}</span></div>`}).join('');
   $('#ai').innerHTML=`<span class="ic">AI</span><div><h4>이번 주 할 일 <span class="ex">AI 요약 예시</span></h4><ol>
