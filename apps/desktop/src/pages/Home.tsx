@@ -4,10 +4,10 @@
  * 아래는 오늘의 챔프 이야기 → 어울리는 증강 판 → 이번 시즌 랭킹 맛보기(Top 5 + 내 순위).
  * 앱 창은 좁다 (최소 980 → 본문 약 730px): 어느 폭에서도 글자가 줄바꿈되지 않게 칸을 나눈다.
  */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AUGMENT, CHAMPIONS, GAME_DATA, RARITY_KO, ROLE_KO, cdragon, fitPoints, guideOf, pct, tierOf, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
-import { AugRing, AugmentLink, Bone, FramedFace, TierBadge, GlassBtn, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
+import { AugRing, AugmentLink, Bone, FramedFace, TierBadge, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
 import { api } from '../bridge';
 import type { State } from '../controller';
 
@@ -24,7 +24,8 @@ export function HomePage({ s }: { s: State }) {
   const nav = useNavigate();
   const P = s.personal;
   const picks = todayPicks(P, Object.keys(CHAMPIONS).map(Number));
-  const [i, setI] = useState(0);
+  // 오늘의 챔프는 날마다 정해진 첫 추천 하나 (다른 추천·증강 가이드 단추는 두지 않는다, 사용자 결정)
+  const i = 0;
   const want = picks.length ? picks[i % picks.length] : null;
   // '다른 추천': 새 그림이 준비될 때까지 지금 글·그림·증강 판을 두었다가 한 번에 (v3.122)
   const hold = useSplashHold(want?.id, i);
@@ -65,10 +66,6 @@ export function HomePage({ s }: { s: State }) {
           <h2>{c.name}</h2>
           <div className="hc-tags">{tags.map((t) => <span key={t}>{t}</span>)}</div>
           <p className="hc-why">{rec ? <>내 기록 <b>{rec.n}판 {rec.w}승</b> ({pct(rec.w, rec.n)}). 주사위나 대기석에서 보이면 잡아보세요.</> : <>도감을 채울 기회예요. 주사위나 대기석에서 보이면 잡아보세요.</>}</p>
-        </div>
-        <div className="hc-act">
-          {picks.length > 1 && <GlassBtn icon="shuffle" label="다른 추천" onClick={() => setI(i + 1)} />}
-          <button type="button" className="btn primary hc-go" onClick={() => nav(`/champions/${pick.id}`)}>증강 가이드<Icon name="arrow" /></button>
         </div>
       </section>}
 

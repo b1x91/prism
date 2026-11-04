@@ -668,7 +668,7 @@ body { overflow: hidden; background: var(--bg); }
 .home-search .omni.os-v-hero .os-in { height: 64px; border-color: transparent; box-shadow: 0 12px 40px rgba(0, 0, 0, .35); }
 .home-search .omni.os-v-hero .os-in input { font-size: var(--fs-lg); }
 .home-search .os-pop { max-height: min(520px, 62vh); }
-.home-champ { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: var(--s4); min-height: 236px; padding: var(--s6) var(--s1) var(--s4); color: #fff; transition: opacity .18s; }
+.home-champ { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: end; gap: var(--s4); min-height: 236px; padding: var(--s6) var(--s1) var(--s4); color: #fff; transition: opacity .18s; }
 .home-champ.swapping .hc-txt { opacity: .5; }
 .hc-txt { display: grid; gap: var(--s2); min-width: 0; transition: opacity .18s; }
 .hc-k { font-size: var(--fs-sm); font-weight: 700; color: rgba(255, 255, 255, .75); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -677,8 +677,6 @@ body { overflow: hidden; background: var(--bg); }
 .hc-tags span { height: 28px; padding: 0 var(--s3); display: inline-flex; align-items: center; border-radius: var(--r-pill); background: rgba(255, 255, 255, .14); font-size: var(--fs-sm); font-weight: 700; white-space: nowrap; }
 .hc-why { margin: var(--s1) 0 0; font-size: var(--fs-md); color: rgba(255, 255, 255, .85); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hc-why b { color: #fff; }
-.hc-act { display: flex; align-items: center; gap: var(--s2); }
-.hc-go { white-space: nowrap; }
 /* 아래 두 칸: 왼쪽 증강 판 · 오른쪽 랭킹 (위만 맞추고 높이는 각자) */
 .home-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4); align-items: start; }
 .home-duo > :only-child { grid-column: 1 / -1; }
