@@ -312,11 +312,42 @@ pub fn restore() {
     *READY.lock().unwrap() = best;
 }
 
+/// 받아 둔 사이에 더 새 버전이 나왔으면 옛 파일을 버린다 (true = 버림) — 켤 때·끌 때 옛 버전을 깔고
+/// 다음에 또 업데이트하지 않게, 최신판을 받아 한 번에 올라가게. 서버에 짧게(최대 2초) 묻고,
+/// 못 물으면(인터넷 없음 등) 받아 둔 것을 그대로 쓴다 (지금보다는 새 버전이므로)
+pub fn drop_stale() -> bool {
+    let Some(r) = READY.lock().unwrap().clone() else { return false };
+    match latest_quick() {
+        Some(latest) if ver(&latest) > ver(&r.version) => {
+            *READY.lock().unwrap() = None;
+            let _ = std::fs::remove_file(&r.path);
+            true
+        }
+        _ => false,
+    }
+}
+
+/// 켤 때 쓰는 짧은 최신 버전 확인 (최대 2초). 서버 주소가 없거나 실패하면 None
+fn latest_quick() -> Option<String> {
+    let base = server_url()?;
+    tauri::async_runtime::block_on(async move {
+        let r = client(2).ok()?.get(format!("{base}/app/latest")).send().await.ok()?;
+        if !r.status().is_success() {
+            return None;
+        }
+        let d: serde_json::Value = r.json().await.ok()?;
+        d["version"].as_str().filter(|v| !v.is_empty()).map(str::to_string)
+    })
+}
+
 /// 켤 때 바로 적용할지: 받아 둔 새 버전이 있고, 그 버전을 켤 때 적용해 본 적이 없을 때만 (설치가 실패해도 무한 반복하지 않게)
 pub fn apply_on_start(background: bool) -> bool {
     let Some(r) = READY.lock().unwrap().clone() else { return false };
     let mark = dir().join(format!("tried-{}", r.version));
     if mark.exists() {
+        return false;
+    }
+    if drop_stale() {
         return false;
     }
     let _ = std::fs::write(&mark, b"");

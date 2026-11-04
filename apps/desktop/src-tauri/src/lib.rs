@@ -467,7 +467,8 @@ pub fn run() {
                     }
                     "quit" => {
                         // 받아 둔 새 버전이 있으면 끝낼 때 조용히 적용 (다시 켜지 않는다) — 다음에 켜면 바로 새 버전 (v3.98)
-                        if update::has_ready() {
+                        // 받아 둔 사이에 더 새 버전이 나왔으면 옛 것은 깔지 않는다 — 다음에 켤 때 최신판을 받는다
+                        if update::has_ready() && !update::drop_stale() {
                             let _ = update::apply(false, false);
                         }
                         app.exit(0)
