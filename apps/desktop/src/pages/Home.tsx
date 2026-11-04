@@ -73,9 +73,11 @@ export function HomePage({ s }: { s: State }) {
         </div>
       </section>}
 
-      {pick && <TodayAugBoard champion={pick.id} personal={P} swapped={swapped.current} pending={hold.pending} />}
-
-      {s.me && <HomeRanking s={s} />}
+      {/* 아래 두 칸: 왼쪽 어울리는 증강 · 오른쪽 랭킹 맛보기 (v3.164) */}
+      <div className="home-duo">
+        {pick && <TodayAugBoard champion={pick.id} personal={P} swapped={swapped.current} pending={hold.pending} />}
+        {s.me && <HomeRanking s={s} />}
+      </div>
     </div>
   );
 }

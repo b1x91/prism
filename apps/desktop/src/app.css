@@ -679,10 +679,12 @@ body { overflow: hidden; background: var(--bg); }
 .hc-why b { color: #fff; }
 .hc-act { display: flex; align-items: center; gap: var(--s2); }
 .hc-go { white-space: nowrap; }
-/* 홈의 증강 판: 이름은 한 줄 (넘치면 말줄임 — 마우스를 올리면 설명 상자에 전체 이름). 칸 폭은 홈 폭으로 */
-.home .today-augs.n4 { --cols: 2; }
+/* 아래 두 칸: 왼쪽 증강 판 · 오른쪽 랭킹 (위만 맞추고 높이는 각자) */
+.home-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4); align-items: start; }
+.home-duo > :only-child { grid-column: 1 / -1; }
+/* 홈의 증강 판: 등급을 위아래로 쌓는 한 칸. 이름은 한 줄 (넘치면 말줄임 — 마우스를 올리면 설명 상자에 전체 이름) */
+.home .today-augs, .home .today-augs.n4 { --cols: 1; }
 .home .today-augs .ta-row .nm { display: block; white-space: nowrap; text-overflow: ellipsis; -webkit-line-clamp: unset; }
-@container (min-width: 1100px) { .home .today-augs.n4 { --cols: 4; } }
 /* 랭킹 맛보기 */
 .home-rank { display: grid; gap: var(--s3); }
 .hr-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
@@ -691,12 +693,11 @@ body { overflow: hidden; background: var(--bg); }
 .hr-all { display: inline-flex; align-items: center; gap: 2px; border: 0; background: none; color: var(--text-3); font: inherit; font-size: var(--fs-sm); font-weight: 650; cursor: pointer; white-space: nowrap; }
 .hr-all:hover { color: var(--text); }
 .hr-all svg { width: 14px; height: 14px; }
-.hr-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(3, auto); grid-auto-flow: column; gap: var(--s1) var(--s4); }
+.hr-list { display: grid; gap: var(--s1); }
 .hr-row { display: grid; grid-template-columns: 24px 40px minmax(0, 1fr) auto; align-items: center; gap: var(--s3); min-height: 56px; padding: var(--s2) var(--s3); border: 0; border-radius: var(--r-m); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: background .15s; }
 .hr-row:hover { background: var(--surface-2); }
 .hr-row.sk { cursor: default; }
 .hr-row.me { background: var(--accent-soft); }
-.hr-row.extra { grid-column: 1 / -1; grid-row: 5; }
 .hr-n { font-size: var(--fs-md); font-weight: 800; text-align: center; color: var(--text-2); }
 .hr-row.p1 .hr-n { color: var(--gold); }
 .hr-row.me .hr-n { color: var(--accent); }
@@ -704,10 +705,10 @@ body { overflow: hidden; background: var(--bg); }
 .hr-who b { font-size: var(--fs-md); font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .hr-who small { grid-column: 1 / -1; font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hr-s { font-size: var(--fs-md); font-weight: 800; }
-.hr-dots { grid-column: 1 / -1; grid-row: 4; text-align: center; color: var(--text-3); letter-spacing: .3em; font-size: var(--fs-xs); line-height: 1; }
+.hr-dots { text-align: center; color: var(--text-3); letter-spacing: .3em; font-size: var(--fs-xs); line-height: 1; }
 .hr-empty { margin: 0; color: var(--text-3); font-size: var(--fs-sm); }
-.hr-soon { display: grid; grid-template-columns: minmax(0, 1fr) 160px auto; align-items: center; gap: var(--s3); font-size: var(--fs-sm); color: var(--text-2); }
-.hr-soon > span:first-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hr-soon { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--s3); font-size: var(--fs-sm); color: var(--text-2); }
+.hr-soon > span:first-child { grid-column: 1 / -1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .hr-gauge { height: 8px; border-radius: var(--r-pill); background: var(--surface-2); overflow: hidden; }
 .hr-gauge i { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
 .hr-soon b { font-size: var(--fs-md); white-space: nowrap; }
@@ -715,7 +716,5 @@ body { overflow: hidden; background: var(--bg); }
 .os-item { flex: none; border-radius: var(--r-s); }
 @container (max-width: 820px) {
   .hc-txt h2 { font-size: 40px; }
-  .hr-list { grid-template-columns: minmax(0, 1fr); grid-template-rows: none; grid-auto-flow: row; }
-  .hr-dots, .hr-row.extra { grid-row: auto; }
 }
 @media (max-width: 900px) { .home { --mp: var(--s5); } }
