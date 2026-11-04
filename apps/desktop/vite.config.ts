@@ -19,7 +19,9 @@ export default defineConfig(({ command }) => ({
         identifierNamesGenerator: 'hexadecimal',
         renameGlobals: false,
         stringArray: true,
-        stringArrayEncoding: ['base64'],
+        // 문자열은 섞인 배열에 모으되 인코딩은 하지 않는다 — base64 를 풀어 쓰는 비용이 화면 그리기 시간을 두 배로 늘렸다
+        // (도감을 여는 데 느린 PC 에서 2초 넘게, 메뉴가 안 눌리는 것처럼 보임 · 2026-11-04 측정 2.3초 → 1.3초)
+        stringArrayEncoding: [],
         stringArrayThreshold: 1,
         // import('…') 경로는 그대로 둔다. 숨기면 Vite 가 묶지 못해 실행할 때 모듈을 못 찾는다
         // (0.8.2~0.9.2: 증강 인식 소식·스킨·아이템 설명·창 제목이 이 때문에 끊겼다)

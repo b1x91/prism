@@ -791,3 +791,11 @@ body { overflow: hidden; background: var(--bg); }
 .csb-st.hot { background: linear-gradient(135deg, rgba(242, 178, 51, .22), rgba(255, 255, 255, .05)); box-shadow: inset 0 0 0 1px rgba(255, 210, 110, .45), 0 0 18px -6px rgba(242, 178, 51, .6); }
 .csb-st .msn-amt { color: #ffd479; }
 .csb .sk { background: rgba(255, 255, 255, .1); }
+
+/* 메뉴를 누른 뒤 화면이 그려질 때까지: 위쪽 가는 진행 줄 + 지금 화면을 살짝 흐리게 (트랜스폼 움직임이라 그리는 동안에도 흐른다) */
+.nav-pend { position: fixed; z-index: 60; top: 0; left: var(--side); right: 0; height: 2px; overflow: hidden; pointer-events: none; animation: nav-pend-in .18s ease both; }
+.nav-pend::before { content: ""; position: absolute; inset: 0; width: 40%; background: linear-gradient(90deg, transparent, var(--accent), #a855f7, transparent); animation: nav-pend-run 1s cubic-bezier(.4, 0, .2, 1) infinite; will-change: transform; }
+@keyframes nav-pend-in { from { opacity: 0; } }
+@keyframes nav-pend-run { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+.main.pending .page { opacity: .55; transition: opacity .2s ease .08s; }
+@media (prefers-reduced-motion: reduce) { .nav-pend::before { animation: none; width: 100%; opacity: .7; } .main.pending .page { transition: none; } }

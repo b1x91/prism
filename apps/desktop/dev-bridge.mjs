@@ -70,6 +70,7 @@ async function login() {
   token = (await api({ method: 'POST', path: '/api/app/token', body: { code } })).token;
 }
 
+let dlAt = 0;
 const CMD = {
   lcu_status: () => ({ client: scene !== 'no-client', inGame: scene === 'in-game' }),
   discord_running: () => process.env.DISCORD !== '0',
@@ -87,6 +88,9 @@ const CMD = {
   // MOCK_UPDATE=1 이면 새 버전이 있는 것처럼
   update_check: () => ({ current: '0.5.2', latest: process.env.MOCK_UPDATE ? '0.5.3' : '0.5.2', available: Boolean(process.env.MOCK_UPDATE), notes: '', managed: Boolean(process.env.MOCK_STORE) }),
   store_update: () => false,
+  // MOCK_UPDATE=1: 새 버전을 1분 동안 천천히 받는 것처럼 (받는 동안 진행 막대가 0.25초마다 바뀐다)
+  update_prepare: () => new Promise((ok) => { dlAt = Date.now(); setTimeout(() => ok({ current: '0.5.2', latest: '0.5.3', available: true, ready: true, notes: '', managed: false }), 60_000); }),
+  update_progress: () => [Math.min(60_000, Date.now() - dlAt), 60_000],
   update_install: () => { throw '개발 모드에서는 설치하지 않습니다.'; },
   // 게임 중 라이브 클라이언트 데이터 흉내 (그라가스 · 상대 소라카·브랜드·말파이트가 크는 중)
   live_game: () => ({ me: 'Haze#KR18', mode: 'KIWI', time: 610, players: [

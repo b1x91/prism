@@ -45,7 +45,9 @@ function useLive(active: boolean) {
   useEffect(() => {
     if (!active) return;
     let on = true;
-    const read = () => bridge.liveGame().then((r) => { if (on) setG(parseLive(r)); }).catch(() => {});
+    // 바뀐 게 없으면 다시 그리지 않는다 (게임 화면 위 창이라 다시 그릴 때마다 게임과 함께 합성된다)
+    let prev = '';
+    const read = () => bridge.liveGame().then((r) => { const k = JSON.stringify(r); if (on && k !== prev) { prev = k; setG(parseLive(r)); } }).catch(() => {});
     read();
     const t = setInterval(read, 3000);
     return () => { on = false; clearInterval(t); };

@@ -31,7 +31,8 @@ restoreTheme();
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <SessionProvider>
-      <BrowserRouter>
+      {/* 화면 전환을 끊기지 않게 바로 그린다: 전환(transition)으로 두면 다른 갱신(숫자 차오름·진행 막대)이 올 때마다 처음부터 다시 그려 무거운 화면이 몇 초씩 안 열렸다 */}
+      <BrowserRouter useTransitions={false}>
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Home />} />

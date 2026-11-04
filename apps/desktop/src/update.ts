@@ -20,7 +20,15 @@ const IDLE_CHECK = 60_000;
 type U = { info: UpdateInfo | null; checking: boolean; preparing: boolean; applying: boolean; progress: number | null; error: string | null };
 let u: U = { info: null, checking: false, preparing: false, applying: false, progress: null, error: null };
 const subs = new Set<() => void>();
-const set = (p: Partial<U>) => { u = { ...u, ...p }; subs.forEach((f) => f()); };
+// 진행률만 바뀔 때는 진행 막대(업데이트 단추)만 다시 그린다. 앱 전체(App)는 진행률 말고 바뀐 게 있을 때만 —
+// 예전엔 받는 동안 0.25초마다 앱 전체가 다시 그려져, 무거운 화면(성장·모임)으로 옮기는 렌더가 계속 끊겨 메뉴가 안 눌리는 것처럼 보였다
+let uq = u;
+const qsubs = new Set<() => void>();
+const set = (p: Partial<U>) => {
+  u = { ...u, ...p };
+  subs.forEach((f) => f());
+  if (Object.keys(p).some((k) => k !== 'progress')) { uq = u; qsubs.forEach((f) => f()); }
+};
 const msg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 /** 받아 둔 버전이 있는데 더 새 버전이 나와 아직 받는 중이면, 다 받을 때까지 받아 둔 쪽을 그대로 보인다.
  *  예전엔 확인할 때마다 '새 버전 · 적용' 줄이 사라졌다가 다 받으면 다시 떠 깜빡였다 (적용하면 받아 둔 버전이 깔리고, 다음에 새 것) */
@@ -48,7 +56,9 @@ export async function prepare() {
   // 받는 동안 진행 막대를 채운다 (사이드바·설정의 업데이트 단추)
   const t = setInterval(async () => {
     const [done, total] = await bridge.updateProgress();
-    if (u.preparing) set({ progress: total > 0 ? Math.min(1, done / total) : null });
+    const p = total > 0 ? Math.min(1, done / total) : null;
+    // 1% 단위로만 (같은 값이면 다시 그리지 않는다)
+    if (u.preparing && (p === null ? u.progress !== null : u.progress === null || Math.floor(p * 100) !== Math.floor(u.progress * 100))) set({ progress: p });
   }, 250);
   try { set({ info: keepReady(await bridge.updatePrepare()), progress: 1 }); }
   catch (e) { set({ error: msg(e) }); }
@@ -88,3 +98,5 @@ export function startUpdates() {
 }
 
 export const useUpdate = () => useSyncExternalStore((f) => { subs.add(f); return () => subs.delete(f); }, () => u);
+/** 진행률 변화는 알리지 않는 판 (앱 전체·설정처럼 진행 막대를 그리지 않는 곳) */
+export const useUpdateQuiet = () => useSyncExternalStore((f) => { qsubs.add(f); return () => qsubs.delete(f); }, () => uq);

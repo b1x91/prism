@@ -1,4 +1,4 @@
-import { StrictMode, useCallback, useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react';
+import { StrictMode, useCallback, useEffect, useRef, useState, useSyncExternalStore, type MouseEvent as RMouseEvent, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
@@ -10,7 +10,7 @@ import { checkNow, clearAttend, getState, refreshSession, start, subscribe, type
 import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
 import { api, bridge } from './bridge';
-import { storeUpdate, checkUpdate, startUpdates, useUpdate } from './update';
+import { storeUpdate, checkUpdate, startUpdates, useUpdateQuiet } from './update';
 import { UpdateButton } from './UpdateButton';
 import { GamePage } from './pages/Game';
 import { HomePage } from './pages/Home';
@@ -103,9 +103,22 @@ function AttendGate({ a }: { a: Attend }) {
 
 function App() {
   const s = useSyncExternalStore(subscribe, getState);
-  const up = useUpdate();
+  const up = useUpdateQuiet();
   const nav = useNavigate();
   const loc = useLocation();
+  // 메뉴를 누르면 그 자리를 바로 밝히고 위쪽에 진행 줄을 띄운 뒤(한 번 그린 다음) 화면을 옮긴다 —
+  // 무거운 화면(성장·모임)은 그리는 데 시간이 걸려, 예전엔 그동안 아무 반응이 없어 '안 눌린다'고 느꼈다
+  const [pend, setPend] = useState<string | null>(null);
+  useEffect(() => { setPend(null); }, [loc.pathname]);
+  const go = useCallback((to: string) => {
+    if (to === loc.pathname) return;
+    setPend(to);
+    requestAnimationFrame(() => setTimeout(() => nav(to), 0));
+  }, [loc.pathname, nav]);
+  const path = pend ?? loc.pathname;
+  const isAt = (to: string, end = false) => path === to || (!end && to !== '/' && path.startsWith(`${to}/`));
+  // 새 탭·새 창(가운데 단추·Ctrl)은 그대로 둔다
+  const onNav = (to: string) => (e: RMouseEvent) => { if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); go(to); };
   const hubAllow = (to: string) => Boolean(s.me) || (to !== '/news' && to !== '/invite');
   const curHub = hubOf(loc.pathname);
   const login = async () => { try { await bridge.login(); } finally { await refreshSession(); } };
@@ -177,7 +190,7 @@ function App() {
       <aside className="side">
         <div className="side-brand">
           {/* 로고 = 홈 (메뉴를 늘리지 않는다, v3.164) */}
-          <NavLink to="/" end className="brand-home" title="홈" aria-label="홈"><span className="brand-mark"><img src="/brand/prism-256.png" alt="" /></span>
+          <NavLink to="/" end onClick={onNav('/')} className="brand-home" title="홈" aria-label="홈"><span className="brand-mark"><img src="/brand/prism-256.png" alt="" /></span>
           <span className="brand-word" data-text="PRISM">PRISM</span></NavLink>
           <NavArrows />
         </div>
@@ -191,15 +204,15 @@ function App() {
             {g.items.map(([to, l, i]) => {
               const hub = hubAt(to);
               const badge = <>{to === '/play' && playing && <i className="live-dot" aria-hidden="true" />}{to === '/crew' && (s.me?.nowLive ?? 0) > 0 && <LiveDot n={s.me!.nowLive!} />}{to === '/crew' && !(s.me?.nowLive) && (s.me?.newsUnread ?? 0) > 0 && <i className="news-dot" aria-label="새 소식" />}{to === '/staff' && (s.me?.staffUnread ?? 0) > 0 && <i className="news-dot" aria-label="승인할 멤버" />}</>;
-              if (!hub) return <NavLink key={to} to={to} end={to === '/'} className={to === '/play' && playing ? 'live' : undefined} title={to === '/play' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{badge}</NavLink>;
+              if (!hub) return <NavLink key={to} to={to} end={to === '/'} onClick={onNav(to)} className={() => [isAt(to, to === '/') ? 'active' : '', to === '/play' && playing ? 'live' : ''].filter(Boolean).join(' ')} title={to === '/play' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{badge}</NavLink>;
               // 허브: 누르면 늘 첫 탭으로 (v3.147), 펼친 줄에서 탭으로 바로 (도감 · 미션 · 랭킹)
-              const on = hubOf(loc.pathname) === hub;
+              const on = hubOf(path) === hub;
               const tabs = hub.tabs.filter((t) => hubAllow(t.to));
               return (
                 <div key={to} className={`side-hub ${on ? 'on' : ''}`}>
-                  <NavLink to={hubHref(hub, hubAllow)} className={() => (on ? 'active' : '')} aria-expanded={on}><Icon name={i} />{l}{badge}<Icon name="chevR" className="hub-chev" /></NavLink>
+                  <NavLink to={hubHref(hub, hubAllow)} onClick={onNav(hubHref(hub, hubAllow))} className={() => (on ? 'active' : '')} aria-expanded={on}><Icon name={i} />{l}{badge}<Icon name="chevR" className="hub-chev" /></NavLink>
                   {/* 지금 허브만 아래로 펼친다: 세로선 + 고른 줄에 파란 막대 (시안 B) */}
-                  <div className={`side-sub ${on ? 'open' : ''}`} aria-hidden={!on}><div>{tabs.map((t) => <NavLink key={t.to} to={t.to} end={tabs.some((x) => x.to.startsWith(`${t.to}/`))} tabIndex={on ? 0 : -1}>{t.to === '/crew' && (s.me?.nowLive ?? 0) > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={s.me!.nowLive!} /></> : t.label}{t.to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
+                  <div className={`side-sub ${on ? 'open' : ''}`} aria-hidden={!on}><div>{tabs.map((t) => <NavLink key={t.to} to={t.to} onClick={onNav(t.to)} className={() => (isAt(t.to, tabs.some((x) => x.to.startsWith(`${t.to}/`))) ? 'active' : '')} tabIndex={on ? 0 : -1}>{t.to === '/crew' && (s.me?.nowLive ?? 0) > 0 ? <><span className="live-text">{t.label}</span><LiveDot n={s.me!.nowLive!} /></> : t.label}{t.to === '/news' && (s.me?.newsUnread ?? 0) > 0 && <i className="sub-dot" aria-label="새 소식" />}</NavLink>)}</div></div>
                 </div>
               );
             })}
@@ -207,11 +220,11 @@ function App() {
         <span className="sp" />
         {/* 아래쪽 한 줄: 상점 · 설정 (디스코드·카카오톡은 모임 화면 오른쪽 위) */}
         <nav className="side-dock" aria-label="상점과 설정">
-          <NavLink to="/shop" className="dock-shop" title="상점"><Icon name="bag" /><span>상점</span></NavLink>
-          <NavLink to="/settings" className="dock-set" title="설정"><Icon name="gear" /><span>설정</span></NavLink>
+          <NavLink to="/shop" onClick={onNav('/shop')} className={() => `dock-shop${isAt('/shop') ? ' active' : ''}`} title="상점"><Icon name="bag" /><span>상점</span></NavLink>
+          <NavLink to="/settings" onClick={onNav('/settings')} className={() => `dock-set${isAt('/settings') ? ' active' : ''}`} title="설정"><Icon name="gear" /><span>설정</span></NavLink>
         </nav>
         {s.me && <div className={`side-me-card ${staff ? 'prism' : ''}`}>
-          <NavLink to="/me" className="side-me" title="내 페이지">
+          <NavLink to="/me" onClick={onNav('/me')} className={() => `side-me${isAt('/me') ? ' active' : ''}`} title="내 페이지">
             {/* 얼굴은 카드 한쪽을 꽉 채우는 그림 + 장착한 프로필 테두리, 접속 점은 카드 오른쪽 끝 (v3.164) */}
             <span className={`side-thumb${s.me.frame ? ` phero face-ring ${s.me.frame}` : ''}`}><span className="phero-face"><MemberFace nick={s.me.nick} skin={s.me.skin} size={56} skins={skins} /></span></span>
             <span className="who"><b><NickName nick={s.me.nick} /></b><span className="st pc" data-pieces title={`보유 ${PIECE}`}>{pieces === null ? '–' : <><b>{pieces.toLocaleString()}</b><PieceIcon size={12} /></>}</span></span>
@@ -219,7 +232,8 @@ function App() {
           </NavLink>
         </div>}
       </aside>
-      <main className="main" ref={main}>
+      <main className={`main${pend ? ' pending' : ''}`} ref={main}>
+        {pend && <i className="nav-pend" aria-hidden="true" />}
         {/* 스토어 판: 새 버전이 있으면 늘 위쪽에 (닫기 없음). 게임·챔프 선택 중에는 단추 대신 안내 (v3.103) */}
         {up.info?.managed && up.info.available && <div className="store-up" role="status">
           <span className="dot" aria-hidden="true" />
@@ -229,7 +243,7 @@ function App() {
             : <button type="button" className="btn sm primary" disabled={up.applying} onClick={() => void storeUpdate()}>{up.applying ? 'Microsoft Store 여는 중…' : '업데이트'}</button>}
         </div>}
         {s.me && !s.me.rolesKnown && <div className="relogin"><span>디스코드 역할(정회원·운영진 등)에 맞는 기능을 열려면 <b>한 번만 다시 로그인</b>해 주세요.</span><button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />다시 로그인</button></div>}
-        {curHub && <HubTabs key={curHub.key} hub={curHub} path={loc.pathname} onGo={(to) => nav(to)} hide={(to) => !hubAllow(to)} dots={{ '/news': (s.me?.newsUnread ?? 0) > 0 }} counts={{ '/staff/todo': s.me?.staffTodo ?? 0, '/staff/inquiries': s.me?.staffInq ?? 0 }} alert={{ '/staff/inquiries': true }} live={{ '/crew': s.me?.nowLive ?? 0 }} />}
+        {curHub && <HubTabs key={curHub.key} hub={curHub} path={path} onGo={go} hide={(to) => !hubAllow(to)} dots={{ '/news': (s.me?.newsUnread ?? 0) > 0 }} counts={{ '/staff/todo': s.me?.staffTodo ?? 0, '/staff/inquiries': s.me?.staffInq ?? 0 }} alert={{ '/staff/inquiries': true }} live={{ '/crew': s.me?.nowLive ?? 0 }} />}
         <AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><MatchNote.Provider value="롤을 켜 두면 열 명 모두 볼 수 있어요."><PullRefresh scroller={mainEl} onRefresh={pullRefresh}>{(k) => <Page main={main} k={k}><Routes>
           <Route index element={<HomePage s={s} />} />
           <Route path="play" element={<GamePage s={s} />} />
@@ -295,4 +309,4 @@ idle();
 // 상품 목록은 서버에서, 새 상품 그림·모양(looks.css)은 웹에서 받는다 (v3.124) — 상점 업데이트에 앱 업데이트가 필요 없게
 startShopCatalog(api, SITE_URL);
 
-createRoot(document.getElementById('root')!).render(<StrictMode><HashRouter><Root /></HashRouter></StrictMode>);
+createRoot(document.getElementById('root')!).render(<StrictMode><HashRouter useTransitions={false}><Root /></HashRouter></StrictMode>);

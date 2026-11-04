@@ -4,7 +4,7 @@ import { FullscreenNote, useFullscreen } from '../fullscreen';
 import { ActBtn, Icon, MemberFace, RoleBadge, guestHue, type ActState, Seg, Toggle, useSkins, getThemeMode, setThemeMode, type ThemeMode } from '@prism/ui';
 import { api, bridge, type VisionState } from '../bridge';
 import { addRiotAccount, refreshSession, removeRiotAccount, setMainRiotAccount, type State } from '../controller';
-import { checkUpdate, useUpdate } from '../update';
+import { checkUpdate, useUpdateQuiet as useUpdate } from '../update';
 import { UpdateButton } from '../UpdateButton';
 
 import { VERSION } from '../version';
