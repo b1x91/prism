@@ -79,7 +79,7 @@ export function Layout() {
         <span className="top-wide"><NavLink to="/shop" className="icon-btn top-shop" title="상점" aria-label="상점"><Icon name="bag" /></NavLink>
           <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>
         {me ? <MeMenu pieces={shownPieces} />
-          : member === null && top ? <NavLink to="/me" className="me-btn" title="내 페이지"><FramedFace frame={top.frame} nick={top.nick} skin={top.skin} size={30} /><span className="me-txt"><b><NickName nick={top.nick} /></b>{top.pieces !== null && <small data-pieces>{top.pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></NavLink>
+          : member === null && top ? <NavLink to="/me" className="me-btn" title="내 페이지"><FramedFace frame={top.frame} round nick={top.nick} skin={top.skin} size={30} /><span className="me-txt"><b><NickName nick={top.nick} /></b>{top.pieces !== null && <small data-pieces>{top.pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></NavLink>
           : member === null ? <span className="me-btn" aria-hidden="true"><Bone w={30} h={30} r="round" /><span className="me-txt"><Bone w={72} h={12} /></span></span>
           : <button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />로그인</button>}
         <button type="button" className="icon-btn menu-btn" aria-label="메뉴 열기" aria-expanded={menu} onClick={() => setMenu(true)}><Icon name="menu" /></button>
@@ -117,7 +117,7 @@ function MeMenu({ pieces }: { pieces: number | null }) {
   return (
     <span className="me-wrap" ref={box}>
       <button type="button" className={`me-btn ${open ? 'on' : ''}`} aria-haspopup="menu" aria-expanded={open} title="내 프로필" onClick={() => setOpen((v) => !v)}>
-        <FacePresence p={me.presence}><FramedFace frame={me.frame} nick={me.nick} skin={me.skin} size={30} /></FacePresence>
+        <FacePresence p={me.presence}><FramedFace frame={me.frame} round nick={me.nick} skin={me.skin} size={30} /></FacePresence>
         <span className="me-txt"><b><NickName nick={me.nick} /></b>{pieces !== null && <small data-pieces>{pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span>
       </button>
       {open && <div className="me-pop" role="menu">

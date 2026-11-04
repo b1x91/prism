@@ -49,9 +49,8 @@ main { min-height: calc(100vh - 64px); }
 @media (max-width: 860px) {
   .topbar .wrap { height: 56px; gap: var(--s2); }
   .tabs { display: none; }
-  /* 좁은 화면은 #태그만 뗀다 — 예전 '.me-btn span' 은 얼굴(테두리·접속 점 span 안)까지 숨겨 로그인 확인 뒤 얼굴이 사라졌다 */
-  .me-btn .nick-tag { display: none; }
-  .me-btn { padding: 0; background: none; }
+  /* 좁은 화면 상단 바에는 로고·햄버거만 — 내 얼굴·이름·피스는 메뉴를 열어야 보인다 (불러오는 동안·지난 접속 기억으로 그릴 때도 나오지 않게) */
+  .topbar .me-btn, .topbar .me-wrap { display: none; }
   .top-wide { display: none; }
   .menu-btn { display: grid !important; touch-action: manipulation; }
   /* 닫힌 메뉴는 그리지 않는다(layout.tsx MobileMenu, body 포털) — 아이폰 사파리(iOS 26)는 화면에 걸친 고정 요소로 주소 막대를 칠하고,

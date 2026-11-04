@@ -26,7 +26,7 @@
   --glass-shine: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(255, 255, 255, .25);
   --glass-shadow: 0 8px 28px rgba(16, 20, 36, .1), 0 1px 2px rgba(16, 20, 36, .05);
   --glass-fill: rgba(255, 255, 255, .55);
-  --glow: radial-gradient(900px 420px at 70% -10%, rgba(58, 99, 240, .12), transparent 65%);
+  --glow: radial-gradient(900px 420px at 70% -10%, rgba(58, 99, 240, .12), rgba(58, 99, 240, .075) 25%, rgba(58, 99, 240, .035) 45%, rgba(58, 99, 240, .01) 60%, transparent 72%); /* 끝이 선처럼 보이지 않게 천천히 옅어지는 단계 (휴대폰 첫 화면에 네모 자국처럼 보이던 것) */
 
   --spectrum-1: #ff3d6e; --spectrum-2: #ff8a1f; --spectrum-3: #ffd21f; --spectrum-4: #2fd36b;
   --spectrum-5: #1fc8ff; --spectrum-6: #3d6bff; --spectrum-7: #b042ff;
@@ -47,7 +47,7 @@
     --glass-shine: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 -1px 0 rgba(255, 255, 255, .04);
     --glass-shadow: 0 10px 32px rgba(0, 0, 0, .4), 0 1px 2px rgba(0, 0, 0, .3);
     --glass-fill: rgba(255, 255, 255, .06);
-    --glow: radial-gradient(900px 460px at 70% -12%, rgba(124, 156, 255, .16), transparent 65%);
+    --glow: radial-gradient(900px 460px at 70% -12%, rgba(124, 156, 255, .16), rgba(124, 156, 255, .1) 25%, rgba(124, 156, 255, .045) 45%, rgba(124, 156, 255, .012) 60%, transparent 72%);
     color-scheme: dark;
   }
 }
@@ -64,7 +64,7 @@
   --glass-shine: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 -1px 0 rgba(255, 255, 255, .04);
   --glass-shadow: 0 10px 32px rgba(0, 0, 0, .4), 0 1px 2px rgba(0, 0, 0, .3);
   --glass-fill: rgba(255, 255, 255, .06);
-  --glow: radial-gradient(900px 460px at 70% -12%, rgba(124, 156, 255, .16), transparent 65%);
+  --glow: radial-gradient(900px 460px at 70% -12%, rgba(124, 156, 255, .16), rgba(124, 156, 255, .1) 25%, rgba(124, 156, 255, .045) 45%, rgba(124, 156, 255, .012) 60%, transparent 72%);
   color-scheme: dark;
 }
 
@@ -414,13 +414,15 @@ svg.light { position: absolute; inset: 0; z-index: 0; pointer-events: none; over
 :root:not([data-theme="dark"]) .light .sparks path { fill: var(--beam); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .light .sparks path { fill: #fff; } }
 .light .beam-core { filter: drop-shadow(0 0 3px var(--beam)); }
-.light .beam-flow { stroke: #fff; stroke-width: 5; stroke-linecap: round; stroke-dasharray: 46 var(--len); stroke-dashoffset: 46; filter: drop-shadow(0 0 8px #fff); animation: lt-into 2.4s cubic-bezier(.5, 0, .9, .6) infinite; }
+.light .beam-flow { stroke: #fff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 36 var(--len); stroke-dashoffset: 36; opacity: 0; animation: lt-into 2.4s cubic-bezier(.5, 0, .9, .6) infinite; }
+/* 들어오는 빛 알갱이: 바깥 끝에서 흰 막대가 툭 튀어나오지 않게 빛줄기가 진해지는 곳에서 나타나 보석에 닿으며 사라진다.
+   CSS 그림자 필터는 쓰지 않는다 — 아이폰 사파리는 SVG 선의 drop-shadow 를 네모난 덩어리로 그렸다 */
 .light .flare { animation: lt-breathe 3s ease-in-out infinite; }
 .light .bloom { animation: lt-breathe 4s ease-in-out infinite; mix-blend-mode: var(--fan-blend); }
 @keyframes lt-in { from { opacity: 0; clip-path: inset(0 100% 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
 @keyframes lt-breathe { 50% { opacity: .55; } }
 @keyframes lt-flow { to { stroke-dashoffset: -2600; } }
-@keyframes lt-into { from { stroke-dashoffset: 46; } to { stroke-dashoffset: calc(var(--len) * -1); } }
+@keyframes lt-into { 0% { stroke-dashoffset: 36; opacity: 0; } 35% { opacity: 0; } 70% { opacity: .9; } 100% { stroke-dashoffset: calc(var(--len) * -1); opacity: 0; } }
 @keyframes lt-twinkle { 0%, 100% { opacity: 0; transform: scale(.6); } 50% { opacity: .9; transform: scale(1); } }
 .light .sparks path { transform-box: fill-box; transform-origin: center; }
 @media (prefers-reduced-motion: reduce) { .light .fan, .light .fan-glow, .light .flare, .light .bloom { animation: none; } .light .fan-flow, .light .beam-flow { display: none; } .light .sparks path { animation: none; opacity: .6; } }
@@ -4303,6 +4305,8 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .phero.face-ring { all: unset; display: inline-grid; position: relative; flex: none; vertical-align: middle; }
 .phero.face-ring::before, .phero.face-ring::after { content: none; display: none; }
 .phero.face-ring .phero-face { display: grid; padding: 2px; border-radius: var(--r-l); box-shadow: 0 0 10px rgba(0, 0, 0, .12); }
+/* 작은 얼굴에는 테두리 고리만 — 프로필 머리용 큰 빛무리(최대 32px)가 상단 바·메뉴 밖으로 번지던 것 (애니메이션의 빛도 덮는다) */
+.phero.face-ring .phero-face { box-shadow: none !important; }
 .phero.face-ring .phero-face .face, .phero.face-ring .phero-face .initial { width: var(--fr) !important; height: var(--fr) !important; border-radius: var(--r-m); }
 .phero.face-ring.round .phero-face, .phero.face-ring.round .phero-face .face, .phero.face-ring.round .phero-face .initial { border-radius: 50%; }
 
