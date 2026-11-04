@@ -1,5 +1,5 @@
 /**
- * 통합 검색 (v3.156) — 웹 홈(멤버·챔프·증강)과 멤버 화면(멤버만)이 같은 검색 경험을 쓴다.
+ * 통합 검색 (v3.156) — 웹 홈(멤버·챔프·증강)·앱 홈(+ 아이템 → 도감, v3.164)과 멤버 화면(멤버만)이 같은 검색 경험을 쓴다.
  * - 비어 있을 때 누르면: 최근 검색 + 바로가기
  * - 글자를 치면: 묶음(멤버 · 챔프 · 증강)마다 결과, 맞은 글자 강조, 멤버는 판수·승률
  * - 위아래 화살표는 묶음을 넘나들고, Enter 로 열고, Esc 로 닫는다. '/' 를 누르면 바로 검색 칸으로 (hotkey)
@@ -7,17 +7,20 @@
  * - 회원이 아니면(api 없음) 멤버 묶음 대신 '로그인하면 멤버 전적을 볼 수 있어요' 한 줄
  */
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from 'react';
-import { CHAMPION_LIST, LISTED_AUGMENTS, RARITY_KO, ROLE_KO, initials, shortNick, type Api } from '@prism/core';
+import { CHAMPION_LIST, ITEM, ITEM_DEX, ITEM_GROUP, ITEM_GROUP_KO, LISTED_AUGMENTS, RARITY_KO, ROLE_KO, cdragon, initials, shortNick, type Api } from '@prism/core';
 import { AugImg, ChampImg, MemberFace, PendingChip } from './basics';
 import { Icon } from './icons';
 
-export type SearchKind = 'member' | 'champ' | 'augment';
+export type SearchKind = 'member' | 'champ' | 'augment' | 'item';
 type MemberHit = { id: string; nick: string; skin: number | null; main: number | null; pending?: boolean; n?: number; w?: number };
 type Row = { kind: SearchKind; key: string; id: string; label: string; meta?: ReactNode; icon: ReactNode; tag?: ReactNode; sub?: string };
 type Recent = { kind: SearchKind; id: string; label: string; ts: number };
 
 const RECENT_KEY = 'prism-search-recent';
-const KIND_KO: Record<SearchKind, string> = { member: '멤버', champ: '챔프', augment: '증강' };
+const KIND_KO: Record<SearchKind, string> = { member: '멤버', champ: '챔프', augment: '증강', item: '아이템' };
+const ItemPic = ({ id }: { id: number }) => <img className="os-item" src={cdragon(ITEM[id]?.icon)} width={36} height={36} alt="" loading="lazy" />;
+// 아이템 도감 목록을 이름순으로 한 번만 (v3.164)
+const ITEM_LIST = ITEM_DEX.map((id) => ({ id, name: ITEM[id].name }));
 const readRecent = (): Recent[] => { try { const v = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); return Array.isArray(v) ? v.slice(0, 8) : []; } catch { return []; } };
 const writeRecent = (list: Recent[]) => { try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 8))); } catch { /* 저장 못 하면 이번만 */ } };
 
@@ -109,6 +112,11 @@ export function OmniSearch({ api, scopes, onOpen, variant = 'bar', placeholder, 
       tag: <span className={`os-rar r-${a.rarity}`}>{RARITY_KO[a.rarity]}</span>, sub: a.note }))
   , [t, scopes]);
 
+  const itemRows = useMemo<Row[]>(() => !t || !scopes.includes('item') ? [] : ITEM_LIST
+    .map((x) => ({ x, r: rank(x.name, t) })).filter((y) => y.r >= 0).sort((a, b) => a.r - b.r || a.x.name.localeCompare(b.x.name, 'ko')).slice(0, 4)
+    .map(({ x }) => ({ kind: 'item' as const, key: `i${x.id}`, id: String(x.id), label: x.name, icon: <ItemPic id={x.id} />,
+      sub: `${ITEM_GROUP[x.id] ? `${ITEM_GROUP_KO[ITEM_GROUP[x.id]]} · ` : ''}도감에서 보기` })), [t, scopes]);
+
   const memberRows = useMemo<Row[]>(() => (members ?? []).map((m) => ({
     kind: 'member' as const, key: `m${m.id}`, id: m.id, label: shortNick(m.nick), icon: <MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={36} />,
     meta: m.nick.includes('#') ? <small className="os-tag">#{m.nick.split('#')[1]}</small> : null,
@@ -119,7 +127,7 @@ export function OmniSearch({ api, scopes, onOpen, variant = 'bar', placeholder, 
   // 비어 있을 때: 최근 검색 + 바로가기
   const recentRows = useMemo<Row[]>(() => t ? [] : recent.filter((r) => scopes.includes(r.kind)).slice(0, 5).map((r) => ({
     kind: r.kind, key: `r${r.kind}${r.id}`, id: r.id, label: r.label, sub: KIND_KO[r.kind],
-    icon: r.kind === 'champ' ? <ChampImg id={Number(r.id)} size={36} /> : r.kind === 'augment' ? <AugImg id={Number(r.id)} size={36} /> : <span className="os-ico"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M8 4.6V8l2.2 1.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg></span>,
+    icon: r.kind === 'champ' ? <ChampImg id={Number(r.id)} size={36} /> : r.kind === 'augment' ? <AugImg id={Number(r.id)} size={36} /> : r.kind === 'item' ? <ItemPic id={Number(r.id)} /> : <span className="os-ico"><svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.2" fill="none" stroke="currentColor" strokeWidth="1.5" /><path d="M8 4.6V8l2.2 1.5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg></span>,
   })), [t, recent, scopes]);
   const quickRows = useMemo<Row[]>(() => t || !quick?.length ? [] : quick.map((id) => CHAMPION_LIST.find((c) => c.id === id)).filter(Boolean).slice(0, 6).map((c) => ({
     kind: 'champ' as const, key: `q${c!.id}`, id: String(c!.id), label: c!.name, icon: <ChampImg id={c!.id} size={36} />, sub: ROLE_KO[c!.roles[0]] ?? '' })), [t, quick]);
@@ -136,6 +144,7 @@ export function OmniSearch({ api, scopes, onOpen, variant = 'bar', placeholder, 
     }
     if (champRows.length) groups.push({ kind: 'champ', title: '챔프', rows: champRows });
     if (augRows.length) groups.push({ kind: 'augment', title: '증강', rows: augRows });
+    if (itemRows.length) groups.push({ kind: 'item', title: '아이템', rows: itemRows });
   }
   const flat = groups.flatMap((g) => g.rows);
   const nothing = Boolean(t) && !groups.some((g) => g.rows.length || g.loading || g.note);

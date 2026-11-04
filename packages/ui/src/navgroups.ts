@@ -30,7 +30,7 @@ export const HUBS: Hub[] = [
 ];
 
 export const NAV_GROUPS: { key: string; label: string; paths: string[] }[] = [
-  { key: 'play', label: '게임', paths: ['/', '/champions', '/augments'] },
+  { key: 'play', label: '게임', paths: ['/', '/play', '/champions', '/augments'] },
   { key: 'more', label: '성장 · 모임', paths: ['/dex', '/crew', '/staff'] },
 ];
 

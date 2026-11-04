@@ -13,6 +13,7 @@ import { api, bridge } from './bridge';
 import { storeUpdate, checkUpdate, startUpdates, useUpdate } from './update';
 import { UpdateButton } from './UpdateButton';
 import { GamePage } from './pages/Game';
+import { HomePage } from './pages/Home';
 import { AugmentsPage } from './pages/Augments';
 import { DexPage } from './pages/Dex';
 import { ChampionsPage } from './pages/Champions';
@@ -22,7 +23,7 @@ import { SettingsPage } from './pages/Settings';
 import { lockdown } from './lockdown';
 
 /** 메뉴 (v3.142): 성장·멤버는 허브 — 메뉴 하나에 탭 여러 개, 주소는 그대로 */
-const NAV: [string, string, IconName][] = [['/', '분석', 'game'], ['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '성장', 'sprout'], ['/crew', '모임', 'users']];
+const NAV: [string, string, IconName][] = [['/', '홈', 'home'], ['/play', '분석', 'game'], ['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '성장', 'sprout'], ['/crew', '모임', 'users']];
 
 /** 롤 클라이언트 연결 상태 (사이드바 내 얼굴의 점에 마우스를 올리면) */
 const STATUS: Record<State['status'], [string, string]> = {
@@ -121,7 +122,7 @@ function App() {
   useEffect(() => {
     const before = prevStatus.current;
     prevStatus.current = s.status;
-    if (before !== s.status && (s.status === 'champ-select' || s.status === 'in-game')) nav('/');
+    if (before !== s.status && (s.status === 'champ-select' || s.status === 'in-game')) nav('/play');
     // 챔프 선택에 들어가는 순간 창을 맨 앞으로 올리는 것은 Rust(watch_phase)가 한다 — 트레이에 있을 때도 늦지 않게
   }, [s.status, nav]);
   const ready = Boolean(s.me?.consent);
@@ -181,8 +182,8 @@ function App() {
             <span className="side-glabel">{g.label}</span>
             {g.items.map(([to, l, i]) => {
               const hub = hubAt(to);
-              const badge = <>{to === '/' && playing && <i className="live-dot" aria-hidden="true" />}{to === '/crew' && (s.me?.nowLive ?? 0) > 0 && <LiveDot n={s.me!.nowLive!} />}{to === '/crew' && !(s.me?.nowLive) && (s.me?.newsUnread ?? 0) > 0 && <i className="news-dot" aria-label="새 소식" />}{to === '/staff' && (s.me?.staffUnread ?? 0) > 0 && <i className="news-dot" aria-label="승인할 멤버" />}</>;
-              if (!hub) return <NavLink key={to} to={to} end={to === '/'} className={to === '/' && playing ? 'live' : undefined} title={to === '/' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{badge}</NavLink>;
+              const badge = <>{to === '/play' && playing && <i className="live-dot" aria-hidden="true" />}{to === '/crew' && (s.me?.nowLive ?? 0) > 0 && <LiveDot n={s.me!.nowLive!} />}{to === '/crew' && !(s.me?.nowLive) && (s.me?.newsUnread ?? 0) > 0 && <i className="news-dot" aria-label="새 소식" />}{to === '/staff' && (s.me?.staffUnread ?? 0) > 0 && <i className="news-dot" aria-label="승인할 멤버" />}</>;
+              if (!hub) return <NavLink key={to} to={to} end={to === '/'} className={to === '/play' && playing ? 'live' : undefined} title={to === '/play' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{badge}</NavLink>;
               // 허브: 누르면 늘 첫 탭으로 (v3.147), 펼친 줄에서 탭으로 바로 (도감 · 미션 · 랭킹)
               const on = hubOf(loc.pathname) === hub;
               const tabs = hub.tabs.filter((t) => hubAllow(t.to));
@@ -222,7 +223,8 @@ function App() {
         {s.me && !s.me.rolesKnown && <div className="relogin"><span>디스코드 역할(정회원·운영진 등)에 맞는 기능을 열려면 <b>한 번만 다시 로그인</b>해 주세요.</span><button type="button" className="btn sm primary" onClick={login}><Icon name="discord" />다시 로그인</button></div>}
         {curHub && <HubTabs key={curHub.key} hub={curHub} path={loc.pathname} onGo={(to) => nav(to)} hide={(to) => !hubAllow(to)} dots={{ '/news': (s.me?.newsUnread ?? 0) > 0 }} counts={{ '/staff/todo': s.me?.staffTodo ?? 0, '/staff/inquiries': s.me?.staffInq ?? 0 }} alert={{ '/staff/inquiries': true }} live={{ '/crew': s.me?.nowLive ?? 0 }} />}
         <AugmentOpen.Provider value={openAug}><MatchSource.Provider value={matchSource}><MatchNote.Provider value="롤을 켜 두면 열 명 모두 볼 수 있어요."><PullRefresh scroller={mainEl} onRefresh={pullRefresh}>{(k) => <Page main={main} k={k}><Routes>
-          <Route index element={<GamePage s={s} />} />
+          <Route index element={<HomePage s={s} />} />
+          <Route path="play" element={<GamePage s={s} />} />
           <Route path="champions" element={<ChampionsPage member={!!s.me} record={s.personal.champions} />} />
           <Route path="champions/:id" element={<ChampionsPage member={!!s.me} record={s.personal.champions} />} />
           <Route path="augments" element={<AugmentsPage />} />
@@ -243,7 +245,7 @@ function App() {
           <Route path="staff/join" element={<StaffJoinPage s={s} onLogin={login} />} />
           <Route path="staff/todo" element={<StaffTodoPage s={s} onLogin={login} />} />
           <Route path="staff/inquiries" element={<StaffInquiryPage s={s} onLogin={login} />} />
-          <Route path="*" element={<GamePage s={s} />} />
+          <Route path="*" element={<HomePage s={s} />} />
         </Routes></Page>}</PullRefresh></MatchNote.Provider></MatchSource.Provider></AugmentOpen.Provider>
       </main>
     </div>
