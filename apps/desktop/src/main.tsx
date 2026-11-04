@@ -23,7 +23,7 @@ import { SettingsPage } from './pages/Settings';
 import { lockdown } from './lockdown';
 
 /** 메뉴 (v3.142): 성장·멤버는 허브 — 메뉴 하나에 탭 여러 개, 주소는 그대로 */
-const NAV: [string, string, IconName][] = [['/', '홈', 'home'], ['/play', '분석', 'game'], ['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '성장', 'sprout'], ['/crew', '모임', 'users']];
+const NAV: [string, string, IconName][] = [['/play', '분석', 'game'], ['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '성장', 'sprout'], ['/crew', '모임', 'users']];
 
 /** 롤 클라이언트 연결 상태 (사이드바 내 얼굴의 점에 마우스를 올리면) */
 const STATUS: Record<State['status'], [string, string]> = {
@@ -119,11 +119,18 @@ function App() {
     return () => off?.();
   }, [nav]);
   const prevStatus = useRef(s.status);
+  // 저절로 분석(/play)으로 옮겨 간 뒤 사용자가 다른 화면으로 가면 '돌아가기'는 하지 않는다
+  const autoPlay = useRef(false);
+  useEffect(() => { if (loc.pathname !== '/play') autoPlay.current = false; }, [loc.pathname]);
   useEffect(() => {
     const before = prevStatus.current;
     prevStatus.current = s.status;
-    if (before !== s.status && (s.status === 'champ-select' || s.status === 'in-game')) nav('/play');
+    const playing = (x: State['status']) => x === 'champ-select' || x === 'in-game';
+    if (before !== s.status && playing(s.status)) { if (loc.pathname !== '/play') { nav('/play'); autoPlay.current = true; } }
+    // 아무것도 누르지 않은 채 저절로 분석으로 넘어왔으면, 게임(챔프 선택)이 끝나면 홈으로 돌아간다 (v3.164)
+    else if (playing(before) && !playing(s.status) && autoPlay.current) { autoPlay.current = false; nav('/'); }
     // 챔프 선택에 들어가는 순간 창을 맨 앞으로 올리는 것은 Rust(watch_phase)가 한다 — 트레이에 있을 때도 늦지 않게
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.status, nav]);
   const ready = Boolean(s.me?.consent);
   // 이미 동의한 회원 중 최애 챔프·'나를 소개해요'가 없는 사람에게 (v3.47). '나중에'는 이번 실행에서만
@@ -169,8 +176,9 @@ function App() {
       {s.me && (!s.me.skin || !s.me.about) && !welcomeLater && <WelcomeFlow api={api} nick={s.me.nick} needFace={!s.me.skin} onClose={(done) => { if (!done) setWelcomeLater(true); void refreshSession(); }} />}
       <aside className="side">
         <div className="side-brand">
-          <span className="brand-mark"><img src="/brand/prism-256.png" alt="" /></span>
-          <span className="brand-word" data-text="PRISM">PRISM</span>
+          {/* 로고 = 홈 (메뉴를 늘리지 않는다, v3.164) */}
+          <NavLink to="/" end className="brand-home" title="홈" aria-label="홈"><span className="brand-mark"><img src="/brand/prism-256.png" alt="" /></span>
+          <span className="brand-word" data-text="PRISM">PRISM</span></NavLink>
           <NavArrows />
         </div>
         <span className="brand-line" aria-hidden="true" />
