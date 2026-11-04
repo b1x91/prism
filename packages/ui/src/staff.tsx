@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { JOIN_TIMES, ago, matchName, pct, shortNick, type Api, type StaffApplication, type StaffApplications, type StaffMember, type StaffMembers } from '@prism/core';
-import { Empty, MemberFace, Select, Seg, Toggle, useSkins } from './basics';
+import { Empty, GuestFace, MemberFace, Select, Seg, Toggle, useSkins } from './basics';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { useKept } from './kept';
@@ -257,15 +257,8 @@ function MembersSkeleton() {
 const KINDS: { key: 'approve' | 'review' | 'join'; name: string; color: string; why: string }[] = [
   { key: 'approve', name: '승인 대기', color: '#d4a017', why: '디스코드에 들어와 앱에 로그인했지만 아직 역할이 없어요. 승인하면 준회원 역할이 붙어요.' },
   { key: 'review', name: '정회원 심사', color: 'var(--accent)', why: '운영진과 같은 판 기준을 채운 준회원이에요.' },
-  { key: 'join', name: '가입 신청', color: 'var(--ok)', why: '초대 링크로 들어온 신청이에요. 칸마다 다음에 할 일이 하나씩 있어요.' },
+  { key: 'join', name: '가입 신청', color: 'var(--ok)', why: '초대 링크로 들어온 신청이에요. 승인하면 로그인하는 순간 준회원이 돼요.' },
 ];
-const STAGES: { key: 'apply' | 'interview' | 'confirmed' | 'invited'; name: string; hint: string }[] = [
-  { key: 'apply', name: '신청', hint: '면접을 시작하면 면접방 안내가 신청자 화면에 떠요' },
-  { key: 'interview', name: '면접 중', hint: '운영진이 확정 서명을 모으면 확정돼요' },
-  { key: 'confirmed', name: '확정', hint: '톡방·디스코드 초대를 보내 주세요' },
-  { key: 'invited', name: '초대함', hint: '로그인하면 자동으로 준회원이 돼요' },
-];
-const stageOf = (a: StaffApplication) => (a.status === 'new' || a.status === 'hold' ? 'apply' : a.status) as (typeof STAGES)[number]['key'] | 'joined' | 'rejected';
 
 export function StaffTodoView({ api, onOpen, onJoin, onSeen }: { api: Api; onOpen?: (id: string) => void; /** 가입 신청 전체 보드 (메모 · 거절 · 면접방 설정) */ onJoin?: () => void; onSeen?: () => void }) {
   const mem = useLoad<StaffMembers>(api, '/api/staff/members');
@@ -353,64 +346,56 @@ function TodoList({ api, list, kind, need, res, onOpen }: { api: Api; list: Staf
   );
 }
 
-function JoinBoard({ api, data, apps, reload }: { api: Api; data: StaffApplications; apps: StaffApplication[]; reload: () => Promise<unknown> }) {
+/** 가입 신청: 단계 없이 코멘트 + 승인 한 번 (2026-11-04 사용자 결정). 승인하면 로그인하는 순간 자동으로 준회원 */
+function JoinBoard({ api, apps, reload }: { api: Api; data: StaffApplications; apps: StaffApplication[]; reload: () => Promise<unknown> }) {
   const skins = useSkins();
   const [busy, setBusy] = useState<Record<number, ActState>>({});
   const [err, setErr] = useState<Record<number, string>>({});
   const [leaving, setLeaving] = useState<Set<number>>(new Set());
-  const [arrived, setArrived] = useState<number | null>(null);
-  const [shake, setShake] = useState<number | null>(null);
+  const [memo, setMemo] = useState<Record<number, string>>({});
   const put = (id: number, v: ActState) => setBusy((b) => ({ ...b, [id]: v }));
-  const act = async (a: StaffApplication, action: string, extra: Record<string, unknown> = {}, move = true) => {
+  const saveMemo = (a: StaffApplication) => { const v = memo[a.id]; if (v == null || v === (a.memo ?? '')) return; void api.post(`/api/staff/applications/${a.id}`, { action: 'memo', memo: v }).catch(() => {}); };
+  const approve = async (a: StaffApplication) => {
     put(a.id, 'busy'); setErr((e) => ({ ...e, [a.id]: '' }));
     try {
-      await api.post(`/api/staff/applications/${a.id}`, { action, at: a.updatedAt, ...extra });
-      if (move) { put(a.id, 'done'); await new Promise((r) => setTimeout(r, 600)); setLeaving((s) => new Set(s).add(a.id)); await new Promise((r) => setTimeout(r, 260)); }
+      const v = memo[a.id];
+      if (v != null && v !== (a.memo ?? '')) await api.post(`/api/staff/applications/${a.id}`, { action: 'memo', memo: v });
+      await api.post(`/api/staff/applications/${a.id}`, { action: 'approve', at: a.updatedAt });
+      put(a.id, 'done'); await new Promise((r) => setTimeout(r, 650));
+      setLeaving((s) => new Set(s).add(a.id)); await new Promise((r) => setTimeout(r, 280));
       await reload();
-      if (move) setArrived(a.id);
     } catch (e) {
       setErr((x) => ({ ...x, [a.id]: e instanceof Error ? e.message : String(e) }));
-      if (String(e).includes('바꿨어요') || String(e).includes('바뀌었어요')) void reload();
+      void reload();
     } finally { put(a.id, undefined); setLeaving((s) => { const n = new Set(s); n.delete(a.id); return n; }); }
   };
-  useEffect(() => { if (arrived == null) return; const t = setTimeout(() => setArrived(null), 900); return () => clearTimeout(t); }, [arrived]);
+  const open = apps.filter((a) => ['new', 'interview', 'hold', 'confirmed'].includes(a.status));
+  const waiting = apps.filter((a) => a.status === 'invited');
   return (
-    <div className="sv-jboard">
-      {STAGES.map((s, i) => {
-        const list = apps.filter((a) => stageOf(a) === s.key);
-        return (
-          <div key={s.key} className={`sv-jcol ${s.key}`}>
-            <div className="sv-jcol-h"><span className="jn">{i + 1}</span>{s.name}<b>{list.length}</b></div>
-            <p className="sv-jhint">{s.hint}</p>
-            {list.length ? list.map((a) => {
-              const mine = a.signs.some((x) => x.id === data.me);
-              return (
-                <article key={a.id} className={`sv-jc ${leaving.has(a.id) ? 'leave' : ''} ${arrived === a.id ? 'arrive' : ''}`}>
-                  <div className="jc-h"><span className="sv-jface">{a.riotId.slice(0, 1)}</span><div><b>{a.riotId.split('#')[0]}</b><small>{a.riotId}</small></div><time>{ago(a.createdAt)}</time></div>
-                  <div className="jc-tags">{a.status === 'hold' && <span className="jtag hold">보류</span>}{a.times.map((t) => <span key={t} className="jtag">{JOIN_TIMES.find((x) => x.key === t)?.label ?? t}</span>)}<span className="jtag kk">카톡 {a.kakao}</span></div>
-                  {a.note && <p className="jc-msg">“{a.note}”</p>}
-                  {a.inviter && <div className="jc-by"><MemberFace nick={a.inviter.nick} skin={a.inviter.skin} champion={a.inviter.main} size={18} skins={skins} />{shortNick(a.inviter.nick)} 님이 초대했어요</div>}
-                  {s.key === 'apply' && <div className="jact"><button type="button" className="btn ghost" disabled={a.status === 'hold' || Boolean(busy[a.id])} onClick={() => act(a, 'hold', {}, false)}>보류</button><ActBtn className="btn primary grow" state={busy[a.id]} label="면접 시작" onClick={() => act(a, 'interview')} /></div>}
-                  {s.key === 'interview' && <>
-                    <div className="jsign"><span className="jsig">{a.signs.map((x) => <span key={x.id} className="sv-jface sm on" title={x.nick}>{x.nick.slice(0, 1)}<i>✓</i></span>)}{Array.from({ length: Math.max(0, data.signsNeeded - a.signs.length) }, (_, k) => <span key={k} className="sv-jface sm off" />)}</span><span>확정 서명 <b>{a.signs.length} / {data.signsNeeded}</b></span></div>
-                    <div className="jact">{mine ? <button type="button" className="btn ghost grow" disabled={Boolean(busy[a.id])} onClick={() => act(a, 'unsign', {}, false)}>내 서명 취소</button>
-                      : <ActBtn className="btn primary grow" state={busy[a.id]} label="내 서명" onClick={() => act(a, 'confirm', {}, a.signs.length + 1 >= data.signsNeeded)} />}</div>
-                  </>}
-                  {s.key === 'confirmed' && <>
-                    <div className={`jchk ${shake === a.id ? 'shake' : ''}`} onAnimationEnd={() => setShake(null)}>
-                      <button type="button" className={`jck ${a.sentKakao ? 'on' : ''}`} aria-pressed={a.sentKakao} onClick={() => act(a, 'kakao', { on: !a.sentKakao }, false)}><i />톡방 초대</button>
-                      <button type="button" className={`jck ${a.sentDiscord ? 'on' : ''}`} aria-pressed={a.sentDiscord} onClick={() => act(a, 'discord', { on: !a.sentDiscord }, false)}><i />디스코드 초대</button>
-                    </div>
-                    <div className="jact"><ActBtn className="btn primary grow" state={busy[a.id]} label="초대함으로" onClick={() => { if (!(a.sentKakao && a.sentDiscord)) { setShake(a.id); return; } void act(a, 'invited'); }} /></div>
-                  </>}
-                  {s.key === 'invited' && <div className="jwait"><span className="ok">✓ 톡방</span><span className="ok">✓ 디스코드</span><span className="pd" />로그인 기다리는 중</div>}
-                  {err[a.id] && <p className="sv-err">{err[a.id]}</p>}
-                </article>
-              );
-            }) : <div className="sv-jempty">비어 있어요</div>}
+    <div className="sv-jlist">
+      {open.length ? <div className="sv-jgrid">{open.map((a) => (
+        <article key={a.id} className={`sv-jc ${leaving.has(a.id) ? 'leave' : ''}`}>
+          <div className="jc-h">
+            <GuestFace name={a.riotId.split('#')[0]} size={40} />
+            <div className="jc-id"><b>{a.riotId.split('#')[0]}<small>#{a.riotId.split('#')[1] ?? ''}</small></b><span className="tn">{a.no} · {ago(a.createdAt)}</span></div>
           </div>
-        );
-      })}
+          {a.note && <p className="jc-msg">{a.note}</p>}
+          <dl className="jc-facts">
+            {a.times.length > 0 && <div><dt>시간</dt><dd>{a.times.map((t) => JOIN_TIMES.find((x) => x.key === t)?.label ?? t).join(' · ')}</dd></div>}
+            <div><dt>카톡</dt><dd>{a.kakao}</dd></div>
+            <div><dt>초대</dt><dd>{a.inviter ? <><MemberFace nick={a.inviter.nick} skin={a.inviter.skin} champion={a.inviter.main} size={18} skins={skins} />{shortNick(a.inviter.nick)}</> : <span className="no">추천인 없음</span>}</dd></div>
+          </dl>
+          <label className="jc-memo"><span className="sr-only">코멘트</span>
+            <textarea rows={2} maxLength={300} placeholder="코멘트 (운영진끼리 보여요)" value={memo[a.id] ?? a.memo ?? ''} onChange={(e) => setMemo((m) => ({ ...m, [a.id]: e.target.value }))} onBlur={() => saveMemo(a)} />
+          </label>
+          <div className="jact"><ActBtn className="btn primary grow" state={busy[a.id]} label="승인" busy="승인 중" done="승인했어요" onClick={() => void approve(a)} /></div>
+          {err[a.id] && <p className="sv-err">{err[a.id]}</p>}
+        </article>
+      ))}</div> : <div className="sv-jempty">새 신청이 없어요</div>}
+      {waiting.length > 0 && <div className="sv-jwait">
+        <span className="jw-k">승인함 · 로그인을 기다려요</span>
+        <div>{waiting.map((a) => <span key={a.id} className="jw-p"><GuestFace name={a.riotId.split('#')[0]} size={24} />{a.riotId.split('#')[0]}</span>)}</div>
+      </div>}
     </div>
   );
 }

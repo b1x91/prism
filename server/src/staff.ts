@@ -38,6 +38,34 @@ export async function staffIds(env: Env): Promise<string[]> {
   return results.filter((m) => levelOf(m) >= 5).map((m) => m.id);
 }
 
+/**
+ * 디스코드에서 지금 운영진 역할을 가진 사람 (가입 신청 알림용, v3.148).
+ * 앱 권한(staffIds)은 로그인 때·12시간마다 받은 역할로 보므로, 운영진이 된 지 얼마 안 됐거나
+ * Prism 에 아직 로그인하지 않은 운영진은 빠질 수 있다 → 디스코드에 바로 묻는다.
+ *  ① 서버 회원 목록(봇에 '서버 회원' 권한이 켜져 있을 때) ② 안 되면 Prism 회원마다 지금 역할
+ * 어느 쪽이든 앱 권한 운영진·관리자와 합친다.
+ */
+export async function staffDiscordIds(env: Env): Promise<string[]> {
+  const out = new Set(await staffIds(env));
+  for (const id of (env.ADMIN_DISCORD_IDS ?? '').split(',').map((x) => x.trim()).filter(Boolean)) out.add(id);
+  if (!env.DISCORD_BOT_TOKEN || !env.DISCORD_GUILD_ID) return [...out];
+  const staffRole = ROLES.find((r) => r.key === 'staff')!.id;
+  const list = await fetch(`https://discord.com/api/v10/guilds/${env.DISCORD_GUILD_ID}/members?limit=1000`, {
+    headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }, signal: AbortSignal.timeout(8000),
+  }).catch(() => null);
+  if (list?.ok) {
+    const rows = (await list.json().catch(() => [])) as { user?: { id: string; bot?: boolean }; roles?: string[] }[];
+    for (const m of rows) if (m.user && !m.user.bot && m.roles?.includes(staffRole)) out.add(m.user.id);
+    return [...out];
+  }
+  const { results } = await env.DB.prepare('SELECT id FROM members ORDER BY last_seen_at DESC LIMIT 150').all<{ id: string }>();
+  for (let i = 0; i < results.length; i += 10) {
+    const part = await Promise.all(results.slice(i, i + 10).map(async (m) => ({ id: m.id, roles: await liveRoles(env, m.id) })));
+    for (const x of part) if (x.roles?.includes(staffRole)) out.add(x.id);
+  }
+  return [...out];
+}
+
 /** 회원마다 운영진과 같은 판 수 (본인이 운영진이면 다른 운영진과) */
 async function gamesWithStaff(env: Env): Promise<Map<string, number>> {
   const ids = await staffIds(env);

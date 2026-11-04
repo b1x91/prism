@@ -8,7 +8,7 @@
 import { sendDM } from './bot.js';
 import { widget } from './discord-now.js';
 import { can, isSpecial, levelOf, unapproved } from './roles.js';
-import { applyLevel, cheer, staffIds } from './staff.js';
+import { applyLevel, cheer, staffDiscordIds, staffIds } from './staff.js';
 import { FACE, HttpError, json, type Env, type Member } from './util.js';
 import { INVITE_BONUS } from '../../packages/core/src/shop.js';
 import { weekStart } from '../../packages/core/src/missions.js';
@@ -172,7 +172,7 @@ const TIME_KO: Record<string, string> = { day: '낮', evening: '저녁', night: 
 /** 새 신청을 운영진에게 DM (실패해도 신청은 그대로, 운영 메뉴의 빨간 점이 함께 켜진다) */
 async function notifyStaff(env: Env, r: Row, inviter: string | null) {
   if (!env.DISCORD_BOT_TOKEN) return;
-  const ids = (await staffIds(env)).slice(0, 6);
+  const ids = (await staffDiscordIds(env)).slice(0, 8);
   const times = arr<string>(r.times).map((x) => TIME_KO[x]).filter(Boolean).join(' · ');
   const payload = {
     embeds: [{
@@ -292,6 +292,10 @@ export async function staffApplicationAction(req: Request, env: Env, me: Member,
       act = signs.length >= need ? '확정' : `확정 ${signs.length}/${need}`;
       break;
     case 'unsign': signs = signs.filter((s) => s !== me.id); if (status === 'confirmed') status = 'interview'; act = '확정 취소'; break;
+    case 'approve': // 단계 없이 승인 한 번 (2026-11-04 사용자 결정): 바로 '초대함' — 로그인하면 자동으로 준회원
+      if (!['new', 'interview', 'hold', 'confirmed'].includes(status)) throw new HttpError(400, '승인할 수 없는 상태예요.');
+      if (!signs.includes(me.id)) signs = [...signs, me.id];
+      status = 'invited'; sk = 1; sd = 1; act = '승인'; break;
     case 'hold': status = 'hold'; act = '보류'; break;
     case 'reject': status = 'rejected'; signs = []; act = '거절'; break;
     case 'reopen': status = 'interview'; signs = []; act = '다시 면접'; break;
@@ -324,7 +328,7 @@ export async function staffApplicationAction(req: Request, env: Env, me: Member,
   await env.DB.prepare('UPDATE applications SET status = ?, signs = ?, sent_kakao = ?, sent_discord = ?, memo = ?, inviter = ?, log = ?, updated_at = ? WHERE id = ?')
     .bind(status, JSON.stringify(signs), sk, sd, memo, inviter, quiet ? r.log : logAdd(r.log, me.nick, act), now, r.id).run();
   // 확정한 순간 이미 가입해 롤을 연결한 회원이 있으면 바로 잇는다
-  if (status === 'confirmed' && r.status !== 'confirmed') {
+  if ((status === 'confirmed' || status === 'invited') && !['confirmed', 'invited'].includes(r.status)) {
     const m = await env.DB.prepare(`SELECT * FROM members WHERE lower(replace(riot_id, ' ', '')) = ?`).bind(riotKey(riot)).first<Member>();
     if (m) await joinMember(env, { ...r, status, signs: JSON.stringify(signs), updated_at: now }, m, me);
   }

@@ -6,7 +6,7 @@
  */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AUGMENT, CHAMPIONS, GAME_DATA, ITEM, ITEM_GROUP, ITEM_GROUP_KO, RARITY_KO, ROLE_KO, cdragon, fitPoints, guideOf, pct, tierOf, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
+import { buyerRoles, itemGuideOf, josa, AUGMENT, CHAMPIONS, GAME_DATA, ITEM, ITEM_GROUP, ITEM_GROUP_KO, RARITY_KO, ROLE_KO, cdragon, fitPoints, guideOf, pct, tierOf, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
 import { AugRing, AugmentLink, Bone, ChampImg, imgIn, useItemDetail, FramedFace, TierBadge, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
 import { api } from '../bridge';
 import type { State } from '../controller';
@@ -152,6 +152,8 @@ function HomeItem({ onDex }: { onDex: (id: number) => void }) {
   const it = ITEM[data.id];
   if (!it) return null;
   const d = detail?.[data.id];
+  const guide = itemGuideOf(data.id, detail);
+  const roles = buyerRoles(data.champs);
   const rate = data.games ? data.picks / data.games : 0;
   const group = ITEM_GROUP[data.id];
   return (
@@ -164,7 +166,13 @@ function HomeItem({ onDex }: { onDex: (id: number) => void }) {
           {d ? <>
             {d.stats.length > 0 && <ul className="hi-statl">{d.stats.map((x) => <li key={x}>{x}</li>)}</ul>}
             {d.effects.slice(0, 3).map(([n, t]) => <p key={n} className="hi-eff"><b>{n}</b> {t}</p>)}
-          </> : <><Bone w="60%" h={14} /><Bone w="90%" h={14} /></>}
+            {guide && guide.when.length > 0 && <div className="hi-guide"><span className="hi-k">언제 가면 좋아요</span>
+              <ul>{guide.when.map((x) => <li key={x}><Icon name="check" />{x}</li>)}</ul></div>}
+            {guide && guide.aram.length > 0 && <div className="hi-guide aram"><span className="hi-k">증바람에서는</span>
+              <ul>{guide.aram.map((x) => <li key={x}><Icon name="spark" />{x}</li>)}</ul></div>}
+            {roles && <p className="hi-who"><Icon name="users" /><span>멤버들은 주로 <b>{roles}</b>{josa(roles, '이/가').slice(roles.length)} 사요</span></p>}
+            {guide && guide.builds.length > 0 && <p className="hi-who"><Icon name="box" /><span>추천 빌드 <b>{guide.builds.join(' · ')}</b>에 들어가요</span></p>}
+          </> : <><Bone w="60%" h={14} /><Bone w="90%" h={14} /><Bone w="80%" h={14} /><Bone w="70%" h={14} /></>}
         </div>
         {data.games === 0 ? <div className="hi-stats hi-none"><span className="hi-k">최근 {data.days}일 Prism 멤버 판</span><p>기록이 쌓이면 멤버들이 이 아이템을 얼마나 고르는지 보여 드려요.</p></div> : <div className="hi-stats">
           <span className="hi-k">최근 {data.days}일 Prism 멤버 판</span>

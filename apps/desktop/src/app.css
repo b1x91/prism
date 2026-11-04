@@ -755,3 +755,14 @@ body { overflow: hidden; background: var(--bg); }
   .hc-txt h2 { font-size: 40px; }
 }
 @media (max-width: 900px) { .home { --mp: var(--s5); } }
+/* 오늘의 아이템 풀이 (v3.166) */
+.hi-guide { display: grid; gap: var(--s2); margin-top: var(--s2); }
+.hi-guide ul { display: grid; gap: var(--s1); margin: 0; padding: 0; list-style: none; }
+.hi-guide li { display: flex; align-items: center; gap: var(--s2); min-width: 0; font-size: var(--fs-sm); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hi-guide li svg { width: 16px; height: 16px; flex: none; color: var(--accent); stroke-width: 2.4; }
+.hi-guide.aram li svg { color: #d97706; }
+.hi-who { display: flex; align-items: center; gap: var(--s2); margin: 0; font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hi-guide + .hi-who, .hi-eff + .hi-who { margin-top: var(--s2); }
+.hi-who svg { width: 14px; height: 14px; flex: none; }
+.hi-who span { overflow: hidden; text-overflow: ellipsis; }
+.hi-who b { color: var(--text-2); font-weight: 700; }
