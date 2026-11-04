@@ -2044,7 +2044,7 @@ button.ga:hover { background: var(--surface-2); }
 .cfav-h { display: flex; align-items: center; gap: var(--s2); color: #ff4d6d; }
 .cfav-h h3 { margin: 0; font-size: var(--fs-lg); font-weight: 800; color: var(--text); }
 .cfav-h .icon { width: 18px; height: 18px; fill: currentColor; }
-.cfav-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 240px); gap: var(--s3); overflow-x: auto; padding-bottom: var(--s1); scrollbar-width: thin; }
+.cfav-row { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(200px, 240px); gap: var(--s3); overflow-x: auto; padding-bottom: var(--s1); }
 .cfav-card { position: relative; isolation: isolate; height: 112px; border: 0; padding: 0; border-radius: var(--r-l); overflow: hidden; cursor: pointer; text-align: left; color: #fff; background: #10131f; box-shadow: var(--shadow); }
 .cfav-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 22%; z-index: -2; transition: transform .4s ease; }
 .cfav-card::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, rgba(7, 9, 15, .85) 0%, rgba(7, 9, 15, .1) 70%); }
@@ -4914,3 +4914,13 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .fr-item small { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @container (max-width: 760px) { .fresh { grid-template-columns: minmax(0, 1fr); gap: var(--s4); padding: var(--s5); } }
 @media (max-width: 760px) { .fresh { grid-template-columns: minmax(0, 1fr); gap: var(--s4); padding: var(--s5); margin-top: -48px; } .live-now ~ .fresh { margin-top: 0; } }
+
+/* 검색 칸은 어디에 놓여도(어두운 홈 배너 위 등) 보통 글자색 — 부모의 흰 글자·가운데 정렬을 물려받아 목록 이름이 안 보이던 것 */
+.omni, .sel-pop { color: var(--text); text-align: left; }
+
+/* 스크롤 막대: 화살표 없이 얇은 둥근 막대만 (앱·웹 전역). 표준 scrollbar-width/color 를 쓰면 크롬이 이 모양을 무시하므로 쓰지 않는다 */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 999px; background: color-mix(in srgb, var(--text-3) 45%, transparent) padding-box; }
+::-webkit-scrollbar-thumb:hover { border-width: 2px; background-color: color-mix(in srgb, var(--text-3) 70%, transparent); }
