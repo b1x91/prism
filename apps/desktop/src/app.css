@@ -633,3 +633,13 @@ body { overflow: hidden; background: var(--bg); }
 .acc-foot { margin: 0; font-size: var(--fs-xs); color: var(--text-3); }
 @media (hover: none) { .acc-x { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .acc-radio::after, .acc-x, .acc-row { transition: none; } }
+
+/* 사이드바 내 카드 (v3.163): 얼굴 그림이 카드 왼쪽을 위아래 끝까지 채우고, 옆에 이름·피스.
+   테두리는 카드 하나뿐 — 얼굴 둘레 고리·안쪽 여백을 겹겹이 두지 않는다 */
+.side-me-card { padding: 0; gap: 0; overflow: hidden; }
+.side-me-card .side-me { padding: 0 var(--s3) 0 0; gap: var(--s3); border-radius: 0; align-self: stretch; }
+.side-me-card .side-thumb { position: relative; flex: none; display: block; align-self: stretch; width: 56px; min-height: 56px; }
+.side-me-card .side-thumb .face, .side-me-card .side-thumb .initial { width: 100% !important; height: 100% !important; min-height: 56px; border-radius: 0; object-fit: cover; display: grid; place-items: center; }
+.side-me-card .side-thumb .sdot { right: 4px; bottom: 4px; box-shadow: 0 0 0 2px rgba(10, 12, 20, .55); }
+.side-me-card .who { gap: 2px; padding: var(--s2) 0; }
+@media (max-width: 900px) { .side-me-card { padding: 0; } .side-me-card .side-me { padding: 0; } .side-me-card .side-thumb { width: 100%; } }
