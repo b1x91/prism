@@ -203,9 +203,10 @@ function App() {
         </nav>
         {s.me && <div className={`side-me-card ${staff ? 'prism' : ''}`}>
           <NavLink to="/me" className="side-me" title="내 페이지">
-            {/* 얼굴은 카드 한쪽을 꽉 채우는 그림 — 테두리를 겹겹이 두르지 않는다 (v3.163) */}
-            <span className="fp side-thumb" title={`${dotLabel} · ${label}${riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}`}><MemberFace nick={s.me.nick} skin={s.me.skin} size={56} skins={skins} /><i className={`sdot ${dot}`} role="img" aria-label={dotLabel} /></span>
+            {/* 얼굴은 카드 한쪽을 꽉 채우는 그림 + 장착한 프로필 테두리, 접속 점은 카드 오른쪽 끝 (v3.164) */}
+            <span className={`side-thumb${s.me.frame ? ` phero face-ring ${s.me.frame}` : ''}`}><span className="phero-face"><MemberFace nick={s.me.nick} skin={s.me.skin} size={56} skins={skins} /></span></span>
             <span className="who"><b><NickName nick={s.me.nick} /></b><span className="st pc" data-pieces title={`보유 ${PIECE}`}>{pieces === null ? '–' : <><b>{pieces.toLocaleString()}</b><PieceIcon size={12} /></>}</span></span>
+            <i className={`sdot ${dot}`} role="img" aria-label={dotLabel} title={`${dotLabel} · ${label}${riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}`} />
           </NavLink>
         </div>}
       </aside>
