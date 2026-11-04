@@ -424,7 +424,7 @@ body { overflow: hidden; background: var(--bg); }
 @media (max-width: 900px) {
   .side-dock { grid-template-columns: 1fr; padding: 4px; }
   .side-dock a, .side-dock button { height: 40px; }
-  .side-dock span { display: none; }
+  .side-dock a > span, .side-dock button > span { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .side-dock a, .side-dock button { transition: none; } .side-dock a:hover, .side-dock button:hover { transform: none; } }
 
