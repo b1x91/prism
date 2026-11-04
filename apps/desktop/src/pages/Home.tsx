@@ -6,11 +6,10 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CHAMPIONS, ROLE_KO, cdragon, pct, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
-import { Bone, FramedFace, GlassBtn, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
+import { AUGMENT, CHAMPIONS, GAME_DATA, RARITY_KO, ROLE_KO, cdragon, fitPoints, guideOf, pct, tierOf, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
+import { AugRing, AugmentLink, Bone, FramedFace, TierBadge, GlassBtn, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
 import { api } from '../bridge';
 import type { State } from '../controller';
-import { TodayAugBoard } from './Game';
 
 /** 아이템을 고르면 도감의 그 아이템 칸을 연다 (거르기는 풀어서 보이게) */
 function openItemInDex(id: number) {
@@ -75,7 +74,7 @@ export function HomePage({ s }: { s: State }) {
 
       {/* 아래 두 칸: 왼쪽 어울리는 증강 · 오른쪽 랭킹 맛보기 (v3.164) */}
       <div className="home-duo">
-        {pick && <TodayAugBoard champion={pick.id} personal={P} swapped={swapped.current} pending={hold.pending} />}
+        {pick && <HomeAugs champion={pick.id} swapped={swapped.current} pending={hold.pending} />}
         {s.me && <HomeRanking s={s} />}
       </div>
     </div>
@@ -127,5 +126,28 @@ function Row({ r, rank, me, extra, onOpen, note }: { r: RankingRow; rank: number
       <span className="hr-who"><b><NickName nick={shortNick(r.nick)} /></b>{r.pending && <PendingChip />}<small className="tn">{note ?? `${r.n}판 · ${pct(r.w, r.n)}`}</small></span>
       <span className="hr-s tn">{rankScore(r.w, r.n)}</span>
     </button>
+  );
+}
+
+/** 오늘의 챔프에게 어울리는 증강 5개 — 등급을 섞어 어울림 점수 순 (오른쪽 랭킹 Top 5 와 같은 다섯 줄) */
+const RANK_RARITY = { prismatic: 3, gold: 2, silver: 1 } as const;
+function HomeAugs({ champion, swapped, pending }: { champion: number; swapped?: boolean; pending?: boolean }) {
+  const guide = guideOf(GAME_DATA, champion);
+  const top = guide ? [...guide.prismatic, ...guide.gold, ...guide.silver]
+    .sort((a, b) => fitPoints(b) - fitPoints(a) || RANK_RARITY[b.rarity] - RANK_RARITY[a.rarity]).slice(0, 5) : [];
+  return (
+    <section className={`card pad home-augs ${pending ? 'swapping' : ''}`}>
+      <div className="hr-head"><h3>{CHAMPIONS[champion]?.name}에게 어울리는 증강</h3></div>
+      <div key={champion} className={`hr-list ${swapped ? 'bn-in' : ''}`}>
+        {top.map((f, k) => (
+          <AugmentLink key={f.id} id={f.id} champion={champion} className="hr-row ha-row">
+            <span className="hr-n tn">{k + 1}</span>
+            <AugRing id={f.id} size={40} />
+            <span className="hr-who"><b>{AUGMENT[f.id]?.name}</b><small className={`ha-r ${f.rarity}`}>{RARITY_KO[f.rarity]}</small></span>
+            <TierBadge tier={tierOf(fitPoints(f))} />
+          </AugmentLink>
+        ))}
+      </div>
+    </section>
   );
 }

@@ -682,9 +682,13 @@ body { overflow: hidden; background: var(--bg); }
 /* 아래 두 칸: 왼쪽 증강 판 · 오른쪽 랭킹 (위만 맞추고 높이는 각자) */
 .home-duo { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4); align-items: start; }
 .home-duo > :only-child { grid-column: 1 / -1; }
-/* 홈의 증강 판: 등급을 위아래로 쌓는 한 칸. 이름은 한 줄 (넘치면 말줄임 — 마우스를 올리면 설명 상자에 전체 이름) */
-.home .today-augs, .home .today-augs.n4 { --cols: 1; }
-.home .today-augs .ta-row .nm { display: block; white-space: nowrap; text-overflow: ellipsis; -webkit-line-clamp: unset; }
+/* 홈의 증강 5개: 랭킹과 같은 줄 모양 (이름은 한 줄, 넘치면 말줄임 — 마우스를 올리면 설명 상자에 전체 이름) */
+.home-augs { display: grid; gap: var(--s3); transition: opacity .18s; }
+.home-augs.swapping { opacity: .5; }
+.ha-row { text-decoration: none; }
+.ha-row .tier { width: 28px; height: 28px; }
+.ha-r { font-weight: 700; }
+.ha-r.prismatic { color: var(--spectrum-6); } .ha-r.gold { color: var(--gold); }
 /* 랭킹 맛보기 */
 .home-rank { display: grid; gap: var(--s3); }
 .hr-head { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
