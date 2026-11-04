@@ -8,12 +8,12 @@ import { useKept } from './kept';
 import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, aboutWhen, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
   type Api, type Game, type InsightKind, type MemberPage, type Ranking, type Shop, type RankingRow, type Skin,
-  rankScore, byScore, seasonOf, improveOf, type WinTip, SHOP_ITEM,
+  rankScore, shortNick, byScore, seasonOf, improveOf, type WinTip, SHOP_ITEM,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, FramedFace, Gem, LockedMore, MemberFace, PendingChip, PresenceTag, faceSrc, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
 import { ArtisanRankingView } from './artisan';
-import { Icon } from './icons';
+import { Icon, type IconName } from './icons';
 import { useLoad } from './crew';
 import { RecentGames } from './game';
 import { ProfileHero, ShareButton, baseTint } from './shop';
@@ -303,7 +303,7 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
   const kda = total.n ? ((total.k + total.a) / Math.max(1, total.d)).toFixed(2) : '–';
   return (<Swap on={rv} skeleton={<MemberSkeleton self={self} id={id} studioBtn={studioBtn} />}>
     <div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
-      <ProfileHero lift={total.n > 0} presence={m.presence} copyNick={!m.self} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
+      <ProfileHero lift={total.n > 0 || (!lv.live && !(m.self && !m.riotId))} presence={m.presence} copyNick={!m.self} nick={m.nick} intro={m.intro} art={art} skin={m.skin} champion={main} deco={deco}
         corner={m.role ? <RoleBadge role={m.role} /> : <span className="pill dark">{TIER_KO[m.tier]}</span>}
         actions={<>{m.self && studioBtn && <button type="button" className="btn sm" onClick={() => setEdit('skin')}><Icon name="spark" />프로필 꾸미기</button>}
           {m.self && <ShareButton api={api} id={m.id} shared={shared} onChange={setShared} />}{actions}</>}
@@ -316,14 +316,12 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
       {lv.live && <LiveNow live={lv.live} meId={meId} over={total.n > 0} onMember={onMember} />}
       {edit && m.self && <ProfileStudio api={api} page={data} skins={skins} start={edit} onClose={closeEdit} onSaved={() => { closeEdit(); reload(); }} />}
       {m.self && !m.riotId && <section className="card pad"><b>아직 롤 계정이 연결되지 않았어요</b><div className="muted">PC의 Prism 앱에서 로그인한 뒤 맨 위의 <b>"동의하고 연결"</b>을 누르면, 그때부터 판이 여기에 쌓입니다. 앱에 이미 보이는 최근 판도 함께 올라와요.</div></section>}
-      {total.n > 0 ? <StatBoard data={data} games={games} kda={kda} streak={st} /> : <div className="grid4">
-        <section className="card stat"><span className="k">기록된 판</span><span className="v">0<small>판</small></span></section>
-      </div>}
+      {total.n > 0 ? <StatBoard data={data} games={games} kda={kda} streak={st} /> : !(m.self && !m.riotId) && <FirstGame data={data} />}
       {m.self && shop?.uses ? <MyHighlight api={api} pinned={data.pinned} frame={shop.uses.frame} onShop={onShop} /> : data.pinned ? <HighlightCard h={data.pinned} /> : null}
       {m.self && total.n > 0 && <ImproveCard data={data} onChampion={onChampion} />}
       {m.self && total.n > 0 && shop?.uses && <InsightPanel api={api} data={shop} focus={insight} onShop={onShop} onChange={setShopNow} />}
-      {!m.self && <SynergyCard data={data} />}
-      <RecentGames games={games} limit={10} max={20} onChampion={onChampion} />
+      {!m.self && total.n > 0 && <SynergyCard data={data} />}
+      {total.n > 0 && <RecentGames games={games} limit={10} max={20} onChampion={onChampion} />}
       {total.n > 0 && <div className="grid2">
         <section className="card pad">
           <div className="card-head"><h2>주 챔프</h2><span className="sp" /><span className="meta">만난 챔프 {data.champions.length} / {Object.keys(CHAMPIONS).length}</span></div>
@@ -352,6 +350,35 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
       </>}
     </div>
   </Swap>);
+}
+
+/**
+ * 한 판도 기록되지 않은 회원 (2026-11-04): 대시(–)만 가득한 칸 대신 머리에 겹쳐 올라오는 한 장.
+ * 왼쪽 = 지금 상태와 할 일(남이 보면 롤 닉 복사로 친구 추가), 오른쪽 = 첫 판이 끝나면 생길 것들.
+ */
+function FirstGame({ data }: { data: MemberPage }) {
+  const m = data.member;
+  const name = shortNick(m.nick);
+  const when = m.about ? aboutWhen(m.about) : '';
+  const soon: [IconName, string, string][] = m.self
+    ? [['chart', '분석판', '승률 · 점수 · KDA · 승률 흐름'], ['book', '도감', '만난 챔프 · 고른 증강이 채워져요'], ['target', '승률을 올리려면', '내 기록으로 찾은 한 가지']]
+    : [['users', '나와의 시너지', `${name}님과 같이 한 판부터`], ['chart', '분석판', '승률 · 점수 · KDA · 승률 흐름'], ['grid', '주 챔프 · 플레이 성향', '어떤 챔프를 즐기는지']];
+  return (
+    <section className="card fresh lift">
+      <div className="fr-main">
+        <span className="fr-badge"><Icon name="spark" />{m.self ? '첫 판을 기다려요' : '새로 온 멤버'}</span>
+        <h2>{m.self ? '아직 기록된 판이 없어요' : `${name}님의 첫 판을 함께해 주세요`}</h2>
+        <p>{m.self
+          ? 'PC의 Prism 앱을 켜 둔 채 아수라장을 한 판 하면, 끝나고 몇 분 안에 여기가 채워져요.'
+          : `아직 기록된 판이 없어요. 같이 한 판 하면 ${name}님의 첫 기록이 여기에 남아요.`}</p>
+        {!m.self && when && <div className="fr-act"><span className="fr-when"><Icon name="clock" />주로 {when} 접속해요</span></div>}
+      </div>
+      <div className="fr-soon">
+        <span className="fr-k">첫 판이 끝나면 생겨요</span>
+        {soon.map(([ic, t, d]) => <div key={t} className="fr-item"><span className="fr-ic"><Icon name={ic} /></span><span><b>{t}</b><small>{d}</small></span></div>)}
+      </div>
+    </section>
+  );
 }
 
 /**
