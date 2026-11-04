@@ -718,6 +718,39 @@ body { overflow: hidden; background: var(--bg); }
 .hr-soon b { font-size: var(--fs-md); white-space: nowrap; }
 .hr-soon small { color: var(--text-3); font-weight: 600; }
 .os-item { flex: none; border-radius: var(--r-s); }
+/* 오늘의 아이템 (v3.166): 왼쪽 도감 설명 · 오른쪽 멤버 픽률 */
+.home-item { display: grid; gap: var(--s3); }
+.hi-body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s6); align-items: start; }
+.hi-desc { display: grid; gap: var(--s2); min-width: 0; }
+.hi-top { display: flex; align-items: center; gap: var(--s3); margin-bottom: var(--s1); }
+.hi-ic { width: 56px; height: 56px; border-radius: var(--r-m); flex: none; }
+.hi-name { display: grid; gap: 2px; min-width: 0; }
+.hi-name b { font-size: var(--fs-lg); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hi-name small { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; }
+.hi-statl { display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); margin: 0; padding: 0; list-style: none; }
+.hi-statl li { height: 24px; padding: 0 var(--s2); display: inline-flex; align-items: center; border-radius: var(--r-pill); background: var(--surface-2); font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); white-space: nowrap; }
+.hi-eff { margin: 0; font-size: var(--fs-sm); line-height: 1.55; color: var(--text-2); }
+.hi-eff b { color: var(--text); font-weight: 750; }
+.hi-stats { display: grid; gap: var(--s2); min-width: 0; padding: var(--s4); border-radius: var(--r-m); background: var(--surface-2); }
+.hi-k { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); white-space: nowrap; }
+.hi-rate { display: flex; align-items: baseline; gap: var(--s3); min-width: 0; }
+.hi-rate b { font-size: var(--fs-2xl); font-weight: 850; letter-spacing: -.02em; }
+.hi-rate span { font-size: var(--fs-sm); color: var(--text-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hi-bar { height: 6px; border-radius: var(--r-pill); background: var(--surface); overflow: hidden; }
+.hi-bar i { display: block; height: 100%; border-radius: inherit; background: var(--accent); }
+.hi-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); margin: var(--s2) 0 0; }
+.hi-grid div { display: grid; gap: 2px; min-width: 0; }
+.hi-grid dt { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hi-grid dd { margin: 0; font-size: var(--fs-lg); font-weight: 800; white-space: nowrap; }
+.hi-grid dd small { font-size: var(--fs-xs); color: var(--text-3); font-weight: 600; }
+.hi-champs { display: grid; gap: var(--s2); margin-top: var(--s2); }
+.hi-champs > div { display: flex; gap: var(--s3); }
+.hi-ch { display: inline-flex; align-items: center; gap: 4px; }
+.hi-ch img { border-radius: var(--r-s); }
+.hi-ch small { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+.hi-none p { margin: 0; font-size: var(--fs-sm); color: var(--text-2); }
+.home-item.sk .hi-desc, .home-item.sk .hi-stats { gap: var(--s3); }
+@container (max-width: 820px) { .hi-body { grid-template-columns: minmax(0, 1fr); gap: var(--s4); } }
 @container (max-width: 820px) {
   .hc-txt h2 { font-size: 40px; }
 }

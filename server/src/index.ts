@@ -11,6 +11,7 @@ import { nickSweep, nickSyncNow } from './discordnick.js';
 import { listNow, reportGame, reportLive, reportLobby, requestJoin, setNowAuto, memberLive } from './now.js';
 import { confirmDraw, getDraw, startDraw } from './draw.js';
 import { appMembers } from './appmembers.js';
+import { itemOfDay } from './itemday.js';
 import { promoteSweep } from './promote.js';
 import { download, latest } from './release.js';
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
@@ -88,6 +89,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'POST' && pathname === '/api/me/pin') return pinHighlight(req, env, me);
   if (m === 'POST' && pathname === '/api/me/share') return setShare(req, env, me);
   if (m === 'GET' && pathname === '/api/me/dex') return myDex(env, me);
+  if (m === 'GET' && pathname === '/api/items/today') return itemOfDay(env, me, new URL(req.url));
   if (m === 'GET' && pathname === '/api/me/missions') return getMissions(env, me);
   if (m === 'POST' && pathname === '/api/me/missions/claim') return claimMissions(req, env, me);
   if (m === 'GET' && pathname === '/api/me/weekly') return getWeekly(env, me);

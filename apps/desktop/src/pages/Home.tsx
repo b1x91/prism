@@ -6,8 +6,8 @@
  */
 import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AUGMENT, CHAMPIONS, GAME_DATA, RARITY_KO, ROLE_KO, cdragon, fitPoints, guideOf, pct, tierOf, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
-import { AugRing, AugmentLink, Bone, FramedFace, TierBadge, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
+import { AUGMENT, CHAMPIONS, GAME_DATA, ITEM, ITEM_GROUP, ITEM_GROUP_KO, RARITY_KO, ROLE_KO, cdragon, fitPoints, guideOf, pct, tierOf, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
+import { AugRing, AugmentLink, Bone, ChampImg, imgIn, useItemDetail, FramedFace, TierBadge, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
 import { api } from '../bridge';
 import type { State } from '../controller';
 
@@ -74,6 +74,8 @@ export function HomePage({ s }: { s: State }) {
         {pick && <HomeAugs champion={pick.id} swapped={swapped.current} pending={hold.pending} />}
         {s.me && <HomeRanking s={s} />}
       </div>
+
+      {s.me && <HomeItem onDex={(id) => { openItemInDex(id); nav('/dex'); }} />}
     </div>
   );
 }
@@ -95,10 +97,6 @@ function HomeRanking({ s }: { s: State }) {
   const rows = data?.rows ?? [];
   const top = rows.slice(0, 5);
   const meId = s.me?.id;
-  const myIdx = rows.findIndex((r) => r.id === meId);
-  const mine: (RankingRow & { rank: number }) | null = myIdx >= 0 ? { ...rows[myIdx], rank: myIdx + 1 } : data?.limited?.mine ?? null;
-  const showMine = mine && mine.rank > 5;
-  const gap = showMine && top[4] ? rankScore(top[4].w, top[4].n) - rankScore(mine.w, mine.n) : 0;
   return (
     <section className="card pad home-rank">
       <div className="hr-head"><h3>{data?.season?.label ?? '이번 시즌'} 랭킹</h3><button type="button" className="hr-all" onClick={() => nav('/ranking')}>전체 보기<Icon name="chevR" /></button></div>
@@ -106,21 +104,17 @@ function HomeRanking({ s }: { s: State }) {
         : !top.length ? <p className="hr-empty">이번 시즌 기록이 쌓이면 여기에 순위가 떠요.</p>
         : <div className="hr-list">
           {top.map((r, k) => <Row key={r.key ?? r.id} r={r} rank={k + 1} me={r.id === meId} onOpen={() => nav(`/members/${r.id}`)} />)}
-          {showMine && <>
-            <span className="hr-dots" aria-hidden="true">···</span>
-            <Row r={mine} rank={mine.rank} me extra onOpen={() => nav('/me')} note={gap > 0 ? `5위까지 ${gap}점` : undefined} />
-          </>}
         </div>}
     </section>
   );
 }
 
-function Row({ r, rank, me, extra, onOpen, note }: { r: RankingRow; rank: number; me?: boolean; extra?: boolean; onOpen: () => void; note?: string }) {
+function Row({ r, rank, me, onOpen }: { r: RankingRow; rank: number; me?: boolean; onOpen: () => void }) {
   return (
-    <button type="button" className={`hr-row ${me ? 'me' : ''} ${extra ? 'extra' : ''} ${rank <= 3 ? `p${rank}` : ''}`} onClick={onOpen}>
+    <button type="button" className={`hr-row ${me ? 'me' : ''} ${rank <= 3 ? `p${rank}` : ''}`} onClick={onOpen}>
       <span className="hr-n tn">{rank}</span>
       <FramedFace frame={r.frame} nick={r.nick} skin={r.skin} champion={r.mainChampion} size={36} />
-      <span className="hr-who"><b><NickName nick={shortNick(r.nick)} /></b>{r.pending && <PendingChip />}<small className="tn">{note ?? `${r.n}판 · ${pct(r.w, r.n)}`}</small></span>
+      <span className="hr-who"><b><NickName nick={shortNick(r.nick)} /></b>{r.pending && <PendingChip />}<small className="tn">{`${r.n}판 · ${pct(r.w, r.n)}`}</small></span>
       <span className="hr-s tn">{rankScore(r.w, r.n)}</span>
     </button>
   );
@@ -144,6 +138,45 @@ function HomeAugs({ champion, swapped, pending }: { champion: number; swapped?: 
             <TierBadge tier={tierOf(fitPoints(f))} />
           </AugmentLink>
         ))}
+      </div>
+    </section>
+  );
+}
+
+/** 오늘의 아이템: 도감 설명 + 최근 30일 Prism 멤버가 얼마나 고르는지 (v3.166, 서버 /api/items/today) */
+type ItemDay = { id: number; days: number; games: number; players: number; picks: number; wins: number; members: number; rank: number | null; ranked: number; champs: { c: number; n: number }[] };
+function HomeItem({ onDex }: { onDex: (id: number) => void }) {
+  const { data } = useLoad<ItemDay>(api, '/api/items/today');
+  const detail = useItemDetail(Boolean(data));
+  if (!data) return <section className="card pad home-item sk" aria-hidden="true"><div className="hr-head"><Bone w={140} h={20} /></div><div className="hi-body"><div className="hi-desc"><Bone w={64} h={64} r="m" /><Bone w="70%" h={14} /><Bone w="90%" h={14} /></div><div className="hi-stats"><Bone w="100%" h={120} r="m" /></div></div></section>;
+  const it = ITEM[data.id];
+  if (!it) return null;
+  const d = detail?.[data.id];
+  const rate = data.games ? data.picks / data.games : 0;
+  const group = ITEM_GROUP[data.id];
+  return (
+    <section className="card pad home-item">
+      <div className="hr-head"><h3>오늘의 아이템</h3><button type="button" className="hr-all" onClick={() => onDex(data.id)}>도감에서 보기<Icon name="chevR" /></button></div>
+      <div className="hi-body">
+        <div className="hi-desc">
+          <div className="hi-top"><img className="hi-ic fi" {...imgIn} src={cdragon(it.icon)} width={56} height={56} alt="" />
+            <div className="hi-name"><b>{it.name}</b><small>{[group && ITEM_GROUP_KO[group], it.price > 0 && `${it.price.toLocaleString()} 골드`].filter(Boolean).join(' · ')}</small></div></div>
+          {d ? <>
+            {d.stats.length > 0 && <ul className="hi-statl">{d.stats.map((x) => <li key={x}>{x}</li>)}</ul>}
+            {d.effects.slice(0, 3).map(([n, t]) => <p key={n} className="hi-eff"><b>{n}</b> {t}</p>)}
+          </> : <><Bone w="60%" h={14} /><Bone w="90%" h={14} /></>}
+        </div>
+        {data.games === 0 ? <div className="hi-stats hi-none"><span className="hi-k">최근 {data.days}일 Prism 멤버 판</span><p>기록이 쌓이면 멤버들이 이 아이템을 얼마나 고르는지 보여 드려요.</p></div> : <div className="hi-stats">
+          <span className="hi-k">최근 {data.days}일 Prism 멤버 판</span>
+          <div className="hi-rate"><b className="tn">{data.games ? `${(rate * 100).toFixed(rate < 0.1 ? 1 : 0)}%` : '–'}</b><span>픽률 · {data.games.toLocaleString()}판 중 {data.picks.toLocaleString()}판</span></div>
+          <span className="hi-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, rate * 100 * 3)}%` }} /></span>
+          <dl className="hi-grid">
+            <div><dt>이 아이템을 산 판 승률</dt><dd className="tn">{data.picks ? pct(data.wins, data.picks) : '–'}</dd></div>
+            <div><dt>쓰는 멤버</dt><dd className="tn">{data.members}<small>/{data.players}명</small></dd></div>
+            <div><dt>픽률 순위</dt><dd className="tn">{data.rank ? <>{data.rank}<small>/{data.ranked}위</small></> : '–'}</dd></div>
+          </dl>
+          {data.champs.length > 0 && <div className="hi-champs"><span className="hi-k">많이 산 챔프</span><div>{data.champs.map((x) => <span key={x.c} className="hi-ch" title={`${CHAMPIONS[x.c]?.name ?? ''} · ${x.n}판`}><ChampImg id={x.c} size={32} /><small className="tn">{x.n}</small></span>)}</div></div>}
+        </div>}
       </div>
     </section>
   );
