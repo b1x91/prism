@@ -240,7 +240,7 @@ function Waiting({ me }: { me: MyApplication }) {
     <span className="jn-glow" aria-hidden="true" />
     <small className="jn-kick ok">{me.status === 'hold' ? '조금만 기다려 주세요' : '신청 완료'}</small>
     <h2 className="jn-h">면접방에서<br />기다릴게요</h2>
-    <p className="jn-lede">운영진 두 명이 이야기해 보고 톡방과 디스코드로 초대해 드려요. 보통 하루 안에 답해요.</p>
+    <p className="jn-lede">운영진이 이야기해 보고 톡방과 디스코드로 초대해 드려요. 보통 하루 안에 답해요.</p>
     <div className="jn-ticket"><span>내 면접 번호</span><b>{me.no}</b></div>
     {me.room ? <>
       {me.room.pw && <div className="jn-how">

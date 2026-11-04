@@ -41,7 +41,7 @@ export function Artisans({ api, kind, id, onMember }: { api: Api; kind: 'champio
       </div>
       <div className="art2-road">
         <div className="art2-road-h"><b>장인의 길</b><span className="meta">이룬 목표 순</span></div>
-        {!data ? <div className="art2-rows">{[0].map((i) => <div key={i} className="art2-row" style={{ cursor: "default" }}><Bone w={12} h={12} /><Bone w={28} h={28} r="round" /><Bone w="60%" h={12} /><Bone w="100%" h={6} r="pill" /><Bone w={28} h={12} /></div>)}</div>
+        {!data ? <div className="art2-rows" aria-busy="true">{[62, 48, 56, 40, 52].map((w, i) => <div key={i} className="art2-row" style={{ cursor: 'default' }}><span className="rk"><Bone w={10} h={12} /></span><Bone w={28} h={28} r="round" /><span className="nm"><Bone w={`${w}%`} h={12} /></span><span className="art2-prog sk-prog"><Bone w={`${90 - i * 14}%`} h={6} r="pill" /></span><span className="art2-n"><Bone w={28} h={12} /></span></div>)}</div>
           : road.length ? <ol className="art2-rows">{road.map((a, i) => (
             <li key={a.id}><button type="button" className="art2-row" onClick={() => onMember?.(a.id)}>
               <span className="rk">{i + 1}</span>
@@ -91,7 +91,7 @@ function ArtRow({ r, rank, kind, me, skins, onOpen }: { r: ArtisanRank; rank: nu
 
 function ArtRankSkeleton() {
   return (
-    <SkeletonFrame className="card rank-list art-rank">{Array.from({ length: 5 }, (_, i) => (
+    <SkeletonFrame className="card rank-list art-rank">{Array.from({ length: 10 }, (_, i) => (
       <div key={i} className="rank-row" style={{ cursor: 'default' }}><span className="rk"><Bone w={12} h={14} /></span><Bone w={40} h={40} r="m" />
         <span className="who" style={{ display: 'grid', gap: 8 }}><Bone w={72} h={14} /><Bone w={i ? 132 : 24} h={i ? 10 : 24} r={i ? 's' : 'round'} /></span>
         <span className="num key"><Bone w={44} h={16} /></span><span className="num"><Bone w={44} h={16} /></span></div>

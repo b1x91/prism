@@ -76,8 +76,9 @@ export function Layout() {
         <NavLink to="/" className="brand"><Gem size={22} />PRISM</NavLink>
         <nav className="tabs">{groupNav(navOf(me)).map((g, gi) => <span key={g.key} className="tab-group" role="group" aria-label={g.label}>{gi > 0 && <i className="tab-sep" aria-hidden="true" />}{g.items.map(([to, label]) => <TopItem key={to} to={to} label={label} />)}</span>)}</nav>
         <span className="sp" />
-        <span className="top-wide"><NavLink to="/shop" className="icon-btn top-shop" title="상점" aria-label="상점"><Icon name="bag" /></NavLink>
-          <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>
+        {/* 로그인한 회원은 상점·테마가 내 프로필 메뉴 안에 (2026-11-04) */}
+        {!me && !(member === null && top) && <span className="top-wide"><NavLink to="/shop" className="icon-btn top-shop" title="상점" aria-label="상점"><Icon name="bag" /></NavLink>
+          <button className="icon-btn" type="button" title="테마 바꾸기" onClick={toggleTheme}><Icon name="moon" /></button></span>}
         {me ? <MeMenu pieces={shownPieces} />
           : member === null && top ? <NavLink to="/me" className="me-btn" title="내 페이지"><FramedFace frame={top.frame} round nick={top.nick} skin={top.skin} size={30} /><span className="me-txt"><b><NickName nick={top.nick} /></b>{top.pieces !== null && <small data-pieces>{top.pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></NavLink>
           : member === null ? <span className="me-btn" aria-hidden="true"><Bone w={30} h={30} r="round" /><span className="me-txt"><Bone w={72} h={12} /></span></span>
@@ -125,11 +126,30 @@ function MeMenu({ pieces }: { pieces: number | null }) {
           <span><b><NickName nick={me.nick} /></b>{pieces !== null && <small>{pieces.toLocaleString()}<PieceIcon size={12} /></small>}</span></div>
         <button type="button" role="menuitem" onClick={() => go('/me')}><Icon name="home" />내 페이지</button>
         <button type="button" role="menuitem" onClick={() => go('/me?studio=1')}><Icon name="spark" />프로필 꾸미기</button>
+        <button type="button" role="menuitem" onClick={() => go('/shop')}><Icon name="bag" />상점</button>
         <button type="button" role="menuitem" onClick={() => go('/inquiry')}><Icon name="mail" />문의</button>
+        <span className="me-pop-sep" />
+        <ThemeSwitch />
         <span className="me-pop-sep" />
         <button type="button" role="menuitem" className="danger" onClick={() => { setOpen(false); logout().then(() => nav('/')); }}><Icon name="logout" />로그아웃</button>
       </div>}
     </span>
+  );
+}
+
+/** 내 프로필 메뉴의 화면 테마 스위치: 해·달이 손잡이 안에서 바뀌며 미끄러진다 */
+function ThemeSwitch() {
+  const isDark = () => (document.documentElement.getAttribute('data-theme') ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')) === 'dark';
+  const [dark, setDark] = useState(isDark);
+  const flip = () => { setThemeMode(dark ? 'light' : 'dark'); setDark(!dark); };
+  return (
+    <button type="button" role="menuitemcheckbox" aria-checked={dark} className="me-theme" onClick={flip}>
+      <Icon name={dark ? 'moon' : 'sun'} /><span className="me-theme-t">{dark ? '다크 모드' : '라이트 모드'}</span>
+      <span className={`ths ${dark ? 'on' : ''}`} aria-hidden="true">
+        <i className="ths-stars"><b /><b /><b /></i>
+        <span className="ths-knob"><Icon name="sun" /><Icon name="moon" /></span>
+      </span>
+    </button>
   );
 }
 

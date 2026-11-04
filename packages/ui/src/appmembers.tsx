@@ -46,7 +46,7 @@ function AppMembersSkeleton() {
   return (
     <section className="card pad appm">
       <div className="card-head"><h2>Prism을 밝히는 사람들</h2></div>
-      <div className="am-grid">{[0, 1, 2, 3, 4, 5].map((i) => (
+      <div className="am-grid">{Array.from({ length: 12 }, (_, i) => i).map((i) => (
         <div key={i} className="am-card"><Bone w={52} h={52} r="round" /><span className="am-t" style={{ gap: 8 }}><Bone w={88} h={14} /><Bone w={120} h={10} /><Bone w={140} h={10} /></span></div>
       ))}</div>
     </section>
