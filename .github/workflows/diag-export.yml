@@ -1,0 +1,59 @@
+# 운영 진단 꺼내기 (수동 실행). 저장소가 공개라 실행 기록·결과물이 누구에게나 보이므로,
+# 꺼낸 내용은 실행할 때 넣는 공개 키로 암호화해서만 결과물로 남긴다 (개인 키를 가진 쪽만 풀 수 있다).
+# 숫자(몇 건)만 기록에 찍는다.
+name: diag-export
+
+on:
+  workflow_dispatch:
+    inputs:
+      pubkey:
+        description: 'RSA 공개 키 (PEM 을 base64 로)'
+        required: true
+      kind:
+        description: '진단 종류 (minimap · partial · overlay-never-shown)'
+        required: true
+        default: minimap
+      limit:
+        description: '최근 몇 건'
+        required: true
+        default: '3'
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: D1 준비
+        run: node scripts/ci/ensure-d1.mjs
+      - name: 꺼내서 암호화
+        env:
+          PUBKEY: ${{ inputs.pubkey }}
+          KIND: ${{ inputs.kind }}
+          LIMIT: ${{ inputs.limit }}
+        run: |
+          set -euo pipefail
+          case "$KIND" in minimap|partial|overlay-never-shown) ;; *) echo "종류가 이상해요"; exit 1;; esac
+          case "$LIMIT" in ''|*[!0-9]*) echo "건수가 이상해요"; exit 1;; esac
+          npx wrangler d1 execute prism --remote --config server/wrangler.toml --json \
+            --command "SELECT id, member_id, at, body FROM diag WHERE body LIKE '%\"kind\":\"$KIND\"%' ORDER BY at DESC LIMIT $LIMIT" > out.json
+          node -e "const r=JSON.parse(require('fs').readFileSync('out.json','utf8'));console.log('건수', (r[0]?.results??[]).length)"
+          echo "$PUBKEY" | base64 -d > pub.pem
+          openssl rand -hex 32 > k.txt
+          openssl enc -aes-256-cbc -pbkdf2 -salt -in out.json -out out.enc -pass file:k.txt
+          openssl pkeyutl -encrypt -pubin -inkey pub.pem -in k.txt -out k.enc
+          mkdir enc && mv out.enc k.enc enc/
+          rm -f out.json k.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: diag-enc
+          path: enc/
+          retention-days: 1
