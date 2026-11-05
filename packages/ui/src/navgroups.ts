@@ -1,6 +1,6 @@
 /**
  * 메뉴 묶음 (CLAUDE.md v3.115 → v3.142). 앱 사이드바·웹 상단·휴대폰 메뉴 공용.
- *  게임 = 분석·챔프·증강 · 성장 · 모임 = 성장(도감·미션·랭킹) · 모임(멤버·소식·초대) · 운영
+ *  게임 = 분석·챔프·증강·랭킹 · 성장(도감·미션) · 모임(멤버·소식·초대) · 운영 (v3.173: 랭킹은 허브 밖 주요 메뉴)
  * 같은 계열 화면은 메뉴 하나(허브)로 묶고, 그 안에서 탭으로 오간다. 문의는 내 메뉴·설정으로.
  */
 import type { IconName } from './icons';
@@ -13,7 +13,6 @@ export const HUBS: Hub[] = [
   { key: 'grow', label: '성장', icon: 'sprout', tabs: [
     { to: '/dex', label: '도감', icon: 'book', hint: '만난 챔프·증강·아이템을 모아요' },
     { to: '/missions', label: '미션', icon: 'target', hint: '이번 주 미션·도전 보상' },
-    { to: '/ranking', label: '랭킹', icon: 'trophy', hint: 'Prism 점수 순위·장인' },
   ] },
   { key: 'crew', label: '모임', icon: 'users', tabs: [
     { to: '/crew', label: '멤버', icon: 'users', hint: '지금 접속·NOW·아카이브' },
@@ -30,7 +29,7 @@ export const HUBS: Hub[] = [
 ];
 
 export const NAV_GROUPS: { key: string; label: string; paths: string[] }[] = [
-  { key: 'play', label: '게임', paths: ['/', '/play', '/champions', '/augments'] },
+  { key: 'play', label: '게임', paths: ['/', '/play', '/champions', '/augments', '/ranking'] },
   { key: 'more', label: '성장 · 모임', paths: ['/dex', '/crew', '/staff'] },
 ];
 

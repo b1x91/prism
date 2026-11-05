@@ -6,7 +6,7 @@ import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
 /** 메뉴 (v3.142): 성장(도감·미션·랭킹) · 멤버(멤버·소식·초대)는 허브 — 메뉴 하나에 탭 여러 개. 문의는 내 메뉴로 */
-const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/dex', '성장', 'sprout'], ['/crew', '모임', 'users']];
+const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/augments', '증강', 'spark'], ['/ranking', '랭킹', 'trophy'], ['/dex', '성장', 'sprout'], ['/crew', '모임', 'users']];
 
 /** 운영 메뉴는 운영진에게만 (v3.107) */
 const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => [...NAV, ...(me?.perms?.manage ? [['/staff', '운영', 'shield'] as const] : [])] as typeof NAV;
