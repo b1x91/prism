@@ -6,6 +6,7 @@
 import { AUGMENT, AUGMENTS, CHAMPIONS, ITEM, type ItemDetail } from './data';
 import { kindsOf, type ItemKind } from './review';
 import { situationsOf, type Matchup, type SituKey } from './situation';
+import { buildFor } from './build';
 
 export type LivePlayer = { championId: number; team: string; items: number[]; k: number; d: number; a: number; me: boolean; augments: number[] };
 export type LiveGame = { players: LivePlayer[]; mode: string; time: number };
@@ -68,7 +69,7 @@ export type ItemAdvice = { key: string; title: string; why: string; items: numbe
 const iga = (w: string) => { const ch = w.charCodeAt(w.length - 1); return `${w}${ch >= 0xac00 && ch <= 0xd7a3 && (ch - 0xac00) % 28 !== 0 ? '이' : '가'}`; };
 const names = (ids: number[]) => ids.map((id) => CHAMPIONS[id]?.name).filter(Boolean).slice(0, 2).join('·');
 
-/** 지금 고려할 아이템 (최대 3개, 급한 순). 이미 그 성격의 아이템이 있으면 말하지 않는다 */
+/** 지금 고려할 아이템 (최대 5개, 급한 순, 항목마다 예시 아이템 2~3개 — 회원 요청 2026-11-05). 이미 그 성격의 아이템이 있으면 말하지 않는다 */
 export function adviseItems(g: LiveGame | null, detail: Record<number, ItemDetail> | null): ItemAdvice[] {
   const me = g?.players.find((p) => p.me);
   const c = me && CHAMPIONS[me.championId];
@@ -86,14 +87,14 @@ export function adviseItems(g: LiveGame | null, detail: Record<number, ItemDetai
   // 1) 치유 감소: 회복이 많은 상대
   if (sv('vsHeal') >= 0.55 && !mine.has('antiHeal')) {
     const healers = enemies.filter((p) => CHAMPIONS[p.championId]?.flags.includes('heal')).map((p) => p.championId);
-    push({ key: 'antiHeal', title: '치유 감소', why: `회복이 많은 상대${healers.length ? ` (${names(healers)})` : ''}`, items: tough ? [3075] : ap ? [3165] : [3033] }, sv('vsHeal') + 0.2);
+    push({ key: 'antiHeal', title: '치유 감소', why: `회복이 많은 상대${healers.length ? ` (${names(healers)})` : ''}`, items: tough ? [3075, 3076] : ap ? [3165, 3916] : [3033, 3123] }, sv('vsHeal') + 0.2);
   }
   // 2) 관통: 상대가 실제로 산 방어 아이템 수 (없으면 조합상 탱커)
   if (dealer) {
     const k = ap ? 'mr' : 'armor', pen = ap ? 'magicPen' : 'armorPen';
     const n = count(k);
     if (!mine.has(pen) && !mine.has('pctHp') && (n >= 2 || sv('vsTank') >= 0.55)) {
-      push({ key: 'pen', title: ap ? '마법 관통' : '방어구 관통', why: n >= 2 ? `상대가 ${ap ? '마법 저항력' : '방어력'} 아이템 ${n}개` : sits.find((s) => s.key === 'vsTank')!.label, items: ap ? [3135] : [3036] }, Math.min(1, n / 4) + sv('vsTank'));
+      push({ key: 'pen', title: ap ? '마법 관통' : '방어구 관통', why: n >= 2 ? `상대가 ${ap ? '마법 저항력' : '방어력'} 아이템 ${n}개` : sits.find((s) => s.key === 'vsTank')!.label, items: ap ? [3135, 4645] : [3036, 6694] }, Math.min(1, n / 4) + sv('vsTank'));
     }
   }
   // 3) 방어: 지금 가장 잘 크는 상대(킬 - 데스)의 피해 유형
@@ -101,14 +102,23 @@ export function adviseItems(g: LiveGame | null, detail: Record<number, ItemDetai
   const tc = threat && CHAMPIONS[threat.championId];
   if (tc && (tough || me.d >= 4)) {
     const magic = tc.damage === 'AP';
-    if (magic && !mine.has('mr')) push({ key: 'def', title: '마법 저항력', why: `${iga(tc.name)} 크는 중 (${threat.k}/${threat.d}/${threat.a})`, items: tough ? [4401, 3065] : ap ? [3102] : [3156] }, 0.6 + threat.k / 20);
-    if (!magic && tc.damage !== 'MIX' && !mine.has('armor')) push({ key: 'def', title: '방어력', why: `${iga(tc.name)} 크는 중 (${threat.k}/${threat.d}/${threat.a})`, items: tough ? [3143, 3110] : [3047] }, 0.6 + threat.k / 20);
+    if (magic && !mine.has('mr')) push({ key: 'def', title: '마법 저항력', why: `${iga(tc.name)} 크는 중 (${threat.k}/${threat.d}/${threat.a})`, items: tough ? [4401, 3065, 2504] : ap ? [3102, 3091] : [3156, 3139] }, 0.6 + threat.k / 20);
+    if (!magic && tc.damage !== 'MIX' && !mine.has('armor')) push({ key: 'def', title: '방어력', why: `${iga(tc.name)} 크는 중 (${threat.k}/${threat.d}/${threat.a})`, items: tough ? [3143, 3110, 3742] : [3047, 3026] }, 0.6 + threat.k / 20);
   } else if (tough) {
-    if (sv('vsAP') >= 0.55 && !mine.has('mr')) push({ key: 'def', title: '마법 저항력', why: '상대가 마법 피해 위주', items: [4401, 3065] }, sv('vsAP'));
-    else if (sv('vsAD') >= 0.55 && !mine.has('armor')) push({ key: 'def', title: '방어력', why: '상대가 물리 피해 위주', items: [3143, 3110] }, sv('vsAD'));
+    if (sv('vsAP') >= 0.55 && !mine.has('mr')) push({ key: 'def', title: '마법 저항력', why: '상대가 마법 피해 위주', items: [4401, 3065, 2504] }, sv('vsAP'));
+    else if (sv('vsAD') >= 0.55 && !mine.has('armor')) push({ key: 'def', title: '방어력', why: '상대가 물리 피해 위주', items: [3143, 3110, 3742] }, sv('vsAD'));
   }
   // 4) 강인함: 군중 제어가 많고 많이 죽는 중
-  if (sv('vsCC') >= 0.55 && !mine.has('tenacity') && me.d >= 3) push({ key: 'ten', title: '강인함', why: `상대 군중 제어가 많아요 · ${me.d}데스`, items: [3111] }, sv('vsCC'));
+  if (sv('vsCC') >= 0.55 && !mine.has('tenacity') && me.d >= 3) push({ key: 'ten', title: '강인함', why: `상대 군중 제어가 많아요 · ${me.d}데스`, items: [3111, 3139] }, sv('vsCC'));
 
-  return out.filter((a) => a.items.length).sort((a, b) => b.w - a.w).slice(0, 3).map(({ w: _w, ...a }) => a);
+  // 5) 살아남기: 상대 폭딜·돌진이 많은데 자꾸 죽는 중 (물렁한 딜러)
+  if (!tough && me.d >= 4 && sv('vsBurst') >= 0.45 && !me.items.some((id) => [3157, 3102, 3026, 3156].includes(id))) {
+    push({ key: 'live', title: '한 번 더 살아남기', why: `상대 폭딜이 강해요 · ${me.d}데스`, items: ap ? [3157, 3102] : [3026, 3156, 6333] }, sv('vsBurst') + me.d / 20);
+  }
+  // 6) 이 챔프가 자주 가는 완성 아이템 중 아직 없는 것 (순서를 정해 주지 않는다 — 후보만, v3.46-2)
+  const b = buildFor(me.championId);
+  const next = b ? [...b.core, ...b.later].map((x) => x.id).filter((id) => !me.items.includes(id)).slice(0, 3) : [];
+  if (next.length) push({ key: 'core', title: '이 챔프가 자주 가는 아이템', why: b!.source === 'crew' ? `Prism 기록 ${b!.games}판` : b!.label, items: next }, 0.3);
+
+  return out.filter((a) => a.items.length).sort((a, b) => b.w - a.w).slice(0, 5).map(({ w: _w, ...a }) => a);
 }

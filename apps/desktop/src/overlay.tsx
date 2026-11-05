@@ -9,7 +9,7 @@ import '@prism/ui/styles.css';
 import './overlay.css';
 import { AUGMENT, CHAMPIONS, ITEM, adviseItems, liveMatchup, loadItemDetail, matchupSummary, parseLive, rankByPriority, topTie, type ItemDetail, type LiveGame } from '@prism/core';
 import { AugRing, ChampImg, Explain, Gem, GradeUp, ItemIcon, TierBadge, useFavs } from '@prism/ui';
-import { lastChampion, readMatchup, useSeenAugments } from './vision';
+import { crewPicked, lastChampion, readMatchup, useSeenAugments } from './vision';
 import { lockdown } from './lockdown';
 import { bridge } from './bridge';
 
@@ -71,6 +71,8 @@ function Overlay() {
   const fits = rankByPriority(c, ids.map((id) => AUGMENT[id]).filter(Boolean), matchup);
   const sits = matchupSummary(c, matchup).slice(0, 2);
   const tie = topTie(fits);
+  const picked = crewPicked();
+  const pick = (id: number) => picked(id, champ) && <span className="ov-pick" title="Prism 사람들이 자주 고른 증강"><i aria-hidden="true" />프리즘 픽</span>;
   return (
     <div key={slide.k} className={`ov at-${slide.pos} ${slide.out ? 'out' : ''}`}>
       <div className="ov-head"><Gem size={16} src="/brand/prism-32.png" /><b>Prism</b>{champ && <><ChampImg id={champ} size={18} /><span>{c?.name}</span></>}<button className="ov-x" type="button" title="닫기 · 이번 고르기 동안 숨겨요" aria-label="닫기" onClick={() => { bridge.overlayClose().catch(() => {}); }}><svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg></button></div>
@@ -80,7 +82,7 @@ function Overlay() {
           <span className="ov-rk">{f.tied && f.rank === 1 && <small>공동</small>}<b>{f.rank}</b><small>위</small></span>
           <AugRing id={f.id} size={44} />
           <span className="ov-tx">
-            <span className="ov-nm">{favs.augs.includes(f.id) && <i className="ov-fav" title="내 증강">♥</i>}<b>{AUGMENT[f.id]?.name}</b><GradeUp rarity={AUGMENT[f.id].rarity} tier={f.tier} /></span>
+            <span className="ov-nm">{favs.augs.includes(f.id) && <i className="ov-fav" title="내 증강">♥</i>}<b>{AUGMENT[f.id]?.name}</b><GradeUp rarity={AUGMENT[f.id].rarity} tier={f.tier} />{pick(f.id)}</span>
             {f.reasons[0] ? <span className={`ov-situ ${f.bonus < 0 ? 'neg' : ''}`}>{f.lifted && f.rank === 1 ? '이번 판 1순위 · ' : ''}{f.reasons[0]}</span> : <Explain c={c!} id={f.id} tier={f.tier} />}
           </span>
           <TierBadge tier={f.tier} />
@@ -89,7 +91,7 @@ function Overlay() {
         <div key={id} className="ov-row">
           <span className="ov-rk">·</span>
           <AugRing id={id} size={44} />
-          <span className="ov-tx"><span className="ov-nm">{favs.augs.includes(id) && <i className="ov-fav" title="내 증강">♥</i>}<b>{AUGMENT[id]?.name}</b></span></span>
+          <span className="ov-tx"><span className="ov-nm">{favs.augs.includes(id) && <i className="ov-fav" title="내 증강">♥</i>}<b>{AUGMENT[id]?.name}</b>{pick(id)}</span></span>
         </div>
       ))}
       {tie && <div className="ov-tie">{tie.length === 2 ? '두' : '세'} 증강 모두 {tie[0].tier}티어, 차이가 작아요 · 취향대로 고르세요</div>}
@@ -98,7 +100,7 @@ function Overlay() {
           <span className="ov-items-h">지금 고려할 아이템</span>
           {advice.map((a) => (
             <div key={a.key} className="ov-item">
-              <ItemIcon id={a.items[0]} size={28} />
+              <span className="ov-icons">{a.items.slice(0, 3).map((id) => <ItemIcon key={id} id={id} size={28} />)}</span>
               <span className="ov-tx"><b>{a.title}</b><small>{a.why} · {a.items.map((id) => ITEM[id]?.name).filter(Boolean).join(' / ')}</small></span>
             </div>
           ))}

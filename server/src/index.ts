@@ -35,6 +35,7 @@ import { createNews, deleteNews, editNews, ensureAuto, heartNews, listNews, read
 import { apply, joinLanding, joinSweep, myApplication, setRoom, staffApplicationAction, staffApplications } from './join.js';
 import { claimInvite, lookupMembers, searchMembers, myInvite, publicInvite, staffAction, staffMembers } from './staff.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
+import { augPicks } from './augpicks.js';
 import { LAUNCH, SHOP, SHOP_REV, type ShopCatalog } from '../../packages/core/src/shop.js';
 
 async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Response> {
@@ -143,6 +144,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'POST' && pathname === '/api/champselect') return champSelect(req, env, me);
   if (m === 'GET' && pathname === '/api/board') return board(env, me);
   if (m === 'GET' && pathname === '/api/crew/pulse') return pulse(env);
+  if (m === 'GET' && pathname === '/api/crew/augpicks') return augPicks(env);
   if (m === 'GET' && pathname === '/api/now') return listNow(env, me);
   if (m === 'POST' && pathname === '/api/now/game') return reportGame(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'POST' && pathname === '/api/me/live') return reportLive(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));

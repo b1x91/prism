@@ -63,7 +63,8 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
 /* 지금 고려할 아이템 (라이브 클라이언트 데이터, v3.46) */
 .ov-items { display: grid; gap: var(--s1); padding-top: var(--s2); border-top: 1px solid rgba(255, 255, 255, .1); }
 .ov-items-h { font-size: var(--fs-xs); font-weight: 800; color: rgba(255, 255, 255, .6); }
-.ov-item { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: var(--s2); align-items: center; }
+.ov-item { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--s2); align-items: center; }
+.ov-icons { display: inline-flex; gap: 2px; }
 .ov-item .item { border-radius: 6px; }
 .ov-item b { font-size: var(--fs-sm); font-weight: 800; color: #ffd98a; }
 .ov-item small { font-size: var(--fs-xs); color: rgba(255, 255, 255, .7); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -72,3 +73,7 @@ html, body, #root { background: transparent !important; margin: 0; overflow: hid
    들어오고 나가는 움직임만 둔다 */
 .ov .gem::after, .ov .gem.float { animation: none !important; }
 .ov *:not(.ov) { animation-iteration-count: 1 !important; }
+
+/* 프리즘 픽: Prism 사람들이 자주 고른 증강 — 작은 보석 + 글자, 귀엽게 살짝 기운 알약 (움직임 없음, v3.68) */
+.ov-pick { display: inline-flex; align-items: center; gap: 4px; height: 18px; padding: 0 7px 0 5px; border-radius: var(--r-pill); background: linear-gradient(180deg, #f2ecff, #d9ccff); color: #4b2fb3; font-size: var(--fs-xs); font-weight: 900; letter-spacing: .02em; white-space: nowrap; transform: rotate(-3deg); box-shadow: 0 2px 6px rgba(124, 92, 255, .35); }
+.ov-pick i { width: 10px; height: 10px; flex: none; background: url('/brand/prism-32.png') center / contain no-repeat; }

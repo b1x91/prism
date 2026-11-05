@@ -157,6 +157,14 @@ function App() {
   }, [ready]);
   // 힐팩 타이머 준비: 관리자 계정의 게임에서만 미니맵 자료를 모아 운영 진단으로 보낸다 (2026-11-05 사용자 결정)
   useEffect(() => { void bridge.visionCalib(s.me?.tier === 'admin'); }, [s.me?.tier]);
+  // 프리즘 픽: Prism 사람들이 많이 고른 증강을 이 기기에 둔다 → 증강 카드가 뜨면 게임 위 작은 창이 표시를 단다 (6시간마다 새로)
+  useEffect(() => {
+    if (!s.me) return;
+    const pull = () => api.get<{ ids: number[]; champ: Record<number, number[]> }>('/api/crew/augpicks').then((r) => { try { localStorage.setItem('prism-crew-picks', JSON.stringify({ ...r, at: Date.now() })); } catch { /* 저장소 없음 */ } }).catch(() => {});
+    void pull();
+    const t = setInterval(pull, 6 * 3600_000);
+    return () => clearInterval(t);
+  }, [s.me?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [label] = STATUS[s.status];
   const pieces = usePieces(s.me ? api : null);
   // 내 챔프·내 증강: 로그인되면 서버 목록으로 맞춘다

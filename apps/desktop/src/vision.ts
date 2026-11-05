@@ -74,3 +74,13 @@ export function useVisionState(every = 2000): VisionState | null {
   }, [every]);
   return v;
 }
+
+/** 프리즘 픽: Prism 사람들이 많이 고른 증강인가 (이 챔프로 고른 것 우선, 메인 창이 받아 둔 목록) */
+export function crewPicked(): (aug: number, champ: number | null) => boolean {
+  try {
+    const r = JSON.parse(localStorage.getItem('prism-crew-picks') ?? 'null');
+    if (!r) return () => false;
+    const all = new Set<number>(r.ids ?? []);
+    return (aug, champ) => all.has(aug) || Boolean(champ && (r.champ?.[champ] ?? []).includes(aug));
+  } catch { return () => false; }
+}
