@@ -7,8 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       pubkey:
-        description: 'RSA 공개 키 (PEM 을 base64 로)'
-        required: true
+        description: 'RSA 공개 키 (PEM 을 base64 로, 비우면 .github/diag-pub.pem)'
+        required: false
+        default: ''
       kind:
         description: '진단 종류 (minimap · partial · overlay-never-shown)'
         required: true
@@ -48,7 +49,7 @@ jobs:
           npx wrangler d1 execute prism --remote --config server/wrangler.toml --json \
             --command "SELECT id, member_id, at, body FROM diag WHERE body LIKE '%\"kind\":\"$KIND\"%' ORDER BY at DESC LIMIT $LIMIT" > out.json
           node -e "const r=JSON.parse(require('fs').readFileSync('out.json','utf8'));console.log('건수', (r[0]?.results??[]).length)"
-          echo "$PUBKEY" | base64 -d > pub.pem
+          if [ -n "$PUBKEY" ]; then echo "$PUBKEY" | base64 -d > pub.pem; else cp .github/diag-pub.pem pub.pem; fi
           openssl rand -hex 32 > k.txt
           openssl enc -aes-256-cbc -pbkdf2 -salt -in out.json -out out.enc -pass file:k.txt
           openssl pkeyutl -encrypt -pubin -inkey pub.pem -in k.txt -out k.enc
