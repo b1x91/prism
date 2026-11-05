@@ -109,6 +109,18 @@ async function autostartOnce() {
 }
 
 /** 롤이 꺼져 있어 클라이언트에서 전적을 못 읽을 때: Prism 에 저장된 내 판으로 채운다 (롤이 켜지면 클라이언트 기록으로 바뀐다) */
+/** 롤 클라이언트 기록에는 10명이 없어 PRISM MVP·ACE 를 모른다 → 서버가 매긴 배지를 같은 판에 붙인다 */
+async function mergeBadges() {
+  try {
+    const { games } = await api.get<{ games: Game[] }>('/api/me/games');
+    const by = new Map(games.filter((g) => g.badge).map((g) => [g.gameId, g.badge]));
+    if (!by.size || !state.games.length) return;
+    let changed = false;
+    const next = state.games.map((g) => { const b = by.get(g.gameId) ?? null; if ((g.badge ?? null) === b) return g; changed = true; return { ...g, badge: b }; });
+    if (changed) set({ games: next });
+  } catch { /* 다음 기회에 */ }
+}
+
 async function loadServerGames() {
   try {
     const { games } = await api.get<{ games: Game[] }>('/api/me/games');
@@ -426,7 +438,7 @@ async function tick(): Promise<number> {
       const games = await loadHistory(state.summoner!.puuid, HISTORY_PAGES);
       historyAt = Date.now();
       set({ games, personal: personalStats(games) });
-      void uploadOwn();
+      void uploadOwn().finally(() => void mergeBadges());
     }
     if (phase === 'None' || phase === 'Lobby') void syncCrew();
     void syncLobby(phase);

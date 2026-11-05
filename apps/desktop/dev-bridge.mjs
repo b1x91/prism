@@ -47,7 +47,7 @@ const lcu = (path) => {
   if (d) {
     const g = games.find((x) => x.gameId === +d[1]);
     if (!g) throw '없는 판';
-    const ps = Array.from({ length: 10 }, (_, i) => ({ participantId: i + 1, teamId: i < 5 ? 100 : 200, championId: i ? pick(champs) : g.participants[0].championId, stats: i ? { win: (i < 5) === g.participants[0].stats.win, kills: 5, deaths: 5, assists: 10 } : g.participants[0].stats }));
+    const ps = Array.from({ length: 10 }, (_, i) => ({ participantId: i + 1, teamId: i < 5 ? 100 : 200, championId: i ? pick(champs) : g.participants[0].championId, stats: i ? { win: (i < 5) === g.participants[0].stats.win, kills: 2 + ((i * 7) % 11), deaths: 3 + ((i * 5) % 8), assists: 6 + ((i * 3) % 17), totalDamageDealtToChampions: 14000 + ((i * 9137) % 40000), totalDamageTaken: 12000 + ((i * 7331) % 36000), goldEarned: 11000 + ((i * 977) % 6000) } : g.participants[0].stats }));
     return { gameId: g.gameId, queueId: g.queueId, gameCreation: g.gameCreation, gameDuration: g.gameDuration, participants: ps, participantIdentities: ps.map((p) => ({ participantId: p.participantId, player: p.participantId === 1 ? ME : { puuid: `other-${p.participantId}` } })) };
   }
   const m = path.match(/matches\?begIndex=(\d+)&endIndex=(\d+)/);

@@ -21,6 +21,8 @@ export const isMayhemGame = (g: any) => Number(g?.queueId) === MAYHEM_QUEUE || i
 
 export type NW = { n: number; w: number };
 export type Game = {
+  /** PRISM MVP·ACE (서버가 10명 기록으로 매김, 2026-11-05) */
+  badge?: 'mvp' | 'ace' | null;
   gameId: number;
   playedAt: number;
   duration: number;

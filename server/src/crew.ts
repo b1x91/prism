@@ -18,6 +18,7 @@ import { ITEM } from '../../packages/core/src/data.js';
 import { unreadNews } from './news.js';
 import { isFinished, type CrewItems } from '../../packages/core/src/build.js';
 import { bondOf } from '../../packages/core/src/duo.js';
+import { badgeFromJson } from '../../packages/core/src/mvp.js';
 import type { DuoGame } from '../../packages/core/src/profile.js';
 import { stakesOf } from '../../packages/core/src/weekly.js';
 import { shortNick } from '../../packages/core/src/text.js';
@@ -97,12 +98,13 @@ export async function setPresence(env: Env, me: Member, body: { via?: unknown; l
 export async function myGames(env: Env, me: Member) {
   const r = await env.DB.prepare(
     `SELECT p.game_id AS gameId, p.played_at AS playedAt, m.duration AS duration, p.champion_id AS championId, p.win, p.kills, p.deaths, p.assists,
-            p.dmg_champ AS damageToChampions, p.dmg_taken AS damageTaken, p.gold AS goldEarned, p.items, p.augments, m.queue_id AS queueId
+            p.dmg_champ AS damageToChampions, p.dmg_taken AS damageTaken, p.gold AS goldEarned, p.items, p.augments, m.queue_id AS queueId,
+            p.team_id AS teamId, m.players AS players
      FROM participants p JOIN matches m ON m.game_id = p.game_id WHERE p.member_id = ? ORDER BY p.played_at DESC LIMIT 100`,
   )
     .bind(me.id)
     .all();
-  const games = r.results.map((g: any) => ({ ...g, win: g.win === 1, custom: g.queueId !== 2400, items: g.items ? JSON.parse(g.items) : [], augments: g.augments ? JSON.parse(g.augments) : [] }));
+  const games = r.results.map(({ players, teamId, ...g }: any) => ({ ...g, win: g.win === 1, custom: g.queueId !== 2400, items: g.items ? JSON.parse(g.items) : [], augments: g.augments ? JSON.parse(g.augments) : [], badge: badgeFromJson(players, teamId, g.championId) }));
   return json({ games });
 }
 

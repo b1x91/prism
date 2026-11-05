@@ -4924,3 +4924,15 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
 ::-webkit-scrollbar-thumb { border: 3px solid transparent; border-radius: 999px; background: color-mix(in srgb, var(--text-3) 45%, transparent) padding-box; }
 ::-webkit-scrollbar-thumb:hover { border-width: 2px; background-color: color-mix(in srgb, var(--text-3) 70%, transparent); }
+
+/* PRISM MVP·ACE (판 상세·최근 판 카드): MVP 금빛 · ACE 남보라, 작은 보석 + 글자. 무지개는 쓰지 않는다 */
+.pmvp { display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 8px 0 6px; margin-left: 6px; border-radius: var(--r-pill); font-size: var(--fs-xs); font-weight: 900; letter-spacing: .06em; line-height: 1; white-space: nowrap; vertical-align: middle; flex: none; }
+.pmvp i { width: 8px; height: 8px; transform: rotate(45deg); border-radius: 2px; flex: none; }
+.pmvp.mvp { color: #4a3300; background: linear-gradient(180deg, #ffe08a, #f5b82e); box-shadow: 0 0 0 1px rgba(160, 110, 0, .35), 0 2px 8px rgba(245, 184, 46, .35); }
+.pmvp.mvp i { background: linear-gradient(135deg, #fff7d6, #c98a00); }
+.pmvp.ace { color: #fff; background: linear-gradient(180deg, #7c83ff, #5b4fd8); box-shadow: 0 0 0 1px rgba(60, 50, 160, .4), 0 2px 8px rgba(91, 79, 216, .3); }
+.pmvp.ace i { background: linear-gradient(135deg, #e6e8ff, #8f86ff); }
+.md-ps { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-2); }
+.md-ps.mvp { color: #b07a00; } .md-ps.ace { color: #5b4fd8; }
+:root[data-theme="dark"] .md-ps.mvp { color: #ffd166; } :root[data-theme="dark"] .md-ps.ace { color: #a8a2ff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .md-ps.mvp { color: #ffd166; } :root:not([data-theme="light"]) .md-ps.ace { color: #a8a2ff; } }

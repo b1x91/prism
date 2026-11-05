@@ -9,6 +9,7 @@ import { HttpError, json, type Env, type Member } from './util.js';
 import { can, isPending, LIMITED, topRole } from './roles.js';
 import { presenceOf } from '../../packages/core/src/presence.js';
 import { byScore, seasonOf } from '../../packages/core/src/ranking.js';
+import { badgeFromJson } from '../../packages/core/src/mvp.js';
 
 export const RANK_MIN_WINRATE = 10; // 승률 순위는 10판 이상만
 
@@ -111,7 +112,7 @@ export async function memberPage(env: Env, me: Member, id: string) {
     champs(id),
     env.DB.prepare('SELECT augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments WHERE member_id = ? GROUP BY augment_id ORDER BY n DESC').bind(id),
     env.DB.prepare(
-      `SELECT p.game_id AS gameId, p.played_at AS playedAt, x.duration, p.champion_id AS championId, p.win, p.kills, p.deaths, p.assists, p.augments, p.items, p.dmg_champ AS damageToChampions, p.gold AS goldEarned, p.crew_count AS crewCount, x.queue_id AS queueId
+      `SELECT p.game_id AS gameId, p.played_at AS playedAt, x.duration, p.champion_id AS championId, p.win, p.kills, p.deaths, p.assists, p.augments, p.items, p.dmg_champ AS damageToChampions, p.gold AS goldEarned, p.crew_count AS crewCount, x.queue_id AS queueId, p.team_id AS teamId, x.players AS players
        FROM participants p JOIN matches x ON x.game_id = p.game_id WHERE p.member_id = ? ORDER BY p.played_at DESC LIMIT 30`,
     ).bind(id),
     // (자리 맞춤용 — 점수 순위는 계정마다의 줄로 따로 센다, v3.161)
@@ -156,7 +157,8 @@ export async function memberPage(env: Env, me: Member, id: string) {
     champions: champions.results,
     augments: augments.results,
     picks: picks.results,
-    recent: recent.results.map((g: any) => ({ ...g, win: g.win === 1, augments: g.augments ? JSON.parse(g.augments) : [], items: g.items ? JSON.parse(g.items) : [], custom: g.queueId !== 2400 })),
+    // PRISM MVP·ACE 는 판의 10명 기록으로 (그 기록은 내보내지 않는다)
+    recent: recent.results.map(({ players, teamId, ...g }: any) => ({ ...g, win: g.win === 1, augments: g.augments ? JSON.parse(g.augments) : [], items: g.items ? JSON.parse(g.items) : [], custom: g.queueId !== 2400, badge: badgeFromJson(players, teamId, g.championId) })),
     ...(self ? {} : {
       together: nw(together.results as { w: number }[]), against: nw(against.results as { w: number }[]),
       viewer: { champions: viewerChampions.results, total: viewerTotal.results[0], ...(viewerMe.results[0] as { nick: string; skin: number | null }) },

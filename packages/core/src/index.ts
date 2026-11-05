@@ -36,3 +36,4 @@ export * from './join';
 export * from './staff';
 export * from './itemguide';
 export * from './relics';
+export * from './mvp';
