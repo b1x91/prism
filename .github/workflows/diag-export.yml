@@ -41,6 +41,8 @@ jobs:
           LIMIT: ${{ inputs.limit }}
         run: |
           set -euo pipefail
+          # 최근 3일 진단 기록 수 (종류별, 숫자만)
+          npx wrangler d1 execute prism --remote --config server/wrangler.toml --command "SELECT json_extract(body, '$.kind') AS kind, json_extract(body, '$.version') AS ver, COUNT(*) AS n, MAX(at) AS last FROM diag WHERE at > (strftime('%s','now') - 259200) * 1000 GROUP BY 1, 2"
           case "$KIND" in minimap|partial|overlay-never-shown) ;; *) echo "종류가 이상해요"; exit 1;; esac
           case "$LIMIT" in ''|*[!0-9]*) echo "건수가 이상해요"; exit 1;; esac
           npx wrangler d1 execute prism --remote --config server/wrangler.toml --json \
