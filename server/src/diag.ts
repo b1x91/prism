@@ -6,7 +6,8 @@
 import { HttpError, json, type Env, type Member } from './util.js';
 
 const KEEP = 20;
-const MAX_BYTES = 400_000;
+// 미니맵 자료(관리자 계정, 판마다 최대 14장)도 들어오므로 넉넉히
+const MAX_BYTES = 900_000;
 
 export async function saveDiag(req: Request, env: Env, me: Member): Promise<Response> {
   const text = await req.text();

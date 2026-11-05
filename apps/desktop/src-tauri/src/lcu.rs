@@ -115,6 +115,13 @@ pub fn window_mode() -> Option<u8> {
     text.lines().find_map(|l| l.trim().strip_prefix("WindowMode=")).and_then(|v| v.trim().parse().ok())
 }
 
+/// 롤 설정의 미니맵 크기 (game.cfg `MinimapScale`, 읽기만) — 힐팩 타이머가 미니맵 자리를 맞추는 데 쓴다
+pub fn minimap_scale() -> Option<f64> {
+    let dir = client_dir()?;
+    let text = std::fs::read_to_string(dir.join("Config").join("game.cfg")).ok()?;
+    text.lines().find_map(|l| l.trim().strip_prefix("MinimapScale=")).and_then(|v| v.trim().parse().ok())
+}
+
 /// 게임(인게임) 프로세스 번호들 (작은 창이 게임 창을 찾을 때 쓴다)
 pub fn game_pids() -> Vec<u32> {
     let mut sys = System::new();

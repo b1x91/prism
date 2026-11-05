@@ -155,6 +155,8 @@ function App() {
     const t = setInterval(() => void bridge.visionAllow(ready), 15_000);
     return () => clearInterval(t);
   }, [ready]);
+  // 힐팩 타이머 준비: 관리자 계정의 게임에서만 미니맵 자료를 모아 운영 진단으로 보낸다 (2026-11-05 사용자 결정)
+  useEffect(() => { void bridge.visionCalib(s.me?.tier === 'admin'); }, [s.me?.tier]);
   const [label] = STATUS[s.status];
   const pieces = usePieces(s.me ? api : null);
   // 내 챔프·내 증강: 로그인되면 서버 목록으로 맞춘다

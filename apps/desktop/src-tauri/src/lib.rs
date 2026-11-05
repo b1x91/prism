@@ -399,6 +399,12 @@ fn vision_allow(handle: tauri::AppHandle, app: State<'_, Arc<App>>, allowed: boo
     }
 }
 
+/// 미니맵 수집 켜기 (관리자 계정만 화면이 부른다, 힐팩 타이머 준비)
+#[tauri::command]
+fn vision_calib(app: State<'_, Arc<App>>, on: bool) {
+    app.vision.calib.store(on, std::sync::atomic::Ordering::SeqCst);
+}
+
 /// 클립보드 그림으로 인식 시험 (증강 화면을 Win+Shift+S 로 찍은 뒤)
 #[tauri::command]
 async fn vision_test(app: State<'_, Arc<App>>) -> Result<serde_json::Value, String> {
@@ -511,7 +517,7 @@ pub fn run() {
                 _ => {}
             }
         })
-        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_show, toast_close, lcu_get, lcu_item_set, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, store_update, update_prepare, update_progress, update_apply, vision_get, vision_set, overlay_close, vision_allow, vision_test])
+        .invoke_handler(tauri::generate_handler![lcu_status, live_game, discord_running, window_mode, bring_to_front, toast_get, toast_show, toast_close, lcu_get, lcu_item_set, api, session, login, logout, open_url, autostart, app_version, update_check, update_install, store_update, update_prepare, update_progress, update_apply, vision_get, vision_set, overlay_close, vision_allow, vision_calib, vision_test])
         .run(tauri::generate_context!())
         .expect("Prism 앱 실행 실패");
 }

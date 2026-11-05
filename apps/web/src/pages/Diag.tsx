@@ -7,7 +7,7 @@ import { Empty, RowsSkeleton } from '@prism/ui';
 import { useSession } from '../session';
 
 type Item = { id: number; member: string; nick: string | null; at: number; body: any; shots?: number };
-type Shot = { cx: number; found: number[]; jpg: string };
+type Shot = { cx?: number; found?: number[]; t?: number; jpg: string };
 
 /** 놓친 카드 그림: 누르면 그때 받아 온다 (목록에는 장 수만) */
 function Shots({ id, n }: { id: number; n: number }) {
@@ -21,8 +21,9 @@ function Shots({ id, n }: { id: number; n: number }) {
       <summary className="meta">못 읽은 카드 그림 {n}장</summary>
       {!shots ? <p className="meta">{busy ? '불러오는 중…' : ''}</p> : <div className="row" style={{ gap: 12, flexWrap: 'wrap', alignItems: 'flex-start' }}>
         {shots.map((s, i) => <figure key={i} style={{ margin: 0 }}>
-          <img src={`data:image/jpeg;base64,${s.jpg}`} alt={`못 읽은 카드 ${i + 1}`} style={{ display: 'block', maxWidth: 260, borderRadius: 8 }} />
-          <figcaption className="meta">x={s.cx} · 그때 찾은 칸 {s.found.join(', ') || '없음'}</figcaption>
+          <img src={`data:image/jpeg;base64,${s.jpg}`} alt={s.t != null ? `미니맵 ${i + 1}` : `못 읽은 카드 ${i + 1}`} style={{ display: 'block', maxWidth: s.t != null ? 420 : 260, borderRadius: 8 }} />
+          {s.t != null && <figcaption className="meta">게임 {Math.floor(s.t / 60)}:{String(Math.floor(s.t % 60)).padStart(2, '0')}</figcaption>}
+          {s.t == null && <figcaption className="meta">x={s.cx} · 그때 찾은 칸 {(s.found ?? []).join(', ') || '없음'}</figcaption>}
         </figure>)}
       </div>}
     </details>
@@ -49,7 +50,7 @@ export function DiagPage() {
         return (
           <article key={x.id} className="card pad stack" style={{ gap: 8 }}>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-              <b>{x.nick ?? x.member}</b><span className="pill">{x.body?.kind === 'partial' ? `세 칸 못 채움 ${d.partial}/${d.offers}` : '작은 창 안 뜸'}</span>{(x.shots ?? 0) > 0 && <span className="pill">카드 그림 {x.shots}장</span>}<span className="meta">{new Date(x.at).toLocaleString('ko-KR')}</span>
+              <b>{x.nick ?? x.member}</b><span className="pill">{x.body?.kind === 'minimap' ? '미니맵 자료 (힐팩 타이머)' : x.body?.kind === 'partial' ? `세 칸 못 채움 ${d.partial}/${d.offers}` : '작은 창 안 뜸'}</span>{(x.shots ?? 0) > 0 && <span className="pill">{x.body?.kind === 'minimap' ? `미니맵 ${x.shots}장` : `카드 그림 ${x.shots}장`}</span>}<span className="meta">{new Date(x.at).toLocaleString('ko-KR')}</span>
               <span className="pill">v{x.body?.version}</span><span className="pill">모니터 {d.monitors}</span><span className="pill">배율 {d.scale}</span>
               <span className="pill">인식기 {x.body?.engine}</span><span className="pill">위치 {x.body?.position === 'top' ? '위' : '오른쪽'}</span>
             </div>

@@ -49,6 +49,8 @@ export const bridge = {
   visionGet: () => call<VisionState>('vision_get'),
   overlayClose: () => call<void>('overlay_close'),
   visionAllow: (allowed: boolean) => call<void>('vision_allow', { allowed }).catch(() => {}),
+  /** 미니맵 수집 켜기 (관리자 계정만, 힐팩 타이머 준비) */
+  visionCalib: (on: boolean) => call<void>('vision_calib', { on }).catch(() => {}),
   visionSet: (enabled: boolean, position: 'right' | 'top') => call<void>('vision_set', { enabled, position }),
   visionTest: () => call<{ ids: number[]; text: string }>('vision_test').catch((e) => { throw err(e); }),
 };

@@ -10,13 +10,18 @@ const QUALITY: u8 = 72;
 
 /// BGRA 화면 복사본에서 카드 자리 (x0, x1, y0, y1) 만 잘라 줄이고 JPEG base64 로
 pub fn card_jpeg(bgra: &[u8], w: usize, h: usize, card: (usize, usize, usize, usize)) -> Option<String> {
+    crop_jpeg(bgra, w, h, card, MAX_W, QUALITY)
+}
+
+/// 화면 일부 (x0, x1, y0, y1) 를 폭 max_w 이하로 줄여 JPEG base64 로 (미니맵 수집에도 쓴다)
+pub fn crop_jpeg(bgra: &[u8], w: usize, h: usize, card: (usize, usize, usize, usize), max_w: usize, quality: u8) -> Option<String> {
     let (x0, x1, y0, y1) = card;
     let (x1, y1) = (x1.min(w), y1.min(h));
     if x1 <= x0 + 8 || y1 <= y0 + 8 || bgra.len() < w * h * 4 {
         return None;
     }
     let (cw, ch) = (x1 - x0, y1 - y0);
-    let k = (cw as f32 / MAX_W as f32).max(1.0);
+    let k = (cw as f32 / max_w as f32).max(1.0);
     let (ow, oh) = (((cw as f32) / k).round().max(1.0) as usize, ((ch as f32) / k).round().max(1.0) as usize);
     // 칸마다 평균을 내어 줄인다 (글자가 깨지지 않게)
     let mut rgb = vec![0u8; ow * oh * 3];
@@ -44,7 +49,7 @@ pub fn card_jpeg(bgra: &[u8], w: usize, h: usize, card: (usize, usize, usize, us
         }
     }
     let mut out = Vec::new();
-    let enc = jpeg_encoder::Encoder::new(&mut out, QUALITY);
+    let enc = jpeg_encoder::Encoder::new(&mut out, quality);
     enc.encode(&rgb, ow as u16, oh as u16, jpeg_encoder::ColorType::Rgb).ok()?;
     Some(base64::engine::general_purpose::STANDARD.encode(out))
 }

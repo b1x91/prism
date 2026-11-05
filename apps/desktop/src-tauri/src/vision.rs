@@ -102,6 +102,21 @@ pub struct GameDiag {
     pub shots: Vec<MissShot>,
 }
 
+/// 힐팩 타이머를 만들기 위한 미니맵 자료 (관리자 계정만, 사용자 결정 2026-11-05). 정해진 게임 시각에 게임 화면 오른쪽 아래만 잘라
+/// 판이 끝날 때 운영 진단으로 보낸다 — 미니맵에서 힐팩 자리·있을 때/먹은 뒤 모습을 확정하려는 것. 그 밖의 화면은 넣지 않는다
+#[derive(Serialize, Clone, Default)]
+pub struct MapShot {
+    /// 게임 시각(초)
+    pub t: f64,
+    /// 잘라 낸 곳 (게임 화면 기준 x, y, 폭, 높이) · 게임 화면 크기
+    pub crop: [i32; 4],
+    pub client: [i32; 2],
+    pub jpg: String,
+}
+
+/// 미니맵을 찍을 게임 시각(초): 첫 힐팩 전후(1:45 · 2:30) + 그 뒤 30초마다 — 누가 먹은 뒤의 모습도 담기게
+pub const MAP_TIMES: [f64; 14] = [95.0, 112.0, 140.0, 158.0, 190.0, 220.0, 250.0, 280.0, 310.0, 340.0, 370.0, 400.0, 460.0, 520.0];
+
 /// 놓친 카드 한 장: 게임 화면 기준 가운데 x · 그때 찾은 칸 · 줄인 JPEG(base64)
 #[derive(Serialize, Clone, Default)]
 pub struct MissShot {
@@ -124,6 +139,9 @@ pub struct Vision {
     pub away: AtomicBool,
     /// 로그인 + 수집 동의를 마쳤는지 (첫 화면을 끝내기 전에는 인식하지 않는다)
     pub allowed: AtomicBool,
+    /// 미니맵 수집 (관리자 계정만 화면이 켠다) · 이번 판에 모은 것
+    pub calib: AtomicBool,
+    pub maps: Mutex<Vec<MapShot>>,
 }
 
 fn now() -> u64 {
@@ -134,7 +152,7 @@ impl Vision {
     pub fn new(dir: PathBuf) -> Arc<Self> {
         let path = dir.join("vision.json");
         let settings = std::fs::read_to_string(&path).ok().and_then(|s| serde_json::from_str(&s).ok()).unwrap_or_default();
-        Arc::new(Self { path, diag: Mutex::new(None), settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), icons: crate::icons::IconBank::new(AUG_ICONS, AUGMENTS_JSON), shown: AtomicBool::new(false), dismissed: AtomicBool::new(false), away: AtomicBool::new(false), allowed: AtomicBool::new(false) })
+        Arc::new(Self { path, diag: Mutex::new(None), settings: Mutex::new(settings), report: Mutex::new(Report::default()), matcher: Matcher::from_json(AUGMENTS_JSON), icons: crate::icons::IconBank::new(AUG_ICONS, AUGMENTS_JSON), shown: AtomicBool::new(false), dismissed: AtomicBool::new(false), away: AtomicBool::new(false), allowed: AtomicBool::new(false), calib: AtomicBool::new(false), maps: Mutex::new(Vec::new()) })
     }
 
     pub fn set(&self, s: Settings) {
@@ -580,6 +598,9 @@ mod imp {
         let mut miss_shots: Vec<(f32, String)> = Vec::new();
         // 게임 창이 마지막으로 맨 앞이던 때 — 다른 창으로 오래 가 있으면 작은 창을 내린다 (다른 프로그램 위에 떠 있지 않게, v3.132)
         let mut front_at = std::time::Instant::now();
+        // 미니맵 수집: 다음에 찍을 시각의 번호, 게임 시각을 마지막으로 물은 때 (5초마다만)
+        let mut map_i: usize = 0;
+        let mut map_ask = std::time::Instant::now() - Duration::from_secs(10);
         // 고르기 끝: 한동안 카드가 안 보임 = 다 고름. 세 칸을 다 못 채운 고르기는 진단으로 남긴다 (끝날 때 서버로)
         macro_rules! finish_offer {
             ($gw:expr) => {{
@@ -643,10 +664,10 @@ mod imp {
             let alive = s.enabled && allowed && (unsafe { FindWindowW(windows::core::w!("RiotWindowClass"), PCWSTR::null()) }.is_ok_and(|w| !w.is_invalid()) || !pids.0.is_empty());
             let ended = {
                 let mut g = v.diag.lock().unwrap();
-                if alive && g.is_none() { *g = Some(GameDiag { started: now(), ..Default::default() }); }
+                if alive && g.is_none() { *g = Some(GameDiag { started: now(), ..Default::default() }); v.maps.lock().unwrap().clear(); map_i = 0; }
                 if alive { None } else { g.take() }
             };
-            if let Some(d) = ended { end_game(&app, &v, d); }
+            if let Some(d) = ended { end_game(&app, &v, d); send_maps(&app, &v); }
             let (Some((h, _)), Some(eng)) = (game, eng.as_ref()) else {
                 v.stage(if !s.enabled { "off" } else if !allowed { "wait" } else if game.is_none() { "no-game" } else { "back" }, 0, how);
                 v.hide(&app);
@@ -659,6 +680,25 @@ mod imp {
                 continue;
             };
             let Some(rc) = client_rect(h) else { std::thread::sleep(EVERY); continue };
+            // 미니맵 수집 (관리자 계정만): 게임 창이 맨 앞일 때 5초마다 게임 시각을 묻고, 정한 시각을 지났으면 오른쪽 아래를 한 장
+            if v.calib.load(Ordering::SeqCst) && front && map_i < MAP_TIMES.len() && map_ask.elapsed() >= Duration::from_secs(5) {
+                map_ask = std::time::Instant::now();
+                let t = tauri::async_runtime::block_on(crate::live::snapshot()).ok().and_then(|j| j["time"].as_f64());
+                if let Some(t) = t {
+                    while map_i < MAP_TIMES.len() && MAP_TIMES[map_i] + 25.0 < t { map_i += 1; }
+                    if map_i < MAP_TIMES.len() && t >= MAP_TIMES[map_i] {
+                        let (cw, ch) = (rc.right - rc.left, rc.bottom - rc.top);
+                        let (w2, h2) = (cw * 32 / 100, ch * 45 / 100);
+                        let (x2, y2) = (cw - w2, ch - h2);
+                        if let Some(buf) = grab(rc.left + x2, rc.top + y2, w2, h2) {
+                            if let Some(jpg) = crate::shot::crop_jpeg(&buf, w2 as usize, h2 as usize, (0, w2 as usize, 0, h2 as usize), 420, 70) {
+                                v.maps.lock().unwrap().push(MapShot { t, crop: [x2, y2, w2, h2], client: [cw, ch], jpg });
+                            }
+                        }
+                        map_i += 1;
+                    }
+                }
+            }
             // 작은 창이 떠 있는 동안 게임 창이 그 위로 올라오면(다른 모니터를 눌렀다가 게임으로 돌아오는 순간 등 — 게임 창도 맨 위 창이라
             // 활성화될 때 우리 창 위로 올라간다) 다시 맨 위로. 무조건 올리지 않고 실제로 깔렸을 때만 (창 순서를 자꾸 바꾸면 끊김)
             if v.shown.load(Ordering::SeqCst) && overlay_buried(&app, h) {
@@ -914,6 +954,22 @@ mod imp {
             "diag": d,
             "lastText": r.last_text.chars().take(300).collect::<String>(),
             "trace": r.trace,
+        });
+        use tauri::Emitter;
+        let _ = app.emit("vision-diag", body);
+    }
+
+    /// 판이 끝났을 때 모은 미니맵 자료를 화면으로 넘긴다 (화면이 운영 진단으로 보낸다)
+    fn send_maps(app: &AppHandle, v: &Vision) {
+        let shots: Vec<MapShot> = std::mem::take(&mut *v.maps.lock().unwrap());
+        if shots.is_empty() {
+            return;
+        }
+        let body = serde_json::json!({
+            "kind": "minimap",
+            "version": app.package_info().version.to_string(),
+            "minimapScale": crate::lcu::minimap_scale(),
+            "diag": { "shots": shots },
         });
         use tauri::Emitter;
         let _ = app.emit("vision-diag", body);
