@@ -115,7 +115,8 @@ pub struct MapShot {
 }
 
 /// 미니맵을 찍을 게임 시각(초): 첫 힐팩 전후(1:45 · 2:30) + 그 뒤 30초마다 — 누가 먹은 뒤의 모습도 담기게
-pub const MAP_TIMES: [f64; 14] = [95.0, 112.0, 140.0, 158.0, 190.0, 220.0, 250.0, 280.0, 310.0, 340.0, 370.0, 400.0, 460.0, 520.0];
+/// 힐팩 시각(가운데 1:45 · 양 끝 2:30)의 앞뒤 + 그 뒤 몇 장. 미니맵만 원래 크기로 찍으므로 10장 (진단 한도 안)
+pub const MAP_TIMES: [f64; 10] = [98.0, 112.0, 143.0, 158.0, 195.0, 250.0, 310.0, 370.0, 430.0, 520.0];
 
 /// 놓친 카드 한 장: 게임 화면 기준 가운데 x · 그때 찾은 칸 · 줄인 JPEG(base64)
 #[derive(Serialize, Clone, Default)]
@@ -688,10 +689,13 @@ mod imp {
                     while map_i < MAP_TIMES.len() && MAP_TIMES[map_i] + 25.0 < t { map_i += 1; }
                     if map_i < MAP_TIMES.len() && t >= MAP_TIMES[map_i] {
                         let (cw, ch) = (rc.right - rc.left, rc.bottom - rc.top);
-                        let (w2, h2) = (cw * 32 / 100, ch * 45 / 100);
+                        // 미니맵은 오른쪽 아래 구석의 정사각형 (5120×2160 · 미니맵 크기 0.48 에서 한 변 484px = 화면 높이의 22%).
+                        // 크기 설정이 더 커도 들어오게 높이의 34% 정사각형을 원래 크기에 가깝게 (힐팩 그림이 몇 px 라 줄이면 안 보인다)
+                        let side = (ch * 34 / 100).min(cw);
+                        let (w2, h2) = (side, side);
                         let (x2, y2) = (cw - w2, ch - h2);
                         if let Some(buf) = grab(rc.left + x2, rc.top + y2, w2, h2) {
-                            if let Some(jpg) = crate::shot::crop_jpeg(&buf, w2 as usize, h2 as usize, (0, w2 as usize, 0, h2 as usize), 420, 70) {
+                            if let Some(jpg) = crate::shot::crop_jpeg(&buf, w2 as usize, h2 as usize, (0, w2 as usize, 0, h2 as usize), 760, 78) {
                                 v.maps.lock().unwrap().push(MapShot { t, crop: [x2, y2, w2, h2], client: [cw, ch], jpg });
                             }
                         }
