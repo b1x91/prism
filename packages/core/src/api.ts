@@ -148,7 +148,9 @@ export type PulseItem =
   | { kind: 'session'; at: number; id: string; nick: string; skin: number | null; main: number | null; n: number; w: number; champ: number; day: 'today' | 'yesterday' | 'before' }
   | { kind: 'multi'; at: number; id: string; nick: string; skin: number | null; main: number | null; multi: number; champ: number; win: boolean }
   | { kind: 'streak'; at: number; id: string; nick: string; skin: number | null; main: number | null; streak: number }
-  | { kind: 'together'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[]; n: number; w: number; run?: number; bonus?: number; multis?: { id: string; nick: string; multi: number; champ: number; win: boolean }[]; praise?: import('./praise').Praise[] }
+  | { kind: 'together'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[]; n: number; w: number; run?: number; bonus?: number; multis?: { id: string; nick: string; multi: number; champ: number; win: boolean }[]; praise?: import('./praise').Praise[];
+      /** v3.182 — 이 날 함께한 판의 승패(시간순) · 첫 판·마지막 판 시각 · 처음부터 함께한 날·통산 판 · 둘이면 듀오 등급 (예전 서버는 없음) */
+      seq?: boolean[]; from?: number; to?: number; days?: number; total?: number; bond?: { grade: number; name: string } | null }
   | { kind: 'first'; at: number; id: string; nick: string; skin: number | null; main: number | null; champ: number }
   | { kind: 'firsts'; at: number; members: { id: string; nick: string; skin: number | null; main: number | null }[] }
   | { kind: 'joined'; at: number; id: string; nick: string; skin: number | null; main: number | null };

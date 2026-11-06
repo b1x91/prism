@@ -53,6 +53,61 @@ function Faces({ list, max = 5, onMember }: { list: PulseFace[]; max?: number; o
   );
 }
 
+type Together = Extract<PulseItem, { kind: 'together' }>;
+const span = (ms: number) => { const m = Math.round(ms / 60000); return m < 60 ? `${Math.max(1, m)}분` : `${Math.floor(m / 60)}시간${m % 60 >= 5 ? ` ${m % 60}분` : ''}`; };
+
+/**
+ * 함께한 판 카드 (v3.182): 같은 날 같은 팀으로 함께한 멤버들의 무대.
+ * 뒤에 멤버마다 대표 스킨 조각이 이어 붙고, 얼굴은 빛나는 줄로 이어진다. 이 날의 승패 흐름(시간순) · 함께한 시간 ·
+ * 처음부터 함께한 날·통산 판(둘이면 듀오 등급) · 함께 연판 피스 · 펜타/쿼드라 · 함께라서 잘한 점.
+ */
+function SquadCard({ it, multis, at, art, onMember }: { it: Together; multis: MultiRef[]; at: ReactNode; art: (skin: number | null, main: number | null) => string; onMember?: (id: string) => void }) {
+  const show = it.members.slice(0, 5), more = it.members.length - show.length;
+  const seq = it.seq?.length ? it.seq : [...Array.from({ length: it.w }, () => true), ...Array.from({ length: Math.max(0, it.n - it.w) }, () => false)];
+  const dur = it.from && it.to && it.to - it.from >= 60_000 ? it.to - it.from : 0;
+  const praise = it.praise ?? [];
+  return (
+    <article className={`pl-squad m${show.length}`}>
+      <div className="sq-art" aria-hidden="true">{show.map((m) => { const src = art(m.skin, m.main); return <span key={m.id}>{src && <img className="fi" {...imgIn} src={src} alt="" loading="lazy" />}</span>; })}</div>
+      <span className="sq-shade" aria-hidden="true" />
+      <div className="sq-top">
+        <span className="sq-k"><Icon name="users" />함께한 판</span>
+        {dur > 0 && <span className="sq-when">{clock(it.from!)} – {clock(it.to!)} · {span(dur)}</span>}
+        <span className="sp" />{at}
+      </div>
+      <div className="sq-chain">
+        {show.map((m, i) => (
+          <span key={m.id} className="sq-node">
+            {i > 0 && <i className="sq-link" aria-hidden="true" />}
+            <button type="button" className="sq-face" title={shortNick(m.nick)} onClick={() => onMember?.(m.id)}>
+              <MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={44} />
+              <small>{shortNick(m.nick)}</small>
+            </button>
+          </span>
+        ))}
+        {more > 0 && <span className="sq-more">+{more}</span>}
+      </div>
+      <div className="sq-score">
+        <span className="sq-wl"><b>{it.w}</b>승<b className="l">{it.n - it.w}</b>패</span>
+        <span className="sq-flow" aria-label={`시간순 ${seq.map((w) => (w ? '승' : '패')).join(' ')}`}>{seq.map((w, i) => <i key={i} className={w ? 'w' : ''} />)}</span>
+      </div>
+      {(Boolean(it.days) || it.bond || (it.run ?? 0) >= 2) && (
+        <div className="sq-bonds">
+          {it.bond && <span className={`sq-grade g${it.bond.grade}`}>{it.bond.name}</span>}
+          {Boolean(it.days) && <span className="sq-chip">함께한 날 <b>{it.days}일</b>{it.total ? <> · 통산 <b>{it.total}판</b></> : null}</span>}
+          {(it.run ?? 0) >= 2 && <span className="sq-chip gold">함께 <b>{it.run}연판</b> · 한 명당 +{(it.bonus ?? 0).toLocaleString()}<PieceIcon size={12} /></span>}
+        </div>
+      )}
+      {multis.length > 0 && <div className="sq-multi">{multis.map((m, k) => (
+        <span key={k} className={`pl-mk ${m.multi >= 5 ? 'penta' : ''}`}><ChampImg id={m.champ} size={24} /><b>{shortNick(m.nick)}</b><em>{m.multi >= 5 ? '펜타킬!' : '쿼드라킬!'}</em></span>
+      ))}</div>}
+      {praise.length > 0 && <div className="sq-praise"><small>함께라서 잘한 점</small>{praise.map((p) => (
+        <div key={p.key} className="sq-pr"><i aria-hidden="true"><Icon name="check" /></i><span><b>{p.title}</b><small>{p.text}</small></span></div>
+      ))}</div>}
+    </article>
+  );
+}
+
 /** 오늘의 하이라이트: 펜타 > 쿼드라 > 가장 긴 연승. 함께한 판 카드 안의 펜타·쿼드라도 후보 — 그때는 카드는 두고 그 칩만 숨긴다 */
 type MultiRef = { id: string; nick: string; multi: number; champ: number; win: boolean };
 function highlight(feed: PulseItem[]): { item: PulseItem | null; multi?: MultiRef; champ: number; skin: number | null; title: ReactNode; sub: string } | null {
@@ -121,26 +176,10 @@ export function CrewPulse({ api, onMember }: { api: Api; onMember?: (id: string)
         {group && group.length > 1 && <span className="pl-plus">+{group.length - 1}</span>}
       </button>
     );
-    // 함께한 판: 멤버들을 한 장에 — 함께 N판 · 연판 보너스 · 펜타/쿼드라 축하 · 함께라서 잘한 점 (v3.83)
-    if (it.kind === 'together' && (it.praise || it.multis || it.run)) {
+    // 함께한 판: 같은 팀으로 함께한 멤버들을 한 장의 무대에 (v3.83 → v3.182)
+    if (it.kind === 'together') {
       const ms = (it.multis ?? []).filter((m) => !(hl?.multi && hl.multi.id === m.id && hl.multi.champ === m.champ && hl.multi.multi === m.multi));
-      const praise = it.praise ?? [];
-      return (
-        <div key={key} className="pl-team">
-          <div className="pl-team-h">
-            <span className="pl-stack lg">{it.members.slice(0, 5).map((m) => <button key={m.id} type="button" title={shortNick(m.nick)} onClick={() => onMember?.(m.id)}><MemberFace nick={m.nick} skin={m.skin} champion={m.main} size={36} /></button>)}{it.members.length > 5 && <span className="pl-stack-n">+{it.members.length - 5}</span>}</span>
-            <span className="pl-team-t"><b>{names(it.members)}</b><span><WinCells n={it.n} w={it.w} />함께 {it.n}판 {it.w}승</span></span>
-            {at}
-          </div>
-          {(it.run ?? 0) >= 2 && <div className="pl-team-run">함께 {it.run}연판<span>·</span>한 명당 +{(it.bonus ?? 0).toLocaleString()}<PieceIcon size={12} /></div>}
-          {ms.length > 0 && <div className="pl-team-multi">{ms.map((m, k) => (
-            <span key={k} className={`pl-mk ${m.multi >= 5 ? 'penta' : ''}`}><ChampImg id={m.champ} size={24} /><b>{shortNick(m.nick)}</b><em>{m.multi >= 5 ? '펜타킬!' : '쿼드라킬!'}</em></span>
-          ))}</div>}
-          {praise.length > 0 && <div className="pl-praise"><small className="pl-praise-h">함께라서 잘한 점</small>{praise.map((p) => (
-            <div key={p.key} className="pl-pr"><i aria-hidden="true"><Icon name="check" /></i><span><b>{p.title}</b><small>{p.text}</small></span></div>
-          ))}</div>}
-        </div>
-      );
+      return <SquadCard key={key} it={it} multis={ms} at={at} art={art} onMember={onMember} />;
     }
     // 펜타·쿼드라킬·연승은 그림 카드
     if (it.kind === 'multi' || it.kind === 'streak') {
@@ -162,7 +201,6 @@ export function CrewPulse({ api, onMember }: { api: Api; onMember?: (id: string)
     let title: ReactNode = null; let sub: ReactNode = null; let cls = '';
     switch (it.kind) {
       case 'session': title = <><b>{shortNick(it.nick)}</b><span className="pl-act">{it.n}판 {it.w}승</span></>; sub = <><WinCells n={it.n} w={it.w} /><span>승률 {rate(it.n, it.w)}% · 주로 {champName(it.champ)}</span></>; break;
-      case 'together': title = <><b>{names(it.members)}</b><span className="pl-act">함께 {it.n}판</span></>; sub = <><WinCells n={it.n} w={it.w} /><span>{it.w}승 {it.n - it.w}패</span></>; cls = 'crew'; break;
       case 'first': title = <><b>{shortNick(it.nick)}</b><span className="pl-act">첫 판 기록</span></>; sub = <span>{champName(it.champ)}</span>; cls = 'new'; break;
       case 'firsts': title = <><b>{names(it.members)}</b><span className="pl-act">첫 판 기록</span></>; sub = <span>{it.members.length}명이 처음으로 기록됐어요</span>; cls = 'new'; break;
       case 'joined': title = <><b>{shortNick(it.nick)}</b><span className="pl-act">새로 들어왔어요</span></>; sub = <span>반갑게 맞아 주세요</span>; cls = 'new'; break;

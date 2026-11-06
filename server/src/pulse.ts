@@ -8,6 +8,7 @@ import { presenceOf, PRESENCE_TTL } from '../../packages/core/src/presence.js';
 import { parseFeat } from '../../packages/core/src/challenges.js';
 import { groupPraiseOf, longestRun, type PraiseGame } from '../../packages/core/src/praise.js';
 import { runBonusOf } from '../../packages/core/src/shop.js';
+import { bondOf } from '../../packages/core/src/duo.js';
 import type { Pulse, PulseItem, PulseNow, PulseSeen } from '../../packages/core/src/api.js';
 import { FACE, json, type Env } from './util.js';
 
@@ -15,6 +16,8 @@ const KST = 9 * 3600_000;
 const DAY = 86400_000;
 const SPAN = 3 * DAY;
 const RECENT_MAX = 8;
+/** 함께한 판 카드: 같은 멤버들이 이만큼 쉬면 다른 묶음 */
+const SESSION_GAP = 3 * 3600_000;
 const dayOf = (t: number) => Math.floor((t + KST) / DAY);
 
 type Face = { id: string; nick: string; skin: number | null; main: number | null };
@@ -56,22 +59,41 @@ export async function pulse(env: Env): Promise<Response> {
   const face = (r: any): Face => ({ id: r.id, nick: r.nick, skin: r.skin, main: r.main });
   const feed: PulseItem[] = [];
   const today = dayOf(now);
-  // 함께한 판 (멤버 2명 이상) → 같은 사람들끼리 같은 날 한 장의 칭찬 카드 (v3.83). 이 판들은 한 사람씩 다시 띄우지 않는다
+  // 함께한 판 (같은 팀 멤버 2명 이상) → 같은 사람들끼리 같은 날 한 장의 카드 (v3.83). 이 판들은 한 사람씩 다시 띄우지 않는다
+  // v3.182: 같은 판이라도 팀이 다르면 함께한 것이 아니다 — 팀별로 나눠 묶는다
   const byGame = new Map<number, any[]>();
   for (const r of rows) (byGame.get(r.g) ?? byGame.set(r.g, []).get(r.g)!).push(r);
-  const groups = new Map<string, { members: Face[]; games: { c: any; ps: any[] }[]; at: number }>();
-  const grouped = new Set<number>();
+  // 같은 멤버들끼리 모은 뒤, 3시간 넘게 쉬면 다른 묶음 — 날짜로 자르면 자정(KST)을 넘겨 이어서 한 판이 두 장으로 갈라졌다
+  const bySet = new Map<string, { members: Face[]; games: { c: any; ps: any[] }[] }>();
+  const grouped = new Set<string>(); // `${판}:${회원}`
   for (const c of crew.results as any[]) {
-    const ps = byGame.get(c.g); if (!ps || ps.length < 2) continue;
-    const ms = ps.map(face).sort((a, b) => a.id.localeCompare(b.id));
-    const k = `${ms.map((m) => m.id).join(',')}:${dayOf(c.t)}`;
-    const e = groups.get(k) ?? { members: ms, games: [] as { c: any; ps: any[] }[], at: c.t };
-    e.games.push({ c, ps }); e.at = Math.max(e.at, c.t);
-    groups.set(k, e);
+    const all = byGame.get(c.g); if (!all || all.length < 2) continue;
+    const byTeam = new Map<number, any[]>();
+    for (const r of all) (byTeam.get(r.tm) ?? byTeam.set(r.tm, []).get(r.tm)!).push(r);
+    for (const ps of byTeam.values()) {
+      if (ps.length < 2) continue;
+      const ms = ps.map(face).sort((a, b) => a.id.localeCompare(b.id));
+      const k = ms.map((m) => m.id).join(',');
+      const e = bySet.get(k) ?? { members: ms, games: [] as { c: any; ps: any[] }[] };
+      e.games.push({ c, ps });
+      bySet.set(k, e);
+    }
   }
-  for (const e of groups.values()) {
-    if (e.games.length < 2 && e.members.length < 3) continue; // 둘이서 한 판은 카드로 만들지 않는다 (각자 근황에 남김)
-    for (const x of e.games) grouped.add(x.c.g);
+  const sessions: { members: Face[]; games: { c: any; ps: any[] }[]; at: number }[] = [];
+  for (const e of bySet.values()) {
+    const gs = [...e.games].sort((a, b) => a.c.t - b.c.t);
+    let cur: typeof gs = [];
+    for (const x of gs) {
+      if (cur.length && x.c.t - cur[cur.length - 1].c.t > SESSION_GAP) { sessions.push({ members: e.members, games: cur, at: cur[cur.length - 1].c.t }); cur = []; }
+      cur.push(x);
+    }
+    if (cur.length) sessions.push({ members: e.members, games: cur, at: cur[cur.length - 1].c.t });
+  }
+  const cards = sessions.filter((e) => e.games.length >= 2 || e.members.length >= 3); // 둘이서 한 판은 카드로 만들지 않는다 (각자 근황에 남김)
+  // 이 멤버들이 함께한 날·통산 판 (같은 팀으로, 처음부터) — 카드마다 한 번에 묻고 10분 담아 둔다
+  const hist = await togetherHistory(env, cards.map((e) => e.members.map((m) => m.id)));
+  for (const e of cards) {
+    for (const x of e.games) for (const r of x.ps) grouped.add(`${x.c.g}:${r.id}`);
     const pg: PraiseGame[] = e.games.map(({ c, ps }) => {
       let tt: any = null; try { tt = JSON.parse(c.tt); } catch { /* 없음 */ }
       const tm = ps[0].tm;
@@ -81,15 +103,19 @@ export async function pulse(env: Env): Promise<Response> {
       }) };
     });
     const times = pg.map((g) => g.at);
+    const order = [...pg].sort((a, b) => a.at - b.at);
     const multis = e.games.flatMap(({ ps }) => ps.map((r) => ({ r, m: parseFeat(r.f)?.multi ?? 0 })).filter((x) => x.m >= 4))
       .sort((a, b) => b.m - a.m).slice(0, 4).map(({ r, m }) => ({ id: r.id, nick: r.nick, multi: m, champ: r.c, win: Boolean(r.w) }));
+    const h = hist.get(e.members.map((m) => m.id).join(','));
     feed.push({ kind: 'together', at: e.at, members: e.members, n: pg.length, w: pg.filter((g) => g.win).length,
-      run: longestRun(times), bonus: runBonusOf(times), multis, praise: groupPraiseOf(pg) });
+      run: longestRun(times), bonus: runBonusOf(times), multis, praise: groupPraiseOf(pg),
+      seq: order.slice(-20).map((g) => g.win), from: order[0].at, to: order[order.length - 1].at,
+      days: h?.days, total: h?.games, bond: h?.bond ?? null });
   }
   // 하루 판 묶음 (회원 × KST 날짜), 가장 많이 한 챔프
   const sess = new Map<string, { r: any; n: number; w: number; at: number; champs: Map<number, number> }>();
   for (const r of rows) {
-    if (grouped.has(r.g)) continue;
+    if (grouped.has(`${r.g}:${r.id}`)) continue;
     const k = `${r.id}:${dayOf(r.t)}`;
     const e = sess.get(k) ?? { r, n: 0, w: 0, at: r.t, champs: new Map() };
     e.n++; e.w += r.w; e.at = Math.max(e.at, r.t); e.champs.set(r.c, (e.champs.get(r.c) ?? 0) + 1);
@@ -103,7 +129,7 @@ export async function pulse(env: Env): Promise<Response> {
   }
   // 펜타·쿼드라킬
   for (const r of rows) {
-    if (grouped.has(r.g)) continue;
+    if (grouped.has(`${r.g}:${r.id}`)) continue;
     const m = parseFeat(r.f)?.multi ?? 0;
     if (m >= 4) feed.push({ kind: 'multi', at: r.t, ...face(r), multi: m, champ: r.c, win: Boolean(r.w) });
   }
@@ -144,4 +170,40 @@ export async function pulse(env: Env): Promise<Response> {
 
   feed.sort((a, b) => b.at - a.at);
   return json({ now: nowList, recent, feed: feed.slice(0, 30), today: todaySum, at: now } satisfies Pulse);
+}
+
+// ───────── 함께한 사이 (v3.182) ─────────
+
+type Hist = { days: number; games: number; bond: { grade: number; name: string } | null };
+const HIST_TTL = 10 * 60_000;
+const histCache = new Map<string, { at: number; v: Hist }>();
+
+/** 멤버 묶음마다: 모두 같은 팀으로 한 판(처음부터)의 수 · 그런 판을 한 날(한국 날짜) 수 · 둘이면 듀오 등급 */
+async function togetherHistory(env: Env, sets: string[][]): Promise<Map<string, Hist>> {
+  const out = new Map<string, Hist>();
+  const now = Date.now();
+  const need: string[][] = [];
+  for (const ids of sets) {
+    const k = ids.join(',');
+    const c = histCache.get(k);
+    if (c && now - c.at < HIST_TTL) out.set(k, c.v); else if (!need.some((x) => x.join(',') === k)) need.push(ids);
+  }
+  if (!need.length) return out;
+  try {
+    const res = await env.DB.batch(need.slice(0, 12).map((ids) => env.DB.prepare(
+      `SELECT MIN(p.played_at) AS t, MAX(p.win) AS w FROM participants p WHERE p.member_id IN (${ids.map(() => '?').join(',')})
+       GROUP BY p.game_id, p.team_id HAVING COUNT(DISTINCT p.member_id) = ?`,
+    ).bind(...ids, ids.length)));
+    need.slice(0, 12).forEach((ids, i) => {
+      const rs = (res[i]?.results ?? []) as { t: number; w: number }[];
+      const v: Hist = {
+        days: new Set(rs.map((r) => dayOf(r.t))).size, games: rs.length,
+        bond: ids.length === 2 && rs.length ? (({ grade, name }) => ({ grade, name }))(bondOf(rs.map((r) => ({ t: r.t, w: r.w })))) : null,
+      };
+      const k = ids.join(',');
+      histCache.set(k, { at: now, v }); out.set(k, v);
+    });
+    if (histCache.size > 400) for (const [k, c] of histCache) if (now - c.at >= HIST_TTL) histCache.delete(k);
+  } catch { /* 없으면 카드에 함께한 날을 빼고 보인다 */ }
+  return out;
 }
