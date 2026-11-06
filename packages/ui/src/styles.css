@@ -4964,13 +4964,14 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 /* ── 랭킹 상위 3명 무대 (v3.182): 결정 신전 + 얼음 속 챔프 + 방패 문장 ── */
 .rks { --rks-pt: 140px; position: relative; border-radius: var(--r-l); overflow: hidden; background: #070a1a; padding-top: var(--rks-pt); isolation: isolate; }
 .rks::before { content: ""; position: absolute; inset: 0 0 auto 0; height: calc(var(--rks-pt) + 30%); z-index: -1; pointer-events: none; background: linear-gradient(180deg, #070a1a 0%, #070a1a calc(var(--rks-pt) - 2px), transparent 100%); }
-.rks-scene { position: relative; width: 100%; aspect-ratio: 2400 / 1018; container-type: inline-size; }
+.rks-scene { position: relative; width: 100%; aspect-ratio: 2400 / 1018; container: rks / inline-size; }
 .rks-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; user-select: none; }
 .rks-motes i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #dfe6ff; opacity: 0; animation: rks-mote 7s linear infinite; z-index: -1; }
 @keyframes rks-mote { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: .8; } 100% { opacity: 0; transform: translateY(-96px); } }
-/* 카드는 무대 바닥에서부터 솟는다: 아래 끝 = 무대 바닥, 1위가 가장 높다 */
-.rks-slot { position: absolute; bottom: 0; transform: translateX(-50%); width: 22%; top: 22%; }
-.rks-slot.p1 { left: 50%; top: 9%; }
+/* 카드는 무대 바닥에서부터 솟는다: 아래 끝 = 무대 바닥 */
+/* 세 카드는 같은 비율(2:3) — 1위는 같은 모양을 크게 키운 것 */
+.rks-slot { position: absolute; bottom: 0; transform: translateX(-50%); width: 22%; aspect-ratio: 2 / 3; }
+.rks-slot.p1 { left: 50%; width: 25.6%; }
 .rks-slot.p2 { left: 23%; }
 .rks-slot.p3 { left: 77%; }
 /* 카드가 서 있는 바닥에 고이는 빛 */
@@ -5035,9 +5036,9 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
   .rks { --rks-pt: 100px; }
   .rks-scene { width: 124%; margin-left: -12%; }
 }
-/* 얼음 폭이 좁으면: 승인대기 칩·SCORE 글자를 빼고, 더 좁으면 점수 → 이름 → 판수로 쌓는다 */
-@container (max-width: 220px) { .rks-nm .wait-chip { display: none; } .rks-sc small { display: none; } .rks-info { padding: 0 8px 20px; } }
-@container (max-width: 180px) {
+/* 카드가 좁으면 (무대 폭 기준, 세 카드가 늘 같은 배치): 승인대기 칩·SCORE 글자를 빼고, 더 좁으면 점수 → 이름 → 판수로 쌓는다 */
+@container rks (max-width: 1000px) { .rks-nm .wait-chip { display: none; } .rks-sc small { display: none; } .rks-info { padding: 0 8px 20px; } }
+@container rks (max-width: 818px) {
   .rks-info { grid-template-columns: 1fr; text-align: center; row-gap: 2px; padding: 0 4px 18px; }
   .rks-info::before { margin-bottom: 4px; }
   .rks-who { order: 2; align-items: center; gap: 0; }
@@ -5047,4 +5048,4 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .rks *, .rks *::after { animation: none !important; } }
 .rks-ice.rks-wait { cursor: default; }
-@container (max-width: 180px) { .rks-wait .rks-info { row-gap: 4px; } .rks-wait .rks-who { gap: 4px; } }
+@container rks (max-width: 818px) { .rks-wait .rks-info { row-gap: 4px; } .rks-wait .rks-who { gap: 4px; } }
