@@ -216,12 +216,12 @@ async function rankTop(env: Env, me: Member) {
   const top = rows[0];
   const medal = ['🥇', '🥈', '🥉', '`4`', '`5`'];
   const face = faceUrl(top.skin, top.main);
-  const head = ['## 🏆 Prism 랭킹', `-# ${season.label} · 레이팅 기준 · 1위 **${top.nick.split('#')[0]}** ${top.rating}점`];
+  const head = ['## 🏆 Prism 랭킹', `-# ${season.label} · 레이팅 기준 · 1위 **${top.nick.split('#')[0]}** ${top.rating}`];
   return {
     components: card([
       face ? section(head, thumb(face)) : text(head.join('\n')),
       line(),
-      text(rows.map((x, i) => `${medal[i]}  **${x.nick.split('#')[0]}**  ·  **${x.rating}점**  ·  ${x.n}판 ${pct(x.w, x.n)}`).join('\n')),
+      text(rows.map((x, i) => `${medal[i]}  **${x.nick.split('#')[0]}**  ·  **${x.rating}**  ·  ${x.n}판 ${pct(x.w, x.n)}`).join('\n')),
       text('-# 점수 = 승률을 판수만큼 믿은 값 (판이 적으면 500점 쪽으로)'),
       line(true),
       linkButtons([['전체 랭킹', `${webUrl(env)}/ranking`]]),

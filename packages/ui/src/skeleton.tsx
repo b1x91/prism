@@ -167,18 +167,20 @@ export function MemberSkeleton({ public: pub = false, self, id, studioBtn = true
 export function RankingSkeleton() {
   return (
     <SkeletonFrame className="stack">
-      <section className="lb still sk-lb" aria-hidden="true">
-        <div className="lb-row">{[2, 1, 3].map((rank) => (
-          <div key={rank} className={`lb-slot p${rank}`}>
-            <div className="lb-card sk-lbcard">
-              <Bone w={rank === 1 ? 88 : 72} h={rank === 1 ? 88 : 72} r="round" dark />
-              <Bone w="62%" h={16} dark />
-              <Bone w={rank === 1 ? 88 : 64} h={rank === 1 ? 28 : 20} dark />
-              <Bone w={56} h={10} dark />
+      {/* 상위 3명 무대: 무대 그림·얼음·순위 문장은 데이터와 상관없어 실제 그대로, 챔프·이름·점수만 뼈대 (v3.182) */}
+      <section className="rks" aria-hidden="true">
+        <div className="rks-scene">
+          <img className="rks-art" src="/rank/stage-v1.webp" alt="" />
+          {[2, 1, 3].map((rank) => (
+            <div key={rank} className={`rks-slot p${rank}`}>
+              <span className="rks-root" />
+              <div className="rks-ice rks-wait">
+                <span className="rks-info"><span className="rks-who"><Bone w="70%" h={14} dark /><Bone w="46%" h={12} dark /></span><span className="rks-sc"><Bone w={rank === 1 ? 64 : 48} h={rank === 1 ? 28 : 20} dark /></span></span>
+              </div>
+              <img className="rks-crest" src={`/rank/crest-${rank}-v1.webp`} alt="" />
             </div>
-            <div className="lb-ped sk-ped" />
-          </div>
-        ))}</div>
+          ))}
+        </div>
       </section>
       {/* 4위부터: 실제 순위 줄(rank-row)과 같은 틀 — 순위 · 얼굴 · 이름/주 챔프 · 점수 · 승률 */}
       <div className="card rank-list">{Array.from({ length: 6 }, (_, i) => (

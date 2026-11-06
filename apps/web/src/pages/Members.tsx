@@ -22,7 +22,7 @@ export function RankingPage() {
   );
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <div className="page-head"><div><h1 className="hub-h">랭킹</h1><p>점수는 승률을 판수만큼 믿은 값이에요. 판이 적으면 500점 쪽으로 당겨져, 많이 하면서 잘 이기는 사람이 위로 갑니다.</p></div></div>
+      <div className="page-head"><div><h1 className="hub-h">랭킹</h1><p>Prism 레이팅은 함께한 팀원·상대의 실력과 그 판의 활약으로 매겨요. 판이 적으면 아직 확실하지 않아 낮게 잡히고, 꾸준히 이긴 사람이 위로 갑니다.</p></div></div>
       <RankingView api={api} meId={me.id} open={me.perms?.ranking !== false} gate={me.rankingGate} onOpen={(id) => nav(`/members/${id}`)} />
     </div></section>
   );

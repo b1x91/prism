@@ -4960,3 +4960,102 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .pscore.mvp { --pc: #a8740a; } .pscore.ace { --pc: #5b55e0; }
 :root[data-theme="dark"] .pscore.mvp { --pc: #f3c95c; } :root[data-theme="dark"] .pscore.ace { --pc: #a9a5ff; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pscore.mvp { --pc: #f3c95c; } :root:not([data-theme="light"]) .pscore.ace { --pc: #a9a5ff; } }
+
+/* ── 랭킹 상위 3명 무대 (v3.182): 결정 신전 + 얼음 속 챔프 + 방패 문장 ── */
+.rks { --rks-pt: 140px; position: relative; border-radius: var(--r-l); overflow: hidden; background: #070a1a; padding-top: var(--rks-pt); isolation: isolate; }
+.rks::before { content: ""; position: absolute; inset: 0 0 auto 0; height: calc(var(--rks-pt) + 30%); z-index: -1; pointer-events: none; background: linear-gradient(180deg, #070a1a 0%, #070a1a calc(var(--rks-pt) - 2px), transparent 100%); }
+.rks-scene { position: relative; width: 100%; aspect-ratio: 2400 / 1018; container-type: inline-size; }
+.rks-art { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2; user-select: none; }
+.rks-motes i { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #dfe6ff; opacity: 0; animation: rks-mote 7s linear infinite; z-index: -1; }
+@keyframes rks-mote { 0% { opacity: 0; transform: translateY(0); } 20% { opacity: .8; } 100% { opacity: 0; transform: translateY(-96px); } }
+/* 받침대 윗면에 얼음 아래 끝을 맞춘다 (무대 그림의 받침대 자리) */
+.rks-slot { position: absolute; transform: translate(-50%, -100%); width: 22.6%; --ar: 308 / 380; }
+.rks-slot.p1 { left: 50%; top: 73.6%; width: 19.6%; --ar: 308 / 470; }
+.rks-slot.p2 { left: 23.75%; top: 81.6%; }
+.rks-slot.p3 { left: 76.5%; top: 81.6%; }
+.rks-ice { position: relative; display: block; width: 100%; aspect-ratio: var(--ar); padding: 0; border: 0; overflow: hidden; container-type: inline-size; color: #fff; text-align: left; font: inherit; cursor: pointer;
+  clip-path: polygon(9% 0, 91% 0, 100% 5%, 100% 100%, 0 100%, 0 5%);
+  background: linear-gradient(180deg, rgba(130, 150, 255, .3), rgba(70, 50, 170, .45)); }
+.rks-champ { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 14%; transition: transform .5s var(--zoom-ease, cubic-bezier(.2, .8, .2, 1)); user-select: none; }
+/* 얼음: 위는 맑게, 아래로 갈수록 푸른 보랏빛으로 짙어져 받침대와 이어진다 + 결정 결 */
+.rks-ice::before { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(160, 180, 255, .22), transparent 12%, transparent 88%, rgba(160, 180, 255, .22)),
+    linear-gradient(180deg, rgba(200, 215, 255, .2) 0%, rgba(150, 160, 255, .06) 26%, rgba(90, 70, 210, .16) 54%, rgba(30, 24, 90, .78) 78%, rgba(14, 12, 44, .96) 100%),
+    repeating-linear-gradient(118deg, rgba(255, 255, 255, .045) 0 2px, transparent 2px 46px); }
+.rks-ice::after { content: ""; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: linear-gradient(104deg, transparent 22%, rgba(255, 255, 255, .16) 34%, transparent 44%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .5); }
+.rks-frost { position: absolute; inset: 0; z-index: 0; pointer-events: none; backdrop-filter: blur(5px) saturate(120%); -webkit-backdrop-filter: blur(5px) saturate(120%);
+  -webkit-mask-image: linear-gradient(0deg, #000 0%, #000 34%, transparent 62%); mask-image: linear-gradient(0deg, #000 0%, #000 34%, transparent 62%);
+  background: radial-gradient(60% 30% at 30% 92%, rgba(220, 235, 255, .22), transparent 70%), radial-gradient(50% 24% at 75% 84%, rgba(200, 220, 255, .16), transparent 70%); }
+.rks-edge { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 3; pointer-events: none; }
+.rks-edge polyline { fill: none; stroke: rgba(200, 215, 255, .6); stroke-width: 1.5; }
+.p1 .rks-edge polyline { stroke: rgba(255, 255, 255, .85); }
+.rks-ice.me .rks-edge polyline { stroke: #7ea0ff; stroke-width: 2; }
+.rks-ice:hover .rks-champ { transform: scale(1.06); }
+.rks-ice:focus-visible { outline: none; }
+.rks-ice:focus-visible .rks-edge polyline { stroke: #fff; stroke-width: 2.5; }
+/* 얼음 뿌리: 얼음이 받침대 속에서부터 한 덩어리로 솟은 것처럼, 얼음 아래 끝에서 무대 바닥까지 같은 결로 이어진다.
+   위는 얼음 아래 끝과 같은 색, 아래로 갈수록 받침대가 비치고 바닥에서 빛이 고인다. 높이 = 무대 높이(폭의 42.4%) × (1 − 받침대 위치) */
+.rks-root { position: absolute; left: 0; right: 0; top: calc(100% - 10px); height: calc(var(--rd) + 2cqw + 8px); pointer-events: none; z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(200, 215, 255, .6) 0 1.5px, rgba(170, 185, 255, .36) 1.5px, transparent 13%, transparent 87%, rgba(170, 185, 255, .36) calc(100% - 1.5px), rgba(200, 215, 255, .6) calc(100% - 1.5px)),
+    repeating-linear-gradient(118deg, rgba(255, 255, 255, .05) 0 2px, transparent 2px 46px),
+    linear-gradient(104deg, transparent 22%, rgba(255, 255, 255, .08) 34%, transparent 44%),
+    radial-gradient(70% 40% at 50% 100%, rgba(140, 220, 255, .38), transparent 70%),
+    linear-gradient(180deg, rgb(15, 13, 46) 0%, rgba(22, 18, 64, .96) 35%, rgba(46, 36, 130, .68) 75%, rgba(80, 70, 200, .42) 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10px, #000 70%, rgba(0, 0, 0, .55) 100%); mask-image: linear-gradient(180deg, transparent 0, #000 10px, #000 70%, rgba(0, 0, 0, .55) 100%); }
+.rks-slot { --rd: 7.8cqw; }
+.rks-slot.p1 { --rd: 11.2cqw; }
+.p1 .rks-root { background-position: 0 0; }
+.rks-ice { z-index: 1; }
+/* 이름·점수 (E2): 가는 선 아래 왼쪽 이름·판수, 오른쪽 점수 */
+.rks-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 8px; padding: 0 12px 12px; }
+.rks-info::before { content: ""; grid-column: 1 / -1; height: 1px; margin-bottom: 12px; background: linear-gradient(90deg, rgba(255, 255, 255, .4), rgba(255, 255, 255, .05)); }
+.rks-who { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.rks-nm { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 14px; font-weight: 800; white-space: nowrap; }
+.rks-nm > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.rks-nm .phero-name.nmfx { filter: none; }
+.rks-mt { font-size: 12px; font-weight: 600; opacity: .7; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rks-sc { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; white-space: nowrap; }
+.rks-sc small { font-size: 12px; font-weight: 800; letter-spacing: .14em; opacity: .55; }
+.rks-sc b { font-size: 20px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; background: linear-gradient(180deg, var(--g1), var(--g2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.p1 .rks-sc b { font-size: 28px; }
+.rks-slot.p1 { --g1: #fff8dc; --g2: #f3c64a; }
+.rks-slot.p2 { --g1: #ffffff; --g2: #c4ccda; }
+.rks-slot.p3 { --g1: #ffe6cf; --g2: #d99258; }
+.rks-crest { position: absolute; left: 50%; top: 0; z-index: 5; width: 44%; transform: translate(-50%, -54%); pointer-events: none; user-select: none; filter: drop-shadow(0 8px 16px rgba(0, 0, 0, .55)); }
+.p1 .rks-crest { width: 50%; }
+.rks-ice.empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: default; }
+.rks-q { position: relative; z-index: 4; font-size: 28px; font-weight: 900; opacity: .55; }
+.rks-empty { position: relative; z-index: 4; font-size: 12px; opacity: .65; }
+/* 등장 (1시간에 한 번, v3.50): 얼음이 아래에서 솟고 → 문장이 내려앉고 → 1위 얼음에 빛 한 줄기 */
+.rks.play .rks-ice { animation: rks-rise .9s cubic-bezier(.16, 1, .3, 1) both .35s; }
+.rks.play .p2 .rks-ice { animation-delay: .45s; } .rks.play .p3 .rks-ice { animation-delay: .6s; } .rks.play .p1 .rks-ice { animation-delay: .8s; }
+.rks.play .rks-root { transform-origin: 50% 100%; animation: rks-grow .55s cubic-bezier(.16, 1, .3, 1) both; }
+.rks.play .p2 .rks-root { animation-delay: .1s; } .rks.play .p3 .rks-root { animation-delay: .25s; } .rks.play .p1 .rks-root { animation-delay: .45s; }
+@keyframes rks-grow { from { transform: scaleY(0); } to { transform: none; } }
+.rks.play .rks-crest { animation: rks-crest .7s cubic-bezier(.2, 1.3, .4, 1) both 1.2s; }
+.rks.play .p1 .rks-crest { animation-delay: 1.5s; }
+.rks.play .p1 .rks-ice::after { background: linear-gradient(104deg, transparent 22%, rgba(255, 255, 255, .16) 34%, transparent 44%), linear-gradient(115deg, transparent 40%, rgba(255, 255, 255, .28) 50%, transparent 60%) -200% 0 / 250% 100% no-repeat; animation: rks-glint 1.4s ease 1.9s both; }
+@keyframes rks-rise { from { opacity: .6; clip-path: polygon(9% 100%, 91% 100%, 100% 100%, 100% 100%, 0 100%, 0 100%); } to { opacity: 1; clip-path: polygon(9% 0, 91% 0, 100% 5%, 100% 100%, 0 100%, 0 5%); } }
+@keyframes rks-crest { from { opacity: 0; transform: translate(-50%, -80%) scale(.8); } to { opacity: 1; transform: translate(-50%, -54%); } }
+@keyframes rks-glint { to { background-position: 0 0, 0 0, 200% 0; } }
+@media (max-width: 720px) {
+  .rks { --rks-pt: 100px; }
+  .rks-scene { width: 124%; margin-left: -12%; }
+}
+/* 얼음 폭이 좁으면: 승인대기 칩·SCORE 글자를 빼고, 더 좁으면 점수 → 이름 → 판수로 쌓는다 */
+@container (max-width: 220px) { .rks-nm .wait-chip { display: none; } .rks-sc small { display: none; } .rks-info { padding: 0 8px 10px; } }
+@container (max-width: 180px) {
+  .rks-info { grid-template-columns: 1fr; text-align: center; row-gap: 2px; padding: 0 4px 8px; }
+  .rks-info::before { margin-bottom: 4px; }
+  .rks-who { order: 2; align-items: center; gap: 0; }
+  .rks-nm { justify-content: center; font-size: 12px; }
+  .rks-sc { order: 1; align-items: center; }
+  .rks-sc b { font-size: 16px; } .p1 .rks-sc b { font-size: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .rks *, .rks *::after { animation: none !important; } }
+.rks-ice.rks-wait { cursor: default; }
+@container (max-width: 180px) { .rks-wait .rks-info { row-gap: 4px; } .rks-wait .rks-who { gap: 4px; } }

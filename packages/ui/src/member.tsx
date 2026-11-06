@@ -93,7 +93,7 @@ export function RankingTeaser({ onLogin }: { onLogin: () => void }) {
                 {rank === 1 && <span className="lb-crown"><Gem size={28} src="/brand/prism-32.png" /></span>}
                 <span className="lb-face"><MemberFace nick="?" champion={TEASE_FACES[i]} size={rank === 1 ? 88 : 72} /></span>
                 <span className="lb-nm">???</span>
-                <span className="lb-st"><b>???점</b><small>?판 · ?%</small></span>
+                <span className="lb-st"><b>???</b><small>?판 · ?%</small></span>
               </div>
               <div className="lb-ped"><b>{rank}</b></div>
             </div>
@@ -112,7 +112,7 @@ export function RankingTeaser({ onLogin }: { onLogin: () => void }) {
           <p className="muted">팀원과 상대의 실력을 함께 봐요. 강한 팀을 이기면 많이 오르고, 그 판에서 잘한 만큼 조금 더 오릅니다. 판이 적으면 아직 확실하지 않아 낮게 잡혀서, 꾸준히 이긴 사람이 위로 갑니다.</p>
           <div className="rk-tz-ex">{ex.map((e) => (
             <div key={e.n} className={`rk-tz-exr ${e.score === best ? 'top' : ''}`}>
-              <span>{e.n}판 {e.w}승</span><span className="muted">승률 {pct(e.w, e.n)}</span><b>{e.score}<small>점</small></b>
+              <span>{e.n}판 {e.w}승</span><span className="muted">승률 {pct(e.w, e.n)}</span><b>{e.score}</b>
             </div>
           ))}</div>
         </section>
@@ -153,7 +153,7 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
   useEffect(() => {
     if (!data || !skins) return;
     let on = true;
-    preloadImages(rows.slice(0, 12).map((r) => faceSrc(r.skin, r.mainChampion, skins))).then(() => { if (on) setReadyFor(data); });
+    preloadImages([...podiumImages(rows, skins), ...rows.slice(3, 12).map((r) => faceSrc(r.skin, r.mainChampion, skins))]).then(() => { if (on) setReadyFor(data); });
     return () => { on = false; };
   }, [data, skins, rows]);
   const shown = !art && Boolean(data) && readyFor === data;
@@ -180,31 +180,52 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
 }
 
 /** 상위 3명 무대: 가운데 1위가 가장 높고, 조명·받침대가 순서대로 올라온다 */
+/** 무대 그림 · 순위 문장 (Artlist 로 새로 그림, v3.182) */
+const POD_STAGE = '/rank/stage-v1.webp';
+const POD_CREST = (rank: number) => `/rank/crest-${rank}-v1.webp`;
+/** 그 회원의 세로 그림: 대표 스킨 → 주 챔프 기본 스킨 → 얼굴 그림 */
+const podArt = (r: RankingRow, skins: Record<number, Skin> | null) =>
+  (r.skin ? skins?.[r.skin]?.load : '') || (r.mainChampion ? skins?.[baseSkin(r.mainChampion)]?.load : '') || faceSrc(r.skin, r.mainChampion, skins);
+export const podiumImages = (rows: RankingRow[], skins: Record<number, Skin> | null) => [POD_STAGE, POD_CREST(1), POD_CREST(2), POD_CREST(3), ...rows.slice(0, 3).map((r) => podArt(r, skins))];
+
+/**
+ * 상위 3명 무대 (v3.182): 결정 신전 무대 위, 받침대 얼음이 한 덩어리로 솟아 그 회원의 챔프가 얼음 속에 서 있다.
+ * 머리에 금·은·동 방패 문장(1위만 프리즘 보석), 얼음 아래쪽에 이름·판수(왼쪽)와 점수(오른쪽).
+ */
 function Leaderboard({ rows, by, meId, skins, onOpen, play }: { rows: RankingRow[]; by: RankBy; meId?: string; play: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
   return (
-    <section className={`lb ${play ? '' : 'still'}`} aria-label="상위 3명">
-      <span className="lb-beam b1" aria-hidden="true" /><span className="lb-beam b2" aria-hidden="true" /><span className="lb-beam b3" aria-hidden="true" />
-      <div className="lb-row">{[2, 1, 3].map((rank) => {
-        const r = rows[rank - 1];
-        return <div key={rank} className={`lb-slot p${rank}`}>
-          {r ? <Podium r={r} rank={rank} by={by} play={play} me={r.id === meId} skins={skins} onOpen={onOpen} /> : <div className="lb-card empty"><span className="lb-q">?</span><span className="lb-empty">아직 비어 있어요</span></div>}
-          <div className="lb-ped"><b>{rank}</b></div>
-        </div>;
-      })}</div>
+    <section className={`rks ${play ? 'play' : ''}`} aria-label="상위 3명">
+      <div className="rks-scene">
+        <img className="rks-art" src={POD_STAGE} alt="" draggable={false} />
+        <span className="rks-motes" aria-hidden="true">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ left: `${(i * 37) % 86 + 7}%`, top: `${(i * 53) % 60 + 25}%`, animationDelay: `${-((i * 0.9) % 7)}s` }} />)}</span>
+        {[2, 1, 3].map((rank) => {
+          const r = rows[rank - 1];
+          return <div key={rank} className={`rks-slot p${rank}`}>
+            <span className="rks-root" aria-hidden="true" />
+            {r ? <Podium r={r} rank={rank} by={by} play={play} me={r.id === meId} skins={skins} onOpen={onOpen} />
+              : <div className="rks-ice empty"><span className="rks-q">?</span><span className="rks-empty">아직 비어 있어요</span></div>}
+            <img className="rks-crest" src={POD_CREST(rank)} alt={`${rank}위`} draggable={false} />
+          </div>;
+        })}
+      </div>
     </section>
   );
 }
 
 function Podium({ r, rank, by, me, skins, onOpen, play }: { r: RankingRow; rank: number; by: RankBy; me: boolean; play: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
+  const delay = [0, 1150, 950, 800][rank];
   return (
-    <button type="button" className={`lb-card ${me ? 'me' : ''}`} onClick={() => onOpen(r.id)}>
-      {/* 산 배경이 있으면 그 장면, 없으면 회원마다 정해진 기본 색 (프로필 머리와 같은 규칙) */}
-      {r.bg ? <BgScene id={r.bg} /> : <span className="phero-tint" style={{ ['--tint' as string]: baseTint(r.nick) }} aria-hidden="true" />}
-      {rank === 1 && <span className="lb-crown" aria-hidden="true"><Gem size={28} src="/brand/prism-32.png" /></span>}
-      <span className="lb-face"><FramedFace frame={r.frame} round nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={rank === 1 ? 88 : 72} /></span>
-      {r.title && <TitleChip id={r.title} dark />}
-      <span className="lb-nm"><span className={r.nameFx ? `phero-name nmfx ${r.nameFx}` : ''}><NickName nick={r.nick} /></span>{r.pending && <PendingChip dark />}</span>
-      <span className="lb-st"><b><CountUp text={scoreTab(by) ? `${scoreOf(r)}점` : `${r.n}판`} delay={[0, 1150, 950, 800][rank]} play={play} /></b><small>{scoreTab(by) ? `${r.n}판 · ${pct(r.w, r.n)}` : `승률 ${pct(r.w, r.n)}`}</small></span>
+    <button type="button" className={`rks-ice ${me ? 'me' : ''}`} onClick={() => onOpen(r.id)}>
+      <img className="rks-champ" src={podArt(r, skins)} alt="" draggable={false} />
+      <span className="rks-frost" aria-hidden="true" />
+      <svg className="rks-edge" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="0.6,100 0.6,5 9,0.6 91,0.6 99.4,5 99.4,100" vectorEffect="non-scaling-stroke" /></svg>
+      <span className="rks-info">
+        <span className="rks-who">
+          <b className="rks-nm"><span className={r.nameFx ? `phero-name nmfx ${r.nameFx}` : ''}>{shortNick(r.nick)}</span>{r.pending && <PendingChip dark />}</b>
+          <small className="rks-mt">{scoreTab(by) ? `${r.n}판 · ${pct(r.w, r.n)}` : `승률 ${pct(r.w, r.n)}`}</small>
+        </span>
+        <span className="rks-sc"><small>{scoreTab(by) ? 'SCORE' : 'GAMES'}</small><b><CountUp text={scoreTab(by) ? `${scoreOf(r)}` : `${r.n}판`} delay={delay} play={play} /></b></span>
+      </span>
     </button>
   );
 }
@@ -247,7 +268,7 @@ function RankRow({ r, rank, i, by, me, skins, onOpen }: { r: RankingRow; rank: n
       <FramedFace frame={r.frame} nick={r.nick} skin={r.skin} champion={r.mainChampion} skins={skins} size={r.frame ? 36 : 40} />
       {/* 이름 효과는 어두운 배경이 깔린 줄에서만 (밝은 줄에선 글자가 묻힌다) */}
       <span className="who"><b><span className={r.nameFx && r.bg ? `phero-name nmfx ${r.nameFx}` : ''}><NickName nick={r.nick} /></span>{r.title && <TitleChip id={r.title} dark={Boolean(r.bg)} />}{r.pending && <PendingChip dark={Boolean(r.bg)} />}</b><span className="meta">{[r.mainChampion ? `주 챔프 ${CHAMPIONS[r.mainChampion]?.name}` : '', scoreTab(by) ? `${r.n}판` : ''].filter(Boolean).join(' · ')}</span></span>
-      {scoreTab(by) ? <span className="num key">{scoreOf(r)}<small>점</small></span> : <span className="num key">{r.n}<small>판</small></span>}
+      {scoreTab(by) ? <span className="num key">{scoreOf(r)}</span> : <span className="num key">{r.n}<small>판</small></span>}
       <span className="num">{pct(r.w, r.n)}</span>
     </button>
   );
@@ -414,7 +435,7 @@ function StatBoard({ data, games, kda, streak }: { data: MemberPage; games: Game
         </div>
         <div className="pd-tile">
           <span className="pd-k">{rated ? 'Prism 레이팅' : 'Prism 점수'}</span>
-          <div className="pd-v"><b>{score}<small>점</small></b><span className="meta">전체 {data.rank}위</span></div>
+          <div className="pd-v"><b>{score}</b><span className="meta">전체 {data.rank}위</span></div>
           {/* 기준(멤버 평균)에서 얼마나 떨어졌는지 (가운데가 기준) */}
           <div className="pd-div" aria-hidden="true"><span className={score >= base ? 'up' : 'down'} style={{ width: `${Math.min(50, (Math.abs(score - base) / span) * 50)}%` }} /><i /></div>
           <span className="pd-foot"><span>{rated ? `멤버 평균 ${base}` : '기준 500'}</span><b className={score >= base ? 'w' : 'l'}>{score >= base ? '+' : '−'}{Math.abs(score - base)}</b></span>
