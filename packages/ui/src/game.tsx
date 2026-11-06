@@ -45,7 +45,9 @@ export type CardGame = {
 
 /** PRISM MVP·ACE 표시: MVP = 이긴 팀에서 가장 잘한 사람(금빛), ACE = 진 팀에서 가장 잘한 사람 (점수 6.0 이상일 때만) */
 export function MvpChip({ b, score }: { b: MvpBadge; score?: number }) {
-  return <span className={`pmvp ${b}`} title={`PRISM ${BADGE_KO[b]} · ${b === 'mvp' ? '이긴 팀에서' : '진 팀에서'} 가장 잘했어요${score != null ? ` (${score.toFixed(1)}점)` : ''} · 피해 몫·받은 피해·킬 관여·데스로 매겨요`}><i aria-hidden="true" />{BADGE_KO[b]}</span>;
+  return <span className={`pmvp ${b}`} title={`PRISM ${BADGE_KO[b]} · ${b === 'mvp' ? '이긴 팀에서' : '진 팀에서'} 가장 잘했어요${score != null ? ` (${score.toFixed(1)}점)` : ''} · 피해 몫·받은 피해·킬 관여·데스로 매겨요`}>{b === 'mvp'
+    ? <svg viewBox="0 0 12 10" aria-hidden="true"><path d="M1 8.6 0 2.4l3.2 2.3L6 0l2.8 4.7L12 2.4l-1 6.2z" /></svg>
+    : <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0 6.2 3.8 10 5 6.2 6.2 5 10 3.8 6.2 0 5l3.8-1.2z" /></svg>}{BADGE_KO[b]}</span>;
 }
 
 const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
