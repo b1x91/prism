@@ -806,22 +806,27 @@ body { overflow: hidden; background: var(--bg); }
 .shell.immersive { position: relative; grid-template-columns: minmax(0, 1fr); background: var(--glow), var(--bg); }
 .shell.immersive .side { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; width: var(--side); background: transparent; border-right-color: transparent; }
 .shell.immersive .main { grid-column: 1; z-index: 1; padding-left: calc(var(--side) + var(--s7)); background: transparent; }
+.shell > .home-bg { opacity: 0; visibility: hidden; transition: opacity .5s cubic-bezier(.45, 0, .25, 1), visibility 0s linear .5s; }
+.shell.immersive > .home-bg.on { opacity: 1; visibility: visible; transition: opacity .5s cubic-bezier(.16, 1, .3, 1), visibility 0s; }
+/* 사이드바는 늘 배경 그림 위에 (홈에서 나갈 때 그림이 사라지는 동안 사이드바를 덮지 않게), 바탕·경계선·글자도 서서히 */
+.side { position: relative; z-index: 2; transition: background-color .45s ease, border-color .45s ease; }
+.side-nav a, .side-glabel, .side-arrows button { transition: color .35s ease, background-color .2s ease; }
 .shell > .home-bg { position: fixed; z-index: 0; top: 0; left: 0; width: 100vw; height: min(820px, 100vh); overflow: hidden; background: #07090f; pointer-events: none;
   --fade: linear-gradient(#000 0%, #000 34%, rgba(0,0,0,.97) 40%, rgba(0,0,0,.9) 46%, rgba(0,0,0,.8) 52%, rgba(0,0,0,.67) 58%, rgba(0,0,0,.52) 64%, rgba(0,0,0,.38) 70%, rgba(0,0,0,.25) 76%, rgba(0,0,0,.14) 82%, rgba(0,0,0,.06) 89%, rgba(0,0,0,.015) 95%, transparent 100%);
   -webkit-mask-image: var(--fade); mask-image: var(--fade); }
 /* 그림 왼쪽(메뉴 자리)을 한 겹 더 어둡게 — 메뉴 글자가 읽히게, 경계선은 없이 */
 .shell > .home-bg::before { content: ""; position: absolute; z-index: 1; inset: 0 auto 0 0; width: calc(var(--side) + 160px); background: linear-gradient(90deg, rgba(7, 9, 15, .55), rgba(7, 9, 15, .3) 60%, transparent); }
-.shell.immersive .brand-word { background-image: linear-gradient(110deg, #fff 0%, #fff 42%, #b9c6ff 50%, #fff 58%, #fff 100%); }
-.shell.immersive .side-arrows button { color: rgba(255, 255, 255, .7); }
-.shell.immersive .side-arrows button:not(:disabled):hover { background: rgba(255, 255, 255, .12); color: #fff; }
-.shell.immersive .side-glabel { color: rgba(255, 255, 255, .55); }
-.shell.immersive .side-nav a, .shell.immersive .side-nav button { color: rgba(255, 255, 255, .82); }
-.shell.immersive .side-nav a:hover { background: rgba(255, 255, 255, .1); color: #fff; }
-.shell.immersive .side-nav a.active { background: rgba(255, 255, 255, .14); color: #fff; box-shadow: none; }
-.shell.immersive .side-nav a.active svg { color: #c7d2ff; }
-.shell.immersive .side-sub { --line: rgba(255, 255, 255, .18); }
-.shell.immersive .side-group + .side-group { border-top-color: rgba(255, 255, 255, .14); }
-.shell.immersive .side-nav .hub-chev { color: rgba(255, 255, 255, .5); }
+.shell.immersive:not(.leaving) .brand-word { background-image: linear-gradient(110deg, #fff 0%, #fff 42%, #b9c6ff 50%, #fff 58%, #fff 100%); }
+.shell.immersive:not(.leaving) .side-arrows button { color: rgba(255, 255, 255, .7); }
+.shell.immersive:not(.leaving) .side-arrows button:not(:disabled):hover { background: rgba(255, 255, 255, .12); color: #fff; }
+.shell.immersive:not(.leaving) .side-glabel { color: rgba(255, 255, 255, .55); }
+.shell.immersive:not(.leaving) .side-nav a, .shell.immersive:not(.leaving) .side-nav button { color: rgba(255, 255, 255, .82); }
+.shell.immersive:not(.leaving) .side-nav a:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+.shell.immersive:not(.leaving) .side-nav a.active { background: rgba(255, 255, 255, .14); color: #fff; box-shadow: none; }
+.shell.immersive:not(.leaving) .side-nav a.active svg { color: #c7d2ff; }
+.shell.immersive:not(.leaving) .side-sub { --line: rgba(255, 255, 255, .18); }
+.shell.immersive:not(.leaving) .side-group + .side-group { border-top-color: rgba(255, 255, 255, .14); }
+.shell.immersive:not(.leaving) .side-nav .hub-chev { color: rgba(255, 255, 255, .5); }
 @media (max-width: 900px) { .shell.immersive .main { padding-left: calc(var(--side) + var(--s5)); } }
 
 /* 홈 랭킹 맛보기 = 시안 C '레이스' (v3.175) — 큰 기울임 숫자 + 점수만큼 차오른 막대.
@@ -855,3 +860,6 @@ body { overflow: hidden; background: var(--bg); }
   .rc-s small { display: none; }
   .rc-in { gap: var(--s2); }
 }
+
+/* 홈에서 나가는 동안: 사이드바 바탕·경계선이 서서히 돌아오고, 그림이 걷히며 새 화면이 드러난다 (v3.177) */
+.shell.immersive.leaving .side { background: var(--bg-2); border-right-color: var(--line); }

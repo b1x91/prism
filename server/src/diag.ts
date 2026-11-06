@@ -6,7 +6,7 @@
 import { HttpError, json, type Env, type Member } from './util.js';
 
 const KEEP = 20;
-// 미니맵 자료(관리자 계정, 판마다 최대 14장)도 들어오므로 넉넉히
+// 미니맵 자료(여러 회원, 기기마다 3판 · 판마다 10장, v3.177)도 들어오므로 넉넉히
 const MAX_BYTES = 1_800_000; // 미니맵 자료 10장(원래 크기) — D1 한 줄 2MB 안
 
 export async function saveDiag(req: Request, env: Env, me: Member): Promise<Response> {
@@ -25,14 +25,10 @@ export async function saveDiag(req: Request, env: Env, me: Member): Promise<Resp
 
 export async function listDiag(env: Env, me: Member): Promise<Response> {
   if (me.tier !== 'admin') throw new HttpError(403, '관리자만 볼 수 있어요');
-  const r = await env.DB.prepare('SELECT d.id, d.member_id, d.at, d.body, m.nick FROM diag d LEFT JOIN members m ON m.id = d.member_id ORDER BY d.at DESC LIMIT 100').all<{ id: number; member_id: string; at: number; body: string; nick: string | null }>();
-  // 목록에는 그림을 빼고 장 수만 (그림은 한 건씩 /api/admin/diag/:id/shots)
-  return json({ items: (r.results ?? []).map((x) => {
-    const body = JSON.parse(x.body);
-    const shots = Array.isArray(body?.diag?.shots) ? body.diag.shots.length : 0;
-    if (body?.diag) delete body.diag.shots;
-    return { id: x.id, member: x.member_id, nick: x.nick, at: x.at, body, shots };
-  }) });
+  // 목록에는 그림을 빼고 장 수만 (그림은 한 건씩 /api/admin/diag/:id/shots). 그림은 DB 에서 빼고 읽는다 —
+  // 여러 회원의 미니맵 자료(한 건 1MB 안팎, v3.177)를 100건 통째로 읽으면 Worker 메모리를 넘는다
+  const r = await env.DB.prepare("SELECT d.id, d.member_id, d.at, json_remove(d.body, '$.diag.shots') AS body, COALESCE(json_array_length(d.body, '$.diag.shots'), 0) AS shots, m.nick FROM diag d LEFT JOIN members m ON m.id = d.member_id ORDER BY d.at DESC LIMIT 100").all<{ id: number; member_id: string; at: number; body: string; shots: number; nick: string | null }>();
+  return json({ items: (r.results ?? []).map((x) => ({ id: x.id, member: x.member_id, nick: x.nick, at: x.at, body: JSON.parse(x.body), shots: x.shots })) });
 }
 
 /** GET /api/admin/diag/:id/shots — 놓친 카드 그림 (관리자만) */

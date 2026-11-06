@@ -559,7 +559,9 @@ export function start() {
   import('@tauri-apps/api/event').then(({ listen }) => listen('lcu-phase', () => void checkNow())).catch(() => {});
   // 자동 진단 (v3.64): 게임 위 작은 창이 한 판 내내 안 뜨면 Rust 가 그 판의 인식 기록을 넘긴다 → 서버에 남긴다 (관리자만 본다)
   import('@tauri-apps/api/event').then(({ listen }) => listen<unknown>('vision-diag', (e) => {
-    if (state.me?.consent) void api.post('/api/me/diag', e.payload).catch(() => {});
+    if (!state.me?.consent) return;
+    const minimap = (e.payload as { kind?: string } | null)?.kind === 'minimap';
+    void api.post('/api/me/diag', e.payload).then(() => { if (minimap) countMinimap(); }).catch(() => {});
   })).catch(() => {});
 }
 
@@ -663,4 +665,16 @@ export async function diagnostics(version: string): Promise<string> {
     latestMayhemDetailRaw: anonymize(detail),
     champSelectRaw: anonymize(raw.champSelect),
   }, null, 2);
+}
+
+/** 미니맵 자료 (힐팩 타이머 준비, v3.177): 이 기기에서 보낸 판 수. 3판이 모이면 (관리자 말고는) 더 찍지 않는다 */
+const MINIMAP_MAX = 3;
+const mapSubs = new Set<() => void>();
+export function minimapLeft(): number {
+  try { return Math.max(0, MINIMAP_MAX - Number(localStorage.getItem('prism-minimap-n') ?? 0)); } catch { return 0; }
+}
+export function onMinimapSent(f: () => void) { mapSubs.add(f); return () => { mapSubs.delete(f); }; }
+function countMinimap() {
+  try { localStorage.setItem('prism-minimap-n', String(Number(localStorage.getItem('prism-minimap-n') ?? 0) + 1)); } catch { /* 저장소 없음 */ }
+  mapSubs.forEach((f) => f());
 }

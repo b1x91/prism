@@ -5,7 +5,7 @@
  * 앱 창은 좁다 (최소 980 → 본문 약 730px): 어느 폭에서도 글자가 줄바꿈되지 않게 칸을 나눈다.
  */
 import { useEffect, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
+import { setHomeBg } from '../homebg';
 import { useNavigate } from 'react-router-dom';
 import { buyerRoles, itemGuideOf, josa, AUGMENT, CHAMPIONS, GAME_DATA, ITEM, ITEM_GROUP, ITEM_GROUP_KO, RARITY_KO, ROLE_KO, cdragon, fitPoints, guideOf, pct, tierOf, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
 import { AugRing, AugmentLink, Bone, ChampImg, imgIn, useItemDetail, FramedFace, TierBadge, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
@@ -48,14 +48,12 @@ export function HomePage({ s }: { s: State }) {
   const quick = Object.entries(P.champions).sort((a, b) => b[1].n - a[1].n).slice(0, 6).map(([id]) => Number(id));
   const tags = c ? [ROLE_KO[c.roles[0]], c.damage === 'MIX' ? 'AP·AD' : c.damage, c.range === 'ranged' ? '원거리' : '근접'].filter(Boolean) as string[] : [];
 
-  // 배경을 그릴 자리(앱 껍데기)는 그려진 뒤에 찾는다 — 처음 그릴 때는 아직 없다
-  const [bgHost, setBgHost] = useState<Element | null>(null);
-  useEffect(() => { setBgHost(document.querySelector('.shell')); }, []);
+  // 배경 그림은 앱 껍데기가 그린다 (홈에 들어오고 나갈 때 서서히, v3.177)
+  const bgSrc = c ? cdragon(c.splash) : '';
+  useEffect(() => { setHomeBg(bgSrc); }, [bgSrc]);
   return (
     <div className="home">
       {/* 홈 전체의 배경: 오늘의 챔프 그림 (아래로 갈수록 바탕색에 녹는다) */}
-      {/* 배경은 창에 고정, 내용만 그 위로 내려간다 (v3.174) — 스크롤 칸 밖(앱 껍데기)에 그린다 */}
-      {bgHost && createPortal(<div className="home-bg" aria-hidden="true">{c && <SplashSwap className="home-splash" src={cdragon(c.splash)} />}</div>, bgHost)}
 
       <section className="home-search">
         <span className="home-k">PRISM</span>

@@ -973,6 +973,9 @@ mod imp {
             "kind": "minimap",
             "version": app.package_info().version.to_string(),
             "minimapScale": crate::lcu::minimap_scale(),
+            // 화면 정보: 미니맵 자리를 해상도·설정별로 정해 두려고 (v3.177)
+            "globalScale": crate::lcu::game_cfg_num("GlobalScale"),
+            "windowMode": crate::lcu::game_cfg_num("WindowMode"),
             "diag": { "shots": shots },
         });
         use tauri::Emitter;

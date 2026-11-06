@@ -1,9 +1,9 @@
-import { StrictMode, useCallback, useEffect, useRef, useState, useSyncExternalStore, type MouseEvent as RMouseEvent, type ReactNode } from 'react';
+import { StrictMode, useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore, type MouseEvent as RMouseEvent, type ReactNode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, SplashSwap, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, SITE_URL, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { pollWhileShown } from './poll';
 import { checkNow, clearAttend, getState, refreshSession, start, subscribe, type State } from './controller';
@@ -11,6 +11,8 @@ import { Onboarding } from './pages/Onboarding';
 import { Splash } from './Splash';
 import { api, bridge } from './bridge';
 import { storeUpdate, checkUpdate, startUpdates, useUpdateQuiet } from './update';
+import { useHomeBg } from './homebg';
+import { minimapLeft, onMinimapSent } from './controller';
 import { UpdateButton } from './UpdateButton';
 import { GamePage } from './pages/Game';
 import { HomePage } from './pages/Home';
@@ -162,7 +164,10 @@ function App() {
     return () => clearInterval(t);
   }, [ready]);
   // 힐팩 타이머 준비: 관리자 계정의 게임에서만 미니맵 자료를 모아 운영 진단으로 보낸다 (2026-11-05 사용자 결정)
-  useEffect(() => { void bridge.visionCalib(s.me?.tier === 'admin'); }, [s.me?.tier]);
+  // 여러 회원 화면에서 모은다 (v3.177, 사용자 결정): 동의한 회원의 이 기기에서 3판까지, 관리자는 늘
+  const [mapLeft, setMapLeft] = useState(minimapLeft);
+  useEffect(() => onMinimapSent(() => setMapLeft(minimapLeft())), []);
+  useEffect(() => { void bridge.visionCalib(s.me?.tier === 'admin' || (ready && mapLeft > 0)); }, [s.me?.tier, ready, mapLeft]);
   // 프리즘 픽: Prism 사람들이 많이 고른 증강을 이 기기에 둔다 → 증강 카드가 뜨면 게임 위 작은 창이 표시를 단다 (6시간마다 새로)
   useEffect(() => {
     if (!s.me) return;
@@ -190,6 +195,18 @@ function App() {
   const mainEl = useCallback(() => main.current, []);
   // 홈은 메뉴와 본문을 나누지 않는다 (v3.174): 사이드바가 창에 고정된 오늘의 챔프 그림 위에 겹치고, 내용만 그 위로 내려간다
   const atHome = loc.pathname === '/';
+  const homeBg = useHomeBg();
+  // 홈에서 나가는 0.5초 동안은 투명한 몰입 배치를 그대로 두고 배경 그림만 서서히 걷는다 (v3.177) —
+  // 바로 바꾸면 새 화면의 바탕이 그림을 한 번에 덮어 '냅다' 바뀌었다
+  const [leaving, setLeaving] = useState(false);
+  const wasHome = useRef(atHome);
+  // 그리기 전에 정한다(useLayoutEffect) — useEffect 면 무거운 새 화면이 한 번 그려진 뒤에야 바뀌어 그 사이 배경이 뚝 끊겼다
+  useLayoutEffect(() => {
+    const was = wasHome.current;
+    wasHome.current = atHome;
+    if (was && !atHome) { setLeaving(true); const t = setTimeout(() => setLeaving(false), 520); return () => clearTimeout(t); }
+    setLeaving(false);
+  }, [atHome]);
   const riotName = s.summoner?.riotId.split('#')[0];
   const openAug = useCallback((id: number) => nav(`/augments/${id}`), [nav]);
   // 판 상세: 서버(함께한 회원 얼굴) + 롤 클라이언트(10명 전체, 게임 중·롤 꺼짐이면 읽지 않는다)
@@ -203,7 +220,9 @@ function App() {
   }, []);
   if (!ready) return <Onboarding s={s} onLogin={login} />;
   return (
-    <div className={`shell${atHome ? ' immersive' : ''}`}>
+    <div className={`shell${atHome || leaving ? ' immersive' : ''}${leaving ? ' leaving' : ''}`}>
+      {/* 홈 배경: 늘 그려 두고 홈일 때만 서서히 나타난다 (v3.177) */}
+      {homeBg && <div className={`home-bg${atHome ? ' on' : ''}`} aria-hidden="true"><SplashSwap className="home-splash" src={homeBg} /></div>}
       {s.me && (!s.me.skin || !s.me.about) && !welcomeLater && <WelcomeFlow api={api} nick={s.me.nick} needFace={!s.me.skin} onClose={(done) => { if (!done) setWelcomeLater(true); void refreshSession(); }} />}
       <aside className="side">
         <div className="side-brand">
