@@ -3,11 +3,12 @@
  *  - 우수회원 이상(`FEATURES.scrim`)·관리자가, 지금 NOW 에 떠 있는 내전(사용자 설정 로비)에서 누른다. 내전에 들어와 있는 사람만 (관리자는 예외).
  *  - 서버가 팀(5:5)과 빛이 지나갈 순서를 정해 두고, 시작 시각(start_at = 누른 때 + LEAD)을 함께 나눠 준다.
  *    모든 화면은 서버 시계에 맞춰 같은 순간에 같은 연출을 시작한다 (늦게 연 화면은 그만큼 앞으로 감아서 따라온다).
- *  - 밸런스 맞추기: Prism 점수(`rankScore`) 합 차이가 가장 작은 조합들 중에서 무작위. 끄면 그냥 무작위 5:5.
+ *  - 밸런스 맞추기: Prism 레이팅 실력(μ × 20, 손님은 기본 실력 = 500) 합 차이가 가장 작은 조합들 중에서 무작위. 끄면 그냥 무작위 5:5.
  *  - 손님(비회원)은 로비에서 읽은 이름(태그 없이, 없으면 '손님 N'), 점수 500 (기준점). puuid 는 남기지 않는다 (v3.140).
  *  - '팀 확정'은 표시만 (롤 로비의 팀은 방장이 롤에서 직접 옮긴다 — 클라이언트를 조작하지 않는다).
  */
-import { rankScore } from '../../packages/core/src/ranking.js';
+import { RATING } from '../../packages/core/src/rating.js';
+import { ratingBook, ratingKey } from './rating.js';
 import type { NowDraw } from '../../packages/core/src/api.js';
 import { FACE, HttpError, json, type Env, type Member } from './util.js';
 import { can } from './roles.js';
@@ -65,14 +66,16 @@ export async function startDraw(env: Env, me: Member, lobbyId: string, body: { b
   const now = Date.now();
   const last = await env.DB.prepare('SELECT created_at FROM scrim_draws WHERE lobby_id = ? ORDER BY created_at DESC LIMIT 1').bind(lobbyId).first<{ created_at: number }>();
   if (last && now - last.created_at < AGAIN) throw new HttpError(429, '방금 나눴어요. 잠깐 뒤에 다시 눌러 주세요.');
-  // 회원 점수 = Prism 점수 (전체 기록)
-  const { results } = await env.DB.prepare('SELECT member_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participants WHERE member_id IN (SELECT value FROM json_each(?)) GROUP BY member_id').bind(JSON.stringify(members)).all<{ id: string; n: number; w: number }>();
-  const rec = new Map(results.map((r) => [r.id, r]));
+  // 회원 실력 = Prism 레이팅의 μ (메인 계정, 팀 밸런스는 보수적 값이 아니라 실력 그대로) × 20 — 기본 실력 25 가 손님 500 과 같다
+  const book = await ratingBook(env);
+  const { results } = await env.DB.prepare('SELECT id, riot_puuid FROM members WHERE id IN (SELECT value FROM json_each(?))').bind(JSON.stringify(members)).all<{ id: string; riot_puuid: string | null }>();
+  const mainOf = new Map(results.map((r) => [r.id, r.riot_puuid]));
+  const skillScore = (id: string) => Math.round((book.get(ratingKey(null, mainOf.get(id), id))?.mu ?? RATING.mu) * 20);
   // 로비에서 읽은 손님 이름 (두 팀)
   let guests: string[] = [];
   try { const t = JSON.parse(row.teams ?? '{}'); guests = [...(t?.['100']?.g ?? []), ...(t?.['200']?.g ?? [])].filter((x: unknown): x is string => typeof x === 'string'); } catch { /* 이름 없음 */ }
   const base = [
-    ...members.map((id) => ({ key: id, id, score: rankScore(rec.get(id)?.w ?? 0, rec.get(id)?.n ?? 0) })),
+    ...members.map((id) => ({ key: id, id, score: skillScore(id) })),
     ...Array.from({ length: total - members.length }, (_, i) => ({ key: `g${i + 1}`, id: null, score: GUEST_SCORE, ...(guests[i] ? { name: guests[i] } : {}) })),
   ];
   const balanced = body.balance !== false;

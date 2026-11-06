@@ -25,7 +25,7 @@ export const CACHE_TTL = 3600_000;
 const LIVE_EXACT = new Set(['/api/me', '/api/me/games', '/api/crew/targets', '/links']);
 const LIVE_PREFIX = ['/api/now', '/api/news', '/api/discord', '/api/staff', '/api/me/invite', '/api/members/lookup', '/api/members/search', '/api/me/inquiry', '/api/inquiry/', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
 /** 다른 화면이 담아 둔 데이터를 바꾸지 않는 쓰기 — 아무것도 지우지 않는다.
- *  게임 중 1분마다 보내는 지금 판(/api/me/live)·챔프 선택 조회·소식 읽음·하트처럼 자주 오는 쓰기가 전부 지우면 다음 화면마다 자리표시가 깜빡였다 (v3.183) */
+ *  게임 중 1분마다 보내는 지금 판(/api/me/live)·챔프 선택 조회·소식 읽음·하트처럼 자주 오는 쓰기가 전부 지우면 다음 화면마다 자리표시가 깜빡였다 (v3.185) */
 const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag', '/api/now', '/api/me/live', '/api/champselect', '/api/news', '/api/me/now-auto'];
 /** 그 기능의 데이터만 바뀌는 쓰기 — 그 주소들만 지운다. body 로 지울 주소를 좁힐 수 있다 */
 const SCOPED_WRITES: [string, (body: unknown) => string[]][] = [

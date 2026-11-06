@@ -855,3 +855,8 @@ body { overflow: hidden; background: var(--bg); }
   .sc-tools { flex-direction: column; }
   .sc-tool > span, .sc-vr { display: none; }
 }
+/* 홈 프리즘에서 가장 핫한 증강: 랭킹 레이스 줄과 같은 틀 (증강 고리는 둥글게) */
+.home-hot .rc-row { width: 100%; }
+.home-hot .rc-in .aug-ring { border-radius: 50%; }
+.home-hot .hr-who small .ha-r { font-weight: 700; }
+@container (max-width: 380px) { .home-hot .rc-s small { display: inline; } }

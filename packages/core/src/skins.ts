@@ -3,8 +3,9 @@
  */
 import { cdragon } from './assets';
 
-export type Skin = { id: number; championId: number; name: string; tier: number; tile: string; splash: string };
-type Raw = { version: string; skins: Record<string, [string, number, string, string]> };
+/** load: 세로 그림(로딩 화면, 308×560) — 예전 데이터에는 없을 수 있다 */
+export type Skin = { id: number; championId: number; name: string; tier: number; tile: string; splash: string; load: string };
+type Raw = { version: string; skins: Record<string, [string, number, string, string, string?]> };
 
 let cache: Promise<Record<number, Skin>> | null = null;
 
@@ -12,8 +13,8 @@ export function loadSkins(): Promise<Record<number, Skin>> {
   cache ??= import('../data/skins.json').then((m) => {
     const raw = (m.default ?? m) as unknown as Raw;
     const out: Record<number, Skin> = {};
-    for (const [id, [name, tier, tile, splash]] of Object.entries(raw.skins)) {
-      out[Number(id)] = { id: Number(id), championId: Math.floor(Number(id) / 1000), name, tier, tile: cdragon(tile), splash: cdragon(splash) };
+    for (const [id, [name, tier, tile, splash, load]] of Object.entries(raw.skins)) {
+      out[Number(id)] = { id: Number(id), championId: Math.floor(Number(id) / 1000), name, tier, tile: cdragon(tile), splash: cdragon(splash), load: cdragon(load) };
     }
     return out;
   });

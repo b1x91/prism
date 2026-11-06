@@ -193,7 +193,7 @@ export function PrismSplit({ draw, offset, meId, canRun, busy, onAgain, onConfir
         {done ? (
           <>
             <span className="ps-sum blue">블루 <b>{sum(blue)}</b></span>
-            <span className={`ps-diff ${diff > 60 ? 'warn' : ''}`}>Prism 점수 합 차이 {diff}{draw.balanced ? ' · 밸런스' : ''}</span>
+            <span className={`ps-diff ${diff > 60 ? 'warn' : ''}`}>실력 합 차이 {diff}{draw.balanced ? ' · 밸런스' : ''}</span>
             <span className="ps-sum red">레드 <b>{sum(red)}</b></span>
             <span className="sp" />
             {draw.confirmed
@@ -223,7 +223,7 @@ export function SplitStarter({ api, lobby, total, onStarted, onClose }: { api: A
   return (
     <div className="ps-start">
       <span className="ps-start-t"><b>팀 나누기</b><small>{ok ? `${total}명을 블루·레드로 나눠요. 모두의 화면에서 함께 시작돼요` : `${total}명이에요. 짝수(4명 이상)일 때 나눌 수 있어요`}</small></span>
-      <label className="ps-bal"><small>밸런스 맞추기</small><Toggle on={bal} onChange={setBal} label="Prism 점수가 비슷하게 나누기" /></label>
+      <label className="ps-bal"><small>밸런스 맞추기</small><Toggle on={bal} onChange={setBal} label="실력이 비슷하게 나누기" /></label>
       <button type="button" className="btn sm ghost-dark" onClick={onClose} disabled={busy}>닫기</button>
       <button type="button" className="btn sm primary" onClick={() => void go()} disabled={busy || !ok}>빛 비추기</button>
       {err && <span className="ps-err">{err}</span>}

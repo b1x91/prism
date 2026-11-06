@@ -49,7 +49,7 @@ export async function toggleFav(kind: FavKind, id: number) {
 }
 
 /** 좋아요 하트 버튼 + 좋아한 회원 수 (로그인 전에는 숨긴다) */
-/** 마지막으로 안 좋아요 수 (챔프·증강마다) — 다시 열 때 숫자 자리가 자리표시로 깜빡이지 않게 먼저 보이고, 받은 값으로 조용히 맞춘다 (v3.183) */
+/** 마지막으로 안 좋아요 수 (챔프·증강마다) — 다시 열 때 숫자 자리가 자리표시로 깜빡이지 않게 먼저 보이고, 받은 값으로 조용히 맞춘다 (v3.185) */
 const lastCount = new Map<string, number>();
 const countPath = (kind: FavKind, id: number) => `/api/favs/count?kind=${kind}&id=${id}`;
 const knownCount = (kind: FavKind, id: number) => api?.peek?.<{ n: number }>(countPath(kind, id))?.n ?? lastCount.get(`${kind}:${id}`) ?? null;
