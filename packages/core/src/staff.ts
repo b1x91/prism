@@ -6,6 +6,11 @@
  */
 export const PICK_POINTS = { act: 25, crew: 20, days: 20, mates: 20, perf: 15 } as const;
 export type PickKey = keyof typeof PICK_POINTS;
+/** 활동 지수 단계 (v3.178): 합(0~100)을 '점'이 아니라 지수로, 세 가지 색 — 낮음(위험) · 보통 · 높음(열심히 활동) */
+export const PICK_TIERS = { low: 45, high: 70 } as const;
+export type PickTier = 'low' | 'mid' | 'high';
+export const pickTier = (v: number): PickTier => (v >= PICK_TIERS.high ? 'high' : v < PICK_TIERS.low ? 'low' : 'mid');
+export const PICK_TIER_KO: Record<PickTier, string> = { low: '활동 낮음', mid: '보통', high: '열심히 활동' };
 export const PICK_INFO: { key: PickKey; name: string; desc: string; color: string }[] = [
   { key: 'act', name: '활동량', desc: '2주 판 수 (모임에서 가장 많이 한 멤버 대비)', color: '#2a78d6' },
   { key: 'crew', name: '참여도', desc: '멤버와 함께한 판의 비율', color: '#eb6834' },

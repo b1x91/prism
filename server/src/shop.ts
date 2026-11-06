@@ -80,18 +80,18 @@ export async function levelsOf(env: Env, id: string) {
 export async function earned(env: Env, id: string, lv?: Awaited<ReturnType<typeof levelsOf>>): Promise<Earned> {
   const now = Date.now();
   const [g, t, d, cr, inv, tr] = await env.DB.batch([
-    env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w, COALESCE(SUM(CASE WHEN crew_count >= 2 THEN 1 ELSE 0 END), 0) AS c FROM participants WHERE member_id = ?').bind(id),
+    env.DB.prepare('SELECT COUNT(*) AS n, COALESCE(SUM(win), 0) AS w, COALESCE(SUM(CASE WHEN crew_count >= 2 THEN 1 ELSE 0 END), 0) AS c FROM reward_participants WHERE member_id = ?').bind(id),
     // 함께 해요: 참여한 판·내전의 시간(30분 전 ~ 3시간 뒤)에 실제로 기록된 판이 있으면
     env.DB.prepare(
       `SELECT COUNT(*) AS n FROM (
          SELECT p.start_at AS at FROM party_slots s JOIN parties p ON p.id = s.party_id WHERE s.member_id = ?1 AND p.cancelled_at IS NULL AND p.start_at < ?2
          UNION ALL
          SELECT x.start_at AS at FROM scrim_slots s JOIN scrims x ON x.id = s.scrim_id WHERE s.member_id = ?1 AND x.cancelled_at IS NULL AND x.start_at < ?2
-       ) t WHERE EXISTS (SELECT 1 FROM participants q WHERE q.member_id = ?1 AND q.played_at BETWEEN t.at - 1800000 AND t.at + 10800000)`,
+       ) t WHERE EXISTS (SELECT 1 FROM reward_participants q WHERE q.member_id = ?1 AND q.played_at BETWEEN t.at - 1800000 AND t.at + 10800000)`,
     ).bind(id, now),
     env.DB.prepare('SELECT day FROM piece_daily WHERE member_id = ?').bind(id),
     // 함께 연판: 멤버 2명 이상 판의 시각 (v3.83)
-    env.DB.prepare('SELECT played_at AS t FROM participants WHERE member_id = ? AND crew_count >= 2 ORDER BY played_at').bind(id),
+    env.DB.prepare('SELECT played_at AS t FROM reward_participants WHERE member_id = ? AND crew_count >= 2 ORDER BY played_at').bind(id),
     // 친구 초대: 초대한 친구가 승인된 수 (v3.107)
     env.DB.prepare('SELECT COUNT(*) AS n FROM invite_rewards WHERE inviter = ?').bind(id),
     // #PRSM 태그 보상 (v3.116)

@@ -13,7 +13,7 @@ async function myGames(env: Env, id: string): Promise<WGame[]> {
     `SELECT p.played_at AS t, p.win AS w,
        (SELECT group_concat(q.member_id) FROM participants q WHERE q.game_id = p.game_id AND q.team_id = p.team_id AND q.member_id <> p.member_id) AS mates,
        (SELECT group_concat(a.augment_id) FROM participant_augments a WHERE a.game_id = p.game_id AND a.member_id = p.member_id) AS augs
-     FROM participants p WHERE p.member_id = ?`,
+     FROM reward_participants p WHERE p.member_id = ?`,
   ).bind(id).all<{ t: number; w: number; mates: string | null; augs: string | null }>();
   return r.results.map((x) => ({ t: x.t, w: x.w ? 1 : 0, mates: x.mates ? x.mates.split(',') : [], augs: x.augs ? x.augs.split(',').map(Number) : [] }));
 }

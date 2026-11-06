@@ -12,7 +12,7 @@
 import { checkTagBonus } from './tagbonus.js';
 import { ensureSnapshotById } from './shop.js';
 import { featOf, type FeatSource } from '../../packages/core/src/challenges.js';
-import { finite, HttpError, int, json, type Env, type Member } from './util.js';
+import { finite, HttpError, int, json, LIVE_MARGIN, type Env, type Member } from './util.js';
 
 const MAYHEM_QUEUE = 2400;
 const MAX_GAMES = 50;
@@ -220,6 +220,10 @@ export async function ingest(req: Request, env: Env, me: Member) {
       stmts.push(env.DB.prepare('UPDATE participants SET puuid = ? WHERE game_id = ? AND member_id = ? AND puuid IS NULL').bind(p.puuid, g.gameId, memberId));
       // 활약 기록: 새 판이든, 기록 없이 먼저 들어온 판이든 비어 있으면 채운다
       stmts.push(env.DB.prepare('UPDATE participants SET feats = ? WHERE game_id = ? AND member_id = ? AND feats IS NULL').bind(JSON.stringify(featOf(featSrc(p), allSrc)), g.gameId, memberId));
+      // 보상은 앱이 켜져 있던 판만 (v3.178): 그 판 시간 안에 이 회원 앱이 '게임 중'을 알렸으면 live
+      stmts.push(env.DB.prepare(
+        'UPDATE participants SET live = 1 WHERE game_id = ?1 AND member_id = ?2 AND live = 0 AND EXISTS (SELECT 1 FROM app_game_seen s WHERE s.member_id = ?2 AND s.at BETWEEN ?3 AND ?4)',
+      ).bind(g.gameId, memberId, g.playedAt - LIVE_MARGIN, g.playedAt + g.duration * 1000 + LIVE_MARGIN));
       for (const a of new Set(augments ?? [])) {
         stmts.push(
           env.DB.prepare('INSERT OR IGNORE INTO participant_augments (game_id, member_id, augment_id, champion_id, win) VALUES (?, ?, ?, ?, ?)').bind(

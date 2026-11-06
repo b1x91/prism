@@ -1087,7 +1087,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .md-team { display: grid; gap: 2px; }
 .md-th { display: flex; align-items: center; gap: var(--s2); padding: var(--s2) var(--s2) 4px; font-size: var(--fs-sm); }
 .md-th span { font-size: var(--fs-xs); font-weight: 800; } .md-th span.w { color: var(--win); } .md-th span.l { color: var(--lose); }
-.md-row { display: grid; grid-template-columns: 36px minmax(0, 1.4fr) 88px minmax(80px, 1fr) auto auto; align-items: center; gap: var(--s3); padding: 6px var(--s2); border-radius: var(--r-s); }
+.md-row { display: grid; grid-template-columns: 36px minmax(0, 1.4fr) auto minmax(80px, 1fr) auto auto; align-items: center; gap: var(--s3); padding: 6px var(--s2); border-radius: var(--r-s); }
 .md-team.w .md-row { background: color-mix(in srgb, var(--win) 5%, transparent); } .md-team.l .md-row { background: color-mix(in srgb, var(--lose) 5%, transparent); }
 .md-row.me { box-shadow: inset 3px 0 0 var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent) !important; }
 .md-champ { padding: 0; border: 0; background: none; line-height: 0; cursor: pointer; }
@@ -1097,9 +1097,10 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .md-who b { display: flex; align-items: center; gap: 4px; font-size: var(--fs-sm); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .md-who b .face, .md-who b .initial { border-radius: 50%; flex: none; }
 .md-who small { font-size: var(--fs-xs); color: var(--text-3); }
-.md-kda { display: grid; font-variant-numeric: tabular-nums; }
-.md-kda b { font-size: var(--fs-sm); } .md-kda b .l { color: var(--lose); }
-.md-kda small { font-size: var(--fs-xs); color: var(--text-3); }
+.md-kda { display: flex; align-items: center; gap: var(--s2); font-variant-numeric: tabular-nums; }
+.md-kv { display: grid; min-width: 64px; }
+.md-kv b { font-size: var(--fs-sm); } .md-kv b .l { color: var(--lose); }
+.md-kv small { font-size: var(--fs-xs); color: var(--text-3); }
 .md-dmg { display: grid; gap: 2px; font-size: var(--fs-xs); font-variant-numeric: tabular-nums; }
 .md-dmg .v { color: var(--text-2); font-weight: 650; }
 .md-dmg .bar { display: block; height: 6px; border-radius: var(--r-pill); background: var(--surface-3); overflow: hidden; }
@@ -1109,6 +1110,16 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .md-items .item-empty { background: var(--surface-3); opacity: .5; }
 .md-augs { display: flex; gap: 2px; min-width: 104px; }
 .md-note { margin: 0; padding: 0 var(--s2); }
+/* 판 상세가 좁은 칸(앱 좁은 창·분석 화면)에 들어가면 줄을 세 줄로 — 이름·KDA·PRISM SCORE / 피해 / 아이템·증강 (v3.178) */
+.md-body { container-type: inline-size; }
+@container (max-width: 860px) {
+  .md-row { grid-template-columns: 36px minmax(0, 1fr) auto auto; grid-template-areas: "c w k k" "c d i a"; row-gap: 6px; }
+  .md-champ { grid-area: c; align-self: start; } .md-who { grid-area: w; } .md-kda { grid-area: k; justify-content: flex-end; text-align: right; }
+  .md-dmg { grid-area: d; } .md-items { grid-area: i; } .md-augs { grid-area: a; min-width: 0; justify-content: flex-end; }
+}
+@container (max-width: 560px) {
+  .md-row { grid-template-columns: 36px minmax(0, 1fr) auto; grid-template-areas: "c w k" "c d d" "i i a"; }
+}
 @keyframes md-in { from { opacity: 0; transform: translateY(8px) scale(.99); } }
 @keyframes md-fade { from { opacity: 0; } }
 @media (max-width: 720px) {
@@ -1116,7 +1127,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
   .md { width: 100%; height: 88vh; border-radius: var(--r-l) var(--r-l) 0 0; }
   .md-head { padding: var(--s4); }
   .md-row { grid-template-columns: 36px minmax(0, 1fr) auto; grid-template-areas: "c w k" "c d d" "i i a"; row-gap: 4px; }
-  .md-champ { grid-area: c; align-self: start; } .md-who { grid-area: w; } .md-kda { grid-area: k; text-align: right; }
+  .md-champ { grid-area: c; align-self: start; } .md-who { grid-area: w; } .md-kda { grid-area: k; text-align: right; justify-content: flex-end; }
   .md-dmg { grid-area: d; } .md-items { grid-area: i; } .md-augs { grid-area: a; min-width: 0; justify-content: flex-end; }
 }
 @media (prefers-reduced-motion: reduce) { .md, .md-scrim { animation: none; } .gcard.can-open { transition: none; } }
@@ -4495,8 +4506,13 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .sv-chips { display: flex; flex-wrap: wrap; gap: 4px var(--s3); font-size: var(--fs-xs); color: var(--text-2); }
 .sv-chips span { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 .sv-chips .k { width: 8px; height: 8px; border-radius: 50%; }
-.sv-mr .tot { text-align: right; font-size: var(--fs-xl); font-weight: 800; font-variant-numeric: tabular-nums; }
-.sv-mr .tot small { display: block; font-size: var(--fs-xs); font-weight: 600; color: var(--text-3); }
+/* 활동 지수 (v3.178): 숫자만, 세 단계 색 — 낮음(위험) · 보통 · 높음(열심히 활동) */
+.sv-mr .tot { --tc: var(--text-2); justify-self: end; display: grid; justify-items: center; gap: 4px; min-width: 64px; font-variant-numeric: tabular-nums; }
+.sv-mr .tot b { display: grid; place-items: center; min-width: 52px; height: 32px; padding: 0 var(--s2); border-radius: var(--r-s); font-size: var(--fs-xl); font-weight: 850; color: var(--tc); background: color-mix(in srgb, var(--tc) 12%, transparent); }
+.sv-mr .tot small { font-size: var(--fs-xs); font-weight: 700; color: var(--tc); white-space: nowrap; }
+.sv-mr .tot.high { --tc: #15803d; } .sv-mr .tot.low { --tc: #dc2626; } .sv-mr .tot.mid { --tc: color-mix(in srgb, var(--text-2) 85%, var(--accent)); }
+:root[data-theme="dark"] .sv-mr .tot.high { --tc: #4ade80; } :root[data-theme="dark"] .sv-mr .tot.low { --tc: #f87171; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sv-mr .tot.high { --tc: #4ade80; } :root:not([data-theme="light"]) .sv-mr .tot.low { --tc: #f87171; } }
 
 /* 온보딩: 카드에 물이 비율만큼, 카드끼리 줄 높이를 함께 써 구분선이 같은 곳 */
 .sv-steps { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); column-gap: var(--s2); row-gap: 0; margin-top: var(--s4); }
@@ -4850,6 +4866,8 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 /* ── 랭킹: 계정마다 장착한 꾸밈 (v3.161) ── */
 /* 이름 효과: 프로필 머리의 .phero-name.name-* 를 그대로 쓰되 글자 크기·굵기는 그 자리 것으로 */
 .lb-nm .phero-name.nmfx, .rank-row .who .phero-name.nmfx { font-size: inherit; font-weight: inherit; letter-spacing: inherit; line-height: inherit; display: inline; overflow-wrap: normal; }
+/* 좁은 이름 칸은 넘친 글자를 잘라 내는 칸이라 빛무리(drop-shadow)가 칸 경계에서 잘려 사각형 선처럼 보였다 → 빛무리 없이 글자 색만 (v3.178) */
+.lb-nm .phero-name.nmfx, .rank-row .who .phero-name.nmfx { filter: none; text-shadow: none; animation: none; }
 .rank-row .who b { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
 .rank-row .who b > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 칭호 칩: 밝은 줄은 차분한 회색, 어두운 줄·무대는 프로필 머리와 같은 유리 */
@@ -4926,12 +4944,19 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 ::-webkit-scrollbar-thumb:hover { border-width: 2px; background-color: color-mix(in srgb, var(--text-3) 70%, transparent); }
 
 /* PRISM MVP·ACE (판 상세·최근 판 카드): MVP 금빛 · ACE 남보라, 작은 보석 + 글자. 무지개는 쓰지 않는다 */
-.pmvp { --pc: #e0a21f; display: inline-flex; align-items: center; gap: 4px; height: 20px; padding: 0 7px 0 6px; margin-left: 6px; border-radius: 6px; font-size: var(--fs-xs); font-weight: 850; letter-spacing: .08em; line-height: 1; white-space: nowrap; vertical-align: middle; flex: none;
-  color: color-mix(in srgb, var(--pc) 72%, var(--text)); background: color-mix(in srgb, var(--pc) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pc) 42%, transparent); }
-.pmvp svg { width: 11px; height: 10px; flex: none; fill: currentColor; }
-.pmvp.ace { --pc: #6366f1; }
-.pmvp.ace svg { width: 10px; }
-.md-ps { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--text-2); }
-.md-ps.mvp { color: #b07a00; } .md-ps.ace { color: #5b4fd8; }
-:root[data-theme="dark"] .md-ps.mvp { color: #ffd166; } :root[data-theme="dark"] .md-ps.ace { color: #a8a2ff; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .md-ps.mvp { color: #ffd166; } :root:not([data-theme="light"]) .md-ps.ace { color: #a8a2ff; } }
+/* PRISM MVP·ACE (v3.178 시안 B): 결정 휘장 + 글자, 상자 없음 */
+.pmvp { --pc: #b07a0a; display: inline-flex; align-items: center; gap: 5px; height: 20px; margin-left: 6px; font-size: var(--fs-xs); font-weight: 900; letter-spacing: .1em; line-height: 1; white-space: nowrap; vertical-align: middle; flex: none; color: var(--pc); }
+.pmvp svg { width: 15px; height: 18px; flex: none; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .22)); }
+.pmvp.ace { --pc: #5b55e0; }
+:root[data-theme="dark"] .pmvp { --pc: #f3c95c; } :root[data-theme="dark"] .pmvp.ace { --pc: #a9a5ff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pmvp { --pc: #f3c95c; } :root:not([data-theme="light"]) .pmvp.ace { --pc: #a9a5ff; } }
+/* 어두운 무대(최근 판 카드 그림 위 등)에서는 늘 밝은 글자 */
+.gcard .pmvp, .gtip .pmvp { text-shadow: none; }
+/* PRISM SCORE 칩 (v3.178): KDA 옆, 이름표 + 숫자 두 칸 */
+.pscore { --pc: var(--text-2); display: inline-flex; align-items: stretch; height: 22px; border-radius: 6px; overflow: hidden; flex: none; white-space: nowrap; font-variant-numeric: tabular-nums; line-height: 1;
+  background: color-mix(in srgb, var(--pc) 10%, transparent); }
+.pscore i { font-style: normal; display: inline-flex; align-items: center; padding: 0 6px 0 7px; font-size: var(--fs-xs); font-weight: 800; letter-spacing: .04em; color: color-mix(in srgb, var(--pc) 70%, var(--text-3)); }
+.pscore b { display: inline-flex; align-items: center; padding: 0 7px; font-size: var(--fs-xs); font-weight: 850; color: var(--pc); background: color-mix(in srgb, var(--pc) 14%, transparent); }
+.pscore.mvp { --pc: #a8740a; } .pscore.ace { --pc: #5b55e0; }
+:root[data-theme="dark"] .pscore.mvp { --pc: #f3c95c; } :root[data-theme="dark"] .pscore.ace { --pc: #a9a5ff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pscore.mvp { --pc: #f3c95c; } :root:not([data-theme="light"]) .pscore.ace { --pc: #a9a5ff; } }

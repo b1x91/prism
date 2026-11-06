@@ -9,7 +9,7 @@
  * 그래프는 SVG 를 실제 크기로 그린다(늘이지 않음). 처음 열 때 한 번 막대가 자라고 칸이 떠오른다. 동작 줄이기 존중.
  */
 import { useId, useLayoutEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
-import { ONBOARD_STEPS, PICK_INFO, PICK_POINTS, onboardNote, onboardTips, shortNick, type PickKey, type StaffOverview } from '@prism/core';
+import { ONBOARD_STEPS, PICK_INFO, PICK_POINTS, PICK_TIERS, PICK_TIER_KO, pickTier, onboardNote, onboardTips, shortNick, type PickKey, type StaffOverview } from '@prism/core';
 import { Empty, MemberFace, useSkins } from './basics';
 import { motionOff } from './motion';
 
@@ -271,10 +271,10 @@ function Picks({ o, onOpen }: { o: StaffOverview; onOpen?: (id: string) => void 
   const ev = (p: (typeof picks)[number], k: PickKey) => (k === 'act' ? `${p.n}판` : k === 'crew' ? `${Math.round((p.crew / Math.max(1, p.n)) * 100)}% (${p.crew}판)` : k === 'days' ? `${p.days} / 14일` : k === 'mates' ? `${p.mates}명` : `${p.score}점`);
   return (
     <section className="card sv-card" onPointerLeave={() => setTip(null)}>
-      <div className="sv-head"><h2>잘하고 있는 멤버</h2><span className="meta">최근 2주 · 다섯 가지 기준의 합 (100점)</span></div>
+      <div className="sv-head"><h2>잘하고 있는 멤버</h2><span className="meta">최근 2주 · 다섯 가지 기준을 합친 활동 지수 (0~100)</span></div>
       <div className="sv-crit">{PICK_INFO.map((c) => <div key={c.key}><span className="t"><i className="k" style={{ background: c.color }} />{c.name}<em>{PICK_POINTS[c.key]}점</em></span><p>{c.desc}</p></div>)}</div>
       {picks.length ? <div className="sv-mtbl" role="table">
-        <div className="sv-mr h" role="row"><span /><span>멤버</span><span>기준마다 받은 점수 (100점 만점)</span><span>합계</span></div>
+        <div className="sv-mr h" role="row"><span /><span>멤버</span><span>기준마다 받은 몫 (합 100)</span><span>지수</span></div>
         {picks.map((p, i) => {
           const top2 = [...PICK_INFO].sort((a, b) => p.pts[b.key] / PICK_POINTS[b.key] - p.pts[a.key] / PICK_POINTS[a.key]).slice(0, 2).map((c) => c.name);
           return (
@@ -288,7 +288,7 @@ function Picks({ o, onOpen }: { o: StaffOverview; onOpen?: (id: string) => void 
                 </span>
                 <span className="sv-chips">{PICK_INFO.map((c) => <span key={c.key}><i className="k" style={{ background: c.color }} />{ev(p, c.key)}</span>)}</span>
               </span>
-              <span className="tot">{p.total}<small>점</small></span>
+              <span className={`tot ${pickTier(p.total)}`} title={`활동 지수 ${p.total} · ${PICK_TIER_KO[pickTier(p.total)]} (${PICK_TIERS.low} 미만 낮음 · ${PICK_TIERS.high} 이상 높음)`}><b>{p.total}</b><small>{PICK_TIER_KO[pickTier(p.total)]}</small></span>
             </div>
           );
         })}

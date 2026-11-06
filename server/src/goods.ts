@@ -32,10 +32,10 @@ async function titleStats(env: Env, id: string, lv: Awaited<ReturnType<typeof le
     env.DB.prepare(
       `SELECT COUNT(*) AS n, COUNT(DISTINCT champion_id) AS c,
          COALESCE(SUM(CASE WHEN ((played_at / 3600000) + 9) % 24 >= 21 OR ((played_at / 3600000) + 9) % 24 < 3 THEN 1 ELSE 0 END), 0) AS night
-       FROM participants WHERE member_id = ?`,
+       FROM reward_participants WHERE member_id = ?`,
     ).bind(id),
-    env.DB.prepare('SELECT feats FROM participants WHERE member_id = ? AND feats IS NOT NULL').bind(id),
-    env.DB.prepare('SELECT DISTINCT j.value AS id FROM participants p, json_each(p.augments) j WHERE p.member_id = ? AND p.augments IS NOT NULL').bind(id),
+    env.DB.prepare('SELECT feats FROM reward_participants WHERE member_id = ? AND feats IS NOT NULL').bind(id),
+    env.DB.prepare('SELECT DISTINCT j.value AS id FROM reward_participants p, json_each(p.augments) j WHERE p.member_id = ? AND p.augments IS NOT NULL').bind(id),
   ]);
   const gr = g.results[0] as { n: number; c: number; night: number };
   let dmgTop = 0, takenTop = 0, penta = 0;

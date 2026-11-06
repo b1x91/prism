@@ -5,7 +5,7 @@
  */
 import { useKept } from './kept';
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, ITEM, ITEM_DEX, ITEM_GROUP, ITEM_GROUP_KO, itemMastery, type ItemGroup, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, mergeDex, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, type Shop, championsFor, explainFit, rankFits, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP, josa } from '@prism/core';
+import { ACTIVE_AUGMENTS, AUGMENT, CHAMPIONS, ITEM, ITEM_DEX, ITEM_GROUP, ITEM_GROUP_KO, itemMastery, type ItemGroup, cdragon, RARITY_KO, ROLE_KO, augMastery, champMastery, CHALLENGE_ROLE_KO, dexFromGames, dexFromRows, initials, pct, type Api, type Dex, type DexEntry, type DexRows, type Game, type Goal, type Mastery, type Rarity, type Shop, championsFor, explainFit, rankFits, dexLevel, DEX_LEVEL_KO, DEX_LEVEL_RULE, type DexLevel, dexXpOf, DEX_XP, josa } from '@prism/core';
 import { ChampImg, Gem, Select, Seg } from './basics';
 import { AugRing, AugmentLink, TierBadge } from './augment';
 import { Icon } from './icons';
@@ -14,7 +14,7 @@ import { LensGate } from './goods';
 import { useItemDetail } from './game';
 import { Artisans } from './artisan';
 
-/** 서버에 기록된 내 모든 판 + (앱이면) 이 PC 롤 기록을 합친 도감 */
+/** 서버에 기록된 내 판으로 만든 도감 (서버 기록을 못 받았을 때만 이 PC 롤 기록) */
 export function useDex(api: Api | null, games: Game[] = []) {
   const kept = () => { const r = api?.peek?.<DexRows>('/api/me/dex'); return r ? dexFromRows(r) : null; };
   const [rows, setRows] = useState<Dex | null>(kept);
@@ -25,7 +25,8 @@ export function useDex(api: Api | null, games: Game[] = []) {
     api.get<DexRows>('/api/me/dex').then((r) => on && setRows(dexFromRows(r))).catch(() => {}).finally(() => on && setLoading(false));
     return () => { on = false; };
   }, [api]);
-  const dex = useMemo(() => { const local = dexFromGames(games); return rows ? mergeDex(rows, local) : local; }, [rows, games]);
+  // 서버 기록이 있으면 서버만 (v3.178): 보상(도감)은 앱을 켜 둔 판만 세므로, 이 PC 롤 기록을 섞으면 앱을 끈 채 한 판이 채워진다
+  const dex = useMemo(() => rows ?? dexFromGames(games), [rows, games]);
   return { dex, loading };
 }
 

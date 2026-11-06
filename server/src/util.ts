@@ -121,3 +121,6 @@ export const FACE = (a: string) =>
 export function canHostScrim(_env: Env, m: Member) {
   return can(m, 'scrim');
 }
+
+/** 판 시작 전·끝난 뒤 이만큼까지의 앱 '게임 중' 알림을 그 판으로 본다 — 보상은 앱을 켜 둔 판만 (v3.178) */
+export const LIVE_MARGIN = 120_000;

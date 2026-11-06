@@ -50,9 +50,9 @@ const order = (a: ReturnType<typeof view>, b: ReturnType<typeof view>) => Number
 /** 한 챔피언의 장인과 장인의 길 순위 */
 export async function championArtisans(env: Env, champ: number) {
   const [rows, pairs, feats] = await env.DB.batch([
-    env.DB.prepare('SELECT member_id, COUNT(*) AS n, SUM(win) AS w FROM participants WHERE champion_id = ? GROUP BY member_id').bind(champ),
-    env.DB.prepare('SELECT member_id, augment_id AS aug, champion_id AS champ, COUNT(*) AS n, SUM(win) AS w FROM participant_augments WHERE champion_id = ? GROUP BY member_id, augment_id').bind(champ),
-    env.DB.prepare(`SELECT ${FEAT_COLS} FROM participants WHERE champion_id = ? AND feats IS NOT NULL`).bind(champ),
+    env.DB.prepare('SELECT member_id, COUNT(*) AS n, SUM(win) AS w FROM reward_participants WHERE champion_id = ? GROUP BY member_id').bind(champ),
+    env.DB.prepare('SELECT member_id, augment_id AS aug, champion_id AS champ, COUNT(*) AS n, SUM(win) AS w FROM reward_participant_augments WHERE champion_id = ? GROUP BY member_id, augment_id').bind(champ),
+    env.DB.prepare(`SELECT ${FEAT_COLS} FROM reward_participants WHERE champion_id = ? AND feats IS NOT NULL`).bind(champ),
   ]);
   const byMember = groupPairs(pairs.results as PairRow[]);
   const kn = await knownFeats(env);
@@ -67,8 +67,8 @@ export async function championArtisans(env: Env, champ: number) {
 /** 한 증강의 장인과 장인의 길 순위 */
 export async function augmentArtisans(env: Env, aug: number) {
   const [rows, pairs] = await env.DB.batch([
-    env.DB.prepare('SELECT member_id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments WHERE augment_id = ? GROUP BY member_id').bind(aug),
-    env.DB.prepare('SELECT member_id, augment_id AS aug, champion_id AS champ, COUNT(*) AS n, SUM(win) AS w FROM participant_augments WHERE augment_id = ? GROUP BY member_id, champion_id').bind(aug),
+    env.DB.prepare('SELECT member_id, COUNT(*) AS n, SUM(win) AS w FROM reward_participant_augments WHERE augment_id = ? GROUP BY member_id').bind(aug),
+    env.DB.prepare('SELECT member_id, augment_id AS aug, champion_id AS champ, COUNT(*) AS n, SUM(win) AS w FROM reward_participant_augments WHERE augment_id = ? GROUP BY member_id, champion_id').bind(aug),
   ]);
   const byMember = groupPairs(pairs.results as PairRow[]);
   const list = (rows.results as Row[]).map((r) => {
@@ -80,7 +80,7 @@ export async function augmentArtisans(env: Env, aug: number) {
 
 /** 한 아이템의 장인과 장인의 길 순위 (v3.119) — 끝까지 갖고 있던 판으로 센다. 바뀐 모습(무라마나 등)은 처음 산 아이템으로 */
 export async function itemArtisans(env: Env, item: number) {
-  const { results } = await env.DB.prepare(`SELECT member_id, champ, COUNT(*) AS n, SUM(win) AS w FROM (${itemRows('1 = 1')}) WHERE item = ? GROUP BY member_id, champ`).bind(item).all<{ member_id: string; champ: number; n: number; w: number }>();
+  const { results } = await env.DB.prepare(`SELECT member_id, champ, COUNT(*) AS n, SUM(win) AS w FROM (${itemRows('1 = 1', 'reward_participants')}) WHERE item = ? GROUP BY member_id, champ`).bind(item).all<{ member_id: string; champ: number; n: number; w: number }>();
   const by = groupItemPairs(results.map((r) => ({ ...r, item })));
   const list = [...by].map(([id, ps]) => {
     const e = entry(ps.reduce((a, p) => ({ n: a.n + p.n, w: a.w + p.w }), { n: 0, w: 0 }));
@@ -98,11 +98,11 @@ function groupItemPairs(rows: { member_id: string; item: number; champ: number; 
 /** 랭킹: 챔피언 장인 / 증강 장인 / 아이템 장인. 회원마다 마스터 수·이룬 목표 수·대표 마스터 */
 export async function artisanRanking(env: Env, me: Member) {
   const [champRows, augRows, pairs, feats, itemPairRows] = await env.DB.batch([
-    env.DB.prepare('SELECT member_id, champion_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participants GROUP BY member_id, champion_id'),
-    env.DB.prepare('SELECT member_id, augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM participant_augments GROUP BY member_id, augment_id'),
-    env.DB.prepare('SELECT member_id, augment_id AS aug, champion_id AS champ, COUNT(*) AS n, SUM(win) AS w FROM participant_augments GROUP BY member_id, augment_id, champion_id'),
-    env.DB.prepare(`SELECT ${FEAT_COLS} FROM participants WHERE feats IS NOT NULL`),
-    env.DB.prepare(`SELECT member_id, item, champ, COUNT(*) AS n, SUM(win) AS w FROM (${itemRows('1 = 1')}) GROUP BY member_id, item, champ`),
+    env.DB.prepare('SELECT member_id, champion_id AS id, COUNT(*) AS n, SUM(win) AS w FROM reward_participants GROUP BY member_id, champion_id'),
+    env.DB.prepare('SELECT member_id, augment_id AS id, COUNT(*) AS n, SUM(win) AS w FROM reward_participant_augments GROUP BY member_id, augment_id'),
+    env.DB.prepare('SELECT member_id, augment_id AS aug, champion_id AS champ, COUNT(*) AS n, SUM(win) AS w FROM reward_participant_augments GROUP BY member_id, augment_id, champion_id'),
+    env.DB.prepare(`SELECT ${FEAT_COLS} FROM reward_participants WHERE feats IS NOT NULL`),
+    env.DB.prepare(`SELECT member_id, item, champ, COUNT(*) AS n, SUM(win) AS w FROM (${itemRows('1 = 1', 'reward_participants')}) GROUP BY member_id, item, champ`),
   ]);
   const byMember = groupPairs(pairs.results as PairRow[]);
   const byItem = groupItemPairs(itemPairRows.results as { member_id: string; item: number; champ: number; n: number; w: number }[]);

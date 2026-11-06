@@ -6,7 +6,7 @@ import { parseDeco } from '../../packages/core/src/shop.js';
 import { onRiotLinked } from './join.js';
 import { syncNick } from './discordnick.js';
 import { can, isPending, levelOf, permsOf, rankingGate, ratesOf, topRole } from './roles.js';
-import { FACE, HttpError, canHostScrim, json, type Env, type Member } from './util.js';
+import { FACE, HttpError, LIVE_MARGIN, canHostScrim, json, type Env, type Member } from './util.js';
 import { adoptProspect } from './prospects.js';
 import { knownFeats, tallyByMember } from './artisans.js';
 import { SKIN_TIERS, skinNeed } from '../../packages/core/src/skin-tiers.js';
@@ -71,6 +71,20 @@ export async function getMe(env: Env, me: Member) {
   });
 }
 
+/** 앱이 '게임 중'을 알린 순간 (v3.178). 30초 단위로 남기고 14일이 지난 것은 가끔 지운다 */
+async function markLive(env: Env, id: string, now: number) {
+  const at = Math.floor(now / 30_000) * 30_000;
+  const stmts = [
+    env.DB.prepare('INSERT OR IGNORE INTO app_game_seen (member_id, at) VALUES (?, ?)').bind(id, at),
+    env.DB.prepare(
+      `UPDATE participants SET live = 1 WHERE member_id = ?1 AND live = 0 AND played_at BETWEEN ?2 - 7200000 AND ?2 + ?3
+         AND game_id IN (SELECT game_id FROM matches m WHERE m.played_at - ?3 <= ?2 AND m.played_at + m.duration * 1000 + ?3 >= ?2)`,
+    ).bind(id, now, LIVE_MARGIN),
+  ];
+  if (Math.random() < 0.02) stmts.push(env.DB.prepare('DELETE FROM app_game_seen WHERE at < ?').bind(now - 14 * 86_400_000));
+  await env.DB.batch(stmts);
+}
+
 /** 접속 알림 (앱·웹이 60초마다). 앱은 롤 켜짐·창 떠 있음도 함께 */
 export async function setPresence(env: Env, me: Member, body: { via?: unknown; lol?: unknown; open?: unknown; phase?: unknown; champ?: unknown }, attend?: unknown) {
   const now = Date.now();
@@ -83,6 +97,8 @@ export async function setPresence(env: Env, me: Member, body: { via?: unknown; l
         app_first_at = CASE WHEN app_first_at = 0 THEN ?1 ELSE app_first_at END WHERE id = ?6`)
       .bind(now, body.lol ? 1 : 0, body.open ? 1 : 0, phase, champ, me.id).run();
     Object.assign(me, { app_first_at: me.app_first_at || now, app_seen_at: now, app_lol: body.lol ? 1 : 0, app_open: body.open ? 1 : 0 });
+    // 앱을 켜 둔 채 한 판만 보상 (v3.178): '게임 중' 알림 시각을 남기고, 이미 기록된 그 판이 있으면 바로 표시
+    if (phase === 'game') await markLive(env, me.id, now).catch(() => {});
   } else if (body.via === 'app-quit') {
     await env.DB.prepare("UPDATE members SET app_seen_at = 0, app_lol = 0, app_open = 0, app_phase = '' WHERE id = ?").bind(me.id).run();
     Object.assign(me, { app_seen_at: 0, app_lol: 0, app_open: 0 });
@@ -118,25 +134,25 @@ export async function myDex(env: Env, me: Member) {
 
 /** 판마다 끝까지 갖고 있던 아이템 (한 판에 같은 아이템은 한 번) — 바뀐 모습은 처음 산 아이템으로 (core ITEM_BASE 와 같게).
  *  where 는 participants p 에 거는 조건 (자리표시 ? 는 부르는 쪽이 bind) */
-export const itemRows = (where: string) => `SELECT DISTINCT p.member_id, p.game_id, p.champion_id AS champ, p.win, p.played_at,
+export const itemRows = (where: string, table = 'participants') => `SELECT DISTINCT p.member_id, p.game_id, p.champion_id AS champ, p.win, p.played_at,
     CASE CAST(j.value AS INTEGER) WHEN 3040 THEN 3003 WHEN 3042 THEN 3004 WHEN 3121 THEN 3119 ELSE CAST(j.value AS INTEGER) END AS item
-  FROM participants p, json_each(p.items) j WHERE ${where} AND p.items IS NOT NULL AND CAST(j.value AS INTEGER) > 0`;
-const ITEM_ROWS = itemRows('p.member_id = ?');
+  FROM ${table} p, json_each(p.items) j WHERE ${where} AND p.items IS NOT NULL AND CAST(j.value AS INTEGER) > 0`;
+const ITEM_ROWS = itemRows('p.member_id = ?', 'reward_participants');
 
 /** 한 회원의 도감 재료 (도감 화면·피스 계산·공개 링크가 같이 쓴다) */
 export async function dexRows(env: Env, id: string) {
   const me = { id };
   const [champs, augs, pairs, feats, items, itemPairs] = await env.DB.batch([
-    env.DB.prepare('SELECT champion_id AS id, COUNT(*) AS n, SUM(win) AS w, MIN(played_at) AS first, MAX(played_at) AS last FROM participants WHERE member_id = ? GROUP BY champion_id').bind(me.id),
+    env.DB.prepare('SELECT champion_id AS id, COUNT(*) AS n, SUM(win) AS w, MIN(played_at) AS first, MAX(played_at) AS last FROM reward_participants WHERE member_id = ? GROUP BY champion_id').bind(me.id),
     env.DB.prepare(
       `SELECT CAST(j.value AS INTEGER) AS id, COUNT(*) AS n, SUM(p.win) AS w, MIN(p.played_at) AS first, MAX(p.played_at) AS last
-       FROM participants p, json_each(p.augments) j WHERE p.member_id = ? AND p.augments IS NOT NULL GROUP BY 1`,
+       FROM reward_participants p, json_each(p.augments) j WHERE p.member_id = ? AND p.augments IS NOT NULL GROUP BY 1`,
     ).bind(me.id),
     env.DB.prepare(
       `SELECT CAST(j.value AS INTEGER) AS aug, p.champion_id AS champ, COUNT(*) AS n, SUM(p.win) AS w
-       FROM participants p, json_each(p.augments) j WHERE p.member_id = ? AND p.augments IS NOT NULL GROUP BY 1, 2`,
+       FROM reward_participants p, json_each(p.augments) j WHERE p.member_id = ? AND p.augments IS NOT NULL GROUP BY 1, 2`,
     ).bind(me.id),
-    env.DB.prepare('SELECT member_id, champion_id AS championId, win, kills, deaths, feats FROM participants WHERE member_id = ? AND feats IS NOT NULL').bind(me.id),
+    env.DB.prepare('SELECT member_id, champion_id AS championId, win, kills, deaths, feats FROM reward_participants WHERE member_id = ? AND feats IS NOT NULL').bind(me.id),
     // 아이템 도감 (v3.119): 끝까지 갖고 있던 아이템, 모습이 바뀐 아이템은 처음 산 아이템으로
     env.DB.prepare(`SELECT item AS id, COUNT(*) AS n, SUM(win) AS w, MIN(played_at) AS first, MAX(played_at) AS last FROM (${ITEM_ROWS}) GROUP BY item`).bind(me.id),
     env.DB.prepare(`SELECT item, champ, COUNT(*) AS n, SUM(win) AS w FROM (${ITEM_ROWS}) GROUP BY item, champ`).bind(me.id),

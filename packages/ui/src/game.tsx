@@ -43,11 +43,23 @@ export type CardGame = {
   /** PRISM MVP·ACE (10명 기록이 있는 판만) */ badge?: MvpBadge | null;
 };
 
-/** PRISM MVP·ACE 표시: MVP = 이긴 팀에서 가장 잘한 사람(금빛), ACE = 진 팀에서 가장 잘한 사람 (점수 6.0 이상일 때만) */
+/** PRISM MVP·ACE 표시 (v3.178 시안 B): 프리즘 결정 휘장 + 글자, 상자 없이. MVP = 이긴 팀에서 가장 잘한 사람(금빛), ACE = 진 팀에서 가장 잘한 사람 (점수 6.0 이상일 때만) */
+const CRYSTAL: Record<MvpBadge, [string, string, string, string, string]> = {
+  mvp: ['#ffe9a8', '#f6c74e', '#dc9d1f', '#9b6608', '#fffbe8'],
+  ace: ['#dcdaff', '#a29dff', '#6a63ee', '#332c9e', '#f4f3ff'],
+};
 export function MvpChip({ b, score }: { b: MvpBadge; score?: number }) {
-  return <span className={`pmvp ${b}`} title={`PRISM ${BADGE_KO[b]} · ${b === 'mvp' ? '이긴 팀에서' : '진 팀에서'} 가장 잘했어요${score != null ? ` (${score.toFixed(1)}점)` : ''} · 피해 몫·받은 피해·킬 관여·데스로 매겨요`}>{b === 'mvp'
-    ? <svg viewBox="0 0 12 10" aria-hidden="true"><path d="M1 8.6 0 2.4l3.2 2.3L6 0l2.8 4.7L12 2.4l-1 6.2z" /></svg>
-    : <svg viewBox="0 0 10 10" aria-hidden="true"><path d="M5 0 6.2 3.8 10 5 6.2 6.2 5 10 3.8 6.2 0 5l3.8-1.2z" /></svg>}{BADGE_KO[b]}</span>;
+  const [top, mid, right, left, tip] = CRYSTAL[b];
+  return <span className={`pmvp ${b}`} title={`PRISM ${BADGE_KO[b]} · ${b === 'mvp' ? '이긴 팀에서' : '진 팀에서'} 가장 잘했어요${score != null ? ` (PRISM SCORE ${score.toFixed(1)})` : ''} · 피해 몫·받은 피해·킬 관여·데스로 매겨요`}>
+    <svg viewBox="0 0 15 18" aria-hidden="true">
+      <path d="M7.5 0 15 4.5 7.5 7 0 4.5z" fill={top} /><path d="M0 4.5 7.5 7v11L0 13.5z" fill={left} /><path d="M15 4.5 7.5 7v11l7.5-4.5z" fill={right} />
+      <path d="M7.5 7 11 5.8 7.5 15 4 5.8z" fill={mid} opacity=".9" /><path d="M7.5 0 9.4 1.2 7.5 2 5.6 1.2z" fill={tip} />
+    </svg>{BADGE_KO[b]}</span>;
+}
+
+/** PRISM SCORE 칩 (v3.178): KDA 옆. 팀 안에서 피해 몫·받은 피해·킬 관여·데스로 매긴 0~10 (팀 평균 5.0) */
+export function PrismScore({ v, b }: { v: number; b?: MvpBadge | null }) {
+  return <span className={`pscore ${b ?? ''}`} title="PRISM SCORE · 같은 팀 다섯 명 안에서 피해 몫·받은 피해·킬 관여·데스로 매겨요 (팀 평균 5.0)"><i>PRISM SCORE</i><b>{v.toFixed(1)}</b></span>;
 }
 
 const k = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
@@ -213,9 +225,9 @@ function MatchView({ g, onClose, onChampion, inline }: { g: CardGame; onClose?: 
                     <button type="button" className="md-champ" onClick={() => onChampion?.(p.championId)} disabled={!onChampion} title={CHAMPIONS[p.championId]?.name}><ChampImg id={p.championId} size={36} /></button>
                     <span className="md-who">
                       <b>{p.memberId ? <><MemberFace nick={p.nick ?? '?'} skin={p.skin} champion={p.main} size={16} />{shortNick(p.nick)}</> : (p.name ?? (isMe(p) ? '나' : '플레이어'))}{badges?.[at(p)] && <MvpChip b={badges[at(p)]!} score={scores?.[at(p)]} />}</b>
-                      <small>{CHAMPIONS[p.championId]?.name}{scores && <> · <span className={`md-ps ${badges?.[at(p)] ?? ''}`} title="PRISM 점수 · 팀 안에서 피해 몫·받은 피해·킬 관여·데스로 매겨요 (팀 평균 5.0)">{scores[at(p)].toFixed(1)}</span></>}</small>
+                      <small>{CHAMPIONS[p.championId]?.name}</small>
                     </span>
-                    <span className="md-kda"><b>{p.kills}/<span className="l">{p.deaths}</span>/{p.assists}</b><small>{kda(p)} KDA</small></span>
+                    <span className="md-kda"><span className="md-kv"><b>{p.kills}/<span className="l">{p.deaths}</span>/{p.assists}</b><small>{kda(p)} KDA</small></span>{scores && <PrismScore v={scores[at(p)]} b={badges?.[at(p)]} />}</span>
                     <span className="md-dmg">{p.damageToChampions != null ? <><span className="v">{(p.damageToChampions / 1000).toFixed(1)}k</span><span className="bar"><span style={{ width: `${(p.damageToChampions / maxDmg) * 100}%` }} /></span></> : <span className="meta">-</span>}</span>
                     <span className="md-items">{[...p.items.slice(0, 6), ...Array(Math.max(0, 6 - p.items.length)).fill(0)].map((id, j) => id ? <ItemIcon key={j} id={id} /> : <span key={j} className="item-empty" />)}</span>
                     <span className="md-augs">{p.augments.slice(0, 6).map((a, j) => <AugmentLink key={`${a}-${j}`} id={a} champion={p.championId} inline><AugRing id={a} size={24} /></AugmentLink>)}</span>

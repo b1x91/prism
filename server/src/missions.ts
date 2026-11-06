@@ -11,7 +11,7 @@ import { HttpError, json, type Env, type Member } from './util.js';
 import { ratesOf } from './roles.js';
 
 export async function myGamesForMissions(env: Env, id: string): Promise<MGame[]> {
-  const r = await env.DB.prepare('SELECT champion_id AS c, win AS w, played_at AS t FROM participants WHERE member_id = ?').bind(id).all<MGame>();
+  const r = await env.DB.prepare('SELECT champion_id AS c, win AS w, played_at AS t FROM reward_participants WHERE member_id = ?').bind(id).all<MGame>();
   return r.results;
 }
 
