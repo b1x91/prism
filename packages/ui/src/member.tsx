@@ -180,7 +180,7 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
 }
 
 /** 상위 3명 무대: 가운데 1위가 가장 높고, 조명·받침대가 순서대로 올라온다 */
-/** 무대 그림 · 순위 문장 (Artlist 로 새로 그림, v3.182) */
+/** 무대 그림 · 순위 문장 (Artlist 로 새로 그림, v3.184) */
 const POD_STAGE = '/rank/stage-v2.webp';
 const POD_CREST = (rank: number) => `/rank/crest-${rank}-v1.webp`;
 /** 그 회원의 세로 그림: 대표 스킨 → 주 챔프 기본 스킨 → 얼굴 그림 */
@@ -189,7 +189,7 @@ const podArt = (r: RankingRow, skins: Record<number, Skin> | null) =>
 export const podiumImages = (rows: RankingRow[], skins: Record<number, Skin> | null) => [POD_STAGE, POD_CREST(1), POD_CREST(2), POD_CREST(3), ...rows.slice(0, 3).map((r) => podArt(r, skins))];
 
 /**
- * 상위 3명 무대 (v3.182): 결정 신전 무대 위, 받침대 얼음이 한 덩어리로 솟아 그 회원의 챔프가 얼음 속에 서 있다.
+ * 상위 3명 무대 (v3.184): 결정 신전 무대 위, 받침대 얼음이 한 덩어리로 솟아 그 회원의 챔프가 얼음 속에 서 있다.
  * 머리에 금·은·동 방패 문장(1위만 프리즘 보석), 얼음 아래쪽에 이름·판수(왼쪽)와 점수(오른쪽).
  */
 function Leaderboard({ rows, by, meId, skins, onOpen, play }: { rows: RankingRow[]; by: RankBy; meId?: string; play: boolean; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
@@ -340,7 +340,7 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
       {total.n > 0 ? <StatBoard data={data} games={games} kda={kda} streak={st} /> : !(m.self && !m.riotId) && <FirstGame data={data} />}
       {m.self && shop?.uses ? <MyHighlight api={api} pinned={data.pinned} frame={shop.uses.frame} onShop={onShop} /> : data.pinned ? <HighlightCard h={data.pinned} /> : null}
       {m.self && total.n > 0 && <ImproveCard data={data} onChampion={onChampion} />}
-      {m.self && total.n > 0 && shop?.uses && <InsightPanel api={api} data={shop} focus={insight} onShop={onShop} onChange={setShopNow} />}
+      {m.self && total.n > 0 && shop?.uses && <InsightPanel api={api} data={shop} me={{ nick: m.nick, skin: m.skin, champion: main }} focus={insight} onShop={onShop} onChange={setShopNow} />}
       {!m.self && total.n > 0 && <SynergyCard data={data} />}
       {total.n > 0 && <RecentGames games={games} limit={10} max={20} onChampion={onChampion} />}
       {total.n > 0 && <div className="grid2">

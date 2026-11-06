@@ -4,6 +4,7 @@
  * 판이 적은 묶음은 내 평균 쪽으로 당겨서(PRIOR판만큼) 튀지 않게 하고, 차이가 작으면 말하지 않는다. 숫자는 INSIGHT 한 곳.
  */
 import { AUGMENT, CHAMPIONS } from './data';
+import { bondOf } from './duo';
 import { tierFor } from './mastery';
 import { TAG_KO } from './profile';
 import type { Rarity } from './synergy';
@@ -147,16 +148,22 @@ export function goldenReport(rows: TimeRow[]): GoldenReport {
 
 // ───────── 베스트 파트너 TOP 3 ─────────
 
-/** 같은 팀으로 함께한 판 하나: 그 멤버 · 승 · 내 챔프·KDA · 그 멤버 챔프 */
-export type PartnerRow = { id: string; w: number; mine: number; theirs: number; k: number; d: number; a: number };
+/** 같은 팀으로 함께한 판 하나: 그 멤버 · 승 · 내 챔프·KDA · 그 멤버 챔프 · 시각(예전 서버는 없음) */
+export type PartnerRow = { id: string; w: number; mine: number; theirs: number; k: number; d: number; a: number; t?: number };
 export type PartnerPick = {
   id: string; n: number; w: number; diff: number;
   /** 함께할 때 내 KDA vs 평소 */
   kda: number; kdaBase: number;
   combo: { mine: number; theirs: number; n: number; w: number } | null;
+  /** v3.181 — 함께한 사이: 처음·마지막으로 함께한 판, 함께한 날 수(한국 날짜), 함께 최고 연승, 듀오 등급 */
+  first?: number | null; last?: number | null; days?: number; run?: number;
+  bond?: { grade: number; name: string } | null;
 };
-export type PartnerReport = { base: number; games: number; list: PartnerPick[]; lines: string[] };
+/** 아직 파트너(같은 팀 minPartner판)가 되지 못한 멤버 — TOP 3 의 빈 칸을 '다음 파트너'로 채운다 */
+export type PartnerNear = { id: string; n: number; w: number; last: number | null };
+export type PartnerReport = { base: number; games: number; list: PartnerPick[]; lines: string[]; near?: PartnerNear[]; need?: number };
 const kdaOf = (k: number, d: number, a: number) => (k + a) / Math.max(1, d);
+const kstDay = (t: number) => Math.floor((t + 9 * 3_600_000) / 86_400_000);
 export function partnerReport(rows: PartnerRow[], mine: { w: number; k: number; d: number; a: number }[], nickOf: (id: string) => string): PartnerReport {
   const all: NW = { n: mine.length, w: mine.filter((r) => r.w).length };
   const base = rate(all) || 0.5;
@@ -164,22 +171,33 @@ export function partnerReport(rows: PartnerRow[], mine: { w: number; k: number; 
   const kdaBase = kdaOf(sum.k, sum.d, sum.a);
   const by = new Map<string, PartnerRow[]>();
   for (const r of rows) by.set(r.id, [...(by.get(r.id) ?? []), r]);
-  const list = [...by].filter(([, rs]) => rs.length >= INSIGHT.minPartner).map(([id, rs]) => {
+  const list = [...by].filter(([, rs]) => rs.length >= INSIGHT.minPartner).map(([id, rs]): PartnerPick => {
     const nw = { n: rs.length, w: rs.filter((r) => r.w).length };
     const s = rs.reduce((a, r) => ({ k: a.k + r.k, d: a.d + r.d, a: a.a + r.a }), { k: 0, d: 0, a: 0 });
     const cm = new Map<string | number, NW>();
     for (const r of rs) add(cm, `${r.mine}:${r.theirs}`, Boolean(r.w));
     const best = [...cm].filter(([, v]) => v.n >= 2).sort((a, b) => rate(b[1]) - rate(a[1]) || b[1].n - a[1].n)[0];
     const combo = best ? (() => { const [m, t] = String(best[0]).split(':').map(Number); return { mine: m, theirs: t, ...best[1] }; })() : null;
-    return { id, ...nw, diff: shrunk(nw, base) - base, kda: kdaOf(s.k, s.d, s.a), kdaBase, combo };
+    // 함께한 사이 (시각이 있는 판만)
+    const ts = rs.filter((r) => typeof r.t === 'number' && r.t > 0).sort((a, b) => a.t! - b.t!);
+    let run = 0, cur = 0;
+    for (const r of ts) { cur = r.w ? cur + 1 : 0; run = Math.max(run, cur); }
+    const bond = ts.length ? bondOf(ts.map((r) => ({ t: r.t!, w: r.w }))) : null;
+    return {
+      id, ...nw, diff: shrunk(nw, base) - base, kda: kdaOf(s.k, s.d, s.a), kdaBase, combo,
+      first: ts[0]?.t ?? null, last: ts[ts.length - 1]?.t ?? null, days: new Set(ts.map((r) => kstDay(r.t!))).size, run,
+      bond: bond ? { grade: bond.grade, name: bond.name } : null,
+    };
   }).sort((a, b) => b.diff - a.diff || b.n - a.n).slice(0, 3);
+  // 빈 칸: 아직 minPartner판이 안 된 멤버 중 가장 많이 함께한 순 (같으면 최근에 함께한 순)
+  const near: PartnerNear[] = [...by].filter(([, rs]) => rs.length < INSIGHT.minPartner).map(([id, rs]) => ({
+    id, n: rs.length, w: rs.filter((r) => r.w).length, last: rs.reduce<number | null>((m, r) => (typeof r.t === 'number' && r.t > (m ?? 0) ? r.t : m), null),
+  })).sort((a, b) => b.n - a.n || (b.last ?? 0) - (a.last ?? 0)).slice(0, 3 - list.length);
+  // 한 줄: 카드에 이미 있는 숫자(승률·KDA·조합)를 되풀이하지 않는다 (v3.32)
   const lines: string[] = [];
   const top = list[0];
-  if (top && top.diff >= INSIGHT.gap / 2) lines.push(`${nickOf(top.id)}님과 함께할 때 승률이 ${pct(rate(top))} — 내 평균보다 ${pp(rate(top) - base)}.`);
-  else if (top) lines.push(`아직 내 평균(${pct(base)})보다 더 잘 이기는 짝은 없어요. 그중 ${nickOf(top.id)}님과 가장 잘 맞아요 (${top.n}판 ${pct(rate(top))}). 함께한 판이 쌓이면 달라질 수 있어요.`);
-  const kd = list.find((x) => x.kda - x.kdaBase >= 0.5);
-  if (kd) lines.push(`${nickOf(kd.id)}님과 함께면 내 KDA가 ${kd.kda.toFixed(2)} (평소 ${kd.kdaBase.toFixed(2)}) — 서로 잘 받쳐 줘요.`);
-  if (top?.combo && top.combo.w >= 2) lines.push(`둘이 ${CHAMPIONS[top.combo.mine]?.name ?? '챔프'} + ${CHAMPIONS[top.combo.theirs]?.name ?? '챔프'}일 때 ${top.combo.n}판 ${top.combo.w}승.`);
+  if (top && top.diff >= INSIGHT.gap / 2) lines.push(`${nickOf(top.id)}님과 함께할 때 가장 잘 이겨요.${list.length > 1 && list[1].diff >= INSIGHT.gap / 2 ? ` ${nickOf(list[1].id)}님도 든든한 짝이에요.` : ''}`);
+  else if (top) lines.push(`아직 내 평균(${pct(base)})보다 확실히 더 잘 이기는 짝은 없어요. 함께한 판이 쌓이면 달라질 수 있어요.`);
   if (!list.length) lines.push(`멤버와 같은 팀으로 ${INSIGHT.minPartner}판 이상 함께하면 파트너가 보여요.`);
-  return { base, games: mine.length, list, lines };
+  return { base, games: mine.length, list, lines, near, need: INSIGHT.minPartner };
 }

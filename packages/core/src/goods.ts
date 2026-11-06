@@ -11,8 +11,9 @@
 import { SHOP, type ShopItem, type ShopRarity } from './shop';
 
 export const USE_PRICE = {
-  // v3.128: 피스 버는 양을 줄인 뒤(v3.120)에도 이용권이 너무 쌌다 → 두 배
-  insight: { aug: 300, partner: 300, golden: 240 },
+  // v3.181: 리포트마다 200 · 셋을 한 번에 500 (하나도 열지 않았을 때만 — insightBundleOk)
+  insight: { aug: 200, partner: 200, golden: 200 },
+  insightAll: 500,
   lens: 60,
   reroll: 60,
   box: 800,
@@ -26,6 +27,11 @@ export const REROLL_PER_WEEK = 2;
 export const GIFT_NOTE_MAX = 40;
 
 export type InsightKind = keyof typeof USE_PRICE.insight;
+/** 셋을 한 번에 열 수 있는지: 지금 열려 있는 리포트가 하나도 없을 때만 (v3.181) */
+export const insightBundleOk = (open: Partial<Record<InsightKind, number>> | undefined, now = Date.now()) =>
+  !Object.values(open ?? {}).some((until) => (until ?? 0) > now);
+/** 하나씩 열 때 모두 합한 값 (묶음과 비교해 '얼마 아껴요'에 쓴다) */
+export const INSIGHT_EACH_SUM = Object.values(USE_PRICE.insight).reduce((a, b) => a + b, 0);
 export const INSIGHTS: { id: InsightKind; name: string; desc: string; rarity: ShopRarity }[] = [
   { id: 'aug', name: '증강 습관 정밀 리포트', desc: '어떤 증강을 언제 골랐을 때 이기는지, 등급·성향·챔프별로', rarity: 'epic' },
   { id: 'partner', name: '베스트 파트너 TOP 3', desc: '함께하면 가장 잘 이기는 멤버 셋과 그 이유', rarity: 'epic' },

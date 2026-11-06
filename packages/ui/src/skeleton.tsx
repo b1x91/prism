@@ -167,7 +167,7 @@ export function MemberSkeleton({ public: pub = false, self, id, studioBtn = true
 export function RankingSkeleton() {
   return (
     <SkeletonFrame className="stack">
-      {/* 상위 3명 무대: 무대 그림·얼음·순위 문장은 데이터와 상관없어 실제 그대로, 챔프·이름·점수만 뼈대 (v3.182) */}
+      {/* 상위 3명 무대: 무대 그림·얼음·순위 문장은 데이터와 상관없어 실제 그대로, 챔프·이름·점수만 뼈대 (v3.184) */}
       <section className="rks" aria-hidden="true">
         <div className="rks-scene">
           <img className="rks-art" src="/rank/stage-v2.webp" alt="" />

@@ -9,7 +9,7 @@ import { parseFeat } from '../../packages/core/src/challenges.js';
 import { pioneer, weekStart } from '../../packages/core/src/missions.js';
 import { SHOP_ITEM, forSale, itemDiscount } from '../../packages/core/src/shop.js';
 import {
-  GIFT_NOTE_MAX, INSIGHT_DAYS, REROLL_PER_WEEK, TITLE_RULES, USE_PRICE, boxPool, drawBox, earnedTitles,
+  GIFT_NOTE_MAX, INSIGHT_DAYS, REROLL_PER_WEEK, TITLE_RULES, USE_PRICE, boxPool, drawBox, earnedTitles, insightBundleOk,
   type InsightKind, type TitleStats,
 } from '../../packages/core/src/goods.js';
 import { augReport, goldenReport, partnerReport } from '../../packages/core/src/insights.js';
@@ -67,9 +67,10 @@ export async function usesOf(env: Env, id: string, lv: Awaited<ReturnType<typeof
   ]);
   const now = Date.now(), ws = weekStart(now);
   const insight: Partial<Record<InsightKind, number>> = {};
-  for (const s of sp.results) if (s.kind === 'insight' && INSIGHT_KINDS.includes(s.ref as InsightKind)) {
+  // ref 'all' = 셋을 한 번에 연 묶음 (v3.181)
+  for (const s of sp.results) if (s.kind === 'insight' && (s.ref === 'all' || INSIGHT_KINDS.includes(s.ref as InsightKind))) {
     const until = s.at + INSIGHT_DAYS * DAY;
-    if (until > (insight[s.ref as InsightKind] ?? 0)) insight[s.ref as InsightKind] = until;
+    for (const k of s.ref === 'all' ? INSIGHT_KINDS : [s.ref as InsightKind]) if (until > (insight[k] ?? 0)) insight[k] = until;
   }
   for (const k of INSIGHT_KINDS) if ((insight[k] ?? 0) <= now) delete insight[k];
   const rerolls = sp.results.filter((s) => s.kind === 'reroll' && s.ref.startsWith(`${ws}:`)).length;
@@ -96,12 +97,16 @@ async function pay(env: Env, me: Member, kind: string, ref: string, base: number
   return s;
 }
 
-/** 이용권 사기: { kind: 'insight', ref } · { kind: 'lens', ref: 'c:ID' | 'a:ID' | 'i:ID' } · { kind: 'frame' } */
+/** 이용권 사기: { kind: 'insight', ref: 'aug' | 'partner' | 'golden' | 'all' } · { kind: 'lens', ref: 'c:ID' | 'a:ID' | 'i:ID' } · { kind: 'frame' } */
 export async function buyUse(req: Request, env: Env, me: Member) {
   if (!can(me, 'shop')) throw new HttpError(403, SHOP_CLOSED);
   const { kind, ref } = (await req.json().catch(() => ({}))) as { kind?: string; ref?: string };
   const s = await state(env, me.id, me);
-  if (kind === 'insight') {
+  if (kind === 'insight' && ref === 'all') {
+    // 셋을 한 번에: 하나도 열려 있지 않을 때만 (하나라도 열었으면 남은 것은 하나씩)
+    if (!insightBundleOk(s.uses.insight)) throw new HttpError(409, '이미 열린 리포트가 있어요. 남은 리포트는 하나씩 열 수 있어요.');
+    await pay(env, me, 'insight', 'all', USE_PRICE.insightAll);
+  } else if (kind === 'insight') {
     if (!INSIGHT_KINDS.includes(ref as InsightKind)) throw new HttpError(400, '없는 리포트입니다.');
     if ((s.uses.insight[ref as InsightKind] ?? 0) > Date.now() + DAY) throw new HttpError(409, '이미 열려 있어요.');
     await pay(env, me, 'insight', ref!, USE_PRICE.insight[ref as InsightKind]);
@@ -121,7 +126,7 @@ export async function buyUse(req: Request, env: Env, me: Member) {
 
 export async function insight(env: Env, me: Member, kind: string) {
   if (!INSIGHT_KINDS.includes(kind as InsightKind)) throw new HttpError(404, '없는 리포트입니다.');
-  const open = await env.DB.prepare("SELECT MAX(at) AS at FROM piece_spend WHERE member_id = ? AND kind = 'insight' AND ref = ?").bind(me.id, kind).first<{ at: number | null }>();
+  const open = await env.DB.prepare("SELECT MAX(at) AS at FROM piece_spend WHERE member_id = ? AND kind = 'insight' AND ref IN (?, 'all')").bind(me.id, kind).first<{ at: number | null }>();
   const until = (open?.at ?? 0) + INSIGHT_DAYS * DAY;
   if (until <= Date.now()) throw new HttpError(402, '인사이트권이 필요해요.');
   if (kind === 'aug') {
@@ -137,19 +142,21 @@ export async function insight(env: Env, me: Member, kind: string) {
   const [mine, together] = await env.DB.batch([
     env.DB.prepare('SELECT win AS w, kills AS k, deaths AS d, assists AS a FROM participants WHERE member_id = ?').bind(me.id),
     env.DB.prepare(
-      `SELECT o.member_id AS id, p.win AS w, p.champion_id AS mine, o.champion_id AS theirs, p.kills AS k, p.deaths AS d, p.assists AS a
+      `SELECT o.member_id AS id, p.win AS w, p.champion_id AS mine, o.champion_id AS theirs, p.kills AS k, p.deaths AS d, p.assists AS a, p.played_at AS t
        FROM participants p JOIN participants o ON o.game_id = p.game_id AND o.team_id = p.team_id AND o.member_id <> p.member_id
        WHERE p.member_id = ?`,
     ).bind(me.id),
   ]);
-  const rows = together.results as { id: string; w: number; mine: number; theirs: number; k: number; d: number; a: number }[];
+  const rows = together.results as { id: string; w: number; mine: number; theirs: number; k: number; d: number; a: number; t: number }[];
   const ids = [...new Set(rows.map((r) => r.id))];
   const people = ids.length
     ? (await env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')} FROM members m WHERE m.id IN (${ids.map(() => '?').join(',')})`).bind(...ids).all<{ id: string; nick: string; skin: number | null; main: number | null }>()).results
     : [];
   const nick = new Map(people.map((p) => [p.id, p.nick]));
   const rep = partnerReport(rows, mine.results as { w: number; k: number; d: number; a: number }[], (id) => (nick.get(id) ?? '멤버').split('#')[0]);
-  return json({ kind, until, report: rep, people: people.filter((p) => rep.list.some((x) => x.id === p.id)) });
+  // 카드에 나오는 사람만 (TOP 3 + 빈 칸의 '다음 파트너') — v3.181
+  const shown = new Set([...rep.list.map((x) => x.id), ...(rep.near ?? []).map((x) => x.id)]);
+  return json({ kind, until, report: rep, people: people.filter((p) => shown.has(p.id)) });
 }
 
 // ───────── 랜덤박스 ─────────
