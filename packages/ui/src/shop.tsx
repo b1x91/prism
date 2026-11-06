@@ -4,6 +4,7 @@
  *  - ShopView: 피스 잔액·버는 법·상품 (사면 바로 장착, 가진 것은 장착/해제)
  *  - PublicProfileView: 로그인 없이 보는 그 사람의 강점 (모임 정보 없음)
  */
+import { nextFrame, cancelFrame } from './frame';
 import { useKept } from './kept';
 import { useEffect, useId, useMemo, useState, useSyncExternalStore, type ReactNode } from 'react';
 import { useShopRev } from './catalog';
@@ -50,8 +51,8 @@ export function addPieces(n: number, dur = 700) {
   if (pieceBal === null || !n) return;
   const from = pieceBal, to = from + n, t0 = performance.now();
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) { setPieces(to); return; }
-  const step = (t: number) => { const k = Math.min(1, (t - t0) / dur); setPieces(Math.round(from + (to - from) * (1 - (1 - k) ** 3))); if (k < 1) requestAnimationFrame(step); };
-  requestAnimationFrame(step);
+  const step = (t: number) => { const k = Math.min(1, (t - t0) / dur); setPieces(Math.round(from + (to - from) * (1 - (1 - k) ** 3))); if (k < 1) nextFrame(step); };
+  nextFrame(step);
 }
 /** 서버의 잔액을 다시 받아 차이만큼 차오르게 (출석처럼 접속 알림으로 들어온 피스) */
 export async function refreshPieces(api: Api, dur = 700) {

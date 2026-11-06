@@ -5,6 +5,7 @@
  * 영수증이 아래에서 올라와 '바로 착용할까요?'를 묻는다. 서버 응답이 링보다 늦으면 링이 끝 근처에서 기다린다.
  * 원본(#081)의 구조·모션 값(시간·곡선)을 따르고, 크기와 색은 프로젝트 토큰에 맞췄다 (styles.css .u081).
  */
+import { nextFrame, cancelFrame } from './frame';
 import { useEffect, useRef, useState } from 'react';
 import { PIECE, RARITY_SHOP_KO, SLOT_KO, itemDiscount, priceWith, saleOf, type Api, type Deco, type Shop, type ShopItem } from '@prism/core';
 import { PieceIcon, ProfileHero } from './shop';
@@ -36,7 +37,7 @@ export function BuyDialog({ api, item, data, me, onClose, onDone }: {
     addEventListener('keydown', esc);
     return () => removeEventListener('keydown', esc);
   }, [onClose, phase]);
-  useEffect(() => () => { cancelAnimationFrame(raf.current); timers.current.forEach(clearTimeout); }, []);
+  useEffect(() => () => { cancelFrame(raf.current); timers.current.forEach(clearTimeout); }, []);
 
   // 링은 처음엔 빠르게, 끝에 가까워질수록 천천히 차오른다. 서버 응답이 오기 전에는 92%에서 기다린다
   const buy = () => {
@@ -50,12 +51,12 @@ export function BuyDialog({ api, item, data, me, onClose, onDone }: {
       if (failed) { setPhase('error'); setMsg(failed); setP(0); return; }
       if (!done) e = Math.min(e, 0.92);
       setP(e);
-      if (k < 1 || !done) { raf.current = requestAnimationFrame(step); return; }
+      if (k < 1 || !done) { raf.current = nextFrame(step); return; }
       setResult(done);
       setPhase('ok');
       timers.current.push(setTimeout(() => { setPhase('rec'); setTimeout(() => backRef.current?.focus({ preventScroll: true }), 50); }, rm ? 0 : 900));
     };
-    raf.current = requestAnimationFrame(step);
+    raf.current = nextFrame(step);
   };
   const wear = async () => {
     if (!result) return;

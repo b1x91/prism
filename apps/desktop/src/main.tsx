@@ -113,7 +113,13 @@ function App() {
   const go = useCallback((to: string) => {
     if (to === loc.pathname) return;
     setPend(to);
-    requestAnimationFrame(() => setTimeout(() => nav(to), 0));
+    // 한 번 그린 뒤(rAF) 옮기되, rAF 만 믿지 않는다 — 게임 중에 켠 창은 WebView 가 '안 보이는 창'으로 잡혀
+    // rAF 가 멈출 수 있다 (게임 중 Prism 을 켜면 메뉴가 안 눌리던 제보, 1.0.50). 늦어도 0.1초 뒤에는 옮긴다
+    let moved = false;
+    const move = () => { if (!moved) { moved = true; nav(to); } };
+    if (document.visibilityState === 'hidden') { move(); return; }
+    requestAnimationFrame(() => setTimeout(move, 0));
+    setTimeout(move, 100);
   }, [loc.pathname, nav]);
   const path = pend ?? loc.pathname;
   const isAt = (to: string, end = false) => path === to || (!end && to !== '/' && path.startsWith(`${to}/`));

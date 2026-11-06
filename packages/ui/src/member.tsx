@@ -2,6 +2,7 @@
  * 회원끼리 보는 화면: 랭킹, 회원 페이지(분석·나와의 시너지), 프로필 꾸미기. 웹·앱 공용.
  * 이동은 onOpen(회원 ID) 으로 화면 쪽에 맡긴다 (웹은 /members/:id, 앱은 #/members/:id).
  */
+import { nextFrame, cancelFrame } from './frame';
 import { LiveNow, useMemberLive } from './livenow';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useKept } from './kept';
@@ -228,10 +229,10 @@ function CountUp({ text, delay, play = true }: { text: string; delay: number; pl
     const tick = (now: number) => {
       const k = Math.max(0, Math.min(1, (now - t0) / 900));
       setV(Math.round(target * (1 - Math.pow(1 - k, 3))));
-      if (k < 1) raf = requestAnimationFrame(tick);
+      if (k < 1) raf = nextFrame(tick);
     };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
+    raf = nextFrame(tick);
+    return () => cancelFrame(raf);
   }, [target, delay, still]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!m) return <>{text}</>;
   // 차오르는 동안 자릿수가 늘어도 글자 폭이 흔들리지 않게 마지막 숫자 폭을 미리 잡아 둔다

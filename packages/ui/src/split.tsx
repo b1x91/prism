@@ -5,6 +5,7 @@
  * - 연출은 '지금 몇 ms 지났나' 하나로만 그린다 → 늦게 연 화면은 그만큼 앞으로 감아서 같은 장면을 본다.
  * - 동작 줄이기면 빛줄기 없이 차례로 자리만 채운다.
  */
+import { nextFrame, cancelFrame } from './frame';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { Api, NowDraw, NowDrawRes } from '@prism/core';
 import { GuestFace, MemberFace, Toggle } from './basics';
@@ -53,10 +54,10 @@ function useElapsed(draw: NowDraw | null, offset: { current: number }) {
     const tick = () => {
       const e = Date.now() + offset.current - draw.start;
       setT(e);
-      if (e < end) raf = requestAnimationFrame(tick);
+      if (e < end) raf = nextFrame(tick);
     };
     tick();
-    return () => cancelAnimationFrame(raf);
+    return () => cancelFrame(raf);
   }, [draw, offset]);
   return t;
 }

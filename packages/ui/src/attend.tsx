@@ -4,6 +4,7 @@
  * → 4단계(14~29일) 프리즘 조각·겹 충격파 → 5단계(30일~) 프리즘 색종이·보석 왕관. 7·14·30·60·100일째에는 보너스 리본.
  * 다 보면(또는 누르면) 금빛 조각이 보유 피스로 날아간다. 동작 줄이기면 멈춘 카드만.
  */
+import { nextFrame, cancelFrame } from './frame';
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { ATTEND, attendBase, attendReward, type Api } from '@prism/core';
@@ -63,12 +64,12 @@ export function AttendBurst({ a, api, onDone }: { a: Attend; api: Api | null; on
     if (reduced()) { const t = window.setTimeout(close, 2600); return () => window.clearTimeout(t); }
     let raf = 0;
     const t0 = performance.now() + 380, dur = 700 + stage * 80;
-    const step = (t: number) => { const k = Math.min(1, Math.max(0, (t - t0) / dur)); setNum(Math.round(a.reward * (1 - (1 - k) ** 3))); if (k < 1) raf = requestAnimationFrame(step); };
-    raf = requestAnimationFrame(step);
+    const step = (t: number) => { const k = Math.min(1, Math.max(0, (t - t0) / dur)); setNum(Math.round(a.reward * (1 - (1 - k) ** 3))); if (k < 1) raf = nextFrame(step); };
+    raf = nextFrame(step);
     const t = window.setTimeout(close, HOLD[stage] + (a.bonus ? 600 : 0));
     const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
     addEventListener('keydown', esc);
-    return () => { cancelAnimationFrame(raf); window.clearTimeout(t); removeEventListener('keydown', esc); };
+    return () => { cancelFrame(raf); window.clearTimeout(t); removeEventListener('keydown', esc); };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- 한 번만
   }, []);
 
