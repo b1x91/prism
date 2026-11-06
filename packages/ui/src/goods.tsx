@@ -524,8 +524,8 @@ export function LensGate({ api, data, refKey, onChange, children }: { api: Api; 
   const open = async () => { setBusy(true); setErr(''); try { onChange(await api.post<Shop>('/api/shop/use', { kind: 'lens', ref: refKey })); } catch (e) { setErr(msgOf(e)); } finally { setBusy(false); } };
   return (
     <div className="lens-gate">
-      <span className="lg-ic" aria-hidden="true"><Icon name="search" /></span>
-      <div className="lg-txt"><b>도감 돋보기</b><span className="meta">마스터 조건과 팁을 미리 볼 수 있어요.</span>{err && <span className="l">{err}</span>}</div>
+      <span className="lens-ic" aria-hidden="true"><Icon name="search" /></span>
+      <div className="lens-txt"><b>도감 돋보기</b><span className="meta">마스터 조건과 팁을 미리 볼 수 있어요.</span>{err && <span className="l">{err}</span>}</div>
       <button type="button" className={`btn sm ${lack ? 'lack' : 'primary'}`} disabled={busy || lack} onClick={open}>{lack ? `${(price - data.balance).toLocaleString()} 부족` : <>열어 보기 <b>{price}</b><PieceIcon size={14} /></>}</button>
     </div>
   );

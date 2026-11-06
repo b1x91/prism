@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, SplashSwap, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { FramedFace, faceSrc, LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, SplashSwap, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, SITE_URL, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { pollWhileShown } from './poll';
 import { checkNow, clearAttend, getState, refreshSession, start, subscribe, type State } from './controller';
@@ -16,6 +16,7 @@ import { minimapLeft, onMinimapSent } from './controller';
 import { UpdateButton } from './UpdateButton';
 import { GamePage } from './pages/Game';
 import { HomePage, prefetchHome } from './pages/Home';
+import { Glass } from 'glisse';
 import { AugmentsPage } from './pages/Augments';
 import { DexPage } from './pages/Dex';
 import { ChampionsPage } from './pages/Champions';
@@ -208,6 +209,8 @@ function App() {
     setLeaving(false);
   }, [atHome]);
   const riotName = s.summoner?.riotId.split('#')[0];
+  // 내 카드 오른쪽에 옅게 번지는 대표 스킨 (v3.180)
+  const faceArt = s.me ? faceSrc(s.me.skin, null, skins) : null;
   const openAug = useCallback((id: number) => nav(`/augments/${id}`), [nav]);
   // 판 상세: 서버(함께한 회원 얼굴) + 롤 클라이언트(10명 전체, 게임 중·롤 꺼짐이면 읽지 않는다)
   const matchSource = useCallback(async (id: number) => {
@@ -255,19 +258,21 @@ function App() {
             })}
           </div>))}</nav>
         <span className="sp" />
-        {/* 아래쪽 한 줄: 상점 · 설정 (디스코드·카카오톡은 모임 화면 오른쪽 위) */}
-        <nav className="side-dock" aria-label="상점과 설정">
-          <NavLink to="/shop" onClick={onNav('/shop')} className={() => `dock-shop${isAt('/shop') ? ' active' : ''}`} title="상점"><Icon name="bag" /><span>상점</span></NavLink>
-          <NavLink to="/settings" onClick={onNav('/settings')} className={() => `dock-set${isAt('/settings') ? ' active' : ''}`} title="설정"><Icon name="gear" /><span>설정</span></NavLink>
-        </nav>
-        {s.me && <div className={`side-me-card ${staff ? 'prism' : ''}`}>
-          <NavLink to="/me" onClick={onNav('/me')} className={() => `side-me${isAt('/me') ? ' active' : ''}`} title="내 페이지">
-            {/* 얼굴은 카드 한쪽을 꽉 채우는 그림 + 장착한 프로필 테두리, 접속 점은 카드 오른쪽 끝 (v3.164) */}
-            <span className={`side-thumb${s.me.frame ? ` phero face-ring ${s.me.frame}` : ''}`}><span className="phero-face"><MemberFace nick={s.me.nick} skin={s.me.skin} size={56} skins={skins} /></span></span>
+        {/* 아래 = 한 장의 카드 (v3.180 시안 A3): 위 내 프로필(오른쪽에 대표 스킨이 옅게 번짐) · 아래 상점 | 설정.
+            상점·설정에 마우스를 올리면 리퀴드 글래스(glisse)가 떠오른다. 디스코드·카카오톡은 모임 화면 오른쪽 위 */}
+        <div className={`side-card ${staff ? 'prism' : ''}`}>
+          {s.me && <NavLink to="/me" onClick={onNav('/me')} className={() => `side-me${isAt('/me') ? ' active' : ''}`} title="내 페이지">
+            {faceArt && <span className="sc-art" aria-hidden="true" style={{ backgroundImage: `url(${faceArt})` }} />}
+            <FramedFace frame={s.me.frame} nick={s.me.nick} skin={s.me.skin} size={40} skins={skins} />
             <span className="who"><b><NickName nick={s.me.nick} /></b><span className="st pc" data-pieces title={`보유 ${PIECE}`}>{pieces === null ? '–' : <><b>{pieces.toLocaleString()}</b><PieceIcon size={12} /></>}</span></span>
             <i className={`sdot ${dot}`} role="img" aria-label={dotLabel} title={`${dotLabel} · ${label}${riotName && riotName !== s.me.nick ? ` · ${riotName}` : ''}`} />
-          </NavLink>
-        </div>}
+          </NavLink>}
+          <nav className="sc-tools" aria-label="상점과 설정">
+            <NavLink to="/shop" onClick={onNav('/shop')} className={() => `sc-tool dock-shop${isAt('/shop') ? ' active' : ''}`} title="상점"><Glass className="sc-glass" aria-hidden="true" /><Icon name="bag" /><span>상점</span></NavLink>
+            <span className="sc-vr" aria-hidden="true" />
+            <NavLink to="/settings" onClick={onNav('/settings')} className={() => `sc-tool dock-set${isAt('/settings') ? ' active' : ''}`} title="설정"><Glass className="sc-glass" aria-hidden="true" /><Icon name="gear" /><span>설정</span></NavLink>
+          </nav>
+        </div>
       </aside>
       <main className={`main${pend ? ' pending' : ''}`} ref={main}>
         {pend && <i className="nav-pend" aria-hidden="true" />}
