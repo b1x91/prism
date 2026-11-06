@@ -151,7 +151,8 @@ export type Bond = {
 const WEEK = 7 * DAY;
 const weekKey = (t: number) => Math.floor((t + 9 * 3_600_000 + 3 * DAY) / WEEK); // 한국 시간 월요일 기준 주
 
-export function bondOf(T: DuoGame[], now = Date.now()): Bond {
+/** 시각·승패만 쓴다 — 인사이트 베스트 파트너(판 기록만 있는 곳)도 같은 등급을 쓰게 (v3.181) */
+export function bondOf(T: Pick<DuoGame, 't' | 'w'>[], now = Date.now()): Bond {
   const wins = T.filter((g) => g.w).length;
   const weeks = new Set(T.map((g) => weekKey(g.t)));
   const cur = weekKey(now);

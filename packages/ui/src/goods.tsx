@@ -5,17 +5,19 @@
  *  - 선물 창 (앱을 쓰는 멤버끼리) · 받은 선물 알림
  *  - 인사이트 리포트 (내 페이지) · 명장면 카드 (회원 페이지)
  */
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import {
-  AUGMENT, CHAMPIONS, GIFT_NOTE_MAX, INSIGHTS, INSIGHT_DAYS, MULTI_KO, RARITY_SHOP_KO, REROLL_PER_WEEK, SHOP_ITEM, SLOT_KO, USE_PRICE, BOX_ODDS, boxPool, cdragon, itemDiscount, josa, priceWith, storyOf,
-  type Api, type AugReport, type GoldenReport, type Highlight, type InsightKind, type PartnerReport, type Shop, type ShopItem, type ShopRarity,
+  AUGMENT, CHAMPIONS, GIFT_NOTE_MAX, INSIGHTS, INSIGHT_DAYS, INSIGHT_EACH_SUM, MULTI_KO, insightBundleOk, RARITY_SHOP_KO, REROLL_PER_WEEK, SHOP_ITEM, SLOT_KO, USE_PRICE, BOX_ODDS, boxPool, cdragon, itemDiscount, josa, priceWith, storyOf,
+  type Api, type AugReport, type GoldenReport, type Highlight, type InsightKind, type PartnerNear, type PartnerPick, type PartnerReport, type Shop, type ShopItem, type ShopRarity,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, GlassBtn, MemberFace, useSkins } from './basics';
 import { AugmentLink } from './augment';
 import { Icon } from './icons';
 import { PieceIcon, ProfileHero } from './shop';
-import { imgIn } from './skeleton';
+import { Bone, imgIn } from './skeleton';
+import { ActBtn, pause, type ActState } from './motion';
+import { cancelFrame, nextFrame } from './frame';
 
 type Me = { nick: string; skin?: number | null; champion?: number | null };
 const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -50,6 +52,24 @@ export function GoodsGrid({ api, data, onChange, onOpenInsight, onGo }: {
     <div className="stack" style={{ gap: 12 }}>
       {err && <p className="l" role="alert" style={{ margin: 0 }}>{err}</p>}
       <div className="goods-grid">
+        {/* 셋을 한 번에: 하나도 열지 않았을 때만 (v3.181) */}
+        {insightBundleOk(u.insight) && (() => {
+          const price = priceWith(USE_PRICE.insightAll, disc), each = priceWith(INSIGHT_EACH_SUM, disc), lack = price > data.balance;
+          return (
+            <article className="goods-card r-legendary gc-bundle">
+              <div className="gc-art ins all" aria-hidden="true">{INSIGHTS.map((x) => <span key={x.id}><InsightGlyph k={x.id} /></span>)}</div>
+              <div className="gc-body">
+                <span className="sc-rar r-legendary"><i />인사이트권 3종 · {INSIGHT_DAYS}일</span>
+                <b className="sc-nm">인사이트 3종 한 번에</b>
+                <span className="sc-desc">증강 습관 · 베스트 파트너 · 골든타임을 함께 열어요</span>
+                <div className="sc-act">
+                  {each > price && <s className="gc-was">{each.toLocaleString()}</s>}<Price n={price} lack={lack} />
+                  <button type="button" className={`btn sm ${lack ? 'lack' : 'primary'}`} disabled={busy === 'all' || lack} onClick={() => buy('all', { kind: 'insight', ref: 'all' })}>{lack ? `${(price - data.balance).toLocaleString()} 부족` : '모두 열기'}</button>
+                </div>
+              </div>
+            </article>
+          );
+        })()}
         {INSIGHTS.map((x) => {
           const until = u.insight[x.id], price = priceWith(USE_PRICE.insight[x.id], disc), lack = price > data.balance;
           return (
@@ -319,64 +339,247 @@ export function BoxDialog({ api, data, me, onClose, onDone }: { api: Api; data: 
 
 // ───────── 인사이트 리포트 (내 페이지) ─────────
 
-type InsightRes = { kind: InsightKind; until: number; report: AugReport | GoldenReport | PartnerReport; people?: { id: string; nick: string; skin: number | null; main: number | null }[] };
+type Person = { id: string; nick: string; skin: number | null; main: number | null };
+type InsightRes = { kind: InsightKind; until: number; report: AugReport | GoldenReport | PartnerReport; people?: Person[] };
+type Viewer = { nick: string; skin?: number | null; champion?: number | null };
+type BuyRef = InsightKind | 'all';
+const IN_EASE = 'cubic-bezier(.16, 1, .3, 1)';
+const vi = (i: number) => ({ ['--i' as string]: i });
 
-/** 내 페이지 '인사이트' 칸: 세 리포트 탭. 열리지 않은 리포트는 잠금 + 상점으로 */
-export function InsightPanel({ api, data, focus, onShop, onChange }: { api: Api; data: Shop; focus?: InsightKind | null; onShop?: () => void; onChange?: (s: Shop) => void }) {
+/**
+ * 담는 칸의 높이가 바뀌면 그 프레임에 이전 높이 → 새 높이로 미끄러진다 (탭을 바꾸거나 자리표시가 실제 리포트로 바뀔 때).
+ * ResizeObserver 는 그리기 전에 불리므로 높이가 툭 바뀌는 프레임이 보이지 않는다. 움직이는 동안만 넘치는 부분을 감춘다.
+ */
+function useAutoHeight() {
+  const outer = useRef<HTMLDivElement>(null), inner = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const o = outer.current, i = inner.current;
+    if (!o || !i || typeof ResizeObserver === 'undefined') return;
+    let last = i.offsetHeight, anim: Animation | null = null, tok = 0;
+    const ro = new ResizeObserver(() => {
+      const h = i.offsetHeight;
+      const from = anim?.playState === 'running' ? o.getBoundingClientRect().height : last;
+      last = h;
+      if (Math.abs(h - from) < 2 || reduced()) return;
+      anim?.cancel();
+      const my = ++tok;
+      o.style.overflow = 'hidden';
+      anim = o.animate([{ height: `${from}px` }, { height: `${h}px` }], { duration: 480, easing: IN_EASE });
+      anim.finished.then(() => { if (my === tok) o.style.overflow = ''; }, () => undefined);
+    });
+    ro.observe(i);
+    return () => { ro.disconnect(); anim?.cancel(); o.style.overflow = ''; };
+  }, []);
+  return { outer, inner };
+}
+
+/** 0 → 값으로 차오르는 숫자 (첫 공개 때만) */
+function Count({ to, play, fmt = (v: number) => String(Math.round(v)), delay = 0 }: { to: number; play: boolean; fmt?: (v: number) => string; delay?: number }) {
+  const [v, setV] = useState(play && !reduced() ? 0 : to);
+  useEffect(() => {
+    if (!play || reduced()) { setV(to); return; }
+    let id = 0; const t0 = performance.now() + delay, D = 900;
+    const step = (t: number) => {
+      const x = Math.min(1, Math.max(0, (t - t0) / D));
+      setV(to * (1 - Math.pow(1 - x, 3)));
+      if (x < 1) id = nextFrame(step);
+    };
+    id = nextFrame(step);
+    return () => cancelFrame(id);
+  }, [to, play, delay]);
+  return <>{fmt(v)}</>;
+}
+
+/** 탭: 고른 표시가 다음 탭으로 미끄러진다. 잠긴 탭의 자물쇠는 열리면 접히며 사라진다 */
+function InsightTabs({ k, open, onPick }: { k: InsightKind; open: (x: InsightKind) => boolean; onPick: (x: InsightKind) => void }) {
+  const box = useRef<HTMLElement>(null);
+  const [ind, setInd] = useState<{ x: number; w: number } | null>(null);
+  useLayoutEffect(() => {
+    const measure = () => { const el = box.current?.querySelector<HTMLButtonElement>('button.on'); if (el) setInd({ x: el.offsetLeft, w: el.offsetWidth }); };
+    measure();
+    const ro = typeof ResizeObserver !== 'undefined' && box.current ? new ResizeObserver(measure) : null;
+    if (ro && box.current) { ro.observe(box.current); box.current.querySelectorAll('button').forEach((b) => ro.observe(b)); }
+    return () => ro?.disconnect();
+  }, [k]);
+  // 좁은 화면에서 가로로 밀리는 탭: 고른 탭이 보이게
+  useEffect(() => { box.current?.querySelector<HTMLButtonElement>('button.on')?.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: reduced() ? 'auto' : 'smooth' }); }, [k]);
+  return (
+    <nav ref={box} className={`ins-tabs ${ind ? 'live' : ''}`} aria-label="리포트" role="tablist">
+      {ind && <span className="it-ind" aria-hidden="true" style={{ transform: `translateX(${ind.x}px)`, width: ind.w }} />}
+      {INSIGHTS.map((x) => (
+        <button key={x.id} type="button" role="tab" aria-selected={k === x.id} className={k === x.id ? 'on' : ''} onClick={() => onPick(x.id)}>
+          <span className={`it-lock ${open(x.id) ? 'gone' : ''}`} aria-hidden="true"><LockGlyph /></span>{x.name}
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/** 고리가 열리는 자물쇠 (잠금 해제 연출) */
+function LockGlyph() {
+  return <svg className="lk" viewBox="0 0 24 24" aria-hidden="true"><path className="lk-sh" d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /><rect className="lk-bd" x="4.5" y="10.5" width="15" height="10" rx="2.5" /></svg>;
+}
+
+/** 내 페이지 '인사이트' 칸: 세 리포트 탭. 열리지 않은 리포트는 잠금 + 하나씩/셋을 한 번에 열기 (v3.181) */
+export function InsightPanel({ api, data, me, focus, onShop, onChange }: { api: Api; data: Shop; me?: Viewer; focus?: InsightKind | null; onShop?: () => void; onChange?: (s: Shop) => void }) {
   const u = data.uses;
-  const first = (focus && u?.insight[focus] ? focus : INSIGHTS.find((x) => u?.insight[x.id])?.id) ?? focus ?? 'aug';
+  const isOpen = (x: InsightKind) => (u?.insight[x] ?? 0) > Date.now();
+  const first = (focus && isOpen(focus) ? focus : INSIGHTS.find((x) => isOpen(x.id))?.id) ?? focus ?? 'aug';
   const [k, setK] = useState<InsightKind>(first);
-  const [res, setRes] = useState<Record<string, InsightRes>>({});
-  const [busy, setBusy] = useState(false);
+  // 보이는 리포트: 탭을 바꾸면 지금 것이 살짝 물러난 뒤(0.15초) 바뀐다
+  const [view, setView] = useState<InsightKind>(first);
+  const [leaving, setLeaving] = useState(false);
+  const [res, setRes] = useState<Partial<Record<InsightKind, InsightRes>>>({});
+  const [act, setAct] = useState<{ ref: BuyRef; st: ActState } | null>(null);
+  const [unlocking, setUnlocking] = useState(false);
   const [err, setErr] = useState('');
-  const open = Boolean(u?.insight[k]);
+  // 리포트가 처음 보인 시각 — 그 뒤 2.6초 동안만 '첫 공개' 연출(다른 리포트가 늦게 도착해 다시 그려져도 연출이 끊기지 않게)
+  const firstAt = useRef(new Map<InsightKind, number>());
+  const flight = useRef(new Map<InsightKind, Promise<void>>());
+  const { outer, inner } = useAutoHeight();
   useEffect(() => { if (focus) setK(focus); }, [focus]);
   useEffect(() => {
-    if (!open || res[k]) return;
-    api.get<InsightRes>(`/api/me/insight/${k}`).then((r) => setRes((x) => ({ ...x, [k]: r }))).catch((e) => setErr(msgOf(e)));
-  }, [api, k, open, res]);
-  const price = priceWith(USE_PRICE.insight[k], data.rates?.discount ?? 0), lack = price > data.balance;
-  const buy = async () => { setBusy(true); setErr(''); try { onChange?.(await api.post<Shop>('/api/shop/use', { kind: 'insight', ref: k })); } catch (e) { setErr(msgOf(e)); } finally { setBusy(false); } };
-  const info = INSIGHTS.find((x) => x.id === k)!;
+    if (k === view) { setLeaving(false); return; }
+    if (reduced()) { setView(k); return; }
+    setLeaving(true);
+    const t = setTimeout(() => { setView(k); setLeaving(false); }, 150);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- k 가 바뀔 때만
+  }, [k]);
+  const load = (x: InsightKind) => {
+    const f = flight.current.get(x);
+    if (f) return f;
+    const p = api.get<InsightRes>(`/api/me/insight/${x}`).then((r) => setRes((m) => ({ ...m, [x]: r }))).catch((e) => { flight.current.delete(x); setErr(msgOf(e)); });
+    flight.current.set(x, p);
+    return p;
+  };
+  // 열린 리포트는 모두 미리 받아 둔다 — 탭을 바꿀 때 기다림 없이 바로 넘어가게
+  const openKey = INSIGHTS.filter((x) => isOpen(x.id)).map((x) => x.id).join(',');
+  useEffect(() => { for (const x of INSIGHTS) if (isOpen(x.id)) void load(x.id); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [openKey]);
+  const disc = data.rates?.discount ?? 0;
+  const bundle = insightBundleOk(u?.insight);
+  const buy = async (ref: BuyRef) => {
+    setErr(''); setAct({ ref, st: 'busy' });
+    let next: Shop;
+    try { next = await api.post<Shop>('/api/shop/use', { kind: 'insight', ref }); } catch (e) { setErr(msgOf(e)); setAct(null); return; }
+    // 자물쇠가 열리는 동안 리포트를 받아 둔다 → 열리자마자 리포트가 차오른다
+    const kinds = ref === 'all' ? INSIGHTS.map((x) => x.id) : [ref];
+    const pre = Promise.all(kinds.map(load));
+    setAct({ ref, st: 'done' });
+    await pause(560);
+    setUnlocking(true);
+    await Promise.all([pause(720), Promise.race([pre, pause(2500)])]);
+    onChange?.(next);
+    setUnlocking(false); setAct(null);
+  };
+  const open = isOpen(view);
+  const r = res[view];
+  if (open && r && !firstAt.current.has(view)) firstAt.current.set(view, performance.now());
+  const fresh = Boolean(open && r) && performance.now() - (firstAt.current.get(view) ?? 0) < 2600;
+  const info = INSIGHTS.find((x) => x.id === view)!;
+  const state = !open ? 'lock' : r ? 'ready' : 'load';
   return (
     <section className="card pad ins-panel" id="insight">
       <div className="card-head"><h2>인사이트</h2><span className="sp" />
-        <nav className="ins-tabs" aria-label="리포트">{INSIGHTS.map((x) => <button key={x.id} type="button" className={k === x.id ? 'on' : ''} onClick={() => setK(x.id)}>{u?.insight[x.id] ? null : <Icon name="lock" />}{x.name}</button>)}</nav>
+        <InsightTabs k={k} open={(x) => isOpen(x) || (unlocking && (act?.ref === 'all' || act?.ref === x))} onPick={setK} />
       </div>
-      {!open ? (
-        <div className="ins-lock">
-          <div className="ins-blur" aria-hidden="true"><span /><span /><span /><span /></div>
-          <div className="ins-lock-in">
-            <b>{info.name}</b>
-            <p className="meta">{info.desc}. 인사이트권으로 {INSIGHT_DAYS}일 동안 열려요.</p>
-            {err && <p className="l" role="alert">{err}</p>}
-            <div className="ins-buy"><Price n={price} lack={lack} /><button type="button" className={`btn ${lack ? 'lack' : 'primary'}`} disabled={busy || lack} onClick={buy}>{lack ? `${(price - data.balance).toLocaleString()} 부족` : '인사이트권으로 열기'}</button>{onShop && <button type="button" className="btn" onClick={onShop}>상점</button>}</div>
+      <div ref={outer} className="ins-stage">
+        <div ref={inner} className="ins-stage-in">
+          <div key={`${view}:${state}`} className={`ins-view ${leaving ? 'iv-out' : 'iv-in'} ${state === 'ready' && fresh ? 'iv-fresh' : ''}`}>
+            {state === 'lock' ? (
+              <InsightLock k={view} name={info.name} desc={info.desc} rarity={info.rarity} price={priceWith(USE_PRICE.insight[view], disc)}
+                all={bundle ? { price: priceWith(USE_PRICE.insightAll, disc), each: priceWith(INSIGHT_EACH_SUM, disc) } : null}
+                balance={data.balance} act={act} unlocking={unlocking} err={err} onBuy={buy} onShop={onShop} />
+            ) : state === 'load' ? <InsightSkeleton k={view} /> : (
+              <div className="ins-body">
+                <span className="meta ins-until"><Icon name="clock" />{daysLeft(r!.until)}일 남음 · 내 기록 {r!.report.games.toLocaleString()}판</span>
+                {view === 'aug' && <AugView r={r!.report as AugReport} />}
+                {view === 'golden' && <GoldenView r={r!.report as GoldenReport} />}
+                {view === 'partner' && <PartnerView r={r!.report as PartnerReport} people={r!.people ?? []} me={me} play={fresh} />}
+              </div>
+            )}
           </div>
         </div>
-      ) : !res[k] ? <InsightSkeleton /> : (
-        <div className="ins-body">
-          <span className="meta ins-until">{daysLeft(res[k].until)}일 남음 · 내 기록 {res[k].report.games}판</span>
-          {k === 'aug' && <AugView r={res[k].report as AugReport} />}
-          {k === 'golden' && <GoldenView r={res[k].report as GoldenReport} />}
-          {k === 'partner' && <PartnerView r={res[k].report as PartnerReport} people={res[k].people ?? []} />}
-        </div>
-      )}
+      </div>
     </section>
   );
 }
 
-function InsightSkeleton() {
-  return <div className="ins-body" aria-hidden="true"><span className="sk" style={{ width: 140, height: 12 }} /><span className="sk" style={{ width: '100%', height: 56 }} /><div className="ins-cols"><span className="sk" style={{ height: 120 }} /><span className="sk" style={{ height: 120 }} /></div></div>;
+/** 잠긴 리포트: 흐린 미리 보기 위에 열기 칸. 하나도 안 열었으면 '셋을 한 번에'도 (v3.181) */
+function InsightLock({ k, name, desc, rarity, price, all, balance, act, unlocking, err, onBuy, onShop }: {
+  k: InsightKind; name: string; desc: string; rarity: ShopRarity; price: number; all: { price: number; each: number } | null;
+  balance: number; act: { ref: BuyRef; st: ActState } | null; unlocking: boolean; err: string; onBuy: (r: BuyRef) => void; onShop?: () => void;
+}) {
+  const lack = price > balance, lackAll = all ? all.price > balance : true;
+  const busy = Boolean(act);
+  return (
+    <div className={`ins-lock ${unlocking ? 'unlocking' : ''}`}>
+      <InsightGhost k={k} />
+      <span className="ins-sweep" aria-hidden="true" />
+      <div className="ins-lock-in">
+        <span className={`il-ic r-${rarity}`} aria-hidden="true"><InsightGlyph k={k} /><span className="il-lk"><LockGlyph /></span></span>
+        <b className="il-t">{name}</b>
+        <p className="meta">{desc} · {INSIGHT_DAYS}일 동안 열려요</p>
+        {err && <p className="l" role="alert">{err}</p>}
+        <div className="il-opts">
+          <div className="il-opt">
+            <span className="il-o-t"><b>이 리포트만</b><Price n={price} lack={lack} /></span>
+            <ActBtn state={act?.ref === k ? act.st : undefined} disabled={(busy && act?.ref !== k) || lack} className={`btn ${lack ? 'lack' : all ? '' : 'primary'}`}
+              label={lack ? `${(price - balance).toLocaleString()} 부족` : '열기'} busy="여는 중" done="열렸어요" onClick={() => onBuy(k)} />
+          </div>
+          {all && (
+            <div className="il-opt all">
+              <span className="il-o-t"><b>인사이트 3종 한 번에</b><span className="il-save"><s>{all.each.toLocaleString()}</s><Price n={all.price} lack={lackAll} />{all.each > all.price && <em>{(all.each - all.price).toLocaleString()} 아껴요</em>}</span></span>
+              <ActBtn state={act?.ref === 'all' ? act.st : undefined} disabled={(busy && act?.ref !== 'all') || lackAll} className={`btn ${lackAll ? 'lack' : 'primary'}`}
+                label={lackAll ? `${(all.price - balance).toLocaleString()} 부족` : '모두 열기'} busy="여는 중" done="열렸어요" onClick={() => onBuy('all')} />
+            </div>
+          )}
+        </div>
+        {onShop && <button type="button" className="il-shop" onClick={onShop}>상점에서 보기<Icon name="chevR" /></button>}
+      </div>
+    </div>
+  );
+}
+
+/** 잠긴 리포트 뒤에 흐리게 깔리는 그 리포트의 모양 (내용 없음) */
+function InsightGhost({ k }: { k: InsightKind }) {
+  return (
+    <div className={`ins-ghost g-${k}`} aria-hidden="true">
+      <i className="gh-line hi" /><i className="gh-line" />
+      {k === 'partner' ? <div className="gh-cards">{[0, 1, 2].map((i) => <span key={i} className="gh-card"><i /><i /></span>)}</div>
+        : k === 'golden' ? <div className="gh-cols"><div className="gh-bars">{[72, 54, 86, 40].map((w, i) => <i key={i} style={{ width: `${w}%` }} />)}</div><div className="gh-days">{[50, 72, 38, 88, 64, 46, 70].map((h, i) => <i key={i} style={{ height: `${h}%` }} />)}</div></div>
+          : <div className="gh-cols"><div className="gh-bars">{[80, 46, 64, 58, 30].map((w, i) => <i key={i} style={{ width: `${w}%` }} />)}</div><div className="gh-bars">{[66, 52, 74, 40, 58].map((w, i) => <i key={i} style={{ width: `${w}%` }} />)}</div></div>}
+    </div>
+  );
+}
+
+/** 불러오는 동안: 그 리포트와 같은 틀 */
+function InsightSkeleton({ k }: { k: InsightKind }) {
+  return (
+    <div className="ins-body" aria-hidden="true">
+      <Bone w={160} h={12} style={{ justifySelf: 'end' }} />
+      {k === 'partner' ? <>
+        <Bone w="60%" h={16} />
+        <div className="pt-grid">{[0, 1, 2].map((i) => <div key={i} className="pt-card sk-card"><Bone w={112} h={56} r="pill" dark /><Bone w={96} h={14} dark /><Bone w={64} h={28} dark /><Bone w="100%" h={6} r="pill" dark /><Bone w="100%" h={40} dark /></div>)}</div>
+      </> : <>
+        <Bone w="100%" h={52} r="m" />
+        <div className="ins-cols">
+          <div className="ins-sec">{[0, 1, 2, 3].map((i) => <Bone key={i} w="100%" h={16} />)}</div>
+          <div className="ins-sec">{k === 'golden' ? <Bone w="100%" h={140} r="m" /> : [0, 1, 2, 3].map((i) => <Bone key={i} w="100%" h={16} />)}</div>
+        </div>
+      </>}
+    </div>
+  );
 }
 
 function Lines({ lines }: { lines: string[] }) {
   if (!lines.length) return <p className="meta">아직 말할 만큼 차이가 나는 게 없어요. 판이 더 쌓이면 보여요.</p>;
-  return <ul className="ins-lines">{lines.map((l, i) => <li key={i} className={i === 0 ? 'top' : ''}>{l}</li>)}</ul>;
+  return <ul className="ins-lines">{lines.map((l, i) => <li key={i} className={i === 0 ? 'top' : ''} style={vi(i)}>{l}</li>)}</ul>;
 }
-function Bar({ label, n, w, base, sub }: { label: ReactNode; n: number; w: number; base: number; sub?: ReactNode }) {
+function Bar({ label, n, w, base, sub, i = 0 }: { label: ReactNode; n: number; w: number; base: number; sub?: ReactNode; i?: number }) {
   const r = n ? w / n : 0;
   return (
-    <div className="ins-bar">
+    <div className="ins-bar" style={vi(i)}>
       <span className="ib-l">{label}</span>
       <span className="ib-track"><i style={{ width: `${Math.round(r * 100)}%` }} className={n && r >= base ? 'up' : 'down'} /><em style={{ left: `${Math.round(base * 100)}%` }} /></span>
       <span className="ib-v">{n ? pct(r) : '—'}<small>{sub ?? `${n}판`}</small></span>
@@ -391,19 +594,19 @@ function AugView({ r }: { r: AugReport }) {
       <div className="ins-cols">
         <div className="ins-sec">
           <h3>잘 맞는 증강 vs 다른 증강</h3>
-          <Bar label="챔프에 S·A" n={r.fit.good.n} w={r.fit.good.w} base={r.base} sub={`${r.fit.good.n}개`} />
-          <Bar label="그 밖" n={r.fit.other.n} w={r.fit.other.w} base={r.base} sub={`${r.fit.other.n}개`} />
+          <Bar i={0} label="챔프에 S·A" n={r.fit.good.n} w={r.fit.good.w} base={r.base} sub={`${r.fit.good.n}개`} />
+          <Bar i={1} label="그 밖" n={r.fit.other.n} w={r.fit.other.w} base={r.base} sub={`${r.fit.other.n}개`} />
           <h3>등급별</h3>
-          {r.rarity.map((x) => <Bar key={x.r} label={{ silver: '실버', gold: '골드', prismatic: '프리즘' }[x.r]} n={x.n} w={x.w} base={r.base} sub={`${x.n}개`} />)}
+          {r.rarity.map((x, i) => <Bar key={x.r} i={i + 2} label={{ silver: '실버', gold: '골드', prismatic: '프리즘' }[x.r]} n={x.n} w={x.w} base={r.base} sub={`${x.n}개`} />)}
         </div>
         <div className="ins-sec">
           <h3>가장 잘 이긴 증강</h3>
-          {r.best.length ? r.best.map((x) => <AugmentLink key={x.id} id={x.id} className="ins-aug"><AugImg id={x.id} size={28} /><span>{AUGNAME(x.id)}</span><b>{pct(x.w / x.n)}</b><small>{x.n}번</small></AugmentLink>) : <p className="meta">같은 증강을 3번 이상 고르면 보여요.</p>}
-          {r.worst.length > 0 && <><h3>조심할 증강</h3>{r.worst.map((x) => <AugmentLink key={x.id} id={x.id} className="ins-aug low"><AugImg id={x.id} size={28} /><span>{AUGNAME(x.id)}</span><b>{pct(x.w / x.n)}</b><small>{x.n}번</small></AugmentLink>)}</>}
+          {r.best.length ? r.best.map((x, i) => <AugmentLink key={x.id} id={x.id} className="ins-aug"><span className="ia-in" style={vi(i)}><AugImg id={x.id} size={28} /><span>{AUGNAME(x.id)}</span><b>{pct(x.w / x.n)}</b><small>{x.n}번</small></span></AugmentLink>) : <p className="meta">같은 증강을 3번 이상 고르면 보여요.</p>}
+          {r.worst.length > 0 && <><h3>조심할 증강</h3>{r.worst.map((x, i) => <AugmentLink key={x.id} id={x.id} className="ins-aug low"><span className="ia-in" style={vi(i + 3)}><AugImg id={x.id} size={28} /><span>{AUGNAME(x.id)}</span><b>{pct(x.w / x.n)}</b><small>{x.n}번</small></span></AugmentLink>)}</>}
         </div>
       </div>
-      {r.tags.length > 0 && <div className="ins-sec"><h3>성향별 (내 평균 {pct(r.base)} 대비)</h3><div className="ins-tags">{r.tags.map((t) => <span key={t.key} className={t.delta >= 0 ? 'up' : 'down'}>{t.label}<b>{t.delta >= 0 ? '+' : ''}{Math.round(t.delta * 100)}%p</b><small>{t.n}개</small></span>)}</div></div>}
-      {r.combos.length > 0 && <div className="ins-sec"><h3>최고의 챔프 + 증강</h3><div className="ins-combos">{r.combos.map((c) => <span key={`${c.champ}:${c.aug}`} className="ins-combo"><ChampImg id={c.champ} size={32} /><span className="plus">+</span><AugImg id={c.aug} size={28} /><span className="cm-t"><b>{CHAMPIONS[c.champ]?.name} · {AUGNAME(c.aug)}</b><small>{c.n}판 {c.w}승</small></span></span>)}</div></div>}
+      {r.tags.length > 0 && <div className="ins-sec"><h3>성향별 (내 평균 {pct(r.base)} 대비)</h3><div className="ins-tags">{r.tags.map((t, i) => <span key={t.key} className={t.delta >= 0 ? 'up' : 'down'} style={vi(i)}>{t.label}<b>{t.delta >= 0 ? '+' : ''}{Math.round(t.delta * 100)}%p</b><small>{t.n}개</small></span>)}</div></div>}
+      {r.combos.length > 0 && <div className="ins-sec"><h3>최고의 챔프 + 증강</h3><div className="ins-combos">{r.combos.map((c, i) => <span key={`${c.champ}:${c.aug}`} className="ins-combo" style={vi(i)}><ChampImg id={c.champ} size={32} /><span className="plus">+</span><AugImg id={c.aug} size={28} /><span className="cm-t"><b>{CHAMPIONS[c.champ]?.name} · {AUGNAME(c.aug)}</b><small>{c.n}판 {c.w}승</small></span></span>)}</div></div>}
     </>
   );
 }
@@ -414,38 +617,80 @@ function GoldenView({ r }: { r: GoldenReport }) {
     <>
       <Lines lines={r.lines} />
       <div className="ins-cols">
-        <div className="ins-sec"><h3>시간대</h3>{r.bands.filter((b) => b.n).map((b) => <Bar key={b.key} label={b.label} n={b.n} w={b.w} base={r.base} />)}</div>
-        <div className="ins-sec"><h3>요일</h3><div className="ins-days">{r.days.map((d) => { const v = d.n ? d.w / d.n : 0; return <span key={d.d} className={`ins-day ${d.n >= 5 ? (v >= r.base ? 'up' : 'down') : 'few'}`}><i style={{ height: `${Math.max(6, Math.round(v * 100))}%` }} /><b>{d.label}</b><small>{d.n ? pct(v) : '—'}</small></span>; })}</div></div>
+        <div className="ins-sec"><h3>시간대</h3>{r.bands.filter((b) => b.n).map((b, i) => <Bar key={b.key} i={i} label={b.label} n={b.n} w={b.w} base={r.base} />)}</div>
+        <div className="ins-sec"><h3>요일</h3><div className="ins-days">{r.days.map((d, i) => { const v = d.n ? d.w / d.n : 0; return <span key={d.d} className={`ins-day ${d.n >= 5 ? (v >= r.base ? 'up' : 'down') : 'few'}`} style={vi(i)}><i style={{ height: `${Math.max(6, Math.round(v * 100))}%` }} /><b>{d.label}</b><small>{d.n ? pct(v) : '—'}</small></span>; })}</div></div>
       </div>
-      <div className="ins-sec"><h3>이어서 할 때 몇 판째</h3><div className="ins-seq">{r.seq.map((s) => { const v = s.n ? s.w / s.n : 0; return <span key={s.k} className={`ins-step ${r.dropAt && s.k >= r.dropAt ? 'down' : ''}`}><b>{s.k === 5 ? '5판째~' : `${s.k}판째`}</b><em>{s.n ? pct(v) : '—'}</em><small>{s.n}판</small></span>; })}</div></div>
+      <div className="ins-sec"><h3>이어서 할 때 몇 판째</h3><div className="ins-seq">{r.seq.map((st, i) => { const v = st.n ? st.w / st.n : 0; return <span key={st.k} className={`ins-step ${r.dropAt && st.k >= r.dropAt ? 'down' : ''}`} style={vi(i)}><b>{st.k === 5 ? '5판째~' : `${st.k}판째`}</b><em>{st.n ? pct(v) : '—'}</em><small>{st.n}판</small></span>; })}</div></div>
     </>
   );
 }
 
-function PartnerView({ r, people }: { r: PartnerReport; people: { id: string; nick: string; skin: number | null; main: number | null }[] }) {
+const RANK_KO = ['', '1위', '2위', '3위'];
+const md = (t: number) => new Date(t).toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' });
+
+/**
+ * 베스트 파트너 TOP 3 (v3.181): 늘 세 칸. 두 얼굴이 이어진 무대 — 함께한 사이(듀오 등급·함께한 날·처음 함께한 날)를 먼저,
+ * 그다음 함께할 때 승률(내 평균과 한 막대에서 비교) · KDA · 최고의 조합. 세 칸이 안 차면 '다음 파트너' 칸에 가장 가까운 멤버와 남은 판수.
+ */
+function PartnerView({ r, people, me, play }: { r: PartnerReport; people: Person[]; me?: Viewer; play: boolean }) {
   const skins = useSkins();
+  const who = (id: string) => people.find((x) => x.id === id);
+  const need = r.need ?? 5;
+  type Slot = { kind: 'pick'; p: PartnerPick } | { kind: 'near'; n: PartnerNear | null };
+  const slots: Slot[] = [...r.list.map((p): Slot => ({ kind: 'pick', p })), ...(r.near ?? []).map((n): Slot => ({ kind: 'near', n }))];
+  while (slots.length < 3) slots.push({ kind: 'near', n: null });
+  const art = (x?: Person) => (x?.skin && skins?.[x.skin]?.splash) || (x?.main ? cdragon(CHAMPIONS[x.main]?.splash) : '');
+  const meFace = <MemberFace nick={me?.nick ?? '나'} skin={me?.skin} champion={me?.champion} skins={skins} size={56} />;
   return (
     <>
-      <Lines lines={r.lines} />
-      <div className="ins-partners">
-        {r.list.map((p, i) => {
-          const who = people.find((x) => x.id === p.id);
+      {r.lines[0] && <p className="pt-head" style={vi(0)}><Icon name="users" /><span>{r.lines[0]}</span></p>}
+      <div className="pt-grid">
+        {slots.slice(0, 3).map((sl, i) => {
+          if (sl.kind === 'near') {
+            const n = sl.n, x = n ? who(n.id) : undefined;
+            return (
+              <article key={`n${i}`} className="pt-card next" style={vi(i)}>
+                <span className="pt-rk">{RANK_KO[i + 1]}</span>
+                <div className="pt-pair"><span className="pt-f me">{meFace}</span><span className="pt-link dash" aria-hidden="true" /><span className="pt-f them">{x ? <MemberFace nick={x.nick} skin={x.skin} champion={x.main} skins={skins} size={56} /> : <span className="pt-q">?</span>}</span></div>
+                <b className="pt-nm">{x ? `${shortName(x.nick)}님` : '다음 파트너'}</b>
+                {n ? <>
+                  <span className="pt-prog"><i style={{ width: `${Math.round((n.n / need) * 100)}%` }} /></span>
+                  <span className="pt-next-t">같은 팀 <b>{n.n}</b> / {need}판 · {n.w}승</span>
+                  <span className="pt-next-d">{need - n.n}판 더 함께하면 TOP 3에 올라요</span>
+                </> : <span className="pt-next-d">같은 팀으로 {need}판을 함께한 멤버가<br />이 자리에 올라요</span>}
+              </article>
+            );
+          }
+          const p = sl.p, x = who(p.id), rate = p.w / p.n, delta = rate - r.base, src = art(x);
           return (
-            <article key={p.id} className={`ins-pt n${i + 1}`}>
-              <span className="pt-rank">{i + 1}</span>
-              <MemberFace nick={who?.nick ?? '멤버'} skin={who?.skin} champion={who?.main} skins={skins} size={48} />
-              <b className="pt-nm">{(who?.nick ?? '멤버').split('#')[0]}</b>
-              <span className="pt-rate">{pct(p.w / p.n)}<small>{p.n}판 {p.w}승</small></span>
-              <span className={`pt-diff ${p.diff >= 0 ? 'up' : 'down'}`}>내 평균 {p.diff >= 0 ? '+' : ''}{Math.round((p.w / p.n - r.base) * 100)}%p</span>
-              <span className="pt-kda">함께 KDA {p.kda.toFixed(2)} <small>평소 {p.kdaBase.toFixed(2)}</small></span>
-              {p.combo && <span className="pt-combo"><ChampImg id={p.combo.mine} size={24} /><span className="plus">+</span><ChampImg id={p.combo.theirs} size={24} /><small>{p.combo.n}판 {p.combo.w}승</small></span>}
+            <article key={p.id} className={`pt-card n${i + 1}`} style={vi(i)}>
+              {src && <img className="pt-art fi" {...imgIn} src={src} alt="" loading="lazy" />}
+              <span className="pt-shade" aria-hidden="true" />
+              <span className="pt-rk">{RANK_KO[i + 1]}</span>
+              {p.bond && <span className={`pt-bond g${p.bond.grade}`} title="함께한 판·이긴 판·함께한 주로 오르는 듀오 등급">{p.bond.name}</span>}
+              <div className="pt-pair"><span className="pt-f me">{meFace}</span><span className="pt-link" aria-hidden="true"><Icon name="link" /></span><span className="pt-f them"><MemberFace nick={x?.nick ?? '멤버'} skin={x?.skin} champion={x?.main} skins={skins} size={56} /></span></div>
+              <b className="pt-nm">{shortName(x?.nick ?? '멤버')}</b>
+              <span className="pt-since">함께 {p.n}판{p.days ? ` · ${p.days}일` : ''}{p.first ? ` · ${md(p.first)}부터` : ''}</span>
+              <div className="pt-rate"><b><Count to={Math.round(rate * 100)} play={play} delay={200 + i * 90} />%</b><small>함께할 때 승률</small></div>
+              <div className="pt-cmp">
+                <span className="pt-track"><i style={{ width: `${Math.round(rate * 100)}%` }} /><em style={{ left: `${Math.round(r.base * 100)}%` }} /></span>
+                <span className="pt-cmp-t"><span>내 평균 {pct(r.base)}</span><b className={delta >= 0 ? 'up' : 'down'}>{delta >= 0 ? '+' : ''}{Math.round(delta * 100)}%p</b></span>
+              </div>
+              <div className="pt-foot">
+                <span className="pt-cell"><small>함께 KDA</small><b>{p.kda.toFixed(2)}{p.kda > p.kdaBase + 0.05 && <Icon name="arrowUp" />}</b><em>평소 {p.kdaBase.toFixed(2)}</em></span>
+                {p.combo
+                  ? <span className="pt-cell"><small>최고의 조합</small><span className="pt-combo"><ChampImg id={p.combo.mine} size={24} /><ChampImg id={p.combo.theirs} size={24} /></span><em>{p.combo.n}판 {p.combo.w}승</em></span>
+                  : <span className="pt-cell"><small>함께 최고</small><b>{p.run ?? 0}연승</b><em>{p.last ? `최근 ${md(p.last)}` : ''}</em></span>}
+              </div>
             </article>
           );
         })}
       </div>
+      <p className="meta pt-note">같은 팀으로 {need}판 이상 함께한 멤버 중에서 골라요 · 판이 적으면 내 평균 쪽으로 당겨서 순위를 매겨요</p>
     </>
   );
 }
+const shortName = (nick: string) => nick.split('#')[0];
 
 // ───────── 명장면 ─────────
 

@@ -320,7 +320,7 @@ export function MemberView({ api, id, self, onChampion, actions, insight, onShop
       {total.n > 0 ? <StatBoard data={data} games={games} kda={kda} streak={st} /> : !(m.self && !m.riotId) && <FirstGame data={data} />}
       {m.self && shop?.uses ? <MyHighlight api={api} pinned={data.pinned} frame={shop.uses.frame} onShop={onShop} /> : data.pinned ? <HighlightCard h={data.pinned} /> : null}
       {m.self && total.n > 0 && <ImproveCard data={data} onChampion={onChampion} />}
-      {m.self && total.n > 0 && shop?.uses && <InsightPanel api={api} data={shop} focus={insight} onShop={onShop} onChange={setShopNow} />}
+      {m.self && total.n > 0 && shop?.uses && <InsightPanel api={api} data={shop} me={{ nick: m.nick, skin: m.skin, champion: main }} focus={insight} onShop={onShop} onChange={setShopNow} />}
       {!m.self && total.n > 0 && <SynergyCard data={data} />}
       {total.n > 0 && <RecentGames games={games} limit={10} max={20} onChampion={onChampion} />}
       {total.n > 0 && <div className="grid2">
