@@ -24,7 +24,16 @@ export interface Api {
 export const CACHE_TTL = 3600_000;
 const LIVE_EXACT = new Set(['/api/me', '/api/me/games', '/api/crew/targets', '/links']);
 const LIVE_PREFIX = ['/api/now', '/api/news', '/api/discord', '/api/staff', '/api/me/invite', '/api/members/lookup', '/api/members/search', '/api/me/inquiry', '/api/inquiry/', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
-const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag', '/api/now'];
+/** 다른 화면이 담아 둔 데이터를 바꾸지 않는 쓰기 — 아무것도 지우지 않는다.
+ *  게임 중 1분마다 보내는 지금 판(/api/me/live)·챔프 선택 조회·소식 읽음·하트처럼 자주 오는 쓰기가 전부 지우면 다음 화면마다 자리표시가 깜빡였다 (v3.183) */
+const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag', '/api/now', '/api/me/live', '/api/champselect', '/api/news', '/api/me/now-auto'];
+/** 그 기능의 데이터만 바뀌는 쓰기 — 그 주소들만 지운다. body 로 지울 주소를 좁힐 수 있다 */
+const SCOPED_WRITES: [string, (body: unknown) => string[]][] = [
+  ['/api/me/favs', (b) => { const x = b as { kind?: string; id?: number } | undefined; return ['/api/me/favs', x?.kind && x.id ? `/api/favs/count?kind=${x.kind}&id=${x.id}` : '/api/favs/']; }],
+  ['/api/me/highlights', () => ['/api/me/highlights']],
+  ['/api/tips', () => ['/api/tips']],
+  ['/api/notes', () => ['/api/notes']],
+];
 /** 내 얼굴·테두리·이름·피스가 바뀔 수 있는 쓰기 — 끝나면 사이드바·상단의 내 정보를 다시 받는다 */
 const ME_WRITES = ['/api/me/equip', '/api/me/profile', '/api/me/skin', '/api/me/about', '/api/me/riot', '/api/shop/', '/api/me/missions/claim', '/api/me/weekly/claim'];
 const meSubs = new Set<() => void>();
@@ -37,8 +46,12 @@ export function withCache(api: Api, ttl = CACHE_TTL): Api {
   const flying = new Map<string, Promise<unknown>>();
   const live = (p: string) => LIVE_EXACT.has(p) || LIVE_PREFIX.some((x) => p.startsWith(x));
   const fresh = (p: string) => { const m = memo.get(p); return m && Date.now() - m.at < ttl ? m : undefined; };
-  const write = <T>(path: string, r: Promise<T>) => r.then((v) => {
-    if (!KEEP_ON_WRITE.some((x) => path.startsWith(x))) memo.clear();
+  const write = <T>(path: string, body: unknown, r: Promise<T>) => r.then((v) => {
+    const scoped = SCOPED_WRITES.find(([x]) => path.startsWith(x));
+    if (scoped) { const pre = scoped[1](body); for (const k of [...memo.keys()]) if (pre.some((x) => k.startsWith(x))) memo.delete(k); }
+    // 판 보내기는 새로 저장된 판이 있을 때만 (이미 있는 판뿐이면 바뀐 게 없다)
+    else if (path === '/api/ingest' && (v as { stored?: number } | null)?.stored === 0) { /* 그대로 */ }
+    else if (!KEEP_ON_WRITE.some((x) => path.startsWith(x))) memo.clear();
     if (ME_WRITES.some((x) => path.startsWith(x))) emitMeChanged();
     return v;
   });
@@ -53,8 +66,8 @@ export function withCache(api: Api, ttl = CACHE_TTL): Api {
       flying.set(path, p);
       return p;
     },
-    post: (path, body) => write(path, api.post(path, body)),
-    del: (path) => write(path, api.del(path)),
+    post: (path, body) => write(path, body, api.post(path, body)),
+    del: (path) => write(path, undefined, api.del(path)),
     peek<T>(path: string) { return live(path) ? undefined : (fresh(path)?.data as T | undefined); },
     forget(path?: string) { if (path) memo.delete(path); else memo.clear(); },
   };

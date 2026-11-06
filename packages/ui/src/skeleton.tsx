@@ -59,8 +59,18 @@ export function Swap({ on, skeleton, children }: { on: boolean; skeleton: ReactN
 }
 export const fadeCls = (on: boolean) => (on ? 'fade-in' : '');
 
-/** 그림이 다 받아지면 서서히 (img 에 className="fi" 와 함께) */
-export const imgIn = { onLoad: (e: SyntheticEvent<HTMLImageElement>) => e.currentTarget.classList.add('ld'), onError: (e: SyntheticEvent<HTMLImageElement>) => e.currentTarget.classList.add('ld') };
+/**
+ * 그림이 다 받아지면 서서히 (img 에 className="fi" 와 함께).
+ * 이미 받아 둔 그림(브라우저가 붙이는 순간 다 그릴 수 있는 그림)은 그리기 전에 바로 'ld now' — 자리표시 빛도 흐리게 나타나기도 없이 (v3.183).
+ * 예전엔 목록으로 돌아올 때마다 다 받아 둔 그림 백여 개가 한꺼번에 자리표시 → 흐림 → 밝게를 다시 해 화면 전체가 깜빡였다.
+ */
+const loaded = new Set<string>(); // 이번 실행에서 다 받은 그림 주소 — 늦게 불러오는(lazy) 그림은 붙는 순간 아직 '다 받음'이 아니어서 함께 본다
+const readyNow = (el: HTMLImageElement | null) => { if (el && ((el.complete && el.naturalWidth > 0) || loaded.has(el.src))) el.classList.add('ld', 'now'); };
+export const imgIn = {
+  ref: readyNow,
+  onLoad: (e: SyntheticEvent<HTMLImageElement>) => { const el = e.currentTarget; el.classList.add('ld'); if (loaded.size < 4000) loaded.add(el.src); },
+  onError: (e: SyntheticEvent<HTMLImageElement>) => e.currentTarget.classList.add('ld'),
+};
 
 type BoneProps = { w?: number | string; h?: number | string; r?: 'none' | 's' | 'm' | 'l' | 'pill' | 'round'; dark?: boolean; className?: string; style?: CSSProperties };
 
