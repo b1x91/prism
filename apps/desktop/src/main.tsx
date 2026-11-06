@@ -182,6 +182,17 @@ function App() {
   const skins = useSkins();
   const main = useRef<HTMLElement>(null);
   const mainEl = useCallback(() => main.current, []);
+  // 홈은 메뉴와 본문을 나누지 않는다 (v3.174): 사이드바가 오늘의 챔프 그림 위에 겹친다. 맨 위에서만 밝은 글자, 내리면 보통 글자
+  const atHome = loc.pathname === '/';
+  const [atTop, setAtTop] = useState(true);
+  useEffect(() => {
+    const el = main.current;
+    if (!el || !atHome) return;
+    const on = () => setAtTop(el.scrollTop < 120);
+    on();
+    el.addEventListener('scroll', on, { passive: true });
+    return () => el.removeEventListener('scroll', on);
+  }, [atHome, ready]);
   const riotName = s.summoner?.riotId.split('#')[0];
   const openAug = useCallback((id: number) => nav(`/augments/${id}`), [nav]);
   // 판 상세: 서버(함께한 회원 얼굴) + 롤 클라이언트(10명 전체, 게임 중·롤 꺼짐이면 읽지 않는다)
@@ -195,7 +206,7 @@ function App() {
   }, []);
   if (!ready) return <Onboarding s={s} onLogin={login} />;
   return (
-    <div className="shell">
+    <div className={`shell${atHome ? ' immersive' : ''}${atHome && atTop ? ' at-top' : ''}`}>
       {s.me && (!s.me.skin || !s.me.about) && !welcomeLater && <WelcomeFlow api={api} nick={s.me.nick} needFace={!s.me.skin} onClose={(done) => { if (!done) setWelcomeLater(true); void refreshSession(); }} />}
       <aside className="side">
         <div className="side-brand">
