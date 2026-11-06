@@ -2,7 +2,9 @@
 // 서버 응답마다 서로 다른 지연(주소마다 고정, 0.15~1.6초)을 걸고 앱·웹 모든 화면을 처음부터 열어
 // 브라우저의 layout-shift 기록을 모은다. 사용자가 누르지 않았는데 이미 보이던 것이 움직이면 문제.
 // 실행: 로컬 서버(8787)·dev-bridge(5199)·앱(5180)·웹(5173)을 켠 뒤 node scripts/qa/shift.mjs <출력 폴더> [app|web]
-import { chromium } from 'playwright-core';
+import { createRequire } from 'node:module';
+// 전역 playwright(이 환경에 미리 설치됨)든 프로젝트 것이든 — 실행: NODE_PATH=$(npm root -g) node …
+const { chromium } = createRequire(import.meta.url)('playwright');
 import fs from 'fs';
 const [,, SP, only, onlyRoute] = process.argv;
 const APP = ['/', '/champions', '/champions/157', '/augments', '/augments/1001', '/dex', '/missions', '/ranking', '/crew', '/me', '/members/other1', '/shop', '/settings'];
@@ -13,7 +15,7 @@ const observe = () => {
   const name = (n) => { if (!n || !n.tagName) return '?'; const parts = []; let e = n; for (let i = 0; e && i < 3; i++, e = e.parentElement) parts.unshift((e.className && typeof e.className === 'string' ? '.' + e.className.trim().split(/\s+/).slice(0, 2).join('.') : e.tagName.toLowerCase())); return parts.join(' > '); };
   new PerformanceObserver((l) => { for (const e of l.getEntries()) { if (e.hadRecentInput) continue; window.__shifts.push({ t: Math.round(e.startTime), v: +e.value.toFixed(4), src: (e.sources || []).map((s) => ({ n: name(s.node), dy: Math.round(s.currentRect.y - s.previousRect.y), dh: Math.round(s.currentRect.height - s.previousRect.height) })) }); } }).observe({ type: 'layout-shift', buffered: true });
 };
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const b = await chromium.launch();
 const report = {};
 for (const [kind, w, scheme] of [['app', 1280, 'dark'], ['app', 760, 'light'], ['web', 1280, 'light'], ['web', 390, 'dark']]) {
   if (only && only !== kind) continue;

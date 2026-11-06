@@ -5,7 +5,9 @@
 //  - 뭉개짐: 옆 칸에 밀려 글이 한두 단어씩 세로로 쌓임 (v3.124)
 // 을 찾는다. 일부러 두 줄로 나눈 칸(도감 번호/이름 .dx)은 뺀다. 실행: 로컬 서버(8787)·dev-bridge(5199)·앱(5180)·웹(5173)을 켠 뒤
 //   node scripts/qa/wrap.mjs <출력 폴더> [app|web]
-import { chromium } from 'playwright-core';
+import { createRequire } from 'node:module';
+// 전역 playwright(이 환경에 미리 설치됨)든 프로젝트 것이든 — 실행: NODE_PATH=$(npm root -g) node …
+const { chromium } = createRequire(import.meta.url)('playwright');
 import fs from 'fs';
 
 const [,, OUT = '.', only] = process.argv;
@@ -71,7 +73,7 @@ const detect = () => {
   return out;
 };
 
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const b = await chromium.launch();
 const report = {};
 let total = 0;
 for (const [kind, w] of [['app', 1280], ['app', 1000], ['app', 760], ['web', 1280], ['web', 820], ['web', 600], ['web', 400], ['web', 360]]) {

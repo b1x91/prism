@@ -11,6 +11,8 @@ import { imgIn } from './skeleton';
 
 /** 아이템 능력치·효과는 처음 마우스를 올릴 때 한 번 불러온다 */
 let details: Record<number, ItemDetail> | null = null;
+/** 아이템 설명을 미리 받아 둔다 — 앱 시작 로딩 동안 (v3.179). 받은 뒤 처음 그리는 화면은 자리표시 없이 바로 */
+export function primeItemDetail() { return details ? Promise.resolve() : loadItemDetail().then((x) => { details = x; }).catch(() => {}); }
 export function useItemDetail(on: boolean) {
   const [d, setD] = useState(details);
   useEffect(() => { if (on && !d) loadItemDetail().then((x) => { details = x; setD(x); }).catch(() => {}); }, [on, d]);

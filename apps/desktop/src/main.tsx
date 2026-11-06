@@ -15,7 +15,7 @@ import { useHomeBg } from './homebg';
 import { minimapLeft, onMinimapSent } from './controller';
 import { UpdateButton } from './UpdateButton';
 import { GamePage } from './pages/Game';
-import { HomePage } from './pages/Home';
+import { HomePage, prefetchHome } from './pages/Home';
 import { AugmentsPage } from './pages/Augments';
 import { DexPage } from './pages/Dex';
 import { ChampionsPage } from './pages/Champions';
@@ -317,15 +317,28 @@ const MIN = matchMedia('(prefers-reduced-motion: reduce)').matches ? 300 : 2200;
 function Root() {
   const s = useSyncExternalStore(subscribe, getState);
   const [phase, setPhase] = useState<'show' | 'leave' | 'gone'>('show');
+  // 홈을 다 받아 둔 뒤에 걷는다 (v3.179): 랭킹·오늘의 아이템·아이템 설명·오늘의 챔프 그림.
+  // 홈이 자리표시로 먼저 보였다가 하나씩 바뀌지 않게. 내 판(오늘의 챔프가 거기서 정해진다)은 2초까지 기다리고, 아무리 늦어도 5초 안에 걷는다
+  const [homeReady, setHomeReady] = useState(false);
+  const goHome = Boolean(s.me?.consent) && (location.hash === '' || location.hash === '#/' || location.hash === '#');
   useEffect(() => {
-    if (!s.sessionChecked) return;
+    if (!s.sessionChecked || homeReady) return;
+    if (!goHome) { setHomeReady(true); return; }
+    let on = true;
+    const t0 = Date.now();
+    const games = new Promise<void>((r) => { const tick = () => (getState().games.length || Date.now() - t0 > 2000 ? r() : setTimeout(tick, 100)); tick(); });
+    void games.then(() => prefetchHome(getState(), 3000)).then(() => { if (on) setHomeReady(true); });
+    return () => { on = false; };
+  }, [s.sessionChecked, homeReady, goHome]);
+  useEffect(() => {
+    if (!s.sessionChecked || !homeReady) return;
     const wait = Math.max(0, MIN - (Date.now() - T0));
     const a = setTimeout(() => setPhase('leave'), wait), b = setTimeout(() => setPhase('gone'), wait + 520);
     return () => { clearTimeout(a); clearTimeout(b); };
-  }, [s.sessionChecked]);
+  }, [s.sessionChecked, homeReady]);
   return <>
     <App />
-    {phase !== 'gone' && <Splash leaving={phase === 'leave'} note={s.sessionChecked ? '준비됐어요' : 'Prism에 연결하는 중'} />}
+    {phase !== 'gone' && <Splash leaving={phase === 'leave'} note={!s.sessionChecked ? 'Prism에 연결하는 중' : homeReady ? '준비됐어요' : '홈을 준비하는 중'} />}
     {/* 출석 연출: 첫 화면이 걷히고 첫 화면 단계·소개 창을 다 마친 뒤에 */}
     {phase === 'gone' && s.attend && s.me?.consent && s.me.skin && s.me.about && <AttendGate a={s.attend} />}
     {/* 인터넷·서버 연결이 끊기면 안내, 돌아오면 저절로 다시 불러온다 (v3.122) */}

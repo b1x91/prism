@@ -7,8 +7,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { setHomeBg } from '../homebg';
 import { useNavigate } from 'react-router-dom';
-import { buyerRoles, itemGuideOf, josa, AUGMENT, CHAMPIONS, GAME_DATA, ITEM, ITEM_GROUP, ITEM_GROUP_KO, RARITY_KO, ROLE_KO, cdragon, fitPoints, guideOf, pct, tierOf, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
-import { AugRing, AugmentLink, Bone, ChampImg, imgIn, useItemDetail, FramedFace, TierBadge, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
+import { type Personal, buyerRoles, itemGuideOf, josa, AUGMENT, CHAMPIONS, GAME_DATA, ITEM, ITEM_GROUP, ITEM_GROUP_KO, RARITY_KO, ROLE_KO, cdragon, fitPoints, guideOf, pct, tierOf, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
+import { AugRing, AugmentLink, Bone, ChampImg, imgIn, preloadImages, primeItemDetail, useItemDetail, FramedFace, TierBadge, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
 import { api } from '../bridge';
 import type { State } from '../controller';
 
@@ -19,6 +19,22 @@ function openItemInDex(id: number) {
   setKept('dex.group', 'all');
   setKept('dex.q', '');
   setKept('dex.sel', { champions: null, augments: null, items: id });
+}
+
+/** 오늘의 챔프 (날마다 정해진 첫 추천) */
+const todayChamp = (P: Personal) => todayPicks(P, Object.keys(CHAMPIONS).map(Number))[0]?.id ?? null;
+
+/**
+ * 앱 시작 로딩 동안 홈을 미리 다 받아 둔다 (v3.179): 랭킹 · 오늘의 아이템 · 아이템 설명 · 오늘의 챔프 그림.
+ * 다 받은 뒤 로딩 화면을 걷으면 홈은 자리표시 없이 완성된 모습으로 처음 보인다. 아무리 늦어도 limit 뒤에는 넘어간다.
+ */
+export function prefetchHome(s: State, limit = 4000): Promise<void> {
+  const jobs: Promise<unknown>[] = [api.get('/api/items/today').catch(() => null), primeItemDetail()];
+  if (s.me?.perms?.ranking !== false) jobs.push(api.get('/api/ranking?period=season&by=score').catch(() => null));
+  const id = todayChamp(s.personal);
+  const splash = id ? cdragon(CHAMPIONS[id]?.splash) : '';
+  if (splash) jobs.push(preloadImages([splash], limit));
+  return Promise.race([Promise.all(jobs).then(() => undefined), new Promise<void>((r) => setTimeout(r, limit))]);
 }
 
 export function HomePage({ s }: { s: State }) {
@@ -103,7 +119,8 @@ function HomeRanking({ s }: { s: State }) {
   return (
     <section className="card pad home-rank">
       <div className="hr-head"><h3>{data?.season?.label ?? '이번 시즌'} 랭킹</h3><button type="button" className="hr-all" onClick={() => nav('/ranking')}>전체 보기<Icon name="chevR" /></button></div>
-      {!data ? <div className="hr-list rc-list">{[0, 1, 2, 3, 4].map((k) => <div key={k} className="rc-row sk"><span className="rc-n"><Bone w={20} h={32} /></span><span className="rc-track"><span className="rc-in"><Bone w={36} h={36} r="m" /><Bone w="55%" h={14} /><Bone w={40} h={18} /></span></span></div>)}</div>
+      {/* 자리표시는 실제 줄과 같은 틀 — 순위 숫자·막대 칸은 그대로, 얼굴·이름·점수만 뼈대 (v3.179) */}
+      {!data ? <div className="hr-list rc-list" aria-hidden="true">{[1, 2, 3, 4, 5].map((k) => <div key={k} className={`rc-row rc-wait ${k <= 3 ? `p${k}` : 'pn'}`}><span className="rc-n tn">{k}</span><span className="rc-track"><span className="rc-in"><Bone w={36} h={36} r="m" /><span className="hr-who rc-who-sk"><Bone w={96} h={14} /><Bone w={64} h={12} /></span><Bone w={40} h={18} /></span></span></div>)}</div>
         : !top.length ? <p className="hr-empty">이번 시즌 기록이 쌓이면 여기에 순위가 떠요.</p>
         : <div className="hr-list rc-list">
           {top.map((r, k) => <Row key={r.key ?? r.id} r={r} rank={k + 1} lead={rankScore(top[0].w, top[0].n)} low={rankScore(top[top.length - 1].w, top[top.length - 1].n)} me={r.id === meId} onOpen={() => nav(`/members/${r.id}`)} />)}
@@ -155,12 +172,35 @@ function HomeAugs({ champion, swapped, pending }: { champion: number; swapped?: 
   );
 }
 
+/** 오늘의 아이템 자리표시: 실제와 같은 칸 — 제목·라벨은 그대로, 받아야 아는 것만 뼈대 (v3.179) */
+function HomeItemSkeleton() {
+  return (
+    <section className="card pad home-item home-item-wait" aria-hidden="true">
+      <div className="hr-head"><h3>오늘의 아이템</h3><span className="hr-all">도감에서 보기<Icon name="chevR" /></span></div>
+      <div className="hi-body">
+        <div className="hi-desc">
+          <div className="hi-top"><Bone w={56} h={56} r="m" /><div className="hi-name"><Bone w={120} h={18} /><Bone w={88} h={12} /></div></div>
+          <div className="hi-statl">{[72, 64, 80].map((w, k) => <Bone key={k} w={w} h={24} r="pill" />)}</div>
+          <Bone w="92%" h={14} /><Bone w="84%" h={14} /><Bone w="60%" h={14} />
+        </div>
+        <div className="hi-stats">
+          <span className="hi-k">최근 30일 Prism 멤버 판</span>
+          <div className="hi-rate"><Bone w={84} h={32} /><Bone w={140} h={14} /></div>
+          <span className="hi-bar" />
+          <dl className="hi-grid">{['이 아이템을 산 판 승률', '쓰는 멤버', '픽률 순위'].map((t) => <div key={t}><dt>{t}</dt><dd><Bone w={48} h={20} /></dd></div>)}</dl>
+          <div className="hi-champs"><span className="hi-k">많이 산 챔프</span><div>{[0, 1, 2, 3, 4].map((k) => <Bone key={k} w={32} h={32} r="m" />)}</div></div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /** 오늘의 아이템: 도감 설명 + 최근 30일 Prism 멤버가 얼마나 고르는지 (v3.166, 서버 /api/items/today) */
 type ItemDay = { id: number; days: number; games: number; players: number; picks: number; wins: number; members: number; rank: number | null; ranked: number; champs: { c: number; n: number }[] };
 function HomeItem({ onDex }: { onDex: (id: number) => void }) {
   const { data } = useLoad<ItemDay>(api, '/api/items/today');
   const detail = useItemDetail(Boolean(data));
-  if (!data) return <section className="card pad home-item sk" aria-hidden="true"><div className="hr-head"><Bone w={140} h={20} /></div><div className="hi-body"><div className="hi-desc"><Bone w={64} h={64} r="m" /><Bone w="70%" h={14} /><Bone w="90%" h={14} /></div><div className="hi-stats"><Bone w="100%" h={120} r="m" /></div></div></section>;
+  if (!data) return <HomeItemSkeleton />;
   const it = ITEM[data.id];
   if (!it) return null;
   const d = detail?.[data.id];

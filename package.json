@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit -p . && tsc --noEmit -p server && tsc --noEmit -p apps/web && tsc --noEmit -p apps/desktop",
+    "build": "node scripts/qa/sk-lint.mjs && tsc --noEmit -p . && tsc --noEmit -p server && tsc --noEmit -p apps/web && tsc --noEmit -p apps/desktop",
     "probe:opgg": "tsx scripts/probe-opgg-mcp.ts",
     "server:dev": "wrangler dev --config server/wrangler.toml --local --ip 127.0.0.1 --port 8787",
     "server:migrate:local": "wrangler d1 migrations apply prism --local --config server/wrangler.toml",

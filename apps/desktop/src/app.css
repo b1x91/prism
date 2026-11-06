@@ -700,7 +700,6 @@ body { overflow: hidden; background: var(--bg); }
 .hr-list { display: grid; gap: var(--s1); }
 .hr-row { display: grid; grid-template-columns: 24px 40px minmax(0, 1fr) auto; align-items: center; gap: var(--s3); min-height: 56px; padding: var(--s2) var(--s3); border: 0; border-radius: var(--r-m); background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; transition: background .15s; }
 .hr-row:hover { background: var(--surface-2); }
-.hr-row.sk { cursor: default; }
 .hr-row.me { background: var(--accent-soft); }
 .hr-n { font-size: var(--fs-md); font-weight: 800; text-align: center; color: var(--text-2); }
 .hr-row.p1 .hr-n { color: var(--gold); }
@@ -749,7 +748,7 @@ body { overflow: hidden; background: var(--bg); }
 .hi-ch img { border-radius: var(--r-s); }
 .hi-ch small { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
 .hi-none p { margin: 0; font-size: var(--fs-sm); color: var(--text-2); }
-.home-item.sk .hi-desc, .home-item.sk .hi-stats { gap: var(--s3); }
+.home-item-wait .hi-desc { gap: var(--s3); } .home-item-wait .hi-name { gap: 6px; }
 @container (max-width: 820px) { .hi-body { grid-template-columns: minmax(0, 1fr); gap: var(--s4); } }
 @container (max-width: 820px) {
   .hc-txt h2 { font-size: 40px; }
@@ -850,7 +849,8 @@ body { overflow: hidden; background: var(--bg); }
 .rc-s b { font-size: var(--fs-lg); font-weight: 850; }
 .rc-row.p1 .rc-s b { color: var(--c); font-size: var(--fs-xl); }
 .rc-s small { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); }
-.rc-row.sk { cursor: default; }
+.rc-row.rc-wait { cursor: default; }
+.rc-who-sk { grid-template-columns: minmax(0, 1fr); row-gap: 6px; }
 @media (prefers-reduced-motion: reduce) { .rc-fill { transition: none; } }
 /* 좁은 창(카드 폭 380 이하): 이름이 잘리지 않게 숫자 칸·점수 차를 줄인다 */
 .home-rank { container-type: inline-size; }

@@ -1,7 +1,11 @@
 // 자리표시(스켈레톤) 겹침·뭉침·넘침 점검 (CLAUDE.md v3.78)
 // 서버 응답을 멈춘 채 앱·웹 모든 화면에서 .sk 의 위치를 재서: 서로 겹침 · 틈 4px 미만으로 붙음 · 카드/칸 밖으로 넘침을 찾는다.
-// 실행: 로컬 서버(8787)·dev-bridge(5199)·앱(5180)·웹(5173)을 켠 뒤 node scripts/qa/skeleton.mjs <출력 폴더> [app|web]
-import { chromium } from 'playwright-core';
+// 실행: 로컬 서버(8787)·dev-bridge(5199)·앱(5180)·웹(5173)을 켠 뒤 NODE_PATH=$(npm root -g) node scripts/qa/skeleton.mjs <출력 폴더> [app|web]
+//   웹은 서버 주소를 넣고 켠다: VITE_PRISM_SERVER=http://localhost:8787 VITE_PRISM_DEV_LOGIN=1 npx vite --port 5173 (apps/web)
+//   로그인이 안 된 채로 돌면 모든 화면이 '로그인' 안내라 자리표시가 0개로 '통과'한다 — 그래서 로그인을 확인하고 안 됐으면 멈춘다 (v3.179)
+import { createRequire } from 'node:module';
+// 전역 playwright(이 환경에 미리 설치됨)든 프로젝트 것이든 — 실행: NODE_PATH=$(npm root -g) node …
+const { chromium } = createRequire(import.meta.url)('playwright');
 const [,, SP, only] = process.argv;
 const ALLOW = /^\/(api\/me$|api\/me\/presence|links|api\/app\/token|auth)/;
 const APP = ['/', '/champions', '/champions/157', '/augments', '/augments/1001', '/dex', '/missions', '/ranking', '/crew', '/me', '/members/other1', '/shop', '/settings', '/staff', '/staff/members', '/staff/todo', '/staff/inquiries'];
@@ -10,6 +14,8 @@ const detect = () => {
   const els = [...document.querySelectorAll('.sk')].filter((e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && cs.display !== 'none' && !e.closest('[hidden]'); });
   const R = els.map((e) => ({ e, r: e.getBoundingClientRect() }));
   const out = [];
+  // 뼈대 안에 다른 요소가 있으면 칸 전체가 큰 뼈대로 그려져 뭉개진다 (v3.179, sk-lint 와 같은 규칙을 화면에서도)
+  for (const { e } of R) if (e.querySelector('*')) out.push({ t: '뼈대가 칸을 품음', a: `.${[...e.classList].join('.')}`, b: '', y: Math.round(e.getBoundingClientRect().top), x: 0 });
   const name = (e) => { const p = e.parentElement; return `${(p?.className || p?.tagName || '').toString().slice(0, 40)} > .${[...e.classList].join('.')}`; };
   for (let i = 0; i < R.length; i++) for (let j = i + 1; j < R.length; j++) {
     const a = R[i].r, b = R[j].r;
@@ -29,7 +35,7 @@ const detect = () => {
   }
   return { count: R.length, issues: out };
 };
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const b = await chromium.launch();
 const report = {};
 for (const [kind, w, scheme] of [['app', 1280, 'dark'], ['app', 760, 'light'], ['web', 1280, 'light'], ['web', 390, 'dark']]) {
   if (only && only !== kind) continue;
@@ -46,10 +52,14 @@ for (const [kind, w, scheme] of [['app', 1280, 'dark'], ['app', 760, 'light'], [
     await p.goto(`http://localhost:8787/auth/dev?id=426955675592163329&name=Haze&redirect=${encodeURIComponent('http://127.0.0.1:5173/auth/done')}`); await p.waitForTimeout(4000);
     for (const t of ['나중에', '나중에']) await p.getByText(t).first().click({ timeout: 1200 }).catch(() => {});
   }
+  // 로그인 확인: 안 됐으면 점검이 눈먼 채 통과하므로 멈춘다
+  const loggedIn = kind === 'app' ? await p.locator('.side-me-card').count() : await p.locator('.me-btn, .me-wrap').count();
+  if (!loggedIn) { console.error(`${kind}: 로그인이 안 됐어요 — 점검을 멈춥니다 (웹은 VITE_PRISM_SERVER 를 넣고 켰는지 확인)`); process.exit(2); }
   hold = true;
   for (const r of kind === 'app' ? APP : WEB) {
     const url = kind === 'app' ? `http://127.0.0.1:5180/#${r}` : `http://127.0.0.1:5173${r}`;
-    await p.goto(url).catch(() => {}); await p.waitForTimeout(2200);
+    // 화면마다 새로 연다 — 같은 페이지 안에서 주소만 바꾸면 앞에서 받아 둔 데이터로 그려져 자리표시를 못 본다 (홈이 0개로 통과하던 것, v3.179)
+    await p.goto(url).catch(() => {}); await p.reload().catch(() => {}); await p.waitForTimeout(r === '/' ? 6500 : 3500); // 앱 홈은 시작 로딩이 최대 5초 기다린다
     for (const t of ['나중에']) await p.getByText(t).first().click({ timeout: 600 }).catch(() => {});
     const res = await p.evaluate(detect).catch((e) => ({ count: -1, issues: [{ t: String(e).slice(0, 80) }] }));
     const tag = `${kind}-${w}-${scheme}${r.replace(/\//g, '_')}`;

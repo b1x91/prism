@@ -1,5 +1,7 @@
 // 화면 전역 대비 점검: 아이콘(svg)·글자의 색과 실제 바탕색(반투명 겹침·그라디언트 포함)의 대비를 잰다
-import { chromium } from 'playwright-core';
+import { createRequire } from 'node:module';
+// 전역 playwright(이 환경에 미리 설치됨)든 프로젝트 것이든 — 실행: NODE_PATH=$(npm root -g) node …
+const { chromium } = createRequire(import.meta.url)('playwright');
 import fs from 'fs';
 // 쓰는 법: 서버(8787)·앱 화면(5180, dev-bridge)·웹(5173)을 켠 뒤 node scripts/qa/contrast.mjs <결과 폴더> app|web
 // 결과는 대비가 낮은 순. 그림 위·글자 그라디언트는 잴 수 없어 낮게 나올 수 있다 — 반드시 그 자리를 찍어 눈으로 확인한다
@@ -67,7 +69,7 @@ const scan = () => {
   }
   return out;
 };
-const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome' });
+const b = await chromium.launch();
 const res = {};
 for (const dark of [true, false]) {
   const ctx = await b.newContext({ viewport: { width: 1400, height: 1000 }, colorScheme: dark ? 'dark' : 'light' });
