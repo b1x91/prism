@@ -13,7 +13,9 @@ export type RankingRow = { id: string; nick: string; skin: number | null; n: num
   /** 승인 대기 (v3.107) */
   pending?: boolean;
   /** 롤 계정마다 한 줄 (v3.161): 줄 열쇠(회원 id:계정 순서) · 메인 계정인지 · 그 계정에 장착한 테두리·이름 효과·칭호. 예전 서버는 보내지 않는다 */
-  key?: string; main?: boolean; frame?: string | null; nameFx?: string | null; title?: string | null };
+  key?: string; main?: boolean; frame?: string | null; nameFx?: string | null; title?: string | null;
+  /** Prism 레이팅 (2026-11-06~, 예전 서버는 보내지 않는다) */
+  rating?: number };
 export type Ranking = { period: 'all' | 'month' | 'season'; season?: { key: string; label: string; start: number; end: number }; minWinrate: number; rows: RankingRow[]; limited?: { total: number; mine: (RankingRow & { rank: number }) | null } };
 export type MemberGame = { gameId: number; playedAt: number; duration: number; championId: number; win: boolean; kills: number; deaths: number; assists: number; augments: number[]; items: number[]; damageToChampions: number | null; goldEarned: number | null; crewCount: number; custom?: boolean };
 export type MemberPage = {
@@ -22,6 +24,8 @@ export type MemberPage = {
   member: { id: string; nick: string; intro: string; tier: 'guest' | 'member' | 'admin'; joinedAt: number; skin: number | null; riotId: string | null; self: boolean; role?: import('./api').DiscordRole | null; presence?: import('./presence').Presence; deco?: import('./shop').Deco; shared?: boolean; about?: import('./about').About | null; pending?: boolean };
   total: NW & { k: number; d: number; a: number; first: number | null };
   rank: number;
+  /** Prism 레이팅 (가장 높은 계정) · 멤버 평균(20판 이상) — 예전 서버는 보내지 않는다 */
+  rating?: number; ratingAvg?: number;
   champions: ChampAgg[];
   augments: { id: number; n: number; w: number }[];
   /** 증강 × 그때 챔피언 (서버 0.6.8 이후. 옛 서버면 없음) */

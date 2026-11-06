@@ -7,8 +7,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { setHomeBg } from '../homebg';
 import { useNavigate } from 'react-router-dom';
-import { type Personal, buyerRoles, itemGuideOf, josa, AUGMENT, CHAMPIONS, GAME_DATA, ITEM, ITEM_GROUP, ITEM_GROUP_KO, RARITY_KO, ROLE_KO, cdragon, fitPoints, guideOf, pct, tierOf, rankScore, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
-import { AugRing, AugmentLink, Bone, ChampImg, imgIn, preloadImages, primeItemDetail, useItemDetail, FramedFace, TierBadge, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
+import { type Personal, buyerRoles, itemGuideOf, josa, AUGMENT, CHAMPIONS, ITEM, ITEM_GROUP, ITEM_GROUP_KO, RARITY_KO, ROLE_KO, cdragon, pct, scoreOf, shortNick, todayPicks, type Ranking, type RankingRow } from '@prism/core';
+import { AugRing, AugmentLink, Bone, ChampImg, imgIn, preloadImages, primeItemDetail, useItemDetail, FramedFace, Icon, NickName, OmniSearch, PendingChip, SplashSwap, preloadSplash, setKept, useLoad, useSplashHold, type SearchKind } from '@prism/ui';
 import { api } from '../bridge';
 import type { State } from '../controller';
 
@@ -29,7 +29,7 @@ const todayChamp = (P: Personal) => todayPicks(P, Object.keys(CHAMPIONS).map(Num
  * 다 받은 뒤 로딩 화면을 걷으면 홈은 자리표시 없이 완성된 모습으로 처음 보인다. 아무리 늦어도 limit 뒤에는 넘어간다.
  */
 export function prefetchHome(s: State, limit = 4000): Promise<void> {
-  const jobs: Promise<unknown>[] = [api.get('/api/items/today').catch(() => null), primeItemDetail()];
+  const jobs: Promise<unknown>[] = [api.get('/api/items/today').catch(() => null), api.get('/api/crew/hotaugs').catch(() => null), primeItemDetail()];
   if (s.me?.perms?.ranking !== false) jobs.push(api.get('/api/ranking?period=season&by=score').catch(() => null));
   const id = todayChamp(s.personal);
   const splash = id ? cdragon(CHAMPIONS[id]?.splash) : '';
@@ -88,9 +88,9 @@ export function HomePage({ s }: { s: State }) {
         </div>
       </section>}
 
-      {/* 아래 두 칸: 왼쪽 어울리는 증강 · 오른쪽 랭킹 맛보기 (v3.164) */}
+      {/* 아래 두 칸: 왼쪽 프리즘에서 가장 핫한 증강 · 오른쪽 랭킹 맛보기 */}
       <div className="home-duo">
-        {pick && <HomeAugs champion={pick.id} swapped={swapped.current} pending={hold.pending} />}
+        {s.me && <HomeHot />}
         {s.me && <HomeRanking s={s} />}
       </div>
 
@@ -123,14 +123,14 @@ function HomeRanking({ s }: { s: State }) {
       {!data ? <div className="hr-list rc-list" aria-hidden="true">{[1, 2, 3, 4, 5].map((k) => <div key={k} className={`rc-row rc-wait ${k <= 3 ? `p${k}` : 'pn'}`}><span className="rc-n tn">{k}</span><span className="rc-track"><span className="rc-in"><Bone w={36} h={36} r="m" /><span className="hr-who rc-who-sk"><Bone w={96} h={14} /><Bone w={64} h={12} /></span><Bone w={40} h={18} /></span></span></div>)}</div>
         : !top.length ? <p className="hr-empty">이번 시즌 기록이 쌓이면 여기에 순위가 떠요.</p>
         : <div className="hr-list rc-list">
-          {top.map((r, k) => <Row key={r.key ?? r.id} r={r} rank={k + 1} lead={rankScore(top[0].w, top[0].n)} low={rankScore(top[top.length - 1].w, top[top.length - 1].n)} me={r.id === meId} onOpen={() => nav(`/members/${r.id}`)} />)}
+          {top.map((r, k) => <Row key={r.key ?? r.id} r={r} rank={k + 1} lead={scoreOf(top[0])} low={scoreOf(top[top.length - 1])} me={r.id === meId} onOpen={() => nav(`/members/${r.id}`)} />)}
         </div>}
     </section>
   );
 }
 
 function Row({ r, rank, lead, low, me, onOpen }: { r: RankingRow; rank: number; lead: number; low: number; me?: boolean; onOpen: () => void }) {
-  const score = rankScore(r.w, r.n);
+  const score = scoreOf(r);
   // 시안 C '레이스' (v3.175): 큰 기울임 숫자 + 점수만큼 차오른 막대. 1~3위 금·은·동, 4·5위는 같은 무게의 중립색 —
   // 순위가 내려갈수록 옅어지기만 하고 4위가 5위보다 흐려 보이지 않게. 내 줄은 숫자 색이 아니라 '나' 표시와 막대 테두리로
   const fill = lead > low ? 42 + 58 * ((score - low) / (lead - low)) : 100;
@@ -149,25 +149,39 @@ function Row({ r, rank, lead, low, me, onOpen }: { r: RankingRow; rank: number; 
   );
 }
 
-/** 오늘의 챔프에게 어울리는 증강 5개 — 등급을 섞어 어울림 점수 순 (오른쪽 랭킹 Top 5 와 같은 다섯 줄) */
-const RANK_RARITY = { prismatic: 3, gold: 2, silver: 1 } as const;
-function HomeAugs({ champion, swapped, pending }: { champion: number; swapped?: boolean; pending?: boolean }) {
-  const guide = guideOf(GAME_DATA, champion);
-  const top = guide ? [...guide.prismatic, ...guide.gold, ...guide.silver]
-    .sort((a, b) => fitPoints(b) - fitPoints(a) || RANK_RARITY[b.rarity] - RANK_RARITY[a.rarity]).slice(0, 5) : [];
+/**
+ * 프리즘에서 가장 핫한 증강 (2026-11-06 사용자 결정, '오늘의 챔프에게 어울리는 증강'을 대신한다): 최근 14일 Prism 사람들이
+ * 가장 많이 고른 증강 5개. 오른쪽 랭킹과 같은 '레이스' 줄 — 큰 기울임 숫자 + 고른 수만큼 차오른 막대 (서버 /api/crew/hotaugs).
+ */
+type HotAugs = { days: number; rows: { id: number; n: number; m: number }[] };
+function HomeHot() {
+  const { data } = useLoad<HotAugs>(api, '/api/crew/hotaugs');
+  const rows = (data?.rows ?? []).filter((r) => AUGMENT[r.id]);
+  const lead = rows[0]?.n ?? 1, low = rows[rows.length - 1]?.n ?? 0;
   return (
-    <section className={`card pad home-augs ${pending ? 'swapping' : ''}`}>
-      <div className="hr-head"><h3>{CHAMPIONS[champion]?.name}에게 어울리는 증강</h3></div>
-      <div key={champion} className={`hr-list ${swapped ? 'bn-in' : ''}`}>
-        {top.map((f, k) => (
-          <AugmentLink key={f.id} id={f.id} champion={champion} className="hr-row ha-row">
-            <span className="hr-n tn">{k + 1}</span>
-            <AugRing id={f.id} size={40} />
-            <span className="hr-who"><b>{AUGMENT[f.id]?.name}</b><small className={`ha-r ${f.rarity}`}>{RARITY_KO[f.rarity]}</small></span>
-            <TierBadge tier={tierOf(fitPoints(f))} />
-          </AugmentLink>
-        ))}
-      </div>
+    <section className="card pad home-rank home-hot">
+      <div className="hr-head"><h3>프리즘에서 가장 핫한 증강</h3><span className="meta">{data ? `최근 ${data.days}일` : ''}</span></div>
+      {!data ? <div className="hr-list rc-list" aria-hidden="true">{[1, 2, 3, 4, 5].map((k) => <div key={k} className={`rc-row rc-wait ${k <= 3 ? `p${k}` : 'pn'}`}><span className="rc-n tn">{k}</span><span className="rc-track"><span className="rc-in"><Bone w={36} h={36} r="pill" /><span className="hr-who rc-who-sk"><Bone w={96} h={14} /><Bone w={64} h={12} /></span><Bone w={40} h={18} /></span></span></div>)}</div>
+        : !rows.length ? <p className="hr-empty">멤버들이 증강을 고르면 여기에 순위가 떠요.</p>
+        : <div className="hr-list rc-list">
+          {rows.map((r, k) => {
+            const a = AUGMENT[r.id];
+            const fill = lead > low ? 42 + 58 * ((r.n - low) / (lead - low)) : 100;
+            return (
+              <AugmentLink key={r.id} id={r.id} className={`rc-row ${k < 3 ? `p${k + 1}` : 'pn'}`}>
+                <span className="rc-n tn">{k + 1}</span>
+                <span className="rc-track">
+                  <i className="rc-fill" style={{ width: `${fill}%` }} />
+                  <span className="rc-in">
+                    <AugRing id={r.id} size={36} />
+                    <span className="hr-who"><b>{a.name}</b><small><span className={`ha-r ${a.rarity}`}>{RARITY_KO[a.rarity]}</span><span className="tn"> · 멤버 {r.m}명</span></small></span>
+                    <span className="rc-s tn"><b>{r.n}</b><small>번</small></span>
+                  </span>
+                </span>
+              </AugmentLink>
+            );
+          })}
+        </div>}
     </section>
   );
 }

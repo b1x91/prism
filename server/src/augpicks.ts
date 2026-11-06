@@ -18,3 +18,17 @@ export async function augPicks(env: Env) {
   for (const r of byChamp.results as { c: number; id: number }[]) (champ[r.c] ??= []).push(r.id);
   return json({ ids: (all.results as { id: number }[]).map((r) => r.id), champ });
 }
+
+/**
+ * 홈 '프리즘에서 가장 핫한 증강' (2026-11-06 사용자 결정): 최근 14일 Prism 사람들이 가장 많이 고른 증강 5개 —
+ * 고른 수 · 고른 멤버 수. 14일 기록으로 5개가 안 차면 60일로 넓힌다. 회원 전용(홈).
+ */
+export const HOT = { days: 14, wide: 60, top: 5 };
+export async function hotAugs(env: Env) {
+  const q = (days: number) => env.DB.prepare(`SELECT a.augment_id AS id, COUNT(*) AS n, COUNT(DISTINCT a.member_id) AS m FROM participant_augments a
+    JOIN participants p ON p.game_id = a.game_id AND p.member_id = a.member_id
+    WHERE p.played_at > ? GROUP BY a.augment_id ORDER BY n DESC, m DESC LIMIT ?`).bind(Date.now() - days * 86_400_000, HOT.top).all<{ id: number; n: number; m: number }>();
+  let days = HOT.days, rows = (await q(days)).results;
+  if (rows.length < HOT.top) { days = HOT.wide; rows = (await q(days)).results; }
+  return json({ days, rows });
+}

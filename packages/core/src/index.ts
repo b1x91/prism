@@ -22,6 +22,7 @@ export * from './duo';
 export * from './liveitems';
 export * from './about';
 export * from './ranking';
+export * from './rating';
 export * from './improve';
 export * from './josa';
 export * from './gameplan';

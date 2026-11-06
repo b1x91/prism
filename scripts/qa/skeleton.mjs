@@ -53,7 +53,7 @@ for (const [kind, w, scheme] of [['app', 1280, 'dark'], ['app', 760, 'light'], [
     for (const t of ['나중에', '나중에']) await p.getByText(t).first().click({ timeout: 1200 }).catch(() => {});
   }
   // 로그인 확인: 안 됐으면 점검이 눈먼 채 통과하므로 멈춘다
-  const loggedIn = kind === 'app' ? await p.locator('.side-me-card').count() : await p.locator('.me-btn, .me-wrap').count();
+  const loggedIn = kind === 'app' ? await p.locator('.side-card .side-me').count() : await p.locator('.me-btn, .me-wrap').count();
   if (!loggedIn) { console.error(`${kind}: 로그인이 안 됐어요 — 점검을 멈춥니다 (웹은 VITE_PRISM_SERVER 를 넣고 켰는지 확인)`); process.exit(2); }
   hold = true;
   for (const r of kind === 'app' ? APP : WEB) {

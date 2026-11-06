@@ -1,6 +1,6 @@
 /**
  * 회원끼리 보는 화면: 랭킹, 회원 페이지(분석). 로그인한 회원에게만 준다 (CLAUDE.md 2절 11).
- * 판수·승률·Prism 점수(승률을 판수만큼 믿은 값)로 순위를 낸다. 딜량 순위·롤 티어·MMR 표시는 하지 않는다 (CLAUDE.md 15절).
+ * 판수·승률·Prism 레이팅(팀원·상대 실력과 판의 활약으로 만든 실력, rating.ts)으로 순위를 낸다. 딜량 순위·롤 티어·MMR 표시는 하지 않는다 (CLAUDE.md 15절).
  */
 import { parseDeco, type Deco } from '../../packages/core/src/shop.js';
 import { pinnedOf } from './goods.js';
@@ -9,6 +9,8 @@ import { HttpError, json, type Env, type Member } from './util.js';
 import { can, isPending, LIMITED, topRole } from './roles.js';
 import { presenceOf } from '../../packages/core/src/presence.js';
 import { byScore, seasonOf } from '../../packages/core/src/ranking.js';
+import { ratingOf } from '../../packages/core/src/rating.js';
+import { ratingBook, ratingKey } from './rating.js';
 import { badgeFromJson } from '../../packages/core/src/mvp.js';
 
 export const RANK_MIN_WINRATE = 10; // 승률 순위는 10판 이상만
@@ -27,6 +29,8 @@ const monthStart = () => {
 export type AccountRow = {
   id: string; key: string; nick: string; skin: number | null; n: number; w: number; mainChampion: number | null;
   main: boolean; deco: Deco; tier: string; discord_roles: string | null; app_first_at: number;
+  /** Prism 레이팅 (그 계정의 모든 판으로 만든 실력, 시즌 줄도 같은 값) */
+  rating: number;
 };
 
 /**
@@ -34,6 +38,7 @@ export type AccountRow = {
  * 회원 페이지 순위·봇 /랭킹도 같은 줄로 센다.
  */
 export async function accountRows(env: Env, since: number): Promise<AccountRow[]> {
+  const book = await ratingBook(env);
   const [games, mems, accs] = await env.DB.batch([
     env.DB.prepare('SELECT member_id AS mid, puuid, champion_id AS c, COUNT(*) AS n, SUM(win) AS w, MAX(played_at) AS last FROM participants WHERE played_at >= ? GROUP BY 1, 2, 3').bind(since),
     env.DB.prepare('SELECT id, nick, profile_skin AS skin, tier, discord_roles, app_first_at, deco, riot_puuid FROM members'),
@@ -58,6 +63,7 @@ export async function accountRows(env: Env, since: number): Promise<AccountRow[]
       r = {
         id: m.id, key: k, nick: (main ? m.nick : a?.riot_id) || m.nick, skin: m.skin, n: 0, w: 0, mainChampion: null, main,
         deco: parseDeco(main ? m.deco : a?.deco), tier: m.tier, discord_roles: m.discord_roles, app_first_at: m.app_first_at, champs: new Map(),
+        rating: ratingOf(book.get(ratingKey(own, m.riot_puuid, m.id))),
       };
       rows.set(k, r);
     }
@@ -154,6 +160,8 @@ export async function memberPage(env: Env, me: Member, id: string) {
     member: { id: m.id, nick: m.nick, intro: m.intro, tier: m.tier, joinedAt: m.joinedAt, skin: m.skin, riotId: self ? m.riotId : null, self, role: topRole(m), pending: isPending({ tier: m.tier as Member['tier'], discord_roles: m.discord_roles, app_first_at: m.app_first_at }), presence: presenceOf({ webAt: m.web_seen_at, appAt: m.app_seen_at, lol: Boolean(m.app_lol), open: Boolean(m.app_open) }), deco: parseDeco(m.deco), shared: Boolean(m.share_on), about: (() => { try { return m.about ? cleanAbout(JSON.parse(m.about)) : null; } catch { return null; } })() },
     total: total.results[0],
     rank: best < 0 ? all.length + 1 : best + 1,
+    rating: best < 0 ? null : all[best].rating,
+    ratingAvg: (() => { const r = all.filter((x) => x.n >= 20); return r.length ? Math.round(r.reduce((t, x) => t + x.rating, 0) / r.length) : null; })(),
     champions: champions.results,
     augments: augments.results,
     picks: picks.results,
