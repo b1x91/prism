@@ -55,17 +55,19 @@ ul.notes{margin:24px 0 0;padding:0 0 0 20px;color:var(--mut);font-size:14px;line
 .rks-ice:focus-visible { outline: none; }
 .rks-ice:focus-visible .rks-edge { border-color: #fff; border-width: 2.5px; }
 /* 이름·점수 (E2): 가는 선 아래 왼쪽 이름·판수, 오른쪽 점수 */
-.rks-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 8px; padding: 0 12px 24px; }
-.rks-info::before { content: ""; grid-column: 1 / -1; height: 1px; margin-bottom: 12px; background: linear-gradient(90deg, rgba(255, 255, 255, .4), rgba(255, 255, 255, .05)); }
-.rks-who { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.rks-nm { display: flex; align-items: center; gap: 4px; min-width: 0; font-size: 14px; font-weight: 800; white-space: nowrap; }
+/* 이름·점수는 카드 폭에 비례(cqw = 카드 폭의 1%, 폭 200px 기준 1px = .5cqw) — 화면이 작아도 배치·글은 그대로, 크기만 줄어든다 */
+.rks-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 4cqw; padding: 0 6cqw 11cqw; }
+.rks-info::before { content: ""; grid-column: 1 / -1; height: 1px; margin-bottom: 6cqw; background: linear-gradient(90deg, rgba(255, 255, 255, .4), rgba(255, 255, 255, .05)); }
+.rks-who { min-width: 0; display: flex; flex-direction: column; gap: 2cqw; }
+.rks-nm { display: flex; align-items: center; gap: 2cqw; min-width: 0; font-size: 7cqw; font-weight: 800; white-space: nowrap; }
 .rks-nm > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .rks-nm .phero-name.nmfx { filter: none; }
-.rks-mt { font-size: 12px; font-weight: 600; opacity: .7; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.rks-sc { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; white-space: nowrap; }
-.rks-sc small { font-size: 12px; font-weight: 800; letter-spacing: .14em; opacity: .55; }
-.rks-sc b { font-size: 20px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; background: linear-gradient(180deg, var(--g1), var(--g2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-.p1 .rks-sc b { font-size: 28px; }
+.rks-mt { font-size: 6cqw; font-weight: 600; opacity: .7; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rks-sc { display: flex; flex-direction: column; align-items: flex-end; gap: 1cqw; white-space: nowrap; }
+.rks-sc small { font-size: 5.5cqw; font-weight: 800; letter-spacing: .14em; opacity: .55; }
+.rks-sc b { font-size: 11cqw; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; background: linear-gradient(180deg, var(--g1), var(--g2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.p1 .rks-sc b { font-size: 13cqw; }
+.rks-nm .wait-chip { height: 9cqw; padding: 0 3.5cqw; margin-left: 0; font-size: 5cqw; }
 .rks-slot.p1 { --g1: #fff8dc; --g2: #f3c64a; }
 .rks-slot.p2 { --g1: #ffffff; --g2: #c4ccda; }
 .rks-slot.p3 { --g1: #ffe6cf; --g2: #d99258; }
@@ -89,16 +91,7 @@ ul.notes{margin:24px 0 0;padding:0 0 0 20px;color:var(--mut);font-size:14px;line
 @media (max-width: 720px) {
   .rks { --rks-pt: 100px; }
   .rks-scene { width: 124%; margin-left: -12%; }
-}
-/* 카드가 좁으면 (무대 폭 기준, 세 카드가 늘 같은 배치): 승인대기 칩·SCORE 글자를 빼고, 더 좁으면 점수 → 이름 → 판수로 쌓는다 */
-@container rks (max-width: 1000px) { .rks-nm .wait-chip { display: none; } .rks-sc small { display: none; } .rks-info { padding: 0 8px 20px; } }
-@container rks (max-width: 818px) {
-  .rks-info { grid-template-columns: 1fr; text-align: center; row-gap: 2px; padding: 0 4px 18px; }
-  .rks-info::before { margin-bottom: 4px; }
-  .rks-who { order: 2; align-items: center; gap: 0; }
-  .rks-nm { justify-content: center; font-size: 12px; }
-  .rks-sc { order: 1; align-items: center; }
-  .rks-sc b { font-size: 16px; } .p1 .rks-sc b { font-size: 20px; }
+  .rks-slot { width: 24%; } .rks-slot.p1 { width: 28%; } .rks-slot.p2 { left: 22%; } .rks-slot.p3 { left: 78%; }
 }
 @media (prefers-reduced-motion: reduce) { .rks *, .rks *::after { animation: none !important; } }
 
@@ -110,6 +103,7 @@ ul.notes{margin:24px 0 0;padding:0 0 0 20px;color:var(--mut);font-size:14px;line
 <li>움직임 (약 2초, 1시간에 한 번): 바닥에 빛이 고이고 → 2위 · 3위 · 1위 순으로 카드가 바닥에서 솟고 → 순위 문장이 내려앉고 → 점수가 차오르고 → 1위 카드에 빛 한 줄기.</li>
 <li>세 카드는 같은 비율(가로 2 : 세로 3). 1위는 같은 모양을 그대로 크게 키웠어요.</li>
 <li>카드 안: 대표 스킨 그림이 위에서 아래까지, 아래쪽만 어둡게 깔아 이름·점수가 읽히게.</li>
+<li>화면이 작아도 이름·판수(왼쪽)와 SCORE·점수(오른쪽) 배치와 글은 그대로, 카드 크기에 맞춰 함께 줄어들어요.</li>
 <li>동작 줄이기 설정이면 처음부터 완성된 무대.</li>
 </ul></div>
 <script>
