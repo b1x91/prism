@@ -20,7 +20,7 @@ import { Glass } from 'glisse';
 import { AugmentsPage } from './pages/Augments';
 import { DexPage } from './pages/Dex';
 import { ChampionsPage } from './pages/Champions';
-import { MemberPage, MissionsPage, NewsPage, InquiryPage, RankingPage, ShopPage, StaffInquiryPage, StaffJoinPage, StaffMembersPage, StaffPage, StaffTodoPage } from './pages/Members';
+import { MemberPage, MissionsPage, NewsPage, InquiryPage, RankingPage, ShopPage, StaffInquiryPage, StaffJoinPage, StaffShopPage, StaffMembersPage, StaffPage, StaffTodoPage } from './pages/Members';
 import { CrewPage, InvitePage } from './pages/Crew';
 import { SettingsPage } from './pages/Settings';
 import { lockdown } from './lockdown';
@@ -128,7 +128,7 @@ function App() {
   const isAt = (to: string, end = false) => path === to || (!end && to !== '/' && path.startsWith(`${to}/`));
   // 새 탭·새 창(가운데 단추·Ctrl)은 그대로 둔다
   const onNav = (to: string) => (e: RMouseEvent) => { if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return; e.preventDefault(); go(to); };
-  const hubAllow = (to: string) => Boolean(s.me) || (to !== '/news' && to !== '/invite');
+  const hubAllow = (to: string) => (to === '/staff/shop' ? s.me?.tier === 'admin' : Boolean(s.me) || (to !== '/news' && to !== '/invite'));
   const curHub = hubOf(loc.pathname);
   const login = async () => { try { await bridge.login(); } finally { await refreshSession(); } };
   // 챔프 선택·게임이 시작되면 게임 화면으로 (Alt+Tab 했을 때 바로 보이게)
@@ -309,6 +309,7 @@ function App() {
           <Route path="staff/join" element={<StaffJoinPage s={s} onLogin={login} />} />
           <Route path="staff/todo" element={<StaffTodoPage s={s} onLogin={login} />} />
           <Route path="staff/inquiries" element={<StaffInquiryPage s={s} onLogin={login} />} />
+          <Route path="staff/shop" element={<StaffShopPage s={s} onLogin={login} />} />
           <Route path="*" element={<HomePage s={s} />} />
         </Routes></Page>}</PullRefresh></MatchNote.Provider></MatchSource.Provider></AugmentOpen.Provider>
       </main>

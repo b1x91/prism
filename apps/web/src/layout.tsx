@@ -11,7 +11,7 @@ const NAV: [string, string, IconName][] = [['/champions', '챔프', 'grid'], ['/
 /** 운영 메뉴는 운영진에게만 (v3.107) */
 const navOf = (me: { perms?: { manage?: boolean } } | null): typeof NAV => [...NAV, ...(me?.perms?.manage ? [['/staff', '운영', 'shield'] as const] : [])] as typeof NAV;
 /** 소식·초대는 회원에게만 */
-const allowOf = (me: unknown) => (to: string) => Boolean(me) || (to !== '/news' && to !== '/invite');
+const allowOf = (me: { tier?: string } | null | undefined) => (to: string) => (to === '/staff/shop' ? me?.tier === 'admin' : Boolean(me) || (to !== '/news' && to !== '/invite'));
 const dotOf = (me: { newsUnread?: number; staffUnread?: number } | null, to: string) => (((to === '/news' || to === '/crew') && (me?.newsUnread ?? 0) > 0) || (to === '/staff' && (me?.staffUnread ?? 0) > 0) ? 'nav-dot' : undefined);
 
 /** 상단 메뉴 한 칸. 허브는 마우스를 올리면 아래로 탭 목록 (그림 · 이름 · 한 줄 설명) */

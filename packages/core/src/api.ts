@@ -24,7 +24,7 @@ export interface Api {
 export const CACHE_TTL = 3600_000;
 const LIVE_EXACT = new Set(['/api/me', '/api/me/games', '/api/crew/targets', '/links']);
 const LIVE_PREFIX = ['/api/now', '/api/news', '/api/discord', '/api/staff', '/api/me/invite', '/api/members/lookup', '/api/members/search', '/api/me/inquiry', '/api/inquiry/', '/api/crew/pulse', '/api/crew/app-members', '/api/me/presence', '/api/admin', '/app/'];
-const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag', '/api/now'];
+const KEEP_ON_WRITE = ['/api/me/presence', '/api/me/diag', '/api/now', '/api/me/shopview'];
 /** 내 얼굴·테두리·이름·피스가 바뀔 수 있는 쓰기 — 끝나면 사이드바·상단의 내 정보를 다시 받는다 */
 const ME_WRITES = ['/api/me/equip', '/api/me/profile', '/api/me/skin', '/api/me/about', '/api/me/riot', '/api/shop/', '/api/me/missions/claim', '/api/me/weekly/claim'];
 const meSubs = new Set<() => void>();

@@ -5,6 +5,7 @@
  * /public/:id 는 본인이 켠 공개 링크만 (모임 정보 없이 그 사람의 강점, v3.24).
  */
 import { saveAbout } from './about.js';
+import { setRetire, shopAdmin, shopView, syncRetire } from './shopadmin.js';
 import { dailyPayload, dailyPost, interactions } from './bot.js';
 import { pulse } from './pulse.js';
 import { nickSweep, nickSyncNow } from './discordnick.js';
@@ -50,7 +51,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'POST' && pathname === '/api/logout') return logout(req, env);
   if (m === 'GET' && pathname === '/links') return json(links(env));
   // 상품 목록 (v3.124): 앱을 다시 내지 않아도 새 상품이 보이게 앱·웹이 켤 때 받는다
-  if (m === 'GET' && pathname === '/shop/catalog') return json({ rev: SHOP_REV, items: SHOP, launch: LAUNCH } satisfies ShopCatalog);
+  if (m === 'GET' && pathname === '/shop/catalog') { await syncRetire(env); return json({ rev: SHOP_REV, items: SHOP, launch: LAUNCH } satisfies ShopCatalog); }
   if (m === 'POST' && pathname === '/discord/interactions') return interactions(req, env, ctx);
   if (m === 'POST' && pathname === '/internal/nick-sync') return nickSyncNow(req, env);
   // 앱 설치 파일·업데이트 정보 (로그인 없이)
@@ -72,6 +73,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
 
   if (!pathname.startsWith('/api/')) throw new HttpError(404, 'not found');
   const me = await authenticate(req, env);
+  await syncRetire(env); // 품절 덮어쓰기 (v3.185) — 구매·선물·랜덤박스가 같은 값을 보게
 
   if (m === 'GET' && pathname === '/api/me') return getMe(env, me);
   if (m === 'GET' && pathname === '/api/me/games') return myGames(env, me);
@@ -112,6 +114,10 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   { const r = m === 'POST' ? /^\/api\/staff\/inquiries\/(\d{1,9})\/reply$/.exec(pathname) : null; if (r) return staffReplyInquiry(env, me, Number(r[1]), await req.json<Record<string, unknown>>().catch(() => ({})), ctx); }
   if (m === 'POST' && pathname === '/api/staff/inquiries/status') return setInquiryStatus(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
+  // 운영 › 상점관리 (v3.185, 관리자만)
+  if (m === 'GET' && pathname === '/api/admin/shop') return shopAdmin(env, me);
+  if (m === 'POST' && pathname === '/api/admin/shop/retire') return setRetire(req, env, me);
+  if (m === 'POST' && pathname === '/api/me/shopview') return shopView(req, env, me);
   { const d = /^\/api\/admin\/diag\/(\d+)\/shots$/.exec(pathname); if (m === 'GET' && d) return diagShots(env, me, Number(d[1])); }
   // 소식 피드 (v3.111)
   if (m === 'GET' && pathname === '/api/news') return listNews(env, me);

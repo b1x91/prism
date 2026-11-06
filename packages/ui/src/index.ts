@@ -40,5 +40,6 @@ export * from './catalog';
 export * from './now';
 export * from './staffjoin';
 export * from './staffinq';
+export * from './staffshop';
 export * from './omnisearch';
 export * from './frame';

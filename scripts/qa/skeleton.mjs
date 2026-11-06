@@ -8,8 +8,8 @@ import { createRequire } from 'node:module';
 const { chromium } = createRequire(import.meta.url)('playwright');
 const [,, SP, only] = process.argv;
 const ALLOW = /^\/(api\/me$|api\/me\/presence|links|api\/app\/token|auth)/;
-const APP = ['/', '/champions', '/champions/157', '/augments', '/augments/1001', '/dex', '/missions', '/ranking', '/crew', '/me', '/members/other1', '/shop', '/settings', '/staff', '/staff/members', '/staff/todo', '/staff/inquiries'];
-const WEB = ['/', '/champions', '/champions/157', '/augments', '/augments/1001', '/compare', '/dex', '/missions', '/ranking', '/crew', '/me', '/members/other1', '/shop', '/p/me1', '/news', '/invite', '/staff', '/staff/members', '/staff/todo', '/staff/inquiries'];
+const APP = ['/', '/champions', '/champions/157', '/augments', '/augments/1001', '/dex', '/missions', '/ranking', '/crew', '/me', '/members/other1', '/shop', '/settings', '/staff', '/staff/members', '/staff/todo', '/staff/inquiries', '/staff/shop'];
+const WEB = ['/', '/champions', '/champions/157', '/augments', '/augments/1001', '/compare', '/dex', '/missions', '/ranking', '/crew', '/me', '/members/other1', '/shop', '/p/me1', '/news', '/invite', '/staff', '/staff/members', '/staff/todo', '/staff/inquiries', '/staff/shop'];
 const detect = () => {
   const els = [...document.querySelectorAll('.sk')].filter((e) => { const r = e.getBoundingClientRect(); const cs = getComputedStyle(e); return r.width > 2 && r.height > 2 && cs.visibility !== 'hidden' && cs.display !== 'none' && !e.closest('[hidden]'); });
   const R = els.map((e) => ({ e, r: e.getBoundingClientRect() }));

@@ -4932,27 +4932,36 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .sv-kchip { height: 20px; padding: 0 8px; border-radius: 6px; background: color-mix(in srgb, var(--kc) 14%, transparent); color: var(--kc); font-size: 11px; font-weight: 800; line-height: 20px; }
 .sv-iqi { align-items: start; row-gap: 0; }
 .sv-rbox.open > div { padding-top: var(--s3); }
-.sv-iqi .sv-acts { align-self: center; }
 .sv-iqi .stp { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-xs); font-weight: 700; color: var(--kc); }
 .sv-iqi .stp i { width: 6px; height: 6px; border-radius: 50%; background: var(--kc); }
 .sv-iqi .iq-text { margin: var(--s2) 0 0; font-size: var(--fs-md); line-height: 1.55; color: var(--text); white-space: pre-wrap; }
 .sv-iqi .inq-pics { margin-top: var(--s2); }
 .sv-iqi .iq-reply { display: grid; gap: 2px; margin-top: 10px; padding: 10px var(--s3); border-radius: var(--r-m); background: var(--surface); font-size: var(--fs-xs); color: var(--text-2); white-space: pre-wrap; }
 .sv-iqi .iq-reply b { font-size: 11px; color: var(--ok); }
-/* 문의 동작 묶음: 한 높이(36)·한 바탕의 알약 안에 답장 | 작업 | 해결 */
-.sv-abar { display: inline-flex; align-items: stretch; height: 36px; border-radius: var(--r-m); background: var(--surface); box-shadow: 0 0 0 1px color-mix(in srgb, var(--text) 6%, transparent), 0 1px 2px rgba(18, 20, 28, .06); overflow: hidden; }
-.sv-abar > button { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 0 14px; border: 0; background: none; color: var(--text-2); font: inherit; font-size: var(--fs-sm); font-weight: 650; white-space: nowrap; cursor: pointer; transition: background .2s, color .2s; }
-.sv-abar > button + button::before { content: ''; position: absolute; left: 0; top: 9px; bottom: 9px; width: 1px; background: var(--line); }
+/* 문의 동작 (v3.185): 따로 떨어진 작은 버튼 셋 — 답장 · 작업 · 해결. 올리면 그 버튼의 색으로 옅게 물들고 테두리가 진해진다 */
+.sv-abar { display: inline-flex; align-items: center; gap: var(--s2); }
+.sv-abar > button { --bc: var(--text); position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 var(--s3); border: 0; border-radius: var(--r-m); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--text-2); font: inherit; font-size: var(--fs-sm); font-weight: 700; white-space: nowrap; cursor: pointer; transition: background .16s, color .16s, box-shadow .16s, transform .16s; }
 .sv-abar > button svg { width: 15px; height: 15px; flex: none; }
-.sv-abar > button:hover:not(:disabled) { background: color-mix(in srgb, var(--text) 5%, transparent); color: var(--text); }
-.sv-abar > button.on { color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, transparent); }
-.sv-abar > button.w { min-width: 112px; }
-.sv-abar > button.ok { display: inline-grid; min-width: 96px; color: var(--ok); font-weight: 750; }
+.sv-abar > button:hover:not(:disabled) { background: color-mix(in srgb, var(--bc) 8%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bc) 40%, transparent); color: var(--bc); }
+.sv-abar > button:active:not(:disabled) { transform: translateY(1px); }
+.sv-abar > button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.sv-abar > button.w { --bc: var(--accent); min-width: 104px; }
+.sv-abar > button.on { --bc: var(--accent); background: color-mix(in srgb, var(--bc) 10%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bc) 45%, transparent); color: var(--bc); }
+.sv-abar > button.ok { --bc: var(--ok); display: inline-grid; min-width: 88px; color: var(--ok); }
 .sv-abar > button.ok > span { grid-area: 1 / 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; opacity: 0; transform: translateY(6px); transition: opacity .2s, transform .3s cubic-bezier(.16, 1, .3, 1); }
 .sv-abar > button.ok:not(.busy):not(.done) .s0, .sv-abar > button.ok.busy .s1, .sv-abar > button.ok.done .s2 { opacity: 1; transform: none; }
-.sv-abar > button.ok:hover:not(:disabled) { background: color-mix(in srgb, var(--ok) 10%, transparent); color: var(--ok); }
-.sv-abar > button.ok.done { background: var(--ok); color: #fff; }
-.sv-abar > button.ok.done::before { display: none; }
+.sv-abar > button.ok.done { background: var(--ok); box-shadow: none; color: #fff; }
+.sv-abar > button:disabled { cursor: default; }
+/* 문의 묶음 안의 줄: 회색 상자를 겹치지 않고 가는 선으로 나눈다 · 동작은 이름 줄 높이에 맞춰 오른쪽 위 */
+.sv-iqg .sv-head { margin-bottom: var(--s2); }
+.sv-iqg .sv-titems { gap: 0; }
+.sv-iqg .sv-iqi { padding: var(--s4) 0; border-radius: 0; background: none; border-top: 1px solid var(--line); column-gap: var(--s3); }
+.sv-iqg .sv-iqi:last-child { padding-bottom: 0; }
+.sv-iqi > .sv-acts { align-self: start; }
+.sv-iqi h4 { min-height: 32px; line-height: 1.3; }
+.sv-iqi .iq-text { margin-top: 0; }
+.sv-iqi .sv-sub { gap: var(--s1); margin-top: var(--s2); }
+.sv-iqi .sv-sub span { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--s2); border-radius: 6px; background: var(--surface-2); color: var(--text-2); font-weight: 600; }
 /* 답장 작성: 줄 아래로 부드럽게 펼쳐진다 */
 .sv-rbox { grid-column: 1 / -1; display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .42s cubic-bezier(.16, 1, .3, 1), opacity .3s; }
 .sv-rbox > div { min-height: 0; overflow: hidden; }
@@ -5221,3 +5230,89 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 @media (prefers-reduced-motion: reduce) { .rks *, .rks *::after { animation: none !important; } }
 .rks-ice.rks-wait { cursor: default; }
 .rks-wait .rks-who { gap: max(4px, 2cqw); }
+
+/* ── 운영 › 상점관리 (v3.185, 관리자만) ── */
+.ssa { display: grid; gap: var(--s4); }
+.ssa-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); }
+.ssa-stat { display: grid; gap: var(--s1); padding: var(--s5) var(--s6); }
+.ssa-stat small { font-size: var(--fs-xs); font-weight: 700; color: var(--text-2); }
+.ssa-stat b { display: inline-flex; align-items: center; gap: 6px; font-size: var(--fs-2xl); font-weight: 850; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.ssa-stat b span { font-size: var(--fs-md); font-weight: 700; color: var(--text-2); }
+.ssa-duo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s4); }
+.ssa .sv-head { align-items: center; margin-bottom: var(--s3); }
+.ssa .sv-head h2 { gap: var(--s2); }
+.ssa-n { font-size: var(--fs-sm); font-weight: 700; color: var(--text-3); font-variant-numeric: tabular-nums; }
+.ssa-ic { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: var(--r-m); }
+.ssa-ic svg { width: 16px; height: 16px; }
+.ssa-ic.hot { background: color-mix(in srgb, var(--gold) 16%, transparent); color: var(--gold); }
+.ssa-ic.cold { background: var(--surface-2); color: var(--text-2); }
+.ssa-rlist { display: grid; margin: 0; padding: 0; list-style: none; }
+.ssa-rlist li { display: grid; grid-template-columns: 24px minmax(0, 1fr) 48px 48px auto; align-items: center; gap: var(--s3); min-height: 52px; padding: var(--s2) 0; border-top: 1px solid var(--line); }
+.ssa-rlist li:first-child { border-top: 0; }
+.ssa-rk { font-size: var(--fs-md); font-weight: 850; font-style: italic; color: var(--text-3); text-align: center; font-variant-numeric: tabular-nums; }
+.ssa-rlist li:first-child .ssa-rk { color: var(--gold); }
+.ssa-nm { display: grid; grid-template-columns: 8px minmax(0, 1fr); column-gap: var(--s2); align-items: center; min-width: 0; }
+.ssa-nm i { width: 8px; height: 8px; border-radius: 50%; grid-row: 1 / span 2; }
+.ssa-nm b { font-size: var(--fs-sm); font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ssa-nm small { font-size: var(--fs-xs); color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ssa-fig { display: grid; justify-items: end; line-height: 1.15; }
+.ssa-fig b { font-size: var(--fs-md); font-weight: 800; font-variant-numeric: tabular-nums; }
+.ssa-fig small { font-size: var(--fs-xs); color: var(--text-3); }
+.ssa-chips { display: flex; flex-wrap: nowrap; gap: var(--s1); overflow-x: auto; scrollbar-width: none; }
+/* 상품 표 */
+.ssa-table { display: grid; }
+.ssa-tr { display: grid; grid-template-columns: minmax(180px, 1.6fr) 64px 84px 84px 48px 80px 96px 128px; align-items: center; gap: var(--s3); min-height: 52px; padding: var(--s2) 0; border-top: 1px solid var(--line); font-size: var(--fs-sm); }
+.ssa-tr.ssa-th { min-height: 32px; border-top: 0; font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); }
+.ssa-tr > .num { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ssa-tr > .num small { font-weight: 600; color: var(--text-3); }
+.ssa-tr.ssa-th > span:nth-child(n+2):nth-child(-n+6) { text-align: right; }
+.ssa-tr > .meta { white-space: nowrap; }
+.ssa-tr.off .ssa-nm b, .ssa-tr.off > .num { color: var(--text-3); }
+.ssa-act { display: flex; justify-content: flex-end; }
+.ssa-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 var(--s3); border: 0; border-radius: var(--r-m); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--text-2); font: inherit; font-size: var(--fs-xs); font-weight: 750; white-space: nowrap; cursor: pointer; transition: background .16s, color .16s, box-shadow .16s; }
+.ssa-btn svg { width: 14px; height: 14px; }
+.ssa-btn.stop { --bc: #a46bff; }
+.ssa-btn.sell { --bc: var(--accent); color: var(--accent); }
+.ssa-btn:hover:not(:disabled) { background: color-mix(in srgb, var(--bc) 9%, var(--surface)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--bc) 45%, transparent); color: var(--bc); }
+.ssa-btn:disabled { cursor: default; opacity: .7; }
+.ssa-note { margin: var(--s3) 0 0; }
+/* 최근 구매 */
+.ssa-rows { display: grid; }
+.ssa-row { display: grid; grid-template-columns: minmax(140px, 200px) 72px minmax(0, 1fr) 96px 104px; align-items: center; gap: var(--s3); min-height: 52px; padding: var(--s2) 0; border-top: 1px solid var(--line); font-size: var(--fs-sm); }
+.ssa-row:first-child { border-top: 0; }
+.ssa-who { display: inline-flex; align-items: center; gap: var(--s2); min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; text-align: left; }
+.ssa-who b { font-weight: 750; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ssa-who:hover b { color: var(--accent); }
+.ssa-what { display: grid; min-width: 0; line-height: 1.3; }
+.ssa-what b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ssa-what small { font-size: var(--fs-xs); color: var(--text-3); }
+.ssa-type { justify-self: start; height: 22px; padding: 0 var(--s2); border-radius: 6px; font-size: var(--fs-xs); font-weight: 750; line-height: 22px; white-space: nowrap; background: var(--surface-2); color: var(--text-2); }
+.ssa-type.t-buy { background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent); }
+.ssa-type.t-box { background: color-mix(in srgb, #a46bff 14%, transparent); color: #8b5cf6; }
+.ssa-type.t-gift { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+.ssa-price { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ssa-price small { color: var(--text-3); font-weight: 600; }
+.ssa-at { text-align: right; white-space: nowrap; }
+.ssa-more { justify-self: center; margin-top: var(--s3); }
+@media (max-width: 980px) {
+  .ssa-tr { grid-template-columns: minmax(0, 1fr) 72px 72px 112px; }
+  .ssa-tr > :nth-child(2), .ssa-tr > :nth-child(5), .ssa-tr > :nth-child(6), .ssa-tr > :nth-child(7) { display: none; }
+}
+@media (max-width: 720px) {
+  .ssa-duo { grid-template-columns: minmax(0, 1fr); }
+  .ssa-stats { gap: var(--s2); }
+  .ssa-stat { padding: var(--s3); }
+  .ssa-stat small { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ssa-stat b { font-size: var(--fs-xl); }
+  .ssa-rlist li { grid-template-columns: 20px minmax(0, 1fr) 40px 40px auto; gap: var(--s2); }
+  .ssa-rank .ssa-btn { width: 32px; padding: 0; }
+  .ssa-rank .ssa-btn span { display: none; }
+  .ssa-row { grid-template-columns: minmax(0, 1fr) auto; row-gap: 2px; }
+  .ssa-row .ssa-who { grid-column: 1; grid-row: 1; }
+  .ssa-row .ssa-what { grid-column: 1; grid-row: 2; padding-left: 40px; }
+  .ssa-row .ssa-type { grid-column: 2; grid-row: 1; justify-self: end; }
+  .ssa-row .ssa-price { grid-column: 2; grid-row: 2; }
+  .ssa-row .ssa-at { display: none; }
+  .ssa-tr { grid-template-columns: minmax(0, 1fr) 56px 104px; }
+  .ssa-tr > :nth-child(3) { display: none; }
+}

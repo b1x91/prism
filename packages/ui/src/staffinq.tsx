@@ -81,7 +81,7 @@ function Item({ api, q, st, res, onOpen, reload }: { api: Api; q: WorkItem; st: 
   const done = q.status === 'done';
   return (
     <div data-flip={q.id} className={`sv-ti sv-iqi ${actCls(st)}`}>
-      <button type="button" className="sv-tface" onClick={() => onOpen?.(q.whoId)} aria-label={`${q.who} 회원 페이지`}><MemberFace nick={q.who} size={44} /></button>
+      <button type="button" className="sv-tface" onClick={() => onOpen?.(q.whoId)} aria-label={`${q.who} 회원 페이지`}><MemberFace nick={q.who} size={40} /></button>
       <div>
         <h4>{q.who}<span className="stp" style={{ ['--kc' as string]: ST[q.status].color }}><i />{ST[q.status].name}</span><span className="meta">#{q.id} · {ago(q.at)}</span></h4>
         <p className="iq-text">{q.body}</p>
@@ -147,7 +147,7 @@ function InqSkeleton() {
   return (
     <SkeletonFrame className="sv">
       <section className="card sv-card sv-iqtop"><div><Bone w={140} h={22} /><Bone w="90%" h={12} /></div><div className="sv-kinds">{[0, 1, 2, 3, 4].map((i) => <Bone key={i} w={96} h={36} r="pill" />)}</div></section>
-      {[0, 1].map((s) => <section key={s} className="card sv-card"><Bone w="40%" h={18} /><div className="sv-titems">{[0, 1].map((i) => <div key={i} className="sv-ti sv-iqi"><Bone w={44} h={44} r="round" /><div><Bone w="50%" h={14} /><Bone w="90%" h={14} /><Bone w="60%" h={12} /></div><div className="sv-acts"><Bone w={260} h={36} r="m" className="sv-abar-sk" /></div></div>)}</div></section>)}
+      {[0, 1].map((s) => <section key={s} className="card sv-card sv-tsec sv-iqg"><div className="sv-head"><Bone w="40%" h={22} /></div><div className="sv-titems">{[0, 1].map((i) => <div key={i} className="sv-ti sv-iqi"><Bone w={40} h={40} r="round" /><div style={{ display: 'grid', gap: 8, alignContent: 'start' }}><Bone w="50%" h={14} /><Bone w="90%" h={14} /><Bone w="40%" h={22} /></div><div className="sv-acts"><div className="sv-abar"><Bone w={72} h={32} r="m" /><Bone w={104} h={32} r="m" /><Bone w={88} h={32} r="m" /></div></div></div>)}</div></section>)}
     </SkeletonFrame>
   );
 }

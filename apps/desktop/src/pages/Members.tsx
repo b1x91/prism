@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import type { ReactNode } from 'react';
-import { Empty, Icon, InquiryView, MemberView, MissionsView, NewsView, RankingView, ShopView, StaffInquiryView, StaffMembersView, StaffJoinView, StaffTodoView, StaffView, goBack, setKept } from '@prism/ui';
+import { Empty, Icon, InquiryView, MemberView, MissionsView, NewsView, RankingView, ShopView, StaffInquiryView, StaffShopView, StaffMembersView, StaffJoinView, StaffTodoView, StaffView, goBack, setKept } from '@prism/ui';
 import { inquiryExtra, refreshSession, type State } from '../controller';
 import { josa } from '@prism/core';
 import { api } from '../bridge';
@@ -79,6 +79,10 @@ export function StaffTodoPage({ s, onLogin }: { s: State; onLogin: () => void })
 }
 export function StaffInquiryPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   return <StaffGate s={s} onLogin={onLogin}>{(open) => <StaffInquiryView api={api} onOpen={open} />}</StaffGate>;
+}
+/** 운영 › 상점관리 (v3.185) — 관리자만 */
+export function StaffShopPage({ s, onLogin }: { s: State; onLogin: () => void }) {
+  return <StaffGate s={s} onLogin={onLogin}>{(open) => (s.me?.tier === 'admin' ? <StaffShopView api={api} onOpen={open} /> : <Empty>관리자만 볼 수 있는 화면이에요.</Empty>)}</StaffGate>;
 }
 /** 운영 › 할 일 › 가입 신청 전체 보드 (v3.148) */
 export function StaffJoinPage({ s, onLogin }: { s: State; onLogin: () => void }) {

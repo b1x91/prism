@@ -25,6 +25,7 @@ export const HUBS: Hub[] = [
     { to: '/staff/members', label: '멤버', icon: 'users', hint: '전체 멤버 · 단계 · 특별회원' },
     { to: '/staff/todo', label: '할 일', icon: 'check', hint: '승인 대기 · 정회원 심사 · 가입 신청', also: ['/staff/join'] },
     { to: '/staff/inquiries', label: '문의', icon: 'talk', hint: '문의 묶음 · 바로 답장' },
+    { to: '/staff/shop', label: '상점관리', icon: 'bag', hint: '상품 · 구매 기록 · 품절 (관리자만)' },
   ] },
 ];
 

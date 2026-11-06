@@ -165,6 +165,16 @@ export const SHOP_ITEM: Record<string, ShopItem> = Object.fromEntries(SHOP.map((
  * 이미 깔린 앱도 다음에 켤 때(또는 당겨서 새로고침) 새 상품을 본다. 그림·looks.css 는 앱이 웹(przm.web.app)에서 받는다.
  * SHOP_REV 는 looks.css 캐시를 깨는 번호 — 상품을 더할 때 올린다.
  */
+/**
+ * 품절 덮어쓰기 (v3.185, 운영 › 상점관리): 관리자가 상품을 '품절(구매 불가)'로 바꾸거나 되돌린다.
+ * 서버가 D1 에 {상품: true|false} 로 두고 이 함수로 표(SHOP_ITEM)의 retired 를 바꾼다 — 상품 목록(/shop/catalog)·구매·선물·랜덤박스가 모두 이 값을 본다.
+ * 덮어쓰기가 없는 상품은 이 파일에 적힌 값 그대로.
+ */
+const BASE_RETIRED = new Set(SHOP.filter((x) => x.retired).map((x) => x.id));
+export const baseRetired = (id: string) => BASE_RETIRED.has(id);
+export function applyRetire(over: Record<string, boolean>) {
+  for (const x of SHOP) { const v = over[x.id]; x.retired = typeof v === 'boolean' ? v : BASE_RETIRED.has(x.id); if (!x.retired) delete x.retired; }
+}
 export const SHOP_REV = 3;
 export type ShopCatalog = { rev: number; items: ShopItem[]; launch: typeof LAUNCH };
 /** 이 빌드에 들어 있던 상품 (그림이 앱 안에 있는 것) */

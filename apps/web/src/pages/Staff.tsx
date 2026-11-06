@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
-import { Empty, Icon, PageSkeleton, StaffInquiryView, StaffJoinView, StaffMembersView, StaffTodoView, StaffView, goBack } from '@prism/ui';
+import { Empty, Icon, PageSkeleton, StaffInquiryView, StaffJoinView, StaffShopView, StaffMembersView, StaffTodoView, StaffView, goBack } from '@prism/ui';
 import { useSession } from '../session';
 
 /** 운영 (v3.107 → v3.160) — 운영진만. 위 탭(대시보드 · 멤버 · 할 일 · 문의)이 제목을 대신한다 */
@@ -31,6 +31,12 @@ export function StaffTodoPage() {
 export function StaffInquiryPage() {
   const { api } = useSession();
   return <StaffGate>{({ open }) => <StaffInquiryView api={api} onOpen={open} />}</StaffGate>;
+}
+
+/** 운영 › 상점관리 (v3.185) — 관리자만 */
+export function StaffShopPage() {
+  const { api, me } = useSession();
+  return <StaffGate>{({ open }) => (me?.tier === 'admin' ? <StaffShopView api={api} onOpen={open} /> : <Empty>관리자만 볼 수 있는 화면이에요.</Empty>)}</StaffGate>;
 }
 
 /** 운영 › 할 일 › 가입 신청 전체 보드 (v3.148) — 메모 · 거절 · 롤 이름 고치기 · 면접방 설정 */
