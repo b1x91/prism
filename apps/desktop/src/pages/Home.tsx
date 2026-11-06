@@ -105,22 +105,24 @@ function HomeRanking({ s }: { s: State }) {
   return (
     <section className="card pad home-rank">
       <div className="hr-head"><h3>{data?.season?.label ?? '이번 시즌'} 랭킹</h3><button type="button" className="hr-all" onClick={() => nav('/ranking')}>전체 보기<Icon name="chevR" /></button></div>
-      {!data ? <div className="hr-list">{[0, 1, 2, 3, 4].map((k) => <div key={k} className="hr-row sk"><Bone w={20} h={16} /><Bone w={36} h={36} r="m" /><Bone w="60%" h={14} /><Bone w={36} h={16} /></div>)}</div>
+      {!data ? <div className="hr-list">{[0, 1, 2, 3, 4].map((k) => <div key={k} className={`hr-row rk sk ${k === 0 ? "p1" : ""}`}><Bone w={28} h={28} r="pill" /><Bone w={k === 0 ? 44 : 36} h={k === 0 ? 44 : 36} r="m" /><Bone w="60%" h={14} /><Bone w={36} h={16} /></div>)}</div>
         : !top.length ? <p className="hr-empty">이번 시즌 기록이 쌓이면 여기에 순위가 떠요.</p>
         : <div className="hr-list">
-          {top.map((r, k) => <Row key={r.key ?? r.id} r={r} rank={k + 1} me={r.id === meId} onOpen={() => nav(`/members/${r.id}`)} />)}
+          {top.map((r, k) => <Row key={r.key ?? r.id} r={r} rank={k + 1} lead={rankScore(top[0].w, top[0].n)} me={r.id === meId} onOpen={() => nav(`/members/${r.id}`)} />)}
         </div>}
     </section>
   );
 }
 
-function Row({ r, rank, me, onOpen }: { r: RankingRow; rank: number; me?: boolean; onOpen: () => void }) {
+function Row({ r, rank, lead, me, onOpen }: { r: RankingRow; rank: number; lead: number; me?: boolean; onOpen: () => void }) {
+  const score = rankScore(r.w, r.n);
+  // 순위가 보이게: 1~3위는 금·은·동 메달 번호, 1위 줄은 금빛, 2위부터 오른쪽에 1위와의 점수 차 (v3.175)
   return (
-    <button type="button" className={`hr-row ${me ? 'me' : ''} ${rank <= 3 ? `p${rank}` : ''}`} onClick={onOpen}>
+    <button type="button" className={`hr-row rk ${me ? 'me' : ''} ${rank <= 3 ? `p${rank}` : ''}`} onClick={onOpen}>
       <span className="hr-n tn">{rank}</span>
-      <FramedFace frame={r.frame} nick={r.nick} skin={r.skin} champion={r.mainChampion} size={36} />
+      <FramedFace frame={r.frame} nick={r.nick} skin={r.skin} champion={r.mainChampion} size={rank === 1 ? 44 : 36} />
       <span className="hr-who"><b><NickName nick={shortNick(r.nick)} /></b>{r.pending && <PendingChip />}<small className="tn">{`${r.n}판 · ${pct(r.w, r.n)}`}</small></span>
-      <span className="hr-s tn">{rankScore(r.w, r.n)}</span>
+      <span className="hr-s tn"><b>{score}</b><small>{rank === 1 ? '1위' : `−${lead - score}`}</small></span>
     </button>
   );
 }

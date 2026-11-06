@@ -822,3 +822,21 @@ body { overflow: hidden; background: var(--bg); }
 .shell.immersive .side-group + .side-group { border-top-color: rgba(255, 255, 255, .14); }
 .shell.immersive .side-nav .hub-chev { color: rgba(255, 255, 255, .5); }
 @media (max-width: 900px) { .shell.immersive .main { padding-left: calc(var(--side) + var(--s5)); } }
+
+/* 홈 랭킹 맛보기: 순위가 한눈에 (v3.175) — 금·은·동 메달 번호 · 1위 줄은 금빛으로 크게 · 오른쪽에 점수와 1위와의 차 */
+.hr-row.rk { grid-template-columns: 28px 44px minmax(0, 1fr) auto; }
+.hr-row.rk .hr-n { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; font-size: var(--fs-sm); color: var(--text-3); }
+.hr-row.rk.p1 .hr-n, .hr-row.rk.p2 .hr-n, .hr-row.rk.p3 .hr-n { color: #1b1305; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 2px 6px rgba(0, 0, 0, .18); }
+.hr-row.rk.p1 .hr-n { background: linear-gradient(160deg, #ffe08a, #e0a92e 60%, #b9821a); }
+.hr-row.rk.p2 .hr-n { background: linear-gradient(160deg, #f4f6fa, #c3cad6 60%, #98a2b3); color: #1d2433; }
+.hr-row.rk.p3 .hr-n { background: linear-gradient(160deg, #f4c39a, #c98450 60%, #9c5a2c); color: #2a1406; }
+.hr-row.rk .face-ring, .hr-row.rk > .face, .hr-row.rk > .initial { justify-self: center; }
+.hr-row.rk.p1 { min-height: 68px; background: linear-gradient(90deg, rgba(224, 169, 46, .16), rgba(224, 169, 46, .04) 70%, transparent); }
+.hr-row.rk.p1:hover { background: linear-gradient(90deg, rgba(224, 169, 46, .24), rgba(224, 169, 46, .08) 70%, transparent); }
+.hr-row.rk.p1 .hr-who b { font-size: var(--fs-lg); }
+.hr-row.rk.p1 .hr-s b { font-size: var(--fs-xl); color: var(--gold); }
+.hr-row.rk.p1 img.face, .hr-row.rk.p1 .initial { box-shadow: 0 0 0 2px #e0a92e, 0 4px 14px rgba(224, 169, 46, .35); }
+.hr-row.rk .hr-s { display: grid; justify-items: end; line-height: 1.15; }
+.hr-row.rk .hr-s b { font-size: var(--fs-lg); font-weight: 800; }
+.hr-row.rk .hr-s small { font-size: var(--fs-xs); font-weight: 650; color: var(--text-3); }
+.hr-row.rk.p1 .hr-s small { color: var(--gold); }
