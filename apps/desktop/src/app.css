@@ -801,27 +801,24 @@ body { overflow: hidden; background: var(--bg); }
 @media (prefers-reduced-motion: reduce) { .nav-pend::before { animation: none; width: 100%; opacity: .7; } .main.pending .page { transition: none; } }
 
 /* ───────── 홈은 메뉴와 본문을 나누지 않는다 (v3.174) ─────────
-   사이드바를 본문 위에 겹쳐 띄우고(바탕·경계선 없음) 오늘의 챔프 그림이 창 왼쪽 끝부터 깔린다.
-   맨 위(그림 위)에서는 사이드바 글자를 밝게, 내려서 그림이 지나가면 보통 글자로 돌아온다. 아래쪽 상점·설정·내 카드는 제 바탕 그대로 */
-.shell.immersive { grid-template-columns: minmax(0, 1fr); }
-.shell.immersive .side { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; width: var(--side); background: transparent; border-right-color: transparent; isolation: isolate; }
-/* 내려서 그림이 지나가면 사이드바 뒤에 본문과 같은 바탕이 서서히 깔린다 (경계선 없이 — 글자가 그림 자투리 위에 얹히지 않게) */
-.shell.immersive .side::before { content: ""; position: absolute; z-index: -1; inset: 0 calc(-1 * var(--s7)) 0 0; background: linear-gradient(90deg, var(--bg) calc(100% - var(--s7) * 2.5), transparent); opacity: 1; transition: opacity .35s ease; pointer-events: none; }
-.shell.immersive.at-top .side::before { opacity: 0; }
-.shell.immersive .main { grid-column: 1; padding-left: calc(var(--side) + var(--s7)); }
-.shell.immersive .home-bg { left: calc(50% - 50vw - var(--side) / 2); width: 100vw; height: 720px; -webkit-mask-image: linear-gradient(#000 66%, transparent); mask-image: linear-gradient(#000 66%, transparent); }
+   오늘의 챔프 그림(.home-bg)은 앱 껍데기에 창 고정으로 깔리고, 사이드바(바탕·경계선 없음)와 본문이 그 위에 겹친다.
+   내리면 내용만 그림 위로 올라간다. 아래쪽 상점·설정·내 카드는 제 바탕 그대로 */
+.shell.immersive { position: relative; grid-template-columns: minmax(0, 1fr); background: var(--glow), var(--bg); }
+.shell.immersive .side { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; width: var(--side); background: transparent; border-right-color: transparent; }
+.shell.immersive .main { grid-column: 1; z-index: 1; padding-left: calc(var(--side) + var(--s7)); background: transparent; }
+.shell > .home-bg { position: fixed; z-index: 0; top: 0; left: 0; width: 100vw; height: min(720px, 100vh); overflow: hidden; background: #07090f; pointer-events: none;
+  -webkit-mask-image: linear-gradient(#000 66%, transparent); mask-image: linear-gradient(#000 66%, transparent); }
 /* 그림 왼쪽(메뉴 자리)을 한 겹 더 어둡게 — 메뉴 글자가 읽히게, 경계선은 없이 */
-.shell.immersive .home-bg::before { content: ""; position: absolute; z-index: 1; inset: 0 auto 0 0; width: calc(var(--side) + 160px); background: linear-gradient(90deg, rgba(7, 9, 15, .55), rgba(7, 9, 15, .3) 60%, transparent); }
-.shell.immersive .side-brand, .shell.immersive .side-nav, .shell.immersive .upd-side { transition: color .3s; }
-.shell.immersive.at-top .brand-word { background-image: linear-gradient(110deg, #fff 0%, #fff 42%, #b9c6ff 50%, #fff 58%, #fff 100%); }
-.shell.immersive.at-top .side-arrows button { color: rgba(255, 255, 255, .7); }
-.shell.immersive.at-top .side-arrows button:not(:disabled):hover { background: rgba(255, 255, 255, .12); color: #fff; }
-.shell.immersive.at-top .side-glabel { color: rgba(255, 255, 255, .55); }
-.shell.immersive.at-top .side-nav a, .shell.immersive.at-top .side-nav button { color: rgba(255, 255, 255, .82); }
-.shell.immersive.at-top .side-nav a:hover { background: rgba(255, 255, 255, .1); color: #fff; }
-.shell.immersive.at-top .side-nav a.active { background: rgba(255, 255, 255, .14); color: #fff; box-shadow: none; }
-.shell.immersive.at-top .side-nav a.active svg { color: #c7d2ff; }
-.shell.immersive.at-top .side-sub { --line: rgba(255, 255, 255, .18); }
-.shell.immersive.at-top .side-group + .side-group { border-top-color: rgba(255, 255, 255, .14); }
-.shell.immersive.at-top .side-nav .hub-chev { color: rgba(255, 255, 255, .5); }
+.shell > .home-bg::before { content: ""; position: absolute; z-index: 1; inset: 0 auto 0 0; width: calc(var(--side) + 160px); background: linear-gradient(90deg, rgba(7, 9, 15, .55), rgba(7, 9, 15, .3) 60%, transparent); }
+.shell.immersive .brand-word { background-image: linear-gradient(110deg, #fff 0%, #fff 42%, #b9c6ff 50%, #fff 58%, #fff 100%); }
+.shell.immersive .side-arrows button { color: rgba(255, 255, 255, .7); }
+.shell.immersive .side-arrows button:not(:disabled):hover { background: rgba(255, 255, 255, .12); color: #fff; }
+.shell.immersive .side-glabel { color: rgba(255, 255, 255, .55); }
+.shell.immersive .side-nav a, .shell.immersive .side-nav button { color: rgba(255, 255, 255, .82); }
+.shell.immersive .side-nav a:hover { background: rgba(255, 255, 255, .1); color: #fff; }
+.shell.immersive .side-nav a.active { background: rgba(255, 255, 255, .14); color: #fff; box-shadow: none; }
+.shell.immersive .side-nav a.active svg { color: #c7d2ff; }
+.shell.immersive .side-sub { --line: rgba(255, 255, 255, .18); }
+.shell.immersive .side-group + .side-group { border-top-color: rgba(255, 255, 255, .14); }
+.shell.immersive .side-nav .hub-chev { color: rgba(255, 255, 255, .5); }
 @media (max-width: 900px) { .shell.immersive .main { padding-left: calc(var(--side) + var(--s5)); } }
