@@ -58,13 +58,12 @@ ul.notes{margin:24px 0 0;padding:0 0 0 20px;color:var(--mut);font-size:14px;line
 /* 이름·점수는 카드 폭에 비례(cqw = 카드 폭의 1%, 폭 200px 기준 1px = .5cqw) — 화면이 작아도 배치·글은 그대로, 크기만 줄어든다 */
 .rks-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 4cqw; padding: 0 6cqw 11cqw; }
 .rks-info::before { content: ""; grid-column: 1 / -1; height: 1px; margin-bottom: 6cqw; background: linear-gradient(90deg, rgba(255, 255, 255, .4), rgba(255, 255, 255, .05)); }
-.rks-who { min-width: 0; display: flex; flex-direction: column; gap: 2cqw; }
-.rks-nm { display: flex; align-items: center; gap: 2cqw; min-width: 0; font-size: 7cqw; font-weight: 800; white-space: nowrap; }
+.rks-who { min-width: 0; display: flex; flex-direction: column; gap: .5cqw; }
+.rks-nm { display: flex; align-items: center; gap: 2cqw; min-width: 0; font-size: 7cqw; font-weight: 800; line-height: 1.15; white-space: nowrap; }
 .rks-nm > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.rks-nm .phero-name.nmfx { filter: none; }
-.rks-mt { font-size: 6cqw; font-weight: 600; opacity: .7; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.rks-sc { display: flex; flex-direction: column; align-items: flex-end; gap: 1cqw; white-space: nowrap; }
-.rks-sc small { font-size: 5.5cqw; font-weight: 800; letter-spacing: .14em; opacity: .55; }
+.rks-mt { font-size: 6cqw; font-weight: 600; line-height: 1.2; opacity: .7; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rks-sc { display: flex; flex-direction: column; align-items: flex-end; gap: 0; white-space: nowrap; }
+.rks-sc small { font-size: 5.5cqw; font-weight: 800; line-height: 1.2; letter-spacing: .14em; opacity: .55; }
 .rks-sc b { font-size: 11cqw; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; background: linear-gradient(180deg, var(--g1), var(--g2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .p1 .rks-sc b { font-size: 13cqw; }
 .rks-nm .wait-chip { height: 9cqw; padding: 0 3.5cqw; margin-left: 0; font-size: 5cqw; }

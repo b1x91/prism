@@ -5045,9 +5045,9 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 
 /* ── 랭킹: 계정마다 장착한 꾸밈 (v3.161) ── */
 /* 이름 효과: 프로필 머리의 .phero-name.name-* 를 그대로 쓰되 글자 크기·굵기는 그 자리 것으로 */
-.lb-nm .phero-name.nmfx, .rank-row .who .phero-name.nmfx { font-size: inherit; font-weight: inherit; letter-spacing: inherit; line-height: inherit; display: inline; overflow-wrap: normal; }
+.rks-nm .phero-name.nmfx, .lb-nm .phero-name.nmfx, .rank-row .who .phero-name.nmfx { font-size: inherit; font-weight: inherit; letter-spacing: inherit; line-height: inherit; display: inline; overflow-wrap: normal; }
 /* 좁은 이름 칸은 넘친 글자를 잘라 내는 칸이라 빛무리(drop-shadow)가 칸 경계에서 잘려 사각형 선처럼 보였다 → 빛무리 없이 글자 색만 (v3.178) */
-.lb-nm .phero-name.nmfx, .rank-row .who .phero-name.nmfx { filter: none; text-shadow: none; animation: none; }
+.rks-nm .phero-name.nmfx, .lb-nm .phero-name.nmfx, .rank-row .who .phero-name.nmfx { filter: none; text-shadow: none; animation: none; }
 .rank-row .who b { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
 .rank-row .who b > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* 칭호 칩: 밝은 줄은 차분한 회색, 어두운 줄·무대는 프로필 머리와 같은 유리 */
@@ -5184,13 +5184,12 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 /* 이름·점수는 카드 폭에 비례(cqw = 카드 폭의 1%, 폭 200px 기준 1px = .5cqw) — 화면이 작아도 배치·글은 그대로, 크기만 줄어든다 */
 .rks-info { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; column-gap: 4cqw; padding: 0 6cqw 11cqw; }
 .rks-info::before { content: ""; grid-column: 1 / -1; height: 1px; margin-bottom: 6cqw; background: linear-gradient(90deg, rgba(255, 255, 255, .4), rgba(255, 255, 255, .05)); }
-.rks-who { min-width: 0; display: flex; flex-direction: column; gap: 2cqw; }
-.rks-nm { display: flex; align-items: center; gap: 2cqw; min-width: 0; font-size: 7cqw; font-weight: 800; white-space: nowrap; }
+.rks-who { min-width: 0; display: flex; flex-direction: column; gap: .5cqw; }
+.rks-nm { display: flex; align-items: center; gap: 2cqw; min-width: 0; font-size: 7cqw; font-weight: 800; line-height: 1.15; white-space: nowrap; }
 .rks-nm > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.rks-nm .phero-name.nmfx { filter: none; }
-.rks-mt { font-size: 6cqw; font-weight: 600; opacity: .7; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.rks-sc { display: flex; flex-direction: column; align-items: flex-end; gap: 1cqw; white-space: nowrap; }
-.rks-sc small { font-size: 5.5cqw; font-weight: 800; letter-spacing: .14em; opacity: .55; }
+.rks-mt { font-size: 6cqw; font-weight: 600; line-height: 1.2; opacity: .7; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.rks-sc { display: flex; flex-direction: column; align-items: flex-end; gap: 0; white-space: nowrap; }
+.rks-sc small { font-size: 5.5cqw; font-weight: 800; line-height: 1.2; letter-spacing: .14em; opacity: .55; }
 .rks-sc b { font-size: 11cqw; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; background: linear-gradient(180deg, var(--g1), var(--g2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .p1 .rks-sc b { font-size: 13cqw; }
 .rks-nm .wait-chip { height: 9cqw; padding: 0 3.5cqw; margin-left: 0; font-size: 5cqw; }
