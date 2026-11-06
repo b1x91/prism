@@ -661,7 +661,7 @@ body { overflow: hidden; background: var(--bg); }
 .home-bg { position: absolute; z-index: -1; top: calc(-1 * var(--mp)); left: calc(50% - (100vw - var(--side)) / 2); width: calc(100vw - var(--side)); height: 640px; overflow: hidden; background: #07090f;
   -webkit-mask-image: linear-gradient(#000 62%, transparent); mask-image: linear-gradient(#000 62%, transparent); pointer-events: none; }
 .home-bg .home-splash { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 70% 22%; }
-.home-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7, 9, 15, .9) 0%, rgba(7, 9, 15, .6) 45%, rgba(7, 9, 15, .2) 100%), linear-gradient(180deg, rgba(7, 9, 15, .55) 0%, rgba(7, 9, 15, .15) 40%, rgba(7, 9, 15, .7) 100%); }
+.home-bg::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7, 9, 15, .9) 0%, rgba(7, 9, 15, .6) 45%, rgba(7, 9, 15, .2) 100%), linear-gradient(180deg, rgba(7, 9, 15, .55) 0%, rgba(7, 9, 15, .15) 40%, rgba(7, 9, 15, .3) 100%); }
 .home-search { display: grid; justify-items: center; gap: var(--s2); padding: var(--s6) 0 var(--s2); text-align: center; color: #fff; }
 .home-k { font-size: var(--fs-xs); font-weight: 800; letter-spacing: .1em; color: rgba(255, 255, 255, .7); }
 .home-search h1 { margin: 0; font-size: var(--fs-2xl); font-weight: 800; white-space: nowrap; text-shadow: 0 2px 12px rgba(0, 0, 0, .35); }
@@ -806,8 +806,9 @@ body { overflow: hidden; background: var(--bg); }
 .shell.immersive { position: relative; grid-template-columns: minmax(0, 1fr); background: var(--glow), var(--bg); }
 .shell.immersive .side { position: fixed; z-index: 20; top: 0; bottom: 0; left: 0; width: var(--side); background: transparent; border-right-color: transparent; }
 .shell.immersive .main { grid-column: 1; z-index: 1; padding-left: calc(var(--side) + var(--s7)); background: transparent; }
-.shell > .home-bg { position: fixed; z-index: 0; top: 0; left: 0; width: 100vw; height: min(720px, 100vh); overflow: hidden; background: #07090f; pointer-events: none;
-  -webkit-mask-image: linear-gradient(#000 66%, transparent); mask-image: linear-gradient(#000 66%, transparent); }
+.shell > .home-bg { position: fixed; z-index: 0; top: 0; left: 0; width: 100vw; height: min(820px, 100vh); overflow: hidden; background: #07090f; pointer-events: none;
+  --fade: linear-gradient(#000 0%, #000 34%, rgba(0,0,0,.97) 40%, rgba(0,0,0,.9) 46%, rgba(0,0,0,.8) 52%, rgba(0,0,0,.67) 58%, rgba(0,0,0,.52) 64%, rgba(0,0,0,.38) 70%, rgba(0,0,0,.25) 76%, rgba(0,0,0,.14) 82%, rgba(0,0,0,.06) 89%, rgba(0,0,0,.015) 95%, transparent 100%);
+  -webkit-mask-image: var(--fade); mask-image: var(--fade); }
 /* 그림 왼쪽(메뉴 자리)을 한 겹 더 어둡게 — 메뉴 글자가 읽히게, 경계선은 없이 */
 .shell > .home-bg::before { content: ""; position: absolute; z-index: 1; inset: 0 auto 0 0; width: calc(var(--side) + 160px); background: linear-gradient(90deg, rgba(7, 9, 15, .55), rgba(7, 9, 15, .3) 60%, transparent); }
 .shell.immersive .brand-word { background-image: linear-gradient(110deg, #fff 0%, #fff 42%, #b9c6ff 50%, #fff 58%, #fff 100%); }
@@ -823,20 +824,34 @@ body { overflow: hidden; background: var(--bg); }
 .shell.immersive .side-nav .hub-chev { color: rgba(255, 255, 255, .5); }
 @media (max-width: 900px) { .shell.immersive .main { padding-left: calc(var(--side) + var(--s5)); } }
 
-/* 홈 랭킹 맛보기: 순위가 한눈에 (v3.175) — 금·은·동 메달 번호 · 1위 줄은 금빛으로 크게 · 오른쪽에 점수와 1위와의 차 */
-.hr-row.rk { grid-template-columns: 28px 44px minmax(0, 1fr) auto; }
-.hr-row.rk .hr-n { width: 28px; height: 28px; display: grid; place-items: center; border-radius: 50%; font-size: var(--fs-sm); color: var(--text-3); }
-.hr-row.rk.p1 .hr-n, .hr-row.rk.p2 .hr-n, .hr-row.rk.p3 .hr-n { color: #1b1305; box-shadow: inset 0 1px 0 rgba(255, 255, 255, .55), 0 2px 6px rgba(0, 0, 0, .18); }
-.hr-row.rk.p1 .hr-n { background: linear-gradient(160deg, #ffe08a, #e0a92e 60%, #b9821a); }
-.hr-row.rk.p2 .hr-n { background: linear-gradient(160deg, #f4f6fa, #c3cad6 60%, #98a2b3); color: #1d2433; }
-.hr-row.rk.p3 .hr-n { background: linear-gradient(160deg, #f4c39a, #c98450 60%, #9c5a2c); color: #2a1406; }
-.hr-row.rk .face-ring, .hr-row.rk > .face, .hr-row.rk > .initial { justify-self: center; }
-.hr-row.rk.p1 { min-height: 68px; background: linear-gradient(90deg, rgba(224, 169, 46, .16), rgba(224, 169, 46, .04) 70%, transparent); }
-.hr-row.rk.p1:hover { background: linear-gradient(90deg, rgba(224, 169, 46, .24), rgba(224, 169, 46, .08) 70%, transparent); }
-.hr-row.rk.p1 .hr-who b { font-size: var(--fs-lg); }
-.hr-row.rk.p1 .hr-s b { font-size: var(--fs-xl); color: var(--gold); }
-.hr-row.rk.p1 img.face, .hr-row.rk.p1 .initial { box-shadow: 0 0 0 2px #e0a92e, 0 4px 14px rgba(224, 169, 46, .35); }
-.hr-row.rk .hr-s { display: grid; justify-items: end; line-height: 1.15; }
-.hr-row.rk .hr-s b { font-size: var(--fs-lg); font-weight: 800; }
-.hr-row.rk .hr-s small { font-size: var(--fs-xs); font-weight: 650; color: var(--text-3); }
-.hr-row.rk.p1 .hr-s small { color: var(--gold); }
+/* 홈 랭킹 맛보기 = 시안 C '레이스' (v3.175) — 큰 기울임 숫자 + 점수만큼 차오른 막대.
+   색은 1위 금 > 2위 은 > 3위 동 > 4·5위 같은 중립색(같은 무게). 내 줄은 숫자 색을 바꾸지 않고 '나' 표시·막대 테두리만 */
+.rc-list { gap: var(--s2); }
+.rc-row { --c: var(--text-3); --fa: 16%; --fb: 6%; display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: center; gap: var(--s2); padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.rc-row.p1 { --c: #d9a21f; --fa: 46%; --fb: 14%; }
+.rc-row.p2 { --c: color-mix(in srgb, #a9b3c4 72%, var(--text)); --fa: 32%; --fb: 10%; }
+.rc-row.p3 { --c: color-mix(in srgb, #c98250 85%, var(--text)); --fa: 30%; --fb: 9%; }
+.rc-n { font-size: 36px; line-height: 1; font-weight: 900; font-style: italic; letter-spacing: -.04em; text-align: center; color: var(--c); }
+.rc-row.pn { --fa: 12%; --fb: 4%; }
+.rc-row.pn .rc-n { color: var(--text-3); opacity: .5; }
+.rc-track { position: relative; display: block; min-width: 0; height: 52px; border-radius: var(--r-m); background: var(--surface-2); overflow: hidden; transition: background .15s; }
+.rc-row:hover .rc-track { background: var(--surface-3); }
+.rc-fill { position: absolute; inset: 0 auto 0 0; border-radius: var(--r-m); background: linear-gradient(90deg, color-mix(in srgb, var(--c) var(--fa), transparent), color-mix(in srgb, var(--c) var(--fb), transparent)); transition: width .6s cubic-bezier(.16, 1, .3, 1); }
+.rc-row.me .rc-track { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--accent) 55%, transparent); }
+.rc-in { position: relative; height: 100%; display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; align-items: center; gap: var(--s3); padding: 0 var(--s3) 0 var(--s2); }
+.rc-in .face, .rc-in .initial, .rc-in .face-ring { border-radius: var(--r-s); }
+.rc-me { font-style: normal; font-size: var(--fs-xs); font-weight: 800; color: var(--accent); }
+.rc-s { display: flex; align-items: baseline; gap: var(--s1); white-space: nowrap; }
+.rc-s b { font-size: var(--fs-lg); font-weight: 850; }
+.rc-row.p1 .rc-s b { color: var(--c); font-size: var(--fs-xl); }
+.rc-s small { font-size: var(--fs-xs); font-weight: 700; color: var(--text-3); }
+.rc-row.sk { cursor: default; }
+@media (prefers-reduced-motion: reduce) { .rc-fill { transition: none; } }
+/* 좁은 창(카드 폭 380 이하): 이름이 잘리지 않게 숫자 칸·점수 차를 줄인다 */
+.home-rank { container-type: inline-size; }
+@container (max-width: 380px) {
+  .rc-row { grid-template-columns: 30px minmax(0, 1fr); }
+  .rc-n { font-size: 28px; }
+  .rc-s small { display: none; }
+  .rc-in { gap: var(--s2); }
+}

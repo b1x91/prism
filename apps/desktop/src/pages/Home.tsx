@@ -105,24 +105,31 @@ function HomeRanking({ s }: { s: State }) {
   return (
     <section className="card pad home-rank">
       <div className="hr-head"><h3>{data?.season?.label ?? '이번 시즌'} 랭킹</h3><button type="button" className="hr-all" onClick={() => nav('/ranking')}>전체 보기<Icon name="chevR" /></button></div>
-      {!data ? <div className="hr-list">{[0, 1, 2, 3, 4].map((k) => <div key={k} className={`hr-row rk sk ${k === 0 ? "p1" : ""}`}><Bone w={28} h={28} r="pill" /><Bone w={k === 0 ? 44 : 36} h={k === 0 ? 44 : 36} r="m" /><Bone w="60%" h={14} /><Bone w={36} h={16} /></div>)}</div>
+      {!data ? <div className="hr-list rc-list">{[0, 1, 2, 3, 4].map((k) => <div key={k} className="rc-row sk"><span className="rc-n"><Bone w={20} h={32} /></span><span className="rc-track"><span className="rc-in"><Bone w={36} h={36} r="m" /><Bone w="55%" h={14} /><Bone w={40} h={18} /></span></span></div>)}</div>
         : !top.length ? <p className="hr-empty">이번 시즌 기록이 쌓이면 여기에 순위가 떠요.</p>
-        : <div className="hr-list">
-          {top.map((r, k) => <Row key={r.key ?? r.id} r={r} rank={k + 1} lead={rankScore(top[0].w, top[0].n)} me={r.id === meId} onOpen={() => nav(`/members/${r.id}`)} />)}
+        : <div className="hr-list rc-list">
+          {top.map((r, k) => <Row key={r.key ?? r.id} r={r} rank={k + 1} lead={rankScore(top[0].w, top[0].n)} low={rankScore(top[top.length - 1].w, top[top.length - 1].n)} me={r.id === meId} onOpen={() => nav(`/members/${r.id}`)} />)}
         </div>}
     </section>
   );
 }
 
-function Row({ r, rank, lead, me, onOpen }: { r: RankingRow; rank: number; lead: number; me?: boolean; onOpen: () => void }) {
+function Row({ r, rank, lead, low, me, onOpen }: { r: RankingRow; rank: number; lead: number; low: number; me?: boolean; onOpen: () => void }) {
   const score = rankScore(r.w, r.n);
-  // 순위가 보이게: 1~3위는 금·은·동 메달 번호, 1위 줄은 금빛, 2위부터 오른쪽에 1위와의 점수 차 (v3.175)
+  // 시안 C '레이스' (v3.175): 큰 기울임 숫자 + 점수만큼 차오른 막대. 1~3위 금·은·동, 4·5위는 같은 무게의 중립색 —
+  // 순위가 내려갈수록 옅어지기만 하고 4위가 5위보다 흐려 보이지 않게. 내 줄은 숫자 색이 아니라 '나' 표시와 막대 테두리로
+  const fill = lead > low ? 42 + 58 * ((score - low) / (lead - low)) : 100;
   return (
-    <button type="button" className={`hr-row rk ${me ? 'me' : ''} ${rank <= 3 ? `p${rank}` : ''}`} onClick={onOpen}>
-      <span className="hr-n tn">{rank}</span>
-      <FramedFace frame={r.frame} nick={r.nick} skin={r.skin} champion={r.mainChampion} size={rank === 1 ? 44 : 36} />
-      <span className="hr-who"><b><NickName nick={shortNick(r.nick)} /></b>{r.pending && <PendingChip />}<small className="tn">{`${r.n}판 · ${pct(r.w, r.n)}`}</small></span>
-      <span className="hr-s tn"><b>{score}</b><small>{rank === 1 ? '1위' : `−${lead - score}`}</small></span>
+    <button type="button" className={`rc-row ${rank <= 3 ? `p${rank}` : 'pn'} ${me ? 'me' : ''}`} onClick={onOpen}>
+      <span className="rc-n tn">{rank}</span>
+      <span className="rc-track">
+        <i className="rc-fill" style={{ width: `${fill}%` }} />
+        <span className="rc-in">
+          <FramedFace frame={r.frame} nick={r.nick} skin={r.skin} champion={r.mainChampion} size={36} />
+          <span className="hr-who"><b><NickName nick={shortNick(r.nick)} /></b>{me ? <em className="rc-me">나</em> : r.pending && <PendingChip />}<small className="tn">{`${r.n}판 · ${pct(r.w, r.n)}`}</small></span>
+          <span className="rc-s tn"><b>{score}</b>{rank > 1 && <small>−{lead - score}</small>}</span>
+        </span>
+      </span>
     </button>
   );
 }
