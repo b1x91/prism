@@ -173,7 +173,6 @@ export function RankingSkeleton() {
           <img className="rks-art" src="/rank/stage-v2.webp" alt="" />
           {[2, 1, 3].map((rank) => (
             <div key={rank} className={`rks-slot p${rank}`}>
-              <span className="rks-root" />
               <div className="rks-ice rks-wait">
                 <span className="rks-info"><span className="rks-who"><Bone w="70%" h={14} dark /><Bone w="46%" h={12} dark /></span><span className="rks-sc"><Bone w={rank === 1 ? 64 : 48} h={rank === 1 ? 28 : 20} dark /></span></span>
               </div>

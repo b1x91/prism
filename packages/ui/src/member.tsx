@@ -201,7 +201,6 @@ function Leaderboard({ rows, by, meId, skins, onOpen, play }: { rows: RankingRow
         {[2, 1, 3].map((rank) => {
           const r = rows[rank - 1];
           return <div key={rank} className={`rks-slot p${rank}`}>
-            <span className="rks-root" aria-hidden="true" />
             {r ? <Podium r={r} rank={rank} by={by} play={play} me={r.id === meId} skins={skins} onOpen={onOpen} />
               : <div className="rks-ice empty"><span className="rks-q">?</span><span className="rks-empty">아직 비어 있어요</span></div>}
             <img className="rks-crest" src={POD_CREST(rank)} alt={`${rank}위`} draggable={false} />
@@ -218,7 +217,7 @@ function Podium({ r, rank, by, me, skins, onOpen, play }: { r: RankingRow; rank:
     <button type="button" className={`rks-ice ${me ? 'me' : ''}`} onClick={() => onOpen(r.id)}>
       <img className="rks-champ" src={podArt(r, skins)} alt="" draggable={false} />
       <span className="rks-frost" aria-hidden="true" />
-      <svg className="rks-edge" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="0.6,100 0.6,5 9,0.6 91,0.6 99.4,5 99.4,100" vectorEffect="non-scaling-stroke" /></svg>
+      <span className="rks-edge" aria-hidden="true" />
       <span className="rks-info">
         <span className="rks-who">
           <b className="rks-nm"><span className={r.nameFx ? `phero-name nmfx ${r.nameFx}` : ''}>{shortNick(r.nick)}</span>{r.pending && <PendingChip dark />}</b>
