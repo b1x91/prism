@@ -5005,7 +5005,7 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
     linear-gradient(104deg, transparent 22%, rgba(255, 255, 255, .08) 34%, transparent 44%),
     radial-gradient(70% 40% at 50% 100%, rgba(140, 220, 255, .38), transparent 70%),
     linear-gradient(180deg, rgb(15, 13, 46) 0%, rgba(22, 18, 64, .96) 35%, rgba(46, 36, 130, .68) 75%, rgba(80, 70, 200, .42) 100%);
-  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10px, #000 70%, rgba(0, 0, 0, .55) 100%); mask-image: linear-gradient(180deg, transparent 0, #000 10px, #000 70%, rgba(0, 0, 0, .55) 100%); }
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 10px, #000 55%, rgba(0, 0, 0, .25) 100%); mask-image: linear-gradient(180deg, transparent 0, #000 10px, #000 55%, rgba(0, 0, 0, .25) 100%); }
 .rks-slot { --rd: 7.8cqw; }
 .rks-slot.p1 { --rd: 11.2cqw; }
 .p1 .rks-root { background-position: 0 0; }

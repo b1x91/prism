@@ -170,7 +170,7 @@ export function RankingSkeleton() {
       {/* 상위 3명 무대: 무대 그림·얼음·순위 문장은 데이터와 상관없어 실제 그대로, 챔프·이름·점수만 뼈대 (v3.182) */}
       <section className="rks" aria-hidden="true">
         <div className="rks-scene">
-          <img className="rks-art" src="/rank/stage-v1.webp" alt="" />
+          <img className="rks-art" src="/rank/stage-v2.webp" alt="" />
           {[2, 1, 3].map((rank) => (
             <div key={rank} className={`rks-slot p${rank}`}>
               <span className="rks-root" />

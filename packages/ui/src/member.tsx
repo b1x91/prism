@@ -181,7 +181,7 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
 
 /** 상위 3명 무대: 가운데 1위가 가장 높고, 조명·받침대가 순서대로 올라온다 */
 /** 무대 그림 · 순위 문장 (Artlist 로 새로 그림, v3.182) */
-const POD_STAGE = '/rank/stage-v1.webp';
+const POD_STAGE = '/rank/stage-v2.webp';
 const POD_CREST = (rank: number) => `/rank/crest-${rank}-v1.webp`;
 /** 그 회원의 세로 그림: 대표 스킨 → 주 챔프 기본 스킨 → 얼굴 그림 */
 const podArt = (r: RankingRow, skins: Record<number, Skin> | null) =>
