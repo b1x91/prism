@@ -71,7 +71,7 @@ async function stats(env: Env, now = Date.now()): Promise<JoinStats> {
 async function inviterOf(env: Env, code: string | null) {
   if (!code || !/^[a-z0-9]{4,12}$/.test(code)) return null;
   const m = await env.DB.prepare(`SELECT m.id, m.nick, m.intro, m.tier, m.discord_roles, ${FACE('m')} FROM members m WHERE m.invite_code = ?`).bind(code).first<Record<string, any>>();
-  // 초대한 사람이 아직 승인 대기여도 누가 초대했는지는 남긴다 (v3.187) — 초대 보너스는 초대한 사람이 승인된 뒤에만 (staff.ts applyLevel)
+  // 초대한 사람이 아직 승인 대기여도 누가 초대했는지는 남긴다 (v3.188) — 초대 보너스는 초대한 사람이 승인된 뒤에만 (staff.ts applyLevel)
   if (!m) return null;
   return { id: m.id as string, nick: m.nick as string, intro: (m.intro as string) || null, skin: m.skin as number | null, main: m.main as number | null, approved: approvedMember({ tier: m.tier, discord_roles: m.discord_roles }) };
 }

@@ -35,7 +35,7 @@
 }
 .phero.frame-sovereign::after { background: linear-gradient(90deg, transparent, #f3dfb0 20%, #fff4e0 42%, #ff4d6d 50%, #fff4e0 58%, #f3dfb0 80%, transparent); }
 
-/* ───── 시즌 랭킹 보상 (v3.188): 금·은·동 결정 테두리 — 면마다 밝기가 다른 고리 + 위 가운데 작은 결정 + 고리를 도는 빛 한 줄기 ───── */
+/* ───── 시즌 랭킹 보상 (v3.189): 금·은·동 결정 테두리 — 면마다 밝기가 다른 고리 + 위 가운데 작은 결정 + 고리를 도는 빛 한 줄기 ───── */
 .phero.frame-season-1 { --ss-a: #fff6d0; --ss-b: #f2c45a; --ss-c: #a8730f; --ss-g: rgba(255, 205, 90, .6); }
 .phero.frame-season-2 { --ss-a: #ffffff; --ss-b: #c9d2e3; --ss-c: #7b8599; --ss-g: rgba(200, 215, 240, .55); }
 .phero.frame-season-3 { --ss-a: #ffe6cf; --ss-b: #d99258; --ss-c: #8a4e22; --ss-g: rgba(230, 150, 90, .55); }

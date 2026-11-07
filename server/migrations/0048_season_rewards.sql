@@ -1,4 +1,4 @@
--- 시즌 랭킹 보상 (CLAUDE.md v3.188): 시즌이 끝나면 1~3위에게 챔피언 세트(꾸밈 + 시즌 칭호). 영원히 소장
+-- 시즌 랭킹 보상 (CLAUDE.md v3.189): 시즌이 끝나면 1~3위에게 챔피언 세트(꾸밈 + 시즌 칭호). 영원히 소장
 CREATE TABLE IF NOT EXISTS season_rewards (
   season TEXT NOT NULL,
   rank INTEGER NOT NULL,

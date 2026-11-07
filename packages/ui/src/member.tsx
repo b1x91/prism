@@ -125,7 +125,7 @@ export function RankingTeaser({ onLogin }: { onLogin: () => void }) {
 const seasonUntil = (sz: { label: string; end: number }) => { const last = new Date(sz.end - 1 + 9 * 3_600_000); return `${sz.label} · ${last.getUTCMonth() + 1}월 ${last.getUTCDate()}일까지`; };
 
 /**
- * 랭킹 화면 위 시즌 D-day 칩 (v3.188): 마우스를 올리면(휴대폰은 누르면) 시즌 보상 카드 — 순위별 챔피언 세트 미리 보기.
+ * 랭킹 화면 위 시즌 D-day 칩 (v3.189): 마우스를 올리면(휴대폰은 누르면) 시즌 보상 카드 — 순위별 챔피언 세트 미리 보기.
  * 회원 화면은 지금 그 순위인 사람과 모자란 판수를 함께 적는다.
  */
 export function SeasonRewardChip({ rows, season }: { rows?: RankingRow[]; season?: { key: string; label: string; end: number } }) {
@@ -231,7 +231,7 @@ function stageDue(): boolean {
 function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (id: string) => void }) {
   const [by, setByRaw] = useKept<RankBy | 'champ-art' | 'aug-art' | 'item-art'>('rank.by', 'season');
   const [play, setPlay] = useState(stageDue);
-  // 자리표시에서 넘어올 때는 늘 무대가 켜지는 연출 (v3.188) — rv 는 0.42초 뒤 꺼지므로 붙잡아 둔다
+  // 자리표시에서 넘어올 때는 늘 무대가 켜지는 연출 (v3.189) — rv 는 0.42초 뒤 꺼지므로 붙잡아 둔다
   const [entered, setEntered] = useState(false);
   const setBy = (v: RankBy | 'champ-art' | 'aug-art' | 'item-art') => { setPlay(false); setEntered(false); setByRaw(v); };
   const art = by === 'champ-art' || by === 'aug-art' || by === 'item-art';
@@ -291,7 +291,7 @@ export const podiumImages = (rows: RankingRow[], skins: Record<number, Skin> | n
 function Leaderboard({ rows, by, meId, skins, onOpen, play, hall }: { rows: RankingRow[]; by: RankBy; meId?: string; play: boolean; hall?: SeasonHall | null; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
   return (
     <section className={`rks ${play ? 'play' : ''}`} aria-label="상위 3명">
-      {/* 명예의 전당 (v3.188): 다음 시즌 내내 지난 시즌 TOP 3 */}
+      {/* 명예의 전당 (v3.189): 다음 시즌 내내 지난 시즌 TOP 3 */}
       {hall && <div className="rks-hall" aria-label={`${hall.season.label} TOP 3`}>
         <span className="rks-hall-k"><Icon name="trophy" />{hall.season.label.replace(/^\d+ /, '')} 명예의 전당</span>
         <span className="rks-hall-row">{hall.top.map((t) => (

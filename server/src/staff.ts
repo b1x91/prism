@@ -358,7 +358,7 @@ export async function applyLevel(env: Env, me: Pick<Member, 'id' | 'nick'>, targ
   await env.DB.prepare('UPDATE members SET discord_roles = ?, roles_at = ? WHERE id = ?').bind(JSON.stringify([...roles]), now, target.id).run();
   if (level >= 1) {
     await env.DB.prepare('UPDATE members SET approved_at = COALESCE(approved_at, ?), approved_by = COALESCE(approved_by, ?) WHERE id = ?').bind(now, me.id, target.id).run();
-    // 초대 보너스는 초대한 사람이 승인된 회원일 때만 (v3.107-4). 승인 대기 중에 초대한 친구는, 초대한 사람이 승인되는 순간 함께 확정 (v3.187)
+    // 초대 보너스는 초대한 사람이 승인된 회원일 때만 (v3.107-4). 승인 대기 중에 초대한 친구는, 초대한 사람이 승인되는 순간 함께 확정 (v3.188)
     const inv = (await env.DB.prepare('SELECT invited_by AS i FROM members WHERE id = ?').bind(target.id).first<{ i: string | null }>())?.i;
     if (inv && await approvedId(env, inv)) await env.DB.prepare('INSERT OR IGNORE INTO invite_rewards (invitee, inviter, at) VALUES (?, ?, ?)').bind(target.id, inv, now).run();
     await env.DB.prepare('INSERT OR IGNORE INTO invite_rewards (invitee, inviter, at) SELECT id, ?1, ?2 FROM members WHERE invited_by = ?1 AND approved_at IS NOT NULL').bind(target.id, now).run();

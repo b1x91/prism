@@ -860,7 +860,7 @@ body { overflow: hidden; background: var(--bg); }
 .home-hot .rc-in .aug-ring { border-radius: 50%; }
 .home-hot .hr-who small .ha-r { font-weight: 700; }
 @container (max-width: 380px) { .home-hot .rc-s small { display: inline; } }
-/* 랭킹 메뉴 (v3.188): 좁은 사이드바는 아이콘만 — 시즌 칩은 숨긴다 · 홈(그림 위)에서도 금빛이 읽히게 */
+/* 랭킹 메뉴 (v3.189): 좁은 사이드바는 아이콘만 — 시즌 칩은 숨긴다 · 홈(그림 위)에서도 금빛이 읽히게 */
 @media (max-width: 900px) { .side-nav a .rk-dday { display: none; } }
 .shell.immersive:not(.leaving) .side-nav a.nav-rank .rk-label { --rk-g1: #ffe39a; --rk-g2: #e9a93a; --rk-hi: #fff6d6; }
 .shell.immersive:not(.leaving) .side-nav a.nav-rank { --rk-gi: #f2c45a; }

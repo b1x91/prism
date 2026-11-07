@@ -75,7 +75,7 @@ export type MyApplication = {
 /** 운영 화면 줄 */
 export type StaffApplication = {
   id: number; no: string; status: JoinStatus; riotId: string; kakao: string; times: string[]; note: string | null;
-  /** pending: 초대한 사람이 아직 승인 대기 (v3.187) */
+  /** pending: 초대한 사람이 아직 승인 대기 (v3.188) */
   inviter: { id: string; nick: string; skin: number | null; main: number | null; pending?: boolean } | null; codeToday: number;
   signs: { id: string; nick: string }[]; sentKakao: boolean; sentDiscord: boolean; memo: string | null;
   member: { id: string; nick: string } | null; createdAt: number; updatedAt: number; log: { at: number; by: string; act: string }[];

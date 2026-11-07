@@ -177,7 +177,7 @@ export function MemberSkeleton({ public: pub = false, self, id, studioBtn = true
 export function RankingSkeleton() {
   return (
     <SkeletonFrame className="stack">
-      {/* 상위 3명 무대: 불이 꺼진 무대 — 그림은 아직 띄우지 않는다. 데이터가 오면 무대가 켜지며 카드가 솟는다 (v3.188) */}
+      {/* 상위 3명 무대: 불이 꺼진 무대 — 그림은 아직 띄우지 않는다. 데이터가 오면 무대가 켜지며 카드가 솟는다 (v3.189) */}
       <section className="rks rks-sk" aria-hidden="true">
         <div className="rks-scene">
           <span className="rks-sk-floor" />

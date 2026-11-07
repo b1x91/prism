@@ -4,7 +4,7 @@ import { AUGMENT, CHAMPIONS, seasonOf, seasonDaysLeft, cdragon, champIcon, augIc
 import { Icon, type IconName } from './icons';
 import { imgIn } from './skeleton';
 
-/** 시즌 마감까지 남은 날 칩 (랭킹 메뉴, v3.188): D-12 · 마지막 7일은 붉게 · 마지막 날 D-DAY */
+/** 시즌 마감까지 남은 날 칩 (랭킹 메뉴, v3.189): D-12 · 마지막 7일은 붉게 · 마지막 날 D-DAY */
 export function SeasonDday({ className = '' }: { className?: string }) {
   const sz = seasonOf();
   const d = seasonDaysLeft();
