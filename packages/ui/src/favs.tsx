@@ -49,22 +49,28 @@ export async function toggleFav(kind: FavKind, id: number) {
 }
 
 /** 좋아요 하트 버튼 + 좋아한 회원 수 (로그인 전에는 숨긴다) */
+/** 마지막으로 안 좋아요 수 (챔프·증강마다) — 다시 열 때 숫자 자리가 자리표시로 깜빡이지 않게 먼저 보이고, 받은 값으로 조용히 맞춘다 (v3.185) */
+const lastCount = new Map<string, number>();
+const countPath = (kind: FavKind, id: number) => `/api/favs/count?kind=${kind}&id=${id}`;
+const knownCount = (kind: FavKind, id: number) => api?.peek?.<{ n: number }>(countPath(kind, id))?.n ?? lastCount.get(`${kind}:${id}`) ?? null;
+
 export function FavStar({ kind, id, size = 'md' }: { kind: FavKind; id: number; size?: 'sm' | 'md' }) {
   const f = useFavs();
   const on = f.has(kind, id);
-  const [count, setCount] = useState<number | null>(null);
-  const [pending, setPending] = useState(true);
+  const [count, setCount] = useState<number | null>(() => knownCount(kind, id));
+  const [pending, setPending] = useState(() => knownCount(kind, id) === null);
   useEffect(() => {
-    setCount(null); setPending(true);
+    const known = knownCount(kind, id);
+    setCount(known); setPending(known === null);
     if (!f.connected || !api) return;
     let live = true;
-    api.get<{ n: number }>(`/api/favs/count?kind=${kind}&id=${id}`).then((r) => { if (live) setCount(r.n); }).catch(() => {}).finally(() => { if (live) setPending(false); });
+    api.get<{ n: number }>(countPath(kind, id)).then((r) => { lastCount.set(`${kind}:${id}`, r.n); if (live) setCount(r.n); }).catch(() => {}).finally(() => { if (live) setPending(false); });
     return () => { live = false; };
   }, [f.connected, kind, id]);
   if (!f.connected) return null;
   const what = kind === 'champ' ? '내 챔프' : '내 증강';
   const label = on ? `좋아요 취소 (${what}에서 빼기)` : `좋아요 (${josa(what, '으로/로')} 표시)`;
-  return <HeartBurst on={on} count={count} label={label} size={size} pending={pending} onToggle={() => { setCount((c) => (c == null ? c : Math.max(0, c + (on ? -1 : 1)))); void toggleFav(kind, id); }} />;
+  return <HeartBurst on={on} count={count} label={label} size={size} pending={pending} onToggle={() => { setCount((c) => { if (c == null) return c; const n = Math.max(0, c + (on ? -1 : 1)); lastCount.set(`${kind}:${id}`, n); return n; }); void toggleFav(kind, id); }} />;
 }
 
 /** 작은 하트 표시 (목록 칸 구석, inline 이면 이름 옆) */

@@ -2611,6 +2611,7 @@ button.ga:hover { background: var(--surface-2); }
 img.fi:not(.ld) { color: transparent; background-color: var(--sk); background-image: linear-gradient(105deg, transparent 38%, var(--sk-hi) 47%, var(--sk-tint) 52%, transparent 62%);
   background-size: 200vw 100%; background-repeat: no-repeat; background-attachment: fixed; animation: sk-sweep 1.9s cubic-bezier(.45, 0, .25, 1) infinite; }
 :where(img.fi.ld) { animation: img-in .3s ease; }
+:where(img.fi.ld.now) { animation: none; } /* 이미 받아 둔 그림: 그 자리에 바로 (v3.185) — 그림마다 따로 준 움직임(배경 흐름 등)은 그대로 이기게 가장 약하게 */
 @keyframes img-in { from { opacity: .4; } } /* 끝값은 그림마다 정한 투명도 그대로 */
 :is(.phero, .lb, .banner, .duo-stage, .sc-prev, .pl-hl, .cs-tile, .msn-strip, .art2-hall, .dxe-stage) { --sk: rgba(255, 255, 255, .08); --sk-hi: rgba(255, 255, 255, .12); --sk-tint: rgba(170, 186, 255, .12); }
 
@@ -4938,7 +4939,7 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .sv-iqi .inq-pics { margin-top: var(--s2); }
 .sv-iqi .iq-reply { display: grid; gap: 2px; margin-top: 10px; padding: 10px var(--s3); border-radius: var(--r-m); background: var(--surface); font-size: var(--fs-xs); color: var(--text-2); white-space: pre-wrap; }
 .sv-iqi .iq-reply b { font-size: 11px; color: var(--ok); }
-/* 문의 동작 (v3.185): 따로 떨어진 작은 버튼 셋 — 답장 · 작업 · 해결. 올리면 그 버튼의 색으로 옅게 물들고 테두리가 진해진다 */
+/* 문의 동작 (v3.186): 따로 떨어진 작은 버튼 셋 — 답장 · 작업 · 해결. 올리면 그 버튼의 색으로 옅게 물들고 테두리가 진해진다 */
 .sv-abar { display: inline-flex; align-items: center; gap: var(--s2); }
 .sv-abar > button { --bc: var(--text); position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 32px; padding: 0 var(--s3); border: 0; border-radius: var(--r-m); background: var(--surface); box-shadow: inset 0 0 0 1px var(--line); color: var(--text-2); font: inherit; font-size: var(--fs-sm); font-weight: 700; white-space: nowrap; cursor: pointer; transition: background .16s, color .16s, box-shadow .16s, transform .16s; }
 .sv-abar > button svg { width: 15px; height: 15px; flex: none; }
@@ -5231,7 +5232,7 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .rks-ice.rks-wait { cursor: default; }
 .rks-wait .rks-who { gap: max(4px, 2cqw); }
 
-/* ── 운영 › 상점관리 (v3.185, 관리자만) ── */
+/* ── 운영 › 상점관리 (v3.186, 관리자만) ── */
 .ssa { display: grid; gap: var(--s4); }
 .ssa-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s4); }
 .ssa-stat { display: grid; gap: var(--s1); padding: var(--s5) var(--s6); }

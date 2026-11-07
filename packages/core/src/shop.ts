@@ -166,7 +166,7 @@ export const SHOP_ITEM: Record<string, ShopItem> = Object.fromEntries(SHOP.map((
  * SHOP_REV 는 looks.css 캐시를 깨는 번호 — 상품을 더할 때 올린다.
  */
 /**
- * 품절 덮어쓰기 (v3.185, 운영 › 상점관리): 관리자가 상품을 '품절(구매 불가)'로 바꾸거나 되돌린다.
+ * 품절 덮어쓰기 (v3.186, 운영 › 상점관리): 관리자가 상품을 '품절(구매 불가)'로 바꾸거나 되돌린다.
  * 서버가 D1 에 {상품: true|false} 로 두고 이 함수로 표(SHOP_ITEM)의 retired 를 바꾼다 — 상품 목록(/shop/catalog)·구매·선물·랜덤박스가 모두 이 값을 본다.
  * 덮어쓰기가 없는 상품은 이 파일에 적힌 값 그대로.
  */

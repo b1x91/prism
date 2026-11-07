@@ -73,7 +73,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
 
   if (!pathname.startsWith('/api/')) throw new HttpError(404, 'not found');
   const me = await authenticate(req, env);
-  await syncRetire(env); // 품절 덮어쓰기 (v3.185) — 구매·선물·랜덤박스가 같은 값을 보게
+  await syncRetire(env); // 품절 덮어쓰기 (v3.186) — 구매·선물·랜덤박스가 같은 값을 보게
 
   if (m === 'GET' && pathname === '/api/me') return getMe(env, me);
   if (m === 'GET' && pathname === '/api/me/games') return myGames(env, me);
@@ -114,7 +114,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   { const r = m === 'POST' ? /^\/api\/staff\/inquiries\/(\d{1,9})\/reply$/.exec(pathname) : null; if (r) return staffReplyInquiry(env, me, Number(r[1]), await req.json<Record<string, unknown>>().catch(() => ({})), ctx); }
   if (m === 'POST' && pathname === '/api/staff/inquiries/status') return setInquiryStatus(env, me, await req.json<Record<string, unknown>>().catch(() => ({})));
   if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
-  // 운영 › 상점관리 (v3.185, 관리자만)
+  // 운영 › 상점관리 (v3.186, 관리자만)
   if (m === 'GET' && pathname === '/api/admin/shop') return shopAdmin(env, me);
   if (m === 'POST' && pathname === '/api/admin/shop/retire') return setRetire(req, env, me);
   if (m === 'POST' && pathname === '/api/me/shopview') return shopView(req, env, me);

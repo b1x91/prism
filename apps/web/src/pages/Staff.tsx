@@ -33,7 +33,7 @@ export function StaffInquiryPage() {
   return <StaffGate>{({ open }) => <StaffInquiryView api={api} onOpen={open} />}</StaffGate>;
 }
 
-/** 운영 › 상점관리 (v3.185) — 관리자만 */
+/** 운영 › 상점관리 (v3.186) — 관리자만 */
 export function StaffShopPage() {
   const { api, me } = useSession();
   return <StaffGate>{({ open }) => (me?.tier === 'admin' ? <StaffShopView api={api} onOpen={open} /> : <Empty>관리자만 볼 수 있는 화면이에요.</Empty>)}</StaffGate>;

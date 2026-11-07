@@ -80,7 +80,7 @@ export function StaffTodoPage({ s, onLogin }: { s: State; onLogin: () => void })
 export function StaffInquiryPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   return <StaffGate s={s} onLogin={onLogin}>{(open) => <StaffInquiryView api={api} onOpen={open} />}</StaffGate>;
 }
-/** 운영 › 상점관리 (v3.185) — 관리자만 */
+/** 운영 › 상점관리 (v3.186) — 관리자만 */
 export function StaffShopPage({ s, onLogin }: { s: State; onLogin: () => void }) {
   return <StaffGate s={s} onLogin={onLogin}>{(open) => (s.me?.tier === 'admin' ? <StaffShopView api={api} onOpen={open} /> : <Empty>관리자만 볼 수 있는 화면이에요.</Empty>)}</StaffGate>;
 }

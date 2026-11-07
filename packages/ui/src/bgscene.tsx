@@ -33,7 +33,7 @@ export function BgScene({ id, row }: { id: string; row?: boolean }) {
     const tier = item.rarity, high = tier === 'legendary' || tier === 'mythic';
     return (
       <span className={`bgx ${id} img t-${tier}`} aria-hidden="true" style={{ ...(img.mote ? { '--mote': img.mote } : {}), ...(img.glow ? { '--glow': img.glow } : {}) } as CSSProperties}>
-        <img className="fi" onLoad={ld} onError={ld} src={shopAsset(id, img.img)} alt="" loading="lazy" decoding="async" style={{ objectPosition: (row ? img.row : img.pos) ?? '50% 50%' }} />
+        <img className="fi" ref={(el) => { if (el && el.complete && el.naturalWidth > 0) el.classList.add('ld', 'now'); }} onLoad={ld} onError={ld} src={shopAsset(id, img.img)} alt="" loading="lazy" decoding="async" style={{ objectPosition: (row ? img.row : img.pos) ?? '50% 50%' }} />
         {high && img.glow && <span className="bgx-glow" />}
         <span className="bgx-motes">{Array.from({ length: tier === 'mythic' ? 18 : 10 }, (_, i) => <i key={i} />)}</span>
         <span className="bgx-sheen" />
