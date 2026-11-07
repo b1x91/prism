@@ -16,7 +16,9 @@ export type RankingRow = { id: string; nick: string; skin: number | null; n: num
   key?: string; main?: boolean; frame?: string | null; nameFx?: string | null; title?: string | null;
   /** Prism 레이팅 (2026-11-06~, 예전 서버는 보내지 않는다) */
   rating?: number };
-export type Ranking = { period: 'all' | 'month' | 'season'; season?: { key: string; label: string; start: number; end: number }; minWinrate: number; rows: RankingRow[]; limited?: { total: number; mine: (RankingRow & { rank: number }) | null } };
+/** 지난 시즌 TOP 3 (명예의 전당, v3.188) */
+export type SeasonHall = { season: { key: string; label: string }; top: { rank: number; id: string; nick: string; rating: number; n: number; w: number; skin: number | null; mainChampion: number | null; frame: string | null }[] };
+export type Ranking = { period: 'all' | 'month' | 'season'; season?: { key: string; label: string; start: number; end: number }; hall?: SeasonHall | null; minWinrate: number; rows: RankingRow[]; limited?: { total: number; mine: (RankingRow & { rank: number }) | null } };
 export type MemberGame = { gameId: number; playedAt: number; duration: number; championId: number; win: boolean; kills: number; deaths: number; assists: number; augments: number[]; items: number[]; damageToChampions: number | null; goldEarned: number | null; crewCount: number; custom?: boolean };
 export type MemberPage = {
   /** 걸어 둔 명장면 (명장면 액자, v3.99 — 예전 서버는 보내지 않는다) */

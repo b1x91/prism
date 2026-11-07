@@ -57,11 +57,20 @@
 /* 작은 얼굴(사이드바·상단·랭킹 줄)에서는 결정을 줄인다 */
 .phero.face-ring.frame-season-1 .phero-face::before, .phero.face-ring.frame-season-2 .phero-face::before, .phero.face-ring.frame-season-3 .phero-face::before { top: -6px; width: 9px; height: 12px; }
 
+/* 챔피언의 이름 (시즌 1위): 금빛 결정 글자에 빛이 한 줄기 스치고 멈춘다 */
+.phero-name.name-season-1 {
+  background: linear-gradient(100deg, #a8730f 0%, #f2c45a 22%, #fff6d0 34%, #f2c45a 46%, #c9952a 64%, #fff1c2 80%, #f2c45a 100%);
+  background-size: 220% 100%; -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 10px rgba(255, 200, 90, .45));
+  animation: mf-champ 5s ease-in-out infinite;
+}
+@keyframes mf-champ { 0%, 60% { background-position: 100% 0; } 100% { background-position: -20% 0; } }
+
 @keyframes mf-crimson { 50% { box-shadow: 0 0 0 1px rgba(255, 244, 224, .75), 0 0 44px rgba(255, 77, 109, .85), 0 0 96px rgba(255, 77, 109, .3); } }
 @keyframes mf-ivory { 50% { box-shadow: 0 0 0 1px rgba(255, 250, 240, .9), 0 0 42px rgba(255, 228, 170, .8), 0 0 90px rgba(255, 77, 109, .22); } }
 @keyframes mf-star { 0%, 100% { transform: scale(.6) rotate(0deg); opacity: .55; } 50% { transform: scale(1.15) rotate(45deg); opacity: 1; } }
 @keyframes mf-band { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) {
   .phero.frame-crimson .phero-face, .phero.frame-sovereign .phero-face, .phero.frame-crimson .phero-face::before, .phero.frame-crimson::after { animation: none; }
-  .phero.frame-season-1 .phero-face, .phero.frame-season-2 .phero-face, .phero.frame-season-3 .phero-face { animation: none; }
+  .phero.frame-season-1 .phero-face, .phero.frame-season-2 .phero-face, .phero.frame-season-3 .phero-face, .phero-name.name-season-1 { animation: none; }
 }

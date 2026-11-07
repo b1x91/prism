@@ -169,7 +169,7 @@ img { display: block; }
 .grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s4); }
 @media (max-width: 960px) { .grid3, .grid4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .grid2, .grid3, .grid4 { grid-template-columns: minmax(0, 1fr); } }
-.stack { display: grid; gap: var(--s4); }
+.stack { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s4); }
 .row { display: flex; align-items: center; gap: var(--s3); }
 .row.wrapr { flex-wrap: wrap; }
 .sp { flex: 1; }
@@ -5362,29 +5362,40 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .rk-dday.soon { color: var(--lose, #e5484d); background: color-mix(in srgb, var(--lose, #e5484d) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lose, #e5484d) 40%, transparent); }
 @media (prefers-reduced-motion: reduce) { .nav-rank:hover svg, .nav-rank:hover .rk-label { animation: none; } }
 
-/* ── 시즌 보상 한 줄 (v3.188): 무대 아래, 누르면 순위별 테두리가 펼쳐진다 ── */
-.srw { padding: 0; overflow: hidden; }
-.srw.lb-in { animation: lb-row .5s var(--lb-ease) 1.45s both; }
-.srw-head { display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: 56px; padding: var(--s2) var(--s4); border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
-.srw-head:hover { background: var(--surface-2); }
-.srw-ic { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: var(--r-m); color: var(--rk-gi); background: color-mix(in srgb, var(--rk-gi) 14%, transparent); }
-.srw-ic svg { width: 18px; height: 18px; }
-.srw-t { display: flex; align-items: baseline; gap: var(--s2); min-width: 0; flex: 1; }
-.srw-t b { flex: none; font-size: var(--fs-md, 14px); font-weight: 800; }
-.srw-t .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-sm, 13px); }
-.srw-head .rk-dday { margin-left: 0; }
-.srw-chev { width: 18px; height: 18px; flex: none; color: var(--text-3); transition: transform .3s cubic-bezier(.16, 1, .3, 1); }
-.srw.open .srw-chev { transform: rotate(180deg); }
-.srw-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .36s cubic-bezier(.16, 1, .3, 1); }
-.srw.open .srw-body { grid-template-rows: 1fr; }
-.srw-body > div { min-height: 0; overflow: hidden; }
-.srw-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); padding: var(--s2) var(--s4) 0; }
-.srw-item { display: flex; align-items: center; gap: var(--s3); min-width: 0; padding: var(--s3); border-radius: var(--r-m); background: var(--surface-2); }
-.srw-item .phero.face-ring { flex: none; }
-.srw-it { display: grid; gap: 2px; min-width: 0; }
-.srw-it b { font-size: var(--fs-sm, 13px); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.srw-it .muted { font-size: var(--fs-xs, 12px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.srw-note { padding: var(--s3) var(--s4) var(--s4); }
-@container (max-width: 640px) { .srw-list { grid-template-columns: 1fr; } }
-@media (max-width: 720px) { .srw-list { grid-template-columns: 1fr; } .srw-t { flex-direction: column; align-items: flex-start; gap: 4px; } .srw-t .muted { max-width: 100%; } }
-@media (prefers-reduced-motion: reduce) { .srw.lb-in { animation: none; } .srw-body, .srw-chev { transition: none; } }
+
+/* ── 시즌 보상 카드 (v3.188): 랭킹 화면 위 D-day 칩에 마우스를 올리면 ── */
+.srh { position: relative; display: inline-flex; margin-left: var(--s2); vertical-align: middle; }
+.srh-chip { gap: 4px; margin-left: 0; border: 0; cursor: pointer; font-family: inherit; }
+.srh-chip svg { width: 12px; height: 12px; }
+.srh-card { position: fixed; z-index: 60; display: none; gap: var(--s3); width: min(420px, calc(100vw - 32px)); padding: var(--s4);
+  border-radius: var(--r-l); background: #0d1124; color: #fff; box-shadow: 0 18px 48px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .08); }
+/* 닫혀 있을 때는 그리지 않는다 — 숨긴 채 자리만 차지해도 휴대폰 화면 폭이 넓어졌다 */
+.srh-card.open { display: grid; animation: srh-in .22s cubic-bezier(.16, 1, .3, 1); }
+@keyframes srh-in { from { opacity: 0; transform: translateY(-6px); } }
+.srh-card .muted, .srh-card .meta { color: rgba(255, 255, 255, .62); }
+.srh-head { display: grid; gap: 2px; }
+.srh-head b { font-size: var(--fs-lg, 16px); font-weight: 800; color: #ffe39a; }
+.srh-head .muted { font-size: var(--fs-xs, 12px); }
+.srh-rank { display: grid; grid-template-columns: 36px minmax(0, 1fr); column-gap: var(--s3); row-gap: 4px; align-items: center; padding: var(--s3); border-radius: var(--r-m); background: rgba(255, 255, 255, .05); }
+.srh-rank.p1 { background: linear-gradient(100deg, rgba(242, 196, 90, .16), rgba(255, 255, 255, .04)); }
+.srh-crest { grid-row: span 2; width: 36px; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, .5)); }
+.srh-items { display: flex; flex-wrap: wrap; gap: var(--s2); min-width: 0; }
+.srh-it { display: grid; justify-items: center; gap: 4px; }
+.srh-it small { font-size: var(--fs-xs, 12px); color: rgba(255, 255, 255, .7); white-space: nowrap; }
+.srh-prev { position: relative; display: grid; place-items: center; height: 40px; min-width: 40px; border-radius: var(--r-s, 8px); overflow: hidden; }
+.s-bg .srh-prev { width: 72px; }
+.s-name .srh-prev { padding: 0 6px; background: rgba(255, 255, 255, .06); }
+.s-name .srh-prev .phero-name { font-size: 14px; font-weight: 800; }
+.srh-sub { grid-column: 2; display: flex; align-items: center; gap: 6px; min-width: 0; font-size: var(--fs-xs, 12px); white-space: nowrap; }
+.srh-now { margin-left: auto; overflow: hidden; text-overflow: ellipsis; }
+.srh-foot { font-size: var(--fs-xs, 12px); line-height: 1.5; }
+.rk-tz-season { display: flex; align-items: center; gap: var(--s2); }
+/* 명예의 전당 (v3.188): 무대 왼쪽 위, 지난 시즌 TOP 3 */
+.rks-hall { position: absolute; left: var(--s4); top: var(--s4); z-index: 6; display: grid; gap: 6px; padding: var(--s2) var(--s3); border-radius: var(--r-m); background: rgba(255, 255, 255, .06); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08); color: #fff; }
+.rks-hall-k { display: inline-flex; align-items: center; gap: 4px; font-size: var(--fs-xs, 12px); font-weight: 800; letter-spacing: .02em; color: #ffe39a; }
+.rks-hall-k svg { width: 12px; height: 12px; }
+.rks-hall-row { display: flex; align-items: center; gap: 6px; }
+.rks-hall-p { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.rks-hall-p b { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-sm, 13px); font-weight: 800; }
+@media (max-width: 720px) { .rks-hall { left: var(--s3); top: var(--s3); } .rks-hall-p b { display: none; } }
+@media (prefers-reduced-motion: reduce) { .srh-card.open { animation: none; } }

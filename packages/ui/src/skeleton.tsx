@@ -192,8 +192,6 @@ export function RankingSkeleton() {
           ))}
         </div>
       </section>
-      {/* 시즌 보상 한 줄 (v3.188) — 실제 줄과 같은 높이 */}
-      <div className="card srw rks-sk-list"><div className="srw-head" style={{ cursor: 'default' }}><Bone w={32} h={32} r="m" /><span className="srw-t"><Bone w={72} h={14} /><Bone w="70%" h={12} /></span><Bone w={44} h={20} r="pill" /></div></div>
       {/* 4위부터: 실제 순위 줄(rank-row)과 같은 틀 — 순위 · 얼굴 · 이름/주 챔프 · 점수 · 승률 */}
       <div className="card rank-list rks-sk-list">{Array.from({ length: 6 }, (_, i) => (
         <div key={i} className="rank-row" style={{ cursor: 'default' }}><span className="rk"><Bone w={12} h={14} /></span><Bone w={40} h={40} r="m" />

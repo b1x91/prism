@@ -14,7 +14,7 @@ import { confirmDraw, getDraw, startDraw } from './draw.js';
 import { appMembers } from './appmembers.js';
 import { itemOfDay } from './itemday.js';
 import { promoteSweep } from './promote.js';
-import { expireSeasonFrames, finalizeSeason, seasonRewardsAdmin } from './seasonreward.js';
+import { finalizeSeason, seasonRewardsAdmin } from './seasonreward.js';
 import { download, latest } from './release.js';
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
 import { artisanRanking, augmentArtisans, championArtisans, itemArtisans } from './artisans.js';
@@ -252,7 +252,6 @@ export default {
     }
     await promoteSweep(env).catch((e) => console.error('역할 자동 승급 실패', e));
     await finalizeSeason(env).catch((e) => console.error('시즌 보상 확정 실패', e));
-    await expireSeasonFrames(env).catch((e) => console.error('시즌 테두리 정리 실패', e));
     await joinSweep(env).catch((e) => console.error('가입 신청 정리 실패', e));
     await nickSweep(env).catch((e) => console.error('디스코드 별명 맞추기 실패', e));
     const now = Date.now();

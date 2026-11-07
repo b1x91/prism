@@ -110,6 +110,9 @@ export const SHOP: ShopItem[] = [
   it('bg-bloodmoon', 'bg', 'legendary', 3000, '붉은 달의 다리', '붉은 달 아래 다리에 재가 흩날린다', { img: 'bg/bloodmoon-v1.webp', pos: '58% 40%', row: '62% 28%', mote: '#ff8a5c', glow: '72% 22%' }),
   it('bg-galaxy', 'bg', 'mythic', 9000, '은하의 심장', '은하의 중심이 소용돌이치며 별을 끌어당긴다', { img: 'bg/galaxy-v1.webp', pos: '50% 45%', row: '50% 42%', mote: '#ffe7a8', glow: '52% 42%' }),
   it('bg-sanctum', 'bg', 'mythic', 9000, '빛의 성소', '거대한 결정이 성소를 금빛으로 비춘다', { img: 'bg/sanctum-v1.webp', pos: '62% 40%', row: '64% 42%', mote: '#fff0c4', glow: '64% 40%' }),
+  // 시즌 랭킹 보상 배경 (v3.188, 팔지 않음): 1위 챔피언의 전당 · 2위 달빛 성소
+  { ...it('bg-season-1', 'bg', 'mythic', 0, '챔피언의 전당', '시즌 1위의 자리 — 금빛 결정 왕좌 위로 프리즘이 빛을 가른다', { img: 'bg/season-champ-v1.webp', pos: '58% 45%', row: '62% 50%', mote: '#ffe7a8', glow: '64% 32%' }), retired: true, reward: 'season' },
+  { ...it('bg-season-2', 'bg', 'legendary', 0, '달빛 성소', '시즌 2위의 자리 — 보름달 아래 은빛 결정 첨탑', { img: 'bg/season-moon-v1.webp', pos: '64% 45%', row: '68% 48%', mote: '#e6f0ff', glow: '68% 30%' }), retired: true, reward: 'season' },
   // 프로필 테두리: 얼굴 테두리 + 프로필 아래 빛 띠
   it('frame-silver', 'frame', 'common', 200, '은빛 테두리', '단정한 은빛으로 얼굴을 두른다'),
   it('frame-gold', 'frame', 'rare', 400, '금빛 테두리', '묵직한 금빛 테두리와 금빛 띠'),
@@ -122,10 +125,10 @@ export const SHOP: ShopItem[] = [
   // 신화 테두리 (v3.128): 모양은 shop/looks.css — 앱을 다시 내지 않고 웹에서 받는다
   it('frame-crimson', 'frame', 'mythic', 5000, '진홍 성광', '진홍빛 고리가 돌고 상아빛 별이 반짝인다'),
   it('frame-sovereign', 'frame', 'mythic', 5000, '상아 왕관', '상아빛 고리 위에 진홍 보석이 박혀 빛난다'),
-  // 시즌 랭킹 보상 (v3.188): 시즌 1~3위에게만, 다음 시즌 마감까지. 모양은 shop/looks.css
-  { ...it('frame-season-1', 'frame', 'legendary', 0, '시즌 1위 테두리', '시즌 1위에게만 주는 금빛 결정 테두리'), retired: true, reward: 'season' },
-  { ...it('frame-season-2', 'frame', 'legendary', 0, '시즌 2위 테두리', '시즌 2위에게만 주는 은빛 결정 테두리'), retired: true, reward: 'season' },
-  { ...it('frame-season-3', 'frame', 'legendary', 0, '시즌 3위 테두리', '시즌 3위에게만 주는 동빛 결정 테두리'), retired: true, reward: 'season' },
+  // 시즌 랭킹 보상 (v3.188): 시즌 1~3위에게만 주고 영원히 소장. 모양은 shop/looks.css · 배경 그림은 Artlist 생성
+  { ...it('frame-season-1', 'frame', 'legendary', 0, '시즌 1위 테두리', '시즌 1위의 금빛 결정 테두리'), retired: true, reward: 'season' },
+  { ...it('frame-season-2', 'frame', 'legendary', 0, '시즌 2위 테두리', '시즌 2위의 은빛 결정 테두리'), retired: true, reward: 'season' },
+  { ...it('frame-season-3', 'frame', 'legendary', 0, '시즌 3위 테두리', '시즌 3위의 동빛 결정 테두리'), retired: true, reward: 'season' },
   // 프로필 효과: 프로필 전체에 흐르는 움직임
   it('fx-sparkle', 'fx', 'common', 300, '반짝임', '프로필 곳곳에 작은 빛이 반짝인다'),
   it('fx-snow', 'fx', 'rare', 450, '눈송이', '하얀 눈이 조용히 내린다'),
@@ -142,6 +145,7 @@ export const SHOP: ShopItem[] = [
   it('name-ember', 'name', 'epic', 650, '불꽃 이름', '붉게 달아오른 이름'),
   it('name-frost', 'name', 'epic', 650, '서리 이름', '얼음처럼 푸른 이름'),
   it('name-galaxy', 'name', 'legendary', 1000, '은하 이름', '푸른 은하가 이름 위로 흐른다'),
+  { ...it('name-season-1', 'name', 'legendary', 0, '챔피언의 이름', '시즌 1위의 금빛 결정 이름 — 빛이 한 줄기 스친다'), retired: true, reward: 'season' },
   // 칭호: 이름 위 한 줄. 상점에서 팔지 않고 미션·도감·활약으로 얻는다 (v3.99, 조건은 goods.ts TITLE_RULES). 값은 예전에 산 기록용
   it('title-night', 'title', 'common', 150, '밤의 단골', '오늘 밤도 한 판'),
   it('title-poro', 'title', 'common', 150, '포로 친구', '다리 위의 작은 친구들과 함께'),
@@ -157,6 +161,9 @@ export const SHOP: ShopItem[] = [
   it('title-ruler', 'title', 'legendary', 800, '칼바람의 지배자', '이 다리의 주인'),
   it('title-prism', 'title', 'legendary', 1000, '프리즘 수집가', '빛을 모으는 사람'),
 ];
+// 시즌 칭호 (v3.188): '2026 시즌 4 1위' — 시즌마다 순위별 하나, 받은 사람만 영원히. 2030년까지 미리 만들어 둔다
+for (let y = 2026; y <= 2030; y++) for (let q = y === 2026 ? 3 : 1; q <= 4; q++) for (let r = 1; r <= 3; r++)
+  SHOP.push({ ...it(`title-season-${y}-S${q}-${r}`, 'title', 'legendary', 0, `${y} 시즌 ${q} ${r}위`, `${y} 시즌 ${q} 랭킹 ${r}위`), retired: true, reward: 'season' });
 /** 상점에서 파는 것 (칭호는 얻는 것, v3.99) */
 export const forSale = (x: ShopItem) => x.slot !== 'title' && !x.retired && !x.reward;
 /** 상점·꾸미기 목록에 보일 상품: 판매 종료 상품은 가진 사람에게만 */
@@ -180,7 +187,7 @@ export const baseRetired = (id: string) => BASE_RETIRED.has(id);
 export function applyRetire(over: Record<string, boolean>) {
   for (const x of SHOP) { const v = over[x.id]; x.retired = x.reward ? true : typeof v === 'boolean' ? v : BASE_RETIRED.has(x.id); if (!x.retired) delete x.retired; }
 }
-export const SHOP_REV = 4;
+export const SHOP_REV = 4; // 시즌 보상 (v3.188)
 export type ShopCatalog = { rev: number; items: ShopItem[]; launch: typeof LAUNCH };
 /** 이 빌드에 들어 있던 상품 (그림이 앱 안에 있는 것) */
 const BUNDLED = new Set(SHOP.map((x) => x.id));
@@ -298,6 +305,12 @@ export const shareUrl = (code: string | number) => `${SITE_URL}/p/${encodeURICom
 
 /**
  * 시즌 랭킹 보상 (v3.188, 사용자 결정): 시즌(분기)이 끝나면 그 시즌 레이팅 1~3위(그 시즌 minGames 판 이상, 한 회원은 가장 높은 계정 하나)에게
- * 순위별 프로필 테두리. 받은 테두리는 다음 시즌이 끝날 때까지 쓴다. 서버가 매일 03:17 KST 에 지난 시즌을 확정한다 (server/src/seasonreward.ts).
+ * 챔피언 세트 — 1위 테두리·배경·이름 효과, 2위 테두리·배경, 3위 테두리 + 순위마다 그 시즌이 적힌 칭호. 모두 영원히 소장.
+ * 서버가 매일 03:17 KST 에 지난 시즌을 확정한다 (server/src/seasonreward.ts).
  */
-export const SEASON_REWARD = { minGames: 30, items: ['frame-season-1', 'frame-season-2', 'frame-season-3'] as const };
+export const SEASON_REWARD = {
+  minGames: 30,
+  /** 순위별 꾸밈 (칭호는 titleOf 로 시즌마다 따로) */
+  ranks: [['frame-season-1', 'bg-season-1', 'name-season-1'], ['frame-season-2', 'bg-season-2'], ['frame-season-3']] as string[][],
+  titleOf: (seasonKey: string, rank: number) => `title-season-${seasonKey}-${rank}`,
+};

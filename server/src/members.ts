@@ -11,6 +11,7 @@ import { presenceOf } from '../../packages/core/src/presence.js';
 import { byScore, seasonOf } from '../../packages/core/src/ranking.js';
 import { ratingOf } from '../../packages/core/src/rating.js';
 import { ratingBook, ratingKey } from './rating.js';
+import { seasonHall } from './seasonreward.js';
 import { badgeFromJson } from '../../packages/core/src/mvp.js';
 
 export const RANK_MIN_WINRATE = 10; // 승률 순위는 10판 이상만
@@ -85,6 +86,7 @@ export async function accountRows(env: Env, since: number): Promise<AccountRow[]
  */
 export async function ranking(env: Env, me: Member, period: string | null, by: string | null = null) {
   const season = seasonOf();
+  const hall = period === 'season' ? await seasonHall(env) : null;
   const since = period === 'season' ? season.start : period === 'month' ? monthStart() : 0;
   let rows = (await accountRows(env, since))
     .sort((a, b) => b.n - a.n || b.w - a.w)
@@ -98,9 +100,9 @@ export async function ranking(env: Env, me: Member, period: string | null, by: s
   // 준회원은 5위까지만 + 내 가장 높은 줄
   if (!can(me, 'rankingAll')) {
     const mine = rows.findIndex((x) => x.id === me.id);
-    return json({ period: period ?? 'all', season, minWinrate: RANK_MIN_WINRATE, rows: rows.slice(0, LIMITED), limited: { total: rows.length, mine: mine >= LIMITED ? { ...rows[mine], rank: mine + 1 } : null } });
+    return json({ period: period ?? 'all', season, hall, minWinrate: RANK_MIN_WINRATE, rows: rows.slice(0, LIMITED), limited: { total: rows.length, mine: mine >= LIMITED ? { ...rows[mine], rank: mine + 1 } : null } });
   }
-  return json({ period: period ?? 'all', season, minWinrate: RANK_MIN_WINRATE, rows });
+  return json({ period: period ?? 'all', season, hall, minWinrate: RANK_MIN_WINRATE, rows });
 }
 
 /** 회원 페이지: 프로필 + 전체 기록 분석 재료 + (다른 사람이면) 나와 같이 한 판 */
