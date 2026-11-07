@@ -1,8 +1,20 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type KeyboardEvent, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
-import { AUGMENT, CHAMPIONS, cdragon, champIcon, augIcon, loadSkins, withDefaults, PRESENCE_LABEL, type DiscordRole, type Links, type Presence, type Skin, josa } from '@prism/core';
+import { AUGMENT, CHAMPIONS, seasonOf, seasonDaysLeft, cdragon, champIcon, augIcon, loadSkins, withDefaults, PRESENCE_LABEL, type DiscordRole, type Links, type Presence, type Skin, josa } from '@prism/core';
 import { Icon, type IconName } from './icons';
 import { imgIn } from './skeleton';
+
+/** 시즌 마감까지 남은 날 칩 (랭킹 메뉴, v3.188): D-12 · 마지막 7일은 붉게 · 마지막 날 D-DAY */
+export function SeasonDday({ className = '' }: { className?: string }) {
+  const sz = seasonOf();
+  const d = seasonDaysLeft();
+  return <span className={`rk-dday ${d <= 7 ? 'soon' : ''} ${className}`} title={`${sz.label} 마감까지 ${d === 0 ? '오늘' : `${d}일`}`}>{d === 0 ? 'D-DAY' : `D-${d}`}</span>;
+}
+
+/** 랭킹 메뉴 이름: 금빛 글자 + 시즌 마감 칩 */
+export function RankNavLabel({ label = '랭킹' }: { label?: string }) {
+  return <><span className="rk-label">{label}</span><SeasonDday /></>;
+}
 
 export function Gem({ size = 28, float, src = '/brand/prism-64.png' }: { size?: number; float?: boolean; src?: string }) {
   return <span className={`gem${float ? ' float' : ''}`} style={{ ['--size' as string]: `${size}px` }}><img src={src} alt="" /></span>;

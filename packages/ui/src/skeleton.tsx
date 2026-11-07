@@ -177,22 +177,25 @@ export function MemberSkeleton({ public: pub = false, self, id, studioBtn = true
 export function RankingSkeleton() {
   return (
     <SkeletonFrame className="stack">
-      {/* 상위 3명 무대: 무대 그림·얼음·순위 문장은 데이터와 상관없어 실제 그대로, 챔프·이름·점수만 뼈대 (v3.184) */}
-      <section className="rks" aria-hidden="true">
+      {/* 상위 3명 무대: 불이 꺼진 무대 — 그림은 아직 띄우지 않는다. 데이터가 오면 무대가 켜지며 카드가 솟는다 (v3.188) */}
+      <section className="rks rks-sk" aria-hidden="true">
         <div className="rks-scene">
-          <img className="rks-art" src="/rank/stage-v2.webp" alt="" />
+          <span className="rks-sk-floor" />
+          <span className="rks-sk-gem"><img src="/brand/prism-128.png" alt="" /></span>
           {[2, 1, 3].map((rank) => (
             <div key={rank} className={`rks-slot p${rank}`}>
               <div className="rks-ice rks-wait">
+                <span className="rks-edge" />
                 <span className="rks-info"><span className="rks-who"><Bone w="70%" h={14} dark /><Bone w="46%" h={12} dark /></span><span className="rks-sc"><Bone w={rank === 1 ? 64 : 48} h={rank === 1 ? 28 : 20} dark /></span></span>
               </div>
-              <img className="rks-crest" src={`/rank/crest-${rank}-v1.webp`} alt="" />
             </div>
           ))}
         </div>
       </section>
+      {/* 시즌 보상 한 줄 (v3.188) — 실제 줄과 같은 높이 */}
+      <div className="card srw rks-sk-list"><div className="srw-head" style={{ cursor: 'default' }}><Bone w={32} h={32} r="m" /><span className="srw-t"><Bone w={72} h={14} /><Bone w="70%" h={12} /></span><Bone w={44} h={20} r="pill" /></div></div>
       {/* 4위부터: 실제 순위 줄(rank-row)과 같은 틀 — 순위 · 얼굴 · 이름/주 챔프 · 점수 · 승률 */}
-      <div className="card rank-list">{Array.from({ length: 6 }, (_, i) => (
+      <div className="card rank-list rks-sk-list">{Array.from({ length: 6 }, (_, i) => (
         <div key={i} className="rank-row" style={{ cursor: 'default' }}><span className="rk"><Bone w={12} h={14} /></span><Bone w={40} h={40} r="m" />
           <span className="who" style={{ display: 'grid', gap: 8 }}><Bone w={88} h={14} /><Bone w={120} h={10} /></span>
           <span className="num key"><Bone w={52} h={16} /></span><span className="num"><Bone w={40} h={14} /></span></div>

@@ -22,3 +22,6 @@ export function seasonOf(t = Date.now()) {
   const end = Date.UTC(y, q * 3 + 3, 1) - KST; // 다음 시즌 시작 (이 시각 직전까지)
   return { key: `${y}-S${q + 1}`, label: `${y} 시즌 ${q + 1}`, start, end };
 }
+
+/** 시즌 마지막 날(한국 날짜)까지 남은 날 — 마지막 날이면 0 (D-DAY). 랭킹 메뉴 칩·시즌 설명이 같은 값을 쓴다 */
+export const seasonDaysLeft = (t = Date.now()) => Math.max(0, Math.ceil((seasonOf(t).end - t) / 86_400_000) - 1);

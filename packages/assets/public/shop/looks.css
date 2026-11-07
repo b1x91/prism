@@ -35,10 +35,33 @@
 }
 .phero.frame-sovereign::after { background: linear-gradient(90deg, transparent, #f3dfb0 20%, #fff4e0 42%, #ff4d6d 50%, #fff4e0 58%, #f3dfb0 80%, transparent); }
 
+/* ───── 시즌 랭킹 보상 (v3.188): 금·은·동 결정 테두리 — 면마다 밝기가 다른 고리 + 위 가운데 작은 결정 + 고리를 도는 빛 한 줄기 ───── */
+.phero.frame-season-1 { --ss-a: #fff6d0; --ss-b: #f2c45a; --ss-c: #a8730f; --ss-g: rgba(255, 205, 90, .6); }
+.phero.frame-season-2 { --ss-a: #ffffff; --ss-b: #c9d2e3; --ss-c: #7b8599; --ss-g: rgba(200, 215, 240, .55); }
+.phero.frame-season-3 { --ss-a: #ffe6cf; --ss-b: #d99258; --ss-c: #8a4e22; --ss-g: rgba(230, 150, 90, .55); }
+.phero.frame-season-1 .phero-face, .phero.frame-season-2 .phero-face, .phero.frame-season-3 .phero-face {
+  padding: 5px;
+  background:
+    conic-gradient(from var(--dx-ang), transparent 0 80%, rgba(255, 255, 255, .95) 88%, transparent 96%),
+    conic-gradient(from 22deg, var(--ss-a), var(--ss-b) 12%, var(--ss-c) 25%, var(--ss-b) 37%, var(--ss-a) 50%, var(--ss-b) 62%, var(--ss-c) 75%, var(--ss-b) 87%, var(--ss-a));
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .5), 0 0 26px var(--ss-g), 0 0 60px color-mix(in srgb, var(--ss-g) 40%, transparent);
+  animation: dx-spin 5s linear infinite;
+}
+.phero.frame-season-1 .phero-face::before, .phero.frame-season-2 .phero-face::before, .phero.frame-season-3 .phero-face::before {
+  content: ""; position: absolute; top: -9px; left: 50%; width: 14px; height: 18px; z-index: 3; pointer-events: none; transform: translateX(-50%);
+  clip-path: polygon(50% 0, 100% 30%, 100% 70%, 50% 100%, 0 70%, 0 30%);
+  background: linear-gradient(135deg, var(--ss-a) 0 30%, var(--ss-b) 30% 60%, var(--ss-c) 60%);
+  filter: drop-shadow(0 0 6px var(--ss-g));
+}
+.phero.frame-season-1::after, .phero.frame-season-2::after, .phero.frame-season-3::after { background: linear-gradient(90deg, transparent, var(--ss-c) 15%, var(--ss-b) 38%, var(--ss-a) 50%, var(--ss-b) 62%, var(--ss-c) 85%, transparent); }
+/* 작은 얼굴(사이드바·상단·랭킹 줄)에서는 결정을 줄인다 */
+.phero.face-ring.frame-season-1 .phero-face::before, .phero.face-ring.frame-season-2 .phero-face::before, .phero.face-ring.frame-season-3 .phero-face::before { top: -6px; width: 9px; height: 12px; }
+
 @keyframes mf-crimson { 50% { box-shadow: 0 0 0 1px rgba(255, 244, 224, .75), 0 0 44px rgba(255, 77, 109, .85), 0 0 96px rgba(255, 77, 109, .3); } }
 @keyframes mf-ivory { 50% { box-shadow: 0 0 0 1px rgba(255, 250, 240, .9), 0 0 42px rgba(255, 228, 170, .8), 0 0 90px rgba(255, 77, 109, .22); } }
 @keyframes mf-star { 0%, 100% { transform: scale(.6) rotate(0deg); opacity: .55; } 50% { transform: scale(1.15) rotate(45deg); opacity: 1; } }
 @keyframes mf-band { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) {
   .phero.frame-crimson .phero-face, .phero.frame-sovereign .phero-face, .phero.frame-crimson .phero-face::before, .phero.frame-crimson::after { animation: none; }
+  .phero.frame-season-1 .phero-face, .phero.frame-season-2 .phero-face, .phero.frame-season-3 .phero-face { animation: none; }
 }

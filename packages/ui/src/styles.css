@@ -1509,6 +1509,7 @@ button.sitem { padding: 0; border: 0; background: none; cursor: pointer; }
 .sc-tag.sale { background: #f2a93b; color: #1a1205; }
 .sc-tag .icon { width: 12px; height: 12px; }
 .sc-sold { display: inline-flex; align-items: center; height: 20px; margin-left: var(--s2); padding: 0 var(--s2); border-radius: var(--r-pill); background: var(--surface-2); color: var(--text-3); font-size: var(--fs-xs); font-weight: 800; vertical-align: 2px; }
+.sc-sold.season { background: color-mix(in srgb, var(--rk-gi, #c28a10) 16%, transparent); color: var(--rk-gi, #c28a10); }
 .sc-body { display: grid; gap: var(--s1); padding: var(--s3) var(--s4) var(--s4); }
 .sc-nm { font-size: var(--fs-lg); font-weight: 800; letter-spacing: -.01em; }
 .sc-desc { font-size: var(--fs-sm); color: var(--text-2); min-height: 20px; }
@@ -5230,6 +5231,34 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 }
 @media (prefers-reduced-motion: reduce) { .rks *, .rks *::after { animation: none !important; } }
 .rks-ice.rks-wait { cursor: default; }
+/* ── 랭킹 입장 (v3.188): 불 꺼진 무대 → 무대가 켜지며 카드가 솟고 → 아래 목록 ── */
+/* 자리표시: 그림 없이 어두운 무대, 가운데 보석이 숨 쉬고 바닥선이 은은히, 세 자리는 얼음 윤곽만 */
+.rks-sk .rks-scene { background: radial-gradient(60% 70% at 50% 100%, rgba(80, 90, 200, .16), transparent 70%); }
+.rks-sk-floor { position: absolute; left: 6%; right: 6%; bottom: 0; height: 1px; z-index: 0; background: linear-gradient(90deg, transparent, rgba(160, 175, 255, .45), transparent); animation: rks-sk-breathe 2.4s ease-in-out infinite; }
+.rks-sk-gem { position: absolute; left: 50%; top: 9%; z-index: 6; width: 6.5%; transform: translate(-50%, -50%); }
+.rks-sk-gem img { display: block; width: 100%; filter: drop-shadow(0 0 18px rgba(140, 160, 255, .55)); animation: rks-sk-gem 2.4s ease-in-out infinite; }
+.rks-sk .rks-ice { background: linear-gradient(180deg, rgba(120, 135, 255, .1), rgba(50, 40, 140, .22)); }
+.rks-sk .rks-ice::before { background: linear-gradient(180deg, rgba(200, 215, 255, .06), transparent 40%, rgba(14, 12, 44, .6)); }
+.rks-sk .rks-edge { border-color: rgba(170, 185, 255, .22); }
+.rks-sk .rks-slot::after { opacity: .35; }
+.rks-sk-list { opacity: .55; }
+@keyframes rks-sk-breathe { 0%, 100% { opacity: .35; } 50% { opacity: 1; } }
+@keyframes rks-sk-gem { 0%, 100% { opacity: .55; transform: scale(.94); } 50% { opacity: 1; transform: scale(1); } }
+/* 실제 무대: 그림이 어둠 속에서 켜진다(살짝 당겨 있다가 제자리로) → 가운데 위에서 빛이 한 번 쏟아지고 → 카드가 솟는다 */
+.rks.play .rks-art { animation: rks-light 1.5s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes rks-light { from { opacity: 0; transform: scale(1.08); filter: brightness(.25) saturate(.5); } 55% { opacity: 1; } to { opacity: 1; transform: none; filter: none; } }
+.rks.play .rks-scene::after { content: ""; position: absolute; inset: 0; z-index: 6; pointer-events: none; background: radial-gradient(28% 60% at 50% 12%, rgba(220, 230, 255, .55), rgba(150, 140, 255, .12) 45%, transparent 75%); animation: rks-burst 1.3s ease-out .25s both; }
+@keyframes rks-burst { from { opacity: 0; } 30% { opacity: 1; } to { opacity: 0; } }
+.rks.play .rks-motes { animation: rks-fade .8s ease 1s both; }
+@keyframes rks-fade { from { opacity: 0; } }
+.rks.play .rks-ice { animation-delay: .5s; } .rks.play .p2 .rks-ice { animation-delay: .6s; } .rks.play .p3 .rks-ice { animation-delay: .75s; } .rks.play .p1 .rks-ice { animation-delay: .95s; }
+.rks.play .rks-slot::after { animation-delay: .6s; } .rks.play .p1::after { animation-delay: 1s; }
+.rks.play .rks-crest { animation-delay: 1.45s; } .rks.play .p1 .rks-crest { animation-delay: 1.75s; }
+.rks.play .p1 .rks-ice::after { animation-delay: 2.15s; }
+/* 4위부터는 무대가 다 선 뒤에: 목록 칸이 먼저 떠오르고 줄이 차례로 */
+.rank-list.lb-in { animation: lb-row .5s var(--lb-ease) 1.55s both; }
+.rank-list.lb-in .rank-row { animation-delay: calc(1.7s + var(--i, 0) * 45ms); }
+@media (prefers-reduced-motion: reduce) { .rks-sk-floor, .rks-sk-gem img, .rks.play .rks-art, .rks.play .rks-scene::after, .rks.play .rks-motes, .rank-list.lb-in { animation: none !important; } .rks.play .rks-scene::after { display: none; } }
 .rks-wait .rks-who { gap: max(4px, 2cqw); }
 
 /* ── 운영 › 상점관리 (v3.186, 관리자만) ── */
@@ -5317,3 +5346,45 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
   .ssa-tr { grid-template-columns: minmax(0, 1fr) 56px 104px; }
   .ssa-tr > :nth-child(3) { display: none; }
 }
+
+/* ── 랭킹 메뉴 (v3.188): 금빛 트로피 · 금빛 이름 · 시즌 마감 칩 (앱 사이드바 · 웹 상단 · 휴대폰 메뉴) ── */
+:root { --rk-g1: #c8900f; --rk-g2: #8a5a06; --rk-gi: #c28a10; --rk-hi: #f0bf45; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --rk-g1: #ffe39a; --rk-g2: #e9a93a; --rk-gi: #f2c45a; --rk-hi: #fff6d6; } }
+:root[data-theme="dark"] { --rk-g1: #ffe39a; --rk-g2: #e9a93a; --rk-gi: #f2c45a; --rk-hi: #fff6d6; }
+.nav-rank svg { color: var(--rk-gi) !important; filter: drop-shadow(0 0 6px color-mix(in srgb, var(--rk-gi) 45%, transparent)); }
+.nav-rank:hover svg { animation: rk-trophy .7s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes rk-trophy { 30% { transform: rotate(-10deg) scale(1.12); } 60% { transform: rotate(6deg) scale(1.06); } }
+.rk-label { font-weight: 800; background: linear-gradient(100deg, var(--rk-g2) 0%, var(--rk-g1) 40%, var(--rk-hi) 50%, var(--rk-g1) 60%, var(--rk-g2) 100%) 100% 0 / 260% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; }
+.nav-rank:hover .rk-label { animation: rk-shine 1s ease; }
+@keyframes rk-shine { from { background-position: 100% 0; } to { background-position: 0 0; } }
+.rk-dday { display: inline-flex; align-items: center; flex: none; height: 20px; margin-left: auto; padding: 0 8px; border-radius: 999px; font-size: var(--fs-xs, 12px); font-weight: 800; line-height: 1; letter-spacing: .02em; white-space: nowrap; font-variant-numeric: tabular-nums;
+  color: var(--rk-gi); background: color-mix(in srgb, var(--rk-gi) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--rk-gi) 38%, transparent); -webkit-text-fill-color: currentColor; }
+.rk-dday.soon { color: var(--lose, #e5484d); background: color-mix(in srgb, var(--lose, #e5484d) 14%, transparent); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--lose, #e5484d) 40%, transparent); }
+@media (prefers-reduced-motion: reduce) { .nav-rank:hover svg, .nav-rank:hover .rk-label { animation: none; } }
+
+/* ── 시즌 보상 한 줄 (v3.188): 무대 아래, 누르면 순위별 테두리가 펼쳐진다 ── */
+.srw { padding: 0; overflow: hidden; }
+.srw.lb-in { animation: lb-row .5s var(--lb-ease) 1.45s both; }
+.srw-head { display: flex; align-items: center; gap: var(--s3); width: 100%; min-height: 56px; padding: var(--s2) var(--s4); border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.srw-head:hover { background: var(--surface-2); }
+.srw-ic { display: grid; place-items: center; flex: none; width: 32px; height: 32px; border-radius: var(--r-m); color: var(--rk-gi); background: color-mix(in srgb, var(--rk-gi) 14%, transparent); }
+.srw-ic svg { width: 18px; height: 18px; }
+.srw-t { display: flex; align-items: baseline; gap: var(--s2); min-width: 0; flex: 1; }
+.srw-t b { flex: none; font-size: var(--fs-md, 14px); font-weight: 800; }
+.srw-t .muted { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-sm, 13px); }
+.srw-head .rk-dday { margin-left: 0; }
+.srw-chev { width: 18px; height: 18px; flex: none; color: var(--text-3); transition: transform .3s cubic-bezier(.16, 1, .3, 1); }
+.srw.open .srw-chev { transform: rotate(180deg); }
+.srw-body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .36s cubic-bezier(.16, 1, .3, 1); }
+.srw.open .srw-body { grid-template-rows: 1fr; }
+.srw-body > div { min-height: 0; overflow: hidden; }
+.srw-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s3); padding: var(--s2) var(--s4) 0; }
+.srw-item { display: flex; align-items: center; gap: var(--s3); min-width: 0; padding: var(--s3); border-radius: var(--r-m); background: var(--surface-2); }
+.srw-item .phero.face-ring { flex: none; }
+.srw-it { display: grid; gap: 2px; min-width: 0; }
+.srw-it b { font-size: var(--fs-sm, 13px); font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srw-it .muted { font-size: var(--fs-xs, 12px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.srw-note { padding: var(--s3) var(--s4) var(--s4); }
+@container (max-width: 640px) { .srw-list { grid-template-columns: 1fr; } }
+@media (max-width: 720px) { .srw-list { grid-template-columns: 1fr; } .srw-t { flex-direction: column; align-items: flex-start; gap: 4px; } .srw-t .muted { max-width: 100%; } }
+@media (prefers-reduced-motion: reduce) { .srw.lb-in { animation: none; } .srw-body, .srw-chev { transition: none; } }

@@ -429,3 +429,5 @@ button.me-btn:hover, button.me-btn.on { background: var(--surface-3, var(--line)
 .ths.on .ths-knob .icon:first-child { opacity: 0; transform: rotate(90deg) scale(.6); }
 .ths.on .ths-knob .icon:last-child { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) { .ths, .ths *, .ths-knob { transition: none !important; } }
+/* 랭킹 메뉴 시즌 칩 (v3.188): 상단은 이름 바로 옆 */
+.tabs a .rk-dday { margin-left: 6px; height: 18px; padding: 0 6px; }

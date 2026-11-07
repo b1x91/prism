@@ -90,7 +90,8 @@ export const RARITY_LADDER: ShopRarity[] = ['common', 'rare', 'epic', 'legendary
  */
 export type ShopLook = { img?: string; pos?: string; row?: string; mote?: string; glow?: string };
 /** retired: 판매 종료 (v3.127) — 이미 산 회원만 그대로 쓰고, 상점·랜덤박스·선물에서는 나오지 않는다 */
-export type ShopItem = { id: string; slot: ShopSlot; name: string; price: number; desc: string; rarity: ShopRarity; look?: ShopLook; retired?: boolean };
+/** reward: 'season' = 시즌 랭킹 보상 (v3.188) — 팔지 않고, 받은 사람만 다음 시즌 마감까지 쓴다. 예전 앱이 상품으로 보이지 않게 retired 도 늘 켠다 */
+export type ShopItem = { id: string; slot: ShopSlot; name: string; price: number; desc: string; rarity: ShopRarity; look?: ShopLook; retired?: boolean; reward?: 'season' };
 
 const it = (id: string, slot: ShopSlot, rarity: ShopRarity, price: number, name: string, desc: string, look?: ShopLook): ShopItem => ({ id, slot, rarity, price, name, desc, ...(look ? { look } : {}) });
 export const SHOP: ShopItem[] = [
@@ -121,6 +122,10 @@ export const SHOP: ShopItem[] = [
   // 신화 테두리 (v3.128): 모양은 shop/looks.css — 앱을 다시 내지 않고 웹에서 받는다
   it('frame-crimson', 'frame', 'mythic', 5000, '진홍 성광', '진홍빛 고리가 돌고 상아빛 별이 반짝인다'),
   it('frame-sovereign', 'frame', 'mythic', 5000, '상아 왕관', '상아빛 고리 위에 진홍 보석이 박혀 빛난다'),
+  // 시즌 랭킹 보상 (v3.188): 시즌 1~3위에게만, 다음 시즌 마감까지. 모양은 shop/looks.css
+  { ...it('frame-season-1', 'frame', 'legendary', 0, '시즌 1위 테두리', '시즌 1위에게만 주는 금빛 결정 테두리'), retired: true, reward: 'season' },
+  { ...it('frame-season-2', 'frame', 'legendary', 0, '시즌 2위 테두리', '시즌 2위에게만 주는 은빛 결정 테두리'), retired: true, reward: 'season' },
+  { ...it('frame-season-3', 'frame', 'legendary', 0, '시즌 3위 테두리', '시즌 3위에게만 주는 동빛 결정 테두리'), retired: true, reward: 'season' },
   // 프로필 효과: 프로필 전체에 흐르는 움직임
   it('fx-sparkle', 'fx', 'common', 300, '반짝임', '프로필 곳곳에 작은 빛이 반짝인다'),
   it('fx-snow', 'fx', 'rare', 450, '눈송이', '하얀 눈이 조용히 내린다'),
@@ -153,7 +158,7 @@ export const SHOP: ShopItem[] = [
   it('title-prism', 'title', 'legendary', 1000, '프리즘 수집가', '빛을 모으는 사람'),
 ];
 /** 상점에서 파는 것 (칭호는 얻는 것, v3.99) */
-export const forSale = (x: ShopItem) => x.slot !== 'title' && !x.retired;
+export const forSale = (x: ShopItem) => x.slot !== 'title' && !x.retired && !x.reward;
 /** 상점·꾸미기 목록에 보일 상품: 판매 종료 상품은 가진 사람에게만 */
 export const listedFor = (x: ShopItem, owned: readonly string[]) => !x.retired || owned.includes(x.id);
 export const SHOP_ITEM: Record<string, ShopItem> = Object.fromEntries(SHOP.map((x) => [x.id, x]));
@@ -173,9 +178,9 @@ export const SHOP_ITEM: Record<string, ShopItem> = Object.fromEntries(SHOP.map((
 const BASE_RETIRED = new Set(SHOP.filter((x) => x.retired).map((x) => x.id));
 export const baseRetired = (id: string) => BASE_RETIRED.has(id);
 export function applyRetire(over: Record<string, boolean>) {
-  for (const x of SHOP) { const v = over[x.id]; x.retired = typeof v === 'boolean' ? v : BASE_RETIRED.has(x.id); if (!x.retired) delete x.retired; }
+  for (const x of SHOP) { const v = over[x.id]; x.retired = x.reward ? true : typeof v === 'boolean' ? v : BASE_RETIRED.has(x.id); if (!x.retired) delete x.retired; }
 }
-export const SHOP_REV = 3;
+export const SHOP_REV = 4;
 export type ShopCatalog = { rev: number; items: ShopItem[]; launch: typeof LAUNCH };
 /** 이 빌드에 들어 있던 상품 (그림이 앱 안에 있는 것) */
 const BUNDLED = new Set(SHOP.map((x) => x.id));
@@ -290,3 +295,9 @@ export type PublicProfile = {
 export const SITE_URL = 'https://przm.web.app';
 /** 공유 링크: 짧은 번호 (`/p/123`, v3.34) */
 export const shareUrl = (code: string | number) => `${SITE_URL}/p/${encodeURIComponent(String(code))}`;
+
+/**
+ * 시즌 랭킹 보상 (v3.188, 사용자 결정): 시즌(분기)이 끝나면 그 시즌 레이팅 1~3위(그 시즌 minGames 판 이상, 한 회원은 가장 높은 계정 하나)에게
+ * 순위별 프로필 테두리. 받은 테두리는 다음 시즌이 끝날 때까지 쓴다. 서버가 매일 03:17 KST 에 지난 시즌을 확정한다 (server/src/seasonreward.ts).
+ */
+export const SEASON_REWARD = { minGames: 30, items: ['frame-season-1', 'frame-season-2', 'frame-season-3'] as const };

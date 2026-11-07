@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { HashRouter, NavLink, Route, Routes, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import '@prism/ui/styles.css';
 import './app.css';
-import { FramedFace, faceSrc, LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, SplashSwap, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
+import { FramedFace, RankNavLabel, faceSrc, LiveDot, AttendBurst, OfflineScreen, startShopCatalog, type Attend, AugmentOpen, Icon, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, SplashSwap, WelcomeFlow, MatchNote, MatchSource, MemberFace, NickName, PieceIcon, connectFavs, useLoad, usePieces, useSkins, type IconName } from '@prism/ui';
 import { PIECE, SITE_URL, emitPullRefresh, matchFromLcu, mergeMatch, withDefaults, type Links, type MatchDetail } from '@prism/core';
 import { pollWhileShown } from './poll';
 import { checkNow, clearAttend, getState, refreshSession, start, subscribe, type State } from './controller';
@@ -244,7 +244,7 @@ function App() {
             {g.items.map(([to, l, i]) => {
               const hub = hubAt(to);
               const badge = <>{to === '/play' && playing && <i className="live-dot" aria-hidden="true" />}{to === '/crew' && (s.me?.nowLive ?? 0) > 0 && <LiveDot n={s.me!.nowLive!} />}{to === '/crew' && !(s.me?.nowLive) && (s.me?.newsUnread ?? 0) > 0 && <i className="news-dot" aria-label="새 소식" />}{to === '/staff' && (s.me?.staffUnread ?? 0) > 0 && <i className="news-dot" aria-label="승인할 멤버" />}</>;
-              if (!hub) return <NavLink key={to} to={to} end={to === '/'} onClick={onNav(to)} className={() => [isAt(to, to === '/') ? 'active' : '', to === '/play' && playing ? 'live' : ''].filter(Boolean).join(' ')} title={to === '/play' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{l}{badge}</NavLink>;
+              if (!hub) return <NavLink key={to} to={to} end={to === '/'} onClick={onNav(to)} className={() => [isAt(to, to === '/') ? 'active' : '', to === '/play' && playing ? 'live' : '', to === '/ranking' ? 'nav-rank' : ''].filter(Boolean).join(' ')} title={to === '/play' && playing ? (s.status === 'in-game' ? '게임 중 · 증강 가이드' : '챔프 선택 중') : undefined}><Icon name={i} />{to === '/ranking' ? <RankNavLabel label={l} /> : l}{badge}</NavLink>;
               // 허브: 누르면 늘 첫 탭으로 (v3.147), 펼친 줄에서 탭으로 바로 (도감 · 미션 · 랭킹)
               const on = hubOf(path) === hub;
               const tabs = hub.tabs.filter((t) => hubAllow(t.to));

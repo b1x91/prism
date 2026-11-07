@@ -9,7 +9,7 @@ import { useKept } from './kept';
 import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, aboutWhen, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
   type Api, type Game, type InsightKind, type MemberPage, type Ranking, type Shop, type RankingRow, type Skin,
-  scoreOf, ratingExample, shortNick, byScore, seasonOf, improveOf, type WinTip, SHOP_ITEM,
+  scoreOf, seasonDaysLeft, SEASON_REWARD, ratingExample, shortNick, byScore, seasonOf, improveOf, type WinTip, SHOP_ITEM,
 } from '@prism/core';
 import { AugImg, ChampImg, Empty, FramedFace, Gem, LockedMore, MemberFace, PendingChip, PresenceTag, faceSrc, RoleBadge, Seg, useSkins } from './basics';
 import { AugmentLink } from './augment';
@@ -34,8 +34,8 @@ const scoreTab = (by: RankBy) => by !== 'games';
 /** '2026 시즌 4 · 12월 31일까지 (D-76)' */
 function seasonMeta(sz: { label: string; end: number }) {
   const last = new Date(sz.end - 1 + 9 * 3_600_000);
-  const left = Math.max(0, Math.ceil((sz.end - Date.now()) / 86_400_000));
-  return `${sz.label} · ${last.getUTCMonth() + 1}월 ${last.getUTCDate()}일까지 (D-${left})`;
+  const left = seasonDaysLeft();
+  return `${sz.label} · ${last.getUTCMonth() + 1}월 ${last.getUTCDate()}일까지 (${left ? `D-${left}` : 'D-DAY'})`;
 }
 
 /** 랭킹. 회원이 충분히 모이기 전(open=false)에는 '준비 중' 화면 (운영진은 미리 본다) */
@@ -106,10 +106,11 @@ export function RankingTeaser({ onLogin }: { onLogin: () => void }) {
           <button type="button" className="btn primary" onClick={onLogin}><Icon name="discord" />디스코드로 로그인</button>
         </div>
       </section>
+      <SeasonRewardLine />
       <div className="grid2 rk-tz-info">
         <section className="card pad stack" style={{ gap: 12 }}>
           <h3>레이팅은 이렇게 매겨요</h3>
-          <p className="muted">팀원과 상대의 실력을 함께 봐요. 강한 팀을 이기면 많이 오르고, 그 판에서 잘한 만큼 조금 더 오릅니다. 판이 적으면 아직 확실하지 않아 낮게 잡혀서, 꾸준히 이긴 사람이 위로 갑니다.</p>
+          <p className="muted">팀원과 상대의 실력을 함께 봐요. 강한 팀을 이기면 많이 오르고, 그 판의 PRISM SCORE(MVP·ACE 를 정하는 활약 점수)만큼 더 오르거나 덜 내려가요. 판이 적으면 아직 확실하지 않아 낮게 잡혀서, 꾸준히 잘한 사람이 위로 갑니다.</p>
           <div className="rk-tz-ex">{ex.map((e) => (
             <div key={e.n} className={`rk-tz-exr ${e.score === best ? 'top' : ''}`}>
               <span>{e.n}판 {e.w}승</span><span className="muted">승률 {pct(e.w, e.n)}</span><b>{e.score}</b>
@@ -122,6 +123,40 @@ export function RankingTeaser({ onLogin }: { onLogin: () => void }) {
         </section>
       </div>
     </div>
+  );
+}
+
+/**
+ * 시즌 보상 한 줄 (v3.188): 무대 아래 '시즌 4 보상 · 1~3위 시즌 한정 프로필 테두리 · D-54'. 누르면 순위별 테두리가 펼쳐진다.
+ * 회원 화면은 지금 그 순위인 사람의 얼굴에 테두리를 둘러 보이고(시즌 판수가 모자라면 그렇게 적는다), 비회원 미리 보기는 게임 데이터 얼굴로.
+ */
+export function SeasonRewardLine({ rows, skins, className = '' }: { rows?: RankingRow[]; skins?: Record<number, Skin> | null; className?: string }) {
+  const [open, setOpen] = useState(false);
+  const sz = seasonOf(), left = seasonDaysLeft();
+  const MEDAL = ['금빛', '은빛', '동빛'];
+  return (
+    <section className={`card srw ${open ? 'open' : ''} ${className}`}>
+      <button type="button" className="srw-head" aria-expanded={open} onClick={() => setOpen((v) => !v)}>
+        <span className="srw-ic"><Icon name="trophy" /></span>
+        <span className="srw-t"><b>{sz.label.replace(/^\d+ /, '')} 보상</b><span className="muted">1~3위에게 시즌 한정 프로필 테두리 · 이번 시즌 {SEASON_REWARD.minGames}판 이상</span></span>
+        <span className={`rk-dday ${left <= 7 ? 'soon' : ''}`}>{left ? `D-${left}` : 'D-DAY'}</span>
+        <Icon name="chevD" className="srw-chev" />
+      </button>
+      <div className="srw-body" aria-hidden={!open}><div>
+        <div className="srw-list">{SEASON_REWARD.items.map((id, i) => {
+          const r = rows?.[i];
+          const short = r && r.n < SEASON_REWARD.minGames ? SEASON_REWARD.minGames - r.n : 0;
+          return (
+            <div key={id} className={`srw-item p${i + 1}`}>
+              <FramedFace frame={id} nick={r?.nick ?? '?'} skin={r?.skin ?? null} champion={r ? r.mainChampion : TEASE_FACES[[1, 0, 2][i]]} skins={skins} size={56} />
+              <span className="srw-it"><b>{i + 1}위 · {MEDAL[i]} 결정 테두리</b>
+                <span className="muted">{r ? (short ? `지금 ${shortNick(r.nick)} · ${short}판 더 하면 받을 수 있어요` : `지금 ${shortNick(r.nick)}`) : '시즌 한정 · 다음 시즌 마감까지'}</span></span>
+            </div>
+          );
+        })}</div>
+        <p className="meta srw-note">시즌 마지막 날이 지나면 그 순간의 레이팅으로 정해져요. 받은 테두리는 다음 시즌이 끝날 때까지 프로필 꾸미기에서 쓸 수 있어요. 한 사람이 계정 여럿으로 3위 안이면 가장 높은 계정 하나만 세요.</p>
+      </div></div>
+    </section>
   );
 }
 
@@ -139,7 +174,9 @@ function stageDue(): boolean {
 function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (id: string) => void }) {
   const [by, setByRaw] = useKept<RankBy | 'champ-art' | 'aug-art' | 'item-art'>('rank.by', 'season');
   const [play, setPlay] = useState(stageDue);
-  const setBy = (v: RankBy | 'champ-art' | 'aug-art' | 'item-art') => { setPlay(false); setByRaw(v); };
+  // 자리표시에서 넘어올 때는 늘 무대가 켜지는 연출 (v3.188) — rv 는 0.42초 뒤 꺼지므로 붙잡아 둔다
+  const [entered, setEntered] = useState(false);
+  const setBy = (v: RankBy | 'champ-art' | 'aug-art' | 'item-art') => { setPlay(false); setEntered(false); setByRaw(v); };
   const art = by === 'champ-art' || by === 'aug-art' || by === 'item-art';
   const { data, error } = useLoad<Ranking>(api, art ? null : by === 'season' ? '/api/ranking?period=season&by=score' : by === 'score' ? '/api/ranking?by=score' : '/api/ranking');
   const skins = useSkins();
@@ -158,6 +195,8 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
   }, [data, skins, rows]);
   const shown = !art && Boolean(data) && readyFor === data;
   const rv = useReveal(shown);
+  if (rv && !entered) setEntered(true);
+  const show = play || entered;
   return (
     <div className="stack" style={{ gap: 16 }}>
       <div className="row wrapr"><Seg value={by} options={[['season', '시즌'], ['score', '전체'], ['games', '판수'], ['champ-art', '챔프 장인'], ['aug-art', '증강 장인'], ['item-art', '아이템 장인']]} onChange={setBy} />
@@ -167,8 +206,9 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
       {!art && !shown && !error && <RankingSkeleton />}
       {shown && data && <Swap on={rv} skeleton={<RankingSkeleton />}><div className={`stack ${fadeCls(rv)}`} style={{ gap: 16 }}>
       {!rows.length && <Empty>{by === 'season' ? '이번 시즌에 기록된 판이 아직 없습니다.' : '아직 기록된 판이 없습니다.'}</Empty>}
-      {rows.length > 0 && <Leaderboard key={`lb-${by}`} play={play} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
-      {rows.length > 3 && <div key={`rl-${by}`} className={`card rank-list ${play ? 'lb-in' : ''}`}>
+      {rows.length > 0 && <Leaderboard key={`lb-${by}`} play={show} rows={rows.slice(0, 3)} by={by as RankBy} meId={meId} skins={skins} onOpen={onOpen} />}
+      {by === 'season' && <SeasonRewardLine key="srw" rows={rows} skins={skins} className={show ? 'lb-in' : ''} />}
+      {rows.length > 3 && <div key={`rl-${by}`} className={`card rank-list ${show ? 'lb-in' : ''}`}>
         {rows.slice(3).map((r, i) => <RankRow key={r.key ?? r.id} r={r} rank={i + 4} i={i} by={by as RankBy} me={r.id === meId} skins={skins} onOpen={onOpen} />)}
       </div>}
       {data?.limited && <LockedMore more={data.limited.total - rows.length}>

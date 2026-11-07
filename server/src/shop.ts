@@ -3,6 +3,7 @@
  *  - 번 피스는 기록(판·도감·함께 해요)에서 늘 다시 계산한다. 따로 남기는 것은 매일 첫 접속과 산 꾸밈뿐.
  *  - 공개 링크(/api/public/:id)는 본인이 켰을 때만, 모임 정보 없이 그 사람의 강점만.
  */
+import { activeSeasonItems } from './seasonreward.js';
 import { augMastery, champMastery, itemMastery, dexLevel, type DexLevel } from '../../packages/core/src/mastery.js';
 import { ITEM_DEX } from '../../packages/core/src/data.js';
 import { dexFromRows } from '../../packages/core/src/history.js';
@@ -122,12 +123,13 @@ export const priceFor = (price: number, discount: number) => Math.round(price * 
 /** 잔액·가진 것·꾸밈 밖 상품 (v3.99). 잔액 = 번 피스 × 배율 − 산 꾸밈 − 이용권·선물·랜덤박스에 쓴 피스 */
 export async function state(env: Env, id: string, m: Pick<Member, 'tier' | 'discord_roles'>) {
   const lv = await levelsOf(env, id);
-  const [e, own, row, spend, uses] = await Promise.all([
+  const [e, own, row, spend, uses, season] = await Promise.all([
     earned(env, id, lv),
     env.DB.prepare('SELECT item_id AS id, price FROM shop_owned WHERE member_id = ?').bind(id).all<{ id: string; price: number }>(),
     env.DB.prepare('SELECT deco, share_on FROM members WHERE id = ?').bind(id).first<{ deco: string | null; share_on: number }>(),
     env.DB.prepare('SELECT COALESCE(SUM(price), 0) AS s FROM piece_spend WHERE member_id = ?').bind(id).first<{ s: number }>().catch(() => ({ s: 0 })),
     usesOf(env, id, lv),
+    activeSeasonItems(env, id).catch(() => [] as string[]),
   ]);
   const spent = own.results.reduce((s, x) => s + x.price, 0) + (spend?.s ?? 0);
   const rates = ratesOf(m);
@@ -139,7 +141,7 @@ export async function state(env: Env, id: string, m: Pick<Member, 'tier' | 'disc
     snap = (await env.DB.prepare('SELECT legacy, fresh FROM piece_snapshot WHERE member_id = ?').bind(id).first<Snap>()) ?? { legacy: t.legacy, fresh: t.fresh };
   }
   const total = snap.legacy + (t.fresh - snap.fresh);
-  return { balance: total - spent, earned: e, spent, owned: own.results.map((x) => x.id), deco: parseDeco(row?.deco), shared: Boolean(row?.share_on), rates, uses };
+  return { balance: total - spent, earned: e, spent, owned: [...own.results.map((x) => x.id), ...season], deco: parseDeco(row?.deco), shared: Boolean(row?.share_on), rates, uses };
 }
 
 export async function getShop(env: Env, me: Member) {

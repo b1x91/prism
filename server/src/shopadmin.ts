@@ -54,7 +54,7 @@ export async function shopAdmin(env: Env, me: Member) {
   const v = new Map(views.results.map((x) => [x.id, x]));
   const items = SHOP.filter((x) => x.slot !== 'title' || o.has(x.id)).map((x) => {
     const a = o.get(x.id), b = v.get(x.id);
-    return { id: x.id, name: x.name, slot: x.slot, rarity: x.rarity, price: x.price, retired: Boolean(x.retired), baseRetired: baseRetired(x.id), sellable: x.slot !== 'title',
+    return { id: x.id, name: x.name, slot: x.slot, rarity: x.rarity, price: x.price, retired: Boolean(x.retired), baseRetired: baseRetired(x.id), sellable: x.slot !== 'title' && !x.reward,
       owners: a?.n ?? 0, bought30: a?.n30 ?? 0, paid: a?.paid ?? 0, revenue: a?.revenue ?? 0, last: a?.last ?? null, views: b?.n ?? 0, views30: b?.n30 ?? 0 };
   });
   const recent = [

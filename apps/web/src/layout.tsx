@@ -1,7 +1,7 @@
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { LiveDot, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, FramedFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
+import { LiveDot, RankNavLabel, AttendBurst, OfflineScreen, startShopCatalog, AugmentOpen, Bone, groupNav, hubAt, hubHref, hubOf, HubTabs, useScrollKeeper, PullRefresh, WelcomeFlow, FacePresence, MatchSource, Gem, Icon, MemberFace, FramedFace, NickName, PieceIcon, Seg, usePieces, getThemeMode, setThemeMode, toggleTheme, type IconName, type ThemeMode } from '@prism/ui';
 import { emitPullRefresh, type MatchDetail } from '@prism/core';
 import { useSession } from './session';
 
@@ -21,7 +21,7 @@ function TopItem({ to, label }: { to: string; label: string }) {
   const hub = hubAt(to);
   const nl = to === '/crew' ? me?.nowLive ?? 0 : 0;
   const live = nl > 0 ? <LiveDot n={nl} /> : null;
-  if (!hub) return <NavLink to={to} className={dotOf(me, to)}>{label}{live}</NavLink>;
+  if (!hub) return <NavLink to={to} className={() => [dotOf(me, to) ?? '', to === '/ranking' ? 'nav-rank' : ''].join(' ').trim()}>{to === '/ranking' ? <RankNavLabel label={label} /> : label}{live}</NavLink>;
   const allow = allowOf(me);
   const on = hubOf(pathname) === hub;
   return (
@@ -200,7 +200,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
         <nav className="mmenu-nav">{groupNav(navOf(me)).map((g) => <div key={g.key} className="mmenu-group" role="group" aria-label={g.label}><span className="mmenu-glabel">{g.label}</span>{g.items.map(([to, label, icon]) => {
           const hub = hubAt(to);
           const badge = <>{to === '/crew' && (me?.nowLive ?? 0) > 0 && <LiveDot n={me!.nowLive!} />}{dotOf(me, to) && !(to === '/crew' && (me?.nowLive ?? 0) > 0) && <i className="news-dot" aria-label={to === "/staff" ? "승인할 멤버" : "새 소식"} />}</>;
-          if (!hub) return <NavLink key={to} to={to} tabIndex={open ? 0 : -1}><Icon name={icon} />{label}{badge}</NavLink>;
+          if (!hub) return <NavLink key={to} to={to} tabIndex={open ? 0 : -1} className={to === '/ranking' ? 'nav-rank' : undefined}><Icon name={icon} />{to === '/ranking' ? <RankNavLabel label={label} /> : label}{badge}</NavLink>;
           const allow = allowOf(me);
           const on = hubOf(pathname) === hub;
           return <div key={to} className={`mmenu-hub ${on ? 'on' : ''}`}>

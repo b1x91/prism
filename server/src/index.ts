@@ -14,6 +14,7 @@ import { confirmDraw, getDraw, startDraw } from './draw.js';
 import { appMembers } from './appmembers.js';
 import { itemOfDay } from './itemday.js';
 import { promoteSweep } from './promote.js';
+import { expireSeasonFrames, finalizeSeason, seasonRewardsAdmin } from './seasonreward.js';
 import { download, latest } from './release.js';
 import { authenticate, devLogin, discordCallback, exchangeCode, logout, startDiscord } from './auth.js';
 import { artisanRanking, augmentArtisans, championArtisans, itemArtisans } from './artisans.js';
@@ -116,6 +117,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (m === 'GET' && pathname === '/api/admin/diag') return listDiag(env, me);
   // 운영 › 상점관리 (v3.186, 관리자만)
   if (m === 'GET' && pathname === '/api/admin/shop') return shopAdmin(env, me);
+  if (m === 'GET' && pathname === '/api/admin/season-rewards') { if (me.tier !== 'admin') throw new HttpError(403, '관리자만 볼 수 있어요.'); return seasonRewardsAdmin(env); }
   if (m === 'POST' && pathname === '/api/admin/shop/retire') return setRetire(req, env, me);
   if (m === 'POST' && pathname === '/api/me/shopview') return shopView(req, env, me);
   { const d = /^\/api\/admin\/diag\/(\d+)\/shots$/.exec(pathname); if (m === 'GET' && d) return diagShots(env, me, Number(d[1])); }
@@ -249,6 +251,8 @@ export default {
       return dailyPost(env).catch((e) => console.error('매일 공지 실패', e));
     }
     await promoteSweep(env).catch((e) => console.error('역할 자동 승급 실패', e));
+    await finalizeSeason(env).catch((e) => console.error('시즌 보상 확정 실패', e));
+    await expireSeasonFrames(env).catch((e) => console.error('시즌 테두리 정리 실패', e));
     await joinSweep(env).catch((e) => console.error('가입 신청 정리 실패', e));
     await nickSweep(env).catch((e) => console.error('디스코드 별명 맞추기 실패', e));
     const now = Date.now();

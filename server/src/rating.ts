@@ -15,10 +15,11 @@ let memo: { stamp: string; book: Map<string, Skill> } | null = null;
 export const ratingKey = (puuid: string | null | undefined, mainPuuid: string | null | undefined, memberId: string) => puuid || mainPuuid || `m:${memberId}`;
 // 메인 계정이 member_accounts 에 없으면 accountRows 는 'm' 줄로 세지만 열쇠는 메인 puuid 로 같다 (두 곳 모두 ratingKey)
 
-export async function ratingBook(env: Env): Promise<Map<string, Skill>> {
-  const head = await env.DB.prepare('SELECT COUNT(*) AS n, MAX(created_at) AS t FROM matches').first<{ n: number; t: number | null }>();
+/** until 을 주면 그 시각 전에 한 판만으로 (시즌 마감 순간의 실력, 시즌 보상 확정용 — 담아 두지 않는다) */
+export async function ratingBook(env: Env, until?: number): Promise<Map<string, Skill>> {
+  const head = until ? null : await env.DB.prepare('SELECT COUNT(*) AS n, MAX(created_at) AS t FROM matches').first<{ n: number; t: number | null }>();
   const stamp = `${head?.n ?? 0}:${head?.t ?? 0}`;
-  if (memo?.stamp === stamp) return memo.book;
+  if (!until && memo?.stamp === stamp) return memo.book;
   const [ms, ps, us, as] = await env.DB.batch([
     env.DB.prepare('SELECT game_id, played_at, players FROM matches'),
     env.DB.prepare('SELECT game_id, member_id, puuid, champion_id, team_id, win, played_at FROM participants'),
@@ -55,9 +56,9 @@ export async function ratingBook(env: Env): Promise<Map<string, Skill>> {
       games.push({ playedAt: m.played_at, players });
     }
   }
-  const all = rateAll(games);
+  const all = rateAll(until ? games.filter((g) => g.playedAt < until) : games);
   const book = new Map<string, Skill>();
   for (const [k, v] of all) if (!k.startsWith('n:')) book.set(k, v);
-  memo = { stamp, book };
+  if (!until) memo = { stamp, book };
   return book;
 }

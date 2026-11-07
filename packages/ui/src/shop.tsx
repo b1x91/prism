@@ -246,7 +246,7 @@ function ShopCard({ x, me, data, busy, onBuy, onEquip, onGift }: { x: ShopItem; 
           : fresh ? <span className="sc-tag new">NEW</span> : sale > 0 && disc === sale ? <span className="sc-tag sale">{Math.round(sale * 100)}% 할인</span> : null}
       </div>
       <div className="sc-body">
-        <b className="sc-nm">{x.name}{x.retired && <span className="sc-sold">품절</span>}</b>
+        <b className="sc-nm">{x.name}{x.reward ? <span className="sc-sold season">시즌 보상</span> : x.retired && <span className="sc-sold">품절</span>}</b>
         <span className="sc-desc">{x.desc}</span>
         <div className="sc-act">
           {onGift && <button type="button" className="sc-gift" title="앱을 쓰는 멤버에게 선물하기" aria-label={`${x.name} 선물하기`} onClick={onGift}><Icon name="gift" /></button>}
