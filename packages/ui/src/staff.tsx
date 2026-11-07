@@ -8,7 +8,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { JOIN_TIMES, ago, matchName, pct, shortNick, type Api, type StaffApplication, type StaffApplications, type StaffMember, type StaffMembers } from '@prism/core';
-import { Empty, GuestFace, MemberFace, Select, Seg, Toggle, useSkins } from './basics';
+import { Empty, GuestFace, MemberFace, PendingChip, Select, Seg, Toggle, useSkins } from './basics';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { useKept } from './kept';
@@ -383,7 +383,7 @@ function JoinBoard({ api, apps, reload }: { api: Api; data: StaffApplications; a
           <dl className="jc-facts">
             {a.times.length > 0 && <div><dt>시간</dt><dd>{a.times.map((t) => JOIN_TIMES.find((x) => x.key === t)?.label ?? t).join(' · ')}</dd></div>}
             <div><dt>카톡</dt><dd>{a.kakao}</dd></div>
-            <div><dt>초대</dt><dd>{a.inviter ? <><MemberFace nick={a.inviter.nick} skin={a.inviter.skin} champion={a.inviter.main} size={18} skins={skins} />{shortNick(a.inviter.nick)}</> : <span className="no">추천인 없음</span>}</dd></div>
+            <div><dt>초대</dt><dd>{a.inviter ? <><MemberFace nick={a.inviter.nick} skin={a.inviter.skin} champion={a.inviter.main} size={18} skins={skins} />{shortNick(a.inviter.nick)}{a.inviter.pending && <PendingChip />}</> : <span className="no">추천인 없음</span>}</dd></div>
           </dl>
           <label className="jc-memo"><span className="sr-only">코멘트</span>
             <textarea rows={2} maxLength={300} placeholder="코멘트 (운영진끼리 보여요)" value={memo[a.id] ?? a.memo ?? ''} onChange={(e) => setMemo((m) => ({ ...m, [a.id]: e.target.value }))} onBlur={() => saveMemo(a)} />

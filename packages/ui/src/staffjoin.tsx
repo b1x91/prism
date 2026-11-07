@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { JOIN, JOIN_STATUS_KO, JOIN_TIMES, ago, shortNick, type Api, type StaffApplication, type StaffApplications } from '@prism/core';
-import { Empty, GuestFace, MemberFace, Select } from './basics';
+import { Empty, GuestFace, MemberFace, PendingChip, Select } from './basics';
 import { Icon } from './icons';
 import { useLoad } from './crew';
 import { ActBtn, actCls, useResolve } from './motion';
@@ -85,7 +85,7 @@ function Card({ a, data, act, st, gone, onOpen }: { a: StaffApplication; data: S
       {a.note && <p className="sj-msg">{a.note}</p>}
       <dl className="sj-dl">
         <dt>카톡</dt><dd>{a.kakao}</dd>
-        <dt>초대</dt><dd>{a.inviter ? <button type="button" className="sj-link" onClick={() => onOpen?.(a.inviter!.id)}>{shortNick(a.inviter.nick)}</button> : '추천인 없음'}{a.inviter && a.codeToday > 1 && <em> · 이 링크 오늘 {a.codeToday}건</em>}</dd>
+        <dt>초대</dt><dd>{a.inviter ? <button type="button" className="sj-link" onClick={() => onOpen?.(a.inviter!.id)}>{shortNick(a.inviter.nick)}</button> : '추천인 없음'}{a.inviter?.pending && <PendingChip />}{a.inviter && a.codeToday > 1 && <em> · 이 링크 오늘 {a.codeToday}건</em>}</dd>
         {a.times.length > 0 && <><dt>시간</dt><dd>{a.times.map((t) => TIME_KO[t]).filter(Boolean).join(' · ')}</dd></>}
       </dl>
       {quiet && <span className="sj-warn">연락 없음 {Math.floor((Date.now() - a.updatedAt) / DAY)}일 · {dropIn}일 뒤 정리</span>}

@@ -71,8 +71,9 @@ async function stats(env: Env, now = Date.now()): Promise<JoinStats> {
 async function inviterOf(env: Env, code: string | null) {
   if (!code || !/^[a-z0-9]{4,12}$/.test(code)) return null;
   const m = await env.DB.prepare(`SELECT m.id, m.nick, m.intro, m.tier, m.discord_roles, ${FACE('m')} FROM members m WHERE m.invite_code = ?`).bind(code).first<Record<string, any>>();
-  if (!m || !approvedMember({ tier: m.tier, discord_roles: m.discord_roles })) return null;
-  return { id: m.id as string, nick: m.nick as string, intro: (m.intro as string) || null, skin: m.skin as number | null, main: m.main as number | null };
+  // 초대한 사람이 아직 승인 대기여도 누가 초대했는지는 남긴다 (v3.187) — 초대 보너스는 초대한 사람이 승인된 뒤에만 (staff.ts applyLevel)
+  if (!m) return null;
+  return { id: m.id as string, nick: m.nick as string, intro: (m.intro as string) || null, skin: m.skin as number | null, main: m.main as number | null, approved: approvedMember({ tier: m.tier, discord_roles: m.discord_roles }) };
 }
 
 /** GET /public/join?code= — 초대한 멤버(승인된 회원일 때만) + 모임 숫자. 1분 담아 둔다 */
@@ -202,10 +203,10 @@ export async function staffApplications(env: Env, me: Member) {
   const { results } = await env.DB.prepare(`SELECT * FROM applications WHERE status != 'joined' OR updated_at > ? ORDER BY created_at DESC LIMIT 200`).bind(now - 7 * DAY).all<Row>();
   const ids = new Set<string>();
   for (const r of results) { if (r.inviter) ids.add(r.inviter); if (r.member_id) ids.add(r.member_id); for (const s of arr<string>(r.signs)) ids.add(s); }
-  const people = new Map<string, { id: string; nick: string; skin: number | null; main: number | null }>();
+  const people = new Map<string, { id: string; nick: string; skin: number | null; main: number | null; pending?: boolean }>();
   if (ids.size) {
-    const { results: ms } = await env.DB.prepare(`SELECT m.id, m.nick, ${FACE('m')} FROM members m WHERE m.id IN (SELECT value FROM json_each(?))`).bind(JSON.stringify([...ids])).all<{ id: string; nick: string; skin: number | null; main: number | null }>();
-    for (const m of ms) people.set(m.id, m);
+    const { results: ms } = await env.DB.prepare(`SELECT m.id, m.nick, m.tier, m.discord_roles, ${FACE('m')} FROM members m WHERE m.id IN (SELECT value FROM json_each(?))`).bind(JSON.stringify([...ids])).all<{ id: string; nick: string; tier: Member['tier']; discord_roles: string | null; skin: number | null; main: number | null }>();
+    for (const m of ms) people.set(m.id, { id: m.id, nick: m.nick, skin: m.skin, main: m.main, ...(approvedMember(m) ? {} : { pending: true }) });
   }
   const dayStart = kstDay(now) * DAY - 9 * HOUR;
   const codeToday = new Map<string, number>();
