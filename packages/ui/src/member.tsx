@@ -5,6 +5,7 @@
 import { nextFrame, cancelFrame } from './frame';
 import { LiveNow, useMemberLive } from './livenow';
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useKept } from './kept';
 import {
   AUGMENT, CHAMPIONS, CHAMPION_LIST, ROLE_KO, aboutWhen, RARITY_KO, SKIN_TIERS, TAG_KO, augmentHabits, baseSkin, cdragon, loadSkins, matchName, pct, shortDate, skinNeed, streakOf, styleOf, duoOf, ago, bondOf, coachOf, BOND_GRADES, BOND_POINT,
@@ -129,6 +130,9 @@ const seasonUntil = (sz: { label: string; end: number }) => { const last = new D
  */
 export function SeasonRewardChip({ rows, season }: { rows?: RankingRow[]; season?: { key: string; label: string; end: number } }) {
   const [open, setOpen] = useState(false);
+  // 휴대폰·터치 화면은 아래에서 올라오는 시트로 (칩 아래에 띄우면 화면 밖으로 잘렸다)
+  const [sheet, setSheet] = useState(false);
+  useLayoutEffect(() => { if (open) setSheet(typeof matchMedia !== 'undefined' && matchMedia('(max-width: 720px), (hover: none)').matches); }, [open]);
   const sz = season ?? seasonOf(), left = seasonDaysLeft();
   const close = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const on = () => { clearTimeout(close.current); setOpen(true); };
@@ -138,35 +142,38 @@ export function SeasonRewardChip({ rows, season }: { rows?: RankingRow[]; season
   const wrap = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     if (!open) return;
-    const down = (e: PointerEvent) => { if (!wrap.current?.contains(e.target as Node)) setOpen(false); };
+    const down = (e: PointerEvent) => { if (!sheet && !wrap.current?.contains(e.target as Node)) setOpen(false); };
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
     document.addEventListener('pointerdown', down); document.addEventListener('keydown', key);
     return () => { document.removeEventListener('pointerdown', down); document.removeEventListener('keydown', key); };
-  }, [open]);
+  }, [open, sheet]);
+  // 시트가 열린 동안 뒤 페이지는 스크롤하지 않는다
+  useEffect(() => {
+    if (!open || !sheet) return;
+    const h = document.documentElement, prev = h.style.overflow;
+    h.style.overflow = 'hidden';
+    return () => { h.style.overflow = prev; };
+  }, [open, sheet]);
   // 카드는 화면에 고정해 칩 아래에 띄운다 — 페이지 폭을 넓히지 않게(휴대폰), 오른쪽 밖으로 나가면 안으로. 스크롤하면 닫는다
   const card = useRef<HTMLSpanElement>(null);
   useLayoutEffect(() => {
     const el = card.current, chip = wrap.current;
-    if (!el || !chip || !open) return;
+    if (!el || !chip || !open || sheet) return;
     const vw = document.documentElement.clientWidth, c = chip.getBoundingClientRect();
     const w = Math.min(420, vw - 32);
     el.style.width = `${w}px`;
     el.style.left = `${Math.max(16, Math.min(c.left, vw - w - 16))}px`;
     el.style.top = `${c.bottom + 8}px`;
-    const shut = () => setOpen(false);
+    const shut = (e: Event) => { if (!(e.target instanceof Node && el.contains(e.target))) setOpen(false); };
     window.addEventListener('scroll', shut, { capture: true, passive: true });
     window.addEventListener('resize', shut);
     return () => { window.removeEventListener('scroll', shut, { capture: true }); window.removeEventListener('resize', shut); };
-  }, [open]);
+  }, [open, sheet]);
   const short = sz.label.replace(/^\d+ /, '');
-  return (
-    <span ref={wrap} className="srh" onPointerEnter={(e) => e.pointerType === 'mouse' && on()} onPointerLeave={(e) => e.pointerType === 'mouse' && off()}>
-      <button type="button" className={`rk-dday srh-chip ${left <= 7 ? 'soon' : ''}`} aria-expanded={open}
-        onClick={() => (typeof matchMedia !== 'undefined' && matchMedia('(hover: hover)').matches ? on() : setOpen((v) => !v))}>
-        <Icon name="trophy" />{left ? `D-${left}` : 'D-DAY'}
-      </button>
-      <span ref={card} className={`srh-card ${open ? 'open' : ''}`} role="dialog" aria-label={`${short} 보상`}>
-        <span className="srh-head"><b>{short} 보상</b><span className="muted">레이팅 1~3위 · 이번 시즌 {SEASON_REWARD.minGames}판 이상 · 영원히 소장</span></span>
+  const card_ = (
+      <span ref={card} className={`srh-card ${open ? 'open' : ''} ${sheet ? 'sheet' : ''}`} role="dialog" aria-modal={sheet || undefined} aria-label={`${short} 보상`}>
+        {sheet && <span className="srh-grab" aria-hidden="true" />}
+        <span className="srh-head"><b>{short} 보상</b>{sheet && <button type="button" className="srh-x" aria-label="닫기" onClick={() => setOpen(false)}><Icon name="x" /></button>}<span className="muted">레이팅 1~3위 · 이번 시즌 {SEASON_REWARD.minGames}판 이상 · 영원히 소장</span></span>
         {SEASON_REWARD.ranks.map((items, i) => {
           const r = rows?.[i], need = r ? Math.max(0, SEASON_REWARD.minGames - r.n) : 0;
           const title = SHOP_ITEM[SEASON_REWARD.titleOf(sz.key, i + 1)];
@@ -196,6 +203,16 @@ export function SeasonRewardChip({ rows, season }: { rows?: RankingRow[]; season
         })}
         <span className="srh-foot meta">시즌 마지막 날이 지나면 그 순간의 레이팅으로 정해져요. 디스코드 '시즌 TOP 3' 역할과 다음 시즌 랭킹 무대의 명예의 전당도 함께예요.</span>
       </span>
+  );
+  return (
+    <span ref={wrap} className="srh" onPointerEnter={(e) => e.pointerType === 'mouse' && on()} onPointerLeave={(e) => e.pointerType === 'mouse' && off()}>
+      <button type="button" className={`rk-dday srh-chip ${left <= 7 ? 'soon' : ''}`} aria-expanded={open}
+        onClick={() => (typeof matchMedia !== 'undefined' && matchMedia('(hover: hover)').matches ? on() : setOpen((v) => !v))}>
+        <Icon name="trophy" />{left ? `D-${left}` : 'D-DAY'}
+      </button>
+      {sheet && open
+        ? createPortal(<><span className="srh-dim" onClick={() => setOpen(false)} />{card_}</>, document.body)
+        : card_}
     </span>
   );
 }
