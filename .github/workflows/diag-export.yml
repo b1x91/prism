@@ -11,7 +11,7 @@ on:
         required: false
         default: ''
       kind:
-        description: '진단 종류 (minimap · partial · overlay-never-shown · ratingdata = 레이팅 비교용 판 기록)'
+        description: '진단 종류 (minimap · partial · overlay-never-shown · ratingdata = 레이팅 비교용 판 기록 · joindata = 가입 신청과 초대 번호)'
         required: true
         default: minimap
       limit:
@@ -44,9 +44,16 @@ jobs:
           set -euo pipefail
           # 최근 3일 진단 기록 수 (종류별, 숫자만)
           npx wrangler d1 execute prism --remote --config server/wrangler.toml --command "SELECT json_extract(body, '$.kind') AS kind, json_extract(body, '$.version') AS ver, COUNT(*) AS n, MAX(at) AS last FROM diag WHERE at > (strftime('%s','now') - 259200) * 1000 GROUP BY 1, 2"
-          case "$KIND" in minimap|partial|overlay-never-shown|ratingdata) ;; *) echo "종류가 이상해요"; exit 1;; esac
+          case "$KIND" in minimap|partial|overlay-never-shown|ratingdata|joindata) ;; *) echo "종류가 이상해요"; exit 1;; esac
           case "$LIMIT" in ''|*[!0-9]*) echo "건수가 이상해요"; exit 1;; esac
-          if [ "$KIND" = ratingdata ]; then
+          if [ "$KIND" = joindata ]; then
+            # 가입 신청의 초대 번호·추천인 확인용 (암호화해서만 남긴다)
+            D1="npx wrangler d1 execute prism --remote --config server/wrangler.toml --json --command"
+            $D1 "SELECT num, invite_code, inviter, status, created_at, member_id FROM applications ORDER BY created_at DESC LIMIT 100" > j.json
+            $D1 "SELECT id, nick, tier, discord_roles, invite_code, invited_by, joined_at FROM members WHERE invite_code IS NOT NULL OR joined_at > (strftime('%s','now') - 1209600) * 1000" > u.json
+            node -e "const f=require('fs');const o={};for(const k of ['j','u']){o[k]=JSON.parse(f.readFileSync(k+'.json','utf8'))[0].results;console.log(k,o[k].length)}f.writeFileSync('out.json',JSON.stringify(o))"
+            rm -f j.json u.json
+          elif [ "$KIND" = ratingdata ]; then
             # 레이팅 비교용: 판(10명 기록) · 회원 판 · 계정 · 회원 이름 (암호화해서만 남긴다)
             D1="npx wrangler d1 execute prism --remote --config server/wrangler.toml --json --command"
             $D1 "SELECT game_id, played_at, queue_id, players FROM matches ORDER BY played_at" > m.json
