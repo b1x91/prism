@@ -179,9 +179,9 @@ export function RankingSkeleton() {
     <SkeletonFrame className="stack">
       {/* 상위 3명 무대: 불이 꺼진 무대 — 그림은 아직 띄우지 않는다. 데이터가 오면 무대가 켜지며 카드가 솟는다 (v3.189) */}
       <section className="rks rks-sk" aria-hidden="true">
+        <div className="rks-sky"><span className="rks-sk-gem"><img src="/brand/prism-128.png" alt="" /></span></div>
         <div className="rks-scene">
           <span className="rks-sk-floor" />
-          <span className="rks-sk-gem"><img src="/brand/prism-128.png" alt="" /></span>
           {[2, 1, 3].map((rank) => (
             <div key={rank} className={`rks-slot p${rank}`}>
               <div className="rks-ice rks-wait">

@@ -131,7 +131,7 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (nw && m === 'DELETE' && !nw[2]) return deleteNews(env, me, Number(nw[1]));
   // 운영 (운영진만, v3.107) · 친구 초대
   if (m === 'GET' && pathname === '/api/staff/members') return staffMembers(env, me);
-  const st = pathname.match(/^\/api\/staff\/members\/([0-9A-Za-z_-]{1,40})\/(approve|promote|level|special|inviter)$/);
+  const st = pathname.match(/^\/api\/staff\/members\/([0-9A-Za-z_-]{1,40})\/(approve|promote|level|special|kakao|inviter)$/);
   if (m === 'POST' && st) return staffAction(req, env, me, st[1], st[2]);
   if (m === 'GET' && pathname === '/api/staff/applications') return staffApplications(env, me);
   if (m === 'POST' && pathname === '/api/staff/applications/room') return setRoom(req, env, me);

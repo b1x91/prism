@@ -1,13 +1,13 @@
 /**
  * 디스코드 역할 자동 승급·강등 (CLAUDE.md v3.53). 매일 한 번(크론) 기록에서 다시 계산해, 바뀔 사람만 봇이 역할을 주고 뺀다.
  * - 준회원 → 정회원: 자동이 아니다 (v3.107). 운영진과 같은 판 3판 이상이면 '운영' 페이지 정회원 심사 → 운영진 승인 (staff.ts)
- * - 정회원 → 우수회원: 최근 14일 안에 7일 연속(KST 날짜) 매일 모임 판이 있고, 그 7일 동안 운영자(ADMIN 첫 번째)와 같은 판 3판 이상
+ * - 정회원 → 우수회원: 자동이 아니다 (v3.190). 운영진이 고른다 — 예전 기준(14일 안 7일 연속 모임 판 + 운영자와 3판)은 '우수회원 후보' 추천으로만
+ * - 정회원·우수회원은 운영진이 카톡방에 있는 것을 확인한 회원만 (members.kakao_at, v3.190, staff.ts)
  * - 30일 동안 판·접속이 모두 없으면 한 단계 내림 (우수회원 → 정회원, 정회원 → 준회원)
  * - 운영진·특별회원·관리자는 사람이 정한다 (건드리지 않는다)
  * 승급은 역할을 더하기만 한다 (아래 역할을 빼지 않아 채널 권한이 그대로). 강등은 그 단계 역할만 뺀다.
  * 봇 역할이 서버 역할 목록에서 운영진 아래 · 회원 역할들 위에 있어야 한다.
  */
-import { sendToChannel } from './bot.js';
 import { ROLES, levelOf, rolesOf } from './roles.js';
 import type { Env, Member } from './util.js';
 
@@ -43,40 +43,42 @@ export async function liveRoles(env: Env, memberId: string): Promise<string[] | 
   return Array.isArray(j?.roles) ? j!.roles : null;
 }
 
-export async function promoteSweep(env: Env, now = Date.now()) {
-  if (!env.DISCORD_BOT_TOKEN) return;
-  const host = (env.ADMIN_DISCORD_IDS ?? '').split(',').map((s) => s.trim()).filter(Boolean)[0];
-  const { results: members } = await env.DB.prepare('SELECT * FROM members').all<Member>();
-  const win = now - PROMOTION.excellent.window * DAY;
+const hostId = (env: Env) => (env.ADMIN_DISCORD_IDS ?? '').split(',').map((s) => s.trim()).filter(Boolean)[0];
 
-  // 우수회원 판단용: 최근 창의 모임 판 (판·날짜·운영자와 같은 판인지)
+/**
+ * 우수회원 후보 (v3.190: 자동 승급을 없애고 운영진이 고른다 — 이 기준은 운영 › 할 일 '우수회원 후보'의 추천으로만 쓴다).
+ * 최근 PROMOTION.excellent.window 일 안에 streak 일 연속 매일 모임 판이 있고, 그 구간에 운영자와 같은 판이 withHost 판 이상.
+ */
+export async function excellentHints(env: Env, now = Date.now()): Promise<Set<string>> {
+  const host = hostId(env);
+  const win = now - PROMOTION.excellent.window * DAY;
   const { results: rows } = await env.DB.prepare(`SELECT p.member_id AS id, p.played_at AS t,
       EXISTS (SELECT 1 FROM participants h WHERE h.game_id = p.game_id AND h.member_id = ?) AS withHost
     FROM participants p WHERE p.played_at >= ? AND p.crew_count >= 2`).bind(host ?? '', win).all<{ id: string; t: number; withHost: number }>();
   const byMember = new Map<string, { day: number; host: boolean }[]>();
   for (const r of rows) (byMember.get(r.id) ?? byMember.set(r.id, []).get(r.id)!).push({ day: kstDay(r.t), host: Boolean(r.withHost) });
-
-  /** 7일 연속 매일 모임 판이 있고, 그 7일 동안 운영자와 같은 판이 3판 이상인 구간이 있는가 */
-  const excellent = (id: string) => {
-    const g = byMember.get(id);
-    if (!g) return false;
+  const out = new Set<string>();
+  for (const [id, g] of byMember) {
     const days = new Set(g.map((x) => x.day));
     for (const start of days) {
       let ok = true;
       for (let d = start; d < start + PROMOTION.excellent.streak; d++) if (!days.has(d)) { ok = false; break; }
       if (!ok) continue;
-      const withHost = g.filter((x) => x.host && x.day >= start && x.day < start + PROMOTION.excellent.streak).length;
-      if (withHost >= PROMOTION.excellent.withHost) return true;
+      if (g.filter((x) => x.host && x.day >= start && x.day < start + PROMOTION.excellent.streak).length >= PROMOTION.excellent.withHost) { out.add(id); break; }
     }
-    return false;
-  };
+  }
+  return out;
+}
 
+export async function promoteSweep(env: Env, now = Date.now()) {
+  if (!env.DISCORD_BOT_TOKEN) return;
+  const host = hostId(env);
+  const { results: members } = await env.DB.prepare('SELECT * FROM members').all<Member>();
   // 마지막 강등 시각 (강등 뒤 30일이 다시 지나야 또 내려간다)
   const demoted = new Map<string, number>();
   for (const r of (await env.DB.prepare("SELECT k, at FROM ext_cache WHERE k LIKE 'demoted-%'").all<{ k: string; at: number }>()).results) demoted.set(r.k.slice(8), r.at);
 
   const R = { associate: role('associate'), regular: role('regular'), excellent: role('excellent') };
-  const cheers: string[] = [];
   for (const m of members) {
     if (m.tier === 'admin' || m.id === host) continue;
     const lv = levelOf(m);
@@ -93,22 +95,9 @@ export async function promoteSweep(env: Env, now = Date.now()) {
         if (!mine.has(R.associate) && await setRole(env, m.id, R.associate, true, 'Prism: 30일 활동 없음')) mine.add(R.associate);
       }
       if (changed) await env.DB.prepare('INSERT OR REPLACE INTO ext_cache (k, v, at) VALUES (?, ?, ?)').bind(`demoted-${m.id}`, '1', now).run();
-    } else {
-      // 승인 대기(역할 없음)는 자동으로 올리지 않는다 — 운영진 승인이 먼저 (v3.107)
-      // 준회원 → 정회원은 자동으로 올리지 않는다: 운영진과 3판 이상 함께하면 '운영' 페이지 정회원 심사에 올라가고 승인으로 (v3.107, staff.ts)
-      const up = lv === 2 && excellent(m.id) ? { id: R.excellent, lv: 3, name: '우수회원', why: 'Prism: 7일 연속 모임 판' } : null;
-      if (up) {
-        const live = await liveRoles(env, m.id);
-        if (live === null) continue; // 서버를 나갔거나 확인 실패 — 다음 날 다시
-        mine.clear(); live.forEach((x) => mine.add(x)); changed = true; // 디스코드의 지금 역할로 맞춘다
-        // 그사이 사람이 이미 그 단계 이상으로 올렸으면 그대로 둔다
-        if (levelOf({ tier: m.tier, discord_roles: JSON.stringify(live) }) < up.lv && await setRole(env, m.id, up.id, true, up.why)) { mine.add(up.id); cheers.push(`<@${m.id}> 님이 **${up.name}**이 되었어요!`); }
-      }
     }
+    // 승급은 자동으로 하지 않는다 — 준회원 → 정회원은 정회원 심사 + 카톡방 확인, 정회원 → 우수회원은 운영진 선발 (v3.107, v3.190, staff.ts)
     // 앱 권한에 바로 반영 (12시간 갱신을 기다리지 않게)
     if (changed) await env.DB.prepare('UPDATE members SET discord_roles = ?, roles_at = ? WHERE id = ?').bind(JSON.stringify([...mine]), now, m.id).run();
-  }
-  if (cheers.length && env.BOT_CHANNEL_ID) {
-    await sendToChannel(env, env.BOT_CHANNEL_ID, { content: `🎉 ${cheers.join('\n')}`, allowed_mentions: { users: cheers.map((c) => c.slice(2, c.indexOf('>'))) } });
   }
 }

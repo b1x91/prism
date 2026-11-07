@@ -2,11 +2,13 @@
  * 운영 (CLAUDE.md v3.107) — 운영진(역할 단계 5·관리자)만.
  *  - 승인 대기: 디스코드 회원 역할이 아직 없는 회원. '승인'을 누르면 봇이 준회원 역할을 붙인다.
  *  - 정회원 심사: 준회원 중 운영진과 같은 판을 PROMOTION.regularReview.withStaff 판 이상 한 회원. '승인'을 누르면 정회원.
+ *  - 정회원·우수회원은 카톡방에 있는 회원만 (v3.190): 운영진이 '카톡방 확인'을 눌러 둔 회원(members.kakao_at)만 올릴 수 있다. 서버도 막는다.
+ *  - 우수회원은 운영진이 고른다 (v3.190). 예전 자동 기준을 채운 정회원은 '우수회원 후보'로 추천만.
  *  - 단계(대기·준·정·우수)·특별회원을 직접 바꿀 수도 있다. 운영진 역할은 디스코드에서 사람이 정한다 (여기서는 건드리지 않는다).
  *  - 친구 초대: 초대한 친구가 승인되는 순간 초대한 회원에게 보너스 피스 (invite_rewards, 한 번만 확정).
  */
 import { sendToChannel } from './bot.js';
-import { PROMOTION, liveRoles, setRole } from './promote.js';
+import { PROMOTION, excellentHints, liveRoles, setRole } from './promote.js';
 import { ROLES, can, isPending, isSpecial, unapproved, levelOf, rolesOf, topRole } from './roles.js';
 import { FACE, HttpError, json, type Env, type Member } from './util.js';
 import { INVITE_BONUS } from '../../packages/core/src/shop.js';
@@ -119,11 +121,12 @@ export async function staffBadge(env: Env, me: Member): Promise<{ staffUnread?: 
 /** GET /api/staff/members — 멤버 목록 (승인 대기 · 정회원 심사 · 전체) */
 export async function staffMembers(env: Env, me: Member) {
   assertStaff(me);
-  const [{ results }, withStaff, rewards, recentRows] = await Promise.all([
+  const [{ results }, withStaff, rewards, recentRows, hints] = await Promise.all([
     env.DB.prepare(
       `SELECT m.id, m.nick, m.discord_name AS discordName, ${FACE('m')}, m.tier, m.discord_roles, m.app_first_at, m.joined_at AS joined,
          MAX(COALESCE(m.last_seen_at, 0), COALESCE(m.web_seen_at, 0), COALESCE(m.app_seen_at, 0)) AS seen,
-         m.riot_id AS riotId, m.invited_by AS invitedBy, m.approved_at AS approvedAt,
+         m.riot_id AS riotId, m.invited_by AS invitedBy, m.approved_at AS approvedAt, m.kakao_at AS kakaoAt,
+         (SELECT a.kakao FROM applications a WHERE a.member_id = m.id ORDER BY a.updated_at DESC LIMIT 1) AS kakaoName,
          (SELECT COUNT(*) FROM participants p WHERE p.member_id = m.id) AS games,
          (SELECT COALESCE(SUM(p.win), 0) FROM participants p WHERE p.member_id = m.id) AS wins,
          (SELECT MAX(p.played_at) FROM participants p WHERE p.member_id = m.id) AS lastPlayed,
@@ -134,6 +137,7 @@ export async function staffMembers(env: Env, me: Member) {
     env.DB.prepare('SELECT inviter, COUNT(*) AS n FROM invite_rewards GROUP BY inviter').all<{ inviter: string; n: number }>(),
     env.DB.prepare('SELECT member_id AS id, game_id AS g, played_at AS t, win AS w, crew_count AS c FROM participants WHERE played_at >= ?')
       .bind(weekStart(Date.now()) - (OVERVIEW_WEEKS * 2 - 1) * WEEK).all<{ id: string; g: number; t: number; w: number; c: number }>(),
+    excellentHints(env).catch(() => new Set<string>()),
   ]);
   const nick = new Map(results.map((r) => [r.id as string, r.nick as string]));
   const invited = new Map(rewards.results.map((r) => [r.inviter, r.n]));
@@ -164,6 +168,8 @@ export async function staffMembers(env: Env, me: Member) {
       recent: recent.get(r.id) ?? 0,
       score: rankScore(Number(r.wins) || 0, Number(r.games) || 0),
       review: level === 1 && staffGames >= need,
+      kakao: r.kakaoAt != null,
+      excellentHint: level === 2 && hints.has(r.id) && !isSpecial(m),
       inviter: r.invitedBy ? { id: r.invitedBy, nick: nick.get(r.invitedBy) ?? '알 수 없음' } : null,
       invitedCount: invited.get(r.id) ?? 0,
       wk: wk.get(r.id) ?? Array(OVERVIEW_WEEKS).fill(0),
@@ -386,7 +392,12 @@ async function setInviterIfEmpty(env: Env, target: Member, inviter: unknown) {
   target.invited_by = inviter;
 }
 
-/** POST /api/staff/members/:id/:action — approve(승인 대기 → 준회원) · promote(정회원 심사 → 정회원) · level · special · inviter */
+/** 정회원·우수회원은 카톡방 확인을 받은 회원만 (v3.190) */
+function needKakao(target: Member) {
+  if (!target.kakao_at) throw new HttpError(400, '카톡방에 있는지 먼저 확인해 주세요. 카톡방에 없는 멤버는 정회원·우수회원이 될 수 없어요.');
+}
+
+/** POST /api/staff/members/:id/:action — approve(승인 대기 → 준회원) · promote(정회원 심사 → 정회원, 카톡방 확인 필요) · level · special · kakao(카톡방 확인) · inviter */
 export async function staffAction(req: Request, env: Env, me: Member, id: string, action: string) {
   assertStaff(me);
   const body = (await req.json().catch(() => ({}))) as { level?: unknown; on?: unknown; inviter?: unknown };
@@ -406,8 +417,14 @@ export async function staffAction(req: Request, env: Env, me: Member, id: string
     }
     return json({ ok: true, ...r });
   }
+  if (action === 'kakao') {
+    const on = Boolean(body.on);
+    await env.DB.prepare('UPDATE members SET kakao_at = ?, kakao_by = ? WHERE id = ?').bind(on ? Date.now() : null, on ? me.id : null, target.id).run();
+    return json({ ok: true });
+  }
   if (action === 'promote') {
     if (levelOf(target) !== 1) throw new HttpError(400, '준회원만 정회원 심사를 받을 수 있어요.');
+    needKakao(target);
     const r = await applyLevel(env, me, target, 2);
     await cheer(env, `🎉 <@${target.id}> 님이 **정회원**이 되었어요!`, [target.id]);
     return json({ ok: true, ...r });
@@ -415,7 +432,10 @@ export async function staffAction(req: Request, env: Env, me: Member, id: string
   if (action === 'level') {
     const lv = Number(body.level);
     if (![0, 1, 2, 3].includes(lv)) throw new HttpError(400, '단계는 0~3 이에요.');
-    return json({ ok: true, ...(await applyLevel(env, me, target, lv)) });
+    if (lv >= 2 && lv > Math.min(levelOf(target), 3)) needKakao(target);
+    const r = await applyLevel(env, me, target, lv);
+    if (r.from < lv && lv >= 2) await cheer(env, `🎉 <@${target.id}> 님이 **${STEPS[lv - 1].name}**${lv === 3 ? '으로 선발되었어요' : '이 되었어요'}!`, [target.id]);
+    return json({ ok: true, ...r });
   }
   if (action === 'special') {
     if (target.tier === 'admin' || levelOf(target) >= 5) throw new HttpError(400, '운영진은 이미 모든 혜택을 받아요.');

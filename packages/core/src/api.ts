@@ -183,6 +183,8 @@ export type StaffMember = {
   staffGames: number; review: boolean; wins: number; recent: number; score: number; lastPlayed: number | null; inviter: { id: string; nick: string } | null; invitedCount: number; approvedAt: number | null;
   /** v3.160 — 최근 8주 주별 판 수 · 자주 함께한 멤버(최근 15주) · 첫 판 시각. 예전 서버는 없음 */
   wk?: number[]; mates?: (StaffFace & { n: number })[]; firstPlayed?: number | null;
+  /** v3.190 — 운영진이 카톡방에 있는 것을 확인했는가 (없으면 정회원·우수회원 불가) · 가입 신청에 적은 카톡 이름 · 우수회원 후보(예전 자동 기준) */
+  kakao?: boolean; kakaoAt?: number | null; kakaoName?: string | null; excellentHint?: boolean;
 };
 export type StaffFace = { id: string; nick: string; skin: number | null; main: number | null };
 /** 운영 대시보드 (v3.109) */

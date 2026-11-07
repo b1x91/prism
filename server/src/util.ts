@@ -45,6 +45,8 @@ export type Member = {
   news_read_at?: number; // 소식을 어디까지 읽었는지 (v3.111)
   now_auto?: number; // 로비를 NOW에 자동으로 올리기 (v3.126, 기본 1)
   staff_seen?: string | null; // 운영 화면에서 마지막으로 본 처리할 멤버 ID 목록 JSON (v3.125)
+  kakao_at?: number | null; // 운영진이 카톡방에 있는 것을 확인한 시각 (v3.190) — 없으면 정회원·우수회원 불가
+  kakao_by?: string | null;
   app_lol: number;
   app_open: number;
   about: string | null; // 나를 소개해요 (JSON, v3.47)

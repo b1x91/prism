@@ -288,6 +288,14 @@ export const podiumImages = (rows: RankingRow[], skins: Record<number, Skin> | n
  * 상위 3명 무대 (v3.184): 결정 신전 무대 위, 받침대 얼음이 한 덩어리로 솟아 그 회원의 챔프가 얼음 속에 서 있다.
  * 머리에 금·은·동 방패 문장(1위만 프리즘 보석), 얼음 아래쪽에 이름·판수(왼쪽)와 점수(오른쪽).
  */
+/** 무대에 뿌린 반짝임 (위치·크기·박자는 고정 — 그릴 때마다 바뀌지 않게). 프리즘 둘레는 더 촘촘히, 몇 개는 스펙트럼 색 */
+const SPARKS = Array.from({ length: 30 }, (_, i) => {
+  const near = i < 10;
+  const x = near ? 50 + Math.sign(Math.sin(i * 2.1) || 1) * (9 + (i % 4) * 5) : ((i * 41) % 92) + 4;
+  const y = near ? 8 + ((i * 7) % 22) : ((i * 29) % 70) + 6;
+  return { x: +x.toFixed(1), y: +y.toFixed(1), s: near ? 18 + (i % 3) * 6 : 11 + (i % 4) * 4, d: -((i * 1.37) % 6.5), t: 3.2 + (i % 5) * 0.9, c: i % 6 === 0 ? 'c1' : i % 6 === 3 ? 'c2' : i % 7 === 5 ? 'c3' : '' };
+});
+
 function Leaderboard({ rows, by, meId, skins, onOpen, play, hall }: { rows: RankingRow[]; by: RankBy; meId?: string; play: boolean; hall?: SeasonHall | null; skins: Record<number, Skin> | null; onOpen: (id: string) => void }) {
   return (
     <section className={`rks ${play ? 'play' : ''}`} aria-label="상위 3명">
@@ -301,9 +309,16 @@ function Leaderboard({ rows, by, meId, skins, onOpen, play, hall }: { rows: Rank
           </button>
         ))}</span>
       </div>}
-      <div className="rks-scene">
+      {/* 무대 그림은 카드 위 여백까지 덮는다 — 떠 있는 프리즘이 1위 문장 위에 보이게 (v3.190) */}
+      <div className="rks-sky" aria-hidden="true">
         <img className="rks-art" src={POD_STAGE} alt="" draggable={false} />
-        <span className="rks-motes" aria-hidden="true">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ left: `${(i * 37) % 86 + 7}%`, top: `${(i * 53) % 60 + 25}%`, animationDelay: `${-((i * 0.9) % 7)}s` }} />)}</span>
+        <span className="rks-halo" />
+        <span className="rks-rays" />
+        <span className="rks-sparks">{SPARKS.map((k, i) => <i key={i} className={k.c} style={{ left: `${k.x}%`, top: `${k.y}%`, ['--sz' as string]: `${k.s}px`, animationDelay: `${k.d}s`, animationDuration: `${k.t}s` }} />)}</span>
+        <span className="rks-streak" />
+        <span className="rks-motes">{Array.from({ length: 18 }, (_, i) => <i key={i} style={{ left: `${(i * 37) % 86 + 7}%`, top: `${(i * 53) % 50 + 40}%`, animationDelay: `${-((i * 0.9) % 7)}s` }} />)}</span>
+      </div>
+      <div className="rks-scene">
         {[2, 1, 3].map((rank) => {
           const r = rows[rank - 1];
           return <div key={rank} className={`rks-slot p${rank}`}>
