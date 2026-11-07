@@ -309,7 +309,7 @@ export const shareUrl = (code: string | number) => `${SITE_URL}/p/${encodeURICom
  * 서버가 매일 03:17 KST 에 지난 시즌을 확정한다 (server/src/seasonreward.ts).
  */
 export const SEASON_REWARD = {
-  minGames: 30,
+  minGames: 100,
   /** 순위별 꾸밈 (칭호는 titleOf 로 시즌마다 따로) */
   ranks: [['frame-season-1', 'bg-season-1', 'name-season-1'], ['frame-season-2', 'bg-season-2'], ['frame-season-3']] as string[][],
   titleOf: (seasonKey: string, rank: number) => `title-season-${seasonKey}-${rank}`,
