@@ -128,6 +128,39 @@ const seasonUntil = (sz: { label: string; end: number }) => { const last = new D
  * 랭킹 화면 위 시즌 D-day 칩 (v3.189): 마우스를 올리면(휴대폰은 누르면) 시즌 보상 카드 — 순위별 챔피언 세트 미리 보기.
  * 회원 화면은 지금 그 순위인 사람과 모자란 판수를 함께 적는다.
  */
+/**
+ * 랭킹 점수 설명 '?' (v3.192): 누르면(PC 는 마우스를 올려도) 작은 카드로 계산 방식을 짧게. 회원이 납득할 수 있을 만큼만, 수식 없이.
+ */
+export function RatingHelp() {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLSpanElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const off = (e: Event) => { if (box.current && !box.current.contains(e.target as Node)) setOpen(false); };
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    document.addEventListener('pointerdown', off); addEventListener('keydown', esc);
+    return () => { document.removeEventListener('pointerdown', off); removeEventListener('keydown', esc); };
+  }, [open]);
+  // 마우스로 올려 연 상태에서 누르면 닫히지 않게 (올리자마자 열리고, 누르면 또 바뀌어 닫히던 것)
+  const hovered = useRef(false);
+  const hover = (on: boolean) => (e: { pointerType: string }) => { if (e.pointerType === 'mouse') { hovered.current = on; setOpen(on); } };
+  return (
+    <span className="rk-help" ref={box} onPointerEnter={hover(true)} onPointerLeave={hover(false)}>
+      <button type="button" className={`rk-help-btn ${open ? 'on' : ''}`} aria-label="랭킹 점수는 어떻게 매기나요?" aria-expanded={open} onClick={() => setOpen((v) => (hovered.current ? true : !v))}>?</button>
+      {open && <span className="rk-help-card" role="dialog" aria-label="랭킹 점수 계산 방식">
+        <b>랭킹 점수는 이렇게 매겨요</b>
+        <span className="rk-help-list">
+          <span><i>1</i><span><em>이기면 오르고, 지면 내려가요.</em> 같은 팀과 상대 팀의 실력을 함께 봐서, 강한 팀을 이기면 많이 오르고 약한 팀에게 지면 많이 내려가요.</span></span>
+          <span><i>2</i><span><em>그 판에서 잘한 만큼 더해요.</em> 팀 안에서 피해·받은 피해·킬 관여·데스를 비교한 PRISM SCORE 가 높으면 이겨도 더 오르고, 져도 덜 내려가요.</span></span>
+          <span><i>3</i><span><em>판이 적으면 낮게 시작해요.</em> 몇 판만으로는 아직 확실하지 않아서 조심스럽게 잡고, 꾸준히 할수록 실제 실력에 가까워져요.</span></span>
+          <span><i>4</i><span><em>시즌이 바뀌어도 처음부터가 아니에요.</em> 실력은 이어지고, 새 시즌 판이 쌓이면서 다시 자리를 잡아요.</span></span>
+        </span>
+        <small>롤 티어·MMR 이 아니라 Prism 에 기록된 판으로만 계산해요.</small>
+      </span>}
+    </span>
+  );
+}
+
 export function SeasonRewardChip({ rows, season }: { rows?: RankingRow[]; season?: { key: string; label: string; end: number } }) {
   const [open, setOpen] = useState(false);
   // 휴대폰·터치 화면은 아래에서 올라오는 시트로 (칩 아래에 띄우면 화면 밖으로 잘렸다)
@@ -243,21 +276,23 @@ function RankingOpen({ api, meId, onOpen }: { api: Api; meId?: string; onOpen: (
     return r.sort((a, b) => b.n - a.n || b.w - a.w);
   }, [data, by]);
   // 얼굴 그림을 먼저 받아 둔 뒤 무대를 보인다 — 빈 동그라미가 먼저 보였다가 얼굴이 튀어나오지 않게 (최대 1.5초, v3.82)
-  const [readyFor, setReadyFor] = useState<unknown>(null);
+  // 준비는 탭(by)마다 한 번 — 받아 둔 데이터로 그린 뒤 새 데이터가 오면 그 자리에서 숫자만 바꾼다.
+  // (예전엔 데이터가 바뀔 때마다 자리표시로 되돌아가 무대가 처음부터 다시 그려졌다 — 깜빡임, v3.192)
+  const [readyFor, setReadyFor] = useState<string | null>(null);
   useEffect(() => {
     if (!data || !skins) return;
     let on = true;
-    preloadImages([...podiumImages(rows, skins), ...rows.slice(3, 12).map((r) => faceSrc(r.skin, r.mainChampion, skins))]).then(() => { if (on) setReadyFor(data); });
+    preloadImages([...podiumImages(rows, skins), ...rows.slice(3, 12).map((r) => faceSrc(r.skin, r.mainChampion, skins))]).then(() => { if (on) setReadyFor(by); });
     return () => { on = false; };
-  }, [data, skins, rows]);
-  const shown = !art && Boolean(data) && readyFor === data;
+  }, [data, skins, rows, by]);
+  const shown = !art && Boolean(data) && readyFor === by;
   const rv = useReveal(shown);
   if (rv && !entered) setEntered(true);
   const show = play || entered;
   return (
     <div className="stack" style={{ gap: 16 }}>
       <div className="row wrapr"><Seg value={by} options={[['season', '시즌'], ['score', '전체'], ['games', '판수'], ['champ-art', '챔프 장인'], ['aug-art', '증강 장인'], ['item-art', '아이템 장인']]} onChange={setBy} />
-        <span className="meta">{art ? '도감 마스터 여정을 모두 이룬 수 (같으면 이룬 목표 수)' : by === 'season' ? (data?.season ? seasonUntil(data.season) : '이번 시즌 레이팅') : by === 'score' ? '지금까지 모든 판으로 만든 Prism 레이팅' : '지금까지 기록된 판수'}</span>{by === 'season' && <SeasonRewardChip rows={shown ? rows : undefined} season={data?.season} />}</div>
+        <span className="rk-meta"><span className="meta">{art ? '도감 마스터 여정을 모두 이룬 수 (같으면 이룬 목표 수)' : by === 'season' ? (data?.season ? seasonUntil(data.season) : '이번 시즌 레이팅') : by === 'score' ? '지금까지 모든 판으로 만든 Prism 레이팅' : '지금까지 기록된 판수'}</span>{by === 'season' && <SeasonRewardChip rows={shown ? rows : undefined} season={data?.season} />}{(by === 'season' || by === 'score') && <RatingHelp />}</span></div>
       {art && <ArtisanRankingView api={api} kind={by === 'champ-art' ? 'champions' : by === 'item-art' ? 'items' : 'augments'} meId={meId} onOpen={onOpen} />}
       {error && <p className="l">{error}</p>}
       {!art && !shown && !error && <RankingSkeleton />}

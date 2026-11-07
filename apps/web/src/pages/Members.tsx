@@ -22,7 +22,7 @@ export function RankingPage() {
   );
   return (
     <section className="section tight"><div className="wrap stack" style={{ gap: 24 }}>
-      <div className="page-head"><div><h1 className="hub-h">랭킹</h1><p>Prism 레이팅은 승패와 그 판의 PRISM SCORE 를 같은 무게로, 함께한 팀원·상대의 실력과 함께 봐요. 판이 적으면 아직 확실하지 않아 낮게 잡히고, 꾸준히 잘한 사람이 위로 갑니다.</p></div></div>
+      <div className="page-head"><div><h1 className="hub-h">랭킹</h1><p>Prism 에 기록된 판으로 매긴 순위예요. 점수를 매기는 방법은 오른쪽의 ? 버튼에서 볼 수 있어요.</p></div></div>
       <RankingView api={api} meId={me.id} open={me.perms?.ranking !== false} gate={me.rankingGate} onOpen={(id) => nav(`/members/${id}`)} />
     </div></section>
   );

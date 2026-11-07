@@ -5483,3 +5483,20 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .sv-kkbulk-acts { display: flex; flex-wrap: wrap; gap: var(--s2); flex: 0 1 auto; min-width: 0; }
 @media (max-width: 560px) { .sv-kkbulk-acts { flex: 1 1 100%; } .sv-kkbulk-acts .btn { flex: 1 1 140px; } }
 .sv-kkbulk-acts .btn { white-space: nowrap; }
+
+/* 랭킹 위 줄: 탭 왼쪽 · 시즌 일정·D-day·'?' 는 오른쪽 끝 (v3.192) */
+.rk-meta { display: inline-flex; align-items: center; gap: var(--s2); margin-left: auto; min-width: 0; flex-wrap: wrap; justify-content: flex-end; }
+.rk-help { position: relative; display: inline-flex; }
+.rk-help-btn { display: grid; place-items: center; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 50%; background: var(--surface-2); color: var(--text-2); font: inherit; font-size: var(--fs-xs); font-weight: 800; cursor: pointer; transition: background .18s ease, color .18s ease; }
+.rk-help-btn:hover, .rk-help-btn.on { background: color-mix(in srgb, var(--accent) 16%, var(--surface)); color: var(--accent); }
+.rk-help-btn:focus-visible { outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); outline-offset: 2px; }
+.rk-help-card { position: absolute; right: 0; top: calc(100% + 8px); z-index: 40; display: grid; gap: var(--s3); width: min(340px, calc(100vw - 32px)); padding: var(--s4); border-radius: var(--r-l); background: var(--surface); box-shadow: 0 12px 32px rgba(10, 14, 30, .18), 0 0 0 1px var(--line); text-align: left; animation: rk-help-in .18s ease both; }
+.rk-help-card > b { font-size: var(--fs-sm); }
+.rk-help-list { display: grid; gap: var(--s3); }
+.rk-help-list > span { display: grid; grid-template-columns: 20px minmax(0, 1fr); gap: var(--s2); font-size: var(--fs-xs); line-height: 1.6; color: var(--text-2); }
+.rk-help-list i { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: color-mix(in srgb, var(--accent) 14%, var(--surface)); color: var(--accent); font-style: normal; font-size: 11px; font-weight: 800; }
+.rk-help-list em { display: block; font-style: normal; font-weight: 700; color: var(--text); }
+.rk-help-card small { font-size: var(--fs-xs); color: var(--text-3); }
+@keyframes rk-help-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rk-help-card { animation: none; } }
+@media (max-width: 720px) { .rk-meta { width: 100%; } }
