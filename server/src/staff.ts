@@ -121,6 +121,7 @@ export async function staffBadge(env: Env, me: Member): Promise<{ staffUnread?: 
 /** GET /api/staff/members — 멤버 목록 (승인 대기 · 정회원 심사 · 전체) */
 export async function staffMembers(env: Env, me: Member) {
   assertStaff(me);
+  const kakaoPending = (await applyKakaoList(env).catch(() => ({ left: [] as string[] }))).left;
   const [{ results }, withStaff, rewards, recentRows, hints] = await Promise.all([
     env.DB.prepare(
       `SELECT m.id, m.nick, m.discord_name AS discordName, ${FACE('m')}, m.tier, m.discord_roles, m.app_first_at, m.joined_at AS joined,
@@ -184,7 +185,7 @@ export async function staffMembers(env: Env, me: Member) {
   const apps = await env.DB.prepare(`SELECT status, COUNT(*) AS n FROM applications WHERE status IN ('new', 'interview', 'confirmed') GROUP BY status`).all<{ status: string; n: number }>().catch(() => null);
   const ac = Object.fromEntries((apps?.results ?? []).map((r) => [r.status, r.n]));
   const inq = await env.DB.prepare("SELECT COUNT(*) AS n FROM inquiries WHERE status IN ('open', 'working')").first<{ n: number }>().catch(() => null);
-  return json({ members, reviewNeed: need, inviteBonus: INVITE_BONUS, applications: { new: ac.new ?? 0, interview: ac.interview ?? 0, confirmed: ac.confirmed ?? 0 }, inquiries: inq?.n ?? 0, overview: overviewOf(members as unknown as Row[], recentRows.results) });
+  return json({ members, kakaoPending, reviewNeed: need, inviteBonus: INVITE_BONUS, applications: { new: ac.new ?? 0, interview: ac.interview ?? 0, confirmed: ac.confirmed ?? 0 }, inquiries: inq?.n ?? 0, overview: overviewOf(members as unknown as Row[], recentRows.results) });
 }
 
 const DAY = 86_400_000, WEEK = 7 * DAY;
@@ -392,6 +393,83 @@ async function setInviterIfEmpty(env: Env, target: Member, inviter: unknown) {
   target.invited_by = inviter;
 }
 
+// ───────── 카톡방 명단 (v3.191) ─────────
+/** 이름 맞추기: 태그(#…)를 떼고 띄어쓰기를 지우고 소문자로 — 톡방 이름 '멍 대 장' ↔ 롤 이름 '멍대장#KR1' */
+export const kakaoKey = (s: string | null | undefined) => (s ?? '').split('#')[0].replace(/\s+/g, '').toLowerCase();
+const KAKAO_LIST = 'kakao-list';
+async function kakaoList(env: Env): Promise<string[]> {
+  const r = await env.DB.prepare('SELECT v FROM ext_cache WHERE k = ?').bind(KAKAO_LIST).first<{ v: string }>().catch(() => null);
+  try { const v = JSON.parse(r?.v ?? '[]'); return Array.isArray(v) ? v.filter((x) => typeof x === 'string') : []; } catch { return []; }
+}
+async function saveKakaoList(env: Env, names: string[]) {
+  await env.DB.prepare('INSERT OR REPLACE INTO ext_cache (k, v, at) VALUES (?, ?, ?)').bind(KAKAO_LIST, JSON.stringify(names.slice(0, 500)), Date.now()).run();
+}
+/**
+ * 명단에 남아 있는 이름(아직 Prism 에 없던 분)과 맞는 회원이 생겼으면 카톡방 확인을 붙이고 명단에서 뺀다.
+ * 롤 이름(모든 연결 계정)·디스코드 이름·디스코드 별명으로 맞춘다. 운영 멤버 화면을 열 때·매일 크론에서 부른다.
+ */
+export async function applyKakaoList(env: Env, by: string | null = null): Promise<{ matched: { id: string; nick: string; name: string }[]; left: string[] }> {
+  const names = await kakaoList(env);
+  if (!names.length) return { matched: [], left: [] };
+  const [{ results: mem }, { results: acc }] = await Promise.all([
+    env.DB.prepare('SELECT id, nick, discord_name, discord_nick, kakao_at FROM members').all<{ id: string; nick: string; discord_name: string | null; discord_nick: string | null; kakao_at: number | null }>(),
+    env.DB.prepare('SELECT member_id AS id, riot_id FROM member_accounts').all<{ id: string; riot_id: string | null }>(),
+  ]);
+  const byKey = new Map<string, Set<string>>();
+  const add = (k: string, id: string) => { if (k) (byKey.get(k) ?? byKey.set(k, new Set()).get(k)!).add(id); };
+  for (const m of mem) { add(kakaoKey(m.nick), m.id); add(kakaoKey(m.discord_name), m.id); add(kakaoKey(m.discord_nick), m.id); }
+  for (const a of acc) add(kakaoKey(a.riot_id), a.id);
+  const info = new Map(mem.map((m) => [m.id, m]));
+  const matched: { id: string; nick: string; name: string }[] = [], left: string[] = [];
+  for (const name of names) {
+    const ids = byKey.get(kakaoKey(name));
+    // 두 명 이상과 맞으면 누구인지 모르니 명단에 남겨 둔다 (운영진이 멤버 서랍에서 직접)
+    if (ids?.size === 1) { const id = [...ids][0]; matched.push({ id, nick: info.get(id)?.nick ?? '', name }); } else left.push(name);
+  }
+  const now = Date.now();
+  const todo = matched.filter((x) => !info.get(x.id)?.kakao_at);
+  if (todo.length) await env.DB.batch(todo.map((x) => env.DB.prepare('UPDATE members SET kakao_at = ?, kakao_by = ? WHERE id = ? AND kakao_at IS NULL').bind(now, by, x.id)));
+  if (left.length !== names.length) await saveKakaoList(env, left);
+  return { matched, left };
+}
+
+/** POST /api/staff/kakao-names { text } — 카톡방 명단 붙여 넣기. 쉼표·줄바꿈으로 나눈 이름을 명단에 더하고 바로 맞춘다 */
+export async function staffKakaoNames(req: Request, env: Env, me: Member) {
+  assertStaff(me);
+  const body = (await req.json().catch(() => ({}))) as { text?: unknown; clear?: unknown };
+  if (body.clear === true) { await saveKakaoList(env, []); return json({ ok: true, matched: [], left: [] }); }
+  const text = typeof body.text === 'string' ? body.text.slice(0, 20000) : '';
+  const names = text.split(/[,\n\r\t]+/).map((x) => x.trim()).filter((x) => x.length >= 1 && x.length <= 40);
+  if (!names.length) throw new HttpError(400, '이름을 쉼표나 줄바꿈으로 나눠 붙여 넣어 주세요.');
+  const prev = await kakaoList(env);
+  const seen = new Set(prev.map(kakaoKey));
+  const merged = [...prev];
+  for (const n of names) if (kakaoKey(n) && !seen.has(kakaoKey(n))) { seen.add(kakaoKey(n)); merged.push(n); }
+  await saveKakaoList(env, merged);
+  const r = await applyKakaoList(env, me.id);
+  // 이번에 붙여 넣은 이름 기준으로 결과를 돌려준다 (이미 확인된 회원도 '맞음'으로)
+  const pasted = new Set(names.map(kakaoKey));
+  const [{ results: mem }, { results: acc }] = await Promise.all([
+    env.DB.prepare('SELECT id, nick, discord_name, discord_nick, kakao_at FROM members').all<{ id: string; nick: string; discord_name: string | null; discord_nick: string | null; kakao_at: number | null }>(),
+    env.DB.prepare('SELECT member_id AS id, riot_id FROM member_accounts').all<{ id: string; riot_id: string | null }>(),
+  ]);
+  const hit = new Map<string, string>();
+  for (const m of mem) for (const k of [m.nick, m.discord_name, m.discord_nick].map(kakaoKey)) if (k && pasted.has(k) && m.kakao_at) hit.set(m.id, m.nick);
+  for (const a of acc) { const k = kakaoKey(a.riot_id); const m = mem.find((x) => x.id === a.id); if (k && pasted.has(k) && m?.kakao_at) hit.set(a.id, m.nick); }
+  return json({ ok: true, matched: [...hit.entries()].map(([id, nick]) => ({ id, nick })), left: r.left.filter((n) => pasted.has(kakaoKey(n))), pending: r.left });
+}
+
+/** POST /api/staff/kakao-bulk { ids } — 카톡방 확인 한꺼번에 (v3.191, 처음 정리용: 멤버 화면에 보이는 멤버를 한 번에) */
+export async function staffKakaoBulk(req: Request, env: Env, me: Member) {
+  assertStaff(me);
+  const body = (await req.json().catch(() => ({}))) as { ids?: unknown };
+  const ids = Array.isArray(body.ids) ? [...new Set(body.ids.filter((x): x is string => typeof x === 'string' && /^[0-9A-Za-z_-]{1,40}$/.test(x)))].slice(0, 300) : [];
+  if (!ids.length) throw new HttpError(400, '확인할 멤버를 골라 주세요.');
+  const now = Date.now();
+  await env.DB.batch(ids.map((id) => env.DB.prepare('UPDATE members SET kakao_at = ?, kakao_by = ? WHERE id = ? AND kakao_at IS NULL').bind(now, me.id, id)));
+  return json({ ok: true, n: ids.length });
+}
+
 /** 정회원·우수회원은 카톡방 확인을 받은 회원만 (v3.190) */
 function needKakao(target: Member) {
   if (!target.kakao_at) throw new HttpError(400, '카톡방에 있는지 먼저 확인해 주세요. 카톡방에 없는 멤버는 정회원·우수회원이 될 수 없어요.');
@@ -401,6 +479,8 @@ function needKakao(target: Member) {
 export async function staffAction(req: Request, env: Env, me: Member, id: string, action: string) {
   assertStaff(me);
   const body = (await req.json().catch(() => ({}))) as { level?: unknown; on?: unknown; inviter?: unknown };
+  // 카톡방 명단에 있는 이름이면 올리기 전에 확인을 붙여 둔다 (v3.191)
+  if (action === 'promote' || action === 'level') await applyKakaoList(env, me.id).catch(() => null);
   const target = await memberRow(env, id);
   if (action === 'inviter') {
     await setInviterIfEmpty(env, target, body.inviter);

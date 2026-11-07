@@ -35,7 +35,7 @@ import { diagShots, listDiag, saveDiag } from './diag.js';
 import { inquiryFiles, inquiryWorklist, myInquiries, postInquiry, setInquiryStatus, staffReplyInquiry } from './inquiry.js';
 import { createNews, deleteNews, editNews, ensureAuto, heartNews, listNews, readNews } from './news.js';
 import { apply, joinLanding, joinSweep, myApplication, setRoom, staffApplicationAction, staffApplications } from './join.js';
-import { claimInvite, lookupMembers, searchMembers, myInvite, publicInvite, staffAction, staffMembers } from './staff.js';
+import { claimInvite, lookupMembers, searchMembers, myInvite, publicInvite, applyKakaoList, staffAction, staffKakaoBulk, staffKakaoNames, staffMembers } from './staff.js';
 import { HttpError, json, webOrigins, type Env } from './util.js';
 import { augPicks, hotAugs } from './augpicks.js';
 import { LAUNCH, SHOP, SHOP_REV, type ShopCatalog } from '../../packages/core/src/shop.js';
@@ -131,6 +131,8 @@ async function route(req: Request, env: Env, ctx?: ExecutionContext): Promise<Re
   if (nw && m === 'DELETE' && !nw[2]) return deleteNews(env, me, Number(nw[1]));
   // 운영 (운영진만, v3.107) · 친구 초대
   if (m === 'GET' && pathname === '/api/staff/members') return staffMembers(env, me);
+  if (m === 'POST' && pathname === '/api/staff/kakao-bulk') return staffKakaoBulk(req, env, me);
+  if (m === 'POST' && pathname === '/api/staff/kakao-names') return staffKakaoNames(req, env, me);
   const st = pathname.match(/^\/api\/staff\/members\/([0-9A-Za-z_-]{1,40})\/(approve|promote|level|special|kakao|inviter)$/);
   if (m === 'POST' && st) return staffAction(req, env, me, st[1], st[2]);
   if (m === 'GET' && pathname === '/api/staff/applications') return staffApplications(env, me);
@@ -250,6 +252,7 @@ export default {
       await nickSweep(env).catch((e) => console.error('디스코드 별명 맞추기 실패', e));
       return dailyPost(env).catch((e) => console.error('매일 공지 실패', e));
     }
+    await applyKakaoList(env).catch((e) => console.error('카톡방 명단 맞추기 실패', e));
     await promoteSweep(env).catch((e) => console.error('역할 자동 승급 실패', e));
     await finalizeSeason(env).catch((e) => console.error('시즌 보상 확정 실패', e));
     await joinSweep(env).catch((e) => console.error('가입 신청 정리 실패', e));

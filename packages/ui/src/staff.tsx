@@ -88,6 +88,69 @@ const kakaoBlocks = (m: StaffMember, to: number) => to >= 2 && to > Math.min(m.l
 const KAKAO_NEED = '카톡방에 있는지 먼저 확인해 주세요. 카톡방에 없는 멤버는 정회원·우수회원이 될 수 없어요.';
 
 /**
+ * 카톡방 확인 한꺼번에 (v3.191): '카톡방 미확인' 거르기를 켜면 목록 위에 뜬다. 지금 보이는 멤버(검색·거르기 그대로) 전부를 한 번에.
+ * 한 번 더 눌러야 처리된다 — 잘못 누르면 멤버마다 다시 풀어야 하므로.
+ */
+function KakaoBulk({ api, list, pending, onDone }: { api: Api; list: StaffMember[]; pending: string[]; onDone: () => Promise<unknown> }) {
+  const [ask, setAsk] = useState(false);
+  const [st, setSt] = useState<ActState>(undefined);
+  const [err, setErr] = useState('');
+  const [paste, setPaste] = useState(false);
+  const [text, setText] = useState('');
+  const [pst, setPst] = useState<ActState>(undefined);
+  const [res, setRes] = useState<{ matched: { id: string; nick: string }[]; left: string[] } | null>(null);
+  const [showLeft, setShowLeft] = useState(false);
+  const n = list.length;
+  useEffect(() => { setAsk(false); }, [n]);
+  const go = async () => {
+    if (!ask) { setAsk(true); return; }
+    setSt('busy'); setErr('');
+    try {
+      await api.post('/api/staff/kakao-bulk', { ids: list.map((m) => m.id) });
+      setSt('done');
+      await new Promise((r) => setTimeout(r, 700));
+      await onDone();
+    } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
+    finally { setSt(undefined); setAsk(false); }
+  };
+  const send = async () => {
+    setPst('busy'); setErr('');
+    try {
+      const r = await api.post<{ matched: { id: string; nick: string }[]; left: string[] }>('/api/staff/kakao-names', { text });
+      setPst('done');
+      await new Promise((ok) => setTimeout(ok, 600));
+      await onDone();
+      setRes(r); setText(''); setPaste(false);
+    } catch (e) { setErr(e instanceof Error ? e.message : String(e)); }
+    finally { setPst(undefined); }
+  };
+  return (
+    <div className={`sv-kkbulk ${ask ? 'ask' : ''}`}>
+      <div className="sv-kk-row">
+        <div className="sv-kk-txt"><b>{ask ? `${n}명 모두 카톡방에 있는 게 맞나요?` : n ? `카톡방 확인이 안 된 멤버 ${n}명` : '카톡방 확인이 안 된 멤버가 없어요'}</b>
+          <small>{ask ? '한 번 더 누르면 처리돼요. 톡방에 없는 분은 나중에 멤버 서랍에서 풀 수 있어요.' : '톡방 명단을 붙여 넣으면 이름이 맞는 멤버를 찾아 확인해요. 보이는 멤버를 한 번에 확인할 수도 있어요.'}</small>
+          {err && <small className="sv-err">{err}</small>}</div>
+        <span className="sv-kkbulk-acts">
+          {ask && st !== 'busy' && st !== 'done' && <button type="button" className="btn" onClick={() => setAsk(false)}>취소</button>}
+          {!ask && <button type="button" className={`btn ${paste ? 'on' : ''}`} onClick={() => setPaste((v) => !v)}>톡방 명단 붙여 넣기</button>}
+          {n > 0 && <ActBtn className={`btn ${ask ? 'primary' : ''}`} state={st} label={ask ? `${n}명 확인` : '보이는 멤버 한 번에 확인'} busy="확인 중" done="확인했어요" onClick={() => void go()} />}
+        </span>
+      </div>
+      {paste && <div className="sv-kk-paste">
+        <textarea value={text} rows={4} placeholder="톡방 이름을 쉼표나 줄바꿈으로 나눠 붙여 넣어 주세요 (예: 찹쌀떡, 멍 대 장, 티  모)" aria-label="톡방 명단" onChange={(e) => setText(e.target.value)} />
+        <div><small>롤 이름·디스코드 이름과 맞춰요. 띄어쓰기와 #태그는 보지 않아요. 아직 가입하지 않은 분은 명단에 남았다가 가입하면 저절로 확인돼요.</small>
+          <ActBtn className="btn primary" state={pst} disabled={!text.trim()} label="명단으로 확인" busy="맞추는 중" done="확인했어요" onClick={() => void send()} /></div>
+      </div>}
+      {res && <p className="sv-kk-res"><b>{res.matched.length}명 확인했어요.</b>{res.left.length > 0 && <> 명단에만 있는 {res.left.length}명은 가입하면 저절로 확인돼요.</>}</p>}
+      {pending.length > 0 && <div className="sv-kk-left">
+        <button type="button" className="sv-more" aria-expanded={showLeft} onClick={() => setShowLeft((v) => !v)}>톡방에는 있지만 아직 Prism 에 없는 분 {pending.length}명<Icon name="chevD" /></button>
+        {showLeft && <p>{pending.join(' · ')}</p>}
+      </div>}
+    </div>
+  );
+}
+
+/**
  * 카톡방 확인 (v3.190): 누르면 바로 저장되는 체크. 켜져 있어야 정회원 승인·우수회원 선발이 열린다.
  * 가입 신청에 적은 카톡 이름이 있으면 함께 보여 준다 (톡방 멤버 목록에서 찾기 쉽게).
  */
@@ -147,6 +210,7 @@ export function StaffMembersView({ api, onOpen, onSeen }: { api: Api; onOpen?: (
               {(lvs.length > 0 || conds.length > 0 || q) && <button type="button" className="sv-fchip clear" onClick={() => { setLvs([]); setConds([]); setQ(''); }}>모두 풀기</button>}
             </div>
           </div>
+          {conds.includes('nokakao') && <KakaoBulk api={api} list={shown} pending={data.kakaoPending ?? []} onDone={reload} />}
           <div className="sv-mhead" aria-hidden="true">
             <span>멤버 <b>{shown.length}</b></span><span className="c-spark">최근 8주</span>
             <span className={sort === 'games' ? 'on' : ''}>판</span><span className={sort === 'winrate' ? 'on' : ''}>승률</span>

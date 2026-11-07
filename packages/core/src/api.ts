@@ -211,7 +211,7 @@ export type StaffOverview = {
   funnelDays?: { app: number | null; played: number | null };
 };
 export type StaffSpan = { active: number; games: number; crew: number; joined: number };
-export type StaffMembers = { members: StaffMember[]; reviewNeed: number; inviteBonus: number; overview?: StaffOverview; /** 가입 신청 (v3.148) */ applications?: { new: number; interview: number; confirmed: number }; /** 답을 기다리는 문의 (v3.159) */ inquiries?: number };
+export type StaffMembers = { members: StaffMember[]; /** v3.191 — 카톡방 명단에만 있고 아직 맞는 회원이 없는 이름 (가입하면 저절로 확인) */ kakaoPending?: string[]; reviewNeed: number; inviteBonus: number; overview?: StaffOverview; /** 가입 신청 (v3.148) */ applications?: { new: number; interview: number; confirmed: number }; /** 답을 기다리는 문의 (v3.159) */ inquiries?: number };
 /** 친구 초대 (v3.107) */
 export type MyInvite = { code: string; bonus: number; rewarded: number; friends: { id: string; nick: string; skin: number | null; main: number | null; joined: number; approved: boolean; pending?: boolean; rewardedAt: number | null }[] };
 export type LookupMember = { id: string; nick: string; skin: number | null; main: number | null };

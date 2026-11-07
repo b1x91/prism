@@ -5463,3 +5463,23 @@ body:has(.hubhead) .crew-head > div:first-child { margin-right: auto; }
 .sv-nokk { flex: none; height: 18px; padding: 0 6px; border-radius: 6px; font-size: 11px; font-weight: 700; line-height: 18px; color: color-mix(in srgb, #c27c0e 80%, var(--text)); background: color-mix(in srgb, #fae100 18%, transparent); }
 .sv-hint { margin-left: var(--s2); height: 20px; padding: 0 8px; border-radius: 999px; font-size: 11px; font-weight: 700; line-height: 20px; color: var(--text-3); background: var(--surface-2); vertical-align: middle; }
 @media (prefers-reduced-motion: reduce) { .sv-kkbox, .sv-kkbox i, .sv-kkbox svg { transition: none; } }
+/* 카톡방 확인 한꺼번에 (v3.191) */
+.sv-kkbulk { display: grid; gap: var(--s3); margin: var(--s3) 0; padding: var(--s3) var(--s4); border-radius: var(--r-m); background: color-mix(in srgb, #fae100 12%, var(--surface)); transition: background .2s ease; }
+.sv-kkbulk.ask { background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+.sv-kk-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); }
+.sv-kk-txt { display: grid; gap: 2px; flex: 1 1 260px; min-width: 0; }
+.sv-kk-paste { display: grid; gap: var(--s2); }
+.sv-kk-paste textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 88px; padding: var(--s3); border: 0; border-radius: var(--r-m); background: var(--surface); color: var(--text); font: inherit; font-size: var(--fs-sm); line-height: 1.5; }
+.sv-kk-paste textarea:focus { outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent); }
+.sv-kk-paste > div { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s3); }
+.sv-kk-paste > div small { flex: 1 1 240px; }
+.sv-kk-res { margin: 0; font-size: var(--fs-sm); color: var(--text-2); }
+.sv-kk-res b { color: var(--ok); }
+.sv-kk-left { display: grid; gap: var(--s2); }
+.sv-kk-left .sv-more { justify-self: start; }
+.sv-kk-left p { margin: 0; font-size: var(--fs-xs); line-height: 1.7; color: var(--text-3); }
+.sv-kk-txt b { font-size: var(--fs-sm); }
+.sv-kkbulk small { font-size: var(--fs-xs); color: var(--text-3); }
+.sv-kkbulk-acts { display: flex; flex-wrap: wrap; gap: var(--s2); flex: 0 1 auto; min-width: 0; }
+@media (max-width: 560px) { .sv-kkbulk-acts { flex: 1 1 100%; } .sv-kkbulk-acts .btn { flex: 1 1 140px; } }
+.sv-kkbulk-acts .btn { white-space: nowrap; }
